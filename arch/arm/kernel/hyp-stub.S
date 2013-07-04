@@ -37,12 +37,16 @@ ENTRY(__boot_cpu_mode)
 	/*
 	 * Save the primary CPU boot mode. Requires 3 scratch registers.
 	 */
+	/*
+	.L__boot_cpu_mode_offset:
+	.long	__boot_cpu_mode - .
+	 */
 	.macro	store_primary_cpu_mode	reg1, reg2, reg3
-	mrs	\reg1, cpsr
-	and	\reg1, \reg1, #MODE_MASK
-	adr	\reg2, .L__boot_cpu_mode_offset
-	ldr	\reg3, [\reg2]
-	str	\reg1, [\reg2, \reg3]
+	mrs	\reg1, cpsr						//reg1 = cpsr
+	and	\reg1, \reg1, #MODE_MASK		//reg1 = reg1 & MODE_MASK
+	adr	\reg2, .L__boot_cpu_mode_offset //reg2 = .L__boot...의 주소
+	ldr	\reg3, [\reg2]					//reg3 = *reg2
+	str	\reg1, [\reg2, \reg3]			//*(reg2+reg3) = reg1
 	.endm
 
 	/*

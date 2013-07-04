@@ -23,11 +23,21 @@
 
 #if defined(CONFIG_DEBUG_ICEDCC)
 
+//ARM 버전별로 적용
 #if defined(CONFIG_CPU_V6) || defined(CONFIG_CPU_V6K) || defined(CONFIG_CPU_V7)
-		.macro	loadsp, rb, tmp
+		.macro	loadsp, rb, tmp			//.macro: 매크로
 		.endm
 		.macro	writeb, ch, rb
-		mcr	p14, 0, \ch, c0, c5, 0
+		/*
+		 * 디버깅 관련 설정 (교재 663 page / TRM 257 page)
+		 * 
+		 * - mcr이란? 코프로세서 전용 MOV명령어
+		 * - '\'의 역할? 매크로의 인자를 표현한다.
+		 * - mcr 명령의 인자?
+		 *   - p14: 코프로세서(디버거,tracer)
+		 *   - 0, c0, c5, 0: TRM 257 page 참조
+		 */
+		mcr	p14, 0, \ch, c0, c5, 0		//Debugger로 명령을 보낸다.
 		.endm
 #elif defined(CONFIG_CPU_XSCALE)
 		.macro	loadsp, rb, tmp
@@ -48,7 +58,7 @@
 #include CONFIG_DEBUG_LL_INCLUDE
 
 		.macro	writeb,	ch, rb
-		senduart \ch, \rb
+		senduart \ch, \rb			//UART로 명령을 보낸다.
 		.endm
 
 #if defined(CONFIG_ARCH_SA1100)
@@ -118,10 +128,44 @@
 /*
  * sort out different calling conventions
  */
+		/* 4byte로 메모리를 align한다는 뜻. (default: 4) */
 		.align
+		/* 이제부터 나오는opcode는 arm임을 어셈블러에게 알림 */
 		.arm				@ Always enter in ARM state
 start:
+		/* .type: symbol table에 entry에 속성을 기록한다.
+		 * start 레이블은 함수 타입이다.
+		 */
 		.type	start,#function
+
+		/*
+		 * - 이 코드가 하는 일:
+		 *   instruction(mov r0, r0)를 8번 반복합니다.
+		 *
+		 * - 탄생비화:
+		 *   옛날옛날에 어떤 거지같은 부트로더가 있었는데 그놈은 이미지 올려놓은 램주소에서 
+		 *   8 Word(32byte = 0x20)만큼의 하위 주소를 call해 버렸었고 올려놓은 주소에서
+		 *   offset(0x24~0x30)사이에 magic number를 찾았답니다. 그래서 그런 부트로더들 
+		 *   맞춰줄려고 head.s에 의미없는 instruction(mov r0, r0)를 8번(8 Word)해서 소비합니다. 
+		 *
+		 *   참조: 
+		 *     - http://www.iamroot.org/xe/QnA/23099
+		 *     - http://comments.gmane.org/gmane.linux.ports.arm.kernel/26690
+		 *
+		 * - ARM(), THUMB() 매크로:
+		 *   CONFIG_THUMB2_KERNEL 옵션이 켜져 있으면 ARM()매크로는 버리고  THUMB()매크로만 사용합니다.
+		 *   반대의 경우는 ARM()매크로만 사용하고, THUMB()는 버립니다.
+		 *
+		 * - instruction(b  1f)에서 '1f'의 뜻:
+		 *   '1'은 레이블 이름. 'f'는 forward방향을 뜻함. (f: forward / b: before)
+		 *
+		 * - BSYM()매크로:
+		 *   #ifdef CONFIG_THUMB2_KERNEL
+		 *     #define BSYM(sym)	sym + 1
+		 *   #else	
+		 *     #define BSYM(sym)	sym
+		 *   #endif	
+		 */
 		.rept	7
 		mov	r0, r0
 		.endr
@@ -130,17 +174,49 @@ start:
  THUMB(		adr	r12, BSYM(1f)	)
  THUMB(		bx	r12		)
 
+		/*
+		 * - (.word 0x016f2818)의 뜻:
+		 *   부트로더에게 linux kernel zImage임을 알려주는 매직넘버입니다.
+		 *   정말인지 zImage를 실제로 읽어서 확인해 VOA요.
+		 *
+		 *     $ hd arch/arm/boot/zImage | head -n3
+		 *     00000000  00 00 a0 e1 00 00 a0 e1  00 00 a0 e1 00 00 a0 e1
+		 *     *
+		 *     00000020  02 00 00 ea 18 28 6f 01  00 00 00 00 10 3b 3d 00
+		 *                           -----------  ----------- -----------
+		 *                           0x016f2818   start       _edata=0x003d3b10
+		 *
+         *  Thumb mode image 
+         *  -------------------------------------------------------------------
+		 *  00000000  00 00 a0 e1 00 00 a0 e1  00 00 a0 e1 00 00 a0 e1  
+		 *  00000010  00 00 a0 e1 00 00 a0 e1  00 00 a0 e1 0d c0 8f e2 
+		 *  00000020  1c ff 2f e1 18 28 6f 01  00 00 00 00 80 bc 39 00 
+		 *                           0x016f2818   start       _edata=0x0039bc80
+         *
+		 * - (.word start)의 뜻:
+		 *   start는 start 레이블을 뜻하며 실제로 0x00000000이 들어갑니다.
+		 *
+		 * - (.word _edata)의 뜻:
+		 *   _edata는 zImage의 끝을 뜻하며, arch/arm/kernel/vmlinux.lds.S 에서 정의합니다.
+		 */
 		.word	0x016f2818		@ Magic numbers to help the loader
 		.word	start			@ absolute load/run zImage address
 		.word	_edata			@ zImage end address
  THUMB(		.thumb			)
 1:
+		/* mrs란? move to register from special register */
 		mrs	r9, cpsr
+
+		/* CONFIG_ARM_VIRT_EXT란?
+		 * firmware의 실시간 지원 없이 하이퍼바이저를 설치하기 위한 ARM 가상화 확장 옵션
+		 */
 #ifdef CONFIG_ARM_VIRT_EXT
+		/* b는 이동. bl은 lr=pc 후 이동 */
 		bl	__hyp_stub_install	@ get into SVC mode, reversibly
 #endif
-		mov	r7, r1			@ save architecture ID
-		mov	r8, r2			@ save atags pointer
+		// 부트로더가 커널에게 넘겨주는 값.
+		mov	r7, r1			@ save architecture ID	; r7 = r1
+		mov	r8, r2			@ save atags pointer	; r8 = r2
 
 #ifndef __ARM_ARCH_2__
 		/*
@@ -155,10 +231,14 @@ start:
  ARM(		swi	0x123456	)	@ angel_SWI_ARM
  THUMB(		svc	0xab		)	@ angel_SWI_THUMB
 not_angel:
-		safe_svcmode_maskall r0
+        /* 이 이후 코드는 SVC mode로 동작*/
+		safe_svcmode_maskall r0 
+        /* 접미사 cxsf 의미? PSR 필드의 접미사임
+         * SVC mode 용 SPSR에 저장             */
 		msr	spsr_cxsf, r9		@ Save the CPU boot mode in
 						@ SPSR
 #else
+        /* ARMv2 일 경우 수행 됨*/
 		teqp	pc, #0x0c000003		@ turn off interrupts
 #endif
 
@@ -172,17 +252,26 @@ not_angel:
 		 * by the linker here, but it should preserve r7, r8, and r9.
 		 */
 
+        /* ELF format 의 text section 정의
+         * Section directive 사용/ 사용안한 코드의 차이는?
+         * vmlinux.lds.in file의 .text 가 맞는지? */
 		.text
 
+        /* exynos defconfig 기준으로 code 분석 
+         * CONFIG_AUTO_ZRELADDR 는 빠져 있으므로 아래 코드는 Skip */ 
 #ifdef CONFIG_AUTO_ZRELADDR
 		@ determine final kernel image address
 		mov	r4, pc
 		and	r4, r4, #0xf8000000
 		add	r4, r4, #TEXT_OFFSET
 #else
+        /* = 의 의미는? : pesudo assembler 임
+         * mov r4 #zreladdr 와 동일 
+         * arm/Makefile 의 TEXT_OFFSET 값이 적혀 있음
+         * TEXT_OFFSET 값의 의미는? datasheet 찾아봐야됨*/
 		ldr	r4, =zreladdr
 #endif
-
+        /* link reg 에 pc를 저장하고 cache_on로jump */
 		bl	cache_on
 
 restart:	adr	r0, LC0
@@ -540,6 +629,8 @@ params:		ldr	r0, =0x10000100		@ params_phys for RPC
  * This routine must preserve:
  *  r4, r7, r8
  */
+        /* memory를 2^5 (32byte) 으로 align 시킴
+         * default align 은 2^4 (16byte) 임 */
 		.align	5
 cache_on:	mov	r3, #8			@ cache_on function
 		b	call_cache_fn
@@ -773,12 +864,20 @@ __common_mmu_cache_on:
  *  r12 = corrupted
  */
 
+/* 주석의 corrupted 의 의미는? :  */
 call_cache_fn:	adr	r12, proc_types
 #ifdef CONFIG_CPU_CP15
+        /* Coprocessor 에서 processor ID를 가져옴  */
 		mrc	p15, 0, r9, c0, c0	@ get processor ID
 #else
+        /* 코드에서 processor ID를 가져옴 */
 		ldr	r9, =CONFIG_PROCESSOR_ID
 #endif
+        /* 
+            .word	0x000f0000		@ new CPU Id
+            .word	0x000f0000
+         */
+        /* 2013/06/29 분석 code 위치 */
 1:		ldr	r1, [r12, #0]		@ get value
 		ldr	r2, [r12, #4]		@ get mask
 		eor	r1, r1, r9		@ (real ^ match)
@@ -931,8 +1030,10 @@ proc_types:
 		W(b)	__armv4_mmu_cache_off
 		W(b)	__armv6_mmu_cache_flush
 
+        /* ARMv7 용 cache struct 정의 */
 		.word	0x000f0000		@ new CPU Id
 		.word	0x000f0000
+        /* W 의 의미는? include/asm/unified.h 참고 */
 		W(b)	__armv7_mmu_cache_on
 		W(b)	__armv7_mmu_cache_off
 		W(b)	__armv7_mmu_cache_flush
