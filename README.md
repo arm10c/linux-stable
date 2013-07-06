@@ -11,3 +11,5 @@
     - arch/arm/include/asm/opcodes-virt.h
     - arch/arm/include/asm/unified.h
 
+  - 2012-07-06
+    - arch/arm/boot/compressed/head.S

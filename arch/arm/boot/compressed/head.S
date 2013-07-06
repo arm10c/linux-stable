@@ -23,21 +23,15 @@
 
 #if defined(CONFIG_DEBUG_ICEDCC)
 
-//ARM 버전별로 적용
+// ARM 버전별로 적용
 #if defined(CONFIG_CPU_V6) || defined(CONFIG_CPU_V6K) || defined(CONFIG_CPU_V7)
-		.macro	loadsp, rb, tmp			//.macro: 매크로
+		.macro	loadsp, rb, tmp		// '.macro'는 매크로임을 뜻함.
 		.endm
 		.macro	writeb, ch, rb
-		/*
-		 * 디버깅 관련 설정 (교재 663 page / TRM 257 page)
-		 * 
-		 * - mcr이란? 코프로세서 전용 MOV명령어
-		 * - '\'의 역할? 매크로의 인자를 표현한다.
-		 * - mcr 명령의 인자?
-		 *   - p14: 코프로세서(디버거,tracer)
-		 *   - 0, c0, c5, 0: TRM 257 page 참조
-		 */
-		mcr	p14, 0, \ch, c0, c5, 0		//Debugger로 명령을 보낸다.
+		mcr	p14, 0, \ch, c0, c5, 0	// Debugger로 명령을 보낸다.
+						// 매크로에서는 인자에 '\'를 붙인다.
+						// p14: 코프로세서 (디버거,tracer)
+						// 참조: 교재 663 page, TRM 257 page
 		.endm
 #elif defined(CONFIG_CPU_XSCALE)
 		.macro	loadsp, rb, tmp
@@ -128,44 +122,42 @@
 /*
  * sort out different calling conventions
  */
-		/* 4byte로 메모리를 align한다는 뜻. (default: 4) */
-		.align
-		/* 이제부터 나오는opcode는 arm임을 어셈블러에게 알림 */
-		.arm				@ Always enter in ARM state
-start:
-		/* .type: symbol table에 entry에 속성을 기록한다.
-		 * start 레이블은 함수 타입이다.
-		 */
-		.type	start,#function
 
-		/*
-		 * - 이 코드가 하는 일:
-		 *   instruction(mov r0, r0)를 8번 반복합니다.
-		 *
-		 * - 탄생비화:
-		 *   옛날옛날에 어떤 거지같은 부트로더가 있었는데 그놈은 이미지 올려놓은 램주소에서 
-		 *   8 Word(32byte = 0x20)만큼의 하위 주소를 call해 버렸었고 올려놓은 주소에서
-		 *   offset(0x24~0x30)사이에 magic number를 찾았답니다. 그래서 그런 부트로더들 
-		 *   맞춰줄려고 head.s에 의미없는 instruction(mov r0, r0)를 8번(8 Word)해서 소비합니다. 
-		 *
-		 *   참조: 
-		 *     - http://www.iamroot.org/xe/QnA/23099
-		 *     - http://comments.gmane.org/gmane.linux.ports.arm.kernel/26690
-		 *
-		 * - ARM(), THUMB() 매크로:
-		 *   CONFIG_THUMB2_KERNEL 옵션이 켜져 있으면 ARM()매크로는 버리고  THUMB()매크로만 사용합니다.
-		 *   반대의 경우는 ARM()매크로만 사용하고, THUMB()는 버립니다.
-		 *
-		 * - instruction(b  1f)에서 '1f'의 뜻:
-		 *   '1'은 레이블 이름. 'f'는 forward방향을 뜻함. (f: forward / b: before)
-		 *
-		 * - BSYM()매크로:
-		 *   #ifdef CONFIG_THUMB2_KERNEL
-		 *     #define BSYM(sym)	sym + 1
-		 *   #else	
-		 *     #define BSYM(sym)	sym
-		 *   #endif	
-		 */
+		.align				// 4byte로 메모리를 align한다는 뜻. (default: 4)
+		.arm				@ Always enter in ARM state
+						// 이제부터 나오는opcode는 arm임을 어셈블러에게 알림
+start:
+		.type	start,#function		// .type: symbol table에 entry에 속성을 기록한다.
+						// start 레이블은 함수 타입이다.
+
+
+// - 이 코드가 하는 일:
+//   instruction(mov r0, r0)를 8번 반복합니다.
+//
+// - 탄생비화:
+//   옛날옛날에 어떤 거지같은 부트로더가 있었는데 그놈은 이미지 올려놓은 램주소에서
+//   8 Word(32byte = 0x20)만큼의 하위 주소를 call해 버렸었고 올려놓은 주소에서
+//   offset(0x24~0x30)사이에 magic number를 찾았답니다. 그래서 그런 부트로더들
+//   맞춰줄려고 head.s에 의미없는 instruction(mov r0, r0)를 8번(8 Word)해서 소비합니다.
+//
+//   참조:
+//     - http://www.iamroot.org/xe/QnA/23099
+//     - http://comments.gmane.org/gmane.linux.ports.arm.kernel/26690
+//
+// - ARM(), THUMB() 매크로:
+//   CONFIG_THUMB2_KERNEL 옵션이 켜져 있으면 ARM()매크로는 버리고  THUMB()매크로만 사용합니다.
+//   반대의 경우는 ARM()매크로만 사용하고, THUMB()는 버립니다.
+//
+// - instruction(b  1f)에서 '1f'의 뜻:
+//   '1'은 레이블 이름. 'f'는 forward방향을 뜻함. (f: forward / b: before)
+//
+// - BSYM()매크로:
+//   #ifdef CONFIG_THUMB2_KERNEL
+//     #define BSYM(sym)	sym + 1
+//   #else
+//     #define BSYM(sym)	sym
+//   #endif
+
 		.rept	7
 		mov	r0, r0
 		.endr
@@ -174,49 +166,55 @@ start:
  THUMB(		adr	r12, BSYM(1f)	)
  THUMB(		bx	r12		)
 
-		/*
-		 * - (.word 0x016f2818)의 뜻:
-		 *   부트로더에게 linux kernel zImage임을 알려주는 매직넘버입니다.
-		 *   정말인지 zImage를 실제로 읽어서 확인해 VOA요.
-		 *
-		 *     $ hd arch/arm/boot/zImage | head -n3
-		 *     00000000  00 00 a0 e1 00 00 a0 e1  00 00 a0 e1 00 00 a0 e1
-		 *     *
-		 *     00000020  02 00 00 ea 18 28 6f 01  00 00 00 00 10 3b 3d 00
-		 *                           -----------  ----------- -----------
-		 *                           0x016f2818   start       _edata=0x003d3b10
-		 *
-         *  Thumb mode image 
-         *  -------------------------------------------------------------------
-		 *  00000000  00 00 a0 e1 00 00 a0 e1  00 00 a0 e1 00 00 a0 e1  
-		 *  00000010  00 00 a0 e1 00 00 a0 e1  00 00 a0 e1 0d c0 8f e2 
-		 *  00000020  1c ff 2f e1 18 28 6f 01  00 00 00 00 80 bc 39 00 
-		 *                           0x016f2818   start       _edata=0x0039bc80
-         *
-		 * - (.word start)의 뜻:
-		 *   start는 start 레이블을 뜻하며 실제로 0x00000000이 들어갑니다.
-		 *
-		 * - (.word _edata)의 뜻:
-		 *   _edata는 zImage의 끝을 뜻하며, arch/arm/kernel/vmlinux.lds.S 에서 정의합니다.
-		 */
+// - (.word 0x016f2818)의 뜻:
+//   부트로더에게 linux kernel zImage임을 알려주는 매직넘버입니다.
+//   정말인지 zImage를 실제로 읽어서 확인해 VOA요.
+//
+//     $ hd arch/arm/boot/zImage | head -n3
+//     00000000  00 00 a0 e1 00 00 a0 e1  00 00 a0 e1 00 00 a0 e1
+//     *
+//     00000020  02 00 00 ea 18 28 6f 01  00 00 00 00 10 3b 3d 00
+//			   -----------  ----------- -----------
+//			   0x016f2818   start       _edata=0x003d3b10
+//
+//  Thumb mode image
+//  -------------------------------------------------------------------
+//  00000000  00 00 a0 e1 00 00 a0 e1  00 00 a0 e1 00 00 a0 e1
+//  00000010  00 00 a0 e1 00 00 a0 e1  00 00 a0 e1 0d c0 8f e2
+//  00000020  1c ff 2f e1 18 28 6f 01  00 00 00 00 80 bc 39 00
+//			   0x016f2818   start       _edata=0x0039bc80
+//
+// - (.word start)의 뜻:
+//   start는 start 레이블을 뜻하며 실제로 0x00000000이 들어갑니다.
+//
+// - (.word _edata)의 뜻:
+//   _edata는 zImage의 끝을 뜻하며, arch/arm/kernel/vmlinux.lds.S 에서 정의합니다.
+//
 		.word	0x016f2818		@ Magic numbers to help the loader
+						// 매직 넘버(=zImage라는 뜻)
 		.word	start			@ absolute load/run zImage address
+						// zImage의 주소를 적재하고 실행할 절대주소
 		.word	_edata			@ zImage end address
+						// zImage의 끝 주소
  THUMB(		.thumb			)
 1:
-		/* mrs란? move to register from special register */
-		mrs	r9, cpsr
 
-		/* CONFIG_ARM_VIRT_EXT란?
-		 * firmware의 실시간 지원 없이 하이퍼바이저를 설치하기 위한 ARM 가상화 확장 옵션
-		 */
+		mrs	r9, cpsr		// mrs란? move to register from special register
+
+//
+// CONFIG_ARM_VIRT_EXT: firmware의 실시간 지원 없이
+// 하이퍼바이저를 설치하기 위한 ARM 가상화 확장 옵션
+//
 #ifdef CONFIG_ARM_VIRT_EXT
-		/* b는 이동. bl은 lr=pc 후 이동 */
 		bl	__hyp_stub_install	@ get into SVC mode, reversibly
+						// b와 bl의 차이점: b는 단순한 이동을 뜻하고,
+						//   bl은 하드웨어가 pc를 lr에 자동으로 넣은 후 이동한다.
 #endif
-		// 부트로더가 커널에게 넘겨주는 값.
-		mov	r7, r1			@ save architecture ID	; r7 = r1
-		mov	r8, r2			@ save atags pointer	; r8 = r2
+		mov	r7, r1			@ save architecture ID
+						// 부트로더가 커널에게 넘겨주는 값.
+						// r7 = r1
+		mov	r8, r2			@ save atags pointer
+						// r8 = r2
 
 #ifndef __ARM_ARCH_2__
 		/*
@@ -224,6 +222,10 @@ start:
 		 * FIQs/IRQs (numeric definitions from angel arm.h source).
 		 * We only do this if we were in user mode on entry.
 		 */
+		// Angel로 부터 부팅 - SVC모드 진입을 필요로 하며 FIQ/IRQ를
+		// disable시켜야 한다.
+		// (angel에 관한 수자 정의는 arm.h 소스에 있다.).
+		// 처음에 user 모드로 시작한 경우에만 작업을 한다.
 		mrs	r2, cpsr		@ get current mode
 		tst	r2, #3			@ not user?
 		bne	not_angel
@@ -231,14 +233,13 @@ start:
  ARM(		swi	0x123456	)	@ angel_SWI_ARM
  THUMB(		svc	0xab		)	@ angel_SWI_THUMB
 not_angel:
-        /* 이 이후 코드는 SVC mode로 동작*/
-		safe_svcmode_maskall r0 
-        /* 접미사 cxsf 의미? PSR 필드의 접미사임
-         * SVC mode 용 SPSR에 저장             */
+		safe_svcmode_maskall r0		// SVC mode로 설정한다.
 		msr	spsr_cxsf, r9		@ Save the CPU boot mode in
 						@ SPSR
+						// SVC mode 용 SPSR에 저장
+						// 접미사 cxsf 의미? PSR 필드의 접미사임
 #else
-        /* ARMv2 일 경우 수행 됨*/
+		/* ARMv2 일 경우 수행 됨*/
 		teqp	pc, #0x0c000003		@ turn off interrupts
 #endif
 
@@ -252,26 +253,26 @@ not_angel:
 		 * by the linker here, but it should preserve r7, r8, and r9.
 		 */
 
-        /* ELF format 의 text section 정의
-         * Section directive 사용/ 사용안한 코드의 차이는?
-         * vmlinux.lds.in file의 .text 가 맞는지? */
+		 //ELF format 의 text section 정의
+		 //Section directive 사용/ 사용안한 코드의 차이는?
+		 //vmlinux.lds.in file의 .text 가 맞는지? 
 		.text
 
-        /* exynos defconfig 기준으로 code 분석 
-         * CONFIG_AUTO_ZRELADDR 는 빠져 있으므로 아래 코드는 Skip */ 
+		 //exynos defconfig 기준으로 code 분석
+		 //CONFIG_AUTO_ZRELADDR 는 빠져 있으므로 아래 코드는 Skip 
 #ifdef CONFIG_AUTO_ZRELADDR
 		@ determine final kernel image address
 		mov	r4, pc
 		and	r4, r4, #0xf8000000
 		add	r4, r4, #TEXT_OFFSET
 #else
-        /* = 의 의미는? : pesudo assembler 임
-         * mov r4 #zreladdr 와 동일 
-         * arm/Makefile 의 TEXT_OFFSET 값이 적혀 있음
-         * TEXT_OFFSET 값의 의미는? datasheet 찾아봐야됨*/
+		//= 의 의미는? : pesudo assembler 임
+		//mov r4 #zreladdr 와 동일
+		//arm/Makefile 의 TEXT_OFFSET 값이 적혀 있음
+		//TEXT_OFFSET 값의 의미는? datasheet 찾아봐야됨
 		ldr	r4, =zreladdr
 #endif
-        /* link reg 에 pc를 저장하고 cache_on로jump */
+		//link reg 에 pc를 저장하고 cache_on로jump
 		bl	cache_on
 
 restart:	adr	r0, LC0
@@ -703,44 +704,139 @@ __armv3_mpu_cache_on:
 #define CB_BITS 0x0c
 #endif
 
+//
+// r4 : 0x40008000 - /arch/arm/mach-exynos/Makefile.boot zerladdr-y로 정의 되어있음
+// bic 를 두번 하는 이유 : arm architecture manual : A5.2.4 참고 imm12 = rotation4 + imm8
+//
 __setup_mmu:	sub	r3, r4, #16384		@ Page directory size
+						// r3 = 0x40008000 - 0x4000(16384) = 0x40004000
 		bic	r3, r3, #0xff		@ Align the pointer
-		bic	r3, r3, #0x3f00
+						// r3 = 0x40004000 & ~(0xff) = 0x40004000
+		bic	r3, r3, #0x3f00		// r3 = 0x40004000 & ~(0x3f00) = 0x40004000
 /*
  * Initialise the page tables, turning on the cacheable and bufferable
  * bits for the RAM area only.
  */
-		mov	r0, r3
-		mov	r9, r0, lsr #18
+//
+// Page Table을 초기화 한다. 오직 RAM영역만 cacheable과 bufferable 비트를 켠다.
+//
+		mov	r0, r3			// r0 = 0x40004000
+						// lsr ,lsl #18 인 이유 : clps711x 계열의 주소가 0xc0028000 이기
+						// 때문에 #18을 해야 하위 bit 클리어 할수 있다.
+		mov	r9, r0, lsr #18		// r9 = 0x40004000 > 18 = 0x1000
+						// FIXME: RAM시작 주소가 0x40000000인 이유는
+						//  arch/arm/mach-exynos/include/mach/map.h 참고 (확인요망)
 		mov	r9, r9, lsl #18		@ start of RAM
+						// r9 = 0x1000 < 18 = 0x40000000
 		add	r10, r9, #0x10000000	@ a reasonable RAM size
-		mov	r1, #0x12		@ XN|U + section mapping
-		orr	r1, r1, #3 << 10	@ AP=11
-		add	r2, r3, #16384
+						// r10 = 0x40000000 + 0x10000000(256M) = 0x50000000
+						// r1에 MMU Page table 의 Section entry 값을 만들어 준다.
+		mov	r1, #0x12		@ XN(0x10)|U + section mapping(0x02)
+						// FIXME: r1 = 0x12
+						// XN : Excute never(0x10)(코드영역이아님),
+						// U(확인요망) : manual B3.5 참고
+		orr	r1, r1, #3 << 10	// AP(Access Permission)=11(Read Write가 가능하다) : B3.7.1 참고
+						// r1 = 0x12 | (0x3 << 10 ) = 0xC12
+		add	r2, r3, #16384		// r2 = 0x40004000 + 0x4000(16384) = 0x40008000
+
+//
+// 전체 4Gbyte 영역중 0x40000000 부터 0x50000000 까지 영역만 Writeback/executable(0xC0E)영역으로 설정한다.
+// 나머지는 Noncacheable,Nonexecutable, Nonbufferable(0xC12) 로 설정
+//
+
+// r0 가 loop를 결정하는 Page table의 주소값
+// r1 은 orrlo, orrhs 수행을 결정하는 Section base address 값
+
+//-------------
+// 최초 루프만 주석표시
+//-------------
 1:		cmp	r1, r9			@ if virt > start of RAM
+						// r1 = 0xC12(가변), r9 = 0x40000000
 		cmphs	r10, r1			@   && end of RAM > virt
+						// r10 = 0x50000000, r1 = 0xC12(가변) // hs : unsigned로 비교해서 크거나 같다면...
 		bic	r1, r1, #0x1c		@ clear XN|U + C + B
+						// r1 = 0xC12 & ~(0x1c) = 0xC02 // AP와 Section mapping만 남음
 		orrlo	r1, r1, #0x10		@ Set XN|U for non-RAM
+						// lo(low) : 작다면 r1 = 0xc02 | 0x10 = 0xc12
 		orrhs	r1, r1, r6		@ set RAM section settings
+						// hs(high or same) : 크거나 같다면
 		str	r1, [r0], #4		@ 1:1 mapping
-		add	r1, r1, #1048576
-		teq	r0, r2
-		bne	1b
+						// *r0 = r1, r0 += 4 // 0x40004000 주소에 0xc12를 저장후 0x40004004
+		add	r1, r1, #1048576	// r1 = 0xc12 + 0x100000(1048576) = 0x100c12
+		teq	r0, r2			// r0 = 0x40004004(가변) ^ 0x40008000(고정) = //Page table의 끝을 검사한다.
+		bne	1b			// 위 결과 Z=0이면 1로감
+
+
+//-------------
+// RAM 영역일때 루프 : 0x40000000 ~ 0x50000000 ( orrhs수행됨 )
+//-------------
+//
+//1:		cmp	r1, r9			@ if virt > start of RAM
+//						// r1 = 0x40000C12, r9 = 0x40000000
+//		cmphs	r10, r1			@   && end of RAM > virt
+//						// r10 = 0x50000000, r1 = 0x40000C12
+//						// hs : unsigned로 비교해서 크거나 같다면...
+//		bic	r1, r1, #0x1c		@ clear XN|U + C + B
+//						// r1 = 0x40000C12 & ~(0x1c) = 0x40000C02 //AP와 Section mapping만 남음
+//		orrlo	r1, r1, #0x10		@ Set XN|U for non-RAM
+//						// lo : 작다면
+//		orrhs	r1, r1, r6		@ set RAM section settings
+//						// hs : 크거나 같다면 r1 = 0x40000c02 | 0xE(r6) = 0x40000C0E
+//		str	r1, [r0], #4		@ 1:1 mapping
+//						// *r0 = r1, r0 += 4
+//						// 0x40005000 주소에 0x40000C0E를 저장후 0x40005004
+//		add	r1, r1, #1048576	// r1 = 0x40000C0E + 0x100000(1048576) = 0x40100c0e
+//		teq	r0, r2			// r0 = 0x40005004(가변) ^ 0x40008000(고정) =
+//						//Page table의 끝을 검사한다.
+//		bne	1b			// 위 결과 Z=0이면 1로감
+//
+
+//-------------
+// end of loop
+//-------------
+//1:		cmp	r1, r9			@ if virt > start of RAM
+//						// r1 = 0xfff00C12, r9 = 0x40000000
+//		cmphs	r10, r1			@   && end of RAM > virt
+//						// r10 = 0x50000000, r1 = 0xfff00C12
+//						// hs : unsigned로 비교해서 크거나 같다면...
+//		bic	r1, r1, #0x1c		@ clear XN|U + C + B
+//						// r1 = 0xfff00C12 & ~(0x1c) = 0xfff00C02 //AP와 Section mapping만 남음
+//		orrlo	r1, r1, #0x10		@ Set XN|U for non-RAM
+//						// lo : 작다면
+//		orrhs	r1, r1, r6
+//		str	r1, [r0], #4		@ 1:1 mapping
+//						// *r0 = r1, r0 += 4
+//						// 0x40007ffc 주소에 0xfff00c12를 저장후 0x40008000
+//		add	r1, r1, #1048576	// r1 = 0xfff00C12 + 0x100000(1048576) = 0x00000c12
+//		teq	r0, r2			// r0 = 0x40008000(가변) ^ 0x40008000(고정) =
+//						// Page table의 끝을 검사한다.
+//		bne	1b			// 위 결과 Z=1, no jump-back
+//
+
 /*
  * If ever we are running from Flash, then we surely want the cache
  * to be enabled also for our execution instance...  We map 2MB of it
  * so there is no map overlap problem for up to 1 MB compressed kernel.
  * If the execution is in RAM then we would only be duplicating the above.
  */
+//
+//FIXME B를 여기와서 다시 0xC0E 로 셋하는 이유 : (조사요망)
+//
 		orr	r1, r6, #0x04		@ ensure B is set for this
-		orr	r1, r1, #3 << 10
-		mov	r2, pc
-		mov	r2, r2, lsr #20
-		orr	r1, r1, r2, lsl #20
-		add	r0, r3, r2, lsl #2
-		str	r1, [r0], #4
-		add	r1, r1, #1048576
-		str	r1, [r0]
+						// r1 = 0xE(r6) | 0x04 = 0xE
+		orr	r1, r1, #3 << 10	// r1 = 0xE(r1) | (0x3 << 10) = 0xC0E
+		mov	r2, pc			// r2 = pc
+		mov	r2, r2, lsr #20		// r2 = pc(r2) > 20
+		orr	r1, r1, r2, lsl #20	// r1 = 0xc0E | ( pc & 0xfff00000 )
+						// 현재 pc에 해당하는 Section에 대한 디스크립터
+		add	r0, r3, r2, lsl #2	// r0 = 0x40004000(r3) + (( pc > 20 ) < 2)
+						// 현재 pc에 해당하는 Section에 대한 Page table address
+		str	r1, [r0], #4		// *r0 = 0xc0e | ( pc & 0xfff00000 ) , r0 += 4
+		add	r1, r1, #1048576	// r1 = ( 0xc0e | ( pc & 0xfff00000 ) ) + 0x100000(1048576)
+		str	r1, [r0]		// *r0 = ( 0xc0e | ( pc & 0xfff00000 ) ) + 0x100000(1048576)
+//
+// 2013/07/06 종료
+//
 		mov	pc, lr
 ENDPROC(__setup_mmu)
 
@@ -780,12 +876,21 @@ __armv4_mmu_cache_on:
 		mov	pc, r12
 
 __armv7_mmu_cache_on:
-		mov	r12, lr
+		mov	r12, lr			//lr을 r12에 저장하는 이유: Stack을 쓰지 않기 위해서.
 #ifdef CONFIG_MMU
 		mrc	p15, 0, r11, c0, c1, 4	@ read ID_MMFR0
+						// MMU에 MMFR0값을 읽어서 r11에 넣는다.
 		tst	r11, #0xf		@ VMSA
+						// MMFR0[3:0](VMSA)를 tst한다.
+						//
+						// tst에 대하여 정리:
+						//    r11&0xf연산을 해서 결과가 0이면 CPSR에 Zero flag가 1이 된다.
+						//
 		movne	r6, #CB_BITS | 0x02	@ !XN
-		blne	__setup_mmu
+						// 현재 설정이 D-Cache WriteBack이므로 CB_BITS는 0xC이고
+						// ne 는 Zero flag가 0이면 명령어 수행
+						// r6 = 0xC | 0x02 = 0x0E 가 된다.
+		blne	__setup_mmu		// VMSA를 지원하면 __setup_mmu로 이동한다.
 		mov	r0, #0
 		mcr	p15, 0, r0, c7, c10, 4	@ drain write buffer
 		tst	r11, #0xf		@ VMSA
@@ -857,14 +962,19 @@ __common_mmu_cache_on:
  * from the start of the block.  Please note this is all position
  * independent code.
  *
- *  r1  = corrupted
+ *  r1  = corrupted      // currupted란 함수 내에서 변경한다는 뜻.
  *  r2  = corrupted
- *  r3  = block offset
+ *  r3  = block offset   // #8
  *  r9  = corrupted
  *  r12 = corrupted
  */
 
 /* 주석의 corrupted 의 의미는? :  */
+//
+// adr:
+// r12:
+// proc_types:
+
 call_cache_fn:	adr	r12, proc_types
 #ifdef CONFIG_CPU_CP15
         /* Coprocessor 에서 processor ID를 가져옴  */
@@ -873,19 +983,25 @@ call_cache_fn:	adr	r12, proc_types
         /* 코드에서 processor ID를 가져옴 */
 		ldr	r9, =CONFIG_PROCESSOR_ID
 #endif
-        /* 
-            .word	0x000f0000		@ new CPU Id
-            .word	0x000f0000
-         */
-        /* 2013/06/29 분석 code 위치 */
+
+// proc_types 중 일부:
+//	.word	0x000f0000		@ new CPU Id
+//	.word	0x000f0000
+
+//
+// 2013/06/29 시작
+//
+
+// addeq에서 eq는 CPSR에 Zero flag가 1이면 실행하라는 뜻.
 1:		ldr	r1, [r12, #0]		@ get value
 		ldr	r2, [r12, #4]		@ get mask
 		eor	r1, r1, r9		@ (real ^ match)
 		tst	r1, r2			@       & mask
- ARM(		addeq	pc, r12, r3		) @ call cache function
+ ARM(		addeq	pc, r12, r3		) @ call cache function``
  THUMB(		addeq	r12, r3			)
  THUMB(		moveq	pc, r12			) @ call cache function
-		add	r12, r12, #PROC_ENTRY_SIZE
+		add	r12, r12, #PROC_ENTRY_SIZE	// proc_type의 다음 단위로 주소 이동
+							//. PROC_ENTRY_SIZE=(4byte * 5항목수)
 		b	1b
 
 /*
@@ -1030,11 +1146,12 @@ proc_types:
 		W(b)	__armv4_mmu_cache_off
 		W(b)	__armv6_mmu_cache_flush
 
-        /* ARMv7 용 cache struct 정의 */
+		//
+		// ARMv7 용 cache struct 정의
+		//
 		.word	0x000f0000		@ new CPU Id
 		.word	0x000f0000
-        /* W 의 의미는? include/asm/unified.h 참고 */
-		W(b)	__armv7_mmu_cache_on
+		W(b)	__armv7_mmu_cache_on	// W 의 의미는? include/asm/unified.h 참고
 		W(b)	__armv7_mmu_cache_off
 		W(b)	__armv7_mmu_cache_flush
 
