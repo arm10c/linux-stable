@@ -893,23 +893,61 @@ __armv7_mmu_cache_on:
 		blne	__setup_mmu		// VMSA를 지원하면 __setup_mmu로 이동한다.
 		mov	r0, #0
 		mcr	p15, 0, r0, c7, c10, 4	@ drain write buffer
+						// data write buffer 용어가 변경 됨 -> data sync barrier (DSB)
+						// Cache 가 아닌데도 hw적으로 data write 되지 않았을 수가 있음
+						// 확실하게 write buffer 있는 data를 memory에 써주도록 함 
+						// A.R.M : 152p, 1484p
 		tst	r11, #0xf		@ VMSA
 		mcrne	p15, 0, r0, c8, c7, 0	@ flush I,D TLBs
+						// invalidate entire unified TLB임, TLB에 있던 data를 무효화 함 
+						// TLB는 page table의 cache임 
+						// MMU를 켜기전에 TLB(cache) 남아 있는 기존 정보를 무효화 함
+						// A.R.M : 1485p, 1470p, 1497p
 #endif
 		mrc	p15, 0, r0, c1, c0, 0	@ read control reg
+						// control register 값을 r0에 넣음
+						// A.R.M : 1705p
 		bic	r0, r0, #1 << 28	@ clear SCTLR.TRE
+						// TRE: TEX remap enable
+						// TEX: type extension -> memory attribute를 확장함
+						// TEX 값을 remap 할수 있는데 하지 않겠다는 의미임
+						// remap의 의미: 다른 위치의 정보로 대채체 한다는 의미임 
+						// A.R.M: 1367p
 		orr	r0, r0, #0x5000		@ I-cache enable, RR cache replacement
+						// control register의 12,14 bit를 set
+						// 12bit: I-cache, 14bit: RR cache replacement - 1: round robin
 		orr	r0, r0, #0x003c		@ write buffer
+						// control register의 5,4,3,2 bit를 set
+						// 5bit: CP15 Barrier enable, 4,3bit: reserved (should be set), 2bit: D-cache 
+						// FIXME : 위에서 barrier enable을 했는데 여기서 다시 CP15 barrier을 enable 하는 이유?
+						// mcr	p15, 0, r0, c7, c10, 4	@ drain write buffer <-- 요기서 했었음 
+						// A.R.M: 1710p
 		bic	r0, r0, #2		@ A (no unaligned access fault)
+						// unaligned access fault 기능을 끄겠다는 뜻.
 		orr	r0, r0, #1 << 22	@ U (v6 unaligned access model)
 						@ (needed for ARM1176)
+						// 22bit: U bit set, arm11 지원 코드 
+						// RAO/SBOP: Read as one, Should be one preserved
+						// arm11은 이 bit가 programmable 함
+						// A.R.M: 2728p
 #ifdef CONFIG_MMU
-#ifdef CONFIG_CPU_ENDIAN_BE8
+#ifdef CONFIG_CPU_ENDIAN_BE8			// Kernel Config에 exynos 5440 설정 확인 필요
 		orr	r0, r0, #1 << 25	@ big-endian page tables
+						// 25bit: exception endian 
+						// exception이 발생시 endian을 big endian으로 처리
+						// page table 처리시 endian을 big endian으로 처리
 #endif
 		mrcne   p15, 0, r6, c2, c0, 2   @ read ttb control reg
+						// TBL용 control register를 r6에 읽어옴
+						// A.R.M: 1722p
 		orrne	r0, r0, #1		@ MMU enabled
 		movne	r1, #0xfffffffd		@ domain 0 = client
+						// DACR (damain access control register) 에 넣을 값임 
+						// page table 변경 없이 access permission의 domain 전체 값을 변경
+						// page table 은 damain 0로 설정 되어 있으므로 page table AP bit로 permission 설정
+						// Client내용: Accesses are checked against the permission bits 
+						//             in the translation tables 
+						// A.R.M: 1558p
 		bic     r6, r6, #1 << 31        @ 32-bit translation system
 		bic     r6, r6, #3 << 0         @ use only ttbr0
 		mcrne	p15, 0, r3, c2, c0, 0	@ load page table pointer
