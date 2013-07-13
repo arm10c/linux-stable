@@ -275,9 +275,13 @@ not_angel:
 		//link reg 에 pc를 저장하고 cache_on로jump
 		bl	cache_on
 
-restart:	adr	r0, LC0
+restart:	adr	r0, LC0			// pc에서 LC0까지의 상대 주소를 r0에 저장
+						//
 		ldmia	r0, {r1, r2, r3, r6, r10, r11, r12}
+						// LC0 에 있는 값들을 순서대로 r1부터 r12까지 저장.
 		ldr	sp, [r0, #28]
+						// LC0 끝부분을 sp에 저장.
+//2013/07/13 종료
 
 		/*
 		 * We might be running at a different address.  We need
@@ -601,7 +605,7 @@ LC0:		.word	LC0			@ r1
 		.word	_edata			@ r6
 		.word	input_data_end - 4	@ r10 (inflated size location)
 		.word	_got_start		@ r11
-		.word	_got_end		@ ip
+		.word	_got_end		@ ip // r12
 		.word	.L_user_stack_end	@ sp
 		.size	LC0, . - LC0
 
@@ -896,44 +900,46 @@ __armv7_mmu_cache_on:
 						// data write buffer 용어가 변경 됨 -> data sync barrier (DSB)
 						// Cache 가 아닌데도 hw적으로 data write 되지 않았을 수가 있음
 						// 확실하게 write buffer 있는 data를 memory에 써주도록 함 
-						// A.R.M : 152p, 1484p
+						// A.R.M : 152p(A3.8.3), 1484p(Table B3-42)
 		tst	r11, #0xf		@ VMSA
 		mcrne	p15, 0, r0, c8, c7, 0	@ flush I,D TLBs
 						// invalidate entire unified TLB임, TLB에 있던 data를 무효화 함 
 						// TLB는 page table의 cache임 
 						// MMU를 켜기전에 TLB(cache) 남아 있는 기존 정보를 무효화 함
-						// A.R.M : 1485p, 1470p, 1497p
+						// A.R.M : 1485p(Table B3-42), 1470p(B3.17.1), 1497p(B3.18.7)
 #endif
 		mrc	p15, 0, r0, c1, c0, 0	@ read control reg
 						// control register 값을 r0에 넣음
-						// A.R.M : 1705p
+						// A.R.M : 1705p(B4.1.130 SCTLR, System Control Register, VMSA)
 		bic	r0, r0, #1 << 28	@ clear SCTLR.TRE
 						// TRE: TEX remap enable
 						// TEX: type extension -> memory attribute를 확장함
 						// TEX 값을 remap 할수 있는데 하지 않겠다는 의미임
 						// remap의 의미: 다른 위치의 정보로 대채체 한다는 의미임 
-						// A.R.M: 1367p
+						// A.R.M: 1367p(B3.8.2 Short-descriptor format memory region attributes, without TEX remap)
 		orr	r0, r0, #0x5000		@ I-cache enable, RR cache replacement
 						// control register의 12,14 bit를 set
 						// 12bit: I-cache, 14bit: RR cache replacement - 1: round robin
 		orr	r0, r0, #0x003c		@ write buffer
-						// control register의 5,4,3,2 bit를 set
+						// 0x3c == 0b111100
 						// 5bit: CP15 Barrier enable, 4,3bit: reserved (should be set), 2bit: D-cache 
 						// FIXME : 위에서 barrier enable을 했는데 여기서 다시 CP15 barrier을 enable 하는 이유?
 						// mcr	p15, 0, r0, c7, c10, 4	@ drain write buffer <-- 요기서 했었음 
 						// A.R.M: 1710p
+						// SCTLR[5]   - CP15BEN(CP15 barrier enable)
+						// SCTLR[4:3] - Reserved, RAO/SBOP(Read-As-One, Should-Be-One-or-Preserved on writes.)
+						// SCTLR[2]   - Cache Enable
 		bic	r0, r0, #2		@ A (no unaligned access fault)
 						// unaligned access fault 기능을 끄겠다는 뜻.
 		orr	r0, r0, #1 << 22	@ U (v6 unaligned access model)
 						@ (needed for ARM1176)
-						// 22bit: U bit set, arm11 지원 코드 
-						// RAO/SBOP: Read as one, Should be one preserved
+						// SCTLR[22]  - U bit set, arm11 지원 코드
 						// arm11은 이 bit가 programmable 함
-						// A.R.M: 2728p
+						// A.R.M: 2728p(Glossary)
 #ifdef CONFIG_MMU
-#ifdef CONFIG_CPU_ENDIAN_BE8			// Kernel Config에 exynos 5440 설정 확인 필요
+#ifdef CONFIG_CPU_ENDIAN_BE8			// exynos 5440의 config에는 꺼져있음.
 		orr	r0, r0, #1 << 25	@ big-endian page tables
-						// 25bit: exception endian 
+						// SCTLR[25]  - EE(Exception Endianness)
 						// exception이 발생시 endian을 big endian으로 처리
 						// page table 처리시 endian을 big endian으로 처리
 #endif
@@ -949,17 +955,55 @@ __armv7_mmu_cache_on:
 						//             in the translation tables 
 						// A.R.M: 1558p
 		bic     r6, r6, #1 << 31        @ 32-bit translation system
+						// A.R.M: 1722p
+						// Large의 경우 40bit
+						// 
 		bic     r6, r6, #3 << 0         @ use only ttbr0
+						// A.R.M : 1726p, 1723p, 1330p(B3.5.4)
+						// 여기서는 TTBR0의 폭을 [31:14-N(0)] 으로 설정.
+						// TTBR0은 User가 쓰고, TTBR1은 커널이 사용한다.
+						//
+						// FIXME: ttbr이 무엇인가?
+						//
+						// 약어
+						//   - TTBR: Translation Table Base Register
+						//   - TLB : Translation Lookaside Buffer
+						//
+						// 참조
+						//  - http://wiki.kldp.org/KoreanDoc/html/EmbeddedKernel-KLDP/arm.mmu.html
+						//  - http://kth3321.blogspot.kr/2013/04/arm-cortex-1.html
+
 		mcrne	p15, 0, r3, c2, c0, 0	@ load page table pointer
+						// TTBR0에 r3를 저장.
+						// r3 = 0x40008000 - 0x4000(16384) = 0x40004000
+
 		mcrne	p15, 0, r1, c3, c0, 0	@ load domain access control
+						// 위에서 도메인 D0를 client로 설정한 것을 쓴다.
+						// r1 = #0xfffffffd
+
 		mcrne   p15, 0, r6, c2, c0, 2   @ load ttb control
+						// TTBCR에 r6를 저장.
+						// TTBCR[31, 1,0]을 clear
 #endif
-		mcr	p15, 0, r0, c7, c5, 4	@ ISB
+		mcr	p15, 0, r0, c7, c5, 4	@ ISB......<1>
+						// ISB: Instruction Barrier
+						// 위에서 r0를 다음과 같이 설정하였음.
+						//
+						// A.R.M : 389p (A8.8.53)
+						//    ISB가 필요한 경우
+						//       1. Address Space Identifier (ASID)
+						//       2. TLB maintenance operations, 
+						//       3. branch predictor maintenance operations, 
+						//       4. and all changes to the CP15 registers
 		mcr	p15, 0, r0, c1, c0, 0	@ load control register
+						// r0에 설정했던 내용을 CP15.System Control Register에 Load
 		mrc	p15, 0, r0, c1, c0, 0	@ and read it back
 		mov	r0, #0
-		mcr	p15, 0, r0, c7, c5, 4	@ ISB
-		mov	pc, r12
+		mcr	p15, 0, r0, c7, c5, 4	@ ISB......<2>
+						// FIXME: ISB<1>, <2>의 역할은 무엇?
+						// 참조
+						//   - http://www.iamroot.org/xe/Kernel_8_ARM/58427
+		mov	pc, r12			// 'bl	cache_on'을 호출했던 곳으로 복귀
 
 __fa526_cache_on:
 		mov	r12, lr
@@ -1526,5 +1570,12 @@ reloc_code_end:
 
 		.align
 		.section ".stack", "aw", %nobits
-.L_user_stack:	.space	4096
+
+.L_user_stack:	.space	4096			// Stack공간을 4K만큼 잡음
 .L_user_stack_end:
+
+
+
+
+'
+
