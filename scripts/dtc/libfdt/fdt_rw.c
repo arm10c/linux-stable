@@ -413,6 +413,9 @@ static void _fdt_packblocks(const char *old, char *new,
 	fdt_set_size_dt_strings(new, fdt_size_dt_strings(old));
 }
 
+//void *fdt = r0 = atags/device tree pointer
+//void *buf = r0 = atags/device tree pointer
+//int bufsize = r2 = (sp - _edata)
 int fdt_open_into(const void *fdt, void *buf, int bufsize)
 {
 	int err;

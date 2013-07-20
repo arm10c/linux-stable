@@ -282,27 +282,31 @@ restart:	adr	r0, LC0			// pc에서 LC0까지의 상대 주소를 r0에 저장
 		ldr	sp, [r0, #28]
 						// LC0 끝부분을 sp에 저장.
 //2013/07/13 종료
+//2013/07/20 시작
 
 		/*
 		 * We might be running at a different address.  We need
 		 * to fix up various pointers.
 		 */
 		sub	r0, r0, r1		@ calculate the delta offset
+						//r0 : runtime의 LC0 address, r1 : compile time의 LC0 address
 		add	r6, r6, r0		@ _edata
+						// r6 : runtime의 _edata
 		add	r10, r10, r0		@ inflated kernel size location
+						// r10 : runtime 의 inflated kernel size location
 
 		/*
 		 * The kernel build system appends the size of the
 		 * decompressed kernel at the end of the compressed data
 		 * in little-endian form.
 		 */
-		ldrb	r9, [r10, #0]
-		ldrb	lr, [r10, #1]
-		orr	r9, r9, lr, lsl #8
-		ldrb	lr, [r10, #2]
-		ldrb	r10, [r10, #3]
-		orr	r9, r9, lr, lsl #16
-		orr	r9, r9, r10, lsl #24
+		ldrb	r9, [r10, #0]		//r9 = *(input_data_end - 4)
+		ldrb	lr, [r10, #1]		//lr = *(input_data_end - 3)
+		orr	r9, r9, lr, lsl #8	//r9 = r9 | (lr << 8)
+		ldrb	lr, [r10, #2]		//lr = *(input_data_end - 2)
+		ldrb	r10, [r10, #3]		//r10 = *(input_data_end - 1)
+		orr	r9, r9, lr, lsl #16	//r9 = r9 | (lr << 16)
+		orr	r9, r9, r10, lsl #24	//r9 = r9 | (lr << 24)
 
 #ifndef CONFIG_ZBOOT_ROM
 		/* malloc space is above the relocated stack (64k max) */
@@ -314,7 +318,7 @@ restart:	adr	r0, LC0			// pc에서 LC0까지의 상대 주소를 r0에 저장
 		 * but someone could still run this code from RAM,
 		 * in which case our reference is _edata.
 		 */
-		mov	r10, r6
+		mov	r10, r6			//
 #endif
 
 		mov	r5, #0			@ init dtb size to 0
@@ -338,12 +342,13 @@ restart:	adr	r0, LC0			// pc에서 LC0까지의 상대 주소를 r0에 저장
  * dtb data will get relocated along with the kernel if necessary.
  */
 
-		ldr	lr, [r6, #0]
+		ldr	lr, [r6, #0]		//lr = *(_edata) zImage의 끝의 값
 #ifndef __ARMEB__
 		ldr	r1, =0xedfe0dd0		@ sig is 0xd00dfeed big endian
 #else
 		ldr	r1, =0xd00dfeed
 #endif
+		//DTB를 사용하면 위 값이 zImage의 끝에 넣어져 있다.
 		cmp	lr, r1
 		bne	dtb_check_done		@ not found
 
@@ -357,11 +362,11 @@ restart:	adr	r0, LC0			// pc에서 LC0까지의 상대 주소를 r0에 저장
 		 * area.  No GOT fixup has occurred yet, but none of the
 		 * code we're about to call uses any global variable.
 		*/
-		add	sp, sp, #0x10000
-		stmfd	sp!, {r0-r3, ip, lr}
-		mov	r0, r8
-		mov	r1, r6
-		sub	r2, sp, r6
+		add	sp, sp, #0x10000	    //sp = sp + 64k ( sp사이즈를 + 64k한다)
+		stmfd	sp!, {r0-r3, ip, lr}	    //*(sp -4) = r0, *(sp - 8) = r1, ... *(sp - 24) = lr, sp -= 24
+		mov	r0, r8			    //r0 = atags/device tree pointer
+		mov	r1, r6			    //r1 = _edata
+		sub	r2, sp, r6		    //r2 = sp - _edata
 		bl	atags_to_fdt
 
 		/*
@@ -604,6 +609,8 @@ LC0:		.word	LC0			@ r1
 		.word	_end			@ r3
 		.word	_edata			@ r6
 		.word	input_data_end - 4	@ r10 (inflated size location)
+		// -4를 하는 이유는? (align 2가 없는데 무조건 -4를 해도 되는가?는 아님)
+		// input_data_end의 끝에 압축을 푼 kernel의 사이즈가 들어가므로 -4를 해줌으로 실제 input_data_end가 됨 
 		.word	_got_start		@ r11
 		.word	_got_end		@ ip // r12
 		.word	.L_user_stack_end	@ sp

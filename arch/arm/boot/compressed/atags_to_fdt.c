@@ -92,19 +92,23 @@ static void merge_fdt_bootargs(void *fdt, const char *fdt_cmdline)
  *    = 1 -> bad ATAG (may retry with another possible ATAG pointer)
  *    < 0 -> error from libfdt
  */
+//arch/arm/boot/compressed/head.S 에서 호출됨
+//void *atag_list = r0 = atags/device tree pointer
+//void *fdt = r1 = _edata
+//int total_space = r2 = (sp - _edata)
 int atags_to_fdt(void *atag_list, void *fdt, int total_space)
 {
 	struct tag *atag = atag_list;
-	uint32_t mem_reg_property[2 * NR_BANKS];
+	uint32_t mem_reg_property[2 * NR_BANKS];//NR_BANKS = 8
 	int memcount = 0;
 	int ret;
 
 	/* make sure we've got an aligned pointer */
-	if ((u32)atag_list & 0x3)
+	if ((u32)atag_list & 0x3)   //4BYTE align 확인(유효한 atag_list인지 확인)
 		return 1;
 
 	/* if we get a DTB here we're done already */
-	if (*(u32 *)atag_list == fdt32_to_cpu(FDT_MAGIC))
+	if (*(u32 *)atag_list == fdt32_to_cpu(FDT_MAGIC)) // fdt32_to_cpu() CONFIG 설정에 맞추어 FDT_MAGIC를 바이트오더함
 	       return 0;
 
 	/* validate the ATAG */
@@ -114,10 +118,12 @@ int atags_to_fdt(void *atag_list, void *fdt, int total_space)
 		return 1;
 
 	/* let's give it all the room it could need */
+	//ftd의 struct alloc/초기화 해준다.
 	ret = fdt_open_into(fdt, fdt, total_space);
 	if (ret < 0)
 		return ret;
 
+	//atag_list hdr의 tag(type)을 보고 ftd를 append 한다 
 	for_each_tag(atag, atag_list) {
 		if (atag->hdr.tag == ATAG_CMDLINE) {
 			/* Append the ATAGS command line to the device tree
