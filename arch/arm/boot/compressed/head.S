@@ -374,18 +374,22 @@ restart:	adr	r0, LC0			// pc에서 LC0까지의 상대 주소를 r0에 저장
 		 * pointed by r8.  Try the typical 0x100 offset from start
 		 * of RAM and hope for the best.
 		 */
+		// start of ram + offset 0x100 보통 ATAG가 오는 주소
+		// 0x100의 의미: 통상적인 ATAG의 위치 
 		cmp	r0, #1
-		sub	r0, r4, #TEXT_OFFSET
+		sub	r0, r4, #TEXT_OFFSET	    // TEXT_OFFSET = 0x00008000
 		add	r0, r0, #0x100
 		mov	r1, r6
 		sub	r2, sp, r6
 		bleq	atags_to_fdt
 
-		ldmfd	sp!, {r0-r3, ip, lr}
-		sub	sp, sp, #0x10000
+		ldmfd	sp!, {r0-r3, ip, lr}	    // stack에 넣은 값 복원
+		sub	sp, sp, #0x10000	    // malloc 으로 잡아 놓은 값 복원
 #endif
 
 		mov	r8, r6			@ use the appended device tree
+						// 위에서 fdt 설정 완료. r8 을 다른 용도로 사용 가능 
+						// r8: dtb address 값
 
 		/*
 		 * Make sure that the DTB doesn't end up in the final
@@ -393,11 +397,13 @@ restart:	adr	r0, LC0			// pc에서 LC0까지의 상대 주소를 r0에 저장
 		 * kernel size to compensate if that .bss size is larger
 		 * than the relocated code.
 		 */
-		ldr	r5, =_kernel_bss_size
+		ldr	r5, =_kernel_bss_size	// = ?: pesudo instruction.
+						// mov 와 동작은 동일, 32bit 전체를 사용
+						// _kernel_bss_size: 압축 풀린 kernel bss 사이즈 
 		adr	r1, wont_overwrite
-		sub	r1, r6, r1
-		subs	r1, r5, r1
-		addhi	r9, r9, r1
+		sub	r1, r6, r1		// r1 = device tree 주소 -  wont_overwrite의 주소 
+		subs	r1, r5, r1		// _kernel_bss_size - r1
+		addhi	r9, r9, r1		// if (r5 > r1) 
 
 		/* Get the dtb's size */
 		ldr	r5, [r6, #4]
@@ -414,9 +420,9 @@ restart:	adr	r0, LC0			// pc에서 LC0까지의 상대 주소를 r0에 저장
 		bic	r5, r5, #7
 
 		/* relocate some pointers past the appended dtb */
-		add	r6, r6, r5
-		add	r10, r10, r5
-		add	sp, sp, r5
+		add	r6, r6, r5	    // r6(_edata) = dtb 시작주소 + dtb size
+		add	r10, r10, r5	    // r10(zimage 끝주소) = r10 + dtb size
+		add	sp, sp, r5	    // sp = sp + dtb size
 dtb_check_done:
 #endif
 
@@ -429,13 +435,16 @@ dtb_check_done:
  *   r4 - 16k page directory >= r10 -> OK
  *   r4 + image length <= address of wont_overwrite -> OK
  */
-		add	r10, r10, #16384
-		cmp	r4, r10
-		bhs	wont_overwrite
+		add	r10, r10, #16384    // r10 = r10(zimage 끝주소)  dtb size + 16K
+		cmp	r4, r10		    // r4 : final kernal address
+		bhs	wont_overwrite	    // 겹치지 않는 경우
 		add	r10, r4, r9
 		adr	r9, wont_overwrite
 		cmp	r10, r9
-		bls	wont_overwrite
+		bls	wont_overwrite	    
+		
+		
+// 겹치는 경우
 
 /*
  * Relocate ourselves past the end of the decompressed kernel.
@@ -449,6 +458,8 @@ dtb_check_done:
 		 * the relocation code added. This avoids overwriting
 		 * ourself when the offset is small.
 		 */
+		// 256 더하는 이유? 겹치지 않도록 여유공간 확보 하기위함. 
+		// r10 = end of the decompressed kernel + (reloc_code_end - restart + 256) & ~255)
 		add	r10, r10, #((reloc_code_end - restart + 256) & ~255)
 		bic	r10, r10, #255
 
@@ -463,7 +474,8 @@ dtb_check_done:
 		cmp	r0, #HYP_MODE
 		bne	1f
 
-		bl	__hyp_get_vectors
+		bl	__hyp_get_vectors	// HVC vector call 0 을 수행
+						// FIXME: Hyperviser 코드분석시 추후 검토 요망
 		sub	r0, r0, r5
 		add	r0, r0, r10
 		bl	__hyp_set_vectors
@@ -471,14 +483,18 @@ dtb_check_done:
 #endif
 
 		sub	r9, r6, r5		@ size to copy
+						// r6 : _edata, r5: restart 위치 
 		add	r9, r9, #31		@ rounded up to a multiple
 		bic	r9, r9, #31		@ ... of 32 bytes
-		add	r6, r9, r5
-		add	r9, r9, r10
+		add	r6, r9, r5		// r6 = size + restart 위치 -> source end address 구한 결과
+		add	r9, r9, r10             // destination end address 구한 결과
 
-1:		ldmdb	r6!, {r0 - r3, r10 - r12, lr}
-		cmp	r6, r5
-		stmdb	r9!, {r0 - r3, r10 - r12, lr}
+		
+		
+1:		ldmdb	r6!, {r0 - r3, r10 - r12, lr}	// decrement before
+							// r0 = *(r6 - 4) ... lr = *(r6 - 32) r6 = r6 - 32
+		cmp	r6, r5				// source end address 까지 왔는지 비교	
+		stmdb	r9!, {r0 - r3, r10 - r12, lr}	// load한것 store 
 		bhi	1b
 
 		/* Preserve offset to relocated code. */
@@ -1382,8 +1398,13 @@ hierarchical:
 		mcr	p15, 0, r10, c7, c10, 5	@ DMB
 		stmfd	sp!, {r0-r7, r9-r11}
 		mrc	p15, 1, r0, c0, c0, 1	@ read clidr
+						// cache level id register
+						// T.R.M: 121p(4.3.22)
 		ands	r3, r0, #0x7000000	@ extract loc from clidr
+						// level of coherency
+						// flush 하기 위한 cache level 값을 확인
 		mov	r3, r3, lsr #23		@ left align loc bit field
+						// 하위 0 하나를 남기고 0을 모두 없앰
 		beq	finished		@ if loc is 0, then no need to clean
 		mov	r10, #0			@ start clean at cache level 0
 loop1:
