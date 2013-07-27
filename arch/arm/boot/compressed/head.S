@@ -507,8 +507,10 @@ dtb_check_done:
 
 		bl	cache_clean_flush
 
-		adr	r0, BSYM(restart)
-		add	r0, r0, r6
+		adr	r0, BSYM(restart)	// 복사를 했던 wont_overwrite 로 어떻게 가서 수행이 되는지?
+						// - 조건에 의해서 restart에 시작해도 cache, DTB 작업을 하지않고
+						// - wont_overwrite jump 하도록 되어 있음
+		add	r0, r0, r6		// r6: offset to relocated code 임 
 		mov	pc, r0
 
 wont_overwrite:
@@ -526,19 +528,20 @@ wont_overwrite:
  *   sp  = stack pointer
  */
 		orrs	r1, r0, r5
-		beq	not_relocated
+		beq	not_relocated		// orr 연산결과 jump 하지 않음
 
-		add	r11, r11, r0
-		add	r12, r12, r0
+		add	r11, r11, r0		// r11 : 복사한 곳의 GOT start 값임
+		add	r12, r12, r0		// r12 : 복사한 곳의 GOT end 값임
 
 #ifndef CONFIG_ZBOOT_ROM
+		// FIXME: GOT, PLT를 사용하지 않을 것 같은데 이 작업이 필요한 이유??
 		/*
 		 * If we're running fully PIC === CONFIG_ZBOOT_ROM = n,
 		 * we need to fix up pointers into the BSS region.
 		 * Note that the stack pointer has already been fixed up.
 		 */
-		add	r2, r2, r0
-		add	r3, r3, r0
+		add	r2, r2, r0		// r2 : 복사한 곳의 BSS start 값임
+		add	r3, r3, r0		// r3 : 복사한 곳의 BSS end 값임
 
 		/*
 		 * Relocate all entries in the GOT table.
@@ -554,8 +557,8 @@ wont_overwrite:
 		blo	1b
 
 		/* bump our bss pointers too */
-		add	r2, r2, r5
-		add	r3, r3, r5
+		add	r2, r2, r5		// r2 : 복사한 곳의 BSS start 값 + appended dtb size 
+		add	r3, r3, r5		// r3 : 복사한 곳의 BSS end 값 + appended dtb size 
 
 #else
 
@@ -1394,37 +1397,64 @@ __armv7_mmu_cache_flush:
 		beq	hierarchical
 		mcr	p15, 0, r10, c7, c14, 0	@ clean+invalidate D
 		b	iflush
+// 2013/07/20 종료
+// 2013/07/27 시작
 hierarchical:
 		mcr	p15, 0, r10, c7, c10, 5	@ DMB
 		stmfd	sp!, {r0-r7, r9-r11}
 		mrc	p15, 1, r0, c0, c0, 1	@ read clidr
-						// cache level id register
+						// CACHE LEVEL ID REGISTER
 						// T.R.M: 121p(4.3.22)
 		ands	r3, r0, #0x7000000	@ extract loc from clidr
 						// level of coherency
 						// flush 하기 위한 cache level 값을 확인
 		mov	r3, r3, lsr #23		@ left align loc bit field
 						// 하위 0 하나를 남기고 0을 모두 없앰
+						// r3 = 4, loc = 2 (cortex a15)
+						// loc가 2는 memory hierarchy 가 3차란 뜻임
 		beq	finished		@ if loc is 0, then no need to clean
+						// 무시되고 넘어감 
 		mov	r10, #0			@ start clean at cache level 0
 loop1:
 		add	r2, r10, r10, lsr #1	@ work out 3x current cache level
+						// CLIDR의 register 의 Ctype# 의 데이터를 뽑기 위함임.
+						// 3x의 의미는 계산용 숫자임
+						// 순수 코드는 1.5배임, LSB에 0이 하나 추가 되어 있음
 		mov	r1, r0, lsr r2		@ extract cache type bits from clidr
 		and	r1, r1, #7		@ mask of the bits for current cache only
+						// r1은 Ctype의 값
 		cmp	r1, #2			@ see what cache we have at this level
+						// Data cache 인지 확인 
+						// A.R.M (B4.1.20)
 		blt	skip			@ skip if no cache, or just i-cache
 		mcr	p15, 2, r10, c0, c0, 0	@ select current cache level in cssr
+						// Cache Size Selection Register 
+						// A.R.M (B4.1.41)
 		mcr	p15, 0, r10, c7, c5, 4	@ isb to sych the new cssr&csidr
 		mrc	p15, 1, r1, c0, c0, 0	@ read the new csidr
+						// A15 기준 : line size = 2 (의미 16 word)
+						// L1 cache : Associativity = 1 (의미 2 way)
+						// L2 cache : Associativity = F (의미 16 way)
+						// Cache Size ID Register 
+						// A.R.M (B4.1.19)
 		and	r2, r1, #7		@ extract the length of the cache lines
+						// r2 = cache lines
 		add	r2, r2, #4		@ add 4 (line length offset)
 		ldr	r4, =0x3ff
 		ands	r4, r4, r1, lsr #3	@ find maximum number on the way size
+						// r1 >> 3 = Associativity 값 추출
+						// r4 = CSIDR의 Associativity값
+						// Associativity의 의미?? N way cache, direct cache의 방법
+						// cache line 의 관리 단위 : way 
 		clz	r5, r4			@ find bit position of way size increment
+						// clz : count leading zero 연산 
 		ldr	r7, =0x7fff
 		ands	r7, r7, r1, lsr #13	@ extract max number of the index size
+						// r1 >> 13 = Numset 값 추출
+						// r7 = CSIDR의 Numset값
 loop2:
 		mov	r9, r4			@ create working copy of max way size
+						// r9 = CSIDR의 Associativity값
 loop3:
  ARM(		orr	r11, r10, r9, lsl r5	) @ factor way and cache number into r11
  ARM(		orr	r11, r11, r7, lsl r2	) @ factor index number into r11
@@ -1433,21 +1463,30 @@ loop3:
  THUMB(		lsl	r6, r7, r2		)
  THUMB(		orr	r11, r11, r6		) @ factor index number into r11
 		mcr	p15, 0, r11, c7, c14, 2	@ clean & invalidate by set/way
+						// r11 : 해당 level의 cache 정보 
+						// A.R.M (B4.1.45)
+						// 민홍교수님 2차 세미나 자료 (p28)
 		subs	r9, r9, #1		@ decrement the way
 		bge	loop3
 		subs	r7, r7, #1		@ decrement the index
 		bge	loop2
 skip:
 		add	r10, r10, #2		@ increment cache number
-		cmp	r3, r10
+		cmp	r3, r10			// r3 = loc * 2 값, r10 = 위에서 연산한 cache의 level
 		bgt	loop1
+
+// 모든 data cache를 flush 하였음
+
 finished:
-		ldmfd	sp!, {r0-r7, r9-r11}
+		ldmfd	sp!, {r0-r7, r9-r11}	// stack에 저장한 값 pop
 		mov	r10, #0			@ swith back to cache level 0
 		mcr	p15, 2, r10, c0, c0, 0	@ select current cache level in cssr
 iflush:
 		mcr	p15, 0, r10, c7, c10, 4	@ DSB
 		mcr	p15, 0, r10, c7, c5, 0	@ invalidate I+BTB
+						// BTB : Branch Target Buffer 
+						// Branch prediction을 했다는 가정하에 기존의 history를 삭제
+						// A.R.M (N3.2)
 		mcr	p15, 0, r10, c7, c10, 4	@ DSB
 		mcr	p15, 0, r10, c7, c5, 4	@ ISB
 		mov	pc, lr
@@ -1593,6 +1632,8 @@ __enter_kernel:
 		mov	r0, #0			@ must be 0
  ARM(		mov	pc, r4	)		@ call kernel
  THUMB(		bx	r4	)		@ entry point is always ARM
+
+// 2013/07/27 종료
 
 reloc_code_end:
 
