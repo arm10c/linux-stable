@@ -40,8 +40,8 @@
  * 현재, 0x8000을 시작 주소라고 생각할 수 있고
  * (KERNEL_RAM_VADDR >= PAGE_OFFSET + 0x4000) 조건에 대해 여유가 있습니다.
  */
-// 2013/8/11 시작
-// excynos 기준
+// 2013/8/10 시작
+// exynos 기준
 // PAGE_OFFSET: 0xC0000000, TEXT_OFFSET: 0x8000
 #define KERNEL_RAM_VADDR	(PAGE_OFFSET + TEXT_OFFSET)
 #if (KERNEL_RAM_VADDR & 0xffff) != 0x8000
@@ -55,7 +55,7 @@
 #define PMD_ORDER	3
 #else
 #define PG_DIR_SIZE	0x4000
-// PMD: ?? 
+// PMD: Page Middle Directory 
 #define PMD_ORDER	2
 #endif
 
@@ -63,6 +63,9 @@
 	.equ	swapper_pg_dir, KERNEL_RAM_VADDR - PG_DIR_SIZE
 	// 연산결과 swapper_pg_dir : 0xc0004000
 
+
+	//TEXT_OFFSET = 0x8000
+	//PG_DIR_SIZE = 0x4000
 	.macro	pgtbl, rd, phys
 	add	\rd, \phys, #TEXT_OFFSET - PG_DIR_SIZE
 	.endm
@@ -145,11 +148,14 @@ ENTRY(stext)
 	 * r1 = machine no, r2 = atags or dtb,
 	 * r8 = phys_offset, r9 = cpuid, r10 = procinfo
 	 */
+//dtb/atags 가 유효한지 확인
 	bl	__vet_atags
 #ifdef CONFIG_SMP_ON_UP
+//멀티코어 인지 확인
 	bl	__fixup_smp
 #endif
 #ifdef CONFIG_ARM_PATCH_PHYS_VIRT
+//__pv_table에 대한 주소보정
 	bl	__fixup_pv_table
 #endif
 	bl	__create_page_tables
@@ -199,11 +205,13 @@ ENDPROC(stext)
  *  r4 = physical page table address
  */
 __create_page_tables:
+	//r4 = 현재의 page table address
 	pgtbl	r4, r8				@ page table address
 
 	/*
 	 * Clear the swapper page table
 	 */
+	//0x40004000~40008000(page table저장영역)를 모두 0으로 클리어
 	mov	r0, r4
 	mov	r3, #0
 	add	r6, r0, #PG_DIR_SIZE
@@ -244,6 +252,10 @@ __create_page_tables:
 #endif
 #endif
 
+	//arch/arm/include/asm/procinfo.h : struct proc_info_list 의 __cpu_mm_mmu_flags 값을 읽어옴
+	//mmu section ENTRY 에 들어갈 속성값 : PMD_TYPE_SECT | PMD_SECT_AP_WRITE | PMD_SECT_AP_READ | \
+	//		PMD_SECT_AF | PMD_FLAGS_SMP | \mm_mmuflags = 0)
+	//section ENTRY 의 base 주소를 제외한 속성값으로 사용된다. 
 	ldr	r7, [r10, #PROCINFO_MM_MMUFLAGS] @ mm_mmuflags
 
 	/*
@@ -252,6 +264,7 @@ __create_page_tables:
 	 *  '__enable_mmu'을 위한 identity mapping 생성하기
 	 * 이 identity mapping은 paging_init() 함수에 의해 제거될 것입니다.
 	 */
+	//SECTION_SHIFT = arch/arm/include/asm/pgtable-2level.h 의 #define SECTION_SHIFT 20
 	adr	r0, __turn_mmu_on_loc
 	ldmia	r0, {r3, r5, r6}
 	sub	r0, r0, r3			@ virt->phys offset
@@ -260,24 +273,37 @@ __create_page_tables:
 	mov	r5, r5, lsr #SECTION_SHIFT
 	mov	r6, r6, lsr #SECTION_SHIFT
 
+	//r3 : SECTION ENTRY base address : MMU L1 table 1M단위
+	//r7 : SECTION ENTRY 속성
+	// __turn_mmu_on  함수는 가상과 물리 주소를 1:1로 맵핑해두고, 나머지는 해당 가상주소를 구하여 셋팅
 1:	orr	r3, r7, r5, lsl #SECTION_SHIFT	@ flags + kernel base
 	str	r3, [r4, r5, lsl #PMD_ORDER]	@ identity mapping
 	cmp	r5, r6
 	addlo	r5, r5, #1			@ next section
 	blo	1b
+	//1:1 맵핑 끝
 
 	/*
 	 * Map our RAM from the start to the end of the kernel .bss section.
 	 * 메모리 맵핑:  커널 .bss section의 시작에서 끝까지
 	 */
+	//PAGE_OFFSET = 0xc0000000
+	//PMD_ORDER = 2
+	// 0x40004000 + (0xC0000000 >> ( 20 - 2 ))
+	// r0 = c0000000에 해당하는 페이지엔트리 base주소(가상주소)
+	// r6 = vmlinux 종료 주소값 - 1
+	// r8 = 0x40000000(PHYS_OFFSET)
 	add	r0, r4, #PAGE_OFFSET >> (SECTION_SHIFT - PMD_ORDER)
 	ldr	r6, =(_end - 1)
 	orr	r3, r8, r7
+	// r6 = 커널의 마지막 주소값에 해당하는 페이지 엔트리 가상 주소값
+	// r3 = SECTION ENTRY base address : MMU L1 table 1M단위(가변) + 속성
 	add	r6, r4, r6, lsr #(SECTION_SHIFT - PMD_ORDER)
 1:	str	r3, [r0], #1 << PMD_ORDER
 	add	r3, r3, #1 << SECTION_SHIFT
 	cmp	r0, r6
 	bls	1b
+// 2013/08/10 종료
 
 #ifdef CONFIG_XIP_KERNEL
 	/*
@@ -546,6 +572,7 @@ ENDPROC(__turn_mmu_on)
 	// #define __INIT		.section	".init.text","ax"
 	__INIT
 __fixup_smp:
+// FIXME 멀티코어가 아닌경우, 보정작업을 한다??
 	// r9: 0x410fc0f0 <- CPU ID
 	// __v7_ca15mp_proc_info:
 	// .long	0x410fc0f0
@@ -554,6 +581,7 @@ __fixup_smp:
 	teq	r3, #0x000f0000		@ CPU ID supported?
 	bne	__fixup_smp_on_up	@ no, assume UP
 
+	//ARM 11MPCore 인지 확인후 맞으면 리턴
 	bic	r3, r9, #0x00ff0000
 	bic	r3, r3, #0x0000000f	@ mask 0xff00fff0
 	mov	r4, #0x41000000
@@ -562,6 +590,8 @@ __fixup_smp:
 	teq	r3, r4			@ ARM 11MPCore?
 	moveq	pc, lr			@ yes, assume SMP
 
+	//A.R.M B4.1.106 MPIDR, Multiprocessor Affinity Register, VMSA
+	//해당 마스크 값이 10 경우에만 smp(멀티코어)가 되어 리턴
 	mrc	p15, 0, r0, c0, c0, 5	@ read MPIDR
 	and	r0, r0, #0xc0000000	@ multiprocessing extensions and
 	teq	r0, #0x80000000		@ not part of a uniprocessor system?
@@ -637,6 +667,7 @@ __fixup_pv_table:
 	add	r4, r4, r3	@ adjust table start address
 	add	r5, r5, r3	@ adjust table end address
 	add	r7, r7, r3	@ adjust __pv_phys_offset address
+	//물리메모리의 주소 - 논리메모리(컴파일시결정)의 주소 = PHYS_OFFSET
 	str	r8, [r7]	@ save computed PHYS_OFFSET to __pv_phys_offset
 	mov	r6, r3, lsr #24	@ constant for add/sub instructions
 	teq	r3, r6, lsl #24 @ must be 16MiB aligned
