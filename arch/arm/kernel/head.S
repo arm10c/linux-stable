@@ -40,22 +40,28 @@
  * 현재, 0x8000을 시작 주소라고 생각할 수 있고
  * (KERNEL_RAM_VADDR >= PAGE_OFFSET + 0x4000) 조건에 대해 여유가 있습니다.
  */
+// 2013/8/11 시작
+// excynos 기준
+// PAGE_OFFSET: 0xC0000000, TEXT_OFFSET: 0x8000
 #define KERNEL_RAM_VADDR	(PAGE_OFFSET + TEXT_OFFSET)
 #if (KERNEL_RAM_VADDR & 0xffff) != 0x8000
 #error KERNEL_RAM_VADDR must start at 0xXXXX8000
 #endif
 
+// LPAE: Large physical address extensions
 #ifdef CONFIG_ARM_LPAE
 	/* LPAE requires an additional page for the PGD */
 #define PG_DIR_SIZE	0x5000
 #define PMD_ORDER	3
 #else
 #define PG_DIR_SIZE	0x4000
+// PMD: ?? 
 #define PMD_ORDER	2
 #endif
 
 	.globl	swapper_pg_dir
 	.equ	swapper_pg_dir, KERNEL_RAM_VADDR - PG_DIR_SIZE
+	// 연산결과 swapper_pg_dir : 0xc0004000
 
 	.macro	pgtbl, rd, phys
 	add	\rd, \phys, #TEXT_OFFSET - PG_DIR_SIZE
@@ -93,6 +99,8 @@
  */
 	.arm
 
+	// vmlinux.lds.s 의 아래 section에 정의 되어 있음 
+        // #define __HEAD		.section	".head.text","ax"
 	__HEAD
 ENTRY(stext)
 
@@ -113,6 +121,7 @@ ENTRY(stext)
 	bl	__lookup_processor_type		@ r5=procinfo r9=cpuid
 	movs	r10, r5				@ invalid processor (r5=0)?
  THUMB( it	eq )		@ force fixup-able long branch encoding
+	// CPU를 못찾았을 때 에러 처리 루틴으로 빠짐
 	beq	__error_p			@ yes, error 'p'
 
 #ifdef CONFIG_ARM_LPAE
@@ -534,8 +543,13 @@ ENDPROC(__turn_mmu_on)
 
 
 #ifdef CONFIG_SMP_ON_UP
+	// #define __INIT		.section	".init.text","ax"
 	__INIT
 __fixup_smp:
+	// r9: 0x410fc0f0 <- CPU ID
+	// __v7_ca15mp_proc_info:
+	// .long	0x410fc0f0
+	// r3 = 0x410fc0f0 & 0x000f0000
 	and	r3, r9, #0x000f0000	@ architecture version
 	teq	r3, #0x000f0000		@ CPU ID supported?
 	bne	__fixup_smp_on_up	@ no, assume UP
@@ -564,6 +578,7 @@ ENDPROC(__fixup_smp)
 
 	.align
 1:	.word	.
+	// FIXME: .alt.smp.init 의 용도? 
 	.word	__smpalt_begin
 	.word	__smpalt_end
 

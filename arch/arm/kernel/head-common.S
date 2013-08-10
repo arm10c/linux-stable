@@ -61,11 +61,14 @@
  * 유효한 atags 포인터 또는 dtb 포인터 아니면 0
  */
 __vet_atags:
+	// r2: atags or dtb 임
 	tst	r2, #0x3			@ aligned?
 	bne	1f
 
 	ldr	r5, [r2, #0]
+	// FLATTREE : flattened device tree -> device tree(dtb)
 #ifdef CONFIG_OF_FLATTREE
+	// r6: 0xd00dfeed 로드
 	ldr	r6, =OF_DT_MAGIC		@ is it a DTB?
 	cmp	r5, r6
 	beq	2f
@@ -173,6 +176,7 @@ ENDPROC(lookup_processor_type)
  *       물리적인 주조 공간에서 proc_info 포인터
  *	r9 = cpuid (preserved)
  */
+	// #define __CPUINIT        .section	".cpuinit.text", "ax"
 	__CPUINIT
 __lookup_processor_type:
 	adr	r3, __lookup_processor_type_data
@@ -180,6 +184,10 @@ __lookup_processor_type:
 	sub	r3, r3, r4			@ get offset between virt&phys
 	add	r5, r5, r3			@ convert virt addresses to
 	add	r6, r6, r3			@ physical address space
+	// arch/mm/proc-v7.S 의 아래의 값을 r3, r4에 로드함
+	// __v7_ca15mp_proc_info:
+	// .long	0x410fc0f0
+	// .long	0xff0ffff0
 1:	ldmia	r5, {r3, r4}			@ value, mask
 	and	r4, r4, r9			@ mask wanted bits
 	teq	r3, r4
@@ -197,9 +205,10 @@ ENDPROC(__lookup_processor_type)
 	.align	2
 	.type	__lookup_processor_type_data, %object
 __lookup_processor_type_data:
-	.long	.
-	.long	__proc_info_begin
-	.long	__proc_info_end
+	// arch/mm/proc-v7.S 에 정의 되어 있음
+	.long	.				// r4 에 로드됨
+	.long	__proc_info_begin		// r5 에 로드됨
+	.long	__proc_info_end			// r6 에 로드됨
 	.size	__lookup_processor_type_data, . - __lookup_processor_type_data
 
 __error_p:
