@@ -25,10 +25,16 @@
  * Exception handling.  Something went wrong and we can't proceed.  We
  * ought to tell the user, but since we don't have any guarantee that
  * we're even running on the right architecture, we do virtually nothing.
+ * 예외 처리.
+ * 무언가 잘 못 되면 더 이상 진행하지 않음.
+ * 올바른 architecture에서 수행하는지 보장할 수 없기 때문입니다.
  *
  * If CONFIG_DEBUG_LL is set we try to print out something about the error
  * and hope for the best (useful if bootloader fails to pass a proper
  * machine ID for example).
+  *  CONFIG_DEBUG_LL이 설정되면
+ * 에러 정보를 출력 시도
+ * (부트로더가 적절한 머신 ID 전달에 실패 했을 때 유용.)
  */
 	__HEAD
 
@@ -39,9 +45,20 @@
  * of this function may be more lenient with the physical address and
  * may also be able to move the ATAGS block if necessary.
  *
+  *  r2 atags 포인터 유효성 결정.
+ * 경험(heuristic)으로는 포인터는 물리적인 RAM의 첫 번째 16k에 위치하고
+ *  ATAG_CORE 마커가 첫 번째에 있음.
+ * CONFIG_OF_FLATTREE를 선택했다면
+ * dtb 포인터를 받음.
+ * 이 함수에 대한 차 후 버전에서는
+ * 물리 주소에 대해 보다 많은 융통성을 가질 것이며
+ * 필요에 따라서는 ATAGS 블록 이동도 가능해 질 것임.
+ *
  * Returns:
  *  r2 either valid atags pointer, valid dtb pointer, or zero
  *  r5, r6 corrupted
+ * 리턴:
+ * 유효한 atags 포인터 또는 dtb 포인터 아니면 0
  */
 __vet_atags:
 	tst	r2, #0x3			@ aligned?
@@ -70,6 +87,8 @@ ENDPROC(__vet_atags)
 /*
  * The following fragment of code is executed with the MMU on in MMU mode,
  * and uses absolute addresses; this is not position independent.
+  * 다음 코드는 MMU 모드에서 MMU를 이용하여 수행 되고,
+ * 절대 주소를 사용합니다; position(주소) 종속
  *
  *  r0  = cp#15 control register
  *  r1  = machine ID
@@ -140,10 +159,18 @@ ENDPROC(lookup_processor_type)
  * (and therefore, we are not in the correct address space).  We have to
  * calculate the offset.
  *
+ * 프로세스 ID 레지스터(CP#15, CR0) 읽어
+ * linker-built에서 지원되는 프로세스 리스트를 찾아봄.
+ *  __proc_info lists에 대한 절대주소를 사용할 수 없음.
+ * MMU를 이용하여 실행하는 것이 아니기 때문입니다.
+ * offset 값을 계산해야 합니다.
+
+ *
  *	r9 = cpuid
  * Returns:
- *	r3, r4, r6 corrupted
+ *	r3, r4, r6 corrupted (변수로 사용)
  *	r5 = proc_info pointer in physical address space
+ *       물리적인 주조 공간에서 proc_info 포인터
  *	r9 = cpuid (preserved)
  */
 	__CPUINIT
