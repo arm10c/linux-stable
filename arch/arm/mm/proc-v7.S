@@ -185,6 +185,7 @@ __v7_ca15mp_setup:
 	mov	r10, #0
 1:
 #ifdef CONFIG_SMP
+	// T.R.M: 4.3.28: Auxiliary Control Register
 	ALT_SMP(mrc	p15, 0, r0, c1, c0, 1)
 	ALT_UP(mov	r0, #(1 << 6))		@ fake it for UP
 	tst	r0, #(1 << 6)			@ SMP/nAMP mode enabled?
@@ -260,13 +261,16 @@ __v7_setup:
 	and	r10, r0, #0xff000000		@ ARM?
 	teq	r10, #0x41000000
 	bne	3f
+	// variant: major, revision: minor
 	and	r5, r0, #0x00f00000		@ variant
 	and	r6, r0, #0x0000000f		@ revision
 	orr	r6, r6, r5, lsr #20-4		@ combine variant and revision
 	ubfx	r0, r0, #4, #12			@ primary part number
 
 	/* Cortex-A8 Errata */
+	// T.R.M: 4.3.1 Main ID Register
 	ldr	r10, =0x00000c08		@ Cortex-A8 primary part number
+	// r0: 0x00000c0f : Cortex-A15
 	teq	r0, r10
 	bne	2f
 #if defined(CONFIG_ARM_ERRATA_430973) && !defined(CONFIG_ARCH_MULTIPLATFORM)
