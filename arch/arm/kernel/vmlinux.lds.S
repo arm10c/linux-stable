@@ -301,6 +301,14 @@ SECTIONS
 	}
 #endif
 
+	// vmlinux.lds.h 에 정의됨
+	//	 #define BSS_SECTION(sbss_align, bss_align, stop_align)			\
+	//	 	. = ALIGN(sbss_align);						\
+	//	 	VMLINUX_SYMBOL(__bss_start) = .;				\
+	//	 	SBSS(sbss_align)						\
+	//	 	BSS(bss_align)							\
+	//	 	. = ALIGN(stop_align);						\
+	//	 	VMLINUX_SYMBOL(__bss_stop) = .;
 	BSS_SECTION(0, 0, 0)
 	_end = .;
 

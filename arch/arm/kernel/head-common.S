@@ -104,17 +104,19 @@ __mmap_switched:
 
 	ldmia	r3!, {r4, r5, r6, r7}
 	cmp	r4, r5				@ Copy data segment if needed
+// CONFIG_XIP_KERNEL이 켜져 있으면 r4, r5는 다른 값을 가짐
+// 따라서 실행되지 않음.
 1:	cmpne	r5, r6
-	ldrne	fp, [r4], #4
+	ldrne	fp, [r4], #4			//r9(sb), r10(sl), r11(fp), r12(ip), r13(sp), r14(lr), r15(pc)
 	strne	fp, [r5], #4
 	bne	1b
 
 	mov	fp, #0				@ Clear BSS (and zero fp)
 1:	cmp	r6, r7
-	strcc	fp, [r6],#4
+	strcc	fp, [r6],#4			//cc: carry clear (=lt)
 	bcc	1b
 
- ARM(	ldmia	r3, {r4, r5, r6, r7, sp})
+ ARM(	ldmia	r3, {r4, r5, r6, r7, sp})	// processor id 부터 읽어옴.
  THUMB(	ldmia	r3, {r4, r5, r6, r7}	)
  THUMB(	ldr	sp, [r3, #16]		)
 	str	r9, [r4]			@ Save processor ID
@@ -141,6 +143,10 @@ __mmap_switched_data:
 #else
 	.long	0				@ r7
 #endif
+	// ARM10C 20130817
+	//FIXME: THREAD_START_SP(thread_info.h) 에서 8을 빼는 이유?
+	//링크: http://forum.falinux.com/zbxe/?mid=lecture_tip&comment_srl=506039&document_srl=551428
+	//링크: http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.faqs/ka4127.html
 	.long	init_thread_union + THREAD_START_SP @ sp
 	.size	__mmap_switched_data, . - __mmap_switched_data
 

@@ -532,6 +532,7 @@ __enable_mmu:
 	mov	r5, #0
 	mcrr	p15, 0, r4, r5, c2		@ load TTBR0
 #else
+	//A.R.M: B3.7.1 Table B3-8 VMSAv7 MMU access permissions 참조
 	mov	r5, #(domain_val(DOMAIN_USER, DOMAIN_MANAGER) | \
 		      domain_val(DOMAIN_KERNEL, DOMAIN_MANAGER) | \
 		      domain_val(DOMAIN_TABLE, DOMAIN_MANAGER) | \
@@ -565,13 +566,14 @@ ENDPROC(__enable_mmu)
 	.align	5
 	.pushsection	.idmap.text, "ax"
 ENTRY(__turn_mmu_on)
-	mov	r0, r0
-	instr_sync
+	mov	r0, r0	// FIXME: isb를 수행하기 전에 필요함.
+			// armV7이외의 코어를 지원하기 위해서 앞뒤 코드가 들어감.(nop)
+	instr_sync	// A.R.M: A3.8.3 Memory barriers
 	mcr	p15, 0, r0, c1, c0, 0		@ write control reg
 	mrc	p15, 0, r3, c0, c0, 0		@ read id reg
 	instr_sync
-	mov	r3, r3
-	mov	r3, r13
+	mov	r3, r3	// Manual Instruction Ordering. 
+	mov	r3, r13	//
 	mov	pc, r3
 __turn_mmu_on_end:
 ENDPROC(__turn_mmu_on)
