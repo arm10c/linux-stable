@@ -116,6 +116,7 @@ __mmap_switched:
 	strcc	fp, [r6],#4			//cc: carry clear (=lt)
 	bcc	1b
 
+// 2013/08/17 종료
  ARM(	ldmia	r3, {r4, r5, r6, r7, sp})	// processor id 부터 읽어옴.
  THUMB(	ldmia	r3, {r4, r5, r6, r7}	)
  THUMB(	ldr	sp, [r3, #16]		)
