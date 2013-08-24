@@ -30,6 +30,8 @@ static inline void arch_local_irq_enable(void)
 		: "memory", "cc");
 }
 
+// ARM10C 20130824
+// 인터럽트를 disable한다.
 static inline void arch_local_irq_disable(void)
 {
 	asm volatile(

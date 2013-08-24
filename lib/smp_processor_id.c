@@ -7,13 +7,18 @@
 #include <linux/kallsyms.h>
 #include <linux/sched.h>
 
+// ARM10C 20130824
+// FIXME: notrace와 관련하여 프로파일링-함수가 무엇인가?
 notrace unsigned int debug_smp_processor_id(void)
 {
-	unsigned long preempt_count = preempt_count();
+	unsigned long preempt_count = preempt_count();//0x4000_0001
 	int this_cpu = raw_smp_processor_id();
 
+	//likely는 true일 가능성이 높은 코드라고 컴파일러에게 알려준다.
 	if (likely(preempt_count))
 		goto out;
+
+// 2013/08/24 종료
 
 	if (irqs_disabled())
 		goto out;

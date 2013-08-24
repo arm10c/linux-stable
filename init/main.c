@@ -500,7 +500,7 @@ asmlinkage void __init start_kernel(void)
 
 	cgroup_init_early();
 
-	local_irq_disable();
+	local_irq_disable();	// IRQ를 disable한다.
 	early_boot_irqs_disabled = true;
 
 /*

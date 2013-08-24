@@ -455,6 +455,18 @@ void __init smp_setup_processor_id(void)
 	u32 mpidr = is_smp() ? read_cpuid_mpidr() & MPIDR_HWID_BITMASK : 0;
 	u32 cpu = MPIDR_AFFINITY_LEVEL(mpidr, 0);
 
+	// if cpu=0 
+	//	cpu_logical_map[0] = 0    // current
+	//	cpu_logical_map[1] = 1    // others
+	//	cpu_logical_map[2] = 2    // others
+	//	cpu_logical_map[3] = 3    // others
+
+	// if cpu=1 
+	//	cpu_logical_map[0] = 1    // current
+	//	cpu_logical_map[1] = 0    // others
+	//	cpu_logical_map[2] = 2    // others
+	//	cpu_logical_map[3] = 3    // others
+
 	cpu_logical_map(0) = cpu;
 	for (i = 1; i < nr_cpu_ids; ++i)
 		cpu_logical_map(i) = i == cpu ? 0 : i;

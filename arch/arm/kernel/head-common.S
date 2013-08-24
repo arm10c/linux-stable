@@ -149,6 +149,7 @@ __mmap_switched_data:
 	//FIXME: THREAD_START_SP(thread_info.h) 에서 8을 빼는 이유?
 	//링크: http://forum.falinux.com/zbxe/?mid=lecture_tip&comment_srl=506039&document_srl=551428
 	//링크: http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.faqs/ka4127.html
+// ARM10C 20130824
 	.long	init_thread_union + THREAD_START_SP @ sp
 	.size	__mmap_switched_data, . - __mmap_switched_data
 

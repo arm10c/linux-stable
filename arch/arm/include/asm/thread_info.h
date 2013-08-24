@@ -71,6 +71,7 @@ struct thread_info {
 	struct restart_block	restart_block;
 };
 
+// ARM10C 20130824
 #define INIT_THREAD_INFO(tsk)						\
 {									\
 	.task		= &tsk,						\
@@ -86,6 +87,7 @@ struct thread_info {
 	},								\
 }
 
+// ARM10C 20130824
 #define init_thread_info	(init_thread_union.thread_info)
 #define init_stack		(init_thread_union.stack)
 
@@ -94,8 +96,11 @@ struct thread_info {
  */
 static inline struct thread_info *current_thread_info(void) __attribute_const__;
 
+// ARM10C 20130824
+// 모기향책: 133p
 static inline struct thread_info *current_thread_info(void)
 {
+	// stack이 8K로 정렬되어 있기 때문에 13비트를 clear시키면 stack의 맨 앞을 가리키게 된다.
 	register unsigned long sp asm ("sp");
 	return (struct thread_info *)(sp & ~(THREAD_SIZE - 1));
 }
