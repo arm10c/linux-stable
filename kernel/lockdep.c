@@ -3971,6 +3971,7 @@ out_restore:
 	raw_local_irq_restore(flags);
 }
 
+// ARM10C 20130824
 void lockdep_init(void)
 {
 	int i;
@@ -3984,6 +3985,7 @@ void lockdep_init(void)
 	if (lockdep_initialized)
 		return;
 
+	// CLASSHASH_SIZE: 2048 
 	for (i = 0; i < CLASSHASH_SIZE; i++)
 		INIT_LIST_HEAD(classhash_table + i);
 

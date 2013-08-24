@@ -441,6 +441,14 @@ static void __init boot_cpu_init(void)
 	set_cpu_possible(cpu, true);
 }
 
+// ARM10C 20130824
+// weak 정의: gcc 메뉴얼 일부 참조
+// weak
+// The weak attribute causes the declaration to be emitted as a weak symbol rather than a global. 
+// This is primarily useful in defining library functions which can be overridden in user code, 
+// though it can also be used with non-function declarations. 
+// Weak symbols are supported for ELF targets, 
+// and also for a.out targets when using the GNU assembler and linker. 
 void __init __weak smp_setup_processor_id(void)
 {
 }
@@ -468,8 +476,12 @@ static void __init mm_init(void)
 	vmalloc_init();
 }
 
+// ARM10C 20130824
+// asmlinkage의 의미 
+// http://www.spinics.net/lists/arm-kernel/msg87677.html
 asmlinkage void __init start_kernel(void)
 {
+	// ATAG,DTB 정보로 사용
 	char * command_line;
 	extern const struct kernel_param __start___param[], __stop___param[];
 

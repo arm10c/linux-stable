@@ -13,12 +13,14 @@
 /*
  * Return true if we are running on a SMP platform
  */
+// ARM10C 20130824
 static inline bool is_smp(void)
 {
 #ifndef CONFIG_SMP
 	return false;
 #elif defined(CONFIG_SMP_ON_UP)
 	extern unsigned int smp_on_up;
+	// !! 를 사용하는 이유? return 값을 0/1로 만들기 위해 사용
 	return !!smp_on_up;
 #else
 	return true;

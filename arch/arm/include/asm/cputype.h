@@ -61,6 +61,11 @@
 extern unsigned int processor_id;
 
 #ifdef CONFIG_CPU_CP15
+// ARM10C 20130824
+// 인라인 어셈블리 링크 참조
+// http://wiki.kldp.org/wiki.php/DocbookSgml/GCC_Inline_Assembly-KLDP
+// "cc" 의 의미는? 아래 링크 참조
+// http://rootfriend.tistory.com/371
 #define read_cpuid(reg)							\
 	({								\
 		unsigned int __val;					\
@@ -142,6 +147,9 @@ static inline unsigned int __attribute_const__ read_cpuid_tcmstatus(void)
 	return read_cpuid(CPUID_TCM);
 }
 
+// ARM10C 20130824
+// __attribute_const__ 정보 아래링크 참조 
+// http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.dui0348bk/Cacgigch.html
 static inline unsigned int __attribute_const__ read_cpuid_mpidr(void)
 {
 	return read_cpuid(CPUID_MPIDR);

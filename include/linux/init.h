@@ -41,6 +41,10 @@
 
 /* These are for everybody (although not all archs will actually
    discard it in modules) */
+
+// ARM10C 20130824
+// __cold: size 를 최적화 하기 위한 옵션
+// http://gcc.gnu.org/onlinedocs/gcc/Function-Attributes.html
 #define __init		__section(.init.text) __cold notrace
 #define __initdata	__section(.init.data)
 #define __initconst	__constsection(.init.rodata)

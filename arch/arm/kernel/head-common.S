@@ -126,6 +126,7 @@ __mmap_switched:
 	cmp	r7, #0
 	bicne	r4, r0, #CR_A			@ Clear 'A' bit
 	stmneia	r7, {r0, r4}			@ Save control register values
+// 2013/08/24 시작
 	b	start_kernel
 ENDPROC(__mmap_switched)
 

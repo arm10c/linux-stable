@@ -446,9 +446,12 @@ void notrace cpu_init(void)
 
 u32 __cpu_logical_map[NR_CPUS] = { [0 ... NR_CPUS-1] = MPIDR_INVALID };
 
+// ARM10C 20130824
 void __init smp_setup_processor_id(void)
 {
 	int i;
+	// A.R.M B4.1.106
+	// MPIDR: Multiprocessor Affinity Register
 	u32 mpidr = is_smp() ? read_cpuid_mpidr() & MPIDR_HWID_BITMASK : 0;
 	u32 cpu = MPIDR_AFFINITY_LEVEL(mpidr, 0);
 
