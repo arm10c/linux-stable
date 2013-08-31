@@ -645,7 +645,17 @@ void __cpuinit notify_cpu_starting(unsigned int cpu)
 #define MASK_DECLARE_4(x)	MASK_DECLARE_2(x), MASK_DECLARE_2(x+2)
 #define MASK_DECLARE_8(x)	MASK_DECLARE_4(x), MASK_DECLARE_4(x+4)
 
+// ARM10C 20130831
+// cpu_bit_bitmap[33][1]
 const unsigned long cpu_bit_bitmap[BITS_PER_LONG+1][BITS_TO_LONGS(NR_CPUS)] = {
+//      MASK_DECLARE_8(0) 이 아래와 같이 확장됨
+//	[1][0] = (1UL << 0),
+//	[2][0] = (1UL << 1),
+//	[3][0] = (1UL << 2),
+//	[4][0] = (1UL << 3),
+//	[5][0] = (1UL << 4),
+//	[6][0] = (1UL << 5),
+//	[7][0] = (1UL << 6),
 
 	MASK_DECLARE_8(0),	MASK_DECLARE_8(8),
 	MASK_DECLARE_8(16),	MASK_DECLARE_8(24),

@@ -68,6 +68,7 @@
 		typecheck(unsigned long, flags);	\
 		arch_local_irq_restore(flags);		\
 	} while (0)
+// ARM10C 20130831
 #define raw_local_save_flags(flags)			\
 	do {						\
 		typecheck(unsigned long, flags);	\
@@ -117,6 +118,7 @@
 		raw_irqs_disabled_flags(flags);		\
 	})
 
+// ARM10C 20130831
 #define irqs_disabled()					\
 	({						\
 		unsigned long _flags;			\

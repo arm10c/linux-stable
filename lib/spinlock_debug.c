@@ -138,6 +138,7 @@ void do_raw_spin_lock(raw_spinlock_t *lock)
 	debug_spin_lock_after(lock);
 }
 
+// ARM10C 20130831
 int do_raw_spin_trylock(raw_spinlock_t *lock)
 {
 	int ret = arch_spin_trylock(&lock->raw_lock);

@@ -2512,8 +2512,10 @@ int printk_sched(const char *fmt, ...)
  * This enforces a rate limit: not more than 10 kernel messages
  * every 5s to make a denial-of-service attack impossible.
  */
+// ARM10C 20130831
 DEFINE_RATELIMIT_STATE(printk_ratelimit_state, 5 * HZ, 10);
 
+// ARM10C 20130831
 int __printk_ratelimit(const char *func)
 {
 	return ___ratelimit(&printk_ratelimit_state, func);

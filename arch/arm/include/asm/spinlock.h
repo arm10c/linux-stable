@@ -71,12 +71,15 @@ static inline void dsb_sev(void)
 
 #define arch_spin_lock_flags(lock, flags) arch_spin_lock(lock)
 
+// ARM10C 20130831
+// http://lwn.net/Articles/267968/
 static inline void arch_spin_lock(arch_spinlock_t *lock)
 {
 	unsigned long tmp;
 	u32 newval;
 	arch_spinlock_t lockval;
 
+	// lock 을 걸릴때까지 loop 
 	__asm__ __volatile__(
 "1:	ldrex	%0, [%3]\n"
 "	add	%1, %0, %4\n"
@@ -87,6 +90,7 @@ static inline void arch_spin_lock(arch_spinlock_t *lock)
 	: "r" (&lock->slock), "I" (1 << TICKET_SHIFT)
 	: "cc");
 
+	// lock 을 건 owner일때까지 루프 수행
 	while (lockval.tickets.next != lockval.tickets.owner) {
 		wfe();
 		lockval.tickets.owner = ACCESS_ONCE(lock->tickets.owner);
@@ -95,11 +99,20 @@ static inline void arch_spin_lock(arch_spinlock_t *lock)
 	smp_mb();
 }
 
+// ARM10C 20130831
+// lock->slock : 0
 static inline int arch_spin_trylock(arch_spinlock_t *lock)
 {
 	unsigned long tmp;
 	u32 slock;
 
+	// lock->slock이0 이면 unlocked
+	// lock->slock이0x10000 이면 locked
+
+//"	ldrex	slock, lock->slock\n"
+//"	subs	tmp,   slock, slock, ror #16\n"		: tmp = slock - (slock >> 16)
+//"	addeq	slock, slock, (1 << TICKET_SHIFT)\n"    : slock = 0x10000
+//"	strexeq	tmp,   slock, lock->slock"              : tmp는 strexeq의 수행 결과 값
 	__asm__ __volatile__(
 "	ldrex	%0, [%2]\n"
 "	subs	%1, %0, %0, ror #16\n"

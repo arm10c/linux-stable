@@ -25,11 +25,13 @@
  * 0 means callbacks will be suppressed.
  * 1 means go ahead and do it.
  */
+// ARM10C 20130831
 int ___ratelimit(struct ratelimit_state *rs, const char *func)
 {
 	unsigned long flags;
 	int ret;
 
+	// 5s 가 지났는지 검사 수행
 	if (!rs->interval)
 		return 1;
 

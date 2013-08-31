@@ -153,6 +153,8 @@ extern int bitmap_ord_to_pos(const unsigned long *bitmap, int n, int bits);
 		(1UL<<((nbits) % BITS_PER_LONG))-1 : ~0UL		\
 )
 
+// ARM10C 20130831
+// 연산자 우선 순위 : <= 이 && 보다 먼저 수행됨
 #define small_const_nbits(nbits) \
 	(__builtin_constant_p(nbits) && (nbits) <= BITS_PER_LONG)
 

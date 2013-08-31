@@ -12,6 +12,10 @@
 
 /* Optimization barrier */
 /* The "volatile" is due to gcc bugs */
+
+// ARM10C 20130831
+// 컴파일러적으로 memory barrier 를 만들어 줌
+// http://studyfoss.egloos.com/5128961
 #define barrier() __asm__ __volatile__("": : :"memory")
 
 /*

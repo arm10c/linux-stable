@@ -88,6 +88,7 @@ do { \
 #define inc_preempt_count_notrace() add_preempt_count_notrace(1)
 #define dec_preempt_count_notrace() sub_preempt_count_notrace(1)
 
+// ARM10C 20130831
 #define preempt_disable_notrace() \
 do { \
 	inc_preempt_count_notrace(); \

@@ -83,6 +83,7 @@ _raw_spin_unlock_irqrestore(raw_spinlock_t *lock, unsigned long flags)
 #define _raw_spin_unlock_irqrestore(lock, flags) __raw_spin_unlock_irqrestore(lock, flags)
 #endif
 
+// ARM10C 20130831
 static inline int __raw_spin_trylock(raw_spinlock_t *lock)
 {
 	preempt_disable();

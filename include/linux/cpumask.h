@@ -11,6 +11,8 @@
 #include <linux/bitmap.h>
 #include <linux/bug.h>
 
+// ARM10C 20130831
+// struct cpumask { bits[1]; }
 typedef struct cpumask { DECLARE_BITMAP(bits, NR_CPUS); } cpumask_t;
 
 /**
@@ -741,6 +743,8 @@ void init_cpu_online(const struct cpumask *src);
  *
  * This does the conversion, and can be used as a constant initializer.
  */
+// ARM10C 20130831
+// FIXME: 1 ? (bitmap) : ~~ 코드의 이유? 
 #define to_cpumask(bitmap)						\
 	((struct cpumask *)(1 ? (bitmap)				\
 			    : (void *)sizeof(__check_is_bitmap(bitmap))))
@@ -796,6 +800,7 @@ static inline const struct cpumask *get_cpu_mask(unsigned int cpu)
 
 #if NR_CPUS <= BITS_PER_LONG
 
+// ARM10C 20130831
 #define CPU_MASK_ALL							\
 (cpumask_t) { {								\
 	[BITS_TO_LONGS(NR_CPUS)-1] = CPU_MASK_LAST_WORD			\
