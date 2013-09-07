@@ -10,6 +10,8 @@
  */
 #if __LINUX_ARM_ARCH__ >= 6
 
+// ARM10C 20130907 
+// 현재 모드 CPSR 을 리턴한다.
 static inline unsigned long arch_local_irq_save(void)
 {
 	unsigned long flags;
@@ -148,6 +150,7 @@ static inline void arch_local_irq_restore(unsigned long flags)
 		: "memory", "cc");
 }
 
+// ARM10C 20130907 this
 static inline int arch_irqs_disabled_flags(unsigned long flags)
 {
 	return flags & PSR_I_BIT;

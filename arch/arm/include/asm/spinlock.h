@@ -44,11 +44,11 @@
 
 static inline void dsb_sev(void)
 {
-#if __LINUX_ARM_ARCH__ >= 7
+#if __LINUX_ARM_ARCH__ >= 7 // ARM10C Y 
 	__asm__ __volatile__ (
 		"dsb\n"
 		SEV
-	);
+	);  // ARM10C this 
 #else
 	__asm__ __volatile__ (
 		"mcr p15, 0, %0, c7, c10, 4\n"
@@ -73,13 +73,23 @@ static inline void dsb_sev(void)
 
 // ARM10C 20130831
 // http://lwn.net/Articles/267968/
+// http://studyfoss.egloos.com/5144295 <- 필독! spin_lock 설명
+//
 static inline void arch_spin_lock(arch_spinlock_t *lock)
 {
 	unsigned long tmp;
-	u32 newval;
-	arch_spinlock_t lockval;
-
-	// lock 을 걸릴때까지 loop 
+	u32 newval;//다음 next 값
+	arch_spinlock_t lockval;//현재 next 값
+//ARM10C 20130907 
+//"1:	ldrex	lockval, &lock->slock\n"
+//현재 next(lockval)는 받아 놓고,
+//"	add	newval, lockval, (1<<TICKET_SHIFT)\n" tickets.next += 1
+//다음 next(newval) 는 += 1하고 저장 한다.
+//"	strex	tmp, newval, &lock->slock\n"
+//"	teq	tmp, #0\n"
+//"	bne	1b"
+	// lock->slock에서 실제 데이터를 쓸때(next+=1) 까지 루프
+	// next+=1 의 의미는 표를 받기위해 번호표발행
 	__asm__ __volatile__(
 "1:	ldrex	%0, [%3]\n"
 "	add	%1, %0, %4\n"
@@ -90,10 +100,13 @@ static inline void arch_spin_lock(arch_spinlock_t *lock)
 	: "r" (&lock->slock), "I" (1 << TICKET_SHIFT)
 	: "cc");
 
-	// lock 을 건 owner일때까지 루프 수행
+	// 실재 lock을 걸기 위해 busylock 한다.
+	// 받은 번호표의 순을 기다린다.(unlock에서 owner을 증가 시켜서)
 	while (lockval.tickets.next != lockval.tickets.owner) {
-		wfe();
+		wfe();	// ARM10C 이벤트대기(irq,frq,부정확한 중단 또는 디버그 시작 요청 대기. 구현되지 않은 경우 NOP
+	       // arch_spin_unlock()의 dsb_sev();가 호출될때 깨어남
 		lockval.tickets.owner = ACCESS_ONCE(lock->tickets.owner);
+		// ARM10C local owner값 업데이트
 	}
 
 	smp_mb();
@@ -110,9 +123,11 @@ static inline int arch_spin_trylock(arch_spinlock_t *lock)
 	// lock->slock이0x10000 이면 locked
 
 //"	ldrex	slock, lock->slock\n"
-//"	subs	tmp,   slock, slock, ror #16\n"		: tmp = slock - (slock >> 16)
-//"	addeq	slock, slock, (1 << TICKET_SHIFT)\n"    : slock = 0x10000
-//"	strexeq	tmp,   slock, lock->slock"              : tmp는 strexeq의 수행 결과 값
+//"	subs	tmp,   slock, slock, ror #16\n"
+//위 코드의 의미
+//if( next == owner )//현재 락을 가져도 된다.
+//"	addeq	slock, slock, (1 << TICKET_SHIFT)\n"
+//"	strexeq	tmp,   slock, lock->slock"
 	__asm__ __volatile__(
 "	ldrex	%0, [%2]\n"
 "	subs	%1, %0, %0, ror #16\n"
@@ -123,7 +138,7 @@ static inline int arch_spin_trylock(arch_spinlock_t *lock)
 	: "cc");
 
 	if (tmp == 0) {
-		smp_mb();
+		smp_mb();   // ARM10C dmb()
 		return 1;
 	} else {
 		return 0;
@@ -132,9 +147,9 @@ static inline int arch_spin_trylock(arch_spinlock_t *lock)
 
 static inline void arch_spin_unlock(arch_spinlock_t *lock)
 {
-	smp_mb();
+	smp_mb();   // ARM10C smb_mb(), dsb_sev() 중 dsb()는 owner를 보호하기위한 것 
 	lock->tickets.owner++;
-	dsb_sev();
+	dsb_sev(); // ARM10C 이벤트발생
 }
 
 static inline int arch_spin_is_locked(arch_spinlock_t *lock)

@@ -12,4 +12,5 @@
 #include "bitops.h"
 		.text
 
+// ARM10C 20130907 
 bitop	_set_bit, orr

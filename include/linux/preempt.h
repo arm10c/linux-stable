@@ -10,8 +10,8 @@
 #include <linux/linkage.h>
 #include <linux/list.h>
 
-#if defined(CONFIG_DEBUG_PREEMPT) || defined(CONFIG_PREEMPT_TRACER)
-  extern void add_preempt_count(int val);
+#if defined(CONFIG_DEBUG_PREEMPT) || defined(CONFIG_PREEMPT_TRACER) // ARM10C Y 
+  extern void add_preempt_count(int val);   // ARM10C this 
   extern void sub_preempt_count(int val);
 #else
 # define add_preempt_count(val)	do { preempt_count() += (val); } while (0)
@@ -28,7 +28,7 @@
 
 asmlinkage void preempt_schedule(void);
 
-#define preempt_check_resched() \
+#define preempt_check_resched() /*ARM10C this*/ \
 do { \
 	if (unlikely(test_thread_flag(TIF_NEED_RESCHED))) \
 		preempt_schedule(); \
@@ -57,9 +57,9 @@ do { \
 #endif /* CONFIG_PREEMPT */
 
 
-#ifdef CONFIG_PREEMPT_COUNT
+#ifdef CONFIG_PREEMPT_COUNT // ARM10C Y 
 
-#define preempt_disable() \
+#define preempt_disable()/*ARM10C this*/ \
 do { \
 	inc_preempt_count(); \
 	barrier(); \
@@ -73,7 +73,7 @@ do { \
 
 #define preempt_enable_no_resched()	sched_preempt_enable_no_resched()
 
-#define preempt_enable() \
+#define preempt_enable() /*ARM10C this*/ \
 do { \
 	preempt_enable_no_resched(); \
 	barrier(); \

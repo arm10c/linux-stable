@@ -145,7 +145,7 @@ int do_raw_spin_trylock(raw_spinlock_t *lock)
 
 	if (ret)
 		debug_spin_lock_after(lock);
-#ifndef CONFIG_SMP
+#ifndef CONFIG_SMP  // ARM10C 실행안함 
 	/*
 	 * Must not happen on UP:
 	 */

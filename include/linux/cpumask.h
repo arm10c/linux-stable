@@ -104,6 +104,7 @@ extern const struct cpumask *const cpu_active_mask;
 #endif
 
 /* verify cpu argument to cpumask_* operators */
+// ARM10C 20130907 
 static inline unsigned int cpumask_check(unsigned int cpu)
 {
 #ifdef CONFIG_DEBUG_PER_CPU_MAPS
@@ -254,9 +255,11 @@ int cpumask_any_but(const struct cpumask *mask, unsigned int cpu);
  * @cpu: cpu number (< nr_cpu_ids)
  * @dstp: the cpumask pointer
  */
+// ARM10C 20130907 
 static inline void cpumask_set_cpu(unsigned int cpu, struct cpumask *dstp)
 {
 	set_bit(cpumask_check(cpu), cpumask_bits(dstp));
+	// ARM10C 20130907 set_bit( 0, dstp->bits) --> dstp->bits[0] = 1;
 }
 
 /**
@@ -744,7 +747,7 @@ void init_cpu_online(const struct cpumask *src);
  * This does the conversion, and can be used as a constant initializer.
  */
 // ARM10C 20130831
-// FIXME: 1 ? (bitmap) : ~~ 코드의 이유? 
+// 1 ? (bitmap) : bitmap의 type을 체크하기 위해
 #define to_cpumask(bitmap)						\
 	((struct cpumask *)(1 ? (bitmap)				\
 			    : (void *)sizeof(__check_is_bitmap(bitmap))))

@@ -115,7 +115,7 @@ BUILD_LOCK_OPS(write, rwlock);
 
 #endif
 
-#ifndef CONFIG_INLINE_SPIN_TRYLOCK
+#ifndef CONFIG_INLINE_SPIN_TRYLOCK  // ARM10C Y 
 int __lockfunc _raw_spin_trylock(raw_spinlock_t *lock)
 {
 	return __raw_spin_trylock(lock);
@@ -171,6 +171,7 @@ void __lockfunc _raw_spin_unlock(raw_spinlock_t *lock)
 EXPORT_SYMBOL(_raw_spin_unlock);
 #endif
 
+// ARM10C 20130907 
 #ifndef CONFIG_INLINE_SPIN_UNLOCK_IRQRESTORE
 void __lockfunc _raw_spin_unlock_irqrestore(raw_spinlock_t *lock, unsigned long flags)
 {

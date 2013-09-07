@@ -2793,14 +2793,16 @@ notrace unsigned long get_parent_ip(unsigned long addr)
 
 void __kprobes add_preempt_count(int val)
 {
-#ifdef CONFIG_DEBUG_PREEMPT
+#ifdef CONFIG_DEBUG_PREEMPT // ARM10C Y 
 	/*
 	 * Underflow?
 	 */
+	// ARM10C 20130907 preempt_count()가  0 보다 작은 경우는 bug이다.
 	if (DEBUG_LOCKS_WARN_ON((preempt_count() < 0)))
 		return;
 #endif
 	preempt_count() += val;
+	// ARM10C 20130907 0x40000001 + 1(val)
 #ifdef CONFIG_DEBUG_PREEMPT
 	/*
 	 * Spinlock count overflowing soon?
@@ -2808,11 +2810,13 @@ void __kprobes add_preempt_count(int val)
 	DEBUG_LOCKS_WARN_ON((preempt_count() & PREEMPT_MASK) >=
 				PREEMPT_MASK - 10);
 #endif
+	// ARM10C 20130907 preempt_count = 0x40000002
 	if (preempt_count() == val)
 		trace_preempt_off(CALLER_ADDR0, get_parent_ip(CALLER_ADDR1));
 }
 EXPORT_SYMBOL(add_preempt_count);
 
+// ARM10C 20130907 
 void __kprobes sub_preempt_count(int val)
 {
 #ifdef CONFIG_DEBUG_PREEMPT

@@ -41,12 +41,14 @@ int ___ratelimit(struct ratelimit_state *rs, const char *func)
 	 * in addition to the one that will be printed by
 	 * the entity that is holding the lock already:
 	 */
-	if (!raw_spin_trylock_irqsave(&rs->lock, flags))
+	if (!raw_spin_trylock_irqsave(&rs->lock, flags)) // ARM10C lock 획득
 		return 0;
 
-	if (!rs->begin)
+	if (!rs->begin)	// ARM10C 시작인가? 
 		rs->begin = jiffies;
 
+	// ARM10C 20130907 rs->interval = 5 * HZ
+	// 시간 만료가 되었나?
 	if (time_is_before_jiffies(rs->begin + rs->interval)) {
 		if (rs->missed)
 			printk(KERN_WARNING "%s: %d callbacks suppressed\n",
@@ -54,7 +56,9 @@ int ___ratelimit(struct ratelimit_state *rs, const char *func)
 		rs->begin   = 0;
 		rs->printed = 0;
 		rs->missed  = 0;
+		// ARM10C 20130907 버퍼삭제
 	}
+	// ARM10C 20130907 rs->burst = 10
 	if (rs->burst && rs->burst > rs->printed) {
 		rs->printed++;
 		ret = 1;

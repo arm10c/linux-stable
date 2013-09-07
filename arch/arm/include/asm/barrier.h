@@ -13,10 +13,10 @@
 #define wfi()	__asm__ __volatile__ ("wfi" : : : "memory")
 #endif
 
-#if __LINUX_ARM_ARCH__ >= 7
+#if __LINUX_ARM_ARCH__ >= 7 // ARM10C Y 
 #define isb() __asm__ __volatile__ ("isb" : : : "memory")
 #define dsb() __asm__ __volatile__ ("dsb" : : : "memory")
-#define dmb() __asm__ __volatile__ ("dmb" : : : "memory")
+#define dmb() __asm__ __volatile__ ("dmb" : : : "memory")   // ARM10C this 
 #elif defined(CONFIG_CPU_XSC3) || __LINUX_ARM_ARCH__ == 6
 #define isb() __asm__ __volatile__ ("mcr p15, 0, %0, c7, c5, 4" \
 				    : : "r" (0) : "memory")
@@ -54,7 +54,7 @@
 #define smp_rmb()	barrier()
 #define smp_wmb()	barrier()
 #else
-#define smp_mb()	dmb()
+#define smp_mb()	dmb()	// ARM10C this 
 #define smp_rmb()	dmb()
 #define smp_wmb()	dmb()
 #endif

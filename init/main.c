@@ -431,9 +431,18 @@ void __init parse_early_param(void)
  *	Activate the first processor.
  */
 
+// ARM10C 20130907
+// 현재 cpu(core id)를 얻어서 cpu_XXX_bits[] 의 cpu를 셋한다.
+//
+// 참조 : http://cafe.daum.net/lksas/8HoZ/42?docid=1K80b8HoZ4220110218025952
+// 시스템 상에 존재하는 CPU의 상태 정보는 다음과 같은 4개의 비트맵 (cpumask_t)으로 관리한다.
+// cpu_possible_mask - 해당 비트에 대한 CPU가 존재할 수 있다.
+// cpu_present_mask - 해당 비트에 대한 CPU가 존재한다.
+// cpu_online_mask - 해당 비트에 대한 CPU가 존재하며 스케줄러가 이를 관리한다.
+// cpu_active_mask - 해당 비트에 대한 CPU가 존재하며 task migration 시 이를 이용할 수 있다.
 static void __init boot_cpu_init(void)
 {
-	int cpu = smp_processor_id();
+	int cpu = smp_processor_id();	// ARM10C FIXME cpu = 0 일 가능성이 큼 
 	/* Mark the boot cpu "present", "online" etc for SMP and UP case */
 	set_cpu_online(cpu, true);
 	set_cpu_active(cpu, true);
@@ -507,7 +516,8 @@ asmlinkage void __init start_kernel(void)
  * Interrupts are still disabled. Do necessary setups, then
  * enable them
  */
-	boot_cpu_init();
+	boot_cpu_init();// 현재 cpu(core id)를 얻어서 cpu_XXX_bits[] 의 cpu를 셋한다.
+//2013/09/07 종료 
 	page_address_init();
 	pr_notice("%s", linux_banner);
 	setup_arch(&command_line);

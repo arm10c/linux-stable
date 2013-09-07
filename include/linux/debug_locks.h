@@ -21,6 +21,9 @@ static inline int __debug_locks_off(void)
  */
 extern int debug_locks_off(void);
 
+// ARM10C 20130907 
+// c 가 0보다 작을때는 선점연산과 관련하여 잘못된 경우이다.
+// 이경우 경고를 출력한다.
 #define DEBUG_LOCKS_WARN_ON(c)						\
 ({									\
 	int __ret = 0;							\

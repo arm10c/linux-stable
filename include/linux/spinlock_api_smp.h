@@ -59,7 +59,7 @@ _raw_spin_unlock_irqrestore(raw_spinlock_t *lock, unsigned long flags)
 #define _raw_spin_lock_irqsave(lock) __raw_spin_lock_irqsave(lock)
 #endif
 
-#ifdef CONFIG_INLINE_SPIN_TRYLOCK
+#ifdef CONFIG_INLINE_SPIN_TRYLOCK   // ARM10C N 
 #define _raw_spin_trylock(lock) __raw_spin_trylock(lock)
 #endif
 
@@ -154,6 +154,8 @@ static inline void __raw_spin_unlock(raw_spinlock_t *lock)
 	preempt_enable();
 }
 
+// ARM10C 20130907 
+// spin_unlock 하고, cpsr_c(제어 필드 마스크 바이트) 원복
 static inline void __raw_spin_unlock_irqrestore(raw_spinlock_t *lock,
 					    unsigned long flags)
 {

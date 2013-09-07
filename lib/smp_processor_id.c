@@ -12,7 +12,10 @@
 notrace unsigned int debug_smp_processor_id(void)
 {
 	unsigned long preempt_count = preempt_count();//0x4000_0001
-	// FIXME: this_cpu 값은? 
+						    //최초만 0x40000001
+						    //Reset by start_kernel()->sched_init()->init_idle().
+	// FIXME: this_cpu 값은?
+	// ARM10C this_cpu = 0이 가장 유력함 
 	int this_cpu = raw_smp_processor_id();
 
 	//likely는 true일 가능성이 높은 코드라고 컴파일러에게 알려준다.
@@ -44,6 +47,7 @@ notrace unsigned int debug_smp_processor_id(void)
 	preempt_disable_notrace();
 
 // 2013/08/31 종료 (spin lock 분석중)
+// 2013/09/07 시작
 	if (!printk_ratelimit())
 		goto out_enable;
 

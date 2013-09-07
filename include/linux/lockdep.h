@@ -479,7 +479,7 @@ static inline void print_irqtrace_events(struct task_struct *curr)
  * on the per lock-class debug mode:
  */
 
-#ifdef CONFIG_DEBUG_LOCK_ALLOC
+#ifdef CONFIG_DEBUG_LOCK_ALLOC	// ARM10C N 
 # ifdef CONFIG_PROVE_LOCKING
 #  define spin_acquire(l, s, t, i)		lock_acquire(l, s, t, 0, 2, NULL, i)
 #  define spin_acquire_nest(l, s, t, n, i)	lock_acquire(l, s, t, 0, 2, n, i)
@@ -489,8 +489,8 @@ static inline void print_irqtrace_events(struct task_struct *curr)
 # endif
 # define spin_release(l, n, i)			lock_release(l, n, i)
 #else
-# define spin_acquire(l, s, t, i)		do { } while (0)
-# define spin_release(l, n, i)			do { } while (0)
+# define spin_acquire(l, s, t, i)		do { } while (0)    // ARM10C this 
+# define spin_release(l, n, i)			do { } while (0)    // ARM10C this 
 #endif
 
 #ifdef CONFIG_DEBUG_LOCK_ALLOC

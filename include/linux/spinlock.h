@@ -128,10 +128,10 @@ static inline void smp_mb__after_lock(void) { smp_mb(); }
  */
 #define raw_spin_unlock_wait(lock)	arch_spin_unlock_wait(&(lock)->raw_lock)
 
-#ifdef CONFIG_DEBUG_SPINLOCK
+#ifdef CONFIG_DEBUG_SPINLOCK	// ARM10C Y 
  extern void do_raw_spin_lock(raw_spinlock_t *lock) __acquires(lock);
 #define do_raw_spin_lock_flags(lock, flags) do_raw_spin_lock(lock)
- extern int do_raw_spin_trylock(raw_spinlock_t *lock);
+ extern int do_raw_spin_trylock(raw_spinlock_t *lock);	// ARM10C this 
  extern void do_raw_spin_unlock(raw_spinlock_t *lock) __releases(lock);
 #else
 static inline void do_raw_spin_lock(raw_spinlock_t *lock) __acquires(lock)
@@ -165,6 +165,7 @@ static inline void do_raw_spin_unlock(raw_spinlock_t *lock) __releases(lock)
  * various methods are defined as nops in the case they are not
  * required.
  */
+// ARM10C 20130907 _raw_spin_trylock(lock) = 1 
 #define raw_spin_trylock(lock)	__cond_lock(lock, _raw_spin_trylock(lock))
 
 #define raw_spin_lock(lock)	_raw_spin_lock(lock)

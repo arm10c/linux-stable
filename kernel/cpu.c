@@ -690,6 +690,8 @@ static DECLARE_BITMAP(cpu_active_bits, CONFIG_NR_CPUS) __read_mostly;
 const struct cpumask *const cpu_active_mask = to_cpumask(cpu_active_bits);
 EXPORT_SYMBOL(cpu_active_mask);
 
+// ARM10C 20130907 cpu = 0, passible = 1
+// cpu_possible_bits[ 0 ] = 1 이됨  
 void set_cpu_possible(unsigned int cpu, bool possible)
 {
 	if (possible)
@@ -698,6 +700,8 @@ void set_cpu_possible(unsigned int cpu, bool possible)
 		cpumask_clear_cpu(cpu, to_cpumask(cpu_possible_bits));
 }
 
+// ARM10C 20130907 cpu = 0, present = 1
+// cpu_present_bits[ 0 ] = 1 이됨  
 void set_cpu_present(unsigned int cpu, bool present)
 {
 	if (present)
@@ -706,6 +710,8 @@ void set_cpu_present(unsigned int cpu, bool present)
 		cpumask_clear_cpu(cpu, to_cpumask(cpu_present_bits));
 }
 
+// ARM10C 20130907 cpu = 0, online = 1
+// cpu_online_bits[ 0 ] = 1 이됨  
 void set_cpu_online(unsigned int cpu, bool online)
 {
 	if (online)
@@ -714,6 +720,8 @@ void set_cpu_online(unsigned int cpu, bool online)
 		cpumask_clear_cpu(cpu, to_cpumask(cpu_online_bits));
 }
 
+// ARM10C 20130907 cpu = 0, active = 1
+// cpu_active_bits[ 0 ] = 1 이됨  
 void set_cpu_active(unsigned int cpu, bool active)
 {
 	if (active)

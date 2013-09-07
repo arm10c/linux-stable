@@ -11,11 +11,11 @@ typedef struct {
 	union {
 		u32 slock;
 		struct __raw_tickets {
-#ifdef __ARMEB__
+#ifdef __ARMEB__    // ARM10C N 
 			u16 next;
 			u16 owner;
 #else
-			u16 owner;
+			u16 owner;  // ARM10C this 
 			u16 next;
 #endif
 		} tickets;

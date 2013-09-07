@@ -39,7 +39,7 @@ extern void __chk_io_ptr(const volatile void __iomem *);
 # define __releases(x)
 # define __acquire(x) (void)0
 # define __release(x) (void)0
-# define __cond_lock(x,c) (c)
+# define __cond_lock(x,c) (c) //ARM10C this
 # define __percpu
 # define __rcu
 #endif
@@ -352,9 +352,9 @@ void ftrace_likely_update(struct ftrace_branch_data *f, int val, int expect);
 #define ACCESS_ONCE(x) (*(volatile typeof(x) *)&(x))
 
 /* Ignore/forbid kprobes attach on very low level functions marked by this attribute: */
-#ifdef CONFIG_KPROBES
+#ifdef CONFIG_KPROBES	// ARM10C N : kprobes : 커널코드에 원하는 기법을 동적으로 추가할수 있는기법
 # define __kprobes	__attribute__((__section__(".kprobes.text")))
 #else
-# define __kprobes
+# define __kprobes  // ARM10C this 
 #endif
 #endif /* __LINUX_COMPILER_H */
