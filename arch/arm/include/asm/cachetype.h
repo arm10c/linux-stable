@@ -1,6 +1,7 @@
 #ifndef __ASM_ARM_CACHETYPE_H
 #define __ASM_ARM_CACHETYPE_H
 
+// ARM10C 20130914
 #define CACHEID_VIVT			(1 << 0)
 #define CACHEID_VIPT_NONALIASING	(1 << 1)
 #define CACHEID_VIPT_ALIASING		(1 << 2)
@@ -26,6 +27,7 @@ extern unsigned int cacheid;
  * - v7+ VIPT never aliases on D-side
  */
 #if __LINUX_ARM_ARCH__ >= 7
+// ARM10C 20130914
 #define __CACHEID_ARCH_MIN	(CACHEID_VIPT_NONALIASING |\
 				 CACHEID_ASID_TAGGED |\
 				 CACHEID_VIPT_I_ALIASING |\
@@ -42,14 +44,17 @@ extern unsigned int cacheid;
 #if defined(CONFIG_CPU_CACHE_VIVT) && !defined(CONFIG_CPU_CACHE_VIPT)
 #define __CACHEID_ALWAYS	(CACHEID_VIVT)
 #define __CACHEID_NEVER		(~CACHEID_VIVT)
-#elif !defined(CONFIG_CPU_CACHE_VIVT) && defined(CONFIG_CPU_CACHE_VIPT)
-#define __CACHEID_ALWAYS	(0)
+#elif !defined(CONFIG_CPU_CACHE_VIVT) && defined(CONFIG_CPU_CACHE_VIPT) 
+// CONFIG_CPU_CACHE_VIVT= n, CONFIG_CPU_CACHE_VIPT = y
+// ARM10C 20130914
+#define __CACHEID_ALWAYS	(0)	// this
 #define __CACHEID_NEVER		(CACHEID_VIVT)
 #else
 #define __CACHEID_ALWAYS	(0)
 #define __CACHEID_NEVER		(0)
 #endif
 
+// ARM10C 20130914
 static inline unsigned int __attribute__((pure)) cacheid_is(unsigned int mask)
 {
 	return (__CACHEID_ALWAYS & mask) |

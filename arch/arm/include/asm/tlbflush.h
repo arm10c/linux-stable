@@ -61,7 +61,7 @@
 #undef _TLB
 #undef MULTI_TLB
 
-#ifdef CONFIG_SMP_ON_UP
+#ifdef CONFIG_SMP_ON_UP // CONFIG_SMP_ON_UP = y
 #define MULTI_TLB 1
 #endif
 
@@ -203,6 +203,7 @@
 
 #include <linux/sched.h>
 
+// ARM10C 20130914
 struct cpu_tlb_fns {
 	void (*flush_user_range)(unsigned long, unsigned long, struct vm_area_struct *);
 	void (*flush_kern_range)(unsigned long, unsigned long);

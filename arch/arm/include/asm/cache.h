@@ -26,6 +26,8 @@
 #define ARCH_SLAB_MINALIGN 8
 #endif
 
+// ARM10C 20130914
+// cache hit 가 자주 될것으로 예상 되는 영역 설정
 #define __read_mostly __attribute__((__section__(".data..read_mostly")))
 
 #endif

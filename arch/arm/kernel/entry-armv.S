@@ -1135,6 +1135,7 @@ __vectors_end:
 
 	.data
 
+// ARM10C 20130914
 	.globl	cr_alignment
 	.globl	cr_no_alignment
 cr_alignment:

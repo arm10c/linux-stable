@@ -98,6 +98,7 @@ extern unsigned int kobjsize(const void *objp);
 /*
  * dummy tlb and user structures.
  */
+// ARM10C 20130914
 #define v3_tlb_fns	(0)
 #define v4_tlb_fns	(0)
 #define v4wb_tlb_fns	(0)

@@ -94,6 +94,7 @@ EXPORT_SYMBOL(system_serial_low);
 unsigned int system_serial_high;
 EXPORT_SYMBOL(system_serial_high);
 
+// ARM10C 20130914
 unsigned int elf_hwcap __read_mostly;
 EXPORT_SYMBOL(elf_hwcap);
 
@@ -130,6 +131,7 @@ struct stack {
 
 static struct stack stacks[NR_CPUS];
 
+// ARM10C 20130914
 char elf_platform[ELF_PLATFORM_SIZE];
 EXPORT_SYMBOL(elf_platform);
 
@@ -138,6 +140,7 @@ static const char *machine_name;
 static char __initdata cmd_line[COMMAND_LINE_SIZE];
 struct machine_desc *machine_desc __initdata;
 
+// ARM10C 20130914
 static union { char c[4]; unsigned long l; } endian_test __initdata = { { 'l', '?', '?', 'b' } };
 #define ENDIANNESS ((char)endian_test.l)
 
@@ -220,6 +223,7 @@ static int __get_cpu_architecture(void)
 {
 	int cpu_arch;
 
+	// read_cpuid_id() :   0x410fc0f0
 	if ((read_cpuid_id() & 0x0008f000) == 0) {
 		cpu_arch = CPU_ARCH_UNKNOWN;
 	} else if ((read_cpuid_id() & 0x0008f000) == 0x00007000) {
@@ -249,6 +253,7 @@ static int __get_cpu_architecture(void)
 	return cpu_arch;
 }
 
+// ARM10C 20130914
 int __pure cpu_architecture(void)
 {
 	BUG_ON(__cpu_architecture == CPU_ARCH_UNKNOWN);
@@ -256,6 +261,7 @@ int __pure cpu_architecture(void)
 	return __cpu_architecture;
 }
 
+// ARM10C 20130914
 static int cpu_has_aliasing_icache(unsigned int arch)
 {
 	int aliasing_icache;
@@ -289,21 +295,25 @@ static int cpu_has_aliasing_icache(unsigned int arch)
 	return aliasing_icache;
 }
 
+// ARM10C 20130914
 static void __init cacheid_init(void)
 {
 	unsigned int arch = cpu_architecture();
 
 	if (arch >= CPU_ARCH_ARMv6) {
+		// T.R.M: 4.3.2 Cache Type Register
 		unsigned int cachetype = read_cpuid_cachetype();
 		if ((cachetype & (7 << 29)) == 4 << 29) {
 			/* ARMv7 register format */
 			arch = CPU_ARCH_ARMv7;
 			cacheid = CACHEID_VIPT_NONALIASING;
+
+			// L1ip: b11, (Physical index, physical tag)
 			switch (cachetype & (3 << 14)) {
 			case (1 << 14):
 				cacheid |= CACHEID_ASID_TAGGED;
 				break;
-			case (3 << 14):
+			case (3 << 14):	// this
 				cacheid |= CACHEID_PIPT;
 				break;
 			}
@@ -314,6 +324,7 @@ static void __init cacheid_init(void)
 			else
 				cacheid = CACHEID_VIPT_NONALIASING;
 		}
+// 2013/09/14 종료
 		if (cpu_has_aliasing_icache(arch))
 			cacheid |= CACHEID_VIPT_I_ALIASING;
 	} else {
@@ -353,6 +364,7 @@ void __init early_print(const char *str, ...)
 	printk("%s", buf);
 }
 
+// ARM10C 20130914
 static void __init cpuid_init_hwcaps(void)
 {
 	unsigned int divide_instrs;
@@ -360,8 +372,11 @@ static void __init cpuid_init_hwcaps(void)
 	if (cpu_architecture() < CPU_ARCH_ARMv7)
 		return;
 
+        // CPUID_EXT_ISAR0	"c2, 0"
+	// A.R.M: B6.1.46 ID_ISAR0, Instruction Set Attribute Register 0, PMSA
 	divide_instrs = (read_cpuid_ext(CPUID_EXT_ISAR0) & 0x0f000000) >> 24;
 
+	// divide instruction을 지원하는지 검사하여 elf hwcap을 업데이트
 	switch (divide_instrs) {
 	case 2:
 		elf_hwcap |= HWCAP_IDIVA;
@@ -370,9 +385,10 @@ static void __init cpuid_init_hwcaps(void)
 	}
 }
 
+// ARM10C 20130914
 static void __init feat_v6_fixup(void)
 {
-	int id = read_cpuid_id();
+	int id = read_cpuid_id(); // id: 0x410fc0f0
 
 	if ((id & 0xff0f0000) != 0x41070000)
 		return;
@@ -479,6 +495,7 @@ static void __init setup_processor(void)
 {
 	struct proc_info_list *list;
 
+	
 	/*
 	 * locate processor in the list of supported processor
 	 * types.  The linker builds this table for us from the
@@ -492,35 +509,47 @@ static void __init setup_processor(void)
 		while (1);
 	}
 
-	cpu_name = list->cpu_name;
-	__cpu_architecture = __get_cpu_architecture();
+	cpu_name = list->cpu_name;  // string	cpu_v7_name, "ARMv7 Processor"
+	__cpu_architecture = __get_cpu_architecture(); // CPU_ARCH_ARMv7: 9
 
-#ifdef MULTI_CPU
+#ifdef MULTI_CPU // undefined
 	processor = *list->proc;
 #endif
-#ifdef MULTI_TLB
-	cpu_tlb = *list->tlb;
+#ifdef MULTI_TLB // defined
+	cpu_tlb = *list->tlb; // 0으로 초기화
 #endif
-#ifdef MULTI_USER
-	cpu_user = *list->user;
+#ifdef MULTI_USER // defined
+	cpu_user = *list->user; // 0으로 초기화
 #endif
-#ifdef MULTI_CACHE
+#ifdef MULTI_CACHE // defined, 참조: #define _CACHE v7
 	cpu_cache = *list->cache;
 #endif
 
+	// *proc_arch[9] = { "7" };
+	// A.R.M: B4.1.130 SCTLR, System Control Register, VMSA
+	// A.R.M: A3.2 Alignment support
+	// cr_alignment: 1 (0xxxxxxx7f)
 	printk("CPU: %s [%08x] revision %d (ARMv%s), cr=%08lx\n",
 	       cpu_name, read_cpuid_id(), read_cpuid_id() & 15,
 	       proc_arch[cpu_architecture()], cr_alignment);
 
+	// init_utsname()->machine: "arm", __NEW_UTS_LEN: 64
+	// list->arch_name: "armv7", ENDIANNESS: 'l'
 	snprintf(init_utsname()->machine, __NEW_UTS_LEN + 1, "%s%c",
 		 list->arch_name, ENDIANNESS);
+	// ELF_PLATFORM_SIZE: 8, list->elf_name: v7, ENDIANNESS: 'l'
 	snprintf(elf_platform, ELF_PLATFORM_SIZE, "%s%c",
 		 list->elf_name, ENDIANNESS);
+	
+	// HWCAP_SWP | HWCAP_HALF | HWCAP_THUMB | HWCAP_FAST_MULT | HWCAP_EDSP | HWCAP_TLS
+	// elf와 hwcap 이름의 관계?
+	// http://blee74.tistory.com/entry/setupprocessor-archarmkernelsetupc
 	elf_hwcap = list->elf_hwcap;
 
+	// elf_hwcap |= HWCAP_IDIVA | HWCAP_IDIVT;
 	cpuid_init_hwcaps();
 
-#ifndef CONFIG_ARM_THUMB
+#ifndef CONFIG_ARM_THUMB // CONFIG_ARM_THUMB = n
 	elf_hwcap &= ~(HWCAP_THUMB | HWCAP_IDIVT);
 #endif
 

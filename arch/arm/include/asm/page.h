@@ -99,7 +99,8 @@
 # endif
 #endif
 
-#ifdef CONFIG_CPU_COPY_V6
+// ARM10C 20130914
+#ifdef CONFIG_CPU_COPY_V6 // CONFIG_CPU_COPY_V6 = y
 # define MULTI_USER 1
 #endif
 

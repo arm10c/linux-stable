@@ -42,7 +42,8 @@
 #define vectors_high()	(0)
 #endif
 
-#ifdef CONFIG_CPU_CP15
+// ARM10C 20130914
+#ifdef CONFIG_CPU_CP15 // CONFIG_CPU_CP15 = y
 
 extern unsigned long cr_no_alignment;	/* defined in entry-armv.S */
 extern unsigned long cr_alignment;	/* defined in entry-armv.S */

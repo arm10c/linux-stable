@@ -76,6 +76,8 @@ extern unsigned int processor_id;
 		__val;							\
 	})
 
+// ARM10C 20130914
+// CPUID_EXT_ISAR0	"c2, 0"
 #define read_cpuid_ext(ext_reg)						\
 	({								\
 		unsigned int __val;					\
@@ -140,6 +142,7 @@ static inline unsigned int __attribute_const__ xscale_cpu_arch_version(void)
 	return read_cpuid_part_number() & ARM_CPU_XSCALE_ARCH_MASK;
 }
 
+// ARM10C 20130914
 static inline unsigned int __attribute_const__ read_cpuid_cachetype(void)
 {
 	return read_cpuid(CPUID_CACHETYPE);

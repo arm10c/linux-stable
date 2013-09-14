@@ -123,6 +123,8 @@ __mmap_switched:
 	str	r9, [r4]			@ Save processor ID
 	str	r1, [r5]			@ Save machine type
 	str	r2, [r6]			@ Save atags pointer
+// ARM10C 20130914
+// cr_alignment 값 체크
 	cmp	r7, #0
 	bicne	r4, r0, #CR_A			@ Clear 'A' bit
 	stmneia	r7, {r0, r4}			@ Save control register values

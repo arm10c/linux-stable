@@ -92,6 +92,10 @@
  * would be.
  * [...]
  */
+// ARM10C 20130914
+// pure의 의미?
+// http://gcc.gnu.org/onlinedocs/gcc/Function-Attributes.html
+// http://www.iamroot.org/xe/Hypervisor_1_Xen/7536
 #define __pure				__attribute__((pure))
 #define __aligned(x)			__attribute__((aligned(x)))
 #define __printf(a, b)			__attribute__((format(printf, a, b)))

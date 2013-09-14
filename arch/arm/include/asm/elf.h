@@ -86,6 +86,7 @@ typedef struct user_fp elf_fpregset_t;
  * ARM6 or ARM7 core and "armv4[lb]" for anything based on a StrongARM-1
  * core.
  */
+// ARM10C 20130914
 #define ELF_PLATFORM_SIZE 8
 #define ELF_PLATFORM	(elf_platform)
 
