@@ -474,6 +474,7 @@ void __init smp_setup_processor_id(void)
 	printk(KERN_INFO "Booting Linux on physical CPU 0x%x\n", mpidr);
 }
 
+// ARM10C 20130914
 static void __init setup_processor(void)
 {
 	struct proc_info_list *list;
@@ -487,6 +488,7 @@ static void __init setup_processor(void)
 	if (!list) {
 		printk("CPU configuration botched (ID %08x), unable "
 		       "to continue.\n", read_cpuid_id());
+		// 못찾으면 무한루프 (여기서 중지)
 		while (1);
 	}
 
@@ -771,6 +773,7 @@ void __init hyp_mode_check(void)
 #endif
 }
 
+// ARM10C 20130914
 void __init setup_arch(char **cmdline_p)
 {
 	struct machine_desc *mdesc;

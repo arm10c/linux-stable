@@ -8,7 +8,11 @@
 #define L1_CACHE_ALIGN(x) ALIGN(x, L1_CACHE_BYTES)
 #endif
 
+// ARM10C 20130914 this
+// SMP_CACHE_BYTES not defined
 #ifndef SMP_CACHE_BYTES
+// L1_CACHE_BYTES = 64
+// SMP_CACHE_BYTES = 64
 #define SMP_CACHE_BYTES L1_CACHE_BYTES
 #endif
 
@@ -16,6 +20,9 @@
 #define __read_mostly
 #endif
 
+// ARM10C 20130914
+// ____cacheline_aligned 
+// 64 byte align (Coretex-A15)
 #ifndef ____cacheline_aligned
 #define ____cacheline_aligned __attribute__((__aligned__(SMP_CACHE_BYTES)))
 #endif

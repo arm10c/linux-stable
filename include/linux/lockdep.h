@@ -16,6 +16,8 @@ struct lockdep_map;
 extern int prove_locking;
 extern int lock_stat;
 
+// ARM10C 20130914
+// CONFIG_LOCKDEP = n
 #ifdef CONFIG_LOCKDEP
 
 #include <linux/linkage.h>

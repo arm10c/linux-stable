@@ -518,7 +518,13 @@ asmlinkage void __init start_kernel(void)
  */
 	boot_cpu_init();// 현재 cpu(core id)를 얻어서 cpu_XXX_bits[] 의 cpu를 셋한다.
 //2013/09/07 종료 
-	page_address_init();
+//2013/09/14 시작
+	
+	page_address_init();// 128개의 page_address_htable 배열을 초기화
+	// 배너: 
+	//	Linux version 2.6.37_DM385_IPNC_3.50.00
+	// 	(a0875405@bangvideoapps01) (gcc version 4.5.3 20110311 
+	// 	(prerelease) (GCC) ) #1 Fri Dec 21 17:27:08 IST 2012
 	pr_notice("%s", linux_banner);
 	setup_arch(&command_line);
 	mm_init_owner(&init_mm, &init_task);

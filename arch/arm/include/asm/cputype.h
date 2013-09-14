@@ -102,12 +102,15 @@ extern unsigned int processor_id;
 
 #endif /* ifdef CONFIG_CPU_CP15 / else */
 
+// ARM10C 20130914
+// CONFIG_CPU_CP15 = y
 #ifdef CONFIG_CPU_CP15
 /*
  * The CPU ID never changes at run time, so we might as well tell the
  * compiler that it's constant.  Use this function to read the CPU ID
  * rather than directly reading processor_id or read_cpuid() directly.
  */
+// ARM10C 20130914 this
 static inline unsigned int __attribute_const__ read_cpuid_id(void)
 {
 	return read_cpuid(CPUID_ID);

@@ -29,6 +29,7 @@ struct machine_desc {
 
 	unsigned int		nr_irqs;	/* number of IRQs */
 
+//CONFIG_ZONE_DMA = n
 #ifdef CONFIG_ZONE_DMA
 	unsigned long		dma_zone_size;	/* size of DMA-able area */
 #endif

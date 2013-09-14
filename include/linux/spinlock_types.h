@@ -17,15 +17,20 @@
 
 #include <linux/lockdep.h>
 
+// ARM10C 20130914
+// arch_spinlock_t의 wrapper다.
 typedef struct raw_spinlock {
 	arch_spinlock_t raw_lock;
+//CONFIG_GENERIC_LOCKBREAK = n
 #ifdef CONFIG_GENERIC_LOCKBREAK
 	unsigned int break_lock;
 #endif
+//CONFIG_DEBUG_SPINLOCK = y
 #ifdef CONFIG_DEBUG_SPINLOCK
 	unsigned int magic, owner_cpu;
 	void *owner;
 #endif
+//CONFIG_DEBUG_LOCK_ALLOC = n
 #ifdef CONFIG_DEBUG_LOCK_ALLOC
 	struct lockdep_map dep_map;
 #endif
@@ -50,6 +55,7 @@ typedef struct raw_spinlock {
 # define SPIN_DEBUG_INIT(lockname)
 #endif
 
+// ARM10C 20130914
 #define __RAW_SPIN_LOCK_INITIALIZER(lockname)	\
 	{					\
 	.raw_lock = __ARCH_SPIN_LOCK_UNLOCKED,	\
@@ -61,10 +67,12 @@ typedef struct raw_spinlock {
 
 #define DEFINE_RAW_SPINLOCK(x)	raw_spinlock_t x = __RAW_SPIN_LOCK_UNLOCKED(x)
 
+// ARM10C 20130914
+// 여기도 raw_spinlock의 wrapper다.
 typedef struct spinlock {
 	union {
 		struct raw_spinlock rlock;
-
+// CONFIG_DEBUG_LOCK_ALLOC = n
 #ifdef CONFIG_DEBUG_LOCK_ALLOC
 # define LOCK_PADSIZE (offsetof(struct raw_spinlock, dep_map))
 		struct {
