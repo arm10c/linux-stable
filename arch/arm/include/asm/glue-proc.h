@@ -221,8 +221,9 @@
 # endif
 #endif
 
-#ifdef CONFIG_CPU_V7
-# ifdef CPU_NAME
+// ARM10C 20130928
+#ifdef CONFIG_CPU_V7	// CONFIG_CPU_V7=y
+# ifdef CPU_NAME	// not defined
 #  undef  MULTI_CPU
 #  define MULTI_CPU
 # else
@@ -248,8 +249,9 @@
 # endif
 #endif
 
-#ifndef MULTI_CPU
-#define cpu_proc_init			__glue(CPU_NAME,_proc_init)
+// ARM10C 20130928
+#ifndef MULTI_CPU	// not defined	
+#define cpu_proc_init			__glue(CPU_NAME,_proc_init) // cpu_v7_proc_init
 #define cpu_proc_fin			__glue(CPU_NAME,_proc_fin)
 #define cpu_reset			__glue(CPU_NAME,_reset)
 #define cpu_do_idle			__glue(CPU_NAME,_do_idle)

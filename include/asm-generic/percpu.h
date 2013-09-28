@@ -17,6 +17,7 @@
 #ifndef __per_cpu_offset
 extern unsigned long __per_cpu_offset[NR_CPUS];
 
+// ARM10C 20130928
 #define per_cpu_offset(x) (__per_cpu_offset[x])
 #endif
 

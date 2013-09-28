@@ -8,6 +8,7 @@
 #define CACHEID_VIPT			(CACHEID_VIPT_ALIASING|CACHEID_VIPT_NONALIASING)
 #define CACHEID_ASID_TAGGED		(1 << 3)
 #define CACHEID_VIPT_I_ALIASING		(1 << 4)
+// ARM10C 20130928
 #define CACHEID_PIPT			(1 << 5)
 
 extern unsigned int cacheid;
@@ -18,6 +19,7 @@ extern unsigned int cacheid;
 #define cache_is_vipt_aliasing()	cacheid_is(CACHEID_VIPT_ALIASING)
 #define icache_is_vivt_asid_tagged()	cacheid_is(CACHEID_ASID_TAGGED)
 #define icache_is_vipt_aliasing()	cacheid_is(CACHEID_VIPT_I_ALIASING)
+// ARM10C 20130928
 #define icache_is_pipt()		cacheid_is(CACHEID_PIPT)
 
 /*
@@ -55,6 +57,7 @@ extern unsigned int cacheid;
 #endif
 
 // ARM10C 20130914
+// ARM10C 20130928
 static inline unsigned int __attribute__((pure)) cacheid_is(unsigned int mask)
 {
 	return (__CACHEID_ALWAYS & mask) |

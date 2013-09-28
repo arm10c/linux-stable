@@ -165,7 +165,7 @@
  * files.  Use virt_to_phys/phys_to_virt/__pa/__va instead.
  */
 #ifndef __virt_to_phys
-#ifdef CONFIG_ARM_PATCH_PHYS_VIRT
+#ifdef CONFIG_ARM_PATCH_PHYS_VIRT // CONFIG_ARM_PATCH_PHYS_VIRT=y
 
 /*
  * Constants used to force the right instruction encodings and shifts
@@ -175,6 +175,14 @@
 
 extern unsigned long __pv_phys_offset;
 #define PHYS_OFFSET __pv_phys_offset
+
+// FIXME: pushsection 의 사용 방법? 
+// #define __pv_stub(x,t,"sub",__PV_BITS_31_24)			\
+//	   __asm__("@ __pv_stub\n"				\
+//	   "1:	"sub"	t, x, __PV_BITS_31_24\n"		\
+//	   "	.pushsection .pv_table,\"a\"\n"		\
+//	   "	.long	1b\n"				\
+//	   "	.popsection\n"				\
 
 #define __pv_stub(from,to,instr,type)			\
 	__asm__("@ __pv_stub\n"				\
@@ -192,6 +200,7 @@ static inline unsigned long __virt_to_phys(unsigned long x)
 	return t;
 }
 
+// ARM10C 20130928
 static inline unsigned long __phys_to_virt(unsigned long x)
 {
 	unsigned long t;
@@ -236,6 +245,7 @@ static inline phys_addr_t virt_to_phys(const volatile void *x)
 	return __virt_to_phys((unsigned long)(x));
 }
 
+// ARM10C 20130928
 static inline void *phys_to_virt(phys_addr_t x)
 {
 	return (void *)(__phys_to_virt((unsigned long)(x)));

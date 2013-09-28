@@ -20,9 +20,13 @@
  * Same as asm-generic/percpu.h, except that we store the per cpu offset
  * in the TPIDRPRW. TPIDRPRW only exists on V6K and V7
  */
-#if defined(CONFIG_SMP) && !defined(CONFIG_CPU_V6)
+#if defined(CONFIG_SMP) && !defined(CONFIG_CPU_V6) // CONFIG_SMP=y, CONFIG_CPU_V6=n
+// ARM10C 20130928
 static inline void set_my_cpu_offset(unsigned long off)
 {
+	// A.R.M: A3.6.1 Processor privilege levels, execution privilege, and access privilege
+	//        B4.1.150 TPIDRPRW, PL1 only Thread ID Register, VMSA 
+	// FIXME: TPIDRPRW를 사용하여 thread id를 설정하는 이유?
 	/* Set TPIDRPRW */
 	asm volatile("mcr p15, 0, %0, c13, c0, 4" : : "r" (off) : "memory");
 }

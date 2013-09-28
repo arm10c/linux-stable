@@ -46,6 +46,7 @@
 // __cold: size 를 최적화 하기 위한 옵션
 // http://gcc.gnu.org/onlinedocs/gcc/Function-Attributes.html
 #define __init		__section(.init.text) __cold notrace
+// ARM10C 20130928
 #define __initdata	__section(.init.data)
 #define __initconst	__constsection(.init.rodata)
 #define __exitdata	__section(.exit.data)
@@ -118,6 +119,8 @@
 #define __INIT		.section	".init.text","ax"
 #define __FINIT		.previous
 
+// ARM10C 20130928
+// http://stackoverflow.com/questions/8832114/what-does-init-mean-in-this-linux-kernel-code
 #define __INITDATA	.section	".init.data","aw",%progbits
 #define __INITRODATA	.section	".init.rodata","a",%progbits
 #define __FINITDATA	.previous

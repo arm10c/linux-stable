@@ -1828,7 +1828,7 @@ out_free_ar:
 }
 #endif /* BUILD_PAGE_FIRST_CHUNK */
 
-#ifndef	CONFIG_HAVE_SETUP_PER_CPU_AREA
+#ifndef	CONFIG_HAVE_SETUP_PER_CPU_AREA	// not defined
 /*
  * Generic SMP percpu area setup.
  *
@@ -1841,6 +1841,10 @@ out_free_ar:
  * on the physical linear memory mapping which uses large page
  * mappings on applicable archs.
  */
+// ARM10C 20130928
+// Percpu 용어 관련 링크
+// http://studyfoss.egloos.com/5375570
+// http://blog.naver.com/PostView.nhn?blogId=nix102guri&logNo=90098904482
 unsigned long __per_cpu_offset[NR_CPUS] __read_mostly;
 EXPORT_SYMBOL(__per_cpu_offset);
 

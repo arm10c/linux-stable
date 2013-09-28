@@ -84,6 +84,8 @@ EXPORT_SYMBOL(__machine_arch_type);
 unsigned int cacheid __read_mostly;
 EXPORT_SYMBOL(cacheid);
 
+// ARM10C 20130928
+// FIXME: __atags_pointer은 왜 EXPORT_SYMBOL 을 하지 않는지?
 unsigned int __atags_pointer __initdata;
 
 unsigned int system_rev;
@@ -124,6 +126,7 @@ EXPORT_SYMBOL(outer_cache);
  */
 int __cpu_architecture __read_mostly = CPU_ARCH_UNKNOWN;
 
+// ARM10C 20130928
 struct stack {
 	u32 irq[3];
 	u32 abt[3];
@@ -131,6 +134,7 @@ struct stack {
 } ____cacheline_aligned;
 
 #ifndef CONFIG_CPU_V7M
+// ARM10C 20130928
 static struct stack stacks[NR_CPUS];
 #endif
 
@@ -272,16 +276,19 @@ int __pure cpu_architecture(void)
 }
 
 // ARM10C 20130914
+// ARM10C 20130928
 static int cpu_has_aliasing_icache(unsigned int arch)
 {
 	int aliasing_icache;
 	unsigned int id_reg, num_sets, line_size;
 
 	/* PIPT caches never alias. */
+	// icache_is_pipt() 리턴값: 0x20
 	if (icache_is_pipt())
 		return 0;
 
 	/* arch specifies the register format */
+	// PIPT가 아닐 경우 아래 코드 수행
 	switch (arch) {
 	case CPU_ARCH_ARMv7:
 		asm("mcr	p15, 2, %0, c0, c0, 0 @ set CSSELR"
@@ -337,12 +344,17 @@ static void __init cacheid_init(void)
 				cacheid = CACHEID_VIPT_NONALIASING;
 		}
 // 2013/09/14 종료
+// 2013/09/28 시작
+		// cpu_has_aliasing_icache(arch) 리턴값 : 0
 		if (cpu_has_aliasing_icache(arch))
 			cacheid |= CACHEID_VIPT_I_ALIASING;
 	} else {
 		cacheid = CACHEID_VIVT;
 	}
 
+	// T.R.M: 6.1 About the L1 memory system
+	// prink 출력값
+	// CPU: PIPT / VIPT nonaliasing data cache, PIPT instruction cache 
 	printk("CPU: %s data cache, %s instruction cache\n",
 		cache_is_vivt() ? "VIVT" :
 		cache_is_vipt_aliasing() ? "VIPT aliasing" :
@@ -423,10 +435,11 @@ static void __init feat_v6_fixup(void)
  *
  * cpu_init sets up the per-CPU stacks.
  */
+// ARM10C 20130928
 void notrace cpu_init(void)
 {
-#ifndef CONFIG_CPU_V7M
-	unsigned int cpu = smp_processor_id();
+#ifndef CONFIG_CPU_V7M	// not defined
+	unsigned int cpu = smp_processor_id();	// cpu : 0 
 	struct stack *stk = &stacks[cpu];
 
 	if (cpu >= NR_CPUS) {
@@ -440,13 +453,14 @@ void notrace cpu_init(void)
 	 */
 	set_my_cpu_offset(per_cpu_offset(cpu));
 
+	// 특정CPU에 필요한 코드 실행, V7인 경우 아무것도 안하고 리턴
 	cpu_proc_init();
 
 	/*
 	 * Define the placement constraint for the inline asm directive below.
 	 * In Thumb-2, msr with an immediate value is not allowed.
 	 */
-#ifdef CONFIG_THUMB2_KERNEL
+#ifdef CONFIG_THUMB2_KERNEL	// not defined
 #define PLC	"r"
 #else
 #define PLC	"I"
@@ -455,6 +469,19 @@ void notrace cpu_init(void)
 	/*
 	 * setup stacks for re-entrant exception handlers
 	 */
+
+	// IRQ, ABT, UND 모드의 sp 값을 초기화 
+	//"msr	cpsr_c, PSR_F_BIT | PSR_I_BIT | IRQ_MODE\n\t"
+	//"add	r14, stk, offsetof(struct stack, irq[0])\n\t"	// r14: &(stk->irq[0])
+	//"mov	sp, r14\n\t"
+	//"msr	cpsr_c, PSR_F_BIT | PSR_I_BIT | ABT_MODE\n\t"
+	//"add	r14, stk, offsetof(struct stack, abt[0])\n\t"	// r14: &(stk->abt[0])
+	//"mov	sp, r14\n\t"
+	//"msr	cpsr_c, PSR_F_BIT | PSR_I_BIT | UND_MODE\n\t"
+	//"add	r14, stk, offsetof(struct stack, und[0])\n\t"	// r14: &(stk->und[0])
+	//"mov	sp, r14\n\t"
+	//"msr	cpsr_c, PSR_F_BIT | PSR_I_BIT | SVC_MODE"
+
 	__asm__ (
 	"msr	cpsr_c, %1\n\t"
 	"add	r14, %0, %2\n\t"

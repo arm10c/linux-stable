@@ -176,6 +176,7 @@ void __init arm_dt_init_cpu_maps(void)
  * If a dtb was passed to the kernel in r2, then use it to choose the
  * correct machine_desc and to setup the system.
  */
+// ARM10C 20130928
 struct machine_desc * __init setup_machine_fdt(unsigned int dt_phys)
 {
 	struct boot_param_header *devtree;
@@ -184,7 +185,7 @@ struct machine_desc * __init setup_machine_fdt(unsigned int dt_phys)
 	unsigned long dt_root;
 	const char *model;
 
-#ifdef CONFIG_ARCH_MULTIPLATFORM
+#ifdef CONFIG_ARCH_MULTIPLATFORM // not defined
 	DT_MACHINE_START(GENERIC_DT, "Generic DT based system")
 	MACHINE_END
 
@@ -194,6 +195,7 @@ struct machine_desc * __init setup_machine_fdt(unsigned int dt_phys)
 	if (!dt_phys)
 		return NULL;
 
+// 2013/09/28 종료
 	devtree = phys_to_virt(dt_phys);
 
 	/* check device tree validity */

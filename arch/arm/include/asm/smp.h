@@ -84,8 +84,9 @@ extern void arch_send_call_function_single_ipi(int cpu);
 extern void arch_send_call_function_ipi_mask(const struct cpumask *mask);
 extern void arch_send_wakeup_ipi_mask(const struct cpumask *mask);
 
+// ARM10C 20130928
 struct smp_operations {
-#ifdef CONFIG_SMP
+#ifdef CONFIG_SMP // CONFIG_SMP=y
 	/*
 	 * Setup the set of possible CPUs (via set_cpu_possible)
 	 */
@@ -104,7 +105,7 @@ struct smp_operations {
 	 * This also gives us the initial stack to use for this CPU.
 	 */
 	int  (*smp_boot_secondary)(unsigned int cpu, struct task_struct *idle);
-#ifdef CONFIG_HOTPLUG_CPU
+#ifdef CONFIG_HOTPLUG_CPU // CONFIG_HOTPLUG_CPU=y
 	int  (*cpu_kill)(unsigned int cpu);
 	void (*cpu_die)(unsigned int cpu);
 	int  (*cpu_disable)(unsigned int cpu);

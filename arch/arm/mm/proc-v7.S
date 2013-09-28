@@ -25,6 +25,7 @@
 #include "proc-v7-2level.S"
 #endif
 
+// ARM10C 20130928
 ENTRY(cpu_v7_proc_init)
 	mov	pc, lr
 ENDPROC(cpu_v7_proc_init)
