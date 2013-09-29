@@ -37,7 +37,7 @@ modules.builtin
 #
 # Top-level generic files
 #
-/tags
+/tags*
 /TAGS
 /linux
 /vmlinux
@@ -73,8 +73,29 @@ patches
 series
 
 # cscope files
-cscope.*
+cscope*
 ncscope.*
+BuildCscope*
+*.vim
+
+#
+# Mac File system error files
+#
+**/include/uapi/linux/netfilter/*
+**/include/uapi/linux/netfilter_ipv4/*
+**/net/netfilter/*
+#include/uapi/linux/netfilter/xt_CONNMARK.h
+#include/uapi/linux/netfilter/xt_DSCP.h
+#include/uapi/linux/netfilter/xt_MARK.h
+#include/uapi/linux/netfilter/xt_RATEEST.h
+#include/uapi/linux/netfilter/xt_TCPMSS.h
+#include/uapi/linux/netfilter_ipv4/ipt_ECN.h
+#include/uapi/linux/netfilter_ipv4/ipt_TTL.h
+#include/uapi/linux/netfilter_ipv6/ip6t_HL.h
+#net/netfilter/xt_DSCP.c
+#net/netfilter/xt_HL.c
+#net/netfilter/xt_RATEEST.c
+#net/netfilter/xt_TCPMSS.c
 
 # gnu global files
 GPATH
