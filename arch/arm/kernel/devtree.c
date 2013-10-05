@@ -196,9 +196,13 @@ struct machine_desc * __init setup_machine_fdt(unsigned int dt_phys)
 		return NULL;
 
 // 2013/09/28 종료
+// 2013/10/05 시작
 	devtree = phys_to_virt(dt_phys);
 
 	/* check device tree validity */
+
+	// little endian으로 swap 한 결과
+	// devtree->magic: 0xd00dfeed
 	if (be32_to_cpu(devtree->magic) != OF_DT_HEADER)
 		return NULL;
 
@@ -206,12 +210,16 @@ struct machine_desc * __init setup_machine_fdt(unsigned int dt_phys)
 	initial_boot_params = devtree;
 	dt_root = of_get_flat_dt_root();
 	for_each_machine_desc(mdesc) {
+		// 아래 경로의 dtcompat 값 비교
+		// arch/arm/mach-exynos/mach-exynos5-dt.c
 		score = of_flat_dt_match(dt_root, mdesc->dt_compat);
 		if (score > 0 && score < mdesc_score) {
 			mdesc_best = mdesc;
 			mdesc_score = score;
 		}
 	}
+
+	// 해당하는 compatible 이 없을 경우 에러 메시지 처리
 	if (!mdesc_best) {
 		const char *prop;
 		long size;
@@ -231,13 +239,17 @@ struct machine_desc * __init setup_machine_fdt(unsigned int dt_phys)
 	}
 
 	model = of_get_flat_dt_prop(dt_root, "model", NULL);
+
+	// model 명이 없으면 compatible 의 문자열을 가져옴 
 	if (!model)
 		model = of_get_flat_dt_prop(dt_root, "compatible", NULL);
 	if (!model)
 		model = "<unknown>";
 	pr_info("Machine: %s, model: %s\n", mdesc_best->name, model);
 
+// 2013/10/05 종료
 	/* Retrieve various information from the /chosen node */
+	// dt에서 chosen 노드를 찾음
 	of_scan_flat_dt(early_init_dt_scan_chosen, boot_command_line);
 	/* Initialize {size,address}-cells info */
 	of_scan_flat_dt(early_init_dt_scan_root, NULL);

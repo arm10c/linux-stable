@@ -678,6 +678,7 @@ static void __init setup_processor(void)
 	cpu_init();
 }
 
+// ARM10C 20131005
 void __init dump_machine_table(void)
 {
 	struct machine_desc *p;

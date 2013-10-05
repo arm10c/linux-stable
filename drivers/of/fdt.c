@@ -25,6 +25,7 @@
 
 #include <asm/page.h>
 
+// ARM10C 20131005
 char *of_fdt_get_string(struct boot_param_header *blob, u32 offset)
 {
 	return ((char *)blob) +
@@ -35,6 +36,7 @@ char *of_fdt_get_string(struct boot_param_header *blob, u32 offset)
  * of_fdt_get_property - Given a node in the given flat blob, return
  * the property ptr
  */
+// ARM10C 20131005
 void *of_fdt_get_property(struct boot_param_header *blob,
 		       unsigned long node, const char *name,
 		       unsigned long *size)
@@ -63,6 +65,7 @@ void *of_fdt_get_property(struct boot_param_header *blob,
 			pr_warning("Can't find property index name !\n");
 			return NULL;
 		}
+		// name: "compatible"
 		if (strcmp(name, nstr) == 0) {
 			if (size)
 				*size = sz;
@@ -83,6 +86,7 @@ void *of_fdt_get_property(struct boot_param_header *blob,
  * On match, returns a non-zero value with smaller values returned for more
  * specific compatible values.
  */
+// ARM10C 20131005
 int of_fdt_is_compatible(struct boot_param_header *blob,
 		      unsigned long node, const char *compat)
 {
@@ -440,7 +444,7 @@ int __initdata dt_root_size_cells;
 
 struct boot_param_header *initial_boot_params;
 
-#ifdef CONFIG_OF_EARLY_FLATTREE
+#ifdef CONFIG_OF_EARLY_FLATTREE // CONFIG_OF_EARLY_FLATTREE=y
 
 /**
  * of_scan_flat_dt - scan flattened tree blob and call callback on each.
@@ -451,6 +455,7 @@ struct boot_param_header *initial_boot_params;
  * used to extract the memory information at boot before we can
  * unflatten the tree
  */
+// ARM10C 20131005
 int __init of_scan_flat_dt(int (*it)(unsigned long node,
 				     const char *uname, int depth,
 				     void *data),
@@ -490,6 +495,8 @@ int __init of_scan_flat_dt(int (*it)(unsigned long node,
 		depth++;
 		pathp = (char *)p;
 		p = ALIGN(p + strlen(pathp) + 1, 4);
+
+		// FIXME: pathp의 값이 절대 경로라면 최하위 경로값 추출
 		if (*pathp == '/')
 			pathp = kbasename(pathp);
 		rc = it(p, pathp, depth, data);
@@ -503,13 +510,17 @@ int __init of_scan_flat_dt(int (*it)(unsigned long node,
 /**
  * of_get_flat_dt_root - find the root node in the flat blob
  */
+// ARM10C 20131005
 unsigned long __init of_get_flat_dt_root(void)
 {
 	unsigned long p = ((unsigned long)initial_boot_params) +
 		be32_to_cpu(initial_boot_params->off_dt_struct);
 
+	// OF_DT_NOP: 0x4
 	while (be32_to_cpup((__be32 *)p) == OF_DT_NOP)
 		p += 4;
+
+	// OF_DT_BEGIN_NOD: 0x1
 	BUG_ON(be32_to_cpup((__be32 *)p) != OF_DT_BEGIN_NODE);
 	p += 4;
 	return ALIGN(p + strlen((char *)p) + 1, 4);
@@ -521,6 +532,7 @@ unsigned long __init of_get_flat_dt_root(void)
  * This function can be used within scan_flattened_dt callback to get
  * access to properties
  */
+// ARM10C 20131005
 void *__init of_get_flat_dt_prop(unsigned long node, const char *name,
 				 unsigned long *size)
 {
@@ -532,6 +544,7 @@ void *__init of_get_flat_dt_prop(unsigned long node, const char *name,
  * @node: node to test
  * @compat: compatible string to compare with compatible list.
  */
+// ARM10C 20131005
 int __init of_flat_dt_is_compatible(unsigned long node, const char *compat)
 {
 	return of_fdt_is_compatible(initial_boot_params, node, compat);
@@ -545,11 +558,12 @@ int __init of_flat_dt_match(unsigned long node, const char *const *compat)
 	return of_fdt_match(initial_boot_params, node, compat);
 }
 
-#ifdef CONFIG_BLK_DEV_INITRD
+#ifdef CONFIG_BLK_DEV_INITRD // CONFIG_BLK_DEV_INITRD=y
 /**
  * early_init_dt_check_for_initrd - Decode initrd location from flat tree
  * @node: reference to node containing initrd location ('chosen')
  */
+// ARM10C 20131005
 void __init early_init_dt_check_for_initrd(unsigned long node)
 {
 	unsigned long start, end, len;
@@ -661,6 +675,7 @@ int __init early_init_dt_scan_memory(unsigned long node, const char *uname,
 	return 0;
 }
 
+// ARM10C 20131005
 int __init early_init_dt_scan_chosen(unsigned long node, const char *uname,
 				     int depth, void *data)
 {

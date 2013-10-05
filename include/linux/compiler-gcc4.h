@@ -51,6 +51,7 @@
  * this in the preprocessor, but we can live with this because they're
  * unreleased.  Really, we need to have autoconf for the kernel.
  */
+// ARM10C 20131005
 #define unreachable() __builtin_unreachable()
 
 /* Mark a function definition as prohibited from being cloned. */
@@ -66,7 +67,8 @@
 #endif
 
 
-#ifdef CONFIG_ARCH_USE_BUILTIN_BSWAP
+// ARM10C 20131005
+#ifdef CONFIG_ARCH_USE_BUILTIN_BSWAP // not defined
 #if GCC_VERSION >= 40400
 #define __HAVE_BUILTIN_BSWAP32__
 #define __HAVE_BUILTIN_BSWAP64__

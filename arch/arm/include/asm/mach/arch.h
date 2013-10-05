@@ -73,6 +73,7 @@ extern struct machine_desc *machine_desc;
  * Machine type table - also only accessible during boot
  */
 extern struct machine_desc __arch_info_begin[], __arch_info_end[];
+// ARM10C 20131005
 #define for_each_machine_desc(p)			\
 	for (p = __arch_info_begin; p < __arch_info_end; p++)
 
@@ -80,6 +81,7 @@ extern struct machine_desc __arch_info_begin[], __arch_info_end[];
  * Set of macros to define architecture features.  This is built into
  * a table by the linker.
  */
+// ARM10C 20131005
 #define MACHINE_START(_type,_name)			\
 static const struct machine_desc __mach_desc_##_type	\
  __used							\

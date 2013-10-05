@@ -36,6 +36,7 @@
 #define __cpu_to_be64(x) ((__force __be64)__swab64((x)))
 #define __be64_to_cpu(x) __swab64((__force __u64)(__be64)(x))
 #define __cpu_to_be32(x) ((__force __be32)__swab32((x)))
+// ARM10C 20131005
 #define __be32_to_cpu(x) __swab32((__force __u32)(__be32)(x))
 #define __cpu_to_be16(x) ((__force __be16)__swab16((x)))
 #define __be16_to_cpu(x) __swab16((__force __u16)(__be16)(x))
@@ -76,6 +77,7 @@ static inline __be32 __cpu_to_be32p(const __u32 *p)
 {
 	return (__force __be32)__swab32p(p);
 }
+// ARM10C 20131005
 static inline __u32 __be32_to_cpup(const __be32 *p)
 {
 	return __swab32p((__u32 *)p);

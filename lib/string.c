@@ -60,6 +60,7 @@ EXPORT_SYMBOL(strnicmp);
 #endif
 
 #ifndef __HAVE_ARCH_STRCASECMP
+// ARM10C 20131005
 int strcasecmp(const char *s1, const char *s2)
 {
 	int c1, c2;

@@ -70,6 +70,7 @@ static void __init exynos5_reserve(void)
 #endif
 }
 
+// ARM10C 20131005
 DT_MACHINE_START(EXYNOS5_DT, "SAMSUNG EXYNOS5 (Flattened Device Tree)")
 	/* Maintainer: Kukjin Kim <kgene.kim@samsung.com> */
 	.smp		= smp_ops(exynos_smp_ops),
