@@ -16,6 +16,7 @@
  * using the generic single-entry routines.
  */
 
+// ARM10C 20131012
 #define LIST_HEAD_INIT(name) { &(name), &(name) }
 
 #define LIST_HEAD(name) \

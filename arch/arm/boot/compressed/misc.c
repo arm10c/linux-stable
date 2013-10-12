@@ -16,6 +16,7 @@
  *  This allows for a much quicker boot time.
  */
 
+// ARM10C 20131012
 unsigned int __machine_arch_type;
 
 #include <linux/compiler.h>	/* for inline */

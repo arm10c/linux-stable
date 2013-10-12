@@ -81,7 +81,6 @@ extern struct machine_desc __arch_info_begin[], __arch_info_end[];
  * Set of macros to define architecture features.  This is built into
  * a table by the linker.
  */
-// ARM10C 20131005
 #define MACHINE_START(_type,_name)			\
 static const struct machine_desc __mach_desc_##_type	\
  __used							\
@@ -92,6 +91,7 @@ static const struct machine_desc __mach_desc_##_type	\
 #define MACHINE_END				\
 };
 
+// ARM10C 20131012
 #define DT_MACHINE_START(_name, _namestr)		\
 static const struct machine_desc __mach_desc_##_name	\
  __used							\

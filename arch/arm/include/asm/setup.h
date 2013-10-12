@@ -24,14 +24,19 @@ static const struct tagtable __tagtable_##fn __tag = { tag, fn }
 /*
  * Memory map description
  */
+// ARM10C 20131012
+// CONFIG_ARM_NR_BANKS=8
+// ARM은 default가 8임
 #define NR_BANKS	CONFIG_ARM_NR_BANKS
 
+// ARM10C 20131012
 struct membank {
 	phys_addr_t start;
 	phys_addr_t size;
 	unsigned int highmem;
 };
 
+// ARM10C 20131012
 struct meminfo {
 	int nr_banks;
 	struct membank bank[NR_BANKS];

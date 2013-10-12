@@ -17,6 +17,7 @@
 #include <asm/barrier.h>
 #include <asm/cmpxchg.h>
 
+// ARM10C 20131012
 #define ATOMIC_INIT(i)	{ (i) }
 
 #ifdef __KERNEL__

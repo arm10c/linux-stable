@@ -21,12 +21,14 @@
 /* The list ends with an ATAG_NONE node. */
 #define ATAG_NONE	0x00000000
 
+// ARM10C 20131012
 struct tag_header {
 	__u32 size;
 	__u32 tag;
 };
 
 /* The list must start with an ATAG_CORE node */
+// ARM10C 20131012
 #define ATAG_CORE	0x54410001
 
 struct tag_core {
@@ -36,6 +38,7 @@ struct tag_core {
 };
 
 /* it is allowed to have multiple ATAG_MEM nodes */
+// ARM10C 20131012
 #define ATAG_MEM	0x54410002
 
 struct tag_mem32 {
@@ -143,6 +146,7 @@ struct tag_memclk {
 	__u32 fmemclk;
 };
 
+// ARM10C 20131012
 struct tag {
 	struct tag_header hdr;
 	union {
@@ -178,6 +182,7 @@ struct tagtable {
 		<= (tag)->hdr.size * 4)
 
 #define tag_next(t)	((struct tag *)((__u32 *)(t) + (t)->hdr.size))
+// ARM10C 20131012
 #define tag_size(type)	((sizeof(struct tag_header) + sizeof(struct type)) >> 2)
 
 #define for_each_tag(t,base)		\

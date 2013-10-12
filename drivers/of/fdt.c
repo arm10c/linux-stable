@@ -439,6 +439,7 @@ void of_fdt_unflatten_tree(unsigned long *blob,
 EXPORT_SYMBOL_GPL(of_fdt_unflatten_tree);
 
 /* Everything below here references initial_boot_params directly. */
+// ARM10C 20131012
 int __initdata dt_root_addr_cells;
 int __initdata dt_root_size_cells;
 
@@ -456,6 +457,7 @@ struct boot_param_header *initial_boot_params;
  * unflatten the tree
  */
 // ARM10C 20131005
+// ARM10C 20131012
 int __init of_scan_flat_dt(int (*it)(unsigned long node,
 				     const char *uname, int depth,
 				     void *data),
@@ -564,6 +566,7 @@ int __init of_flat_dt_match(unsigned long node, const char *const *compat)
  * @node: reference to node containing initrd location ('chosen')
  */
 // ARM10C 20131005
+// ARM10C 20131012
 void __init early_init_dt_check_for_initrd(unsigned long node)
 {
 	unsigned long start, end, len;
@@ -593,6 +596,7 @@ inline void early_init_dt_check_for_initrd(unsigned long node)
 /**
  * early_init_dt_scan_root - fetch the top level address and size cells
  */
+// ARM10C 20131012
 int __init early_init_dt_scan_root(unsigned long node, const char *uname,
 				   int depth, void *data)
 {
@@ -601,23 +605,29 @@ int __init early_init_dt_scan_root(unsigned long node, const char *uname,
 	if (depth != 0)
 		return 0;
 
+	// dt_root_size_cells=1, dt_root_addr_cells=1
 	dt_root_size_cells = OF_ROOT_NODE_SIZE_CELLS_DEFAULT;
 	dt_root_addr_cells = OF_ROOT_NODE_ADDR_CELLS_DEFAULT;
 
 	prop = of_get_flat_dt_prop(node, "#size-cells", NULL);
 	if (prop)
 		dt_root_size_cells = be32_to_cpup(prop);
+
+	// dt_root_size_cells=1
 	pr_debug("dt_root_size_cells = %x\n", dt_root_size_cells);
 
 	prop = of_get_flat_dt_prop(node, "#address-cells", NULL);
 	if (prop)
 		dt_root_addr_cells = be32_to_cpup(prop);
+
+	// dt_root_addr_cells=1
 	pr_debug("dt_root_addr_cells = %x\n", dt_root_addr_cells);
 
 	/* break now */
 	return 1;
 }
 
+// ARM10C 20131012
 u64 __init dt_mem_next_cell(int s, __be32 **cellp)
 {
 	__be32 *p = *cellp;
@@ -629,6 +639,7 @@ u64 __init dt_mem_next_cell(int s, __be32 **cellp)
 /**
  * early_init_dt_scan_memory - Look for an parse memory nodes
  */
+// ARM10C 20131012
 int __init early_init_dt_scan_memory(unsigned long node, const char *uname,
 				     int depth, void *data)
 {
@@ -647,12 +658,16 @@ int __init early_init_dt_scan_memory(unsigned long node, const char *uname,
 	} else if (strcmp(type, "memory") != 0)
 		return 0;
 
+	// memory 노드 안의 프로퍼티를 찾음 
 	reg = of_get_flat_dt_prop(node, "linux,usable-memory", &l);
+
+	// 프로퍼터의 length값 l = 8
 	if (reg == NULL)
 		reg = of_get_flat_dt_prop(node, "reg", &l);
 	if (reg == NULL)
 		return 0;
 
+	// memory의 reg 값의 끝 위치를 계산
 	endp = reg + (l / sizeof(__be32));
 
 	pr_debug("memory scan node %s, reg size %ld, data: %x %x %x %x,\n",
@@ -661,6 +676,7 @@ int __init early_init_dt_scan_memory(unsigned long node, const char *uname,
 	while ((endp - reg) >= (dt_root_addr_cells + dt_root_size_cells)) {
 		u64 base, size;
 
+		// base=0x20000000 , size=0x80000000
 		base = dt_mem_next_cell(dt_root_addr_cells, &reg);
 		size = dt_mem_next_cell(dt_root_size_cells, &reg);
 
@@ -676,12 +692,22 @@ int __init early_init_dt_scan_memory(unsigned long node, const char *uname,
 }
 
 // ARM10C 20131005
+// ARM10C 20131012
 int __init early_init_dt_scan_chosen(unsigned long node, const char *uname,
 				     int depth, void *data)
 {
 	unsigned long l;
 	char *p;
 
+	// exynos5420-smdk5420.dtb 값의 chosen 부분 
+	// 00000d0: 4f53 3534 3230 0000 0000 0001 6368 6f73  OS5420......chos
+	// 00000e0: 656e 0000 0000 0003 0000 0025 0000 003d  en.........%...=
+	// 00000f0: 636f 6e73 6f6c 653d 7474 7953 4143 322c  console=ttySAC2,
+	// 0000100: 3131 3532 3030 2069 6e69 743d 2f6c 696e  115200 init=/lin
+	// 0000110: 7578 7263 0000 0000 0000 0002 0000 0001  uxrc............
+	// 0000120: 616c 6961 7365 7300 0000 0003 0000 0012  aliases.........
+
+	// depth 값: 1, uname: chosen
 	pr_debug("search \"chosen\", depth: %d, uname: %s\n", depth, uname);
 
 	if (depth != 1 || !data ||
@@ -700,8 +726,9 @@ int __init early_init_dt_scan_chosen(unsigned long node, const char *uname,
 	 * managed to set the command line, unless CONFIG_CMDLINE_FORCE
 	 * is set in which case we override whatever was found earlier.
 	 */
-#ifdef CONFIG_CMDLINE
-#ifndef CONFIG_CMDLINE_FORCE
+#ifdef CONFIG_CMDLINE // defined
+// CONFIG_CMDLINE="root=/dev/ram0 rw ramdisk=8192 initrd=0x41000000,8M console=ttySAC1,115200 init=/linuxrc mem=256M"
+#ifndef CONFIG_CMDLINE_FORCE // not defined
 	if (!((char *)data)[0])
 #endif
 		strlcpy(data, CONFIG_CMDLINE, COMMAND_LINE_SIZE);

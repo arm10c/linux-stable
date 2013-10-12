@@ -36,6 +36,7 @@
 
 #include "mm.h"
 
+// ARM10C 20131012
 static phys_addr_t phys_initrd_start __initdata = 0;
 static unsigned long phys_initrd_size __initdata = 0;
 
@@ -76,7 +77,8 @@ static int __init parse_tag_initrd2(const struct tag *tag)
 
 __tagtable(ATAG_INITRD2, parse_tag_initrd2);
 
-#ifdef CONFIG_OF_FLATTREE
+#ifdef CONFIG_OF_FLATTREE // CONFIG_OF_FLATTREE=y
+// ARM10C 20131012
 void __init early_init_dt_setup_initrd_arch(unsigned long start, unsigned long end)
 {
 	phys_initrd_start = start;
@@ -89,6 +91,7 @@ void __init early_init_dt_setup_initrd_arch(unsigned long start, unsigned long e
  * initialization functions, as well as show_mem() for the skipping
  * of holes in the memory map.  It is populated by arm_add_memory().
  */
+// ARM10C 20131012
 struct meminfo meminfo;
 
 void show_mem(unsigned int filter)
@@ -231,9 +234,10 @@ static void __init arm_adjust_dma_zone(unsigned long *size, unsigned long *hole,
 }
 #endif
 
+// ARM10C 20131012
 void __init setup_dma_zone(struct machine_desc *mdesc)
 {
-#ifdef CONFIG_ZONE_DMA
+#ifdef CONFIG_ZONE_DMA // CONFIG_ZONE_DMA=n
 	if (mdesc->dma_zone_size) {
 		arm_dma_zone_size = mdesc->dma_zone_size;
 		arm_dma_limit = PHYS_OFFSET + arm_dma_zone_size - 1;

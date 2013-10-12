@@ -83,9 +83,11 @@ typedef struct spinlock {
 	};
 } spinlock_t;
 
+// ARM10C 20131012
 #define __SPIN_LOCK_INITIALIZER(lockname) \
 	{ { .rlock = __RAW_SPIN_LOCK_INITIALIZER(lockname) } }
 
+// ARM10C 20131012
 #define __SPIN_LOCK_UNLOCKED(lockname) \
 	(spinlock_t ) __SPIN_LOCK_INITIALIZER(lockname)
 

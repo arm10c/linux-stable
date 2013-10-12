@@ -26,6 +26,7 @@
 #include <asm/mach/arch.h>
 #include <asm/mach-types.h>
 
+// ARM10C 20131012
 void __init early_init_dt_add_memory_arch(u64 base, u64 size)
 {
 	arm_add_memory(base, size);
@@ -248,15 +249,22 @@ struct machine_desc * __init setup_machine_fdt(unsigned int dt_phys)
 	pr_info("Machine: %s, model: %s\n", mdesc_best->name, model);
 
 // 2013/10/05 종료
+// 2013/10/12 시작
 	/* Retrieve various information from the /chosen node */
-	// dt에서 chosen 노드를 찾음
+	// dt에서 chosen 노드를 찾고 정보를 저장 
 	of_scan_flat_dt(early_init_dt_scan_chosen, boot_command_line);
+
 	/* Initialize {size,address}-cells info */
+	// dt에서 root 노드에 있는 정보를 저장
 	of_scan_flat_dt(early_init_dt_scan_root, NULL);
+
 	/* Setup memory, calling early_init_dt_add_memory_arch */
+	// dt에서 memory 노드에 있는 정보를 저장
 	of_scan_flat_dt(early_init_dt_scan_memory, NULL);
 
 	/* Change machine number to match the mdesc we're using */
+	// FIXME: machine_arch_type값이 0xFFFFFFFF 가 맞는지?
+	// __machine_arch_type = 0xFFFFFFFF 
 	__machine_arch_type = mdesc_best->nr;
 
 	return mdesc_best;

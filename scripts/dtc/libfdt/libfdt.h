@@ -1151,6 +1151,7 @@ int fdt_setprop(void *fdt, int nodeoffset, const char *name,
  *	-FDT_ERR_BADLAYOUT,
  *	-FDT_ERR_TRUNCATED, standard meanings
  */
+// ARM10C 20131012
 static inline int fdt_setprop_u32(void *fdt, int nodeoffset, const char *name,
 				  uint32_t val)
 {
@@ -1198,6 +1199,7 @@ static inline int fdt_setprop_u64(void *fdt, int nodeoffset, const char *name,
  *
  * This is an alternative name for fdt_setprop_u32()
  */
+// ARM10C 20131012
 static inline int fdt_setprop_cell(void *fdt, int nodeoffset, const char *name,
 				   uint32_t val)
 {

@@ -143,8 +143,10 @@ char elf_platform[ELF_PLATFORM_SIZE];
 EXPORT_SYMBOL(elf_platform);
 
 static const char *cpu_name;
+// ARM10C 20131012
 static const char *machine_name;
 static char __initdata cmd_line[COMMAND_LINE_SIZE];
+// ARM10C 20131012
 struct machine_desc *machine_desc __initdata;
 
 // ARM10C 20130914
@@ -693,6 +695,7 @@ void __init dump_machine_table(void)
 		/* can't use cpu_relax() here as it may require MMU setup */;
 }
 
+// ARM10C 20131012
 int __init arm_add_memory(phys_addr_t start, phys_addr_t size)
 {
 	struct membank *bank = &meminfo.bank[meminfo.nr_banks];
@@ -707,10 +710,15 @@ int __init arm_add_memory(phys_addr_t start, phys_addr_t size)
 	 * Ensure that start/size are aligned to a page boundary.
 	 * Size is appropriately rounded down, start is rounded up.
 	 */
+	// start=0x20000000 , size=0x80000000
+	// PAGE_MASK=(~((1 << 12) - 1)) : 0xFFFFF000, 4k
+	// size = 0x80000000 - (0x20000000 & 0x00000FFF)
+	// size = 0x80000000
 	size -= start & ~PAGE_MASK;
+	// bank->start=0x20000000
 	bank->start = PAGE_ALIGN(start);
 
-#ifndef CONFIG_ARM_LPAE
+#ifndef CONFIG_ARM_LPAE	// not defined
 	if (bank->start + size < bank->start) {
 		printk(KERN_CRIT "Truncating memory at 0x%08llx to fit in "
 			"32-bit physical address space\n", (long long)start);
@@ -723,6 +731,7 @@ int __init arm_add_memory(phys_addr_t start, phys_addr_t size)
 	}
 #endif
 
+	// bank->size=0x80000000
 	bank->size = size & ~(phys_addr_t)(PAGE_SIZE - 1);
 
 	/*
@@ -946,6 +955,7 @@ void __init setup_arch(char **cmdline_p)
 	init_mm.end_data   = (unsigned long) _edata;
 	init_mm.brk	   = (unsigned long) _end;
 
+// 2013/10/12 종료
 	/* populate cmd_line too for later use, preserving boot_command_line */
 	strlcpy(cmd_line, boot_command_line, COMMAND_LINE_SIZE);
 	*cmdline_p = cmd_line;

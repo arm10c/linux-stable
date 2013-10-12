@@ -30,12 +30,16 @@
 
 #include "atags.h"
 
+// ARM10C 20131012
+// CONFIG_CMDLINE="earlyprintk=ocd,keep ignore_loglevel"
 static char default_command_line[COMMAND_LINE_SIZE] __initdata = CONFIG_CMDLINE;
 
 #ifndef MEM_SIZE
+// ARM10C 20131012
 #define MEM_SIZE	(16*1024*1024)
 #endif
 
+// ARM10C 20131012
 static struct {
 	struct tag_header hdr1;
 	struct tag_core   core;
@@ -178,6 +182,7 @@ static void __init squash_mem_tags(struct tag *tag)
 			tag->hdr.tag = ATAG_NONE;
 }
 
+// ARM10C 20131012
 struct machine_desc * __init setup_machine_tags(phys_addr_t __atags_pointer,
 						unsigned int machine_nr)
 {
@@ -208,7 +213,7 @@ struct machine_desc * __init setup_machine_tags(phys_addr_t __atags_pointer,
 	else if (mdesc->atag_offset)
 		tags = (void *)(PAGE_OFFSET + mdesc->atag_offset);
 
-#if defined(CONFIG_DEPRECATED_PARAM_STRUCT)
+#if defined(CONFIG_DEPRECATED_PARAM_STRUCT) // CONFIG_DEPRECATED_PARAM_STRUCT=n
 	/*
 	 * If we have the old style parameters, convert them to
 	 * a tag list.

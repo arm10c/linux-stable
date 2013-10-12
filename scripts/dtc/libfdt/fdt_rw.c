@@ -220,6 +220,7 @@ static int _fdt_resize_property(void *fdt, int nodeoffset, const char *name,
 	return 0;
 }
 
+// ARM10C 20131012
 static int _fdt_add_property(void *fdt, int nodeoffset, const char *name,
 			     int len, struct fdt_property **prop)
 {
@@ -271,6 +272,7 @@ int fdt_set_name(void *fdt, int nodeoffset, const char *name)
 	return 0;
 }
 
+// ARM10C 20131012
 int fdt_setprop(void *fdt, int nodeoffset, const char *name,
 		const void *val, int len)
 {
