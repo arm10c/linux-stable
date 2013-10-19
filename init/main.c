@@ -158,6 +158,7 @@ static const char * argv_init[MAX_INIT_ARGS+2] = { "init", NULL, };
 const char * envp_init[MAX_INIT_ENVS+2] = { "HOME=/", "TERM=linux", NULL, };
 static const char *panic_later, *panic_param;
 
+// ARM10C 20131019
 extern const struct obs_kernel_param __setup_start[], __setup_end[];
 
 static int __init obsolete_checksetup(char *line)
@@ -391,6 +392,7 @@ static noinline void __init_refok rest_init(void)
 }
 
 /* Check for early params. */
+// ARM10C 20131019
 static int __init do_early_param(char *param, char *val, const char *unused)
 {
 	const struct obs_kernel_param *p;
@@ -408,12 +410,14 @@ static int __init do_early_param(char *param, char *val, const char *unused)
 	return 0;
 }
 
+// ARM10C 20131019
 void __init parse_early_options(char *cmdline)
 {
 	parse_args("early options", cmdline, NULL, 0, 0, 0, do_early_param);
 }
 
 /* Arch code calls this early on, or if not, just before other parsing. */
+// ARM10C 20131019
 void __init parse_early_param(void)
 {
 	static __initdata int done = 0;

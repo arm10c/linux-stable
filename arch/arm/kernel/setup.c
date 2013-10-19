@@ -909,6 +909,7 @@ static void __init reserve_crashkernel(void)
 static inline void reserve_crashkernel(void) {}
 #endif /* CONFIG_KEXEC */
 
+// ARM10C 20131019
 static int __init meminfo_cmp(const void *_a, const void *_b)
 {
 	const struct membank *a = _a, *b = _b;
@@ -956,14 +957,18 @@ void __init setup_arch(char **cmdline_p)
 	init_mm.brk	   = (unsigned long) _end;
 
 // 2013/10/12 종료
+// 2013/10/19 시작
 	/* populate cmd_line too for later use, preserving boot_command_line */
 	strlcpy(cmd_line, boot_command_line, COMMAND_LINE_SIZE);
 	*cmdline_p = cmd_line;
 
 	parse_early_param();
 
+	// page frame number 기준으로 정렬
+	// 어드래스로 비교안하는 이유?
 	sort(&meminfo.bank, meminfo.nr_banks, sizeof(meminfo.bank[0]), meminfo_cmp, NULL);
 	sanity_check_meminfo();
+// 2013/10/12 종료
 	arm_memblock_init(&meminfo, mdesc);
 
 	paging_init(mdesc);

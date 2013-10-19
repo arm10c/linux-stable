@@ -20,9 +20,11 @@
 #include <linux/seq_file.h>
 #include <linux/memblock.h>
 
+// ARM10C 20131019
 static struct memblock_region memblock_memory_init_regions[INIT_MEMBLOCK_REGIONS] __initdata_memblock;
 static struct memblock_region memblock_reserved_init_regions[INIT_MEMBLOCK_REGIONS] __initdata_memblock;
 
+// ARM10C 20131019
 struct memblock memblock __initdata_memblock = {
 	.memory.regions		= memblock_memory_init_regions,
 	.memory.cnt		= 1,	/* empty dummy entry */
@@ -32,6 +34,7 @@ struct memblock memblock __initdata_memblock = {
 	.reserved.cnt		= 1,	/* empty dummy entry */
 	.reserved.max		= INIT_MEMBLOCK_REGIONS,
 
+        // MEMBLOCK_ALLOC_ANYWHERE: 0xffffffff
 	.current_limit		= MEMBLOCK_ALLOC_ANYWHERE,
 };
 
@@ -53,8 +56,12 @@ memblock_type_name(struct memblock_type *type)
 }
 
 /* adjust *@size so that (@base + *@size) doesn't overflow, return new size */
+// ARM10C 20131019
+// base: 0x20000000, size: 0x4f800000
 static inline phys_addr_t memblock_cap_size(phys_addr_t base, phys_addr_t *size)
 {
+	// ULLONG_MAX: 0xFFFF FFFF FFFF FFFF
+	// size: 0x4f800000
 	return *size = min(*size, (phys_addr_t)ULLONG_MAX - base);
 }
 
@@ -361,11 +368,16 @@ static void __init_memblock memblock_insert_region(struct memblock_type *type,
  * RETURNS:
  * 0 on success, -errno on failure.
  */
+// ARM10C 20131019
+// base: 0x20000000, size: 0x4f800000, nid: 1
+// base: 0x6f800000, size: 0x30800000, nid: 1
 static int __init_memblock memblock_add_region(struct memblock_type *type,
 				phys_addr_t base, phys_addr_t size, int nid)
 {
 	bool insert = false;
 	phys_addr_t obase = base;
+	// end = 0x20000000 + 0x4f800000: 0x6f800000
+	// end = 0x6f800000 + 0x30800000: 0xA0000000
 	phys_addr_t end = base + memblock_cap_size(base, &size);
 	int i, nr_new;
 
@@ -375,9 +387,13 @@ static int __init_memblock memblock_add_region(struct memblock_type *type,
 	/* special case for empty array */
 	if (type->regions[0].size == 0) {
 		WARN_ON(type->cnt != 1 || type->total_size);
+
+		// type->regions[0].base: 0x20000000
+		// type->regions[0].size: 0x4f800000
 		type->regions[0].base = base;
 		type->regions[0].size = size;
 		memblock_set_region_node(&type->regions[0], nid);
+		// type->total_size: 0x4f800000
 		type->total_size = size;
 		return 0;
 	}
@@ -387,11 +403,14 @@ repeat:
 	 * then with %true.  The first counts the number of regions needed
 	 * to accomodate the new area.  The second actually inserts them.
 	 */
+	// base: 0x6f800000
 	base = obase;
 	nr_new = 0;
 
+	// type->cnt: 1
 	for (i = 0; i < type->cnt; i++) {
 		struct memblock_region *rgn = &type->regions[i];
+		// rbase: 0x20000000, rend: 0x6f800000
 		phys_addr_t rbase = rgn->base;
 		phys_addr_t rend = rbase + rgn->size;
 
@@ -442,6 +461,9 @@ int __init_memblock memblock_add_node(phys_addr_t base, phys_addr_t size,
 	return memblock_add_region(&memblock.memory, base, size, nid);
 }
 
+// ARM10C 20131019
+// base: 0x20000000, size: 0x4f800000
+// base: 0x6f800000, size: 0x30800000
 int __init_memblock memblock_add(phys_addr_t base, phys_addr_t size)
 {
 	return memblock_add_region(&memblock.memory, base, size, MAX_NUMNODES);
@@ -977,8 +999,10 @@ void __init_memblock memblock_trim_memory(phys_addr_t align)
 	}
 }
 
+// ARM10C 20131019
 void __init_memblock memblock_set_current_limit(phys_addr_t limit)
 {
+	// memblock.current_limit: 0x6f800000
 	memblock.current_limit = limit;
 }
 

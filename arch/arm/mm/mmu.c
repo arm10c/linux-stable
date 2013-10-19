@@ -954,6 +954,10 @@ void __init debug_ll_io_init(void)
 }
 #endif
 
+// ARM10C 20131019
+// VMALLOC_END: 0xff000000, VMALLOC_OFFSET: (8*1024*1024)=0x00800000
+// (240 << 20): 0x0f000000
+// vmalloc_min: 0xef800000
 static void * __initdata vmalloc_min =
 	(void *)(VMALLOC_END - (240 << 20) - VMALLOC_OFFSET);
 
@@ -985,14 +989,18 @@ static int __init early_vmalloc(char *arg)
 }
 early_param("vmalloc", early_vmalloc);
 
+// ARM10C 20131019
 phys_addr_t arm_lowmem_limit __initdata = 0;
 
+// ARM10C 20131019
 void __init sanity_check_meminfo(void)
 {
 	phys_addr_t memblock_limit = 0;
 	int i, j, highmem = 0;
+	// vmalloc_limit: 0x6f800000 = __pa(0xef800000 - 1) + 1
 	phys_addr_t vmalloc_limit = __pa(vmalloc_min - 1) + 1;
 
+	// meminfo.nr_banks = 1
 	for (i = 0, j = 0; i < meminfo.nr_banks; i++) {
 		struct membank *bank = &meminfo.bank[j];
 		phys_addr_t size_limit;
@@ -1000,18 +1008,25 @@ void __init sanity_check_meminfo(void)
 		*bank = meminfo.bank[i];
 		size_limit = bank->size;
 
+	        // vmalloc_limit: 0x6f800000
+		// bank->start  : 0x20000000
 		if (bank->start >= vmalloc_limit)
 			highmem = 1;
 		else
+			// size_limit: 0x4f800000
 			size_limit = vmalloc_limit - bank->start;
 
+		// bank->highmem: 0
 		bank->highmem = highmem;
 
-#ifdef CONFIG_HIGHMEM
+#ifdef CONFIG_HIGHMEM // CONFIG_HIGHMEM=y
 		/*
 		 * Split those memory banks which are partially overlapping
 		 * the vmalloc area greatly simplifying things later.
 		 */
+
+		// bank->size: 0x80000000
+		// size_limit: 0x4f800000
 		if (!highmem && bank->size > size_limit) {
 			if (meminfo.nr_banks >= NR_BANKS) {
 				printk(KERN_CRIT "NR_BANKS too low, "
@@ -1021,11 +1036,15 @@ void __init sanity_check_meminfo(void)
 					(meminfo.nr_banks - i) * sizeof(*bank));
 				meminfo.nr_banks++;
 				i++;
+
+				// bank[1].size: 0x30800000, bank[1].start: 0x6f800000, 
+				// bank[1].highmem: 1
 				bank[1].size -= size_limit;
 				bank[1].start = vmalloc_limit;
 				bank[1].highmem = highmem = 1;
 				j++;
 			}
+			// bank->size: 0x4f800000
 			bank->size = size_limit;
 		}
 #else
@@ -1054,9 +1073,11 @@ void __init sanity_check_meminfo(void)
 		}
 #endif
 		if (!bank->highmem) {
+			// bank_end = 0x20000000 + 0x4f800000: 0x6f800000
 			phys_addr_t bank_end = bank->start + bank->size;
 
 			if (bank_end > arm_lowmem_limit)
+				// arm_lowmem_limit: 0x6f800000
 				arm_lowmem_limit = bank_end;
 
 			/*
@@ -1072,7 +1093,9 @@ void __init sanity_check_meminfo(void)
 			 * allocated when mapping the start of bank 0, which
 			 * occurs before any free memory is mapped.
 			 */
+			// memblock_limit: 0
 			if (!memblock_limit) {
+				// bank->start: 0x20000000, bank_end: 0x6f800000
 				if (!IS_ALIGNED(bank->start, SECTION_SIZE))
 					memblock_limit = bank->start;
 				else if (!IS_ALIGNED(bank_end, SECTION_SIZE))
@@ -1081,10 +1104,11 @@ void __init sanity_check_meminfo(void)
 		}
 		j++;
 	}
-#ifdef CONFIG_HIGHMEM
+#ifdef CONFIG_HIGHMEM // CONFIG_HIGHMEM=y
 	if (highmem) {
 		const char *reason = NULL;
 
+		// pipt
 		if (cache_is_vipt_aliasing()) {
 			/*
 			 * Interactions between kmap and other mappings
@@ -1101,7 +1125,11 @@ void __init sanity_check_meminfo(void)
 		}
 	}
 #endif
+	// meminfo.nr_banks: 2
 	meminfo.nr_banks = j;
+
+	// arm_lowmem_limit: 0x6f800000
+	// high_memory: 0xef800000
 	high_memory = __va(arm_lowmem_limit - 1) + 1;
 
 	/*
@@ -1112,6 +1140,7 @@ void __init sanity_check_meminfo(void)
 	if (memblock_limit)
 		memblock_limit = round_down(memblock_limit, SECTION_SIZE);
 	if (!memblock_limit)
+		// memblock_limit: 0x6f800000
 		memblock_limit = arm_lowmem_limit;
 
 	memblock_set_current_limit(memblock_limit);

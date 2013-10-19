@@ -41,8 +41,10 @@
  * The vmalloc() routines leaves a hole of 4kB between each vmalloced
  * area for the same reason. ;)
  */
+// ARM10C 20131019
 #define VMALLOC_OFFSET		(8*1024*1024)
 #define VMALLOC_START		(((unsigned long)high_memory + VMALLOC_OFFSET) & ~(VMALLOC_OFFSET-1))
+// ARM10C 20131019
 #define VMALLOC_END		0xff000000UL
 
 #define LIBRARY_TEXT_START	0x0c000000

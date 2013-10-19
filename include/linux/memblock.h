@@ -19,14 +19,16 @@
 
 #define INIT_MEMBLOCK_REGIONS	128
 
+// ARM10C 20131019
 struct memblock_region {
 	phys_addr_t base;
 	phys_addr_t size;
-#ifdef CONFIG_HAVE_MEMBLOCK_NODE_MAP
+#ifdef CONFIG_HAVE_MEMBLOCK_NODE_MAP // CONFIG_HAVE_MEMBLOCK_NODE_MAP=n
 	int nid;
 #endif
 };
 
+// ARM10C 20131019
 struct memblock_type {
 	unsigned long cnt;	/* number of regions */
 	unsigned long max;	/* size of the allocated array */
@@ -34,6 +36,7 @@ struct memblock_type {
 	struct memblock_region *regions;
 };
 
+// ARM10C 20131019
 struct memblock {
 	phys_addr_t current_limit;
 	struct memblock_type memory;
@@ -118,7 +121,7 @@ void __next_free_mem_range_rev(u64 *idx, int nid, phys_addr_t *out_start,
 	     i != (u64)ULLONG_MAX;					\
 	     __next_free_mem_range_rev(&i, nid, p_start, p_end, p_nid))
 
-#ifdef CONFIG_HAVE_MEMBLOCK_NODE_MAP
+#ifdef CONFIG_HAVE_MEMBLOCK_NODE_MAP // CONFIG_HAVE_MEMBLOCK_NODE_MAP=n
 int memblock_set_node(phys_addr_t base, phys_addr_t size, int nid);
 
 static inline void memblock_set_region_node(struct memblock_region *r, int nid)
@@ -131,6 +134,7 @@ static inline int memblock_get_region_node(const struct memblock_region *r)
 	return r->nid;
 }
 #else
+// ARM10C 20131019
 static inline void memblock_set_region_node(struct memblock_region *r, int nid)
 {
 }

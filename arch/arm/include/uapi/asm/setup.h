@@ -16,6 +16,7 @@
 
 #include <linux/types.h>
 
+// ARM10C 20131019
 #define COMMAND_LINE_SIZE 1024
 
 /* The list ends with an ATAG_NONE node. */

@@ -60,6 +60,7 @@ static void maybe_kfree_parameter(void *param)
 	}
 }
 
+// ARM10C 20131019
 static char dash2underscore(char c)
 {
 	if (c == '-')
@@ -67,6 +68,7 @@ static char dash2underscore(char c)
 	return c;
 }
 
+// ARM10C 20131019
 bool parameqn(const char *a, const char *b, size_t n)
 {
 	size_t i;
@@ -78,11 +80,14 @@ bool parameqn(const char *a, const char *b, size_t n)
 	return true;
 }
 
+// ARM10C 20131019
 bool parameq(const char *a, const char *b)
 {
 	return parameqn(a, b, strlen(a)+1);
 }
 
+// ARM10C 20131019
+// parse_one( param, val, "early options", "NULL, 0, 0, 0, do_early_param);
 static int parse_one(char *param,
 		     char *val,
 		     const char *doing,
@@ -116,6 +121,8 @@ static int parse_one(char *param,
 	}
 
 	if (handle_unknown) {
+		// 출력값 
+		// doing early options: console='ttySAC2,115200'
 		pr_debug("doing %s: %s='%s'\n", doing, param, val);
 		return handle_unknown(param, val, doing);
 	}
@@ -126,6 +133,8 @@ static int parse_one(char *param,
 
 /* You can use " around spaces, but can't escape ". */
 /* Hyphens and underscores equivalent in parameter names. */
+// ARM10C 20131019
+// "console=ttySAC2,115200 init=/linuxrc"
 static char *next_arg(char *args, char **param, char **val)
 {
 	unsigned int i, equals = 0;
@@ -138,6 +147,7 @@ static char *next_arg(char *args, char **param, char **val)
 		quoted = 1;
 	}
 
+	// equals 값은 "=" string index 값
 	for (i = 0; args[i]; i++) {
 		if (isspace(args[i]) && !in_quote)
 			break;
@@ -177,6 +187,8 @@ static char *next_arg(char *args, char **param, char **val)
 }
 
 /* Args looks like "foo=bar,bar2 baz=fuz wiz". */
+// ARM10C 20131019
+// parse_args("early options", cmdline, NULL, 0, 0, 0, do_early_param);
 int parse_args(const char *doing,
 	       char *args,
 	       const struct kernel_param *params,
@@ -188,8 +200,11 @@ int parse_args(const char *doing,
 	char *param, *val;
 
 	/* Chew leading spaces */
+	// string의 앞 공백 제거
 	args = skip_spaces(args);
 
+	// dtb 에서 복사된 값
+	// "console=ttySAC2,115200 init=/linuxrc" 이 args 값임
 	if (*args)
 		pr_debug("doing %s, parsing ARGS: '%s'\n", doing, args);
 
@@ -201,6 +216,7 @@ int parse_args(const char *doing,
 		irq_was_disabled = irqs_disabled();
 		ret = parse_one(param, val, doing, params, num,
 				min_level, max_level, unknown);
+		// irq 값이 바뀌었는지 확인
 		if (irq_was_disabled && !irqs_disabled())
 			pr_warn("%s: option '%s' enabled irq's!\n",
 				doing, param);

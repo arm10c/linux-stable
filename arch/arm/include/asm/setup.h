@@ -47,6 +47,7 @@ extern struct meminfo meminfo;
 #define for_each_bank(iter,mi)				\
 	for (iter = 0; iter < (mi)->nr_banks; iter++)
 
+// ARM10C 20131019
 #define bank_pfn_start(bank)	__phys_to_pfn((bank)->start)
 #define bank_pfn_end(bank)	__phys_to_pfn((bank)->start + (bank)->size)
 #define bank_pfn_size(bank)	((bank)->size >> PAGE_SHIFT)

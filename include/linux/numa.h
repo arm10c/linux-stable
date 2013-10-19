@@ -2,12 +2,14 @@
 #define _LINUX_NUMA_H
 
 
-#ifdef CONFIG_NODES_SHIFT
+#ifdef CONFIG_NODES_SHIFT // CONFIG_NODES_SHIFT=n
 #define NODES_SHIFT     CONFIG_NODES_SHIFT
 #else
 #define NODES_SHIFT     0
 #endif
 
+// ARM10C 20131019
+// MAX_NUMNODES: 1
 #define MAX_NUMNODES    (1 << NODES_SHIFT)
 
 #define	NUMA_NO_NODE	(-1)

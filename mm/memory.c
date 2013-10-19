@@ -89,6 +89,7 @@ EXPORT_SYMBOL(mem_map);
  * highstart_pfn must be the same; there must be no gap between ZONE_NORMAL
  * and ZONE_HIGHMEM.
  */
+// ARM10C 20131019
 void * high_memory;
 
 EXPORT_SYMBOL(high_memory);
