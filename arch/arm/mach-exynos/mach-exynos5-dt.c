@@ -72,6 +72,7 @@ static void __init exynos5_reserve(void)
 
 // ARM10C 20131005
 // ARM10C 20131012
+/*
 //static const struct machine_desc __mach_desc_EXYNOS5_DT	\
 // __used							\
 // __attribute__((__section__(".arch.info.init"))) = {	\
@@ -86,6 +87,7 @@ static void __init exynos5_reserve(void)
 //	.restart        = exynos5_restart,
 //	.reserve	= exynos5_reserve,
 // };
+*/
 DT_MACHINE_START(EXYNOS5_DT, "SAMSUNG EXYNOS5 (Flattened Device Tree)")
 	/* Maintainer: Kukjin Kim <kgene.kim@samsung.com> */
 	.smp		= smp_ops(exynos_smp_ops),

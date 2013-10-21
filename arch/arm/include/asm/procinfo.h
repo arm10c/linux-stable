@@ -43,6 +43,7 @@ struct proc_info_list {
 	struct cpu_cache_fns	*cache;
 };
 
+/*
 // ARM v7의 구조체값을 만드는 값
 // proc-v7.S 에 있음: __lookup_processor_type:
 //
@@ -68,6 +69,7 @@ struct proc_info_list {
 //       .long	v6_user_fns
 //       .long	v7_cache_fns
 //.endm
+*/
 
 #else	/* __KERNEL__ */
 #include <asm/elf.h>

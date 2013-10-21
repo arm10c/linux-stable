@@ -17,7 +17,9 @@
 
 #define THREAD_SIZE_ORDER	1
 #define THREAD_SIZE		8192
+/*
 // ARM10C 20130817
+*/
 #define THREAD_START_SP		(THREAD_SIZE - 8)
 
 #ifndef __ASSEMBLY__

@@ -244,6 +244,7 @@ struct obs_kernel_param {
  * obs_kernel_param "array" too far apart in .init.setup.
  */
 // ARM10C 20131019
+/*
 // __setup__param("earlycon", setup_early_serial8250_console, setup_early_serial8250_console, 1);
 //
 //	static const char __setup_str_setup_early_serial8250_console[] __initconst	\
@@ -252,6 +253,7 @@ struct obs_kernel_param {
 //		__used __section(.init.setup)			\
 //		__attribute__((aligned((sizeof(long)))))	\
 //		= { __setup_str_setup_early_serial8250_console, setup_early_serial8250_console, 1}
+*/
 #define __setup_param(str, unique_id, fn, early)			\
 	static const char __setup_str_##unique_id[] __initconst	\
 		__aligned(1) = str; \

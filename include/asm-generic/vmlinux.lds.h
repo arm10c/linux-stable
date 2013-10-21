@@ -604,9 +604,9 @@
 		VMLINUX_SYMBOL(__stop_notes) = .;			\
 	}
 
+/* ARM10C 20131019 */
 #define INIT_SETUP(initsetup_align)					\
 		. = ALIGN(initsetup_align);				\
-		/* ARM10C 20131019 */
 		VMLINUX_SYMBOL(__setup_start) = .;			\
 		*(.init.setup)						\
 		VMLINUX_SYMBOL(__setup_end) = .;

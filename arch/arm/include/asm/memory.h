@@ -134,7 +134,9 @@
 /*
  * Convert a physical address to a Page Frame Number and back
  */
+/*
 // ARM10C 20131019
+*/
 #define	__phys_to_pfn(paddr)	((unsigned long)((paddr) >> PAGE_SHIFT))
 #define	__pfn_to_phys(pfn)	((phys_addr_t)(pfn) << PAGE_SHIFT)
 
@@ -177,6 +179,7 @@
 extern unsigned long __pv_phys_offset;
 #define PHYS_OFFSET __pv_phys_offset
 
+/*
 // FIXME: pushsection 의 사용 방법? 
 // #define __pv_stub(x,t,"sub",__PV_BITS_31_24)			\
 //	   __asm__("@ __pv_stub\n"				\
@@ -184,6 +187,7 @@ extern unsigned long __pv_phys_offset;
 //	   "	.pushsection .pv_table,\"a\"\n"		\
 //	   "	.long	1b\n"				\
 //	   "	.popsection\n"				\
+*/
 
 #define __pv_stub(from,to,instr,type)			\
 	__asm__("@ __pv_stub\n"				\
