@@ -324,6 +324,7 @@ static void __init arm_memory_present(void)
 }
 #endif
 
+// ARM10C 20131026
 static bool arm_memblock_steal_permitted = true;
 
 phys_addr_t __init arm_memblock_steal(phys_addr_t size, phys_addr_t align)
@@ -344,23 +345,28 @@ void __init arm_memblock_init(struct meminfo *mi, struct machine_desc *mdesc)
 {
 	int i;
 
+	// 메모리 영역을 검사 후 추가 혹은 합치는 작업 수행.
 	// mi->nr_banks: 2
 	for (i = 0; i < mi->nr_banks; i++)
 		memblock_add(mi->bank[i].start, mi->bank[i].size);
 
 	/* Register the kernel text, kernel data and initrd with memblock. */
-#ifdef CONFIG_XIP_KERNEL
+#ifdef CONFIG_XIP_KERNEL // CONFIG_XIP_KERNEL=n
 	memblock_reserve(__pa(_sdata), _end - _sdata);
 #else
+	// kernel이 사용하는 영역으로 reserve 함.
+	// _stext: 0xC0008000, __pa(_stext): 0x40008000
 	memblock_reserve(__pa(_stext), _end - _stext);
 #endif
-#ifdef CONFIG_BLK_DEV_INITRD
+#ifdef CONFIG_BLK_DEV_INITRD // CONFIG_BLK_DEV_INITRD=y
+	// initrd로 넘어온 메모리 영역이 memblock.memory 안에 있는지 체크 
 	if (phys_initrd_size &&
 	    !memblock_is_region_memory(phys_initrd_start, phys_initrd_size)) {
 		pr_err("INITRD: 0x%08llx+0x%08lx is not a memory region - disabling initrd\n",
 		       (u64)phys_initrd_start, phys_initrd_size);
 		phys_initrd_start = phys_initrd_size = 0;
 	}
+	// initrd로 넘어온 메모리 영역이 memblock.reserved 안에 있는지 체크 
 	if (phys_initrd_size &&
 	    memblock_is_region_reserved(phys_initrd_start, phys_initrd_size)) {
 		pr_err("INITRD: 0x%08llx+0x%08lx overlaps in-use memory region - disabling initrd\n",
@@ -368,6 +374,7 @@ void __init arm_memblock_init(struct meminfo *mi, struct machine_desc *mdesc)
 		phys_initrd_start = phys_initrd_size = 0;
 	}
 	if (phys_initrd_size) {
+		// memblock.reserved 안에 initrd 를 추가
 		memblock_reserve(phys_initrd_start, phys_initrd_size);
 
 		/* Now convert initrd to virtual addresses */
@@ -376,10 +383,13 @@ void __init arm_memblock_init(struct meminfo *mi, struct machine_desc *mdesc)
 	}
 #endif
 
+	// memblock.reserved 안에 page table을 추가
 	arm_mm_memblock_reserve();
+	// memblock.reserved 안에 dtb을 추가
 	arm_dt_memblock_reserve();
 
 	/* reserve any platform specific memblock areas */
+	// chip관련 특별한 메모리 영역을 reserve 함
 	if (mdesc->reserve)
 		mdesc->reserve();
 
@@ -387,10 +397,15 @@ void __init arm_memblock_init(struct meminfo *mi, struct machine_desc *mdesc)
 	 * reserve memory for DMA contigouos allocations,
 	 * must come from DMA area inside low memory
 	 */
+	// arm_dma_limit: 0xFFFFFFFF, arm_lowmem_limit: 0
+	//
+	// CMA 메모리 영역을 reserve 함 (현재 설정에 따라 해당 사항 없음)
 	dma_contiguous_reserve(min(arm_dma_limit, arm_lowmem_limit));
 
+	// 메모리를 할당시 steal 가능여부 설정
 	arm_memblock_steal_permitted = false;
 	memblock_allow_resize();
+	// debug 용도록 메모리 영역의 base, size를 출력
 	memblock_dump_all();
 }
 

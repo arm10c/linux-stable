@@ -10,6 +10,8 @@
 #ifndef __PLAT_SAMSUNG_MFC_H
 #define __PLAT_SAMSUNG_MFC_H __FILE__
 
+// ARM10C 20131026
+// mfc: multi format codec
 struct s5p_mfc_dt_meminfo {
 	unsigned long	loff;
 	unsigned long	lsize;

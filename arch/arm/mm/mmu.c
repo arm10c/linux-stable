@@ -65,6 +65,7 @@ pgprot_t pgprot_s2_device;
 EXPORT_SYMBOL(pgprot_user);
 EXPORT_SYMBOL(pgprot_kernel);
 
+// ARM10C 20131026
 struct cachepolicy {
 	const char	policy[16];
 	unsigned int	cr_mask;
@@ -73,12 +74,14 @@ struct cachepolicy {
 	pteval_t	pte_s2;
 };
 
-#ifdef CONFIG_ARM_LPAE
+#ifdef CONFIG_ARM_LPAE // CONFIG_ARM_LPAE=n
 #define s2_policy(policy)	policy
 #else
+// ARM10C 20131026
 #define s2_policy(policy)	0
 #endif
 
+// ARM10C 20131026
 static struct cachepolicy cache_policies[] __initdata = {
 	{
 		.policy		= "uncached",
@@ -231,6 +234,7 @@ __setup("noalign", noalign_setup);
 #define PROT_PTE_DEVICE		L_PTE_PRESENT|L_PTE_YOUNG|L_PTE_DIRTY|L_PTE_XN
 #define PROT_SECT_DEVICE	PMD_TYPE_SECT|PMD_SECT_AP_WRITE
 
+// ARM10C 20131026
 static struct mem_type mem_types[] = {
 	[MT_DEVICE] = {		  /* Strongly ordered / ARMv6 shared device */
 		.prot_pte	= PROT_PTE_DEVICE | L_PTE_MT_DEV_SHARED |
@@ -251,6 +255,7 @@ static struct mem_type mem_types[] = {
 		.prot_sect	= PROT_SECT_DEVICE | PMD_SECT_WB,
 		.domain		= DOMAIN_IO,
 	},
+	// 쓰기 버퍼 및 cache 미사용 device
 	[MT_DEVICE_WC] = {	/* ioremap_wc */
 		.prot_pte	= PROT_PTE_DEVICE | L_PTE_MT_DEV_WC,
 		.prot_l1	= PMD_TYPE_TABLE,
@@ -338,20 +343,22 @@ EXPORT_SYMBOL(get_mem_type);
 /*
  * Adjust the PMD section entries according to the CPU in use.
  */
+// ARM10C 20131026
 static void __init build_mem_type_table(void)
 {
 	struct cachepolicy *cp;
 	unsigned int cr = get_cr();
 	pteval_t user_pgprot, kern_pgprot, vecs_pgprot;
 	pteval_t hyp_device_pgprot, s2_pgprot, s2_device_pgprot;
+	// cpu_arch: CPU_ARCH_ARMv7: 9
 	int cpu_arch = cpu_architecture();
 	int i;
 
 	if (cpu_arch < CPU_ARCH_ARMv6) {
-#if defined(CONFIG_CPU_DCACHE_DISABLE)
+#if defined(CONFIG_CPU_DCACHE_DISABLE) // CONFIG_CPU_DCACHE_DISABLE=n
 		if (cachepolicy > CPOLICY_BUFFERED)
 			cachepolicy = CPOLICY_BUFFERED;
-#elif defined(CONFIG_CPU_DCACHE_WRITETHROUGH)
+#elif defined(CONFIG_CPU_DCACHE_WRITETHROUGH) // CONFIG_CPU_DCACHE_WRITETHROUGH=n
 		if (cachepolicy > CPOLICY_WRITETHROUGH)
 			cachepolicy = CPOLICY_WRITETHROUGH;
 #endif
@@ -362,6 +369,7 @@ static void __init build_mem_type_table(void)
 		ecc_mask = 0;
 	}
 	if (is_smp())
+		// CPOLICY_WRITEALLOC: 4
 		cachepolicy = CPOLICY_WRITEALLOC;
 
 	/*
@@ -398,17 +406,26 @@ static void __init build_mem_type_table(void)
 	/*
 	 * Mark the device areas according to the CPU/architecture.
 	 */
+	// CR_XP: (1 << 23) - Extended page tables
+	// A.R.M: B4.1.130 - SCTLR, System Control Register, VMSA
+	// (cr & CR_XP): 1
+	// v7_crval: 
+	//	.word 0x2120c302  (r5) (clear)
+	//	.word 0x10c03c7d  (r6) (mmuset)
 	if (cpu_is_xsc3() || (cpu_arch >= CPU_ARCH_ARMv6 && (cr & CR_XP))) {
 		if (!cpu_is_xsc3()) {
 			/*
 			 * Mark device regions on ARMv6+ as execute-never
 			 * to prevent speculative instruction fetches.
 			 */
+			// XN: execute-never
 			mem_types[MT_DEVICE].prot_sect |= PMD_SECT_XN;
 			mem_types[MT_DEVICE_NONSHARED].prot_sect |= PMD_SECT_XN;
 			mem_types[MT_DEVICE_CACHED].prot_sect |= PMD_SECT_XN;
 			mem_types[MT_DEVICE_WC].prot_sect |= PMD_SECT_XN;
 		}
+
+		// CR_TRE: (1 << 28) - TEX remap enable
 		if (cpu_arch >= CPU_ARCH_ARMv7 && (cr & CR_TRE)) {
 			/*
 			 * For ARMv7 with TEX remapping,
@@ -417,6 +434,8 @@ static void __init build_mem_type_table(void)
 			 * - write combine device mem is SXCB=0001
 			 * (Uncached Normal memory)
 			 */
+			// SXCB: S - shared, X - TEX[0], C - cachable, B - bufferable
+		        // PMD_SECT_TEX(x) (_AT(pmdval_t, (x)) << 12)
 			mem_types[MT_DEVICE].prot_sect |= PMD_SECT_TEX(1);
 			mem_types[MT_DEVICE_NONSHARED].prot_sect |= PMD_SECT_TEX(1);
 			mem_types[MT_DEVICE_WC].prot_sect |= PMD_SECT_BUFFERABLE;
@@ -453,20 +472,26 @@ static void __init build_mem_type_table(void)
 	/*
 	 * Now deal with the memory-type mappings
 	 */
+	// cachepolicy: 4 - CPOLICY_WRITEALLOC
 	cp = &cache_policies[cachepolicy];
+	// cp->pte: L_PTE_MT_WRITEALLOC
 	vecs_pgprot = kern_pgprot = user_pgprot = cp->pte;
+	// cp->pte_s2: 0 - s2_policy(L_PTE_S2_MT_WRITEBACK)
 	s2_pgprot = cp->pte_s2;
+	// mem_types[MT_DEVICE].prot_pte: PROT_PTE_DEVICE | L_PTE_MT_DEV_SHARED | L_PTE_SHARED,
 	hyp_device_pgprot = s2_device_pgprot = mem_types[MT_DEVICE].prot_pte;
 
 	/*
 	 * ARMv6 and above have extended page tables.
 	 */
 	if (cpu_arch >= CPU_ARCH_ARMv6 && (cr & CR_XP)) {
-#ifndef CONFIG_ARM_LPAE
+#ifndef CONFIG_ARM_LPAE // CONFIG_ARM_LPAE=n
 		/*
 		 * Mark cache clean areas and XIP ROM read only
 		 * from SVC mode and no access from userspace.
 		 */
+		// A.R.M: B3.7 Memory access control
+		// PMD_SECT_APX - Access permission
 		mem_types[MT_ROM].prot_sect |= PMD_SECT_APX|PMD_SECT_AP_WRITE;
 		mem_types[MT_MINICLEAN].prot_sect |= PMD_SECT_APX|PMD_SECT_AP_WRITE;
 		mem_types[MT_CACHECLEAN].prot_sect |= PMD_SECT_APX|PMD_SECT_AP_WRITE;
@@ -477,6 +502,7 @@ static void __init build_mem_type_table(void)
 			 * Mark memory with the "shared" attribute
 			 * for SMP systems
 			 */
+			// L_PTE_SHARED, PMD_SECT_S 설정
 			user_pgprot |= L_PTE_SHARED;
 			kern_pgprot |= L_PTE_SHARED;
 			vecs_pgprot |= L_PTE_SHARED;
@@ -498,6 +524,7 @@ static void __init build_mem_type_table(void)
 	 * not cause dirty cache line writebacks when used
 	 */
 	if (cpu_arch >= CPU_ARCH_ARMv6) {
+		// CR_TRE: (1 << 28) - TEX remap enable
 		if (cpu_arch >= CPU_ARCH_ARMv7 && (cr & CR_TRE)) {
 			/* Non-cacheable Normal is XCB = 001 */
 			mem_types[MT_MEMORY_NONCACHED].prot_sect |=
@@ -511,7 +538,7 @@ static void __init build_mem_type_table(void)
 		mem_types[MT_MEMORY_NONCACHED].prot_sect |= PMD_SECT_BUFFERABLE;
 	}
 
-#ifdef CONFIG_ARM_LPAE
+#ifdef CONFIG_ARM_LPAE // CONFIG_ARM_LPAE=n
 	/*
 	 * Do not generate access flag faults for the kernel mappings.
 	 */
@@ -524,11 +551,13 @@ static void __init build_mem_type_table(void)
 	vecs_pgprot |= PTE_EXT_AF;
 #endif
 
+	// user page protection 설정값 추가
 	for (i = 0; i < 16; i++) {
 		pteval_t v = pgprot_val(protection_map[i]);
 		protection_map[i] = __pgprot(v | user_pgprot);
 	}
 
+// 2013/10/26 종료
 	mem_types[MT_LOW_VECTORS].prot_pte |= vecs_pgprot;
 	mem_types[MT_HIGH_VECTORS].prot_pte |= vecs_pgprot;
 
@@ -1180,26 +1209,32 @@ static inline void prepare_page_table(void)
 		pmd_clear(pmd_off_k(addr));
 }
 
-#ifdef CONFIG_ARM_LPAE
+#ifdef CONFIG_ARM_LPAE // CONFIG_ARM_LPAE=n
 /* the first page is reserved for pgd */
 #define SWAPPER_PG_DIR_SIZE	(PAGE_SIZE + \
 				 PTRS_PER_PGD * PTRS_PER_PMD * sizeof(pmd_t))
 #else
+// ARM10C 20131026
+// PTRS_PER_PGD: 2048, sizeof(pgd_t): 8 byte
+// SWAPPER_PG_DIR_SIZE: 0x4000 - 16 Kbytes
 #define SWAPPER_PG_DIR_SIZE	(PTRS_PER_PGD * sizeof(pgd_t))
 #endif
 
 /*
  * Reserve the special regions of memory
  */
+// ARM10C 20131026
 void __init arm_mm_memblock_reserve(void)
 {
 	/*
 	 * Reserve the page tables.  These are already in use,
 	 * and can only be in node 0.
 	 */
+	// mmu가 사용하는 page table 있는 위치
+	// swapper_pg_dir: 0xc0004000, __pa(swapper_pg_dir); 0x40004000
 	memblock_reserve(__pa(swapper_pg_dir), SWAPPER_PG_DIR_SIZE);
 
-#ifdef CONFIG_SA1111
+#ifdef CONFIG_SA1111 // CONFIG_SA1111=n
 	/*
 	 * Because of the SA1111 DMA bug, we want to preserve our
 	 * precious DMA-able memory...
@@ -1348,10 +1383,12 @@ static void __init map_lowmem(void)
  * paging_init() sets up the page tables, initialises the zone memory
  * maps, and sets up the zero page, bad page and bad page tables.
  */
+// ARM10C 20131026
 void __init paging_init(struct machine_desc *mdesc)
 {
 	void *zero_page;
 
+// 2013/10/26 종료
 	build_mem_type_table();
 	prepare_page_table();
 	map_lowmem();

@@ -22,6 +22,7 @@
 #include <asm/types.h>
 
 typedef u32 pteval_t;
+// ARM10C 20131026
 typedef u32 pmdval_t;
 
 #undef STRICT_MM_TYPECHECKS
@@ -50,16 +51,19 @@ typedef struct { pteval_t pgprot; } pgprot_t;
  */
 typedef pteval_t pte_t;
 typedef pmdval_t pmd_t;
+// ARM10C 20131026
 typedef pmdval_t pgd_t[2];
 typedef pteval_t pgprot_t;
 
 #define pte_val(x)      (x)
 #define pmd_val(x)      (x)
+// ARM10C 20131026
 #define pgd_val(x)	((x)[0])
 #define pgprot_val(x)   (x)
 
 #define __pte(x)        (x)
 #define __pmd(x)        (x)
+// ARM10C 20131026
 #define __pgprot(x)     (x)
 
 #endif /* STRICT_MM_TYPECHECKS */

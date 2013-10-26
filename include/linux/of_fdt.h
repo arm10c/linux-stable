@@ -42,6 +42,7 @@
  * ends when size is 0
  */
 // ARM10C 20130928
+// ARM10C 20131026
 struct boot_param_header {
 	__be32	magic;			/* magic word OF_DT_HEADER */
 	__be32	totalsize;		/* total size of DT block */

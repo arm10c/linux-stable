@@ -57,12 +57,15 @@ static char const *exynos5_dt_compat[] __initdata = {
 	NULL
 };
 
+// ARM10C 20131026
 static void __init exynos5_reserve(void)
 {
-#ifdef CONFIG_S5P_DEV_MFC
+#ifdef CONFIG_S5P_DEV_MFC // CONFIG_S5P_DEV_MFC=n, 분석.
+	// mfc: multi format codec
 	struct s5p_mfc_dt_meminfo mfc_mem;
 
 	/* Reserve memory for MFC only if it's available */
+	// mfc 용 memory buffer영역을  reserve 함 
 	mfc_mem.compatible = "samsung,mfc-v6";
 	if (of_scan_flat_dt(s5p_fdt_find_mfc_mem, &mfc_mem))
 		s5p_mfc_reserve_mem(mfc_mem.roff, mfc_mem.rsize, mfc_mem.loff,

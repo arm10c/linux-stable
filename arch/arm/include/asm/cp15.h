@@ -32,9 +32,11 @@
 #define CR_ST	(1 << 19)
 #define CR_FI	(1 << 21)	/* Fast interrupt (lower latency mode)	*/
 #define CR_U	(1 << 22)	/* Unaligned access operation		*/
+// ARM10C 20131026
 #define CR_XP	(1 << 23)	/* Extended page tables			*/
 #define CR_VE	(1 << 24)	/* Vectored interrupts			*/
 #define CR_EE	(1 << 25)	/* Exception (Big) Endian		*/
+// ARM10C 20131026
 #define CR_TRE	(1 << 28)	/* TEX remap enable			*/
 #define CR_AFE	(1 << 29)	/* Access flag enable			*/
 #define CR_TE	(1 << 30)	/* Thumb exception enable		*/
@@ -53,6 +55,7 @@
 extern unsigned long cr_no_alignment;	/* defined in entry-armv.S */
 extern unsigned long cr_alignment;	/* defined in entry-armv.S */
 
+// ARM10C 20131026
 static inline unsigned int get_cr(void)
 {
 	unsigned int val;

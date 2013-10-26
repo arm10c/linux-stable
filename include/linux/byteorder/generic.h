@@ -102,6 +102,7 @@
 #define cpu_to_le16p __cpu_to_le16p
 #define le16_to_cpup __le16_to_cpup
 #define cpu_to_be64p __cpu_to_be64p
+// ARM10C 20131026
 #define be64_to_cpup __be64_to_cpup
 #define cpu_to_be32p __cpu_to_be32p
 // ARM10C 20131005

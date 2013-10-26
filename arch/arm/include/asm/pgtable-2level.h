@@ -70,6 +70,7 @@
  */
 #define PTRS_PER_PTE		512
 #define PTRS_PER_PMD		1
+// ARM10C 20131026
 #define PTRS_PER_PGD		2048
 
 #define PTE_HWTABLE_PTRS	(PTRS_PER_PTE)

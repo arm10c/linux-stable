@@ -36,6 +36,7 @@ static inline pmd_t *pmd_off_k(unsigned long virt)
 	return pmd_offset(pud_offset(pgd_offset_k(virt), virt), virt);
 }
 
+// ARM10C 20131026
 struct mem_type {
 	pteval_t prot_pte;
 	pmdval_t prot_l1;
@@ -79,9 +80,10 @@ extern __init void add_static_vm_early(struct static_vm *svm);
 
 #endif
 
-#ifdef CONFIG_ZONE_DMA
+#ifdef CONFIG_ZONE_DMA // CONFIG_ZONE_DMA=n
 extern phys_addr_t arm_dma_limit;
 #else
+// ARM10C 20131026
 #define arm_dma_limit ((phys_addr_t)~0)
 #endif
 

@@ -170,8 +170,10 @@ int memblock_is_region_reserved(phys_addr_t base, phys_addr_t size);
 
 extern void __memblock_dump_all(void);
 
+// ARM10C 20131026
 static inline void memblock_dump_all(void)
 {
+	// memblock_debug: 0
 	if (memblock_debug)
 		__memblock_dump_all();
 }
@@ -235,10 +237,11 @@ static inline unsigned long memblock_region_reserved_end_pfn(const struct memblo
 	     region++)
 
 
-#ifdef CONFIG_ARCH_DISCARD_MEMBLOCK
+#ifdef CONFIG_ARCH_DISCARD_MEMBLOCK // CONFIG_ARCH_DISCARD_MEMBLOCK=n
 #define __init_memblock __meminit
 #define __initdata_memblock __meminitdata
 #else
+// ARM10C 20131026
 #define __init_memblock
 #define __initdata_memblock
 #endif

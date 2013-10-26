@@ -37,10 +37,12 @@ void * __init early_init_dt_alloc_memory_arch(u64 size, u64 align)
 	return alloc_bootmem_align(size, align);
 }
 
+// ARM10C 20131026
 void __init arm_dt_memblock_reserve(void)
 {
 	u64 *reserve_map, base, size;
 
+	// initial_boot_params: atag 의 위치 값
 	if (!initial_boot_params)
 		return;
 
@@ -53,9 +55,11 @@ void __init arm_dt_memblock_reserve(void)
 	 * and dtb locations which are already reserved, but overlaping
 	 * doesn't hurt anything
 	 */
+	// offset to memory reserve map
 	reserve_map = ((void*)initial_boot_params) +
 			be32_to_cpu(initial_boot_params->off_mem_rsvmap);
 	while (1) {
+		// detree 값이 big endian이므로 little로 변환
 		base = be64_to_cpup(reserve_map++);
 		size = be64_to_cpup(reserve_map++);
 		if (!size)

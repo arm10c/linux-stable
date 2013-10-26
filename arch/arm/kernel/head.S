@@ -59,6 +59,7 @@
 #define PMD_ORDER	2
 #endif
 
+// ARM10C 20131026
 	.globl	swapper_pg_dir
 	.equ	swapper_pg_dir, KERNEL_RAM_VADDR - PG_DIR_SIZE
 	// 연산결과 swapper_pg_dir : 0xc0004000

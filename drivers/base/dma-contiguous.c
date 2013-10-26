@@ -58,6 +58,7 @@ struct cma *dma_contiguous_default_area;
  * should use cma= kernel parameter.
  */
 static const phys_addr_t size_bytes = CMA_SIZE_MBYTES * SZ_1M;
+// ARM10C 20131026
 static phys_addr_t size_cmdline = -1;
 
 static int __init early_cma(char *p)
@@ -104,6 +105,8 @@ static inline __maybe_unused phys_addr_t cma_early_percent_memory(void)
  * has been activated and all other subsystems have already allocated/reserved
  * memory.
  */
+// ARM10C 20131026
+// limit: 0
 void __init dma_contiguous_reserve(phys_addr_t limit)
 {
 	phys_addr_t selected_size = 0;
@@ -113,17 +116,18 @@ void __init dma_contiguous_reserve(phys_addr_t limit)
 	if (size_cmdline != -1) {
 		selected_size = size_cmdline;
 	} else {
-#ifdef CONFIG_CMA_SIZE_SEL_MBYTES
+#ifdef CONFIG_CMA_SIZE_SEL_MBYTES // CONFIG_CMA_SIZE_SEL_MBYTES=n
 		selected_size = size_bytes;
-#elif defined(CONFIG_CMA_SIZE_SEL_PERCENTAGE)
+#elif defined(CONFIG_CMA_SIZE_SEL_PERCENTAGE) // CONFIG_CMA_SIZE_SEL_PERCENTAGE=n
 		selected_size = cma_early_percent_memory();
-#elif defined(CONFIG_CMA_SIZE_SEL_MIN)
+#elif defined(CONFIG_CMA_SIZE_SEL_MIN) // CONFIG_CMA_SIZE_SEL_MIN=n
 		selected_size = min(size_bytes, cma_early_percent_memory());
-#elif defined(CONFIG_CMA_SIZE_SEL_MAX)
+#elif defined(CONFIG_CMA_SIZE_SEL_MAX) // CONFIG_CMA_SIZE_SEL_MAX=n
 		selected_size = max(size_bytes, cma_early_percent_memory());
 #endif
 	}
 
+	// selected_size: 0
 	if (selected_size) {
 		pr_debug("%s: reserving %ld MiB for global area\n", __func__,
 			 (unsigned long)selected_size / SZ_1M);

@@ -69,6 +69,7 @@ static inline __be64 __cpu_to_be64p(const __u64 *p)
 {
 	return (__force __be64)__swab64p(p);
 }
+// ARM10C 20131026
 static inline __u64 __be64_to_cpup(const __be64 *p)
 {
 	return __swab64p((__u64 *)p);

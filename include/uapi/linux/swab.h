@@ -66,11 +66,12 @@ static inline __attribute_const__ __u32 __fswab32(__u32 val)
 #endif
 }
 
+// ARM10C 20131026
 static inline __attribute_const__ __u64 __fswab64(__u64 val)
 {
-#ifdef __HAVE_BUILTIN_BSWAP64__
+#ifdef __HAVE_BUILTIN_BSWAP64__ // not defined
 	return __builtin_bswap64(val);
-#elif defined (__arch_swab64)
+#elif defined (__arch_swab64)   // defined
 	return __arch_swab64(val);
 #elif defined(__SWAB_64_THRU_32__)
 	__u32 h = val >> 32;
@@ -122,6 +123,7 @@ static inline __attribute_const__ __u32 __fswahb32(__u32 val)
  * __swab64 - return a byteswapped 64-bit value
  * @x: value to byteswap
  */
+// ARM10C 20131026
 #define __swab64(x)				\
 	(__builtin_constant_p((__u64)(x)) ?	\
 	___constant_swab64(x) :			\
@@ -180,6 +182,7 @@ static inline __u32 __swab32p(const __u32 *p)
  * __swab64p - return a byteswapped 64-bit value from a pointer
  * @p: pointer to a naturally-aligned 64-bit value
  */
+// ARM10C 20131026
 static inline __u64 __swab64p(const __u64 *p)
 {
 #ifdef __arch_swab64p

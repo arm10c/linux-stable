@@ -31,7 +31,9 @@
 #define PMD_SECT_XN		(_AT(pmdval_t, 1) << 4)		/* v6 */
 #define PMD_SECT_AP_WRITE	(_AT(pmdval_t, 1) << 10)
 #define PMD_SECT_AP_READ	(_AT(pmdval_t, 1) << 11)
+// ARM10C 20131026
 #define PMD_SECT_TEX(x)		(_AT(pmdval_t, (x)) << 12)	/* v5 */
+// ARM10C 20131026
 #define PMD_SECT_APX		(_AT(pmdval_t, 1) << 15)	/* v6 */
 #define PMD_SECT_S		(_AT(pmdval_t, 1) << 16)	/* v6 */
 #define PMD_SECT_nG		(_AT(pmdval_t, 1) << 17)	/* v6 */

@@ -124,6 +124,7 @@ EXPORT_SYMBOL(outer_cache);
  * C code should use the cpu_architecture() function instead of accessing this
  * variable directly.
  */
+// ARM10C 20131026
 int __cpu_architecture __read_mostly = CPU_ARCH_UNKNOWN;
 
 // ARM10C 20130928
@@ -270,10 +271,12 @@ static int __get_cpu_architecture(void)
 #endif
 
 // ARM10C 20130914
+// ARM10C 20131026
 int __pure cpu_architecture(void)
 {
 	BUG_ON(__cpu_architecture == CPU_ARCH_UNKNOWN);
 
+	// __cpu_architecture: 9
 	return __cpu_architecture;
 }
 
@@ -968,9 +971,13 @@ void __init setup_arch(char **cmdline_p)
 	// 어드래스로 비교안하는 이유?
 	sort(&meminfo.bank, meminfo.nr_banks, sizeof(meminfo.bank[0]), meminfo_cmp, NULL);
 	sanity_check_meminfo();
-// 2013/10/12 종료
+// 2013/10/19 종료
+// 2013/10/26 시작
+
+	// meminfo를 참조하여 메모리 블록 구조체를 초기화
 	arm_memblock_init(&meminfo, mdesc);
 
+// 2013/10/26 종료
 	paging_init(mdesc);
 	request_standard_resources(mdesc);
 
