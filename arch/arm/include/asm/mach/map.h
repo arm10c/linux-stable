@@ -14,6 +14,7 @@
 
 #include <asm/io.h>
 
+// ARM10C 20131102
 struct map_desc {
 	unsigned long virtual;
 	unsigned long pfn;

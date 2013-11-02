@@ -105,7 +105,8 @@ EXPORT_SYMBOL(elf_hwcap);
 #ifdef MULTI_CPU
 struct processor processor __read_mostly;
 #endif
-#ifdef MULTI_TLB
+#ifdef MULTI_TLB // defined
+// ARM10C 20131102
 struct cpu_tlb_fns cpu_tlb __read_mostly;
 #endif
 #ifdef MULTI_USER
@@ -978,6 +979,7 @@ void __init setup_arch(char **cmdline_p)
 	arm_memblock_init(&meminfo, mdesc);
 
 // 2013/10/26 종료
+// 2013/11/02 시작
 	paging_init(mdesc);
 	request_standard_resources(mdesc);
 

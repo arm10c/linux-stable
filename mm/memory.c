@@ -90,6 +90,7 @@ EXPORT_SYMBOL(mem_map);
  * and ZONE_HIGHMEM.
  */
 // ARM10C 20131019
+// ARM10C 20131102
 void * high_memory;
 
 EXPORT_SYMBOL(high_memory);

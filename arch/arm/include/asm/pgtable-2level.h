@@ -82,8 +82,11 @@
  * PGDIR_SHIFT determines what a third-level page table entry can map
  */
 #define PMD_SHIFT		21
+// ARM10C 20131102
 #define PGDIR_SHIFT		21
 
+// ARM10C 20131102
+// PMD_SIZE: 0x00200000
 #define PMD_SIZE		(1UL << PMD_SHIFT)
 #define PMD_MASK		(~(PMD_SIZE-1))
 #define PGDIR_SIZE		(1UL << PGDIR_SHIFT)
@@ -156,6 +159,7 @@
 #define pud_clear(pudp)		do { } while (0)
 #define set_pud(pud,pudp)	do { } while (0)
 
+// ARM10C 20131102
 static inline pmd_t *pmd_offset(pud_t *pud, unsigned long addr)
 {
 	return (pmd_t *)pud;
@@ -170,6 +174,7 @@ static inline pmd_t *pmd_offset(pud_t *pud, unsigned long addr)
 		flush_pmd_entry(pmdpd);	\
 	} while (0)
 
+// ARM10C 20131102
 #define pmd_clear(pmdp)			\
 	do {				\
 		pmdp[0] = __pmd(0);	\

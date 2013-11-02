@@ -33,6 +33,7 @@
  * CPUs based on ARMv6+ or the Intel XSC3 core.
  */
 #ifndef CONFIG_IO_36
+// ARM10C 20131102
 #define DOMAIN_KERNEL	0
 #define DOMAIN_TABLE	0
 #define DOMAIN_USER	1

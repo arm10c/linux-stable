@@ -43,6 +43,9 @@
  */
 // ARM10C 20131019
 #define VMALLOC_OFFSET		(8*1024*1024)
+// ARM10C 20131102
+// high_memory: 0xef800000, VMALLOC_OFFSET: (8*1024*1024): 0x80000
+// VMALLOC_START: 0xf0000000 
 #define VMALLOC_START		(((unsigned long)high_memory + VMALLOC_OFFSET) & ~(VMALLOC_OFFSET-1))
 // ARM10C 20131019
 #define VMALLOC_END		0xff000000UL
@@ -178,11 +181,17 @@ extern struct page *empty_zero_page;
 extern pgd_t swapper_pg_dir[PTRS_PER_PGD];
 
 /* to find an entry in a page-table-directory */
+// ARM10C 20131102
+// PGDIR_SHIFT:	21
 #define pgd_index(addr)		((addr) >> PGDIR_SHIFT)
 
+// ARM10C 20131102
+// 연산결과 swapper_pg_dir : 0xc0004000
+//.pgd = swapper_pg_dir
 #define pgd_offset(mm, addr)	((mm)->pgd + pgd_index(addr))
 
 /* to find an entry in a kernel page-table-directory */
+// ARM10C 20131102
 #define pgd_offset_k(addr)	pgd_offset(&init_mm, addr)
 
 #define pmd_none(pmd)		(!pmd_val(pmd))

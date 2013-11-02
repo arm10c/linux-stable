@@ -30,7 +30,7 @@
  */
 #define UL(x) _AC(x, UL)
 
-#ifdef CONFIG_MMU
+#ifdef CONFIG_MMU // CONFIG_MMU=y
 
 /*
  * PAGE_OFFSET - the virtual address of the start of the kernel image
@@ -38,6 +38,8 @@
  * TASK_UNMAPPED_BASE - the lower boundary of the mmap VM area
  */
 #define PAGE_OFFSET		UL(CONFIG_PAGE_OFFSET)
+// ARM10C 20131102
+// TASK_SIZE: 0xBF000000
 #define TASK_SIZE		(UL(CONFIG_PAGE_OFFSET) - UL(SZ_16M))
 #define TASK_UNMAPPED_BASE	ALIGN(TASK_SIZE / 3, SZ_16M)
 
@@ -50,7 +52,9 @@
  * The module space lives between the addresses given by TASK_SIZE
  * and PAGE_OFFSET - it must be within 32MB of the kernel text.
  */
-#ifndef CONFIG_THUMB2_KERNEL
+#ifndef CONFIG_THUMB2_KERNEL // CONFIG_THUMB2_KERNEL=n
+// ARM10C 20131102
+// MODULES_VADDR: 0xBF000000: 0xC0000000 - 0x01000000
 #define MODULES_VADDR		(PAGE_OFFSET - SZ_16M)
 #else
 /* smaller range for Thumb-2 symbols relocation (2^24)*/
@@ -136,6 +140,7 @@
  */
 /*
 // ARM10C 20131019
+// ARM10C 20131102
 */
 #define	__phys_to_pfn(paddr)	((unsigned long)((paddr) >> PAGE_SHIFT))
 #define	__pfn_to_phys(pfn)	((phys_addr_t)(pfn) << PAGE_SHIFT)

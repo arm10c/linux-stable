@@ -21,6 +21,7 @@
 
 #include <asm/types.h>
 
+// ARM10C 20131102
 typedef u32 pteval_t;
 // ARM10C 20131026
 typedef u32 pmdval_t;
@@ -49,10 +50,12 @@ typedef struct { pteval_t pgprot; } pgprot_t;
 /*
  * .. while these make it easier on the compiler
  */
+// ARM10C 20131102
 typedef pteval_t pte_t;
 typedef pmdval_t pmd_t;
 // ARM10C 20131026
 typedef pmdval_t pgd_t[2];
+// ARM10C 20131102
 typedef pteval_t pgprot_t;
 
 #define pte_val(x)      (x)
@@ -62,8 +65,10 @@ typedef pteval_t pgprot_t;
 #define pgprot_val(x)   (x)
 
 #define __pte(x)        (x)
+// ARM10C 20131102
 #define __pmd(x)        (x)
 // ARM10C 20131026
+// ARM10C 20131102
 #define __pgprot(x)     (x)
 
 #endif /* STRICT_MM_TYPECHECKS */

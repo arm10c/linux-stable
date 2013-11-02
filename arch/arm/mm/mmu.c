@@ -55,10 +55,14 @@ pmd_t *top_pmd;
 #define CPOLICY_WRITEALLOC	4
 
 static unsigned int cachepolicy __initdata = CPOLICY_WRITEBACK;
+// ARM10C 20131102
 static unsigned int ecc_mask __initdata = 0;
+// ARM10C 20131102
 pgprot_t pgprot_user;
+// ARM10C 20131102
 pgprot_t pgprot_kernel;
 pgprot_t pgprot_hyp_device;
+// ARM10C 20131102
 pgprot_t pgprot_s2;
 pgprot_t pgprot_s2_device;
 
@@ -110,6 +114,8 @@ static struct cachepolicy cache_policies[] __initdata = {
 	}, {
 		.policy		= "writealloc",
 		.cr_mask	= 0,
+// ARM10C 20131102
+// PMD_SECT_WBWA: (PMD_SECT_TEX(1) | PMD_SECT_CACHEABLE | PMD_SECT_BUFFERABLE)
 		.pmd		= PMD_SECT_WBWA,
 		.pte		= L_PTE_MT_WRITEALLOC,
 		.pte_s2		= s2_policy(L_PTE_S2_MT_WRITEBACK),
@@ -272,7 +278,7 @@ static struct mem_type mem_types[] = {
 		.prot_sect = PMD_TYPE_SECT | PMD_SECT_XN,
 		.domain    = DOMAIN_KERNEL,
 	},
-#ifndef CONFIG_ARM_LPAE
+#ifndef CONFIG_ARM_LPAE // CONFIG_ARM_LPAE=n
 	[MT_MINICLEAN] = {
 		.prot_sect = PMD_TYPE_SECT | PMD_SECT_XN | PMD_SECT_MINICACHE,
 		.domain    = DOMAIN_KERNEL,
@@ -558,24 +564,36 @@ static void __init build_mem_type_table(void)
 	}
 
 // 2013/10/26 종료
+// 2013/11/02 시작
+	// vecs_pgprot: L_PTE_MT_WRITEALLOC | L_PTE_SHARED;
 	mem_types[MT_LOW_VECTORS].prot_pte |= vecs_pgprot;
 	mem_types[MT_HIGH_VECTORS].prot_pte |= vecs_pgprot;
 
+	// user_pgprot: L_PTE_MT_WRITEALLOC | L_PTE_SHARED
 	pgprot_user   = __pgprot(L_PTE_PRESENT | L_PTE_YOUNG | user_pgprot);
+	// kern_pgprot: L_PTE_MT_WRITEALLOC | L_PTE_SHARED
 	pgprot_kernel = __pgprot(L_PTE_PRESENT | L_PTE_YOUNG |
 				 L_PTE_DIRTY | kern_pgprot);
+
+	// s2_pgprot: L_PTE_SHARED
 	pgprot_s2  = __pgprot(L_PTE_PRESENT | L_PTE_YOUNG | s2_pgprot);
+	// s2_device_pgprot: PROT_PTE_DEVICE | L_PTE_MT_DEV_SHARED | L_PTE_SHARED,
 	pgprot_s2_device  = __pgprot(s2_device_pgprot);
+	// hyp_device_pgprot: PROT_PTE_DEVICE | L_PTE_MT_DEV_SHARED | L_PTE_SHARED,
 	pgprot_hyp_device  = __pgprot(hyp_device_pgprot);
 
+	// ecc_mask: 0
 	mem_types[MT_LOW_VECTORS].prot_l1 |= ecc_mask;
 	mem_types[MT_HIGH_VECTORS].prot_l1 |= ecc_mask;
+	// cp->pmd: PMD_SECT_WBWA: (PMD_SECT_TEX(1) | PMD_SECT_CACHEABLE | PMD_SECT_BUFFERABLE)
 	mem_types[MT_MEMORY].prot_sect |= ecc_mask | cp->pmd;
+	// kern_pgprot: L_PTE_MT_WRITEALLOC | L_PTE_SHARED
 	mem_types[MT_MEMORY].prot_pte |= kern_pgprot;
 	mem_types[MT_MEMORY_DMA_READY].prot_pte |= kern_pgprot;
 	mem_types[MT_MEMORY_NONCACHED].prot_sect |= ecc_mask;
 	mem_types[MT_ROM].prot_sect |= cp->pmd;
 
+	// cp->pmd: PMD_SECT_WBWA
 	switch (cp->pmd) {
 	case PMD_SECT_WT:
 		mem_types[MT_CACHECLEAN].prot_sect |= PMD_SECT_WT;
@@ -585,9 +603,12 @@ static void __init build_mem_type_table(void)
 		mem_types[MT_CACHECLEAN].prot_sect |= PMD_SECT_WB;
 		break;
 	}
+
+	//  ecc_mask: 0, cp->palicy: "writealloc"
 	printk("Memory policy: ECC %sabled, Data cache %s\n",
 		ecc_mask ? "en" : "dis", cp->policy);
 
+	// ARRAY_SIZE: 15
 	for (i = 0; i < ARRAY_SIZE(mem_types); i++) {
 		struct mem_type *t = &mem_types[i];
 		if (t->prot_l1)
@@ -610,6 +631,8 @@ pgprot_t phys_mem_access_prot(struct file *file, unsigned long pfn,
 EXPORT_SYMBOL(phys_mem_access_prot);
 #endif
 
+// ARM10C 20131102
+// vectors_base(): 0xffff0000
 #define vectors_base()	(vectors_high() ? 0xffff0000 : 0)
 
 static void __init *early_alloc_aligned(unsigned long sz, unsigned long align)
@@ -786,6 +809,11 @@ static void __init create_36bit_mapping(struct map_desc *md,
  * offsets, and we take full advantage of sections and
  * supersections.
  */
+// ARM10C 20131102
+// map.pfn: 0x20000
+// map.virtual: 0xA0000000
+// map.length: 0x4f800000
+// map.type: MT_MEMORY
 static void __init create_mapping(struct map_desc *md)
 {
 	unsigned long addr, length, end;
@@ -793,6 +821,7 @@ static void __init create_mapping(struct map_desc *md)
 	const struct mem_type *type;
 	pgd_t *pgd;
 
+	// md->virtual: 0xA0000000, vectors_base(): 0xffff0000, TASK_SIZE: 0xBF000000
 	if (md->virtual != vectors_base() && md->virtual < TASK_SIZE) {
 		printk(KERN_WARNING "BUG: not creating mapping for 0x%08llx"
 		       " at 0x%08lx in user region\n",
@@ -1175,6 +1204,7 @@ void __init sanity_check_meminfo(void)
 	memblock_set_current_limit(memblock_limit);
 }
 
+// ARM10C 20131102
 static inline void prepare_page_table(void)
 {
 	unsigned long addr;
@@ -1183,27 +1213,41 @@ static inline void prepare_page_table(void)
 	/*
 	 * Clear out all the mappings below the kernel image.
 	 */
+	// 0 ~ 0xBF000000 까지 클리어 (유저 영역)
+	// Virtual Address 0 ~ MODULES_VADDR까지 영역에 대한 페이지테이블 영역 Clear 
+	// 페이지테이블영역: 0xC0004000 ~ 0xC0006FC7 
+	// MODULES_VADDR: 0xBF000000, PMD_SIZE: 0x00200000
 	for (addr = 0; addr < MODULES_VADDR; addr += PMD_SIZE)
 		pmd_clear(pmd_off_k(addr));
 
-#ifdef CONFIG_XIP_KERNEL
+#ifdef CONFIG_XIP_KERNEL // CONFIG_XIP_KERNEL=n
 	/* The XIP kernel is mapped in the module area -- skip over it */
 	addr = ((unsigned long)_etext + PMD_SIZE - 1) & PMD_MASK;
 #endif
+
+	// 0xBF000000 ~ 0xC0000000 까지 클리어 (모듈 영역)
+	// PAGE_OFFSET: 0xC0000000, PMD_SIZE: 0x00200000
 	for ( ; addr < PAGE_OFFSET; addr += PMD_SIZE)
 		pmd_clear(pmd_off_k(addr));
 
 	/*
 	 * Find the end of the first block of lowmem.
 	 */
+	// memblock.memory.regions[0].base: 0x20000000 
+	// memblock.memory.regions[0].size: 0x80000000
+	// end: 0xA0000000
 	end = memblock.memory.regions[0].base + memblock.memory.regions[0].size;
+
+	// arm_lowmem_limit: 0x6f800000
 	if (end >= arm_lowmem_limit)
+		// end: 0x6f800000
 		end = arm_lowmem_limit;
 
 	/*
 	 * Clear out all the kernel space mappings, except for the first
 	 * memory bank, up to the vmalloc region.
 	 */
+	// addr: 0xef800000, VMALLOC_START: 0xf0000000
 	for (addr = __phys_to_virt(end);
 	     addr < VMALLOC_START; addr += PMD_SIZE)
 		pmd_clear(pmd_off_k(addr));
@@ -1355,6 +1399,7 @@ static void __init kmap_init(void)
 #endif
 }
 
+// ARM10C 20131102
 static void __init map_lowmem(void)
 {
 	struct memblock_region *reg;
@@ -1365,16 +1410,24 @@ static void __init map_lowmem(void)
 		phys_addr_t end = start + reg->size;
 		struct map_desc map;
 
+		// end: 0xA0000000, arm_lowmem_limit: 0x6f800000
 		if (end > arm_lowmem_limit)
+			// end: 0x6f800000
 			end = arm_lowmem_limit;
+
+		// start: 0x20000000, end: 0x6f800000
 		if (start >= end)
 			break;
 
+		// map.pfn: 0x20000
 		map.pfn = __phys_to_pfn(start);
+		// map.virtual: 0xA0000000
 		map.virtual = __phys_to_virt(start);
+		// map.length: 0x4f800000
 		map.length = end - start;
 		map.type = MT_MEMORY;
 
+// 2013/11/02 종료
 		create_mapping(&map);
 	}
 }
@@ -1388,9 +1441,11 @@ void __init paging_init(struct machine_desc *mdesc)
 {
 	void *zero_page;
 
-// 2013/10/26 종료
+	// 아키텍처 버전에 따른 메모리 타입 설정
 	build_mem_type_table();
+	// page table 초기화 
 	prepare_page_table();
+// 2013/11/02 종료
 	map_lowmem();
 	dma_contiguous_remap();
 	devicemaps_init(mdesc);
