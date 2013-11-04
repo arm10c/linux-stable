@@ -324,15 +324,15 @@ extern struct cpu_tlb_fns cpu_tlb;
 // ARM10C 20131102
 // always_tlb_flags: TLB_WB | TLB_BARRIER
 // possible_tlb_flags:
-// TLB_WB | TLB_BARRIER | TLB_V7_UIS_FULL | TLB_V7_UIS_PAGE | \
-// TLB_V7_UIS_ASID | TLB_V7_UIS_BP | TLB_DCLEAN | TLB_V6_U_FULL | TLB_V6_U_PAGE | \
+// TLB_WB | TLB_BARRIER | TLB_V7_UIS_FULL | TLB_V7_UIS_PAGE | 
+// TLB_V7_UIS_ASID | TLB_V7_UIS_BP | TLB_DCLEAN | TLB_V6_U_FULL | TLB_V6_U_PAGE | 
 // TLB_V6_U_ASID | TLB_V6_BP
 // 
 // __tlb_op(TLB_DCLEAN, "p15, 0, %0, " "c7, c10, 1	@ flush_pmd", pmd)
-// asm("tst %1, %2\n\t"				\
-//      "mcrne " "p15, 0, %0, " "c7, c10, 1	@ flush_pmd"	\
-//	: : "r" (pmd), "r" (__tlb_flag), "Ir" (TLB_DCLEAN)	\
-//	: "cc");					\
+// asm("tst %1, %2\n\t"				
+//      "mcrne " "p15, 0, %0, " "c7, c10, 1	@ flush_pmd"	
+//	: : "r" (pmd), "r" (__tlb_flag), "Ir" (TLB_DCLEAN)	
+//	: "cc");					
 // A.R.M: B4.1.46 DCCMVAC, Data Cache Clean by MVA to PoC, VMSA
 #define __tlb_op(f, insnarg, arg)					\
 	do {								\
