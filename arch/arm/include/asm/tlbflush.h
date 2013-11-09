@@ -44,6 +44,7 @@
 #define TLB_L2CLEAN_FR	(1 << 29)		/* Feroceon */
 // ARM10C 20131102
 #define TLB_DCLEAN	(1 << 30)
+// ARM10C 20131109
 #define TLB_WB		(1 << 31)
 
 /*
@@ -319,6 +320,7 @@ extern struct cpu_tlb_fns cpu_tlb;
 				 v6wbi_always_flags & \
 				 v7wbi_always_flags)
 
+// ARM10C 20131109
 #define tlb_flag(f)	((always_tlb_flags & (f)) || (__tlb_flag & possible_tlb_flags & (f)))
 
 // ARM10C 20131102
@@ -523,11 +525,15 @@ static inline void dummy_flush_tlb_a15_erratum(void)
  *	these operations.  This is typically used when we are removing
  *	PMD entries.
  */
+// ARM10C 20131109
 static inline void flush_pmd_entry(void *pmd)
 {
+	// __cpu_tlb_flags: 0
 	const unsigned int __tlb_flag = __cpu_tlb_flags;
 
+	// Data cache clean 수행
 	tlb_op(TLB_DCLEAN, "c7, c10, 1	@ flush_pmd", pmd);
+	// TLB_L2CLEAN_FR 은 exynos에서 사용 안함 
 	tlb_l2_op(TLB_L2CLEAN_FR, "c15, c9, 1  @ L2 flush_pmd", pmd);
 
 	if (tlb_flag(TLB_WB))

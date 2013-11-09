@@ -15,6 +15,7 @@
 
 #if __LINUX_ARM_ARCH__ >= 7 // ARM10C Y 
 #define isb() __asm__ __volatile__ ("isb" : : : "memory")
+// ARM10C 20131109
 #define dsb() __asm__ __volatile__ ("dsb" : : : "memory")
 #define dmb() __asm__ __volatile__ ("dmb" : : : "memory")   // ARM10C this 
 #elif defined(CONFIG_CPU_XSC3) || __LINUX_ARM_ARCH__ == 6

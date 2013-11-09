@@ -147,6 +147,7 @@
 // ARM10C 20131102
 */
 #define	__phys_to_pfn(paddr)	((unsigned long)((paddr) >> PAGE_SHIFT))
+// ARM10C 20131109
 #define	__pfn_to_phys(pfn)	((phys_addr_t)(pfn) << PAGE_SHIFT)
 
 /*
@@ -270,6 +271,7 @@ static inline void *phys_to_virt(phys_addr_t x)
  */
 // ARM10C 20131019
 #define __pa(x)			__virt_to_phys((unsigned long)(x))
+// ARM10C 20131109
 #define __va(x)			((void *)__phys_to_virt((unsigned long)(x)))
 #define pfn_to_kaddr(pfn)	__va((pfn) << PAGE_SHIFT)
 

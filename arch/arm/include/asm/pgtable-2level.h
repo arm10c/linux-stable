@@ -89,14 +89,21 @@
 // PMD_SIZE: 0x00200000
 #define PMD_SIZE		(1UL << PMD_SHIFT)
 #define PMD_MASK		(~(PMD_SIZE-1))
+// ARM10C 20131109
+// PGDIR_SIZE: 0x00200000
 #define PGDIR_SIZE		(1UL << PGDIR_SHIFT)
+// PGDIR_MASK: 0xFFE00000
 #define PGDIR_MASK		(~(PGDIR_SIZE-1))
 
 /*
  * section address mask and size definitions.
  */
 #define SECTION_SHIFT		20
+// ARM10C 20131109
+// SECTION_SIZE: 0x00100000
 #define SECTION_SIZE		(1UL << SECTION_SHIFT)
+// ARM10C 20131109
+// SECTION_MASK: 0xFFF00000
 #define SECTION_MASK		(~(SECTION_SIZE-1))
 
 /*
@@ -165,6 +172,7 @@ static inline pmd_t *pmd_offset(pud_t *pud, unsigned long addr)
 	return (pmd_t *)pud;
 }
 
+// ARM10C 20131109
 #define pmd_bad(pmd)		(pmd_val(pmd) & 2)
 
 #define copy_pmd(pmdpd,pmdps)		\

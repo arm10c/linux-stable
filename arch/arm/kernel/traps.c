@@ -37,6 +37,7 @@
 
 static const char *handler[]= { "prefetch abort", "data abort", "address exception", "interrupt" };
 
+// ARM10C 20131109
 void *vectors_page;
 
 #ifdef CONFIG_DEBUG_USER
@@ -819,14 +820,17 @@ static void __init kuser_init(void *vectors)
 }
 #endif
 
+// ARM10C 20131109
+// vectors: 0xEF7FE000
 void __init early_trap_init(void *vectors_base)
 {
-#ifndef CONFIG_CPU_V7M
+#ifndef CONFIG_CPU_V7M // CONFIG_CPU_V7M=n
 	unsigned long vectors = (unsigned long)vectors_base;
 	extern char __stubs_start[], __stubs_end[];
 	extern char __vectors_start[], __vectors_end[];
 	unsigned i;
 
+	// vectors_base: 0xEF7FE000
 	vectors_page = vectors_base;
 
 	/*
@@ -836,6 +840,7 @@ void __init early_trap_init(void *vectors_base)
 	 * branch back to the undefined instruction.
 	 */
 	for (i = 0; i < PAGE_SIZE / sizeof(u32); i++)
+		// 0xe7fddef1: undefined instruction
 		((u32 *)vectors_base)[i] = 0xe7fddef1;
 
 	/*
@@ -843,9 +848,12 @@ void __init early_trap_init(void *vectors_base)
 	 * into the vector page, mapped at 0xffff0000, and ensure these
 	 * are visible to the instruction stream.
 	 */
+	// vectors: 0xEF7FE000
 	memcpy((void *)vectors, __vectors_start, __vectors_end - __vectors_start);
+	// vectors +  0x1000: 0xEF7FE000 + 0x1000
 	memcpy((void *)vectors + 0x1000, __stubs_start, __stubs_end - __stubs_start);
 
+// 2013/11/09 종료
 	kuser_init(vectors_base);
 
 	flush_icache_range(vectors, vectors + PAGE_SIZE * 2);

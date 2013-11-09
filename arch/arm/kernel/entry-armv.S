@@ -998,6 +998,7 @@ ENDPROC(vector_\name)
 	.endm
 
 	.section .stubs, "ax", %progbits
+// ARM10C 20131109
 __stubs_start:
 	@ This must be the first word
 	.word	vector_swi
@@ -1128,6 +1129,7 @@ vector_fiq:
 	.equ	vector_fiq_offset, vector_fiq
 
 	.section .vectors, "ax", %progbits
+// ARM10C 20131109
 __vectors_start:
 	W(b)	vector_rst
 	W(b)	vector_und

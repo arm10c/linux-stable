@@ -152,18 +152,30 @@ SECTIONS
 	 * The vectors and stubs are relocatable code, and the
 	 * only thing that matters is their relative offsets
 	 */
+	/*
+	// ARM10C 20131109
+	*/
 	__vectors_start = .;
 	.vectors 0 : AT(__vectors_start) {
 		*(.vectors)
 	}
 	. = __vectors_start + SIZEOF(.vectors);
+	/*
+	// ARM10C 20131109
+	*/
 	__vectors_end = .;
 
+	/*
+	// ARM10C 20131109
+	*/
 	__stubs_start = .;
 	.stubs 0x1000 : AT(__stubs_start) {
 		*(.stubs)
 	}
 	. = __stubs_start + SIZEOF(.stubs);
+	/*
+	// ARM10C 20131109
+	*/
 	__stubs_end = .;
 
 	INIT_TEXT_SECTION(8)

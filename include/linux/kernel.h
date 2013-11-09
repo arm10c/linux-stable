@@ -48,7 +48,11 @@
  * as wide as the result!), and we want to evaluate the macro
  * arguments just once each.
  */
+// ARM10C 20131109
+// size: 0x00002000, align: 0x00002000
 #define __round_mask(x, y) ((__typeof__(x))((y)-1))
+// ARM10C 20131109
+// size: 0x00002000, align: 0x00002000
 #define round_up(x, y) ((((x)-1) | __round_mask(x, y))+1)
 #define round_down(x, y) ((x) & ~__round_mask(x, y))
 
@@ -708,6 +712,11 @@ static inline void ftrace_dump(enum ftrace_dump_mode oops_dump_mode) { }
  * This macro does strict typechecking of min/max to make sure they are of the
  * same type as val.  See the unnecessary pointer comparisons.
  */
+// ARM10C 20131109
+// start: 0x00001000, end: 0x6f800000
+// 가정: this_start: 0x6F800000, this_end: 0xC0000000
+// this_start: 0x6F800000, start: 0x00001000, end: 0x6f800000
+// this_end: 0xC0000000, start: 0x00001000, end: 0x6f800000
 #define clamp(val, min, max) ({			\
 	typeof(val) __val = (val);		\
 	typeof(min) __min = (min);		\
@@ -728,6 +737,7 @@ static inline void ftrace_dump(enum ftrace_dump_mode oops_dump_mode) { }
 	type __min2 = (y);			\
 	__min1 < __min2 ? __min1: __min2; })
 
+// ARM10C 20131109
 #define max_t(type, x, y) ({			\
 	type __max1 = (x);			\
 	type __max2 = (y);			\

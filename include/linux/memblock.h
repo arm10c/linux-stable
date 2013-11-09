@@ -2,7 +2,7 @@
 #define _LINUX_MEMBLOCK_H
 #ifdef __KERNEL__
 
-#ifdef CONFIG_HAVE_MEMBLOCK
+#ifdef CONFIG_HAVE_MEMBLOCK // CONFIG_HAVE_MEMBLOCK=y
 /*
  * Logical memory blocks.
  *
@@ -115,6 +115,8 @@ void __next_free_mem_range_rev(u64 *idx, int nid, phys_addr_t *out_start,
  * Walks over free (memory && !reserved) areas of memblock in reverse
  * order.  Available as soon as memblock is initialized.
  */
+// ARM10C 20131109
+// nid: 1
 #define for_each_free_mem_range_reverse(i, nid, p_start, p_end, p_nid)	\
 	for (i = (u64)ULLONG_MAX,					\
 	     __next_free_mem_range_rev(&i, nid, p_start, p_end, p_nid);	\
@@ -152,6 +154,7 @@ phys_addr_t memblock_alloc(phys_addr_t size, phys_addr_t align);
 
 /* Flags for memblock_alloc_base() amd __memblock_alloc_base() */
 #define MEMBLOCK_ALLOC_ANYWHERE	(~(phys_addr_t)0)
+// ARM10C 20131109
 #define MEMBLOCK_ALLOC_ACCESSIBLE	0
 
 phys_addr_t memblock_alloc_base(phys_addr_t size, phys_addr_t align,

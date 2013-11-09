@@ -192,8 +192,10 @@ extern pgd_t swapper_pg_dir[PTRS_PER_PGD];
 
 /* to find an entry in a kernel page-table-directory */
 // ARM10C 20131102
+// ARM10C 20131109
 #define pgd_offset_k(addr)	pgd_offset(&init_mm, addr)
 
+// ARM10C 20131109
 #define pmd_none(pmd)		(!pmd_val(pmd))
 #define pmd_present(pmd)	(pmd_val(pmd))
 

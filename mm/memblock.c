@@ -106,6 +106,8 @@ static long __init_memblock memblock_overlaps_region(struct memblock_type *type,
  * RETURNS:
  * Found address on success, %0 on failure.
  */
+// ARM10C 20131109
+// 0, max_addr: 0, size: 0x00002000, align: 0x00002000, nid: 1
 phys_addr_t __init_memblock memblock_find_in_range_node(phys_addr_t start,
 					phys_addr_t end, phys_addr_t size,
 					phys_addr_t align, int nid)
@@ -114,21 +116,37 @@ phys_addr_t __init_memblock memblock_find_in_range_node(phys_addr_t start,
 	u64 i;
 
 	/* pump up @end */
+	// end: 0x0, MEMBLOCK_ALLOC_ACCESSIBLE: 0
 	if (end == MEMBLOCK_ALLOC_ACCESSIBLE)
+		// end: 0x6f800000
 		end = memblock.current_limit;
 
 	/* avoid allocating the first page */
+	// start: 0, PAGE_SIZE: 0x00001000
+	// start: 0x00001000
 	start = max_t(phys_addr_t, start, PAGE_SIZE);
+
+	// end: 0x6f800000
 	end = max(start, end);
 
 	for_each_free_mem_range_reverse(i, nid, &this_start, &this_end, NULL) {
+		// start: 0x00001000, end: 0x6f800000
+		// 가정: this_start: 0x6F800000, this_end: 0xC0000000
+		// this_start: 0x6F800000
 		this_start = clamp(this_start, start, end);
+		// this_end: 0xC0000000, start: 0x00001000, end: 0x6f800000
+		// this_end: 0x6f800000
 		this_end = clamp(this_end, start, end);
 
+		// this_end: 0x6f800000, size: 0x00002000
 		if (this_end < size)
 			continue;
 
+		// this_end - size: 0x6f7FE000, align: 0x00002000
+		// cand: 0x6f7FE000
 		cand = round_down(this_end - size, align);
+
+		// cand: 0x6f7FE000, this_start: 0x6F800000
 		if (cand >= this_start)
 			return cand;
 	}
@@ -711,6 +729,8 @@ void __init_memblock __next_free_mem_range(u64 *idx, int nid,
  *
  * Reverse of __next_free_mem_range().
  */
+// ARM10C 20131109
+// *idx: ULLONG_MAX, nid: 1
 void __init_memblock __next_free_mem_range_rev(u64 *idx, int nid,
 					   phys_addr_t *out_start,
 					   phys_addr_t *out_end, int *out_nid)
@@ -721,41 +741,60 @@ void __init_memblock __next_free_mem_range_rev(u64 *idx, int nid,
 	int ri = *idx >> 32;
 
 	if (*idx == (u64)ULLONG_MAX) {
+		// mem->cnt: 1, rsv->cnt: 5
 		mi = mem->cnt - 1;
 		ri = rsv->cnt;
 	}
 
 	for ( ; mi >= 0; mi--) {
 		struct memblock_region *m = &mem->regions[mi];
+		// m->base: 0x40000000
 		phys_addr_t m_start = m->base;
+		// m->size: 0x80000000, m_end: 0xC0000000
 		phys_addr_t m_end = m->base + m->size;
 
 		/* only memory regions are associated with nodes, check it */
+		// nid: 1, MAX_NUMNODES: 1
 		if (nid != MAX_NUMNODES && nid != memblock_get_region_node(m))
 			continue;
 
 		/* scan areas before each reservation for intersection */
+		// ri: 5
 		for ( ; ri >= 0; ri--) {
+			// dtb reseved map 가정
+			// base: 0x60000000, size: 0x00100000
 			struct memblock_region *r = &rsv->regions[ri];
+			// r[-1].base, r[-1].size: dtb reseved map
+			// r_start: 0x60100000 
 			phys_addr_t r_start = ri ? r[-1].base + r[-1].size : 0;
+			// r_end: ULLONG_MAX
 			phys_addr_t r_end = ri < rsv->cnt ? r->base : ULLONG_MAX;
 
 			/* if ri advanced past mi, break out to advance mi */
+			// r_end: ULLONG_MAX, m_start: 0x40000000
 			if (r_end <= m_start)
 				break;
 			/* if the two regions intersect, we're done */
+			// m_end: 0xC0000000, r_start: 0x60100000 
 			if (m_end > r_start) {
 				if (out_start)
+					// m_start: 0x40000000, r_start: 0x60100000 
+					// *out_start: 0x60100000
 					*out_start = max(m_start, r_start);
 				if (out_end)
+					// m_end: 0xC0000000, r_end: ULLONG_MAX
+					// *out_end: 0xC0000000
 					*out_end = min(m_end, r_end);
 				if (out_nid)
 					*out_nid = memblock_get_region_node(m);
 
+				// m_start: 0x40000000, r_start: 0x60100000 
 				if (m_start >= r_start)
 					mi--;
 				else
+					// ri: 4
 					ri--;
+				// mi: 0, ri: 4
 				*idx = (u32)mi | (u64)ri << 32;
 				return;
 			}
@@ -828,18 +867,23 @@ int __init_memblock memblock_set_node(phys_addr_t base, phys_addr_t size,
 }
 #endif /* CONFIG_HAVE_MEMBLOCK_NODE_MAP */
 
+// ARM10C 20131109
+// size: 0x00002000, align: 0x00002000, MEMBLOCK_ALLOC_ACCESSIBLE: 0, MAX_NUMNODES: 1
 static phys_addr_t __init memblock_alloc_base_nid(phys_addr_t size,
 					phys_addr_t align, phys_addr_t max_addr,
 					int nid)
 {
 	phys_addr_t found;
 
+	// align: 0x00002000
 	if (WARN_ON(!align))
 		align = __alignof__(long long);
 
 	/* align @size to avoid excessive fragmentation on reserved array */
+	// size: 0x00002000
 	size = round_up(size, align);
 
+	// 0, max_addr: 0, size: 0x00002000, align: 0x00002000, nid: 1
 	found = memblock_find_in_range_node(0, max_addr, size, align, nid);
 	if (found && !memblock_reserve(found, size))
 		return found;
@@ -847,20 +891,29 @@ static phys_addr_t __init memblock_alloc_base_nid(phys_addr_t size,
 	return 0;
 }
 
+// ARM10C 20131109
+// size: 0x00002000, align: 0x00002000, max_addr: 0, MAX_NUMNODES: 1
 phys_addr_t __init memblock_alloc_nid(phys_addr_t size, phys_addr_t align, int nid)
 {
+	// size: 0x00002000, align: 0x00002000, MEMBLOCK_ALLOC_ACCESSIBLE: 0, MAX_NUMNODES: 1
 	return memblock_alloc_base_nid(size, align, MEMBLOCK_ALLOC_ACCESSIBLE, nid);
 }
 
+// ARM10C 20131109
+// size: 0x00002000, align: 0x00002000, max_addr: 0
 phys_addr_t __init __memblock_alloc_base(phys_addr_t size, phys_addr_t align, phys_addr_t max_addr)
 {
+	// size: 0x00002000, align: 0x00002000, max_addr: 0, MAX_NUMNODES: 1
 	return memblock_alloc_base_nid(size, align, max_addr, MAX_NUMNODES);
 }
 
+// ARM10C 20131109
+// size: 0x00002000, align: 0x00002000, MEMBLOCK_ALLOC_ACCESSIBLE: 0
 phys_addr_t __init memblock_alloc_base(phys_addr_t size, phys_addr_t align, phys_addr_t max_addr)
 {
 	phys_addr_t alloc;
 
+	// size: 0x00002000, align: 0x00002000, max_addr: 0
 	alloc = __memblock_alloc_base(size, align, max_addr);
 
 	if (alloc == 0)
@@ -870,8 +923,11 @@ phys_addr_t __init memblock_alloc_base(phys_addr_t size, phys_addr_t align, phys
 	return alloc;
 }
 
+// ARM10C 20131109
+// sz: 0x00002000, align: 0x00002000
 phys_addr_t __init memblock_alloc(phys_addr_t size, phys_addr_t align)
 {
+	// size: 0x00002000, align: 0x00002000, MEMBLOCK_ALLOC_ACCESSIBLE: 0
 	return memblock_alloc_base(size, align, MEMBLOCK_ALLOC_ACCESSIBLE);
 }
 
