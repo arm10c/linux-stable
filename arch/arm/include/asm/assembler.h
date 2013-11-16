@@ -167,6 +167,7 @@
 	restore_irqs_notrace \oldcpsr
 	.endm
 
+// ARM10C 20131116
 #define USER(x...)				\
 9999:	x;					\
 	.pushsection __ex_table,"a";		\

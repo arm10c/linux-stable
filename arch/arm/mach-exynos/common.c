@@ -303,6 +303,7 @@ void __init exynos_init_late(void)
 	exynos_pm_late_initcall();
 }
 
+// ARM10C 20131116
 static int __init exynos_fdt_map_chipid(unsigned long node, const char *uname,
 					int depth, void *data)
 {
@@ -332,6 +333,7 @@ static int __init exynos_fdt_map_chipid(unsigned long node, const char *uname,
  * register the standard cpu IO areas
  */
 
+// ARM10C 20131116
 void __init exynos_init_io(void)
 {
 	debug_ll_io_init();

@@ -754,7 +754,8 @@ ENDPROC(__switch_to)
 	.endr
 	.endm
 
-#ifdef CONFIG_KUSER_HELPERS
+#ifdef CONFIG_KUSER_HELPERS // CONFIG_KUSER_HELPERS=y
+// ARM10C 20131116
 	.align	5
 	.globl	__kuser_helper_start
 __kuser_helper_start:
@@ -938,6 +939,7 @@ __kuser_get_tls:				@ 0xffff0fe0
 __kuser_helper_version:				@ 0xffff0ffc
 	.word	((__kuser_helper_end - __kuser_helper_start) >> 5)
 
+// ARM10C 20131116
 	.globl	__kuser_helper_end
 __kuser_helper_end:
 

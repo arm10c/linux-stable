@@ -112,7 +112,8 @@ struct cpu_tlb_fns cpu_tlb __read_mostly;
 #ifdef MULTI_USER
 struct cpu_user_fns cpu_user __read_mostly;
 #endif
-#ifdef MULTI_CACHE
+#ifdef MULTI_CACHE // defined
+// ARM10C 20131116
 struct cpu_cache_fns cpu_cache __read_mostly;
 #endif
 #ifdef CONFIG_OUTER_CACHE

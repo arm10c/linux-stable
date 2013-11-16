@@ -101,6 +101,7 @@
  *		- end    - virtual end address
  */
 
+/// ARM10C 20131116
 struct cpu_cache_fns {
 	void (*flush_icache_all)(void);
 	void (*flush_kern_all)(void);
@@ -121,7 +122,7 @@ struct cpu_cache_fns {
 /*
  * Select the calling method
  */
-#ifdef MULTI_CACHE
+#ifdef MULTI_CACHE // defined
 
 extern struct cpu_cache_fns cpu_cache;
 
@@ -130,6 +131,8 @@ extern struct cpu_cache_fns cpu_cache;
 #define __cpuc_flush_kern_louis		cpu_cache.flush_kern_louis
 #define __cpuc_flush_user_all		cpu_cache.flush_user_all
 #define __cpuc_flush_user_range		cpu_cache.flush_user_range
+// ARM10C 20131116
+// vectors: 0xEF7FE000, vectors + PAGE_SIZE * 2: 0xEF800000
 #define __cpuc_coherent_kern_range	cpu_cache.coherent_kern_range
 #define __cpuc_coherent_user_range	cpu_cache.coherent_user_range
 #define __cpuc_flush_dcache_area	cpu_cache.flush_kern_dcache_area
@@ -275,6 +278,8 @@ extern void flush_cache_page(struct vm_area_struct *vma, unsigned long user_addr
  * Perform necessary cache operations to ensure that data previously
  * stored within this range of addresses can be executed by the CPU.
  */
+// ARM10C 20131116
+// vectors: 0xEF7FE000, vectors + PAGE_SIZE * 2: 0xEF800000
 #define flush_icache_range(s,e)		__cpuc_coherent_kern_range(s,e)
 
 /*

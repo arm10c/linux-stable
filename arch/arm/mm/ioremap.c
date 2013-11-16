@@ -40,6 +40,7 @@
 #include "mm.h"
 
 
+// ARM10C 20131116
 LIST_HEAD(static_vmlist);
 
 static struct static_vm *find_static_vm_paddr(phys_addr_t paddr,
@@ -84,6 +85,7 @@ struct static_vm *find_static_vm_vaddr(void *vaddr)
 	return NULL;
 }
 
+// ARM10C 20131116
 void __init add_static_vm_early(struct static_vm *svm)
 {
 	struct static_vm *curr_svm;
