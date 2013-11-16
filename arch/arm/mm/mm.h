@@ -70,6 +70,7 @@ extern void __flush_dcache_page(struct address_space *mapping, struct page *page
 #define VM_ARM_DMA_CONSISTENT	0x20000000
 
 
+// ARM10C 20131116
 struct static_vm {
 	struct vm_struct vm;
 	struct list_head list;

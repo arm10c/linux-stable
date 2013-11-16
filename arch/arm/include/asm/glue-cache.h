@@ -110,6 +110,7 @@
 #endif
 
 // ARM10C 20130914
+// ARM10C 20131116
 #if defined(CONFIG_CPU_V7)
 # ifdef _CACHE
 #  define MULTI_CACHE 1

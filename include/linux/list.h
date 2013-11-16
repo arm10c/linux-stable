@@ -17,8 +17,10 @@
  */
 
 // ARM10C 20131012
+// ARM10C 20131116
 #define LIST_HEAD_INIT(name) { &(name), &(name) }
 
+// ARM10C 20131116
 #define LIST_HEAD(name) \
 	struct list_head name = LIST_HEAD_INIT(name)
 

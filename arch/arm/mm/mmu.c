@@ -636,6 +636,7 @@ EXPORT_SYMBOL(phys_mem_access_prot);
 #define vectors_base()	(vectors_high() ? 0xffff0000 : 0)
 
 // ARM10C 20131109
+// ARM10C 20131116
 // sz: 0x00002000, sz: 0x00002000
 static void __init *early_alloc_aligned(unsigned long sz, unsigned long align)
 {
@@ -922,6 +923,7 @@ static void __init create_mapping(struct map_desc *md)
 /*
  * Create the architecture specific mappings
  */
+// ARM10C 20131116
 void __init iotable_init(struct map_desc *io_desc, int nr)
 {
 	struct map_desc *md;
@@ -1356,8 +1358,13 @@ static void __init devicemaps_init(struct machine_desc *mdesc)
 	vectors = early_alloc(PAGE_SIZE * 2);
 
 // 2013/11/09 종료
+// 2013/11/16 시작
+ 
+	// 0xEF7FE000에 vector, stub, kuserhelper 설정
 	early_trap_init(vectors);
 
+	// VMALLOC_START: 0xf0000000, PMD_SIZE: 0x00200000
+	// 0xF0000000 ~ 0xFFFFFFFF의 pgd를 clear함
 	for (addr = VMALLOC_START; addr; addr += PMD_SIZE)
 		pmd_clear(pmd_off_k(addr));
 
@@ -1365,7 +1372,7 @@ static void __init devicemaps_init(struct machine_desc *mdesc)
 	 * Map the kernel if it is XIP.
 	 * It is always first in the modulearea.
 	 */
-#ifdef CONFIG_XIP_KERNEL
+#ifdef CONFIG_XIP_KERNEL // CONFIG_XIP_KERNEL=n
 	map.pfn = __phys_to_pfn(CONFIG_XIP_PHYS_ADDR & SECTION_MASK);
 	map.virtual = MODULES_VADDR;
 	map.length = ((unsigned long)_etext - map.virtual + ~SECTION_MASK) & SECTION_MASK;
@@ -1376,14 +1383,14 @@ static void __init devicemaps_init(struct machine_desc *mdesc)
 	/*
 	 * Map the cache flushing regions.
 	 */
-#ifdef FLUSH_BASE
+#ifdef FLUSH_BASE // undefined
 	map.pfn = __phys_to_pfn(FLUSH_BASE_PHYS);
 	map.virtual = FLUSH_BASE;
 	map.length = SZ_1M;
 	map.type = MT_CACHECLEAN;
 	create_mapping(&map);
 #endif
-#ifdef FLUSH_BASE_MINICACHE
+#ifdef FLUSH_BASE_MINICACHE // undefined
 	map.pfn = __phys_to_pfn(FLUSH_BASE_PHYS + SZ_1M);
 	map.virtual = FLUSH_BASE_MINICACHE;
 	map.length = SZ_1M;
@@ -1396,14 +1403,18 @@ static void __init devicemaps_init(struct machine_desc *mdesc)
 	 * location (0xffff0000).  If we aren't using high-vectors, also
 	 * create a mapping at the low-vectors virtual address.
 	 */
+	// vectors: 0xEF7FE000, virt_to_phys(vectors): 0x6F7FE000
+	// map.pfn: 0x37B
 	map.pfn = __phys_to_pfn(virt_to_phys(vectors));
 	map.virtual = 0xffff0000;
+	// map.length: 0x1000, PAGE_SIZE: 0x1000
 	map.length = PAGE_SIZE;
-#ifdef CONFIG_KUSER_HELPERS
+#ifdef CONFIG_KUSER_HELPERS // CONFIG_KUSER_HELPERS=y
 	map.type = MT_HIGH_VECTORS;
 #else
 	map.type = MT_LOW_VECTORS;
 #endif
+	// MT_HIGH_VECTORS 의 메모리를 mapping
 	create_mapping(&map);
 
 	if (!vectors_high()) {
@@ -1414,16 +1425,22 @@ static void __init devicemaps_init(struct machine_desc *mdesc)
 	}
 
 	/* Now create a kernel read-only mapping */
+	// map.pfn: 0x37C
 	map.pfn += 1;
+	// map.virtual: 0xffff1000
 	map.virtual = 0xffff0000 + PAGE_SIZE;
 	map.length = PAGE_SIZE;
 	map.type = MT_LOW_VECTORS;
+
+	// MT_LOW_VECTORS 의 메모리를 mapping
 	create_mapping(&map);
 
 	/*
 	 * Ask the machine support to map in the statically mapped devices.
 	 */
+// 2013/11/16 종료
 	if (mdesc->map_io)
+		// exynos_init_io 함수를 호출
 		mdesc->map_io();
 	else
 		debug_ll_io_init();
@@ -1500,8 +1517,9 @@ void __init paging_init(struct machine_desc *mdesc)
 	// low memory영역에 page table 속성값과physical memory mapping 값 갱신
 	map_lowmem();
 	// dma contiguous 는 사용안함
-// 2013/11/09 종료
 	dma_contiguous_remap();
+// 2013/11/09 종료
+// 2013/11/16 시작
 	devicemaps_init(mdesc);
 	kmap_init();
 	tcm_init();

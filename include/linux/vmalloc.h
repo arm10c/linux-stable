@@ -26,6 +26,7 @@ struct vm_area_struct;		/* vma defining user mapping in mm_types.h */
 #define IOREMAP_MAX_ORDER	(7 + PAGE_SHIFT)	/* 128 pages */
 #endif
 
+// ARM10C 20131116
 struct vm_struct {
 	struct vm_struct	*next;
 	void			*addr;

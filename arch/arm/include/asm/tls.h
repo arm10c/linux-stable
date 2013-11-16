@@ -31,15 +31,16 @@
 	.endm
 #endif
 
-#ifdef CONFIG_TLS_REG_EMUL
+#ifdef CONFIG_TLS_REG_EMUL // CONFIG_TLS_REG_EMUL=n
 #define tls_emu		1
 #define has_tls_reg		1
 #define switch_tls	switch_tls_none
-#elif defined(CONFIG_CPU_V6)
+#elif defined(CONFIG_CPU_V6) // CONFIG_CPU_V6=n
 #define tls_emu		0
 #define has_tls_reg		(elf_hwcap & HWCAP_TLS)
 #define switch_tls	switch_tls_v6
-#elif defined(CONFIG_CPU_32v6K)
+#elif defined(CONFIG_CPU_32v6K) // CONFIG_CPU_32v6K=y
+// ARM10C 20131116
 #define tls_emu		0
 #define has_tls_reg		1
 #define switch_tls	switch_tls_v6k

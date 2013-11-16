@@ -254,6 +254,8 @@ ENDPROC(v7_flush_user_cache_range)
  *	It is assumed that:
  *	- the Icache does not read data from the write buffer
  */
+// ARM10C 20131116
+// vectors: 0xEF7FE000, vectors + PAGE_SIZE * 2: 0xEF800000
 ENTRY(v7_coherent_kern_range)
 	/* FALLTHROUGH */
 
@@ -271,17 +273,23 @@ ENTRY(v7_coherent_kern_range)
  *	- the Icache does not read data from the write buffer
  */
 ENTRY(v7_coherent_user_range)
+ // unwind 기능을 사용하는 코드 시작 
  UNWIND(.fnstart		)
+	// r2: 0x40 - data cache 최소크기
 	dcache_line_size r2, r3
+	// r3: 0x3F
 	sub	r3, r2, #1
+	// r0: 0xEF7FE000, r12: 0xEF7FE000
 	bic	r12, r0, r3
-#ifdef CONFIG_ARM_ERRATA_764369
+#ifdef CONFIG_ARM_ERRATA_764369 // CONFIG_ARM_ERRATA_764369=n
 	ALT_SMP(W(dsb))
 	ALT_UP(W(nop))
 #endif
 1:
+	// r12: 0xEF7FE000
  USER(	mcr	p15, 0, r12, c7, c11, 1	)	@ clean D line to the point of unification
 	add	r12, r12, r2
+	// r1: 0xEF800000
 	cmp	r12, r1
 	blo	1b
 	dsb
@@ -304,6 +312,8 @@ ENTRY(v7_coherent_user_range)
  * Fault handling for the cache operation above. If the virtual address in r0
  * isn't mapped, fail with -EFAULT.
  */
+// ARM10C 20131116
+// USER() 매크로에 정의 되어 있는 심볼
 9001:
 #ifdef CONFIG_ARM_ERRATA_775420
 	dsb
