@@ -689,10 +689,11 @@ static void __init alloc_init_pte(pmd_t *pmd, unsigned long addr,
 				  const struct mem_type *type)
 {
 	// pmd: 0xc0007FF8, addr: 0xffff0000
-	// pte: 0xC00071F0
+	// pte: 0xEF7FD1F0
 	pte_t *pte = early_pte_alloc(pmd, addr, type->prot_l1);
 	do {
-		// pte: 0xC00071F0, pfn: 0x6F7FE
+		// pte: 0xEF7FD1F0, pfn: 0x6F7FE
+		// pfn_pte(0x6F7FE, __pgprot(type->prot_pte)): 0x6F7FEXXX
 		set_pte_ext(pte, pfn_pte(pfn, __pgprot(type->prot_pte)), 0);
 		pfn++;
 	} while (pte++, addr += PAGE_SIZE, addr != end);

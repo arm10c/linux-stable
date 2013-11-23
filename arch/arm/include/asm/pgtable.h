@@ -234,7 +234,8 @@ static inline pte_t *pmd_page_vaddr(pmd_t pmd)
 
 #define pte_pfn(pte)		((pte_val(pte) & PHYS_MASK) >> PAGE_SHIFT)
 // ARM10C 20131123
-// pfn: 0x6F7FE, __pte(__pfn_to_phys(pfn): 0x6F7FE000
+// pfn: 0x6F7FE, __pfn_to_phys(pfn): 0x6F7FE000
+// __pte(__pfn_to_phys(pfn) | pgprot_val(prot)): 0x6F7FEXXX
 #define pfn_pte(pfn,prot)	__pte(__pfn_to_phys(pfn) | pgprot_val(prot))
 
 #define pte_page(pte)		pfn_to_page(pte_pfn(pte))
