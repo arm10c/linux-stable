@@ -199,8 +199,12 @@ extern pgd_t swapper_pg_dir[PTRS_PER_PGD];
 #define pmd_none(pmd)		(!pmd_val(pmd))
 #define pmd_present(pmd)	(pmd_val(pmd))
 
+// ARM10C 20131123
+// pmd: 0x6F7FD8XX
 static inline pte_t *pmd_page_vaddr(pmd_t pmd)
 {
+	// pmd_val(pmd): 0x6F7FD8XX, PHYS_MASK: 0xFFFFFFFF, PAGE_MASK: 0xFFFFF000
+	// __va(pmd_val(pmd) & PHYS_MASK & (s32)PAGE_MASK): 0xEF7FD000
 	return __va(pmd_val(pmd) & PHYS_MASK & (s32)PAGE_MASK);
 }
 
@@ -214,14 +218,23 @@ static inline pte_t *pmd_page_vaddr(pmd_t pmd)
 #define __pte_unmap(pte)	kunmap_atomic(pte)
 #endif
 
+// ARM10C 20131123
+// addr: 0xffff0000,  PTRS_PER_PTE: 512
+// pte_index(0xffff0000): 0x1F0
 #define pte_index(addr)		(((addr) >> PAGE_SHIFT) & (PTRS_PER_PTE - 1))
 
+// ARM10C 20131123
+// pmd: 0xc0007FF8, addr: 0xffff0000
+// pmd_page_vaddr(*(pmd)): 0xEF7FD000,  pte_index(0xffff0000): 0x1F0
+// pte_offset_kernel(0x6F7FD8XX, 0xffff0000): 0xEF7FD1F0
 #define pte_offset_kernel(pmd,addr)	(pmd_page_vaddr(*(pmd)) + pte_index(addr))
 
 #define pte_offset_map(pmd,addr)	(__pte_map(pmd) + pte_index(addr))
 #define pte_unmap(pte)			__pte_unmap(pte)
 
 #define pte_pfn(pte)		((pte_val(pte) & PHYS_MASK) >> PAGE_SHIFT)
+// ARM10C 20131123
+// pfn: 0x6F7FE, __pte(__pfn_to_phys(pfn): 0x6F7FE000
 #define pfn_pte(pfn,prot)	__pte(__pfn_to_phys(pfn) | pgprot_val(prot))
 
 #define pte_page(pte)		pfn_to_page(pte_pfn(pte))

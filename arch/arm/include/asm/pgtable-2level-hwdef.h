@@ -59,6 +59,8 @@
  * + Level 2 descriptor (PTE)
  *   - common
  */
+// ARM10C 20131123
+// PTE_TYPE_MASK: 0x3
 #define PTE_TYPE_MASK		(_AT(pteval_t, 3) << 0)
 #define PTE_TYPE_FAULT		(_AT(pteval_t, 0) << 0)
 #define PTE_TYPE_LARGE		(_AT(pteval_t, 1) << 0)
@@ -70,15 +72,25 @@
 /*
  *   - extended small page/tiny page
  */
+// ARM10C 20131123
+// PTE_EXT_XN: 0x1
 #define PTE_EXT_XN		(_AT(pteval_t, 1) << 0)		/* v6 */
 #define PTE_EXT_AP_MASK		(_AT(pteval_t, 3) << 4)
+// ARM10C 20131123
+// PTE_EXT_AP0: 0x10
 #define PTE_EXT_AP0		(_AT(pteval_t, 1) << 4)
+// ARM10C 20131123
+// PTE_EXT_AP1: 0x20
 #define PTE_EXT_AP1		(_AT(pteval_t, 2) << 4)
 #define PTE_EXT_AP_UNO_SRO	(_AT(pteval_t, 0) << 4)
 #define PTE_EXT_AP_UNO_SRW	(PTE_EXT_AP0)
 #define PTE_EXT_AP_URO_SRW	(PTE_EXT_AP1)
 #define PTE_EXT_AP_URW_SRW	(PTE_EXT_AP1|PTE_EXT_AP0)
+// ARM10C 20131123
+// PTE_EXT_TEX(1): 0x40
 #define PTE_EXT_TEX(x)		(_AT(pteval_t, (x)) << 6)	/* v5 */
+// ARM10C 20131123
+// PTE_EXT_APX: 0x200
 #define PTE_EXT_APX		(_AT(pteval_t, 1) << 9)		/* v6 */
 #define PTE_EXT_COHERENT	(_AT(pteval_t, 1) << 9)		/* XScale3 */
 #define PTE_EXT_SHARED		(_AT(pteval_t, 1) << 10)	/* v6 */
@@ -93,6 +105,8 @@
 #define PTE_SMALL_AP_URO_SRW	(_AT(pteval_t, 0xaa) << 4)
 #define PTE_SMALL_AP_URW_SRW	(_AT(pteval_t, 0xff) << 4)
 
+// ARM10C 20131123
+// PHYS_MASK: 0xFFFFFFFF
 #define PHYS_MASK		(~0UL)
 
 #endif

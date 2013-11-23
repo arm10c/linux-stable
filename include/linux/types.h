@@ -182,6 +182,7 @@ typedef struct {
 } atomic64_t;
 #endif
 
+// ARM10C 20131123
 struct list_head {
 	struct list_head *next, *prev;
 };

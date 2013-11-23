@@ -68,13 +68,20 @@
  * until either the TLB entry is evicted under pressure, or a context
  * switch which changes the user space mapping occurs.
  */
+// ARM10C 20131123
 #define PTRS_PER_PTE		512
 #define PTRS_PER_PMD		1
 // ARM10C 20131026
 #define PTRS_PER_PGD		2048
 
 #define PTE_HWTABLE_PTRS	(PTRS_PER_PTE)
+// ARM10C 20131123
+// PTE_HWTABLE_PTRS: 512, sizeof(pte_t): 4
+// PTE_HWTABLE_OFF: 2048
 #define PTE_HWTABLE_OFF		(PTE_HWTABLE_PTRS * sizeof(pte_t))
+// ARM10C 20131123
+// PTRS_PER_PTE: 512, sizeof(u32): 4
+// PTE_HWTABLE_SIZE: 2048
 #define PTE_HWTABLE_SIZE	(PTRS_PER_PTE * sizeof(u32))
 
 /*
@@ -126,15 +133,29 @@
  * The PTE table pointer refers to the hardware entries; the "Linux"
  * entries are stored 1024 bytes below.
  */
+// ARM10C 20131123
+// L_PTE_VALID: 0x1
 #define L_PTE_VALID		(_AT(pteval_t, 1) << 0)		/* Valid */
 #define L_PTE_PRESENT		(_AT(pteval_t, 1) << 0)
+// ARM10C 20131123
+// L_PTE_YOUNG: 0x2
 #define L_PTE_YOUNG		(_AT(pteval_t, 1) << 1)
 #define L_PTE_FILE		(_AT(pteval_t, 1) << 2)	/* only when !PRESENT */
+// ARM10C 20131123
+// L_PTE_DIRTY: 0x40
 #define L_PTE_DIRTY		(_AT(pteval_t, 1) << 6)
+// ARM10C 20131123
+// L_PTE_RDONLY: 0x80
 #define L_PTE_RDONLY		(_AT(pteval_t, 1) << 7)
+// ARM10C 20131123
+// L_PTE_USER: 0x100
 #define L_PTE_USER		(_AT(pteval_t, 1) << 8)
+// ARM10C 20131123
+// L_PTE_XN: 0x200
 #define L_PTE_XN		(_AT(pteval_t, 1) << 9)
 #define L_PTE_SHARED		(_AT(pteval_t, 1) << 10)	/* shared(v6), coherent(xsc3) */
+// ARM10C 20131123
+// L_PTE_NONE: 0x800 
 #define L_PTE_NONE		(_AT(pteval_t, 1) << 11)
 
 /*
@@ -193,6 +214,8 @@ static inline pmd_t *pmd_offset(pud_t *pud, unsigned long addr)
 /* we don't need complex calculations here as the pmd is folded into the pgd */
 #define pmd_addr_end(addr,end) (end)
 
+// ARM10C 20131123
+// pte: 0xC00071F0, pfn: 0x6F7FEXXX, 0
 #define set_pte_ext(ptep,pte,ext) cpu_set_pte_ext(ptep,pte,ext)
 
 #endif /* __ASSEMBLY__ */

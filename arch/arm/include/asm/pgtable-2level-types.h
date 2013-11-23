@@ -65,11 +65,13 @@ typedef pteval_t pgprot_t;
 #define pgd_val(x)	((x)[0])
 #define pgprot_val(x)   (x)
 
+// ARM10C 20131123
 #define __pte(x)        (x)
 // ARM10C 20131102
 #define __pmd(x)        (x)
 // ARM10C 20131026
 // ARM10C 20131102
+// ARM10C 20131123
 #define __pgprot(x)     (x)
 
 #endif /* STRICT_MM_TYPECHECKS */

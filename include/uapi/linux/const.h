@@ -14,6 +14,7 @@
 
 #ifdef __ASSEMBLY__
 #define _AC(X,Y)	X
+// ARM10C 20131123
 #define _AT(T,X)	X
 #else
 #define __AC(X,Y)	(X##Y)
