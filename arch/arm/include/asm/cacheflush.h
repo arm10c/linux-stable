@@ -127,6 +127,7 @@ struct cpu_cache_fns {
 extern struct cpu_cache_fns cpu_cache;
 
 #define __cpuc_flush_icache_all		cpu_cache.flush_icache_all
+// ARM10C 20131130
 #define __cpuc_flush_kern_all		cpu_cache.flush_kern_all
 #define __cpuc_flush_kern_louis		cpu_cache.flush_kern_louis
 #define __cpuc_flush_user_all		cpu_cache.flush_user_all
@@ -222,6 +223,7 @@ static inline void __flush_icache_all(void)
  */
 #define flush_cache_louis()		__cpuc_flush_kern_louis()
 
+// ARM10C 20131130
 #define flush_cache_all()		__cpuc_flush_kern_all()
 
 static inline void vivt_flush_cache_mm(struct mm_struct *mm)

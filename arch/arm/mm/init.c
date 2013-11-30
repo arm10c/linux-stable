@@ -141,6 +141,7 @@ void show_mem(unsigned int filter)
 	printk("%d pages swap cached\n", cached);
 }
 
+// ARM10C 20131130
 static void __init find_limits(unsigned long *min, unsigned long *max_low,
 			       unsigned long *max_high)
 {
@@ -409,6 +410,7 @@ void __init arm_memblock_init(struct meminfo *mi, struct machine_desc *mdesc)
 	memblock_dump_all();
 }
 
+// ARM10C 20131130
 void __init bootmem_init(void)
 {
 	unsigned long min, max_low, max_high;

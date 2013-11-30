@@ -23,6 +23,10 @@
 #ifdef CONFIG_MMU
 
 #define _PAGE_USER_TABLE	(PMD_TYPE_TABLE | PMD_BIT4 | PMD_DOMAIN(DOMAIN_USER))
+// ARM10C 20131130
+// PMD_TYPE_TABLE: 0x1, PMD_BIT4: 0x10
+// DOMAIN_KERNEL: 0, PMD_DOMAIN(DOMAIN_KERNEL): 0
+// _PAGE_KERNEL_TABLE: 0x11
 #define _PAGE_KERNEL_TABLE	(PMD_TYPE_TABLE | PMD_BIT4 | PMD_DOMAIN(DOMAIN_KERNEL))
 
 #ifdef CONFIG_ARM_LPAE
@@ -134,10 +138,10 @@ static inline void __pmd_populate(pmd_t *pmdp, phys_addr_t pte,
 	// pte: 0x6F7FD000, PTE_HWTABLE_OFF: 0x800
 	// pmdval: 0x6F7FD8XX
 	pmdval_t pmdval = (pte + PTE_HWTABLE_OFF) | prot;
-    // pmdp[0]: 0x6F7FD8XX
+	// pmdp[0]: 0x6F7FD8XX
 	pmdp[0] = __pmd(pmdval);
 #ifndef CONFIG_ARM_LPAE // CONFIG_ARM_LPAE=n
-    // pmdp[1]: 0x6F7FDCXX
+	// pmdp[1]: 0x6F7FDCXX
 	pmdp[1] = __pmd(pmdval + 256 * sizeof(pte_t));
 #endif
 	flush_pmd_entry(pmdp);

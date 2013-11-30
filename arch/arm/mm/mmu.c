@@ -46,6 +46,7 @@ EXPORT_SYMBOL(empty_zero_page);
 /*
  * The pmd table for the upper-most set of pages.
  */
+// ARM10C 20131130
 pmd_t *top_pmd;
 
 #define CPOLICY_UNCACHED	0
@@ -978,6 +979,12 @@ static void __init create_mapping(struct map_desc *md)
 // iodesc.virtual: 0xF8000000
 // iodesc.type = MT_DEVICE;
 // nr: 1
+//
+// S3C_VA_SYS
+// iodesc.pfn: __phys_to_pfn(EXYNOS5_PA_SYSCON): 0x10050
+// iodesc.length: SZ_64K: 0x10000
+// iodesc.virtual: S3C_VA_SYS : 0xF6100000
+// iodesc.type = MT_DEVICE;
 void __init iotable_init(struct map_desc *io_desc, int nr)
 {
 	struct map_desc *md;
@@ -992,19 +999,34 @@ void __init iotable_init(struct map_desc *io_desc, int nr)
 
 	for (md = io_desc; nr; md++, nr--) {
 // 2013/11/23 종료
+// 2013/11/30 시작
+		// io 영역을 highmem에 mapping 함 
 		create_mapping(md);
 
 		vm = &svm->vm;
+		// md->virtual: 0xF8000000,  PAGE_MASK: 0xFFFFF000, vm->addr: 0xF8000000
+		// md->virtual: 0xF6100000,  PAGE_MASK: 0xFFFFF000, vm->addr: 0xF6100000
 		vm->addr = (void *)(md->virtual & PAGE_MASK);
+		// md->length: 0xFF, vm->size: 0x1000
+		// md->length: 0x10000, vm->size: 0x10000
 		vm->size = PAGE_ALIGN(md->length + (md->virtual & ~PAGE_MASK));
+		// md->pfn: 0x10000, vm->phys_addr: 0x10000000
+		// md->pfn: 0x10050, vm->phys_addr: 0x10050000
 		vm->phys_addr = __pfn_to_phys(md->pfn);
+		// VM_IOREMAP: 0x00000001, VM_ARM_STATIC_MAPPING: 0x40000000, vm->flags: 0x40000001
+		// VM_IOREMAP: 0x00000001, VM_ARM_STATIC_MAPPING: 0x40000000, vm->flags: 0x40000001
 		vm->flags = VM_IOREMAP | VM_ARM_STATIC_MAPPING;
+		// md->type = MT_DEVICE, VM_ARM_MTYPE(md->type): 0x0
+		// md->type = MT_DEVICE, VM_ARM_MTYPE(md->type): 0x0
 		vm->flags |= VM_ARM_MTYPE(md->type);
 		vm->caller = iotable_init;
+		// vm->addr: 0xF8000000, vm->size: 0x1000, vm->phys_addr: 0x10000000, vm->flags: 0x40000001
+		// vm->addr: 0xF6100000, vm->size: 0x10000, vm->phys_addr: 0x10050000, vm->flags: 0x40000001
 		add_static_vm_early(svm++);
 	}
 }
 
+// ARM10C 20131130
 void __init vm_reserve_area_early(unsigned long addr, unsigned long size,
 				  void *caller)
 {
@@ -1016,12 +1038,13 @@ void __init vm_reserve_area_early(unsigned long addr, unsigned long size,
 	vm = &svm->vm;
 	vm->addr = (void *)addr;
 	vm->size = size;
+	// VM_ARM_EMPTY_MAPPING: 0x20000000
 	vm->flags = VM_IOREMAP | VM_ARM_EMPTY_MAPPING;
 	vm->caller = caller;
 	add_static_vm_early(svm);
 }
 
-#ifndef CONFIG_ARM_LPAE
+#ifndef CONFIG_ARM_LPAE // CONFIG_ARM_LPAE=n
 
 /*
  * The Linux PMD is made of two consecutive section entries covering 2MB
@@ -1036,11 +1059,14 @@ void __init vm_reserve_area_early(unsigned long addr, unsigned long size,
  * PMD halves once the static mappings are in place.
  */
 
+// ARM10C 20131130
 static void __init pmd_empty_section_gap(unsigned long addr)
 {
 	vm_reserve_area_early(addr, SECTION_SIZE, pmd_empty_section_gap);
 }
 
+// ARM10C 20131130
+// SYSC: 0xf6100000 +  64kB   PA:0x10050000 
 static void __init fill_pmd_gaps(void)
 {
 	struct static_vm *svm;
@@ -1050,6 +1076,7 @@ static void __init fill_pmd_gaps(void)
 
 	list_for_each_entry(svm, &static_vmlist, list) {
 		vm = &svm->vm;
+		// addr: 0xf6100000
 		addr = (unsigned long)vm->addr;
 		if (addr < next)
 			continue;
@@ -1059,8 +1086,12 @@ static void __init fill_pmd_gaps(void)
 		 * If so and the first section entry for this PMD is free
 		 * then we block the corresponding virtual address.
 		 */
+		// pmd 의 첫번째 section 
+		// addr: 0xf6100000, PMD_MASK: 0xFFE00000, (addr & ~PMD_MASK): 0x00100000
+		// SECTION_SIZE: 0x00100000
 		if ((addr & ~PMD_MASK) == SECTION_SIZE) {
 			pmd = pmd_off_k(addr);
+			// pmd_none(*pmd): 0
 			if (pmd_none(*pmd))
 				pmd_empty_section_gap(addr & PMD_MASK);
 		}
@@ -1070,7 +1101,12 @@ static void __init fill_pmd_gaps(void)
 		 * If so and the second section entry for this PMD is empty
 		 * then we block the corresponding virtual address.
 		 */
+		// vm->size: 0x10000, addr: 0xf6110000 
 		addr += vm->size;
+
+		// pmd 의 두번째 section 
+		// addr: 0xf6110000, PMD_MASK: 0xFFE00000, (addr & ~PMD_MASK): 0x00100000
+		// SECTION_SIZE: 0x00100000
 		if ((addr & ~PMD_MASK) == SECTION_SIZE) {
 			pmd = pmd_off_k(addr) + 1;
 			if (pmd_none(*pmd))
@@ -1078,6 +1114,8 @@ static void __init fill_pmd_gaps(void)
 		}
 
 		/* no need to look at any vm entry until we hit the next PMD */
+		// addr: 0xf6110000, PMD_SIZE: 0x00200000, PMD_MASK: 0xFFE00000
+		// next: 0xf6200000
 		next = (addr + PMD_SIZE - 1) & PMD_MASK;
 	}
 }
@@ -1086,7 +1124,7 @@ static void __init fill_pmd_gaps(void)
 #define fill_pmd_gaps() do { } while (0)
 #endif
 
-#if defined(CONFIG_PCI) && !defined(CONFIG_NEED_MACH_IO_H)
+#if defined(CONFIG_PCI) && !defined(CONFIG_NEED_MACH_IO_H) // CONFIG_PCI=n, CONFIG_NEED_MACH_IO_H=n
 static void __init pci_reserve_io(void)
 {
 	struct static_vm *svm;
@@ -1098,6 +1136,7 @@ static void __init pci_reserve_io(void)
 	vm_reserve_area_early(PCI_IO_VIRT_BASE, SZ_2M, pci_reserve_io);
 }
 #else
+// ARM10C 20131130
 #define pci_reserve_io() do { } while (0)
 #endif
 
@@ -1501,6 +1540,8 @@ static void __init devicemaps_init(struct machine_desc *mdesc)
 		mdesc->map_io();
 	else
 		debug_ll_io_init();
+
+	// section 단위로 pgd 할당시 사용 section이 갯수가 홀수인경우 안쓰도록 리저브함
 	fill_pmd_gaps();
 
 	/* Reserve fixed i/o space in VMALLOC region */
@@ -1516,9 +1557,11 @@ static void __init devicemaps_init(struct machine_desc *mdesc)
 	flush_cache_all();
 }
 
+// ARM10C 20131130
 static void __init kmap_init(void)
 {
-#ifdef CONFIG_HIGHMEM
+#ifdef CONFIG_HIGHMEM // CONFIG_HIGHMEM=y
+	// PKMAP_BASE: 0xBFE00000,  _PAGE_KERNEL_TABLE: 0x11
 	pkmap_page_table = early_pte_alloc(pmd_off_k(PKMAP_BASE),
 		PKMAP_BASE, _PAGE_KERNEL_TABLE);
 #endif
@@ -1575,17 +1618,26 @@ void __init paging_init(struct machine_desc *mdesc)
 	map_lowmem();
 	// dma contiguous 는 사용안함
 	dma_contiguous_remap();
+
 // 2013/11/09 종료
 // 2013/11/16 시작
+
+	// vectors, io memory map 설정
 	devicemaps_init(mdesc);
+	// kmap을 위한 4k 공간을 0xBFE00000 에 맞는 2nd page tabel에 할당
 	kmap_init();
+	// tcm: tightly coupled memory. 
 	tcm_init();
 
+	// high vector가 최상위 pmd section index임
 	top_pmd = pmd_off_k(0xffff0000);
 
 	/* allocate the zero page. */
+	// PAGE_SIZE: 0x1000
+	// zero_page에 4k 메모리 할당 
 	zero_page = early_alloc(PAGE_SIZE);
 
+// 2013/11/30 종료
 	bootmem_init();
 
 	empty_zero_page = virt_to_page(zero_page);

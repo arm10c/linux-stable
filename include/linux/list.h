@@ -18,9 +18,11 @@
 
 // ARM10C 20131012
 // ARM10C 20131116
+// ARM10C 20131130
 #define LIST_HEAD_INIT(name) { &(name), &(name) }
 
 // ARM10C 20131116
+// ARM10C 20131130
 #define LIST_HEAD(name) \
 	struct list_head name = LIST_HEAD_INIT(name)
 
@@ -37,7 +39,9 @@ static inline void INIT_LIST_HEAD(struct list_head *list)
  * This is only for internal list manipulation where we know
  * the prev/next entries already!
  */
-#ifndef CONFIG_DEBUG_LIST
+#ifndef CONFIG_DEBUG_LIST // CONFIG_DEBUG_LIST=n
+// ARM10C 20131130
+// __list_add(new, head->prev, head);
 static inline void __list_add(struct list_head *new,
 			      struct list_head *prev,
 			      struct list_head *next)
@@ -75,6 +79,8 @@ static inline void list_add(struct list_head *new, struct list_head *head)
  * Insert a new entry before the specified head.
  * This is useful for implementing queues.
  */
+// ARM10C 20131130
+// list_add_tail(&svm->list, &curr_svm->list);
 static inline void list_add_tail(struct list_head *new, struct list_head *head)
 {
 	__list_add(new, head->prev, head);
@@ -351,6 +357,7 @@ static inline void list_splice_tail_init(struct list_head *list,
  * @type:	the type of the struct this is embedded in.
  * @member:	the name of the list_struct within the struct.
  */
+// ARM10C 20131130
 #define list_entry(ptr, type, member) \
 	container_of(ptr, type, member)
 
@@ -419,6 +426,7 @@ static inline void list_splice_tail_init(struct list_head *list,
  * @head:	the head for your list.
  * @member:	the name of the list_struct within the struct.
  */
+// ARM10C 20131130
 #define list_for_each_entry(pos, head, member)				\
 	for (pos = list_entry((head)->next, typeof(*pos), member);	\
 	     &pos->member != (head); 	\

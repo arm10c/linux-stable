@@ -10,7 +10,7 @@
 #ifndef _ASMARM_TLBFLUSH_H
 #define _ASMARM_TLBFLUSH_H
 
-#ifdef CONFIG_MMU
+#ifdef CONFIG_MMU // CONFIG_MMU=y
 
 #include <asm/glue.h>
 
@@ -36,15 +36,18 @@
 
 /* Unified Inner Shareable TLB operations (ARMv7 MP extensions) */
 #define TLB_V7_UIS_PAGE	(1 << 20)
+// ARM10C 20131130
 #define TLB_V7_UIS_FULL (1 << 21)
 #define TLB_V7_UIS_ASID (1 << 22)
 #define TLB_V7_UIS_BP	(1 << 23)
 
+// ARM10C 20131130
 #define TLB_BARRIER	(1 << 28)
 #define TLB_L2CLEAN_FR	(1 << 29)		/* Feroceon */
 // ARM10C 20131102
 #define TLB_DCLEAN	(1 << 30)
 // ARM10C 20131109
+// ARM10C 20131130
 #define TLB_WB		(1 << 31)
 
 /*
@@ -217,6 +220,7 @@
 
 // ARM10C 20130914
 // ARM10C 20131102
+// ARM10C 20131130
 struct cpu_tlb_fns {
 	void (*flush_user_range)(unsigned long, unsigned long, struct vm_area_struct *);
 	void (*flush_kern_range)(unsigned long, unsigned long);
@@ -244,6 +248,7 @@ extern void __cpu_flush_kern_tlb_range(unsigned long, unsigned long);
 extern struct cpu_tlb_fns cpu_tlb;
 
 // ARM10C 20131102
+// ARM10C 20131130
 #define __cpu_tlb_flags			cpu_tlb.tlb_flags
 
 /*
@@ -321,6 +326,7 @@ extern struct cpu_tlb_fns cpu_tlb;
 				 v7wbi_always_flags)
 
 // ARM10C 20131109
+// ARM10C 20131130
 #define tlb_flag(f)	((always_tlb_flags & (f)) || (__tlb_flag & possible_tlb_flags & (f)))
 
 // ARM10C 20131102
@@ -357,19 +363,27 @@ extern struct cpu_tlb_fns cpu_tlb;
 //      "mcrne " "p15, 0, %0, " "c15, c9, 1  @ L2 flush_pmd"
 #define tlb_l2_op(f, regs, arg)	__tlb_op(f, "p15, 1, %0, " regs, arg)
 
+// ARM10C 20131130
 static inline void local_flush_tlb_all(void)
 {
 	const int zero = 0;
 	const unsigned int __tlb_flag = __cpu_tlb_flags;
 
+	// tlb_flag(TLB_WB)): 0아닌 값
 	if (tlb_flag(TLB_WB))
 		dsb();
 
 	tlb_op(TLB_V4_U_FULL | TLB_V6_U_FULL, "c8, c7, 0", zero);
 	tlb_op(TLB_V4_D_FULL | TLB_V6_D_FULL, "c8, c6, 0", zero);
 	tlb_op(TLB_V4_I_FULL | TLB_V6_I_FULL, "c8, c5, 0", zero);
+	
+	// T.R.M: 4.2.8 c8 registers
+	// c8, c3, 0: Invalidate entire TLB Inner Shareable
+	// TLB_V7_UIS_FULL: (1 << 21)
 	tlb_op(TLB_V7_UIS_FULL, "c8, c3, 0", zero);
 
+	// TLB_BARRIER:	(1 << 28)
+	// tlb_flag(TLB_BARRIER): 0이 아닌값
 	if (tlb_flag(TLB_BARRIER)) {
 		dsb();
 		isb();
@@ -601,7 +615,7 @@ static inline void update_mmu_cache(struct vm_area_struct *vma,
 
 #endif
 
-#elif defined(CONFIG_SMP)	/* !CONFIG_MMU */
+#elif defined(CONFIG_SMP) // CONFIG_SMP=y	/* !CONFIG_MMU */
 
 #ifndef __ASSEMBLY__
 

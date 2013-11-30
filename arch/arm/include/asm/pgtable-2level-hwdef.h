@@ -19,8 +19,10 @@
 #define PMD_TYPE_MASK		(_AT(pmdval_t, 3) << 0)
 #define PMD_TYPE_FAULT		(_AT(pmdval_t, 0) << 0)
 // ARM10C 20131102
+// ARM10C 20131130
 #define PMD_TYPE_TABLE		(_AT(pmdval_t, 1) << 0)
 #define PMD_TYPE_SECT		(_AT(pmdval_t, 2) << 0)
+// ARM10C 20131130
 #define PMD_BIT4		(_AT(pmdval_t, 1) << 4)
 // ARM10C 20131102
 #define PMD_DOMAIN(x)		(_AT(pmdval_t, (x)) << 5)

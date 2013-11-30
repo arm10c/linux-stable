@@ -19,7 +19,9 @@
 #include <mach/map.h>
 #include <plat/cpu.h>
 
+// ARM10C 20131130
 unsigned long samsung_cpu_id;
+// ARM10C 20131130
 static unsigned int samsung_cpu_rev;
 
 unsigned int samsung_rev(void)
@@ -50,6 +52,7 @@ void __init s3c64xx_init_cpu(void)
 	samsung_cpu_rev = 0;
 }
 
+// ARM10C 20131130
 void __init s5p_init_cpu(void __iomem *cpuid_addr)
 {
 	samsung_cpu_id = __raw_readl(cpuid_addr);

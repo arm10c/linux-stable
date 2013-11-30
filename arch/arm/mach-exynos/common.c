@@ -60,6 +60,7 @@ static void exynos4_map_io(void);
 static void exynos5_map_io(void);
 static int exynos_init(void);
 
+// ARM10C 20131130
 static struct cpu_table cpu_ids[] __initdata = {
 	{
 		.idcode		= EXYNOS4210_CPU_ID,
@@ -225,6 +226,7 @@ static struct map_desc exynos5250_iodesc[] __initdata = {
 	},
 };
 
+// ARM10C 20131130
 static struct map_desc exynos5_iodesc[] __initdata = {
 	{
 		.virtual	= (unsigned long)S3C_VA_SYS,
@@ -329,6 +331,7 @@ static int __init exynos_fdt_map_chipid(unsigned long node, const char *uname,
 	iodesc.virtual = (unsigned long)S5P_VA_CHIPID;
 	iodesc.type = MT_DEVICE;
 // 2013/11/23 종료
+// 2013/11/30 시작
 	iotable_init(&iodesc, 1);
 	return 1;
 }
@@ -344,6 +347,7 @@ void __init exynos_init_io(void)
 {
 	debug_ll_io_init();
 
+	// chipid 레지스터를 0xF8000000 에 할당, vmlist, static_vmlist에 chipid를 주소를 등록
 	of_scan_flat_dt(exynos_fdt_map_chipid, NULL);
 
 	/* detect cpu id and rev. */
@@ -367,10 +371,13 @@ static void __init exynos4_map_io(void)
 		iotable_init(exynos4x12_iodesc, ARRAY_SIZE(exynos4x12_iodesc));
 }
 
+// ARM10C 20131130
 static void __init exynos5_map_io(void)
 {
+	// exynos의 io 메모리 맵핑, vmlist 설정
 	iotable_init(exynos5_iodesc, ARRAY_SIZE(exynos5_iodesc));
 
+	// soc_is_exynos5250(): 0
 	if (soc_is_exynos5250())
 		iotable_init(exynos5250_iodesc, ARRAY_SIZE(exynos5250_iodesc));
 }

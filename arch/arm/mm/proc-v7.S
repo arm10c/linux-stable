@@ -428,6 +428,7 @@ __v7_setup_stack:
 		HWCAP_EDSP | HWCAP_TLS | \hwcaps
 	.long	cpu_v7_name
 	.long	\proc_fns
+	// ARM10C 20131130
 	.long	v7wbi_tlb_fns
 	.long	v6_user_fns
 	.long	v7_cache_fns

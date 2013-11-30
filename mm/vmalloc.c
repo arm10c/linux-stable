@@ -1115,6 +1115,7 @@ void *vm_map_ram(struct page **pages, unsigned int count, int node, pgprot_t pro
 EXPORT_SYMBOL(vm_map_ram);
 
 // ARM10C 20131116
+// ARM10C 20131130
 static struct vm_struct *vmlist __initdata;
 /**
  * vm_area_add_early - add vmap area early during boot
@@ -1127,6 +1128,17 @@ static struct vm_struct *vmlist __initdata;
  * DO NOT USE THIS FUNCTION UNLESS YOU KNOW WHAT YOU'RE DOING.
  */
 // ARM10C 20131116
+// ARM10C 20131130
+// vm->addr: 0xF8000000
+// vm->size: 0x1000
+// vm->phys_addr: 0x10000000
+// vm->flags: 0x40000001
+//
+// S3C_VA_SYS
+// vm->addr: 0xF6100000
+// vm->size: 0x10000 
+// vm->phys_addr: 0x10050000
+// vm->flags: 0x40000001
 void __init vm_area_add_early(struct vm_struct *vm)
 {
 	struct vm_struct *tmp, **p;
@@ -1135,6 +1147,7 @@ void __init vm_area_add_early(struct vm_struct *vm)
 	BUG_ON(vmap_initialized);
 	for (p = &vmlist; (tmp = *p) != NULL; p = &tmp->next) {
 		if (tmp->addr >= vm->addr) {
+			// 이전의 vm영역을 침범하는지 확인
 			BUG_ON(tmp->addr < vm->addr + vm->size);
 			break;
 		} else

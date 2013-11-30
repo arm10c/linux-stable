@@ -7,10 +7,12 @@
  * Author: Rickard Andersson <rickard.andersson@stericsson.com>
  */
 
-#ifdef CONFIG_HAVE_TCM
+#ifdef CONFIG_HAVE_TCM // CONFIG_HAVE_TCM=n
 void __init tcm_init(void);
 #else
 /* No TCM support, just blank inlines to be optimized out */
+// ARM10C 20131130
+// tcm: tightly coupled memory. 
 inline void tcm_init(void)
 {
 }
