@@ -174,13 +174,16 @@ extern int _find_next_zero_bit_be(const void * p, int size, int offset);
 extern int _find_first_bit_be(const unsigned long *p, unsigned size);
 extern int _find_next_bit_be(const unsigned long *p, int size, int offset);
 
-#ifndef CONFIG_SMP
+#ifndef CONFIG_SMP // CONFIG_SMP=y
 /*
  * The __* form of bitops are non-atomic and may be reordered.
  */
 #define ATOMIC_BITOP(name,nr,p)			\
 	(__builtin_constant_p(nr) ? ____atomic_##name(nr, p) : _##name(nr,p))
 #else	// ARM10C Y 
+// ARM10C 20131207
+// _test_and_clear_bit
+// _test_and_set_bit
 #define ATOMIC_BITOP(name,nr,p)		_##name(nr,p)	// ARM10C this 
 #endif
 
@@ -190,7 +193,9 @@ extern int _find_next_bit_be(const unsigned long *p, int size, int offset);
 #define set_bit(nr,p)			ATOMIC_BITOP(set_bit,nr,p)  // _set_bit(nr,p)로 치환 
 #define clear_bit(nr,p)			ATOMIC_BITOP(clear_bit,nr,p)
 #define change_bit(nr,p)		ATOMIC_BITOP(change_bit,nr,p)
+// ARM10C 20131207
 #define test_and_set_bit(nr,p)		ATOMIC_BITOP(test_and_set_bit,nr,p)
+// ARM10C 20131207
 #define test_and_clear_bit(nr,p)	ATOMIC_BITOP(test_and_clear_bit,nr,p)
 #define test_and_change_bit(nr,p)	ATOMIC_BITOP(test_and_change_bit,nr,p)
 
@@ -199,6 +204,7 @@ extern int _find_next_bit_be(const unsigned long *p, int size, int offset);
  * These are the little endian, atomic definitions.
  */
 #define find_first_zero_bit(p,sz)	_find_first_zero_bit_le(p,sz)
+// ARM10C 20131207
 #define find_next_zero_bit(p,sz,off)	_find_next_zero_bit_le(p,sz,off)
 #define find_first_bit(p,sz)		_find_first_bit_le(p,sz)
 #define find_next_bit(p,sz,off)		_find_next_bit_le(p,sz,off)

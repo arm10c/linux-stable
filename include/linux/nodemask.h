@@ -445,6 +445,7 @@ static inline int node_state(int node, enum node_states state)
 	return node == 0;
 }
 
+// ARM10C 20131207
 static inline void node_set_state(int node, enum node_states state)
 {
 }
@@ -466,6 +467,7 @@ static inline int num_node_state(enum node_states state)
 #define nr_node_ids		1
 #define nr_online_nodes		1
 
+// ARM10C 20131207
 #define node_set_online(node)	   node_set_state((node), N_ONLINE)
 #define node_set_offline(node)	   node_clear_state((node), N_ONLINE)
 

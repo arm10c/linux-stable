@@ -92,6 +92,7 @@ void __init early_init_dt_setup_initrd_arch(unsigned long start, unsigned long e
  * of holes in the memory map.  It is populated by arm_add_memory().
  */
 // ARM10C 20131012
+// ARM10C 20131207
 struct meminfo meminfo;
 
 void show_mem(unsigned int filter)
@@ -142,6 +143,7 @@ void show_mem(unsigned int filter)
 }
 
 // ARM10C 20131130
+// ARM10C 20131207
 static void __init find_limits(unsigned long *min, unsigned long *max_low,
 			       unsigned long *max_high)
 {
@@ -149,14 +151,31 @@ static void __init find_limits(unsigned long *min, unsigned long *max_low,
 	int i;
 
 	/* This assumes the meminfo array is properly sorted */
+	// mi->bank[0].start: 0x20000000, bank_pfn_start(&mi->bank[0]): 0x20000
+	// *min: 0x20000
 	*min = bank_pfn_start(&mi->bank[0]);
+
+	// #define for_each_bank(i,mi) \
+	// for (i = 0; i < (mi)->nr_banks; i++)
+	//
+	// mi->nr_banks: 2, mi->bank[1].highmem: 1
 	for_each_bank (i, mi)
 		if (mi->bank[i].highmem)
 				break;
+
+	// i: 1, mi->bank[0].start: 0x20000000, mi->bank[0].size: 0x2f800000
+	// bank_pfn_end(&mi->bank[i - 1]): 0x4f800
+	// *max_low: 0x4f800
 	*max_low = bank_pfn_end(&mi->bank[i - 1]);
+
+	// mi->bank[1].start: 0x4f800000, mi->bank[1].size: 0x50800000 
+	// bank_pfn_end(&mi->bank[mi->nr_banks - 1]): 0xA0000
+	// *max_high: 0xA0000
 	*max_high = bank_pfn_end(&mi->bank[mi->nr_banks - 1]);
 }
 
+// ARM10C 20131207
+// min: 0x20000, max_low: 0x4f800
 static void __init arm_bootmem_init(unsigned long start_pfn,
 	unsigned long end_pfn)
 {
@@ -169,7 +188,12 @@ static void __init arm_bootmem_init(unsigned long start_pfn,
 	 * Allocate the bootmem bitmap page.  This must be in a region
 	 * of memory which has already been mapped.
 	 */
+	// start_pfn: 0x20000, end_pfn: 0x4f800, end_pfn - start_pfn: 0x2f800
+	// boot_pages: 0x6
 	boot_pages = bootmem_bootmap_pages(end_pfn - start_pfn);
+
+	// boot_pages << PAGE_SHIFT: 0x6000, L1_CACHE_BYTES: 64
+	// __pfn_to_phys(0x4f800); 0x4f800000
 	bitmap = memblock_alloc_base(boot_pages << PAGE_SHIFT, L1_CACHE_BYTES,
 				__pfn_to_phys(end_pfn));
 
@@ -178,32 +202,48 @@ static void __init arm_bootmem_init(unsigned long start_pfn,
 	 * memory banks over to bootmem.
 	 */
 	node_set_online(0);
+
+	// pglist_data.bdata 의 bootmem_node_data 주소로 설정
 	pgdat = NODE_DATA(0);
+
+	// pgdat: ?, __phys_to_pfn(bitmap): ?, start_pfn: 0x20000, end_pfn: 0x4f800
 	init_bootmem_node(pgdat, __phys_to_pfn(bitmap), start_pfn, end_pfn);
 
 	/* Free the lowmem regions from memblock into bootmem. */
 	for_each_memblock(memory, reg) {
+		// start: 0x20000
 		unsigned long start = memblock_region_memory_base_pfn(reg);
+		// end: 0xA0000
 		unsigned long end = memblock_region_memory_end_pfn(reg);
 
+		// end: 0xA0000, end_pfn: 0x4f800
 		if (end >= end_pfn)
+			// end: 0x4f800
 			end = end_pfn;
+		// start: 0x20000, end: 0x4f800
 		if (start >= end)
 			break;
 
+		// __pfn_to_phys(0x20000): 0x20000000, (end - start) << PAGE_SHIFT: 0x2f800000
 		free_bootmem(__pfn_to_phys(start), (end - start) << PAGE_SHIFT);
 	}
 
 	/* Reserve the lowmem memblock reserved regions in bootmem. */
 	for_each_memblock(reserved, reg) {
+		// start: 0x40004
 		unsigned long start = memblock_region_reserved_base_pfn(reg);
+		// end: 0x40008
 		unsigned long end = memblock_region_reserved_end_pfn(reg);
 
+		// end: 0x40008, end_pfn: 0x4f800
 		if (end >= end_pfn)
 			end = end_pfn;
+		// start: 0x40004, end: 0x40008
 		if (start >= end)
 			break;
 
+		// __pfn_to_phys(0x40004): 0x40004000, (end - start) << PAGE_SHIFT: 0x4000
+		// BOOTMEM_DEFAULT: 0
 		reserve_bootmem(__pfn_to_phys(start),
 			        (end - start) << PAGE_SHIFT, BOOTMEM_DEFAULT);
 	}
@@ -310,16 +350,19 @@ int pfn_valid(unsigned long pfn)
 EXPORT_SYMBOL(pfn_valid);
 #endif
 
-#ifndef CONFIG_SPARSEMEM
+#ifndef CONFIG_SPARSEMEM // CONFIG_SPARSEMEM=y
 static void __init arm_memory_present(void)
 {
 }
 #else
+// ARM10C 20131207
 static void __init arm_memory_present(void)
 {
 	struct memblock_region *reg;
 
 	for_each_memblock(memory, reg)
+		// memblock_region_memory_base_pfn(reg): 0x20000
+		// memblock_region_memory_end_pfn(reg):  0xA0000
 		memory_present(0, memblock_region_memory_base_pfn(reg),
 			       memblock_region_memory_end_pfn(reg));
 }
@@ -411,14 +454,18 @@ void __init arm_memblock_init(struct meminfo *mi, struct machine_desc *mdesc)
 }
 
 // ARM10C 20131130
+// ARM10C 20131207
 void __init bootmem_init(void)
 {
 	unsigned long min, max_low, max_high;
 
 	max_low = max_high = 0;
 
+	// min: 0x20000, max_low: 0x4f800, max_high: 0xA0000
 	find_limits(&min, &max_low, &max_high);
 
+	// min: 0x20000, max_low: 0x4f800
+	// memory block을 free, reserved 영역에 맞게 memory bitmap을 생성
 	arm_bootmem_init(min, max_low);
 
 	/*

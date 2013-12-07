@@ -1638,6 +1638,7 @@ void __init paging_init(struct machine_desc *mdesc)
 	zero_page = early_alloc(PAGE_SIZE);
 
 // 2013/11/30 종료
+// 2013/12/07 시작
 	bootmem_init();
 
 	empty_zero_page = virt_to_page(zero_page);

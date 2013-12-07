@@ -720,6 +720,8 @@ extern struct page *mem_map;
  * per-zone basis.
  */
 struct bootmem_data;
+
+// ARM10C 20131207
 typedef struct pglist_data {
 	struct zone node_zones[MAX_NR_ZONES];
 	struct zonelist node_zonelists[MAX_ZONELISTS];
@@ -730,7 +732,8 @@ typedef struct pglist_data {
 	struct page_cgroup *node_page_cgroup;
 #endif
 #endif
-#ifndef CONFIG_NO_BOOTMEM
+#ifndef CONFIG_NO_BOOTMEM // CONFIG_NO_BOOTMEM=n
+	// ARM10C 20131207
 	struct bootmem_data *bdata;
 #endif
 #ifdef CONFIG_MEMORY_HOTPLUG
@@ -822,7 +825,8 @@ static inline struct zone *lruvec_zone(struct lruvec *lruvec)
 #endif
 }
 
-#ifdef CONFIG_HAVE_MEMORY_PRESENT
+#ifdef CONFIG_HAVE_MEMORY_PRESENT // CONFIG_HAVE_MEMORY_PRESENT=y
+// ARM10C 20131207
 void memory_present(int nid, unsigned long start, unsigned long end);
 #else
 static inline void memory_present(int nid, unsigned long start, unsigned long end) {}
@@ -909,6 +913,7 @@ extern char numa_zonelist_order[];
 #ifndef CONFIG_NEED_MULTIPLE_NODES
 
 extern struct pglist_data contig_page_data;
+// ARM10C 20131207
 #define NODE_DATA(nid)		(&contig_page_data)
 #define NODE_MEM_MAP(nid)	mem_map
 
@@ -1053,7 +1058,7 @@ static inline unsigned long early_pfn_to_nid(unsigned long pfn)
 #define pfn_to_nid(pfn)		(0)
 #endif
 
-#ifdef CONFIG_SPARSEMEM
+#ifdef CONFIG_SPARSEMEM // CONFIG_SPARSEMEM=y
 
 /*
  * SECTION_SHIFT    		#bits space required to store a section #
@@ -1062,11 +1067,24 @@ static inline unsigned long early_pfn_to_nid(unsigned long pfn)
  * PFN_SECTION_SHIFT		pfn to/from section number
  */
 #define PA_SECTION_SHIFT	(SECTION_SIZE_BITS)
+// ARM10C 20131207
+// SECTION_SIZE_BITS: 28
+// PFN_SECTION_SHIFT: 16
 #define PFN_SECTION_SHIFT	(SECTION_SIZE_BITS - PAGE_SHIFT)
 
+// ARM10C 20131207
+// SECTIONS_SHIFT: 4
+// NR_MEM_SECTIONS: 0x10
 #define NR_MEM_SECTIONS		(1UL << SECTIONS_SHIFT)
 
+// ARM10C 20131207
+// PFN_SECTION_SHIFT: 16
+// PAGES_PER_SECTION: 0x10000
 #define PAGES_PER_SECTION       (1UL << PFN_SECTION_SHIFT)
+// ARM10C 20131207
+// PAGE_SECTION_MASK
+// PAGES_PER_SECTION: 0x10000
+// PAGE_SECTION_MASK: 0xFFFF0000
 #define PAGE_SECTION_MASK	(~(PAGES_PER_SECTION-1))
 
 #define SECTION_BLOCKFLAGS_BITS \
@@ -1076,6 +1094,8 @@ static inline unsigned long early_pfn_to_nid(unsigned long pfn)
 #error Allocator MAX_ORDER exceeds SECTION_SIZE
 #endif
 
+// ARM10C 20131207
+// PFN_SECTION_SHIFT: 16
 #define pfn_to_section_nr(pfn) ((pfn) >> PFN_SECTION_SHIFT)
 #define section_nr_to_pfn(sec) ((sec) << PFN_SECTION_SHIFT)
 
@@ -1084,6 +1104,7 @@ static inline unsigned long early_pfn_to_nid(unsigned long pfn)
 
 struct page;
 struct page_cgroup;
+// ARM10C 20131207
 struct mem_section {
 	/*
 	 * This is, logically, a pointer to an array of struct
@@ -1101,7 +1122,7 @@ struct mem_section {
 
 	/* See declaration of similar field in struct zone */
 	unsigned long *pageblock_flags;
-#ifdef CONFIG_MEMCG
+#ifdef CONFIG_MEMCG // CONFIG_MEMCG=n
 	/*
 	 * If !SPARSEMEM, pgdat doesn't have page_cgroup pointer. We use
 	 * section. (see memcontrol.h/page_cgroup.h about this.)
@@ -1115,13 +1136,22 @@ struct mem_section {
 	 */
 };
 
-#ifdef CONFIG_SPARSEMEM_EXTREME
+#ifdef CONFIG_SPARSEMEM_EXTREME // CONFIG_SPARSEMEM_EXTREME=y
+// ARM10C 20131207
+// PAGE_SIZE: 0x1000, sizeof (struct mem_section): 8
+// SECTIONS_PER_ROOT: 0x200
 #define SECTIONS_PER_ROOT       (PAGE_SIZE / sizeof (struct mem_section))
 #else
 #define SECTIONS_PER_ROOT	1
 #endif
 
+// ARM10C 20131207
+// SECTIONS_PER_ROOT: 0x200
 #define SECTION_NR_TO_ROOT(sec)	((sec) / SECTIONS_PER_ROOT)
+// ARM10C 20131207
+// NR_MEM_SECTIONS: 0x10, SECTIONS_PER_ROOT: 0x200
+// DIV_ROUND_UP(0x10,0x200): 1 
+// NR_SECTION_ROOTS: 1
 #define NR_SECTION_ROOTS	DIV_ROUND_UP(NR_MEM_SECTIONS, SECTIONS_PER_ROOT)
 #define SECTION_ROOT_MASK	(SECTIONS_PER_ROOT - 1)
 

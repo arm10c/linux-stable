@@ -29,6 +29,7 @@ struct memblock_region {
 };
 
 // ARM10C 20131019
+// ARM10C 20131207
 struct memblock_type {
 	unsigned long cnt;	/* number of regions */
 	unsigned long max;	/* size of the allocated array */
@@ -37,6 +38,7 @@ struct memblock_type {
 };
 
 // ARM10C 20131019
+// ARM10C 20131207
 struct memblock {
 	phys_addr_t current_limit;
 	struct memblock_type memory;
@@ -235,6 +237,7 @@ static inline unsigned long memblock_region_reserved_end_pfn(const struct memblo
 }
 
 // ARM10C 20131102
+// ARM10C 20131207
 #define for_each_memblock(memblock_type, region)					\
 	for (region = memblock.memblock_type.regions;				\
 	     region < (memblock.memblock_type.regions + memblock.memblock_type.cnt);	\

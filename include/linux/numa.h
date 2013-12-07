@@ -9,6 +9,7 @@
 #endif
 
 // ARM10C 20131019
+// ARM10C 20131207
 // MAX_NUMNODES: 1
 #define MAX_NUMNODES    (1 << NODES_SHIFT)
 

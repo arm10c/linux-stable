@@ -21,7 +21,7 @@
 #ifndef __KMEMLEAK_H
 #define __KMEMLEAK_H
 
-#ifdef CONFIG_DEBUG_KMEMLEAK
+#ifdef CONFIG_DEBUG_KMEMLEAK // CONFIG_DEBUG_KMEMLEAK=n
 
 extern void kmemleak_init(void) __ref;
 extern void kmemleak_alloc(const void *ptr, size_t size, int min_count,
@@ -76,6 +76,7 @@ static inline void kmemleak_alloc_percpu(const void __percpu *ptr, size_t size)
 static inline void kmemleak_free(const void *ptr)
 {
 }
+// ARM10C 20131207
 static inline void kmemleak_free_part(const void *ptr, size_t size)
 {
 }

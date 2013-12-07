@@ -12,6 +12,7 @@
  * have the problem that the structures used for managing slab caches are
  * allocated from slab caches themselves.
  */
+// ARM10C 20131207
 enum slab_state {
 	DOWN,			/* No slab functionality yet */
 	PARTIAL,		/* SLUB: kmem_cache_node available */

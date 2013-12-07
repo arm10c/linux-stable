@@ -30,6 +30,7 @@ static const struct tagtable __tagtable_##fn __tag = { tag, fn }
 #define NR_BANKS	CONFIG_ARM_NR_BANKS
 
 // ARM10C 20131012
+// ARM10C 20131207
 struct membank {
 	phys_addr_t start;
 	phys_addr_t size;
@@ -37,6 +38,7 @@ struct membank {
 };
 
 // ARM10C 20131012
+// ARM10C 20131207
 struct meminfo {
 	int nr_banks;
 	struct membank bank[NR_BANKS];
@@ -44,11 +46,14 @@ struct meminfo {
 
 extern struct meminfo meminfo;
 
+// ARM10C 20131207
 #define for_each_bank(iter,mi)				\
 	for (iter = 0; iter < (mi)->nr_banks; iter++)
 
 // ARM10C 20131019
+// ARM10C 20131207
 #define bank_pfn_start(bank)	__phys_to_pfn((bank)->start)
+// ARM10C 20131207
 #define bank_pfn_end(bank)	__phys_to_pfn((bank)->start + (bank)->size)
 #define bank_pfn_size(bank)	((bank)->size >> PAGE_SHIFT)
 #define bank_phys_start(bank)	(bank)->start

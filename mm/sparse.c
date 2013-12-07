@@ -19,7 +19,9 @@
  *
  * 1) mem_section	- memory sections, mem_map's for valid memory
  */
-#ifdef CONFIG_SPARSEMEM_EXTREME
+#ifdef CONFIG_SPARSEMEM_EXTREME // CONFIG_SPARSEMEM_EXTREME=y
+// ARM10C 20131207
+// NR_SECTION_ROOTS: 1
 struct mem_section *mem_section[NR_SECTION_ROOTS]
 	____cacheline_internodealigned_in_smp;
 #else
@@ -56,10 +58,14 @@ static inline void set_section_nid(unsigned long section_nr, int nid)
 }
 #endif
 
-#ifdef CONFIG_SPARSEMEM_EXTREME
+#ifdef CONFIG_SPARSEMEM_EXTREME // CONFIG_SPARSEMEM_EXTREME=y
+// ARM10C 20131207
+// nid: 0
 static struct mem_section noinline __init_refok *sparse_index_alloc(int nid)
 {
 	struct mem_section *section = NULL;
+	// SECTIONS_PER_ROOT: 0x200, sizeof(struct mem_section): 8
+	// array_size: 0x1000
 	unsigned long array_size = SECTIONS_PER_ROOT *
 				   sizeof(struct mem_section);
 
@@ -69,20 +75,26 @@ static struct mem_section noinline __init_refok *sparse_index_alloc(int nid)
 		else
 			section = kzalloc(array_size, GFP_KERNEL);
 	} else {
+		// nid: 0, array_size: 0x1000
 		section = alloc_bootmem_node(NODE_DATA(nid), array_size);
 	}
 
 	return section;
 }
 
+// ARM10C 20131207
+// section: 0x2, nid: 0
 static int __meminit sparse_index_init(unsigned long section_nr, int nid)
 {
+	// SECTION_NR_TO_ROOT(0x2): 0x0, root: 0
 	unsigned long root = SECTION_NR_TO_ROOT(section_nr);
 	struct mem_section *section;
 
+	// root: 0, mem_section[root]: 0
 	if (mem_section[root])
 		return -EEXIST;
 
+	// nid: 0
 	section = sparse_index_alloc(nid);
 	if (!section)
 		return -ENOMEM;
@@ -139,15 +151,22 @@ static inline int sparse_early_nid(struct mem_section *section)
 }
 
 /* Validate the physical addressing limitations of the model */
+// ARM10C 20131207
+// start: 0x20000, end: 0x4f800
+// start: 0x20000, end: 0xA0000
 void __meminit mminit_validate_memmodel_limits(unsigned long *start_pfn,
 						unsigned long *end_pfn)
 {
+	// MAX_PHYSMEM_BITS: 32, PAGE_SHIFT: 12
+	// max_sparsemem_pfn: 0x100000
 	unsigned long max_sparsemem_pfn = 1UL << (MAX_PHYSMEM_BITS-PAGE_SHIFT);
 
 	/*
 	 * Sanity checks - do not allow an architecture to pass
 	 * in larger pfns than the maximum scope of sparsemem:
 	 */
+	// *start_pfn: 0x20000, *end_pfn: 0x4f800  max_sparsemem_pfn: 0x100000
+	// *start_pfn: 0x20000, *end_pfn: 0xA0000  max_sparsemem_pfn: 0x100000
 	if (*start_pfn > max_sparsemem_pfn) {
 		mminit_dprintk(MMINIT_WARNING, "pfnvalidation",
 			"Start of range %lu -> %lu exceeds SPARSEMEM max %lu\n",
@@ -165,16 +184,26 @@ void __meminit mminit_validate_memmodel_limits(unsigned long *start_pfn,
 }
 
 /* Record a memory area against a node. */
+// ARM10C 20131207
+// nid: 0, start: 0x20000, end: 0xA0000
 void __init memory_present(int nid, unsigned long start, unsigned long end)
 {
 	unsigned long pfn;
 
+	// PAGE_SECTION_MASK: 0xFFFF0000
+	// start: 0x20000
 	start &= PAGE_SECTION_MASK;
+	// start: 0x20000, end: 0xA0000
 	mminit_validate_memmodel_limits(&start, &end);
+
+	// start: 0x20000, end: 0xA0000, PAGES_PER_SECTION: 0x10000
 	for (pfn = start; pfn < end; pfn += PAGES_PER_SECTION) {
+		// pfn_to_section_nr(0x20000): 0x2
+		// section: 0x2
 		unsigned long section = pfn_to_section_nr(pfn);
 		struct mem_section *ms;
 
+		// section: 0x2, nid: 0
 		sparse_index_init(section, nid);
 		set_section_nid(section, nid);
 

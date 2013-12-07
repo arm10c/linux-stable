@@ -19,11 +19,12 @@ extern unsigned long min_low_pfn;
  */
 extern unsigned long max_pfn;
 
-#ifndef CONFIG_NO_BOOTMEM
+#ifndef CONFIG_NO_BOOTMEM // CONFIG_NO_BOOTMEM=n
 /*
  * node_bootmem_map is a map pointer - the bits represent all physical 
  * memory pages (including holes) on the node.
  */
+// ARM10C 20131207
 typedef struct bootmem_data {
 	unsigned long node_min_pfn;
 	unsigned long node_low_pfn;
@@ -62,7 +63,9 @@ extern void __free_pages_bootmem(struct page *page, unsigned int order);
  * flags contains BOOTMEM_EXCLUSIVE, then -EBUSY is returned if the
  * memory already was reserved.
  */
+// ARM10C 20131207
 #define BOOTMEM_DEFAULT		0
+// ARM10C 20131207
 #define BOOTMEM_EXCLUSIVE	(1<<0)
 
 extern int reserve_bootmem(unsigned long addr,
@@ -107,10 +110,13 @@ extern void *__alloc_bootmem_low_node(pg_data_t *pgdat,
 				      unsigned long align,
 				      unsigned long goal);
 
-#ifdef CONFIG_NO_BOOTMEM
+#ifdef CONFIG_NO_BOOTMEM // CONFIG_NO_BOOTMEM=n
 /* We are using top down, so it is safe to use 0 here */
 #define BOOTMEM_LOW_LIMIT 0
 #else
+// ARM10C 20131207
+// MAX_DMA_ADDRESS: 0xffffffffUL, __pa(0xffffffff): 0x5FFFFFFF
+// BOOTMEM_LOW_LIMIT: 0x5FFFFFFF
 #define BOOTMEM_LOW_LIMIT __pa(MAX_DMA_ADDRESS)
 #endif
 
@@ -124,6 +130,9 @@ extern void *__alloc_bootmem_low_node(pg_data_t *pgdat,
 	__alloc_bootmem(x, PAGE_SIZE, BOOTMEM_LOW_LIMIT)
 #define alloc_bootmem_pages_nopanic(x) \
 	__alloc_bootmem_nopanic(x, PAGE_SIZE, BOOTMEM_LOW_LIMIT)
+// ARM10C 20131207
+// pgdat: ?, array_size: 0x1000
+// SMP_CACHE_BYTES = 64, BOOTMEM_LOW_LIMIT: 0x5FFFFFFF
 #define alloc_bootmem_node(pgdat, x) \
 	__alloc_bootmem_node(pgdat, x, SMP_CACHE_BYTES, BOOTMEM_LOW_LIMIT)
 #define alloc_bootmem_node_nopanic(pgdat, x) \

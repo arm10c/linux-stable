@@ -22,6 +22,7 @@
 
 #include "slab.h"
 
+// ARM10C 20131207
 enum slab_state slab_state;
 LIST_HEAD(slab_caches);
 DEFINE_MUTEX(slab_mutex);
@@ -281,6 +282,7 @@ void kmem_cache_destroy(struct kmem_cache *s)
 }
 EXPORT_SYMBOL(kmem_cache_destroy);
 
+// ARM10C 20131207
 int slab_is_available(void)
 {
 	return slab_state >= UP;

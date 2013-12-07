@@ -183,6 +183,7 @@ typedef struct {
 #endif
 
 // ARM10C 20131123
+// ARM10C 20131207
 struct list_head {
 	struct list_head *next, *prev;
 };

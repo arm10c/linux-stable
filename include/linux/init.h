@@ -80,11 +80,14 @@
  *
  * The markers follow same syntax rules as __init / __initdata.
  */
+// ARM10C 20131207
 #define __ref            __section(.ref.text) noinline
+// ARM10C 20131207
 #define __refdata        __section(.ref.data)
 #define __refconst       __constsection(.ref.rodata)
 
 /* compatibility defines */
+// ARM10C 20131207
 #define __init_refok     __ref
 #define __initdata_refok __refdata
 #define __exit_refok     __ref
