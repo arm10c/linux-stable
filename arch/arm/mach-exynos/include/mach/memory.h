@@ -17,9 +17,13 @@
 
 #ifndef CONFIG_ARM_LPAE // CONFIG_ARM_LPAE=n
 /* Maximum of 256MiB in one bank */
+/*
 // ARM10C 20131207
+*/
 #define MAX_PHYSMEM_BITS	32
+/*
 // ARM10C 20131207
+*/
 #define SECTION_SIZE_BITS	28
 #else
 #define MAX_PHYSMEM_BITS	36
