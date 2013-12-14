@@ -4583,7 +4583,7 @@ static inline void setup_usemap(struct pglist_data *pgdat, struct zone *zone,
 				unsigned long zone_start_pfn, unsigned long zonesize) {}
 #endif /* CONFIG_SPARSEMEM */
 
-#ifdef CONFIG_HUGETLB_PAGE_SIZE_VARIABLE
+#ifdef CONFIG_HUGETLB_PAGE_SIZE_VARIABLE // CONFIG_HUGETLB_PAGE_SIZE_VARIABLE=n
 
 /* Initialise the number of pages represented by NR_PAGEBLOCK_BITS */
 void __init set_pageblock_order(void)
@@ -4614,6 +4614,7 @@ void __init set_pageblock_order(void)
  * include/linux/pageblock-flags.h for the values of pageblock_order based on
  * the kernel config
  */
+// ARM10C 20131214
 void __init set_pageblock_order(void)
 {
 }

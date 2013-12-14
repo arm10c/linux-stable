@@ -66,6 +66,7 @@ extern void __free_pages_bootmem(struct page *page, unsigned int order);
 // ARM10C 20131207
 #define BOOTMEM_DEFAULT		0
 // ARM10C 20131207
+// ARM10C 20131214
 #define BOOTMEM_EXCLUSIVE	(1<<0)
 
 extern int reserve_bootmem(unsigned long addr,
@@ -120,6 +121,9 @@ extern void *__alloc_bootmem_low_node(pg_data_t *pgdat,
 #define BOOTMEM_LOW_LIMIT __pa(MAX_DMA_ADDRESS)
 #endif
 
+// ARM10C 20131214
+// size: 0x40
+// SMP_CACHE_BYTES = 64, BOOTMEM_LOW_LIMIT: 0x5FFFFFFF
 #define alloc_bootmem(x) \
 	__alloc_bootmem(x, SMP_CACHE_BYTES, BOOTMEM_LOW_LIMIT)
 #define alloc_bootmem_align(x, align) \

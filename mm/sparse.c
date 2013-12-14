@@ -30,7 +30,7 @@ struct mem_section mem_section[NR_SECTION_ROOTS][SECTIONS_PER_ROOT]
 #endif
 EXPORT_SYMBOL(mem_section);
 
-#ifdef NODE_NOT_IN_PAGE_FLAGS
+#ifdef NODE_NOT_IN_PAGE_FLAGS // undefined
 /*
  * If we did not store the node number in the page then we have to
  * do a lookup in the section_to_node_table in order to find which
@@ -53,6 +53,7 @@ static void set_section_nid(unsigned long section_nr, int nid)
 	section_to_node_table[section_nr] = nid;
 }
 #else /* !NODE_NOT_IN_PAGE_FLAGS */
+// ARM10C 20131214
 static inline void set_section_nid(unsigned long section_nr, int nid)
 {
 }
@@ -99,6 +100,7 @@ static int __meminit sparse_index_init(unsigned long section_nr, int nid)
 	if (!section)
 		return -ENOMEM;
 
+	// root: 0
 	mem_section[root] = section;
 
 	return 0;
@@ -140,13 +142,18 @@ int __section_nr(struct mem_section* ms)
  * node.  This keeps us from having to use another data structure.  The
  * node information is cleared just before we store the real mem_map.
  */
+// ARM10C 20131214
+// nid: 0
 static inline unsigned long sparse_encode_early_nid(int nid)
 {
+	// SECTION_NID_SHIFT: 2
 	return (nid << SECTION_NID_SHIFT);
 }
 
+// ARM10C 20131214
 static inline int sparse_early_nid(struct mem_section *section)
 {
+	// SECTION_NID_SHIFT: 2
 	return (section->section_mem_map >> SECTION_NID_SHIFT);
 }
 
@@ -205,10 +212,16 @@ void __init memory_present(int nid, unsigned long start, unsigned long end)
 
 		// section: 0x2, nid: 0
 		sparse_index_init(section, nid);
+		// section: 0x2, nid: 0
 		set_section_nid(section, nid);
 
+		// section: 0x2
 		ms = __nr_to_section(section);
+		// ms->section_mem_map: 0
 		if (!ms->section_mem_map)
+			// nid: 0, 
+			// sparse_encode_early_nid(0): 0, SECTION_MARKED_PRESENT: 1
+			// ms->section_mem_map: 1
 			ms->section_mem_map = sparse_encode_early_nid(nid) |
 							SECTION_MARKED_PRESENT;
 	}
@@ -271,6 +284,7 @@ static int __meminit sparse_init_one_section(struct mem_section *ms,
 	return 1;
 }
 
+// ARM10C 20131214
 unsigned long usemap_size(void)
 {
 	unsigned long size_bytes;
@@ -368,6 +382,8 @@ static void __init check_usemap_section_nr(int nid, unsigned long *usemap)
 }
 #endif /* CONFIG_MEMORY_HOTREMOVE */
 
+// ARM10C 20131214
+// usemap_map: ?, pnum_begin: 2, NR_MEM_SECTIONS: 0x10, usemap_count: 8, nodeid_begin: 0
 static void __init sparse_early_usemaps_alloc_node(unsigned long**usemap_map,
 				 unsigned long pnum_begin,
 				 unsigned long pnum_end,
@@ -493,6 +509,7 @@ void __attribute__((weak)) __meminit vmemmap_populate_print_last(void)
  * Allocate the accumulated non-linear sections, allocate a mem_map
  * for each and record the physical to section mapping.
  */
+// ARM10C 20131214
 void __init sparse_init(void)
 {
 	unsigned long pnum;
@@ -503,13 +520,15 @@ void __init sparse_init(void)
 	int nodeid_begin = 0;
 	unsigned long pnum_begin = 0;
 	unsigned long usemap_count;
-#ifdef CONFIG_SPARSEMEM_ALLOC_MEM_MAP_TOGETHER
+#ifdef CONFIG_SPARSEMEM_ALLOC_MEM_MAP_TOGETHER // CONFIG_SPARSEMEM_ALLOC_MEM_MAP_TOGETHER=n
 	unsigned long map_count;
 	int size2;
 	struct page **map_map;
 #endif
 
 	/* see include/linux/mmzone.h 'struct mem_section' definition */
+	// sizeof(struct mem_section): 8
+	// is_power_of_2(8): 1 
 	BUILD_BUG_ON(!is_power_of_2(sizeof(struct mem_section)));
 
 	/* Setup pageblock_order for HUGETLB_PAGE_SIZE_VARIABLE */
@@ -526,11 +545,17 @@ void __init sparse_init(void)
 	 * powerpc need to call sparse_init_one_section right after each
 	 * sparse_early_mem_map_alloc, so allocate usemap_map at first.
 	 */
+	// NR_MEM_SECTIONS: 0x10
+	// sizeof(unsigned long *): 4
+	// size: 0x40
 	size = sizeof(unsigned long *) * NR_MEM_SECTIONS;
+	// size: 0x40
 	usemap_map = alloc_bootmem(size);
+	// usemap_map: NULL 아닌 값
 	if (!usemap_map)
 		panic("can not allocate usemap_map\n");
 
+	// NR_MEM_SECTIONS: 0x10
 	for (pnum = 0; pnum < NR_MEM_SECTIONS; pnum++) {
 		struct mem_section *ms;
 
@@ -541,7 +566,11 @@ void __init sparse_init(void)
 		pnum_begin = pnum;
 		break;
 	}
+	// nodeid_begin: 0, pnum_begin: 2
+	
 	usemap_count = 1;
+
+	// NR_MEM_SECTIONS: 0x10
 	for (pnum = pnum_begin + 1; pnum < NR_MEM_SECTIONS; pnum++) {
 		struct mem_section *ms;
 		int nodeid;
@@ -549,7 +578,11 @@ void __init sparse_init(void)
 		if (!present_section_nr(pnum))
 			continue;
 		ms = __nr_to_section(pnum);
+
+		// nodeid: 0
 		nodeid = sparse_early_nid(ms);
+
+		// nodeid_begin: 0, nodeid: 0
 		if (nodeid == nodeid_begin) {
 			usemap_count++;
 			continue;
@@ -562,7 +595,10 @@ void __init sparse_init(void)
 		pnum_begin = pnum;
 		usemap_count = 1;
 	}
+	// usemap_count: 8
+	  
 	/* ok, last chunk */
+	// usemap_map: ?, pnum_begin: 2, NR_MEM_SECTIONS: 0x10, usemap_count: 8, nodeid_begin: 0
 	sparse_early_usemaps_alloc_node(usemap_map, pnum_begin, NR_MEM_SECTIONS,
 					 usemap_count, nodeid_begin);
 

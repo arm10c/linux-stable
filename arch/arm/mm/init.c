@@ -472,6 +472,8 @@ void __init bootmem_init(void)
 	 * Sparsemem tries to allocate bootmem in memory_present(),
 	 * so must be done after the fixed reservations
 	 */
+	// memory block을 free, reserved 영역에 맞게 memory bitmap을 설정 
+	// 200 개의 mem_section 할당 받고 256MB 단위로 8개를 section_mem_map을 1로 마스킹
 	arm_memory_present();
 
 	/*

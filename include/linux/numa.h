@@ -5,6 +5,7 @@
 #ifdef CONFIG_NODES_SHIFT // CONFIG_NODES_SHIFT=n
 #define NODES_SHIFT     CONFIG_NODES_SHIFT
 #else
+// ARM10C 20131214
 #define NODES_SHIFT     0
 #endif
 

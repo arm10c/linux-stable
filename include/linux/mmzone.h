@@ -1087,6 +1087,10 @@ static inline unsigned long early_pfn_to_nid(unsigned long pfn)
 // PAGE_SECTION_MASK: 0xFFFF0000
 #define PAGE_SECTION_MASK	(~(PAGES_PER_SECTION-1))
 
+// ARM10C 20131214
+// PFN_SECTION_SHIFT: 16, pageblock_order: 9, NR_PAGEBLOCK_BITS: 4
+// PFN_SECTION_SHIFT - pageblock_order: 7
+// SECTION_BLOCKFLAGS_BITS: (1UL << 7) * 4: 0x80 * 4: 0x200
 #define SECTION_BLOCKFLAGS_BITS \
 	((1UL << (PFN_SECTION_SHIFT - pageblock_order)) * NR_PAGEBLOCK_BITS)
 
@@ -1153,18 +1157,28 @@ struct mem_section {
 // DIV_ROUND_UP(0x10,0x200): 1 
 // NR_SECTION_ROOTS: 1
 #define NR_SECTION_ROOTS	DIV_ROUND_UP(NR_MEM_SECTIONS, SECTIONS_PER_ROOT)
+// ARM10C 20131214
+// SECTION_ROOT_MASK: 0x1FF
 #define SECTION_ROOT_MASK	(SECTIONS_PER_ROOT - 1)
 
-#ifdef CONFIG_SPARSEMEM_EXTREME
+#ifdef CONFIG_SPARSEMEM_EXTREME // CONFIG_SPARSEMEM_EXTREME=y
+// ARM10C 20131214
 extern struct mem_section *mem_section[NR_SECTION_ROOTS];
 #else
 extern struct mem_section mem_section[NR_SECTION_ROOTS][SECTIONS_PER_ROOT];
 #endif
 
+// ARM10C 20131214
+// section: 0x2
 static inline struct mem_section *__nr_to_section(unsigned long nr)
 {
+	// SECTION_NR_TO_ROOT(0x2): 0x0
+	// mem_section[0]: NULL 아닌 값
 	if (!mem_section[SECTION_NR_TO_ROOT(nr)])
 		return NULL;
+
+	// SECTION_ROOT_MASK: 0x1FF
+	// &mem_section[0][2] 
 	return &mem_section[SECTION_NR_TO_ROOT(nr)][nr & SECTION_ROOT_MASK];
 }
 extern int __section_nr(struct mem_section* ms);
@@ -1175,10 +1189,13 @@ extern unsigned long usemap_size(void);
  * a little bit of information.  There should be at least
  * 3 bits here due to 32-bit alignment.
  */
+// ARM10C 20131214
+// SECTION_MARKED_PRESENT: 1
 #define	SECTION_MARKED_PRESENT	(1UL<<0)
 #define SECTION_HAS_MEM_MAP	(1UL<<1)
 #define SECTION_MAP_LAST_BIT	(1UL<<2)
 #define SECTION_MAP_MASK	(~(SECTION_MAP_LAST_BIT-1))
+// ARM10C 20131214
 #define SECTION_NID_SHIFT	2
 
 static inline struct page *__section_mem_map_addr(struct mem_section *section)
@@ -1188,11 +1205,14 @@ static inline struct page *__section_mem_map_addr(struct mem_section *section)
 	return (struct page *)map;
 }
 
+// ARM10C 20131214
 static inline int present_section(struct mem_section *section)
 {
+	// SECTION_MARKED_PRESENT: 1
 	return (section && (section->section_mem_map & SECTION_MARKED_PRESENT));
 }
 
+// ARM10C 20131214
 static inline int present_section_nr(unsigned long nr)
 {
 	return present_section(__nr_to_section(nr));

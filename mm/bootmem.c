@@ -563,9 +563,12 @@ int __init reserve_bootmem(unsigned long addr, unsigned long size,
 	return mark_bootmem(start, end, 1, flags);
 }
 
+// ARM10C 20131214
+// bdata: ?, sidx: ?, step: 1
 static unsigned long __init align_idx(struct bootmem_data *bdata,
 				      unsigned long idx, unsigned long step)
 {
+	// bdata->node_min_pfn: 0x20000, base: 0x20000
 	unsigned long base = bdata->node_min_pfn;
 
 	/*
@@ -573,6 +576,7 @@ static unsigned long __init align_idx(struct bootmem_data *bdata,
 	 * combination of both satisfies the requested alignment.
 	 */
 
+	// base: 0x20000, idx: ?, step: 1 
 	return ALIGN(base + idx, step) - base;
 }
 
@@ -588,10 +592,15 @@ static unsigned long __init align_off(struct bootmem_data *bdata,
 
 // ARM10C 20131207
 // pgdat: ?, size: 0x1000, align: 64, goal: 0x5FFFFFFF, limit: 0
+//
+// bdata: ?, size: 0x40, align: 64, goal: 0x0, limit: 0
 static void * __init alloc_bootmem_bdata(struct bootmem_data *bdata,
 					unsigned long size, unsigned long align,
 					unsigned long goal, unsigned long limit)
 {
+	// fallback: 대비책 
+	// hint_idx 부터 빈공간 찾음
+	// 없으면 fallback 으로 돌아가서 다시 검색
 	unsigned long fallback = 0;
 	unsigned long min, max, start, sidx, midx, step;
 
@@ -667,14 +676,20 @@ static void * __init alloc_bootmem_bdata(struct bootmem_data *bdata,
 		unsigned long eidx, i, start_off, end_off;
 find_block:
 	// 2013/12/07 종료
+	// 2013/12/14 시작
 		// bdata->node_bootmem_map: ?, midx: 0x2f800, sidx: 0x0
 		sidx = find_next_zero_bit(bdata->node_bootmem_map, midx, sidx);
+		
+		// bdata: ?, sidx: ?, step: 1
 		sidx = align_idx(bdata, sidx, step);
+		// sidx: ?, size: 0x1000, PFN_UP(0x1000): 1
 		eidx = sidx + PFN_UP(size);
 
+		// sidx: ?, eidx: ?, midx: 0x2f800
 		if (sidx >= midx || eidx > midx)
 			break;
 
+		// size 만큼 루프를 돌며 first fit 된 영역을 찾음
 		for (i = sidx; i < eidx; i++)
 			if (test_bit(i, bdata->node_bootmem_map)) {
 				sidx = align_idx(bdata, i, step);
@@ -683,13 +698,17 @@ find_block:
 				goto find_block;
 			}
 
+		// bdata->last_end_off: 0, (PAGE_SIZE - 1): 0xFFF
 		if (bdata->last_end_off & (PAGE_SIZE - 1) &&
 				PFN_DOWN(bdata->last_end_off) + 1 == sidx)
 			start_off = align_off(bdata, bdata->last_end_off, align);
 		else
+			// start_off: sidx << 12
 			start_off = PFN_PHYS(sidx);
 
+		// merge: 0
 		merge = PFN_DOWN(start_off) < sidx;
+		// size: 0x1000
 		end_off = start_off + size;
 
 		bdata->last_end_off = end_off;
@@ -698,17 +717,21 @@ find_block:
 		/*
 		 * Reserve the area now:
 		 */
+		// BOOTMEM_EXCLUSIVE: 1
 		if (__reserve(bdata, PFN_DOWN(start_off) + merge,
 				PFN_UP(end_off), BOOTMEM_EXCLUSIVE))
 			BUG();
 
+		// bdata->node_min_pfn: 0x20000, PFN_PHYS(0x20000): 0x20000000
 		region = phys_to_virt(PFN_PHYS(bdata->node_min_pfn) +
 				start_off);
+		// size: 0x1000
 		memset(region, 0, size);
 		/*
 		 * The min_count is set to 0 so that bootmem allocated blocks
 		 * are never reported as leaks.
 		 */
+		// region: ?, size: 0x1000
 		kmemleak_alloc(region, size, 0, 0);
 		return region;
 	}
@@ -722,6 +745,11 @@ find_block:
 	return NULL;
 }
 
+// ARM10C 20131214
+// size: 0x1000, align: 64, goal: 0x5FFFFFFF, limit: 0
+//
+// size: 0x40, align: 64, goal: 0x5FFFFFFF, limit: 0
+// size: 0x40, align: 64, goal: 0x0, limit: 0
 static void * __init alloc_bootmem_core(unsigned long size,
 					unsigned long align,
 					unsigned long goal,
@@ -730,15 +758,19 @@ static void * __init alloc_bootmem_core(unsigned long size,
 	bootmem_data_t *bdata;
 	void *region;
 
+	// slab_is_available(): 0
 	if (WARN_ON_ONCE(slab_is_available()))
 		return kzalloc(size, GFP_NOWAIT);
 
 	list_for_each_entry(bdata, &bdata_list, list) {
+		// goal: 0x5FFFFFFF, bdata->node_low_pfn: 0x4f800, PFN_DOWN(0x5FFFFFFF): 0x5FFFF
 		if (goal && bdata->node_low_pfn <= PFN_DOWN(goal))
 			continue;
+		// limit: 0, bdata->node_min_pfn: 0x20000, PFN_DOWN(0): 0
 		if (limit && bdata->node_min_pfn >= PFN_DOWN(limit))
 			break;
 
+		// bdata: ?, size: 0x40, align: 64, goal: 0x0, limit: 0
 		region = alloc_bootmem_bdata(bdata, size, align, goal, limit);
 		if (region)
 			return region;
@@ -747,6 +779,8 @@ static void * __init alloc_bootmem_core(unsigned long size,
 	return NULL;
 }
 
+// ARM10C 20131214
+// size: 0x40, align: 64, goal: 0x5FFFFFFF, limit: 0
 static void * __init ___alloc_bootmem_nopanic(unsigned long size,
 					      unsigned long align,
 					      unsigned long goal,
@@ -755,7 +789,10 @@ static void * __init ___alloc_bootmem_nopanic(unsigned long size,
 	void *ptr;
 
 restart:
+	// size: 0x40, align: 64, goal: 0x5FFFFFFF, limit: 0
+	// restart 이후: size: 0x40, align: 64, goal: 0x0, limit: 0
 	ptr = alloc_bootmem_core(size, align, goal, limit);
+	// restart 이후: ptr: NULL 아닌 값
 	if (ptr)
 		return ptr;
 	if (goal) {
@@ -787,11 +824,15 @@ void * __init __alloc_bootmem_nopanic(unsigned long size, unsigned long align,
 	return ___alloc_bootmem_nopanic(size, align, goal, limit);
 }
 
+// ARM10C 20131214
+// size: 0x40, align: 64, goal: 0x5FFFFFFF, limit: 0
 static void * __init ___alloc_bootmem(unsigned long size, unsigned long align,
 					unsigned long goal, unsigned long limit)
 {
+	// size: 0x40, align: 64, goal: 0x5FFFFFFF, limit: 0
 	void *mem = ___alloc_bootmem_nopanic(size, align, goal, limit);
 
+	// mem: NULL 아닌 값
 	if (mem)
 		return mem;
 	/*
@@ -815,11 +856,14 @@ static void * __init ___alloc_bootmem(unsigned long size, unsigned long align,
  *
  * The function panics if the request can not be satisfied.
  */
+// ARM10C 20131214
+// size: 0x40, align: 64, goal: 0x5FFFFFFF
 void * __init __alloc_bootmem(unsigned long size, unsigned long align,
 			      unsigned long goal)
 {
 	unsigned long limit = 0;
 
+	// size: 0x40, align: 64, goal: 0x5FFFFFFF, limit: 0
 	return ___alloc_bootmem(size, align, goal, limit);
 }
 
@@ -841,9 +885,11 @@ again:
 		limit = 0;
 
 	// 2013/12/07 종료
+	// 2013/12/14 시작
 	// pgdat: ?, size: 0x1000, align: 64, goal: 0x5FFFFFFF, limit: 0
 	ptr = alloc_bootmem_bdata(pgdat->bdata, size, align, goal, limit);
 	if (ptr)
+		// ptr 값 리턴
 		return ptr;
 
 	ptr = alloc_bootmem_core(size, align, goal, limit);
@@ -878,6 +924,7 @@ void * __init ___alloc_bootmem_node(pg_data_t *pgdat, unsigned long size,
 	// pgdat: ?, size: 0x1000, align: 64, goal: 0x5FFFFFFF
 	ptr = ___alloc_bootmem_node_nopanic(pgdat, size, align, goal, 0);
 	if (ptr)
+		// ptr 값 리턴
 		return ptr;
 
 	printk(KERN_ALERT "bootmem alloc of %lu bytes failed!\n", size);
