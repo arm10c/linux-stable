@@ -254,8 +254,11 @@ unsigned long __init node_memmap_size_bytes(int nid, unsigned long start_pfn,
  * the identity pfn - section_mem_map will return the actual
  * physical page frame number.
  */
+// mem_map : 2816K 주소, pnum : 2
 static unsigned long sparse_encode_mem_map(struct page *mem_map, unsigned long pnum)
 {
+	// mem_map : 2816K 주소, pnum : 2
+	// section_nr_to_pfn(2) : 0x20000
 	return (unsigned long)(mem_map - (section_nr_to_pfn(pnum)));
 }
 
@@ -269,17 +272,31 @@ struct page *sparse_decode_mem_map(unsigned long coded_mem_map, unsigned long pn
 	return ((struct page *)coded_mem_map) + section_nr_to_pfn(pnum);
 }
 
+// __nr_to_section(pum) : &mem_section[0][2], pnum : 2, map : 2816K
+// usemap : usemap_map[2]
 static int __meminit sparse_init_one_section(struct mem_section *ms,
 		unsigned long pnum, struct page *mem_map,
 		unsigned long *pageblock_bitmap)
 {
-	if (!present_section(ms))
+	if (!present_section(ms)) // 통과
 		return -EINVAL;
 
+	// ms->section_mem_map : 0x1
 	ms->section_mem_map &= ~SECTION_MAP_MASK;
+	// ms->section_mem_map : 0x1
+	// mem_map : 2816K 주소, pnum : 2
 	ms->section_mem_map |= sparse_encode_mem_map(mem_map, pnum) |
 							SECTION_HAS_MEM_MAP;
+	// ms->section_mem_map 에 들어간 정보
+	// 1bit : 할당 됬음
+	// 2bit : struct page용 공간이 할당됬음.
+	// 
+	// 3~4bit : nid값
+	// 나머지 : struct page용 공간의 시작 주소를 encoding해서 저장
+	
+	// pageblock_bitmap : usemap_map[2]
  	ms->pageblock_flags = pageblock_bitmap;
+
 
 	return 1;
 }
@@ -288,7 +305,9 @@ static int __meminit sparse_init_one_section(struct mem_section *ms,
 unsigned long usemap_size(void)
 {
 	unsigned long size_bytes;
+	// size_bytes = 0x40
 	size_bytes = roundup(SECTION_BLOCKFLAGS_BITS, 8) / 8;
+	// size_bytes = 0x40
 	size_bytes = roundup(size_bytes, sizeof(unsigned long));
 	return size_bytes;
 }
@@ -370,10 +389,12 @@ static void __init check_usemap_section_nr(int nid, unsigned long *usemap)
 	       " have a circular dependency on usemap and pgdat allocations\n");
 }
 #else
+// NODE_DATA(nodeid) = &contig_page_data, usemap_count = 0x20
 static unsigned long * __init
 sparse_early_usemaps_alloc_pgdat_section(struct pglist_data *pgdat,
 					 unsigned long size)
 {
+	// pgdat = &contig_page_data, size = 0x20
 	return alloc_bootmem_node_nopanic(pgdat, size);
 }
 
@@ -391,35 +412,51 @@ static void __init sparse_early_usemaps_alloc_node(unsigned long**usemap_map,
 {
 	void *usemap;
 	unsigned long pnum;
+	// size = 0x40
 	int size = usemap_size();
 
+	// NODE_DATA(nodeid) = &contig_page_data, usemap_count = 0x20
 	usemap = sparse_early_usemaps_alloc_pgdat_section(NODE_DATA(nodeid),
 							  size * usemap_count);
+	// 4KB를 할당받고 가상주소를 리턴
+	
 	if (!usemap) {
 		printk(KERN_WARNING "%s: allocation failed\n", __func__);
 		return;
 	}
-
+	
+	// pnum_begin : 2, pnum_end : 0x10
 	for (pnum = pnum_begin; pnum < pnum_end; pnum++) {
-		if (!present_section_nr(pnum))
+		if (!present_section_nr(pnum)) // pnum : 0, 1 일때 continue에 걸림
 			continue;
+
+		// pnum : 2
 		usemap_map[pnum] = usemap;
 		usemap += size;
+		// nodeid : 0, usemap_map[2] : 할당받은 가상 주소(4KB)
 		check_usemap_section_nr(nodeid, usemap_map[pnum]);
+		// null 함수
 	}
+	// usemap_map[2] ~ usemap_map[10] : 할당받은 주소 + offset가 저장됨
 }
 
 #ifndef CONFIG_SPARSEMEM_VMEMMAP
+// pnum : 2, nid : 0
 struct page __init *sparse_mem_map_populate(unsigned long pnum, int nid)
 {
 	struct page *map;
 	unsigned long size;
 
+	// nid : 0, sizeof(struct page) : 44, PAGES_PER_SECTION: 0x10000
+	// nid : 0, 0x2C0000
 	map = alloc_remap(nid, sizeof(struct page) * PAGES_PER_SECTION);
+	// null 함수, map : NULL
 	if (map)
 		return map;
 
+	// size : 0x2C0000
 	size = PAGE_ALIGN(sizeof(struct page) * PAGES_PER_SECTION);
+	// NODE_DATA(nid) : &contig_page_data, size : 0x2C0000, PAGE_SIZE : 0x1000, __pa : 0x5FFFFFFF
 	map = __alloc_bootmem_node_high(NODE_DATA(nid), size,
 					 PAGE_SIZE, __pa(MAX_DMA_ADDRESS));
 	return map;
@@ -484,13 +521,19 @@ static void __init sparse_early_mem_maps_alloc_node(struct page **map_map,
 					 map_count, nodeid);
 }
 #else
+
+// pnum : 2
 static struct page __init *sparse_early_mem_map_alloc(unsigned long pnum)
 {
 	struct page *map;
+	// ms : &mem_section[0][2] 
 	struct mem_section *ms = __nr_to_section(pnum);
+	// nid : 0
 	int nid = sparse_early_nid(ms);
 
+	// pnum : 2, nid : 0
 	map = sparse_mem_map_populate(pnum, nid);
+	// map : 2816K 만큼 할당 받고, 가상 주소를 리턴
 	if (map)
 		return map;
 
@@ -601,7 +644,8 @@ void __init sparse_init(void)
 	// usemap_map: ?, pnum_begin: 2, NR_MEM_SECTIONS: 0x10, usemap_count: 8, nodeid_begin: 0
 	sparse_early_usemaps_alloc_node(usemap_map, pnum_begin, NR_MEM_SECTIONS,
 					 usemap_count, nodeid_begin);
-
+	// usemap_map[2] ~ usemap_map[10] : 할당받은 주소 + offset가 저장됨
+	
 #ifdef CONFIG_SPARSEMEM_ALLOC_MEM_MAP_TOGETHER
 	size2 = sizeof(struct page *) * NR_MEM_SECTIONS;
 	map_map = alloc_bootmem(size2);
@@ -643,33 +687,45 @@ void __init sparse_init(void)
 	sparse_early_mem_maps_alloc_node(map_map, pnum_begin, NR_MEM_SECTIONS,
 					 map_count, nodeid_begin);
 #endif
-
+	
+	// NR_MEM_SECTIONS : 0x10
 	for (pnum = 0; pnum < NR_MEM_SECTIONS; pnum++) {
 		if (!present_section_nr(pnum))
 			continue;
-
+		
+		// pnum : 2 ~ 10
 		usemap = usemap_map[pnum];
+		// 이전에 받은 주소를 다시 usemap에 대입
 		if (!usemap)
 			continue;
 
 #ifdef CONFIG_SPARSEMEM_ALLOC_MEM_MAP_TOGETHER
 		map = map_map[pnum];
 #else
+		// pnum : 2
 		map = sparse_early_mem_map_alloc(pnum);
+		// map : 2816K 만큼 할당 받고, 가상 주소를 리턴
 #endif
-		if (!map)
+		if (!map)	// 통과
 			continue;
-
+		
+		// __nr_to_section(pum) : &mem_section[0][2], pnum : 2, map : 2816K
+		// usemap : usemap_map[2]
 		sparse_init_one_section(__nr_to_section(pnum), pnum, map,
 								usemap);
+		// ms->section_mem_map에 struct page용 공간 정보 저장
+		// ms->pageblock_bitmap : usemap_map[pnum]
 	}
 
 	vmemmap_populate_print_last();
+	// null 함수
 
 #ifdef CONFIG_SPARSEMEM_ALLOC_MEM_MAP_TOGETHER
 	free_bootmem(__pa(map_map), size2);
 #endif
+	// usemap_map : ?(가상), size : 0x40
 	free_bootmem(__pa(usemap_map), size);
+	// usemap_map은 사용이 끝났으므로 free 해서 돌려줌
 }
 
 #ifdef CONFIG_MEMORY_HOTPLUG

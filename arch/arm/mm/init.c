@@ -479,6 +479,8 @@ void __init bootmem_init(void)
 	/*
 	 * sparse_init() needs the bootmem allocator up and running.
 	 */
+	// ms->section_mem_map에 256MB를 위한 struct page용 공간 정보 저장
+	// ms->pageblock_bitmap : 할당받은 주소 + offset가 저장
 	sparse_init();
 
 	/*

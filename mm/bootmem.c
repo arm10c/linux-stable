@@ -960,6 +960,7 @@ void * __init __alloc_bootmem_node(pg_data_t *pgdat, unsigned long size,
 	return  ___alloc_bootmem_node(pgdat, size, align, goal, 0);
 }
 
+// NODE_DATA(nid) : &contig_page_data, size : 0x2C0000, PAGE_SIZE : 0x1000, __pa : 0x5FFFFFFF
 void * __init __alloc_bootmem_node_high(pg_data_t *pgdat, unsigned long size,
 				   unsigned long align, unsigned long goal)
 {
@@ -985,7 +986,9 @@ void * __init __alloc_bootmem_node_high(pg_data_t *pgdat, unsigned long size,
 	}
 #endif
 
+	// pgdat : &contig_page_data, size : 0x2C0000, align : 0x1000, __pa : 0x5FFFFFFF
 	return __alloc_bootmem_node(pgdat, size, align, goal);
+	// 2816K 만큼 할당 받고, 가상 주소를 리턴
 
 }
 

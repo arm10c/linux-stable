@@ -1101,6 +1101,7 @@ static inline unsigned long early_pfn_to_nid(unsigned long pfn)
 // ARM10C 20131207
 // PFN_SECTION_SHIFT: 16
 #define pfn_to_section_nr(pfn) ((pfn) >> PFN_SECTION_SHIFT)
+// PFN_SECTION_SHIFT: 16
 #define section_nr_to_pfn(sec) ((sec) << PFN_SECTION_SHIFT)
 
 #define SECTION_ALIGN_UP(pfn)	(((pfn) + PAGES_PER_SECTION - 1) & PAGE_SECTION_MASK)
@@ -1192,8 +1193,10 @@ extern unsigned long usemap_size(void);
 // ARM10C 20131214
 // SECTION_MARKED_PRESENT: 1
 #define	SECTION_MARKED_PRESENT	(1UL<<0)
+// SECTION_HAS_MEM_MAP : 2
 #define SECTION_HAS_MEM_MAP	(1UL<<1)
 #define SECTION_MAP_LAST_BIT	(1UL<<2)
+// SECTION_MAP_MASK : 0xFFFFFFFC
 #define SECTION_MAP_MASK	(~(SECTION_MAP_LAST_BIT-1))
 // ARM10C 20131214
 #define SECTION_NID_SHIFT	2
