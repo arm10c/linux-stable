@@ -640,6 +640,7 @@ void __init sparse_init(void)
 	}
 	// usemap_count: 8
 	  
+// 2013/12/14 종료
 	/* ok, last chunk */
 	// usemap_map: ?, pnum_begin: 2, NR_MEM_SECTIONS: 0x10, usemap_count: 8, nodeid_begin: 0
 	sparse_early_usemaps_alloc_node(usemap_map, pnum_begin, NR_MEM_SECTIONS,
