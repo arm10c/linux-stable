@@ -494,6 +494,7 @@ void __init free_bootmem_node(pg_data_t *pgdat, unsigned long physaddr,
  * The range must be contiguous but may span node boundaries.
  */
 // ARM10C 20131207
+// ARM10C 20131221
 // __pfn_to_phys(0x20000): 0x20000000, (end - start) << PAGE_SHIFT: 0x2f800000
 void __init free_bootmem(unsigned long physaddr, unsigned long size)
 {
@@ -592,8 +593,8 @@ static unsigned long __init align_off(struct bootmem_data *bdata,
 
 // ARM10C 20131207
 // pgdat: ?, size: 0x1000, align: 64, goal: 0x5FFFFFFF, limit: 0
-//
-// bdata: ?, size: 0x40, align: 64, goal: 0x0, limit: 0
+// ARM10C 20131221
+// bdata: ?, size: 0x800, align: 64, goal: 0x5FFFFFFF, limit: 0
 static void * __init alloc_bootmem_bdata(struct bootmem_data *bdata,
 					unsigned long size, unsigned long align,
 					unsigned long goal, unsigned long limit)
@@ -869,6 +870,8 @@ void * __init __alloc_bootmem(unsigned long size, unsigned long align,
 
 // ARM10C 20131207
 // pgdat: ?, size: 0x1000, align: 64, goal: 0x5FFFFFFF
+// ARM10C 20131221
+// pgdat : &contig_page_data, size : 0x800, align : 64, goal : 0x5FFFFFFF
 void * __init ___alloc_bootmem_node_nopanic(pg_data_t *pgdat,
 				unsigned long size, unsigned long align,
 				unsigned long goal, unsigned long limit)
@@ -887,6 +890,7 @@ again:
 	// 2013/12/07 종료
 	// 2013/12/14 시작
 	// pgdat: ?, size: 0x1000, align: 64, goal: 0x5FFFFFFF, limit: 0
+	// pgdat : &contig_page_data, size : 0x800, align : 64, goal : 0x5FFFFFFF
 	ptr = alloc_bootmem_bdata(pgdat->bdata, size, align, goal, limit);
 	if (ptr)
 		// ptr 값 리턴
@@ -904,6 +908,7 @@ again:
 	return NULL;
 }
 
+// ARM10C 20131221
 void * __init __alloc_bootmem_node_nopanic(pg_data_t *pgdat, unsigned long size,
 				   unsigned long align, unsigned long goal)
 {
@@ -960,6 +965,7 @@ void * __init __alloc_bootmem_node(pg_data_t *pgdat, unsigned long size,
 	return  ___alloc_bootmem_node(pgdat, size, align, goal, 0);
 }
 
+// ARM10C 20131221
 // NODE_DATA(nid) : &contig_page_data, size : 0x2C0000, PAGE_SIZE : 0x1000, __pa : 0x5FFFFFFF
 void * __init __alloc_bootmem_node_high(pg_data_t *pgdat, unsigned long size,
 				   unsigned long align, unsigned long goal)
@@ -986,7 +992,7 @@ void * __init __alloc_bootmem_node_high(pg_data_t *pgdat, unsigned long size,
 	}
 #endif
 
-	// pgdat : &contig_page_data, size : 0x2C0000, align : 0x1000, __pa : 0x5FFFFFFF
+	// pgdat : &contig_page_data, size : 0x2C0000, align : 0x1000, goal : 0x5FFFFFFF
 	return __alloc_bootmem_node(pgdat, size, align, goal);
 	// 2816K 만큼 할당 받고, 가상 주소를 리턴
 

@@ -254,6 +254,7 @@ unsigned long __init node_memmap_size_bytes(int nid, unsigned long start_pfn,
  * the identity pfn - section_mem_map will return the actual
  * physical page frame number.
  */
+// ARM10C 20131221
 // mem_map : 2816K 주소, pnum : 2
 static unsigned long sparse_encode_mem_map(struct page *mem_map, unsigned long pnum)
 {
@@ -272,8 +273,8 @@ struct page *sparse_decode_mem_map(unsigned long coded_mem_map, unsigned long pn
 	return ((struct page *)coded_mem_map) + section_nr_to_pfn(pnum);
 }
 
-// __nr_to_section(pum) : &mem_section[0][2], pnum : 2, map : 2816K
-// usemap : usemap_map[2]
+// ARM10C 20131221
+// __nr_to_section(pum) : &mem_section[0][2], pnum : 2, map : 2816K, usemap : usemap_map[2]
 static int __meminit sparse_init_one_section(struct mem_section *ms,
 		unsigned long pnum, struct page *mem_map,
 		unsigned long *pageblock_bitmap)
@@ -389,15 +390,17 @@ static void __init check_usemap_section_nr(int nid, unsigned long *usemap)
 	       " have a circular dependency on usemap and pgdat allocations\n");
 }
 #else
-// NODE_DATA(nodeid) = &contig_page_data, usemap_count = 0x20
+// ARM10C 20131221
+// NODE_DATA(nodeid) : &contig_page_data, usemap_count : 0x20
 static unsigned long * __init
 sparse_early_usemaps_alloc_pgdat_section(struct pglist_data *pgdat,
 					 unsigned long size)
 {
-	// pgdat = &contig_page_data, size = 0x20
+	// pgdat : &contig_page_data, size : 0x800
 	return alloc_bootmem_node_nopanic(pgdat, size);
 }
 
+// ARM10C 20131221
 static void __init check_usemap_section_nr(int nid, unsigned long *usemap)
 {
 }
@@ -415,7 +418,7 @@ static void __init sparse_early_usemaps_alloc_node(unsigned long**usemap_map,
 	// size = 0x40
 	int size = usemap_size();
 
-	// NODE_DATA(nodeid) = &contig_page_data, usemap_count = 0x20
+	// NODE_DATA(nodeid) : &contig_page_data, usemap_count : 0x20, size : 0x40
 	usemap = sparse_early_usemaps_alloc_pgdat_section(NODE_DATA(nodeid),
 							  size * usemap_count);
 	// 4KB를 할당받고 가상주소를 리턴
@@ -440,7 +443,8 @@ static void __init sparse_early_usemaps_alloc_node(unsigned long**usemap_map,
 	// usemap_map[2] ~ usemap_map[10] : 할당받은 주소 + offset가 저장됨
 }
 
-#ifndef CONFIG_SPARSEMEM_VMEMMAP
+#ifndef CONFIG_SPARSEMEM_VMEMMAP // CONFIG_SPARSEMEM_VMEMMAP=n
+// ARM10C 20131221
 // pnum : 2, nid : 0
 struct page __init *sparse_mem_map_populate(unsigned long pnum, int nid)
 {
@@ -448,7 +452,7 @@ struct page __init *sparse_mem_map_populate(unsigned long pnum, int nid)
 	unsigned long size;
 
 	// nid : 0, sizeof(struct page) : 44, PAGES_PER_SECTION: 0x10000
-	// nid : 0, 0x2C0000
+	// nid : 0, sizeof(struct page) * PAGES_PER_SECTION : 0x2C0000
 	map = alloc_remap(nid, sizeof(struct page) * PAGES_PER_SECTION);
 	// null 함수, map : NULL
 	if (map)
@@ -522,6 +526,7 @@ static void __init sparse_early_mem_maps_alloc_node(struct page **map_map,
 }
 #else
 
+// ARM10C 20131221
 // pnum : 2
 static struct page __init *sparse_early_mem_map_alloc(unsigned long pnum)
 {
@@ -641,13 +646,14 @@ void __init sparse_init(void)
 	// usemap_count: 8
 	  
 // 2013/12/14 종료
+// 2013/12/21 시작
 	/* ok, last chunk */
 	// usemap_map: ?, pnum_begin: 2, NR_MEM_SECTIONS: 0x10, usemap_count: 8, nodeid_begin: 0
 	sparse_early_usemaps_alloc_node(usemap_map, pnum_begin, NR_MEM_SECTIONS,
 					 usemap_count, nodeid_begin);
 	// usemap_map[2] ~ usemap_map[10] : 할당받은 주소 + offset가 저장됨
 	
-#ifdef CONFIG_SPARSEMEM_ALLOC_MEM_MAP_TOGETHER
+#ifdef CONFIG_SPARSEMEM_ALLOC_MEM_MAP_TOGETHER	// CONFIG_SPARSEMEM_ALLOC_MEM_MAP_TOGETHER=n
 	size2 = sizeof(struct page *) * NR_MEM_SECTIONS;
 	map_map = alloc_bootmem(size2);
 	if (!map_map)
@@ -700,7 +706,7 @@ void __init sparse_init(void)
 		if (!usemap)
 			continue;
 
-#ifdef CONFIG_SPARSEMEM_ALLOC_MEM_MAP_TOGETHER
+#ifdef CONFIG_SPARSEMEM_ALLOC_MEM_MAP_TOGETHER // CONFIG_SPARSEMEM_ALLOC_MEM_MAP_TOGETHER=n
 		map = map_map[pnum];
 #else
 		// pnum : 2

@@ -482,7 +482,8 @@ void __init bootmem_init(void)
 	// ms->section_mem_map에 256MB를 위한 struct page용 공간 정보 저장
 	// ms->pageblock_bitmap : 할당받은 주소 + offset가 저장
 	sparse_init();
-
+// 2013/12/21 종료
+	
 	/*
 	 * Now free the memory - free_area_init_node needs
 	 * the sparse mem_map arrays initialized by sparse_init()
