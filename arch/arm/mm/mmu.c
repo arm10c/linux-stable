@@ -354,7 +354,7 @@ EXPORT_SYMBOL(get_mem_type);
 static void __init build_mem_type_table(void)
 {
 	struct cachepolicy *cp;
-	unsigned int cr = get_cr();
+	unsigned int cr = get_cr(); // cr = system control register.
 	pteval_t user_pgprot, kern_pgprot, vecs_pgprot;
 	pteval_t hyp_device_pgprot, s2_pgprot, s2_device_pgprot;
 	// cpu_arch: CPU_ARCH_ARMv7: 9
@@ -387,6 +387,8 @@ static void __init build_mem_type_table(void)
 	if (cpu_arch < CPU_ARCH_ARMv5)
 		for (i = 0; i < ARRAY_SIZE(mem_types); i++)
 			mem_types[i].prot_sect &= ~PMD_SECT_TEX(7);
+
+    // CR_XP는 reserved 되어 있어서 for에 안들어 감.
 	if ((cpu_arch < CPU_ARCH_ARMv6 || !(cr & CR_XP)) && !cpu_is_xsc3())
 		for (i = 0; i < ARRAY_SIZE(mem_types); i++)
 			mem_types[i].prot_sect &= ~PMD_SECT_S;
@@ -416,7 +418,7 @@ static void __init build_mem_type_table(void)
 	// CR_XP: (1 << 23) - Extended page tables
 	// A.R.M: B4.1.130 - SCTLR, System Control Register, VMSA
 	// (cr & CR_XP): 1
-	// v7_crval: 
+	// v7_crval:
 	//	.word 0x2120c302  (r5) (clear)
 	//	.word 0x10c03c7d  (r6) (mmuset)
 	if (cpu_is_xsc3() || (cpu_arch >= CPU_ARCH_ARMv6 && (cr & CR_XP))) {
@@ -442,7 +444,7 @@ static void __init build_mem_type_table(void)
 			 * (Uncached Normal memory)
 			 */
 			// SXCB: S - shared, X - TEX[0], C - cachable, B - bufferable
-		        // PMD_SECT_TEX(x) (_AT(pmdval_t, (x)) << 12)
+		    // PMD_SECT_TEX(x) (_AT(pmdval_t, (x)) << 12)
 			mem_types[MT_DEVICE].prot_sect |= PMD_SECT_TEX(1);
 			mem_types[MT_DEVICE_NONSHARED].prot_sect |= PMD_SECT_TEX(1);
 			mem_types[MT_DEVICE_WC].prot_sect |= PMD_SECT_BUFFERABLE;
@@ -656,7 +658,7 @@ static void __init *early_alloc_aligned(unsigned long sz, unsigned long align)
 }
 
 // ARM10C 20131123
-// PTE_HWTABLE_OFF + PTE_HWTABLE_SIZE: 4096 
+// PTE_HWTABLE_OFF + PTE_HWTABLE_SIZE: 4096
 static void __init *early_alloc(unsigned long sz)
 {
 	return early_alloc_aligned(sz, sz);
@@ -671,7 +673,7 @@ static pte_t * __init early_pte_alloc(pmd_t *pmd, unsigned long addr, unsigned l
 		// PTE_HWTABLE_OFF: 2048, PTE_HWTABLE_SIZE: 2048
 		// pte: 0xEF7FD000
 		pte_t *pte = early_alloc(PTE_HWTABLE_OFF + PTE_HWTABLE_SIZE);
-		// pmd: 0xc0007FF8, __pa(pte): 0x6F7FD000, 
+		// pmd: 0xc0007FF8, __pa(pte): 0x6F7FD000,
 		__pmd_populate(pmd, __pa(pte), prot);
 	}
 	// pmd_bad(*pmd): 0
@@ -1000,7 +1002,7 @@ void __init iotable_init(struct map_desc *io_desc, int nr)
 	for (md = io_desc; nr; md++, nr--) {
 // 2013/11/23 종료
 // 2013/11/30 시작
-		// io 영역을 highmem에 mapping 함 
+		// io 영역을 highmem에 mapping 함
 		create_mapping(md);
 
 		vm = &svm->vm;
@@ -1066,7 +1068,7 @@ static void __init pmd_empty_section_gap(unsigned long addr)
 }
 
 // ARM10C 20131130
-// SYSC: 0xf6100000 +  64kB   PA:0x10050000 
+// SYSC: 0xf6100000 +  64kB   PA:0x10050000
 static void __init fill_pmd_gaps(void)
 {
 	struct static_vm *svm;
@@ -1086,7 +1088,7 @@ static void __init fill_pmd_gaps(void)
 		 * If so and the first section entry for this PMD is free
 		 * then we block the corresponding virtual address.
 		 */
-		// pmd 의 첫번째 section 
+		// pmd 의 첫번째 section
 		// addr: 0xf6100000, PMD_MASK: 0xFFE00000, (addr & ~PMD_MASK): 0x00100000
 		// SECTION_SIZE: 0x00100000
 		if ((addr & ~PMD_MASK) == SECTION_SIZE) {
@@ -1101,10 +1103,10 @@ static void __init fill_pmd_gaps(void)
 		 * If so and the second section entry for this PMD is empty
 		 * then we block the corresponding virtual address.
 		 */
-		// vm->size: 0x10000, addr: 0xf6110000 
+		// vm->size: 0x10000, addr: 0xf6110000
 		addr += vm->size;
 
-		// pmd 의 두번째 section 
+		// pmd 의 두번째 section
 		// addr: 0xf6110000, PMD_MASK: 0xFFE00000, (addr & ~PMD_MASK): 0x00100000
 		// SECTION_SIZE: 0x00100000
 		if ((addr & ~PMD_MASK) == SECTION_SIZE) {
@@ -1199,7 +1201,7 @@ void __init sanity_check_meminfo(void)
 {
 	phys_addr_t memblock_limit = 0;
 	int i, j, highmem = 0;
-	// vmalloc_limit: 0x6f800000 = __pa(0xef800000 - 1) + 1
+	// vmalloc_limit: 0x4f800000 = __pa(0xef800000 - 1) + 1
 	phys_addr_t vmalloc_limit = __pa(vmalloc_min - 1) + 1;
 
 	// meminfo.nr_banks = 1
@@ -1210,12 +1212,12 @@ void __init sanity_check_meminfo(void)
 		*bank = meminfo.bank[i];
 		size_limit = bank->size;
 
-	        // vmalloc_limit: 0x6f800000
+	        // vmalloc_limit: 0x4f800000
 		// bank->start  : 0x20000000
 		if (bank->start >= vmalloc_limit)
 			highmem = 1;
 		else
-			// size_limit: 0x4f800000
+			// size_limit: 0x2f800000
 			size_limit = vmalloc_limit - bank->start;
 
 		// bank->highmem: 0
@@ -1228,7 +1230,7 @@ void __init sanity_check_meminfo(void)
 		 */
 
 		// bank->size: 0x80000000
-		// size_limit: 0x4f800000
+		// size_limit: 0x2f800000
 		if (!highmem && bank->size > size_limit) {
 			if (meminfo.nr_banks >= NR_BANKS) {
 				printk(KERN_CRIT "NR_BANKS too low, "
@@ -1239,14 +1241,14 @@ void __init sanity_check_meminfo(void)
 				meminfo.nr_banks++;
 				i++;
 
-				// bank[1].size: 0x30800000, bank[1].start: 0x6f800000, 
+				// bank[1].size: 0x50800000, bank[1].start: 0x4f800000,
 				// bank[1].highmem: 1
 				bank[1].size -= size_limit;
 				bank[1].start = vmalloc_limit;
 				bank[1].highmem = highmem = 1;
 				j++;
 			}
-			// bank->size: 0x4f800000
+			// bank->size: 0x2f800000:bank[0]
 			bank->size = size_limit;
 		}
 #else
@@ -1275,11 +1277,11 @@ void __init sanity_check_meminfo(void)
 		}
 #endif
 		if (!bank->highmem) {
-			// bank_end = 0x20000000 + 0x4f800000: 0x6f800000
+			// bank_end = 0x20000000 + 0x2f800000: 0x4f800000
 			phys_addr_t bank_end = bank->start + bank->size;
 
 			if (bank_end > arm_lowmem_limit)
-				// arm_lowmem_limit: 0x6f800000
+				// arm_lowmem_limit: 0x4f800000
 				arm_lowmem_limit = bank_end;
 
 			/*
@@ -1330,7 +1332,7 @@ void __init sanity_check_meminfo(void)
 	// meminfo.nr_banks: 2
 	meminfo.nr_banks = j;
 
-	// arm_lowmem_limit: 0x6f800000
+	// arm_lowmem_limit: 0x4f800000
 	// high_memory: 0xef800000
 	high_memory = __va(arm_lowmem_limit - 1) + 1;
 
@@ -1342,7 +1344,7 @@ void __init sanity_check_meminfo(void)
 	if (memblock_limit)
 		memblock_limit = round_down(memblock_limit, SECTION_SIZE);
 	if (!memblock_limit)
-		// memblock_limit: 0x6f800000
+		// memblock_limit: 0x4f800000
 		memblock_limit = arm_lowmem_limit;
 
 	memblock_set_current_limit(memblock_limit);
@@ -1358,8 +1360,8 @@ static inline void prepare_page_table(void)
 	 * Clear out all the mappings below the kernel image.
 	 */
 	// 0 ~ 0xBF000000 까지 클리어 (유저 영역)
-	// Virtual Address 0 ~ MODULES_VADDR까지 영역에 대한 페이지테이블 영역 Clear 
-	// 페이지테이블영역: 0xC0004000 ~ 0xC0006FC7 
+	// Virtual Address 0 ~ MODULES_VADDR까지 영역에 대한 페이지테이블 영역 Clear
+	// 페이지테이블영역: 0xC0004000 ~ 0xC0006FC7
 	// MODULES_VADDR: 0xBF000000, PMD_SIZE: 0x00200000
 	for (addr = 0; addr < MODULES_VADDR; addr += PMD_SIZE)
 		pmd_clear(pmd_off_k(addr));
@@ -1377,7 +1379,7 @@ static inline void prepare_page_table(void)
 	/*
 	 * Find the end of the first block of lowmem.
 	 */
-	// memblock.memory.regions[0].base: 0x20000000 
+	// memblock.memory.regions[0].base: 0x20000000
 	// memblock.memory.regions[0].size: 0x80000000
 	// end: 0xA0000000
 	end = memblock.memory.regions[0].base + memblock.memory.regions[0].size;
@@ -1454,7 +1456,7 @@ static void __init devicemaps_init(struct machine_desc *mdesc)
 
 // 2013/11/09 종료
 // 2013/11/16 시작
- 
+
 	// 0xEF7FE000에 vector, stub, kuserhelper 설정
 	early_trap_init(vectors);
 
@@ -1612,7 +1614,7 @@ void __init paging_init(struct machine_desc *mdesc)
 
 	// 아키텍처 버전에 따른 메모리 타입 설정
 	build_mem_type_table();
-	// page table 초기화 
+	// page table 초기화
 	prepare_page_table();
 	// low memory영역에 page table 속성값과physical memory mapping 값 갱신
 	map_lowmem();
@@ -1626,7 +1628,7 @@ void __init paging_init(struct machine_desc *mdesc)
 	devicemaps_init(mdesc);
 	// kmap을 위한 4k 공간을 0xBFE00000 에 맞는 2nd page tabel에 할당
 	kmap_init();
-	// tcm: tightly coupled memory. 
+	// tcm: tightly coupled memory.
 	tcm_init();
 
 	// high vector가 최상위 pmd section index임
@@ -1634,7 +1636,7 @@ void __init paging_init(struct machine_desc *mdesc)
 
 	/* allocate the zero page. */
 	// PAGE_SIZE: 0x1000
-	// zero_page에 4k 메모리 할당 
+	// zero_page에 4k 메모리 할당
 	zero_page = early_alloc(PAGE_SIZE);
 
 // 2013/11/30 종료

@@ -443,7 +443,7 @@ void __init arm_memblock_init(struct meminfo *mi, struct machine_desc *mdesc)
 	 */
 	// arm_dma_limit: 0xFFFFFFFF, arm_lowmem_limit: 0
 	//
-	// CMA 메모리 영역을 reserve 함 (현재 설정에 따라 해당 사항 없음)
+	// DMA 메모리 영역을 reserve 함 (현재 설정에 따라 해당 사항 없음)
 	dma_contiguous_reserve(min(arm_dma_limit, arm_lowmem_limit));
 
 	// 메모리를 할당시 steal 가능여부 설정
