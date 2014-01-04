@@ -73,7 +73,7 @@ ENDPROC(cpu_v7_switch_mm)
  *	- ext	- value for extended PTE bits
  */
 // ARM10C 20131123
-// ptep: 0xEF7FD1F0, pte: 0x6F7FEXXX, ext:0
+// ptep: 0xEF7FD1F0, pte: 0x4F7FEXXX, ext:0
 ENTRY(cpu_v7_set_pte_ext)
 #ifdef CONFIG_MMU // CONFIG_MMU=y
 	str	r1, [r0]			@ linux version
@@ -91,10 +91,10 @@ ENTRY(cpu_v7_set_pte_ext)
 	orrne	r3, r3, #PTE_EXT_TEX(1)
 
 	// L_PTE_DIRTY: 0x40
-	// r1: 0x6F7FEXXX ^ 0x40
+	// r1: 0x4F7FEXXX ^ 0x40
 	eor	r1, r1, #L_PTE_DIRTY
 	// L_PTE_RDONLY: 0x80
-	// r1: 0x6F7FEXXX tst 0xC0
+	// r1: 0x4F7FEXXX tst 0xC0
 	tst	r1, #L_PTE_RDONLY | L_PTE_DIRTY
 	// PTE_EXT_APX: 0x200
 	orrne	r3, r3, #PTE_EXT_APX

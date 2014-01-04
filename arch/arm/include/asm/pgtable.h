@@ -226,7 +226,7 @@ static inline pte_t *pmd_page_vaddr(pmd_t pmd)
 // ARM10C 20131123
 // pmd: 0xc0007FF8, addr: 0xffff0000
 // pmd_page_vaddr(*(pmd)): 0xEF7FD000,  pte_index(0xffff0000): 0x1F0
-// pte_offset_kernel(0x6F7FD8XX, 0xffff0000): 0xEF7FD1F0
+// pte_offset_kernel(0x4F7FD8XX, 0xffff0000): 0xEF7FD1F0
 #define pte_offset_kernel(pmd,addr)	(pmd_page_vaddr(*(pmd)) + pte_index(addr))
 
 #define pte_offset_map(pmd,addr)	(__pte_map(pmd) + pte_index(addr))

@@ -108,6 +108,7 @@ static long __init_memblock memblock_overlaps_region(struct memblock_type *type,
  */
 // ARM10C 20131109
 // 0, max_addr: 0, size: 0x00002000, align: 0x00002000, nid: 1
+// lowmem 위에서 요청받은 size만큼 빈 영역을 찾아 시작주소 반환
 phys_addr_t __init_memblock memblock_find_in_range_node(phys_addr_t start,
 					phys_addr_t end, phys_addr_t size,
 					phys_addr_t align, int nid)
@@ -118,7 +119,7 @@ phys_addr_t __init_memblock memblock_find_in_range_node(phys_addr_t start,
 	/* pump up @end */
 	// end: 0x0, MEMBLOCK_ALLOC_ACCESSIBLE: 0
 	if (end == MEMBLOCK_ALLOC_ACCESSIBLE)
-		// end: 0x6f800000
+		// end: 0x4f800000
 		end = memblock.current_limit;
 
 	/* avoid allocating the first page */
@@ -126,27 +127,28 @@ phys_addr_t __init_memblock memblock_find_in_range_node(phys_addr_t start,
 	// start: 0x00001000
 	start = max_t(phys_addr_t, start, PAGE_SIZE);
 
-	// end: 0x6f800000
+	// end: 0x4f800000
 	end = max(start, end);
 
 	for_each_free_mem_range_reverse(i, nid, &this_start, &this_end, NULL) {
-		// start: 0x00001000, end: 0x6f800000
-		// 가정: this_start: 0x6F800000, this_end: 0xC0000000
-		// this_start: 0x6F800000
+		// start: 0x00001000, end: 0x4f800000
+		// 가정: this_start: 0x4F800000, this_end: 0xA0000000
+		// this_start: 0x4F800000 
+		// 복습: this_start값이 현재보다 작아진 결과가 나와야 한다. 현재 확인 불가 
 		this_start = clamp(this_start, start, end);
-		// this_end: 0xC0000000, start: 0x00001000, end: 0x6f800000
-		// this_end: 0x6f800000
+		// this_end: 0xA0000000, start: 0x00001000, end: 0x4f800000
+		// this_end: 0x4f800000
 		this_end = clamp(this_end, start, end);
 
-		// this_end: 0x6f800000, size: 0x00002000
+		// this_end: 0x4f800000, size: 0x00002000
 		if (this_end < size)
 			continue;
 
-		// this_end - size: 0x6f7FE000, align: 0x00002000
-		// cand: 0x6f7FE000
+		// this_end - size: 0x4f7FE000, align: 0x00002000
+		// cand: 0x4f7FE000
 		cand = round_down(this_end - size, align);
 
-		// cand: 0x6f7FE000, this_start: 0x6F800000
+		// cand: 0x4f7FE000, this_start: 0x4F800000
 		if (cand >= this_start)
 			return cand;
 	}
@@ -630,6 +632,7 @@ int __init_memblock memblock_free(phys_addr_t base, phys_addr_t size)
 
 // ARM10C 20131026
 // base: 0x40008000
+// base부터 size만큼 memblock.reserved에 등록한다.
 int __init_memblock memblock_reserve(phys_addr_t base, phys_addr_t size)
 {
 	struct memblock_type *_rgn = &memblock.reserved;
@@ -749,9 +752,9 @@ void __init_memblock __next_free_mem_range_rev(u64 *idx, int nid,
 
 	for ( ; mi >= 0; mi--) {
 		struct memblock_region *m = &mem->regions[mi];
-		// m->base: 0x40000000
+		// m->base: 0x20000000
 		phys_addr_t m_start = m->base;
-		// m->size: 0x80000000, m_end: 0xC0000000
+		// m->size: 0x80000000, m_end: 0xA0000000
 		phys_addr_t m_end = m->base + m->size;
 
 		/* only memory regions are associated with nodes, check it */
@@ -772,24 +775,24 @@ void __init_memblock __next_free_mem_range_rev(u64 *idx, int nid,
 			phys_addr_t r_end = ri < rsv->cnt ? r->base : ULLONG_MAX;
 
 			/* if ri advanced past mi, break out to advance mi */
-			// r_end: ULLONG_MAX, m_start: 0x40000000
+			// r_end: ULLONG_MAX, m_start: 0x20000000
 			if (r_end <= m_start)
 				break;
 			/* if the two regions intersect, we're done */
-			// m_end: 0xC0000000, r_start: 0x60100000 
+			// m_end: 0xA0000000, r_start: 0x60100000 
 			if (m_end > r_start) {
 				if (out_start)
-					// m_start: 0x40000000, r_start: 0x60100000 
+					// m_start: 0x20000000, r_start: 0x60100000 
 					// *out_start: 0x60100000
 					*out_start = max(m_start, r_start);
 				if (out_end)
-					// m_end: 0xC0000000, r_end: ULLONG_MAX
-					// *out_end: 0xC0000000
+					// m_end: 0xA0000000, r_end: ULLONG_MAX
+					// *out_end: 0xA0000000
 					*out_end = min(m_end, r_end);
 				if (out_nid)
 					*out_nid = memblock_get_region_node(m);
 
-				// m_start: 0x40000000, r_start: 0x60100000 
+				// m_start: 0x20000000, r_start: 0x60100000 
 				if (m_start >= r_start)
 					mi--;
 				else

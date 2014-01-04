@@ -258,7 +258,7 @@
 #define cpu_dcache_clean_area		__glue(CPU_NAME,_dcache_clean_area)
 #define cpu_do_switch_mm		__glue(CPU_NAME,_switch_mm)
 // ARM10C 20131123
-// ptep: 0xEF7FD1F0, pte: 0x6F7FEXXX, ext:0
+// ptep: 0xEF7FD1F0, pte: 0x4F7FEXXX, ext:0
 #define cpu_set_pte_ext			__glue(CPU_NAME,_set_pte_ext) // cpu_v7_set_pte_ext
 #define cpu_suspend_size		__glue(CPU_NAME,_suspend_size)
 #define cpu_do_suspend			__glue(CPU_NAME,_do_suspend)

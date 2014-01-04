@@ -217,8 +217,8 @@ static inline pmd_t *pmd_offset(pud_t *pud, unsigned long addr)
 #define pmd_addr_end(addr,end) (end)
 
 // ARM10C 20131123
-// pte: 0xEF7FD1F0, pfn_pte(0x6F7FE, __pgprot(type->prot_pte)): 0x6F7FEXXX, 0
-// ptep: 0xEF7FD1F0, pte: 0x6F7FEXXX, ext:0
+// pte: 0xEF7FD1F0, pfn_pte(0x4F7FE, __pgprot(type->prot_pte)): 0x4F7FEXXX, 0
+// ptep: 0xEF7FD1F0, pte: 0x4F7FEXXX, ext:0
 #define set_pte_ext(ptep,pte,ext) cpu_set_pte_ext(ptep,pte,ext)
 
 #endif /* __ASSEMBLY__ */

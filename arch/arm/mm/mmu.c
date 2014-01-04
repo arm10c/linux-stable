@@ -646,12 +646,12 @@ EXPORT_SYMBOL(phys_mem_access_prot);
 static void __init *early_alloc_aligned(unsigned long sz, unsigned long align)
 {
 	// sz: 0x00002000, align: 0x00002000
-	// memblock_alloc(sz, align): 0x6F7FE000
-	// ptr: __va(0x6F7FE000): 0xEF7FE000
+	// memblock_alloc(sz, align): 0x4F7FE000
+	// ptr: __va(0x4F7FE000): 0xEF7FE000
 	//
 	// sz: 0x00001000, sz: 0x00001000
-	// memblock_alloc(sz, align): 0x6F7FD000
-	// ptr: __va(0x6F7FD000): 0xEF7FD000
+	// memblock_alloc(sz, align): 0x4F7FD000
+	// ptr: __va(0x4F7FD000): 0xEF7FD000
 	void *ptr = __va(memblock_alloc(sz, align));
 	memset(ptr, 0, sz);
 	return ptr;
@@ -672,8 +672,10 @@ static pte_t * __init early_pte_alloc(pmd_t *pmd, unsigned long addr, unsigned l
 	if (pmd_none(*pmd)) {
 		// PTE_HWTABLE_OFF: 2048, PTE_HWTABLE_SIZE: 2048
 		// pte: 0xEF7FD000
+		// 2차 table에서 사용할 공간 할당받음.
 		pte_t *pte = early_alloc(PTE_HWTABLE_OFF + PTE_HWTABLE_SIZE);
-		// pmd: 0xc0007FF8, __pa(pte): 0x6F7FD000,
+		// pmd: 0xc0007FF8, __pa(pte): 0x4F7FD000,
+		// 1차 table 내에 할당받은 2차 table 시작 주소 매핑 
 		__pmd_populate(pmd, __pa(pte), prot);
 	}
 	// pmd_bad(*pmd): 0
@@ -681,12 +683,12 @@ static pte_t * __init early_pte_alloc(pmd_t *pmd, unsigned long addr, unsigned l
 
 	// __pmd_populate에서 pmd 값을 바꿈
 	// pmd: 0x6F7FD8XX, addr: 0xffff0000
-	// pte_offset_kernel(0x6F7FD8XX, 0xffff0000): 0xEF7FD1F0
+	// pte_offset_kernel(0x4F7FD8XX, 0xffff0000): 0xEF7FD1F0
 	return pte_offset_kernel(pmd, addr);
 }
 
 // ARM10C 20131123
-// pmd: 0xc0007FF8, addr: 0xffff0000, next: 0xffff1000, __phys_to_pfn(phys): 0x6F7FE
+// pmd: 0xc0007FF8, addr: 0xffff0000, next: 0xffff1000, __phys_to_pfn(phys): 0x4F7FE
 static void __init alloc_init_pte(pmd_t *pmd, unsigned long addr,
 				  unsigned long end, unsigned long pfn,
 				  const struct mem_type *type)
@@ -695,15 +697,15 @@ static void __init alloc_init_pte(pmd_t *pmd, unsigned long addr,
 	// pte: 0xEF7FD1F0
 	pte_t *pte = early_pte_alloc(pmd, addr, type->prot_l1);
 	do {
-		// pte: 0xEF7FD1F0, pfn: 0x6F7FE
-		// pfn_pte(0x6F7FE, __pgprot(type->prot_pte)): 0x6F7FEXXX
+		// pte: 0xEF7FD1F0, pfn: 0x4F7FE
+		// pfn_pte(0x4F7FE, __pgprot(type->prot_pte)): 0x4F7FEXXX
 		set_pte_ext(pte, pfn_pte(pfn, __pgprot(type->prot_pte)), 0);
 		pfn++;
 	} while (pte++, addr += PAGE_SIZE, addr != end);
 }
 
 // ARM10C 20131109
-// pmd: 0xc0007000, addr: 0xC0000000, next: 0xC0200000, phys: 0x40000000
+// pmd: 0xc0007000, addr: 0xC0000000, next: 0xC0200000, phys: 0x20000000
 static void __init __map_init_section(pmd_t *pmd, unsigned long addr,
 			unsigned long end, phys_addr_t phys,
 			const struct mem_type *type)
@@ -726,11 +728,11 @@ static void __init __map_init_section(pmd_t *pmd, unsigned long addr,
 		pmd++;
 #endif
 	do {
-		// phys: 0x40000000, type->prot_sect: 미리 넣어준 값들.
+		// phys: 0x20000000, type->prot_sect: 미리 넣어준 값들.
 		// *pmd: 0xc0007000 <- (phys | type->prot_sect)을 넣어줌
 		*pmd = __pmd(phys | type->prot_sect);
 
-		// phys: 0x40000000
+		// phys: 0x20000000
 		phys += SECTION_SIZE;
 	} while (pmd++, addr += SECTION_SIZE, addr != end);
 
@@ -739,9 +741,9 @@ static void __init __map_init_section(pmd_t *pmd, unsigned long addr,
 }
 
 // ARM10C 20131109
-// pud: 0xc0007000, addr: 0xC0000000, next: 0xC0200000, phys: 0x40000000
+// pud: 0xc0007000, addr: 0xC0000000, next: 0xC0200000, phys: 0x20000000
 // ARM10C 20131123
-// pud: 0xc0007FF8, addr: 0xffff0000, next: 0xffff1000, phys: 0x6F7FE000
+// pud: 0xc0007FF8, addr: 0xffff0000, next: 0xffff1000, phys: 0x4F7FE000
 static void __init alloc_init_pmd(pud_t *pud, unsigned long addr,
 				      unsigned long end, phys_addr_t phys,
 				      const struct mem_type *type)
@@ -764,30 +766,30 @@ static void __init alloc_init_pmd(pud_t *pud, unsigned long addr,
 		 * Try a section mapping - addr, next and phys must all be
 		 * aligned to a section boundary.
 		 */
-		// addr: 0xC0000000, next: 0xC0200000, phys: 0x40000000
-		// addr: 0xffff0000, next: 0xffff1000, phys: 0x6F7FE000
+		// addr: 0xC0000000, next: 0xC0200000, phys: 0x20000000
+		// addr: 0xffff0000, next: 0xffff1000, phys: 0x4F7FE000
 		// SECTION_MASK: 0xFFF00000, ~SECTION_MASK: 0x000FFFFF
 		if (type->prot_sect &&
 				((addr | next | phys) & ~SECTION_MASK) == 0) {
-			// pmd: 0xc0007000, addr: 0xC0000000, next: 0xC0200000, phys: 0x40000000
+			// pmd: 0xc0007000, addr: 0xC0000000, next: 0xC0200000, phys: 0x20000000
 			__map_init_section(pmd, addr, next, phys, type);
 		} else {
-			// pmd: 0xc0007FF8, addr: 0xffff0000, next: 0xffff1000, __phys_to_pfn(phys): 0x6F7FE
+			// pmd: 0xc0007FF8, addr: 0xffff0000, next: 0xffff1000, __phys_to_pfn(phys): 0x4F7FE
 			alloc_init_pte(pmd, addr, next,
 						__phys_to_pfn(phys), type);
 		}
 
-		// addr: 0xC0000000, next: 0xC0200000, phys: 0x40000000
-		// phys: 0x40000000 + 200000
+		// addr: 0xC0000000, next: 0xC0200000, phys: 0x20000000
+		// phys: 0x20000000 + 200000
 		phys += next - addr;
 
 	} while (pmd++, addr = next, addr != end);
 }
 
 // ARM10C 20131109
-// pgd: 0xc0007000, addr: 0xC0000000, next: 0xC0200000, phys: 0x40000000
+// pgd: 0xc0007000, addr: 0xC0000000, next: 0xC0200000, phys: 0x20000000
 // ARM10C 20131123
-// pgd: 0xc0007FF8, addr: 0xffff0000, next: 0xffff1000, phys: 0x6F7FE000
+// pgd: 0xc0007FF8, addr: 0xffff0000, next: 0xffff1000, phys: 0x4F7FE000
 static void __init alloc_init_pud(pgd_t *pgd, unsigned long addr,
 				  unsigned long end, phys_addr_t phys,
 				  const struct mem_type *type)
@@ -801,11 +803,11 @@ static void __init alloc_init_pud(pgd_t *pgd, unsigned long addr,
 		// addr: 0xC0000000, end: 0xC0200000, next: 0xC0200000
 		// addr: 0xffff0000, end: 0xffff1000, next: 0xffff1000
 		next = pud_addr_end(addr, end);
-		// pud: 0xc0007000, addr: 0xC0000000, next: 0xC0200000, phys: 0x40000000
-		// pud: 0xc0007FF8, addr: 0xffff0000, next: 0xffff1000, phys: 0x6F7FE000
+		// pud: 0xc0007000, addr: 0xC0000000, next: 0xC0200000, phys: 0x20000000
+		// pud: 0xc0007FF8, addr: 0xffff0000, next: 0xffff1000, phys: 0x4F7FE000
 		alloc_init_pmd(pud, addr, next, phys, type);
-		// phys: 0x40000000 + 0x200000
-		// phys: 0x6F7FE000 + 0x1000
+		// phys: 0x20000000 + 0x200000
+		// phys: 0x4F7FE000 + 0x1000
 		phys += next - addr;
 	} while (pud++, addr = next, addr != end);
 }
@@ -880,13 +882,13 @@ static void __init create_36bit_mapping(struct map_desc *md,
  * supersections.
  */
 // ARM10C 20131102
-// map.pfn: 0x40000
+// map.pfn: 0x20000
 // map.virtual: 0xC0000000
 // map.length: 0x2f800000
 // map.type: MT_MEMORY
 
 // ARM10C 20131123
-// map.pfn: 0x6F7FE
+// map.pfn: 0x4F7FE
 // map.virtual: 0xffff0000;
 // map.length: 0x1000, PAGE_SIZE: 0x1000
 // map.type = MT_HIGH_VECTORS;
@@ -920,8 +922,8 @@ static void __init create_mapping(struct map_desc *md)
 	/*
 	 * Catch 36-bit addresses
 	 */
-	// md->pfn: 0x40000
-	// map.pfn: 0x6F7FE
+	// md->pfn: 0x20000
+	// map.pfn: 0x4F7FE
 	if (md->pfn >= 0x100000) {
 		create_36bit_mapping(md, type);
 		return;
@@ -931,22 +933,24 @@ static void __init create_mapping(struct map_desc *md)
 	// md.virtual: 0xC0000000, PAGE_MASK: 0xFFFFF000, addr: 0xC0000000
 	// md.virtual: 0xffff0000, PAGE_MASK: 0xFFFFF000, addr: 0xffff0000
 	addr = md->virtual & PAGE_MASK;
-	// md->pfn: 0x40000, phys: 0x40000000
-	// md->pfn: 0x6F7FE, phys: 0x6F7FE000
+	// md->pfn: 0x20000, phys: 0x20000000
+	// md->pfn: 0x4F7FE, phys: 0x4F7FE000
 	phys = __pfn_to_phys(md->pfn);
 	// md.length: 0x2f800000, length: 0x2f800000
 	// md.length: 0x1000, length: 0x1000
 	length = PAGE_ALIGN(md->length + (md->virtual & ~PAGE_MASK));
 
-	// addr: 0xC0000000, phys: 0x40000000, length: 0x2f800000
-	// addr: 0xffff0000, phys: 0x6F7FE000, length: 0x1000
+	// addr: 0xC0000000, phys: 0x20000000, length: 0x2f800000
+	// addr: 0xffff0000, phys: 0x4F7FE000, length: 0x1000
 	if (type->prot_l1 == 0 && ((addr | phys | length) & ~SECTION_MASK)) {
 		printk(KERN_WARNING "BUG: map for 0x%08llx at 0x%08lx can not "
 		       "be mapped using pages, ignoring.\n",
 		       (long long)__pfn_to_phys(md->pfn), addr);
 		return;
 	}
-
+	// (*8)을 하는 이유? 
+	// typedef struct { pmdval_t pgd[2]; } pgd_t; 로 선언되어 pmdval_t이 4byte,
+	// 그래서 주소 계산시 8byte 곱해준다.
 	// addr: 0xC0000000, pgd: 0xc0004000 + 0x600 * 8
 	// addr: 0xffff0000, pgd: 0xc0004000 + 0x7FF * 8
 	pgd = pgd_offset_k(addr);
@@ -959,12 +963,12 @@ static void __init create_mapping(struct map_desc *md)
 		// addr: 0xffff0000, end: 0xffff1000, next: 0xffff1000
 		unsigned long next = pgd_addr_end(addr, end);
 
-		// pgd: 0xc0007000, addr: 0xC0000000, next: 0xC0200000, phys: 0x40000000
-		// pgd: 0xc0007FF8, addr: 0xffff0000, next: 0xffff1000, phys: 0x6F7FE000
+		// pgd: 0xc0007000, addr: 0xC0000000, next: 0xC0200000, phys: 0x20000000
+		// pgd: 0xc0007FF8, addr: 0xffff0000, next: 0xffff1000, phys: 0x4F7FE000
 		alloc_init_pud(pgd, addr, next, phys, type);
 
-		// phys: 0x40000000 + 0x200000
-		// phys: 0x6F7FE000 + 0x1000
+		// phys: 0x20000000 + 0x200000
+		// phys: 0x4F7FE000 + 0x1000
 		phys += next - addr;
 		// addr: 0xC0200000
 		// addr: 0xffff1000
@@ -1384,15 +1388,16 @@ static inline void prepare_page_table(void)
 	// end: 0xA0000000
 	end = memblock.memory.regions[0].base + memblock.memory.regions[0].size;
 
-	// arm_lowmem_limit: 0x6f800000
+	// arm_lowmem_limit: 0x4f800000
 	if (end >= arm_lowmem_limit)
-		// end: 0x6f800000
+		// end: 0x4f800000
 		end = arm_lowmem_limit;
 
 	/*
 	 * Clear out all the kernel space mappings, except for the first
 	 * memory bank, up to the vmalloc region.
 	 */
+	// 0xEF800000 ~ 0xF0000000 까지 클리어
 	// addr: 0xef800000, VMALLOC_START: 0xf0000000
 	for (addr = __phys_to_virt(end);
 	     addr < VMALLOC_START; addr += PMD_SIZE)
@@ -1500,8 +1505,8 @@ static void __init devicemaps_init(struct machine_desc *mdesc)
 	 * location (0xffff0000).  If we aren't using high-vectors, also
 	 * create a mapping at the low-vectors virtual address.
 	 */
-	// vectors: 0xEF7FE000, virt_to_phys(vectors): 0x6F7FE000
-	// map.pfn: 0x6F7FE
+	// vectors: 0xEF7FE000, virt_to_phys(vectors): 0x4F7FE000
+	// map.pfn: 0x4F7FE
 	map.pfn = __phys_to_pfn(virt_to_phys(vectors));
 	map.virtual = 0xffff0000;
 	// map.length: 0x1000, PAGE_SIZE: 0x1000
@@ -1522,9 +1527,10 @@ static void __init devicemaps_init(struct machine_desc *mdesc)
 	}
 
 	/* Now create a kernel read-only mapping */
-	// map.pfn: 0X6F7FF
+	// map.pfn: 0X4F7FF
 	map.pfn += 1;
 	// map.virtual: 0xffff1000
+	// stub가 있는 곳 
 	map.virtual = 0xffff0000 + PAGE_SIZE;
 	map.length = PAGE_SIZE;
 	map.type = MT_LOW_VECTORS;
@@ -1570,6 +1576,9 @@ static void __init kmap_init(void)
 }
 
 // ARM10C 20131102
+// region 중 lowmem영역을 추출하여 create_mapping 수행
+// create_mapping: 가상 0xC0000000~0xEF800000을 1M 단위로 물리 0x20000000 부터 매핑하면서 
+// mem_type을 MT_MEMORY 값으로 설정.(cache 정책 access permission 등이 들어가 있다.
 static void __init map_lowmem(void)
 {
 	struct memblock_region *reg;
@@ -1580,16 +1589,16 @@ static void __init map_lowmem(void)
 		phys_addr_t end = start + reg->size;
 		struct map_desc map;
 
-		// end: 0xC0000000, arm_lowmem_limit: 0x6f800000
+		// end: 0xA0000000, arm_lowmem_limit: 0x4f800000
 		if (end > arm_lowmem_limit)
-			// end: 0x6f800000
+			// end: 0x4f800000
 			end = arm_lowmem_limit;
 
-		// start: 0x40000000, end: 0x6f800000
+		// start: 0x20000000, end: 0x4f800000
 		if (start >= end)
 			break;
 
-		// map.pfn: 0x40000
+		// map.pfn: 0x20000
 		map.pfn = __phys_to_pfn(start);
 		// map.virtual: 0xC0000000
 		map.virtual = __phys_to_virt(start);
@@ -1615,8 +1624,13 @@ void __init paging_init(struct machine_desc *mdesc)
 	// 아키텍처 버전에 따른 메모리 타입 설정
 	build_mem_type_table();
 	// page table 초기화
-	prepare_page_table();
+        // 0 ~ 0xBF000000, 0xBF000000 ~ 0xC0000000, 0xEF800000 ~ 0xF0000000  
+	// 영역을 2M 단위로 section table entry를 clear
+	Prepare_page_table();
 	// low memory영역에 page table 속성값과physical memory mapping 값 갱신
+	// region 중 lowmem영역을 추출하여 create_mapping 수행
+	// create_mapping: 가상 0xC0000000~0xEF800000을 1M 단위로 물리 0x20000000 부터 매핑하면서 
+	// mem_type을 MT_MEMORY 값으로 설정.(cache 정책 access permission 등이 들어가 있다.
 	map_lowmem();
 	// dma contiguous 는 사용안함
 	dma_contiguous_remap();
