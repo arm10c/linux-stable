@@ -1623,15 +1623,18 @@ void __init paging_init(struct machine_desc *mdesc)
 
 	// 아키텍처 버전에 따른 메모리 타입 설정
 	build_mem_type_table();
+
 	// page table 초기화
-        // 0 ~ 0xBF000000, 0xBF000000 ~ 0xC0000000, 0xEF800000 ~ 0xF0000000  
+	// 0 ~ 0xBF000000, 0xBF000000 ~ 0xC0000000, 0xEF800000 ~ 0xF0000000
 	// 영역을 2M 단위로 section table entry를 clear
-	Prepare_page_table();
+	prepare_page_table();
+
 	// low memory영역에 page table 속성값과physical memory mapping 값 갱신
 	// region 중 lowmem영역을 추출하여 create_mapping 수행
 	// create_mapping: 가상 0xC0000000~0xEF800000을 1M 단위로 물리 0x20000000 부터 매핑하면서 
 	// mem_type을 MT_MEMORY 값으로 설정.(cache 정책 access permission 등이 들어가 있다.
 	map_lowmem();
+
 	// dma contiguous 는 사용안함
 	dma_contiguous_remap();
 
@@ -1640,8 +1643,10 @@ void __init paging_init(struct machine_desc *mdesc)
 
 	// vectors, io memory map 설정
 	devicemaps_init(mdesc);
+
 	// kmap을 위한 4k 공간을 0xBFE00000 에 맞는 2nd page tabel에 할당
 	kmap_init();
+
 	// tcm: tightly coupled memory.
 	tcm_init();
 

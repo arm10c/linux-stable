@@ -491,7 +491,7 @@ static void __init mm_init(void)
 }
 
 // ARM10C 20130824
-// asmlinkage의 의미 
+// asmlinkage의 의미
 // http://www.spinics.net/lists/arm-kernel/msg87677.html
 asmlinkage void __init start_kernel(void)
 {
@@ -514,19 +514,24 @@ asmlinkage void __init start_kernel(void)
 
 	cgroup_init_early();
 
-	local_irq_disable();	// IRQ를 disable한다.
+	// IRQ를 disable한다.
+	local_irq_disable();
 	early_boot_irqs_disabled = true;
 
 /*
  * Interrupts are still disabled. Do necessary setups, then
  * enable them
  */
-	boot_cpu_init();// 현재 cpu(core id)를 얻어서 cpu_XXX_bits[] 의 cpu를 셋한다.
-//2013/09/07 종료 
-//2013/09/14 시작
+	// 현재 cpu(core id)를 얻어서 cpu_XXX_bits[] 의 cpu를 셋한다.
+	boot_cpu_init();
+
+// 2013/09/07 종료
+// 2013/09/14 시작
 	
-	page_address_init();// 128개의 page_address_htable 배열을 초기화
-	// 배너: 
+	// 128개의 page_address_htable 배열을 초기화
+	page_address_init();
+
+	// 배너:
 	//	Linux version 2.6.37_DM385_IPNC_3.50.00
 	// 	(a0875405@bangvideoapps01) (gcc version 4.5.3 20110311 
 	// 	(prerelease) (GCC) ) #1 Fri Dec 21 17:27:08 IST 2012

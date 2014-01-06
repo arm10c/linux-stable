@@ -946,19 +946,19 @@ void __init setup_arch(char **cmdline_p)
 {
 	struct machine_desc *mdesc;
 
-    // setup_processor: 각 프로세서에 의존적인 초기화 함수 구조체를 할당하고,
-    //                  현재 CPU에 대한 모드의 스택을 설정함.
+	// setup_processor: 각 프로세서에 의존적인 초기화 함수 구조체를 할당하고,
+	//                  현재 CPU에 대한 모드의 스택을 설정함.
 	setup_processor();
 
-    // setup_machine_fdt:
-    // dtb에서 memory bank설정, cmd arg 설정, arch type 설정, mdesc 검색.
+	// setup_machine_fdt:
+	// dtb에서 memory bank설정, cmd arg 설정, arch type 설정, mdesc 검색.
 	mdesc = setup_machine_fdt(__atags_pointer);
 	if (!mdesc)
 		mdesc = setup_machine_tags(__atags_pointer, __machine_arch_type);
 	machine_desc = mdesc;
 	machine_name = mdesc->name;
 
-    //우리는 안함.
+	// 우리는 안함.
 	setup_dma_zone(mdesc);
 
 	if (mdesc->reboot_mode != REBOOT_HARD)
@@ -975,16 +975,16 @@ void __init setup_arch(char **cmdline_p)
 	strlcpy(cmd_line, boot_command_line, COMMAND_LINE_SIZE);
 	*cmdline_p = cmd_line;
 
-    //command arg에서 각 요소들을 파싱하여 early init section으로 설정된 디바이스 초기화.
-    //우리는 serial device가 검색이 되지만 config설정은 없어서 아무것도 안함.
+	// command arg에서 각 요소들을 파싱하여 early init section으로 설정된 디바이스 초기화.
+	// 우리는 serial device가 검색이 되지만 config설정은 없어서 아무것도 안함.
 	parse_early_param();
 
 	// page frame number 기준으로 정렬
 	// 어드래스로 비교안하는 이유?
 	sort(&meminfo.bank, meminfo.nr_banks, sizeof(meminfo.bank[0]), meminfo_cmp, NULL);
 
-    // memory bank에서 bank하나가  valloc limit 을 넘으면 2개로 쪼갬.bank[0]:low bank[1]:high
-    sanity_check_meminfo();
+	// memory bank에서 bank하나가  valloc limit 을 넘으면 2개로 쪼갬.bank[0]:low bank[1]:high
+	sanity_check_meminfo();
 // 2013/10/19 종료
 // 2013/10/26 시작
 
