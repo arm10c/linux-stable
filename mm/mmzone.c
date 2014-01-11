@@ -87,6 +87,8 @@ int memmap_valid_within(unsigned long pfn,
 }
 #endif /* CONFIG_ARCH_HAS_HOLES_MEMORYMODEL */
 
+// ARM10C 20140111
+// least recently used vector init 
 void lruvec_init(struct lruvec *lruvec)
 {
 	enum lru_list lru;

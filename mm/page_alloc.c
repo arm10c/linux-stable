@@ -189,6 +189,7 @@ int sysctl_lowmem_reserve_ratio[MAX_NR_ZONES-1] = {
 
 EXPORT_SYMBOL(totalram_pages);
 
+// ARM10C 20140111 
 static char * const zone_names[MAX_NR_ZONES] = {
 #ifdef CONFIG_ZONE_DMA
 	 "DMA",
@@ -1675,7 +1676,7 @@ bool zone_watermark_ok_safe(struct zone *z, int order, unsigned long mark,
 								free_pages);
 }
 
-#ifdef CONFIG_NUMA
+#ifdef CONFIG_NUMA	// ARM10C CONFIG_NUMA = n 
 /*
  * zlc_setup - Setup for "zonelist cache".  Uses cached zone data to
  * skip over zones that are not allowed by the cpuset, or that have
@@ -1834,6 +1835,7 @@ static bool zone_allows_reclaim(struct zone *local_zone, struct zone *zone)
 	return true;
 }
 
+// ARM10C 20140111 
 static inline void init_zone_allows_reclaim(int nid)
 {
 }
@@ -3633,6 +3635,8 @@ static void build_zonelist_cache(pg_data_t *pgdat)
  * Other parts of the kernel may not check if the zone is available.
  */
 static void setup_pageset(struct per_cpu_pageset *p, unsigned long batch);
+// ARM10C 20140111 
+// __attribute__((section(.data..percpu))) struct per_cpu_pageset boot_pageset
 static DEFINE_PER_CPU(struct per_cpu_pageset, boot_pageset);
 static void setup_zone_pageset(struct zone *zone);
 
@@ -3640,6 +3644,7 @@ static void setup_zone_pageset(struct zone *zone);
  * Global mutex to protect against size modification of zonelists
  * as well as to serialize pageset setup for the new populated zone.
  */
+
 DEFINE_MUTEX(zonelists_mutex);
 
 /* return values int ....just for stop_machine() */
@@ -3757,14 +3762,18 @@ void __ref build_all_zonelists(pg_data_t *pgdat, struct zone *zone)
  */
 #define PAGES_PER_WAITQUEUE	256
 
-#ifndef CONFIG_MEMORY_HOTPLUG
+#ifndef CONFIG_MEMORY_HOTPLUG	// CONFIG_MEMORY_HOTPLUG = n
+// ARM10C 20140111 
+// pages = 0x2F800
 static inline unsigned long wait_table_hash_nr_entries(unsigned long pages)
 {
 	unsigned long size = 1;
 
+	//pages = 0x2f800 / 256 = 0x2f8  
 	pages /= PAGES_PER_WAITQUEUE;
 
 	while (size < pages)
+		// size = 0x400(1024)
 		size <<= 1;
 
 	/*
@@ -3772,8 +3781,10 @@ static inline unsigned long wait_table_hash_nr_entries(unsigned long pages)
 	 * on IO we've got bigger problems than wait queue collision.
 	 * Limit the size of the wait table to a reasonable size.
 	 */
+	// size = 0x400(1024)
 	size = min(size, 4096UL);
 
+	//return size = 0x400(1024)
 	return max(size, 4UL);
 }
 #else
@@ -3805,8 +3816,11 @@ static inline unsigned long wait_table_hash_nr_entries(unsigned long pages)
  * to extract the more random high bits from the multiplicative
  * hash function before the remainder is taken.
  */
+// ARM10C 20140111
+// size = 1024(0x400) 
 static inline unsigned long wait_table_bits(unsigned long size)
 {
+	//size = 1024(0x400), return 10
 	return ffz(~size);
 }
 
@@ -3974,9 +3988,14 @@ void __meminit memmap_init_zone(unsigned long size, int nid, unsigned long zone,
 	}
 }
 
+// ARM10C 20140111 
 static void __meminit zone_init_free_lists(struct zone *zone)
 {
 	int order, t;
+	//  MAX_ORDER = 11
+	//  MIGRATE_TYPES = 4
+	/*for (order = 0; order < MAX_ORDER; order++) \
+		for (t = 0; t < MIGRATE_TYPES; t++)*/
 	for_each_migratetype_order(order, t) {
 		INIT_LIST_HEAD(&zone->free_area[order].free_list[t]);
 		zone->free_area[order].nr_free = 0;
@@ -3988,9 +4007,10 @@ static void __meminit zone_init_free_lists(struct zone *zone)
 	memmap_init_zone((size), (nid), (zone), (start_pfn), MEMMAP_EARLY)
 #endif
 
+// ARM10C 20140111 
 static int __meminit zone_batchsize(struct zone *zone)
 {
-#ifdef CONFIG_MMU
+#ifdef CONFIG_MMU	// CONFIG_MMU = y 
 	int batch;
 
 	/*
@@ -3999,9 +4019,13 @@ static int __meminit zone_batchsize(struct zone *zone)
 	 *
 	 * OK, so we don't know how big the cache is.  So guess.
 	 */
+	// batch = 0x2efd6 / 1024 = 0xbb(187) 
 	batch = zone->managed_pages / 1024;
+	// 0xbb * 0x1000 = 0xbb000(765952) > 512 * 1024 = 524288
 	if (batch * PAGE_SIZE > 512 * 1024)
+		// batch = 524288 / 0x1000 = 0x80
 		batch = (512 * 1024) / PAGE_SIZE;
+	// batch = 0x80 / 4 = 0x20(32)
 	batch /= 4;		/* We effectively *= 4 below */
 	if (batch < 1)
 		batch = 1;
@@ -4016,8 +4040,11 @@ static int __meminit zone_batchsize(struct zone *zone)
 	 * of pages of one half of the possible page colors
 	 * and the other with pages of the other colors.
 	 */
+	//rounddown_pow_of_two(0x20 + 0x10 = 0x30) 
+	//batch = 31
 	batch = rounddown_pow_of_two(batch + batch/2) - 1;
 
+	//return 31;
 	return batch;
 
 #else
@@ -4143,6 +4170,8 @@ void __init setup_per_cpu_pageset(void)
 		setup_zone_pageset(zone);
 }
 
+// ARM10C 20140111 
+// zone_size_pages = 0x2F800
 static noinline __init_refok
 int zone_wait_table_init(struct zone *zone, unsigned long zone_size_pages)
 {
@@ -4155,13 +4184,20 @@ int zone_wait_table_init(struct zone *zone, unsigned long zone_size_pages)
 	 * per zone.
 	 */
 	zone->wait_table_hash_nr_entries =
+		// zone_size_pages = 0x2F800
 		 wait_table_hash_nr_entries(zone_size_pages);
+	//zone->wait_table_hash_nr_entries = 0x400(1024)
+
 	zone->wait_table_bits =
+		//zone->wait_table_hash_nr_entries = 0x400(1024)
 		wait_table_bits(zone->wait_table_hash_nr_entries);
+	//zone->wait_table_bits = 10
 	alloc_size = zone->wait_table_hash_nr_entries
 					* sizeof(wait_queue_head_t);
+	// alloc_size = 1024 * sizeof( wait_queue_head_t ) 
 
-	if (!slab_is_available()) {
+	if (!slab_is_available()) {	// 수행 
+		//zone->wait_table = wait_queue_head_t[1024] 할당 
 		zone->wait_table = (wait_queue_head_t *)
 			alloc_bootmem_node_nopanic(pgdat, alloc_size);
 	} else {
@@ -4180,12 +4216,16 @@ int zone_wait_table_init(struct zone *zone, unsigned long zone_size_pages)
 	if (!zone->wait_table)
 		return -ENOMEM;
 
+	//zone->wait_table_hash_nr_entries = 1024
 	for(i = 0; i < zone->wait_table_hash_nr_entries; ++i)
 		init_waitqueue_head(zone->wait_table + i);
 
 	return 0;
 }
 
+// ARM10C 20140111 
+// pcp : per cpu page
+// http://www.spinics.net/lists/linux-mm/msg64440.html 상위 주석 참고
 static __meminit void zone_pcp_init(struct zone *zone)
 {
 	/*
@@ -4193,26 +4233,35 @@ static __meminit void zone_pcp_init(struct zone *zone)
 	 * relies on the ability of the linker to provide the
 	 * offset of a (static) per cpu variable into the per cpu area.
 	 */
+	// boot_pageset :  mm/page_alloc.c 에 정의되어 있음 
 	zone->pageset = &boot_pageset;
 
 	if (zone->present_pages)
 		printk(KERN_DEBUG "  %s zone: %lu pages, LIFO batch:%u\n",
 			zone->name, zone->present_pages,
+					//zone_batchsize(zone) : 31
 					 zone_batchsize(zone));
 }
 
+// ARM10C 20140111 
+//j = 0, zone_start_pfn = 0x20000, size = 0x2f800, context = 0
 int __meminit init_currently_empty_zone(struct zone *zone,
 					unsigned long zone_start_pfn,
 					unsigned long size,
 					enum memmap_context context)
 {
+	// pgdat = (&contig_page_data) 
 	struct pglist_data *pgdat = zone->zone_pgdat;
 	int ret;
+	// size = 0x2F800
+	// 1024개의 wait_table(hash)을 할당, 초기화
 	ret = zone_wait_table_init(zone, size);
 	if (ret)
 		return ret;
+	//pgdat->nr_zones = 0 + 1 = 1
 	pgdat->nr_zones = zone_idx(zone) + 1;
 
+	//zone->zone_start_pfn = 0x20000;
 	zone->zone_start_pfn = zone_start_pfn;
 
 	mminit_dprintk(MMINIT_TRACE, "memmap_init",
@@ -4221,12 +4270,14 @@ int __meminit init_currently_empty_zone(struct zone *zone,
 			(unsigned long)zone_idx(zone),
 			zone_start_pfn, (zone_start_pfn + size));
 
+	//zone->free_area[].free_list[] 리스트초기화
+	//zone->free_area[].nr_free = 0
 	zone_init_free_lists(zone);
 
 	return 0;
 }
 
-#ifdef CONFIG_HAVE_MEMBLOCK_NODE_MAP
+#ifdef CONFIG_HAVE_MEMBLOCK_NODE_MAP	// ARM10C CONFIG_HAVE_MEMBLOCK_NODE_MAP = n 
 #ifndef CONFIG_HAVE_ARCH_EARLY_PFN_TO_NID
 /*
  * Required by SPARSEMEM. Given a PFN, return what node the PFN is on.
@@ -4496,6 +4547,8 @@ static unsigned long __meminit zone_absent_pages_in_node(int nid,
 }
 
 #else /* CONFIG_HAVE_MEMBLOCK_NODE_MAP */
+
+// ARM10C 20140111 
 static inline unsigned long __meminit zone_spanned_pages_in_node(int nid,
 					unsigned long zone_type,
 					unsigned long node_start_pfn,
@@ -4505,6 +4558,7 @@ static inline unsigned long __meminit zone_spanned_pages_in_node(int nid,
 	return zones_size[zone_type];
 }
 
+// ARM10C 20140111
 static inline unsigned long __meminit zone_absent_pages_in_node(int nid,
 						unsigned long zone_type,
 						unsigned long node_start_pfn,
@@ -4519,6 +4573,8 @@ static inline unsigned long __meminit zone_absent_pages_in_node(int nid,
 
 #endif /* CONFIG_HAVE_MEMBLOCK_NODE_MAP */
 
+// ARM10C 20140111 
+//start_pfn = 0, end_pfn = 0
 static void __meminit calculate_node_totalpages(struct pglist_data *pgdat,
 						unsigned long node_start_pfn,
 						unsigned long node_end_pfn,
@@ -4528,25 +4584,33 @@ static void __meminit calculate_node_totalpages(struct pglist_data *pgdat,
 	unsigned long realtotalpages, totalpages = 0;
 	enum zone_type i;
 
+	//MAX_NR_ZONES = 3
 	for (i = 0; i < MAX_NR_ZONES; i++)
+		//totalpages = 0x2f800(zone_size[0]) + 0x50800(zone_size[1]) = 0x80000(2GByte) 
 		totalpages += zone_spanned_pages_in_node(pgdat->node_id, i,
 							 node_start_pfn,
 							 node_end_pfn,
 							 zones_size);
+	
+	//pgdat->node_spanned_pages = 0x80000;
 	pgdat->node_spanned_pages = totalpages;
 
+	//realtotalpages = 0x80000;
 	realtotalpages = totalpages;
+	//MAX_NR_ZONES = 3
 	for (i = 0; i < MAX_NR_ZONES; i++)
+		//realtatalpages = 0x80000 - 0x0(zhone_size[0]) - 0x0(zhole_size[1]) = 0x80000
 		realtotalpages -=
 			zone_absent_pages_in_node(pgdat->node_id, i,
 						  node_start_pfn, node_end_pfn,
 						  zholes_size);
+	//pgdat->node_present_pages = 0x80000;
 	pgdat->node_present_pages = realtotalpages;
 	printk(KERN_DEBUG "On node %d totalpages: %lu\n", pgdat->node_id,
 							realtotalpages);
 }
 
-#ifndef CONFIG_SPARSEMEM
+#ifndef CONFIG_SPARSEMEM	// CONFIG_SPARSEMEM = y 
 /*
  * Calculate the size of the zone->blockflags rounded to an unsigned long
  * Start by making sure zonesize is a multiple of pageblock_order by rounding
@@ -4579,6 +4643,7 @@ static void __init setup_usemap(struct pglist_data *pgdat,
 								   usemapsize);
 }
 #else
+// ARM10C 20140111 
 static inline void setup_usemap(struct pglist_data *pgdat, struct zone *zone,
 				unsigned long zone_start_pfn, unsigned long zonesize) {}
 #endif /* CONFIG_SPARSEMEM */
@@ -4615,15 +4680,19 @@ void __init set_pageblock_order(void)
  * the kernel config
  */
 // ARM10C 20131214
+// ARM10C 20140111 
 void __init set_pageblock_order(void)
 {
 }
 
 #endif /* CONFIG_HUGETLB_PAGE_SIZE_VARIABLE */
 
+// ARM10C 20140111 
+// spanned_pages = 0x2f800, present_pages = 0x2f800
 static unsigned long __paginginit calc_memmap_size(unsigned long spanned_pages,
 						   unsigned long present_pages)
 {
+	// pages = 0x2f800
 	unsigned long pages = spanned_pages;
 
 	/*
@@ -4638,6 +4707,9 @@ static unsigned long __paginginit calc_memmap_size(unsigned long spanned_pages,
 	    IS_ENABLED(CONFIG_SPARSEMEM))
 		pages = present_pages;
 
+	//총할당한 page 갯수를 리턴
+	//PAGE_ALIGN( 0x2f800 * 44 ) >> PAGE_SHIFT
+	//0x82a000 >> PAGE_SHIFT = 0x82a;
 	return PAGE_ALIGN(pages * sizeof(struct page)) >> PAGE_SHIFT;
 }
 
@@ -4649,31 +4721,37 @@ static unsigned long __paginginit calc_memmap_size(unsigned long spanned_pages,
  *
  * NOTE: pgdat should get zeroed by caller.
  */
+// ARM10C 20140111
+// node_start_pfn = 0, node_end_pfn = 0
 static void __paginginit free_area_init_core(struct pglist_data *pgdat,
 		unsigned long node_start_pfn, unsigned long node_end_pfn,
 		unsigned long *zones_size, unsigned long *zholes_size)
 {
 	enum zone_type j;
-	int nid = pgdat->node_id;
+	int nid = pgdat->node_id;//0
+	//zone_start_pfn = 0x20000;
 	unsigned long zone_start_pfn = pgdat->node_start_pfn;
 	int ret;
 
-	pgdat_resize_init(pgdat);
-#ifdef CONFIG_NUMA_BALANCING
+	pgdat_resize_init(pgdat);//empty function
+#ifdef CONFIG_NUMA_BALANCING // CONFIG_NUMA_BALANCING = n
 	spin_lock_init(&pgdat->numabalancing_migrate_lock);
 	pgdat->numabalancing_migrate_nr_pages = 0;
 	pgdat->numabalancing_migrate_next_window = jiffies;
 #endif
-	init_waitqueue_head(&pgdat->kswapd_wait);
-	init_waitqueue_head(&pgdat->pfmemalloc_wait);
-	pgdat_page_cgroup_init(pgdat);
+	init_waitqueue_head(&pgdat->kswapd_wait); //kswapd_wait 자료구조 초기화
+	init_waitqueue_head(&pgdat->pfmemalloc_wait); //pfmemalloc_wait 자료구조 초기화
+	pgdat_page_cgroup_init(pgdat);//empty function
 
 	for (j = 0; j < MAX_NR_ZONES; j++) {
+		//zone = &pgdat->node_zones[0]
 		struct zone *zone = pgdat->node_zones + j;
 		unsigned long size, realsize, freesize, memmap_pages;
 
+		// size = 0x2f800;  
 		size = zone_spanned_pages_in_node(nid, j, node_start_pfn,
 						  node_end_pfn, zones_size);
+		// realsize = freesize = 0x2f800 - 0x0 = 0x2f800 
 		realsize = freesize = size - zone_absent_pages_in_node(nid, j,
 								node_start_pfn,
 								node_end_pfn,
@@ -4684,8 +4762,11 @@ static void __paginginit free_area_init_core(struct pglist_data *pgdat,
 		 * is used by this zone for memmap. This affects the watermark
 		 * and per-cpu initialisations
 		 */
+		// size = 0x2F800, realsize = 0x2f800
 		memmap_pages = calc_memmap_size(size, realsize);
+		//memmap_pages = 0x82a(2090)
 		if (freesize >= memmap_pages) {
+			//freesize = 0x2f800 - 0x82a = 2efd6
 			freesize -= memmap_pages;
 			if (memmap_pages)
 				printk(KERN_DEBUG
@@ -4697,61 +4778,79 @@ static void __paginginit free_area_init_core(struct pglist_data *pgdat,
 				zone_names[j], memmap_pages, freesize);
 
 		/* Account for reserved pages */
+		// j = 0, freesize = 0x2efd6, dma_reserve = 0;
 		if (j == 0 && freesize > dma_reserve) {
+			// j = 0, freesize = 0x2efd6 - 0 = 0x2efd6
 			freesize -= dma_reserve;
 			printk(KERN_DEBUG "  %s zone: %lu pages reserved\n",
 					zone_names[0], dma_reserve);
 		}
 
 		if (!is_highmem_idx(j))
+			// j = 0, nr_kernel_pages = 0 + 0x2efd6 
 			nr_kernel_pages += freesize;
 		/* Charge for highmem memmap if there are enough kernel pages */
 		else if (nr_kernel_pages > memmap_pages * 2)
 			nr_kernel_pages -= memmap_pages;
+
+		//j = 0, nr_all_pages = 0 + 0x2efd6 
 		nr_all_pages += freesize;
 
+		//j = 0, zone->panned_pages = 0x2f800; 
 		zone->spanned_pages = size;
+		//j = 0, zone->present_pages = 0x2f800; 
 		zone->present_pages = realsize;
 		/*
 		 * Set an approximate value for lowmem here, it will be adjusted
 		 * when the bootmem allocator frees pages into the buddy system.
 		 * And all highmem pages will be managed by the buddy system.
 		 */
+		//j = 0, zone->managed_pages = 0x2efd6 
 		zone->managed_pages = is_highmem_idx(j) ? realsize : freesize;
-#ifdef CONFIG_NUMA
+#ifdef CONFIG_NUMA	// CONFIG_NUMA = n 
 		zone->node = nid;
 		zone->min_unmapped_pages = (freesize*sysctl_min_unmapped_ratio)
 						/ 100;
 		zone->min_slab_pages = (freesize * sysctl_min_slab_ratio) / 100;
 #endif
+		//j = 0, zone->name = "Normal"
 		zone->name = zone_names[j];
 		spin_lock_init(&zone->lock);
 		spin_lock_init(&zone->lru_lock);
-		zone_seqlock_init(zone);
+		zone_seqlock_init(zone);//empty function
+		//j = 0, zone->zone_pgdat = (&contig_page_data)
 		zone->zone_pgdat = pgdat;
-
-		zone_pcp_init(zone);
-		lruvec_init(&zone->lruvec);
+		
+		// j = 0, zone->pageset = &boot_pageset;
+		zone_pcp_init(zone); 
+		// least recently used vector init
+		lruvec_init(&zone->lruvec); 
+		//j = 0, size = 0x2f800
 		if (!size)
 			continue;
 
-		set_pageblock_order();
-		setup_usemap(pgdat, zone, zone_start_pfn, size);
+		set_pageblock_order();	// empty function 
+		//j = 0, zone_start_pfn = 0x20000, size = 0x2f800
+		setup_usemap(pgdat, zone, zone_start_pfn, size);	// empty function 
+		//j = 0, zone_start_pfn = 0x20000, size = 0x2f800, MEMMAP_EARLY = 0
 		ret = init_currently_empty_zone(zone, zone_start_pfn,
 						size, MEMMAP_EARLY);
+		//zone wait_table, free_area관련 멤버를 초기화
+
 		BUG_ON(ret);
 		memmap_init(size, nid, j, zone_start_pfn);
 		zone_start_pfn += size;
 	}
 }
 
+// ARM10C 20140111
 static void __init_refok alloc_node_mem_map(struct pglist_data *pgdat)
 {
 	/* Skip empty nodes */
 	if (!pgdat->node_spanned_pages)
 		return;
 
-#ifdef CONFIG_FLAT_NODE_MEM_MAP
+#ifdef CONFIG_FLAT_NODE_MEM_MAP // CONFIG_FLAG_NODE_MEM_MAP = n
 	/* ia64 gets its own node_mem_map, before this, without bootmem */
 	if (!pgdat->node_mem_map) {
 		unsigned long size, start, end;
@@ -4783,9 +4882,11 @@ static void __init_refok alloc_node_mem_map(struct pglist_data *pgdat)
 #endif /* CONFIG_HAVE_MEMBLOCK_NODE_MAP */
 	}
 #endif
-#endif /* CONFIG_FLAT_NODE_MEM_MAP */
+#endif /* CONFIG_FLAT_NODE_MEM_MAP */// CONFIG_FLAG_NODE_MEM_MAP = n
 }
 
+// ARM10C 20140111 
+// nid = 0, node_start_pfn = 0x20000
 void __paginginit free_area_init_node(int nid, unsigned long *zones_size,
 		unsigned long node_start_pfn, unsigned long *zholes_size)
 {
@@ -4796,22 +4897,29 @@ void __paginginit free_area_init_node(int nid, unsigned long *zones_size,
 	/* pg_data_t should be reset to zero when it's allocated */
 	WARN_ON(pgdat->nr_zones || pgdat->classzone_idx);
 
+	//pgdat->node_id = 0;
 	pgdat->node_id = nid;
+	//pgdat->node_start_pfn = 0x20000;
 	pgdat->node_start_pfn = node_start_pfn;
-	init_zone_allows_reclaim(nid);
-#ifdef CONFIG_HAVE_MEMBLOCK_NODE_MAP
+	init_zone_allows_reclaim(nid);	// Empty function 
+#ifdef CONFIG_HAVE_MEMBLOCK_NODE_MAP	// ARM10C  CONFIG_HAVE_MEMBLOCK_NODE_MAP = n
 	get_pfn_range_for_nid(nid, &start_pfn, &end_pfn);
 #endif
+	//start_pfn = 0, end_pfn = 0
+	//pgdat 구조체
+	//pgdat->node_spanned_pages = 0x80000;
+	//pgdat->node_present_pages = 0x80000;
 	calculate_node_totalpages(pgdat, start_pfn, end_pfn,
 				  zones_size, zholes_size);
 
 	alloc_node_mem_map(pgdat);
-#ifdef CONFIG_FLAT_NODE_MEM_MAP
+#ifdef CONFIG_FLAT_NODE_MEM_MAP	//CONFIG_FLAT_NODE_MEM_MAP = n
 	printk(KERN_DEBUG "free_area_init_node: node %d, pgdat %08lx, node_mem_map %08lx\n",
 		nid, (unsigned long)pgdat,
 		(unsigned long)pgdat->node_mem_map);
 #endif
 
+	//start_pfn = 0, end_pfn = 0
 	free_area_init_core(pgdat, start_pfn, end_pfn,
 			    zones_size, zholes_size);
 }

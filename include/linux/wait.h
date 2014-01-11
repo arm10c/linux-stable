@@ -66,6 +66,7 @@ struct task_struct;
 
 extern void __init_waitqueue_head(wait_queue_head_t *q, const char *name, struct lock_class_key *);
 
+// ARM10C 20140111
 #define init_waitqueue_head(q)				\
 	do {						\
 		static struct lock_class_key __key;	\

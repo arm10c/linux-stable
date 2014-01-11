@@ -89,7 +89,7 @@ extern void setup_per_cpu_areas(void);
 #endif	/* SMP */
 
 #ifndef PER_CPU_BASE_SECTION
-#ifdef CONFIG_SMP
+#ifdef CONFIG_SMP	// CONFIG_SMP = y 
 #define PER_CPU_BASE_SECTION ".data..percpu"
 #else
 #define PER_CPU_BASE_SECTION ".data"

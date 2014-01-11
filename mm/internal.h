@@ -285,10 +285,11 @@ enum mminit_level {
 	MMINIT_TRACE
 };
 
-#ifdef CONFIG_DEBUG_MEMORY_INIT
+#ifdef CONFIG_DEBUG_MEMORY_INIT	// CONFIG_DEBUG_MEMORY_INIT = y 
 
 extern int mminit_loglevel;
 
+// ARM10C 20140111 
 #define mminit_dprintk(level, prefix, fmt, arg...) \
 do { \
 	if (level < mminit_loglevel) { \

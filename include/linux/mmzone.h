@@ -20,10 +20,10 @@
 #include <asm/page.h>
 
 /* Free memory management - zoned buddy allocator.  */
-#ifndef CONFIG_FORCE_MAX_ZONEORDER
+#ifndef CONFIG_FORCE_MAX_ZONEORDER	// CONFIG_FORCE_MAX_ZONEORDER = 11 
 #define MAX_ORDER 11
 #else
-#define MAX_ORDER CONFIG_FORCE_MAX_ZONEORDER
+#define MAX_ORDER CONFIG_FORCE_MAX_ZONEORDER	// this MAX_ORDER 11 
 #endif
 #define MAX_ORDER_NR_PAGES (1 << (MAX_ORDER - 1))
 
@@ -35,6 +35,7 @@
  */
 #define PAGE_ALLOC_COSTLY_ORDER 3
 
+// ARM10C 20140111 
 enum {
 	MIGRATE_UNMOVABLE,
 	MIGRATE_RECLAIMABLE,
@@ -60,7 +61,7 @@ enum {
 #ifdef CONFIG_MEMORY_ISOLATION
 	MIGRATE_ISOLATE,	/* can't allocate from here */
 #endif
-	MIGRATE_TYPES
+	MIGRATE_TYPES	// 4 
 };
 
 #ifdef CONFIG_CMA
@@ -69,6 +70,9 @@ enum {
 #  define is_migrate_cma(migratetype) false
 #endif
 
+// ARM10C 20140111 
+//  MAX_ORDER = 11
+//  MIGRATE_TYPES = 4
 #define for_each_migratetype_order(order, type) \
 	for (order = 0; order < MAX_ORDER; order++) \
 		for (type = 0; type < MIGRATE_TYPES; type++)
@@ -199,10 +203,11 @@ struct zone_reclaim_stat {
 	unsigned long		recent_scanned[2];
 };
 
+// ARM10C 20140111 
 struct lruvec {
 	struct list_head lists[NR_LRU_LISTS];
 	struct zone_reclaim_stat reclaim_stat;
-#ifdef CONFIG_MEMCG
+#ifdef CONFIG_MEMCG	// CONFIG_MEMCG = n 
 	struct zone *zone;
 #endif
 };
@@ -244,6 +249,7 @@ struct per_cpu_pages {
 	struct list_head lists[MIGRATE_PCPTYPES];
 };
 
+// ARM10C 20140111 
 struct per_cpu_pageset {
 	struct per_cpu_pages pcp;
 #ifdef CONFIG_NUMA
@@ -258,7 +264,7 @@ struct per_cpu_pageset {
 #endif /* !__GENERATING_BOUNDS.H */
 
 enum zone_type {
-#ifdef CONFIG_ZONE_DMA
+#ifdef CONFIG_ZONE_DMA	// ARM10C CONFIG_ZONE_DMA = n 
 	/*
 	 * ZONE_DMA is used when there are devices that are not able
 	 * to do DMA to all of addressable memory (ZONE_NORMAL). Then we
@@ -279,7 +285,7 @@ enum zone_type {
 	 */
 	ZONE_DMA,
 #endif
-#ifdef CONFIG_ZONE_DMA32
+#ifdef CONFIG_ZONE_DMA32	// ARM10C CONFIG_ZONE_DMA32 = n
 	/*
 	 * x86_64 needs two ZONE_DMAs because it supports devices that are
 	 * only able to do DMA to the lower 16M but also 32 bit devices that
@@ -292,8 +298,8 @@ enum zone_type {
 	 * performed on pages in ZONE_NORMAL if the DMA devices support
 	 * transfers to all addressable memory.
 	 */
-	ZONE_NORMAL,
-#ifdef CONFIG_HIGHMEM
+	ZONE_NORMAL,	// ARM10C ZONE_NORMAL = 0 
+#ifdef CONFIG_HIGHMEM	// ARM10C CONFIG_HIGHMEM = y 
 	/*
 	 * A memory area that is only addressable by the kernel through
 	 * mapping portions into its own address space. This is for example
@@ -302,10 +308,10 @@ enum zone_type {
 	 * table entries on i386) for each page that the kernel needs to
 	 * access.
 	 */
-	ZONE_HIGHMEM,
+	ZONE_HIGHMEM,	// ARM10C ZONE_HIGHMEM = 1 
 #endif
-	ZONE_MOVABLE,
-	__MAX_NR_ZONES
+	ZONE_MOVABLE,	// ARM10C ZONE_MOVABLE = 2 
+	__MAX_NR_ZONES	// ARM10C __MAX_NR_ZONES = 3 
 };
 
 #ifndef __GENERATING_BOUNDS_H
@@ -806,6 +812,8 @@ bool zone_watermark_ok(struct zone *z, int order, unsigned long mark,
 		int classzone_idx, int alloc_flags);
 bool zone_watermark_ok_safe(struct zone *z, int order, unsigned long mark,
 		int classzone_idx, int alloc_flags);
+
+// ARM10C 20140111 
 enum memmap_context {
 	MEMMAP_EARLY,
 	MEMMAP_HOTPLUG,
@@ -845,6 +853,7 @@ unsigned long __init node_memmap_size_bytes(int, unsigned long, unsigned long);
 /*
  * zone_idx() returns 0 for the ZONE_DMA zone, 1 for the ZONE_NORMAL zone, etc.
  */
+// ARM10C 20140111 
 #define zone_idx(zone)		((zone) - (zone)->zone_pgdat->node_zones)
 
 static inline int populated_zone(struct zone *zone)
@@ -854,18 +863,22 @@ static inline int populated_zone(struct zone *zone)
 
 extern int movable_zone;
 
+// ARM10C 20140111 
 static inline int zone_movable_is_highmem(void)
 {
-#if defined(CONFIG_HIGHMEM) && defined(CONFIG_HAVE_MEMBLOCK_NODE_MAP)
+#if defined(CONFIG_HIGHMEM) && defined(CONFIG_HAVE_MEMBLOCK_NODE_MAP)	// CONFIG_HIGHMEM = y, CONFIG_HAVE_MEMBLOCK_NODE_MAP = n 
 	return movable_zone == ZONE_HIGHMEM;
 #else
-	return 0;
+	return 0; // this
 #endif
 }
 
+// ARM10C 20140111 
+// idx = 0
 static inline int is_highmem_idx(enum zone_type idx)
 {
-#ifdef CONFIG_HIGHMEM
+#ifdef CONFIG_HIGHMEM	// CONFIG_HIGHMEM = y 
+	// idx = 0 -> return 0;
 	return (idx == ZONE_HIGHMEM ||
 		(idx == ZONE_MOVABLE && zone_movable_is_highmem()));
 #else
@@ -912,7 +925,7 @@ extern char numa_zonelist_order[];
 
 #ifndef CONFIG_NEED_MULTIPLE_NODES
 
-extern struct pglist_data contig_page_data;
+extern struct pglist_data contig_page_data;	// bitmap 정보가 들어가있음 
 // ARM10C 20131207
 #define NODE_DATA(nid)		(&contig_page_data)
 #define NODE_MEM_MAP(nid)	mem_map

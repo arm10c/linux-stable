@@ -12,7 +12,7 @@ enum {
 #ifndef __GENERATING_BOUNDS_H
 #include <generated/bounds.h>
 
-#ifdef CONFIG_MEMCG
+#ifdef CONFIG_MEMCG	//CONFIG_MEMCG = N
 #include <linux/bit_spinlock.h>
 
 /*
@@ -85,6 +85,7 @@ static inline void unlock_page_cgroup(struct page_cgroup *pc)
 #else /* CONFIG_MEMCG */
 struct page_cgroup;
 
+// ARM10C 20140111
 static inline void __meminit pgdat_page_cgroup_init(struct pglist_data *pgdat)
 {
 }

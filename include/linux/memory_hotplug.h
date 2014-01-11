@@ -12,7 +12,7 @@ struct pglist_data;
 struct mem_section;
 struct memory_block;
 
-#ifdef CONFIG_MEMORY_HOTPLUG
+#ifdef CONFIG_MEMORY_HOTPLUG	//CONFIG_MEMORY_HOTPLUG = n
 
 /*
  * Types for free bootmem stored in page->lru.next. These have to be in
@@ -200,6 +200,7 @@ void unlock_memory_hotplug(void);
  */
 static inline void pgdat_resize_lock(struct pglist_data *p, unsigned long *f) {}
 static inline void pgdat_resize_unlock(struct pglist_data *p, unsigned long *f) {}
+// ARM10C 20140111
 static inline void pgdat_resize_init(struct pglist_data *pgdat) {}
 
 static inline unsigned zone_span_seqbegin(struct zone *zone)
@@ -212,6 +213,7 @@ static inline int zone_span_seqretry(struct zone *zone, unsigned iv)
 }
 static inline void zone_span_writelock(struct zone *zone) {}
 static inline void zone_span_writeunlock(struct zone *zone) {}
+// ARM10C 20140111 
 static inline void zone_seqlock_init(struct zone *zone) {}
 
 static inline int mhp_notimplemented(const char *func)

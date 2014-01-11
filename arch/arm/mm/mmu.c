@@ -1648,7 +1648,7 @@ void __init paging_init(struct machine_desc *mdesc)
 	kmap_init();
 
 	// tcm: tightly coupled memory.
-	tcm_init();
+	tcm_init();//Empty function
 
 	// high vector가 최상위 pmd section index임
 	top_pmd = pmd_off_k(0xffff0000);

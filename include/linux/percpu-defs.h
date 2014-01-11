@@ -11,6 +11,11 @@
  * linkage errors occur due the compiler generating the wrong code to access
  * that section.
  */
+
+// ARM10C 20140111
+// sec = "" 
+//#define PER_CPU_BASE_SECTION ".data..percpu"
+//PER_CPU_ATTRIBUTES = undefined
 #define __PCPU_ATTRS(sec)						\
 	__percpu __attribute__((section(PER_CPU_BASE_SECTION sec)))	\
 	PER_CPU_ATTRIBUTES
@@ -47,7 +52,7 @@
  * restrictions, if CONFIG_DEBUG_FORCE_WEAK_PER_CPU is set weak
  * definition is used for all cases.
  */
-#if defined(ARCH_NEEDS_WEAK_PER_CPU) || defined(CONFIG_DEBUG_FORCE_WEAK_PER_CPU)
+#if defined(ARCH_NEEDS_WEAK_PER_CPU) || defined(CONFIG_DEBUG_FORCE_WEAK_PER_CPU)	// ARCH_NEEDS_WEAK_PER_CPU = undefined, CONFIG_DEBUG_FORCE_WEAK_PER_CPU = n 
 /*
  * __pcpu_scope_* dummy variable is used to enforce scope.  It
  * receives the static modifier when it's used in front of
@@ -75,6 +80,9 @@
 #define DECLARE_PER_CPU_SECTION(type, name, sec)			\
 	extern __PCPU_ATTRS(sec) __typeof__(type) name
 
+// ARM10C 20140111 
+// type = struct per_cpu_pageset, name = boot_pageset
+// __attribute__((section(.data..percpu))) struct per_cpu_pageset boot_pageset
 #define DEFINE_PER_CPU_SECTION(type, name, sec)				\
 	__PCPU_ATTRS(sec) PER_CPU_DEF_ATTRIBUTES			\
 	__typeof__(type) name
@@ -87,6 +95,8 @@
 #define DECLARE_PER_CPU(type, name)					\
 	DECLARE_PER_CPU_SECTION(type, name, "")
 
+// ARM10C 20140111 
+// type = struct per_cpu_pageset, name = boot_pageset
 #define DEFINE_PER_CPU(type, name)					\
 	DEFINE_PER_CPU_SECTION(type, name, "")
 

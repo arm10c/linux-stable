@@ -176,6 +176,7 @@ static void __init find_limits(unsigned long *min, unsigned long *max_low,
 
 // ARM10C 20131207
 // min: 0x20000, max_low: 0x4f800
+// contig_page_data에 bitmap을 저장한다.
 static void __init arm_bootmem_init(unsigned long start_pfn,
 	unsigned long end_pfn)
 {
@@ -287,6 +288,8 @@ void __init setup_dma_zone(struct machine_desc *mdesc)
 #endif
 }
 
+// ARM10C 20140111
+// min: 0x20000, max_low: 0x4f800, max_high: 0xA0000
 static void __init arm_bootmem_free(unsigned long min, unsigned long max_low,
 	unsigned long max_high)
 {
@@ -303,8 +306,12 @@ static void __init arm_bootmem_free(unsigned long min, unsigned long max_low,
 	 * to do anything fancy with the allocation of this memory
 	 * to the zones, now is the time to do it.
 	 */
+
+	// zone_size[0] = 0x4f800 - 0x20000 = 0x2f800
 	zone_size[0] = max_low - min;
-#ifdef CONFIG_HIGHMEM
+#ifdef CONFIG_HIGHMEM	//CONFIG_HIGHMEM = y
+	// ZONE_HIGHMEM = 1 
+	// zone_size[1] = A0000 - 0x4f800 = 0x50800  
 	zone_size[ZONE_HIGHMEM] = max_high - max_low;
 #endif
 
@@ -314,22 +321,28 @@ static void __init arm_bootmem_free(unsigned long min, unsigned long max_low,
 	 */
 	memcpy(zhole_size, zone_size, sizeof(zhole_size));
 	for_each_memblock(memory, reg) {
+		// start = 0x20000
 		unsigned long start = memblock_region_memory_base_pfn(reg);
+		// end = 0xA0000 
 		unsigned long end = memblock_region_memory_end_pfn(reg);
 
 		if (start < max_low) {
+			// low_end = 0x4f800
 			unsigned long low_end = min(end, max_low);
+			// zhole_size[0] = 0x2f800 - (0x4f800 - 0x20000) = 0
 			zhole_size[0] -= low_end - start;
 		}
-#ifdef CONFIG_HIGHMEM
+#ifdef CONFIG_HIGHMEM	// ARM10C CONFIG_HIGHMEM = y 
 		if (end > max_low) {
+			// high_start = 0x4f800
 			unsigned long high_start = max(start, max_low);
+			// zhole_size[1] = 0x50800 - (0xA0000 - 0x4f800) = 0
 			zhole_size[ZONE_HIGHMEM] -= end - high_start;
 		}
 #endif
 	}
 
-#ifdef CONFIG_ZONE_DMA
+#ifdef CONFIG_ZONE_DMA	// ARM10C CONFIG_ZONE_DMA = n 
 	/*
 	 * Adjust the sizes according to any special requirements for
 	 * this machine type.
@@ -339,6 +352,7 @@ static void __init arm_bootmem_free(unsigned long min, unsigned long max_low,
 			arm_dma_zone_size >> PAGE_SHIFT);
 #endif
 
+	//min = 0x20000 
 	free_area_init_node(0, zone_size, min, zhole_size);
 }
 
@@ -489,6 +503,7 @@ void __init bootmem_init(void)
 	 * the sparse mem_map arrays initialized by sparse_init()
 	 * for memmap_init_zone(), otherwise all PFNs are invalid.
 	 */
+	// min: 0x20000, max_low: 0x4f800, max_high: 0xA0000
 	arm_bootmem_free(min, max_low, max_high);
 
 	/*
