@@ -27,7 +27,9 @@
  * 0 otherwise.
  *
  */
+/*
 // ARM10C 20140111 
+*/
 #define IS_ENABLED(option) \
 	(config_enabled(option) || config_enabled(option##_MODULE))
 
