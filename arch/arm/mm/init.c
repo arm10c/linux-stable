@@ -497,6 +497,7 @@ void __init bootmem_init(void)
 	// ms->pageblock_bitmap : 할당받은 주소 + offset가 저장
 	sparse_init();
 // 2013/12/21 종료
+// 2014/01/11 시작
 	
 	/*
 	 * Now free the memory - free_area_init_node needs

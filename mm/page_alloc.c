@@ -4836,6 +4836,7 @@ static void __paginginit free_area_init_core(struct pglist_data *pgdat,
 		ret = init_currently_empty_zone(zone, zone_start_pfn,
 						size, MEMMAP_EARLY);
 		//zone wait_table, free_area관련 멤버를 초기화
+// 2014/01/11 종료
 
 		BUG_ON(ret);
 		memmap_init(size, nid, j, zone_start_pfn);
