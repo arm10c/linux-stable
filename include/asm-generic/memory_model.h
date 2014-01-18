@@ -58,11 +58,11 @@
  */
 // ARM10C 20140118
 // pg : &page
-//#define __page_to_pfn(pg)					\
-//({	const struct page *__pg = (pg);				\
-//	int __sec = page_to_section(__pg);			\
+//#define __page_to_pfn(pg)
+//({	const struct page *__pg = (pg);
+//	int __sec = page_to_section(__pg);
 //	__sec : &mem_section[0][2]
-//	(unsigned long)(__pg - __section_mem_map_addr(__nr_to_section(__sec)));	\
+//	(unsigned long)(__pg - __section_mem_map_addr(__nr_to_section(__sec)));
 //	pfn offset이 계산됨
 //})
 #define __page_to_pfn(pg)					\
@@ -73,11 +73,11 @@
 
 // ARM10C 20140118
 // pfn : 0x20000
-//#define __pfn_to_page(pfn)				
-//({	unsigned long __pfn = (pfn);			
-//	struct mem_section *__sec = __pfn_to_section(__pfn);	
+//#define __pfn_to_page(pfn)
+//({	unsigned long __pfn = (pfn);
+//	struct mem_section *__sec = __pfn_to_section(__pfn);
 //	__sec : &mem_section[0][2]
-//	__section_mem_map_addr(__sec) + __pfn;	
+//	__section_mem_map_addr(__sec) + __pfn;
 //	시작주소 + offset
 //})
 #define __pfn_to_page(pfn)				\

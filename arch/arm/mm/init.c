@@ -155,7 +155,7 @@ static void __init find_limits(unsigned long *min, unsigned long *max_low,
 	// *min: 0x20000
 	*min = bank_pfn_start(&mi->bank[0]);
 
-	// #define for_each_bank(i,mi) \
+	// #define for_each_bank(i,mi)
 	// for (i = 0; i < (mi)->nr_banks; i++)
 	//
 	// mi->nr_banks: 2, mi->bank[1].highmem: 1
