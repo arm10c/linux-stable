@@ -130,12 +130,15 @@ void __init mminit_verify_pageflags_layout(void)
 	BUG_ON(or_mask != add_mask);
 }
 
+// ARM10C 20140118
+// page : ?, zone : 0, nid : 0, pfn : 0x20000
 void __meminit mminit_verify_page_links(struct page *page, enum zone_type zone,
 			unsigned long nid, unsigned long pfn)
 {
 	BUG_ON(page_to_nid(page) != nid);
 	BUG_ON(page_zonenum(page) != zone);
 	BUG_ON(page_to_pfn(page) != pfn);
+	// flag에 제대로 설정이 되었는지 확인
 }
 
 static __init int set_mminit_loglevel(char *str)

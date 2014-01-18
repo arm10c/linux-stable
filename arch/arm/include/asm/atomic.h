@@ -28,6 +28,7 @@
  * atomic_set() is the clrex or dummy strex done on every exception return.
  */
 #define atomic_read(v)	(*(volatile int *)&(v)->counter)
+// ARM10C 20140118
 #define atomic_set(v,i)	(((v)->counter) = (i))
 
 #if __LINUX_ARM_ARCH__ >= 6

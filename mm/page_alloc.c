@@ -232,12 +232,15 @@ EXPORT_SYMBOL(nr_online_nodes);
 
 int page_group_by_mobility_disabled __read_mostly;
 
+// ARM10C 20140118
+// MIGRATE_MOVABLE : 2
 void set_pageblock_migratetype(struct page *page, int migratetype)
 {
-
+	// 수행 안함
 	if (unlikely(page_group_by_mobility_disabled))
 		migratetype = MIGRATE_UNMOVABLE;
-
+	
+	// migratetype : 2, PB_migrate : 0, PB_migrate_end : 2
 	set_pageblock_flags_group(page, (unsigned long)migratetype,
 					PB_migrate, PB_migrate_end);
 }
@@ -3929,36 +3932,66 @@ static void setup_zone_migrate_reserve(struct zone *zone)
  * up by free_all_bootmem() once the early boot process is
  * done. Non-atomic initialization, single-pass.
  */
+// ARM10C 20140118
+// size : 0x2F800, nid : 0, j : 0, zone_start_pfn : 0x20000, context : 0
+// size : 0x50800, nid : 0, j : 1, zone_start_pfn : 0x4F800, context : 0
 void __meminit memmap_init_zone(unsigned long size, int nid, unsigned long zone,
 		unsigned long start_pfn, enum memmap_context context)
 {
 	struct page *page;
 	unsigned long end_pfn = start_pfn + size;
+	// end_pfn : 0x4F800
+	// end_pfn : 0xA0000
 	unsigned long pfn;
 	struct zone *z;
-
+	
+	// highest_memmap_pfn : 0, end_pfn : 0x4F800
+	// highest_memmap_pfn : 0, end_pfn : 0xA0000
 	if (highest_memmap_pfn < end_pfn - 1)
 		highest_memmap_pfn = end_pfn - 1;
-
+		// highest_memmap_pfn : 0x4F7FF
+		// highest_memmap_pfn : 0x9FFFF
+	
+	// z :&contig_page_data.node_zones[0]
+	// z :&contig_page_data.node_zones[1]
 	z = &NODE_DATA(nid)->node_zones[zone];
+	// start_pfn : 0x20000, end_pfn : 0x4F800
+	// start_pfn : 0x4F800, end_pfn : 0xA0000
 	for (pfn = start_pfn; pfn < end_pfn; pfn++) {
 		/*
 		 * There can be holes in boot-time mem_map[]s
 		 * handed to this function.  They do not
 		 * exist on hotplugged memory.
 		 */
+		// context : MEMMAP_EARLY
 		if (context == MEMMAP_EARLY) {
-			if (!early_pfn_valid(pfn))
+			// pfn : 0x20000
+			if (!early_pfn_valid(pfn))	// 1이 리턴됨
 				continue;
+			// pfn : 0x20000, nid : 0
 			if (!early_pfn_in_nid(pfn, nid))
 				continue;
 		}
+		// pfn : 0x20000
+		// pfn : 0x4F800
+		// page : pfn에 해당하는 struct page의 주소
 		page = pfn_to_page(pfn);
+		// page : ?, zone : 0, nid : 0, pfn : 0x20000
+		// page->flags : 0x20000000 (상위 4비트에 pfn에 해당하는 section, node, zone 번호를 저장)
+		// page : ?, zone : 1, nid : 0, pfn : 0x4F800
+		// page->flags : 0x44000000 (상위 4비트에 pfn에 해당하는 section, node, zone 번호를 저장)
 		set_page_links(page, zone, nid, pfn);
+		// page : ?, zone : 0, nid : 0, pfn : 0x20000
+		// page : ?, zone : 1, nid : 0, pfn : 0x4F800
+		// flag에 제대로 설정이 되었는지 확인
 		mminit_verify_page_links(page, zone, nid, pfn);
+		// page->__count.counter : 1
 		init_page_count(page);
+		// page->_mapcount.counter : -1
 		page_mapcount_reset(page);
+		// null 함수
 		page_nid_reset_last(page);
+		// page->flags의 10(PG_reserved)번째 비트를 1로 atomic set
 		SetPageReserved(page);
 		/*
 		 * Mark the block movable so that blocks are reserved for
@@ -3974,13 +4007,26 @@ void __meminit memmap_init_zone(unsigned long size, int nid, unsigned long zone,
 		 * check here not to call set_pageblock_migratetype() against
 		 * pfn out of zone.
 		 */
+		// zone_start_pfn : 0x20000, pfn : 0x20000
+		// zone_end_pfn(z) : 0x4F800
+		// pageblock_nr_pages : 0x400
+		// MIGRATE_MOVABLE : 2
+		// zone_start_pfn : 0x4F800, pfn : 0x4F800
+		// zone_end_pfn(z) : 0xA0000
+		// pageblock_nr_pages : 0x400
+		// MIGRATE_MOVABLE : 2
 		if ((z->zone_start_pfn <= pfn)
 		    && (pfn < zone_end_pfn(z))
 		    && !(pfn & (pageblock_nr_pages - 1)))
 			set_pageblock_migratetype(page, MIGRATE_MOVABLE);
-
+			// page에 해당하는 &mem_section[0][2]->pageblock_flags의
+			// MIGRATE_MOVABLE(2)번 비트를 1로 설정
+			// page에 해당하는 &mem_section[0][4]->pageblock_flags의
+		// set_pageblock_migratetype은 1024번째 page(pageblock)가 올 때마다 수행됨
+		
+		// page->lru 초기화
 		INIT_LIST_HEAD(&page->lru);
-#ifdef WANT_PAGE_VIRTUAL
+#ifdef WANT_PAGE_VIRTUAL	// N
 		/* The shift won't overflow because ZONE_NORMAL is below 4G. */
 		if (!is_highmem_idx(zone))
 			set_page_address(page, __va(pfn << PAGE_SHIFT));
@@ -4003,8 +4049,9 @@ static void __meminit zone_init_free_lists(struct zone *zone)
 }
 
 #ifndef __HAVE_ARCH_MEMMAP_INIT
+// ARM10C 20140118
 #define memmap_init(size, nid, zone, start_pfn) \
-	memmap_init_zone((size), (nid), (zone), (start_pfn), MEMMAP_EARLY)
+	memmap_init_zone((size), (nid), (zone), (start_pfn), MEMMAP_EARLY)	// MEMMAP_EARLY : 0
 #endif
 
 // ARM10C 20140111 
@@ -4172,6 +4219,7 @@ void __init setup_per_cpu_pageset(void)
 
 // ARM10C 20140111 
 // zone_size_pages = 0x2F800
+// zone_size_pages = 0x50800
 static noinline __init_refok
 int zone_wait_table_init(struct zone *zone, unsigned long zone_size_pages)
 {
@@ -4187,17 +4235,22 @@ int zone_wait_table_init(struct zone *zone, unsigned long zone_size_pages)
 		// zone_size_pages = 0x2F800
 		 wait_table_hash_nr_entries(zone_size_pages);
 	//zone->wait_table_hash_nr_entries = 0x400(1024)
+	//zone->wait_table_hash_nr_entries = 0x800(2048)
 
 	zone->wait_table_bits =
 		//zone->wait_table_hash_nr_entries = 0x400(1024)
+		//zone->wait_table_hash_nr_entries = 0x800(2048)
 		wait_table_bits(zone->wait_table_hash_nr_entries);
 	//zone->wait_table_bits = 10
+	//zone->wait_table_bits = 11
 	alloc_size = zone->wait_table_hash_nr_entries
 					* sizeof(wait_queue_head_t);
 	// alloc_size = 1024 * sizeof( wait_queue_head_t ) 
+	// alloc_size = 2048 * sizeof( wait_queue_head_t ) 
 
 	if (!slab_is_available()) {	// 수행 
 		//zone->wait_table = wait_queue_head_t[1024] 할당 
+		//zone->wait_table = wait_queue_head_t[2048] 할당 
 		zone->wait_table = (wait_queue_head_t *)
 			alloc_bootmem_node_nopanic(pgdat, alloc_size);
 	} else {
@@ -4217,6 +4270,7 @@ int zone_wait_table_init(struct zone *zone, unsigned long zone_size_pages)
 		return -ENOMEM;
 
 	//zone->wait_table_hash_nr_entries = 1024
+	//zone->wait_table_hash_nr_entries = 2048
 	for(i = 0; i < zone->wait_table_hash_nr_entries; ++i)
 		init_waitqueue_head(zone->wait_table + i);
 
@@ -4244,7 +4298,8 @@ static __meminit void zone_pcp_init(struct zone *zone)
 }
 
 // ARM10C 20140111 
-//j = 0, zone_start_pfn = 0x20000, size = 0x2f800, context = 0
+//zone_start_pfn = 0x20000, size = 0x2f800, context = 0
+//zone_start_pfn = 0x4F800, size = 0x50800, MEMMAP_EARLY = 0
 int __meminit init_currently_empty_zone(struct zone *zone,
 					unsigned long zone_start_pfn,
 					unsigned long size,
@@ -4254,14 +4309,18 @@ int __meminit init_currently_empty_zone(struct zone *zone,
 	struct pglist_data *pgdat = zone->zone_pgdat;
 	int ret;
 	// size = 0x2F800
+	// size = 0x50800
 	// 1024개의 wait_table(hash)을 할당, 초기화
+	// 2048개의 wait_table(hash)을 할당, 초기화
 	ret = zone_wait_table_init(zone, size);
 	if (ret)
 		return ret;
 	//pgdat->nr_zones = 0 + 1 = 1
+	//pgdat->nr_zones = 1 + 1 = 2
 	pgdat->nr_zones = zone_idx(zone) + 1;
 
 	//zone->zone_start_pfn = 0x20000;
+	//zone->zone_start_pfn = 0x4F800;
 	zone->zone_start_pfn = zone_start_pfn;
 
 	mminit_dprintk(MMINIT_TRACE, "memmap_init",
@@ -4707,7 +4766,7 @@ static unsigned long __paginginit calc_memmap_size(unsigned long spanned_pages,
 	    IS_ENABLED(CONFIG_SPARSEMEM))
 		pages = present_pages;
 
-	//총할당한 page 갯수를 리턴
+	//총 할당한 page 갯수를 리턴
 	//PAGE_ALIGN( 0x2f800 * 44 ) >> PAGE_SHIFT
 	//0x82a000 >> PAGE_SHIFT = 0x82a;
 	return PAGE_ALIGN(pages * sizeof(struct page)) >> PAGE_SHIFT;
@@ -4743,15 +4802,22 @@ static void __paginginit free_area_init_core(struct pglist_data *pgdat,
 	init_waitqueue_head(&pgdat->pfmemalloc_wait); //pfmemalloc_wait 자료구조 초기화
 	pgdat_page_cgroup_init(pgdat);//empty function
 
+	// MAX_NR_ZONES : 3
 	for (j = 0; j < MAX_NR_ZONES; j++) {
-		//zone = &pgdat->node_zones[0]
+		//zone = &pgdat->node_zones[ZONE_NORMAL]
+		//zone = &pgdat->node_zones[ZONE_HIGHMEM]
+		//zone = &pgdat->node_zones[ZONE_MOVABLE]
 		struct zone *zone = pgdat->node_zones + j;
 		unsigned long size, realsize, freesize, memmap_pages;
 
-		// size = 0x2f800;  
+		// size = 0x2f800 
+		// size = 0x50800
+		// size = 0
 		size = zone_spanned_pages_in_node(nid, j, node_start_pfn,
 						  node_end_pfn, zones_size);
 		// realsize = freesize = 0x2f800 - 0x0 = 0x2f800 
+		// realsize = freesize = 0x50800 - 0x0 = 0x50800 
+		// realsize = freesize = 0x0 - 0x0 = 0x0 
 		realsize = freesize = size - zone_absent_pages_in_node(nid, j,
 								node_start_pfn,
 								node_end_pfn,
@@ -4763,10 +4829,16 @@ static void __paginginit free_area_init_core(struct pglist_data *pgdat,
 		 * and per-cpu initialisations
 		 */
 		// size = 0x2F800, realsize = 0x2f800
+		// size = 0x50800, realsize = 0x50800
+		// size = 0x0, realsize = 0x0
 		memmap_pages = calc_memmap_size(size, realsize);
 		//memmap_pages = 0x82a(2090)
+		//memmap_pages = 0xDD6(3542)
+		//memmap_pages = 0x0(0)
 		if (freesize >= memmap_pages) {
-			//freesize = 0x2f800 - 0x82a = 2efd6
+			//freesize = 0x2f800 - 0x82a = 0x2efd6
+			//freesize = 0x50800 - 0xDD6 = 0x4FA2A
+			//freesize = 0x0 - 0x0 = 0x0
 			freesize -= memmap_pages;
 			if (memmap_pages)
 				printk(KERN_DEBUG
@@ -4779,6 +4851,8 @@ static void __paginginit free_area_init_core(struct pglist_data *pgdat,
 
 		/* Account for reserved pages */
 		// j = 0, freesize = 0x2efd6, dma_reserve = 0;
+		// j = 1, freesize = 0x4FA2A, dma_reserve = 0;
+		// j = 2, freesize = 0x0, dma_reserve = 0;
 		if (j == 0 && freesize > dma_reserve) {
 			// j = 0, freesize = 0x2efd6 - 0 = 0x2efd6
 			freesize -= dma_reserve;
@@ -4790,15 +4864,23 @@ static void __paginginit free_area_init_core(struct pglist_data *pgdat,
 			// j = 0, nr_kernel_pages = 0 + 0x2efd6 
 			nr_kernel_pages += freesize;
 		/* Charge for highmem memmap if there are enough kernel pages */
+		// nr_kernel_pages : 0x2EFD6, memmap_pages * 2 : 0x1BAC
 		else if (nr_kernel_pages > memmap_pages * 2)
+			// nr_kernel_pages : 0x2E200
 			nr_kernel_pages -= memmap_pages;
 
 		//j = 0, nr_all_pages = 0 + 0x2efd6 
+		//j = 1, nr_all_pages = 0x2efd6 + 0x4FA2A
+		//j = 2, nr_all_pages = 0x7EA00 + 0
 		nr_all_pages += freesize;
 
-		//j = 0, zone->panned_pages = 0x2f800; 
+		//j = 0, zone->spanned_pages = 0x2f800; 
+		//j = 1, zone->spanned_pages = 0x50800; 
+		//j = 2, zone->spanned_pages = 0x0; 
 		zone->spanned_pages = size;
 		//j = 0, zone->present_pages = 0x2f800; 
+		//j = 1, zone->present_pages = 0x50800; 
+		//j = 2, zone->present_pages = 0x0; 
 		zone->present_pages = realsize;
 		/*
 		 * Set an approximate value for lowmem here, it will be adjusted
@@ -4806,6 +4888,8 @@ static void __paginginit free_area_init_core(struct pglist_data *pgdat,
 		 * And all highmem pages will be managed by the buddy system.
 		 */
 		//j = 0, zone->managed_pages = 0x2efd6 
+		//j = 1, zone->managed_pages = 0x50800
+		//j = 2, zone->managed_pages = 0x0
 		zone->managed_pages = is_highmem_idx(j) ? realsize : freesize;
 #ifdef CONFIG_NUMA	// CONFIG_NUMA = n 
 		zone->node = nid;
@@ -4814,32 +4898,55 @@ static void __paginginit free_area_init_core(struct pglist_data *pgdat,
 		zone->min_slab_pages = (freesize * sysctl_min_slab_ratio) / 100;
 #endif
 		//j = 0, zone->name = "Normal"
+		//j = 1, zone->name = "HighMem"
+		//j = 2, zone->name = "Movable"
 		zone->name = zone_names[j];
 		spin_lock_init(&zone->lock);
 		spin_lock_init(&zone->lru_lock);
 		zone_seqlock_init(zone);//empty function
 		//j = 0, zone->zone_pgdat = (&contig_page_data)
+		//j = 1, zone->zone_pgdat = (&contig_page_data)
+		//j = 2, zone->zone_pgdat = (&contig_page_data)
 		zone->zone_pgdat = pgdat;
 		
 		// j = 0, zone->pageset = &boot_pageset;
+		// j = 1, zone->pageset = &boot_pageset;
+		// j = 2, zone->pageset = &boot_pageset;
 		zone_pcp_init(zone); 
 		// least recently used vector init
 		lruvec_init(&zone->lruvec); 
 		//j = 0, size = 0x2f800
+		//j = 1, size = 0x50800
+		//j = 2, size = 0x0
 		if (!size)
 			continue;
 
 		set_pageblock_order();	// empty function 
 		//j = 0, zone_start_pfn = 0x20000, size = 0x2f800
+		//j = 1, zone_start_pfn = 0x4F800, size = 0x50800
 		setup_usemap(pgdat, zone, zone_start_pfn, size);	// empty function 
 		//j = 0, zone_start_pfn = 0x20000, size = 0x2f800, MEMMAP_EARLY = 0
+		//j = 1, zone_start_pfn = 0x4F800, size = 0x50800, MEMMAP_EARLY = 0
 		ret = init_currently_empty_zone(zone, zone_start_pfn,
 						size, MEMMAP_EARLY);
 		//zone wait_table, free_area관련 멤버를 초기화
 // 2014/01/11 종료
-
+// 2014/01/18 시작
 		BUG_ON(ret);
+		// j = 0, size : 0x2F800, nid : 0, j : 0, zone_start_pfn : 0x20000
+		// j = 1, size : 0x50800, nid : 0, j : 1, zone_start_pfn : 0x4F800
 		memmap_init(size, nid, j, zone_start_pfn);
+		// struct page 내부 멤버를 설정
+		// flags : section, node, zone 번호, PG_reserved(10) 설정
+		// page->__count.counter : 1
+		// page->_mapcount.counter : -1
+		// page->lru 초기화
+		// page에 해당하는 &mem_section[0][2]->pageblock_flags의
+		// MIGRATE_MOVABLE(2)번 비트를 1로 설정(pageblock마다)
+		// mem_section[0][2] ~ mem_section[0][9] 까지 설정
+
+		// zone_start_pfn : 0x4F800
+		// zone_start_pfn : 0xA0000
 		zone_start_pfn += size;
 	}
 }
@@ -5929,21 +6036,35 @@ void *__init alloc_large_system_hash(const char *tablename,
 }
 
 /* Return a pointer to the bitmap storing bits affecting a block of pages */
+// ARM10C 20140118
+// zone : &contig_page_data.node_zones[0], pfn : 0x20000
 static inline unsigned long *get_pageblock_bitmap(struct zone *zone,
 							unsigned long pfn)
 {
 #ifdef CONFIG_SPARSEMEM
+	// &mem_section[0][2]->pageblock_flags
 	return __pfn_to_section(pfn)->pageblock_flags;
+	// 4KB 할당받아뒀던 주소 값을 리턴 : sparse_early_usemaps_alloc_node()
 #else
 	return zone->pageblock_flags;
 #endif /* CONFIG_SPARSEMEM */
 }
 
+// ARM10C 20140118
+// zone : &contig_page_data.node_zones[0], pfn : 0x20000
+// zone : &contig_page_data.node_zones[1], pfn : 0x4F800
 static inline int pfn_to_bitidx(struct zone *zone, unsigned long pfn)
 {
 #ifdef CONFIG_SPARSEMEM
+	// PAGES_PER_SECTION : 0x10000
+	// pfn : 0 (section의 몇 번째 프레임)
+	// pfn : 0xF800
 	pfn &= (PAGES_PER_SECTION-1);
+	// pageblock_order: 9, NR_PAGEBLOCK_BITS : 4
+	// bit : page 1024개당 1 바이트씩 사용
 	return (pfn >> pageblock_order) * NR_PAGEBLOCK_BITS;
+	// return 0x0
+	// return 0x1F0
 #else
 	pfn = pfn - round_down(zone->zone_start_pfn, pageblock_nr_pages);
 	return (pfn >> pageblock_order) * NR_PAGEBLOCK_BITS;
@@ -5985,6 +6106,8 @@ unsigned long get_pageblock_flags_group(struct page *page,
  * @end_bitidx: The last bit of interest
  * @flags: The flags to set
  */
+// ARM10C 20140118
+// migratetype : 2, PB_migrate : 0, PB_migrate_end : 2
 void set_pageblock_flags_group(struct page *page, unsigned long flags,
 					int start_bitidx, int end_bitidx)
 {
@@ -5993,16 +6116,37 @@ void set_pageblock_flags_group(struct page *page, unsigned long flags,
 	unsigned long pfn, bitidx;
 	unsigned long value = 1;
 
+	// page : ??, flags : 2, start_bitidx : 0, end_bitidx : 2
+	// zone : &contig_page_data.node_zones[0]
+	// zone : &contig_page_data.node_zones[1]
 	zone = page_zone(page);
+	// pfn offset이 계산됨
+	// pfn : 0x20000
+	// pfn : 0x4F800
 	pfn = page_to_pfn(page);
+	// zone : &contig_page_data.node_zones[0], pfn : 0x20000
+	// bitmap : &mem_section[0][2]->pageblock_flags
+	// zone : &contig_page_data.node_zones[1], pfn : 0x4F800
+	// bitmap : &mem_section[0][4]->pageblock_flags
 	bitmap = get_pageblock_bitmap(zone, pfn);
+	// zone : &contig_page_data.node_zones[0], pfn : 0x20000
+	// bitidx : 0
+	// zone : &contig_page_data.node_zones[1], pfn : 0x4F800
+	// bitidx : 0x1F0
 	bitidx = pfn_to_bitidx(zone, pfn);
 	VM_BUG_ON(!zone_spans_pfn(zone, pfn));
-
+	
+	// start_bitidx : 0, end_bitidx : 2
 	for (; start_bitidx <= end_bitidx; start_bitidx++, value <<= 1)
+		// flags : 2, value : 1
+		// flags : 2, value : 2
 		if (flags & value)
+			// bitidx + start_bitidx : 1, bitmap : &mem_section[0][2]->pageblock_flags
+			// bitidx + start_bitidx : 1, bitmap : &mem_section[0][4]->pageblock_flags
 			__set_bit(bitidx + start_bitidx, bitmap);
 		else
+			// bitidx + start_bitidx : 0, bitmap : &mem_section[0][2]->pageblock_flags
+			// bitidx + start_bitidx : 0, bitmap : &mem_section[0][4]->pageblock_flags
 			__clear_bit(bitidx + start_bitidx, bitmap);
 }
 

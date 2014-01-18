@@ -26,14 +26,15 @@
 #include <linux/types.h>
 
 /* Bit indices that affect a whole block of pages */
+// ARM10C 20140118
 enum pageblock_bits {
-	PB_migrate,
-	PB_migrate_end = PB_migrate + 3 - 1,
+	PB_migrate,		// 0
+	PB_migrate_end = PB_migrate + 3 - 1,	// 2
 			/* 3 bits required for migrate types */
 #ifdef CONFIG_COMPACTION // CONFIG_COMPACTION=y
 	PB_migrate_skip,/* If set the block is skipped by compaction */
 #endif /* CONFIG_COMPACTION */
-	NR_PAGEBLOCK_BITS
+	NR_PAGEBLOCK_BITS	// 4
 };
 
 #ifdef CONFIG_HUGETLB_PAGE
@@ -56,10 +57,14 @@ extern int pageblock_order;
 #else /* CONFIG_HUGETLB_PAGE */
 
 /* If huge pages are not used, group by MAX_ORDER_NR_PAGES */
+// ARM10C 20140118
+// pageblock_order : 10
 #define pageblock_order		(MAX_ORDER-1)
 
 #endif /* CONFIG_HUGETLB_PAGE */
 
+// ARM10C 20140118
+// pageblock_nr_pages : 0x400
 #define pageblock_nr_pages	(1UL << pageblock_order)
 
 /* Forward declaration */

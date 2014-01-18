@@ -31,6 +31,9 @@ struct pglist_data __refdata contig_page_data = {
 EXPORT_SYMBOL(contig_page_data);
 #endif
 
+// ARM10C 20140118
+// max_low_pfn : 0x2F800
+// max_pfn : 0x80000
 unsigned long max_low_pfn;
 unsigned long min_low_pfn;
 unsigned long max_pfn;

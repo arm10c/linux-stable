@@ -254,6 +254,7 @@ unsigned long __init node_memmap_size_bytes(int nid, unsigned long start_pfn,
  * the identity pfn - section_mem_map will return the actual
  * physical page frame number.
  */
+// ARM10C 20140118
 // ARM10C 20131221
 // mem_map : 2816K 주소, pnum : 2
 static unsigned long sparse_encode_mem_map(struct page *mem_map, unsigned long pnum)
@@ -261,6 +262,9 @@ static unsigned long sparse_encode_mem_map(struct page *mem_map, unsigned long p
 	// mem_map : 2816K 주소, pnum : 2
 	// section_nr_to_pfn(2) : 0x20000
 	return (unsigned long)(mem_map - (section_nr_to_pfn(pnum)));
+
+	// 실제 물리 페이지 번호를 써서 해당하는 struct page 주소를 찾아내기 위해
+	// 미리 offset 값을 빼서 저장해둠
 }
 
 /*

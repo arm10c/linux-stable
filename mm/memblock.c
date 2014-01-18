@@ -1034,9 +1034,13 @@ int __init memblock_is_reserved(phys_addr_t addr)
 	return memblock_search(&memblock.reserved, addr) != -1;
 }
 
+// ARM10C 20140118
+// __pfn_to_phys(pfn) : 0x20000000
 int __init_memblock memblock_is_memory(phys_addr_t addr)
 {
+	// addr : 0x20000000
 	return memblock_search(&memblock.memory, addr) != -1;
+	// addr이 속한 region의 번호 0이 -1하고 다르니까 1 리턴 
 }
 
 /**

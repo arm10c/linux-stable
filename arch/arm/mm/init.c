@@ -356,9 +356,12 @@ static void __init arm_bootmem_free(unsigned long min, unsigned long max_low,
 	free_area_init_node(0, zone_size, min, zhole_size);
 }
 
-#ifdef CONFIG_HAVE_ARCH_PFN_VALID
+// ARM10C 20140118
+#ifdef CONFIG_HAVE_ARCH_PFN_VALID	// Y
+// pfn : 0x20000
 int pfn_valid(unsigned long pfn)
 {
+	// __pfn_to_phys(pfn) : 0x20000000
 	return memblock_is_memory(__pfn_to_phys(pfn));
 }
 EXPORT_SYMBOL(pfn_valid);
@@ -506,6 +509,7 @@ void __init bootmem_init(void)
 	 */
 	// min: 0x20000, max_low: 0x4f800, max_high: 0xA0000
 	arm_bootmem_free(min, max_low, max_high);
+	// contig_page_data 내부 값을 설정
 
 	/*
 	 * This doesn't seem to be used by the Linux memory manager any
@@ -515,7 +519,11 @@ void __init bootmem_init(void)
 	 * Note: max_low_pfn and max_pfn reflect the number of _pages_ in
 	 * the system, not the maximum PFN.
 	 */
+	// max_low: 0x4f800, PHYS_PFN_OFFSET : 0x20000
+	// max_low_pfn : 0x2F800
 	max_low_pfn = max_low - PHYS_PFN_OFFSET;
+	// max_high : 0xA0000, PHYS_PFN_OFFSET : 0x20000
+	// max_pfn : 0x80000
 	max_pfn = max_high - PHYS_PFN_OFFSET;
 }
 

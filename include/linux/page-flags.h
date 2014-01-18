@@ -71,6 +71,7 @@
  * SPARSEMEM section (for variants of SPARSEMEM that require section ids like
  * SPARSEMEM_EXTREME with !SPARSEMEM_VMEMMAP).
  */
+// ARM10C 20140118
 enum pageflags {
 	PG_locked,		/* Page is locked. Don't touch. */
 	PG_error,
@@ -82,7 +83,7 @@ enum pageflags {
 	PG_slab,
 	PG_owner_priv_1,	/* Owner use. If pagecache, fs may use*/
 	PG_arch_1,
-	PG_reserved,
+	PG_reserved,		// ARM10C 20140118, 10
 	PG_private,		/* If pagecache, has fs-private data */
 	PG_private_2,		/* If pagecache, has fs aux data */
 	PG_writeback,		/* Page is under writeback */
@@ -137,6 +138,9 @@ enum pageflags {
 static inline int Page##uname(const struct page *page)			\
 			{ return test_bit(PG_##lname, &page->flags); }
 
+// ARM10C 20140118
+// SetPageReserved()
+// set_bit(PG_reserved, &page->flags)
 #define SETPAGEFLAG(uname, lname)					\
 static inline void SetPage##uname(struct page *page)			\
 			{ set_bit(PG_##lname, &page->flags); }
@@ -206,6 +210,7 @@ __PAGEFLAG(Slab, slab)
 PAGEFLAG(Checked, checked)		/* Used by some filesystems */
 PAGEFLAG(Pinned, pinned) TESTSCFLAG(Pinned, pinned)	/* Xen */
 PAGEFLAG(SavePinned, savepinned);			/* Xen */
+// ARM10C 20140118
 PAGEFLAG(Reserved, reserved) __CLEARPAGEFLAG(Reserved, reserved)
 PAGEFLAG(SwapBacked, swapbacked) __CLEARPAGEFLAG(SwapBacked, swapbacked)
 

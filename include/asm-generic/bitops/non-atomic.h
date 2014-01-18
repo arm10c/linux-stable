@@ -12,19 +12,26 @@
  * If it's called on the same region of memory simultaneously, the effect
  * may be that only one operation succeeds.
  */
+// ARM10C 20140118
 static inline void __set_bit(int nr, volatile unsigned long *addr)
 {
 	unsigned long mask = BIT_MASK(nr);
 	unsigned long *p = ((unsigned long *)addr) + BIT_WORD(nr);
 
+	// nr 값을 이용해 해당 비트를 1로 설정
 	*p  |= mask;
+
 }
 
+// ARM10C 20140118
+// bitidx + start_bitidx : 0, bitmap : &mem_section[0][2]->pageblock_flags
 static inline void __clear_bit(int nr, volatile unsigned long *addr)
 {
+	// mask : 0x1
 	unsigned long mask = BIT_MASK(nr);
 	unsigned long *p = ((unsigned long *)addr) + BIT_WORD(nr);
 
+	// nr 값을 이용해서 해당 bit를 클리어
 	*p &= ~mask;
 }
 

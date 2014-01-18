@@ -561,6 +561,7 @@ static inline unsigned long zone_end_pfn(const struct zone *zone)
 	return zone->zone_start_pfn + zone->spanned_pages;
 }
 
+// ARM10C 20140118
 static inline bool zone_spans_pfn(const struct zone *zone, unsigned long pfn)
 {
 	return zone->zone_start_pfn <= pfn && pfn < zone_end_pfn(zone);
@@ -1113,6 +1114,7 @@ static inline unsigned long early_pfn_to_nid(unsigned long pfn)
 
 // ARM10C 20131207
 // PFN_SECTION_SHIFT: 16
+// ARM10C 20140118
 #define pfn_to_section_nr(pfn) ((pfn) >> PFN_SECTION_SHIFT)
 // ARM10C 20131221
 // PFN_SECTION_SHIFT: 16
@@ -1217,9 +1219,12 @@ extern unsigned long usemap_size(void);
 // ARM10C 20131214
 #define SECTION_NID_SHIFT	2
 
+// ARM10C 20140118
+// __sec : &mem_section[0][2]
 static inline struct page *__section_mem_map_addr(struct mem_section *section)
 {
 	unsigned long map = section->section_mem_map;
+	// 이전에 할당받은 섹션에 대한 struct page용 공간의 시작 주소 정보
 	map &= SECTION_MAP_MASK;
 	return (struct page *)map;
 }
@@ -1247,9 +1252,13 @@ static inline int valid_section_nr(unsigned long nr)
 	return valid_section(__nr_to_section(nr));
 }
 
+// ARM10C 20140118
+// pfn : 0x20000
 static inline struct mem_section *__pfn_to_section(unsigned long pfn)
 {
+	// pfn_to_section_nr(pfn) : 2
 	return __nr_to_section(pfn_to_section_nr(pfn));
+	// return : &mem_section[0][2] 
 }
 
 #ifndef CONFIG_HAVE_ARCH_PFN_VALID
@@ -1283,6 +1292,7 @@ static inline int pfn_present(unsigned long pfn)
 #define pfn_to_nid(pfn)		(0)
 #endif
 
+// ARM10C 20140118
 #define early_pfn_valid(pfn)	pfn_valid(pfn)
 void sparse_init(void);
 #else
@@ -1290,9 +1300,10 @@ void sparse_init(void);
 #define sparse_index_init(_sec, _nid)  do {} while (0)
 #endif /* CONFIG_SPARSEMEM */
 
-#ifdef CONFIG_NODES_SPAN_OTHER_NODES
+#ifdef CONFIG_NODES_SPAN_OTHER_NODES	// N
 bool early_pfn_in_nid(unsigned long pfn, int nid);
 #else
+// ARM10C 20140118
 #define early_pfn_in_nid(pfn, nid)	(1)
 #endif
 
