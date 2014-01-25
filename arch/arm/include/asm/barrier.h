@@ -55,6 +55,7 @@
 #define smp_rmb()	barrier()
 #define smp_wmb()	barrier()
 #else
+// ARM10C 20140125
 #define smp_mb()	dmb()	// ARM10C this 
 #define smp_rmb()	dmb()
 #define smp_wmb()	dmb()

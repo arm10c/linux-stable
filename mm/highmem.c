@@ -334,6 +334,7 @@ static struct page_address_map page_address_maps[LAST_PKMAP];
 // 64 byte align되어있음.
 // - ____cacheline_aligned_in_smp는 64byte align 시키는 attribute.
 // - 배열 사이즈: 1<<PA_HASH_ORDER = 1<<7 = 128
+// ARM10C 20140125
 static struct page_address_slot {
 	struct list_head lh;			/* List of page_address_maps */
 	spinlock_t lock;			/* Protect this bucket's list */
@@ -350,14 +351,17 @@ static struct page_address_slot *page_slot(const struct page *page)
  *
  * Returns the page's virtual address.
  */
+// ARM10C 20140125
 void *page_address(const struct page *page)
 {
 	unsigned long flags;
 	void *ret;
 	struct page_address_slot *pas;
 
+        // PageHighMem(page): 0
 	if (!PageHighMem(page))
 		return lowmem_page_address(page);
+                // page의 virtual address 값을 리턴
 
 	pas = page_slot(page);
 	ret = NULL;

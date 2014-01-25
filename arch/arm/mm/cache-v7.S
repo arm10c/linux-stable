@@ -335,15 +335,29 @@ ENDPROC(v7_coherent_user_range)
  *	- addr	- kernel address
  *	- size	- region size
  */
+// ARM10C 20140125
+// page_address(page): page의 virtual address, page_size: 4096(4K)
 ENTRY(v7_flush_kern_dcache_area)
 	dcache_line_size r2, r3
+	// r2: 0x40, r3: 0x4
+
+        // r1: 4096, r0: ??
 	add	r1, r0, r1
+        // r1: page의 virtual address 에 page size(4K)를 더함
+
+        // r3: 0x4, r2: 0x40
 	sub	r3, r2, #1
+        // r3: 0x3F
+
+        // r0: page의 virtual address, r3: 0x3F
 	bic	r0, r0, r3
-#ifdef CONFIG_ARM_ERRATA_764369
+        // page의 virtual address를 cache 사이즈 align 을 맞춤
+
+#ifdef CONFIG_ARM_ERRATA_764369 // CONFIG_ARM_ERRATA_764369=n
 	ALT_SMP(W(dsb))
 	ALT_UP(W(nop))
 #endif
+        // 4K 영역만큼 루프 돌며 flush
 1:
 	mcr	p15, 0, r0, c7, c14, 1		@ clean & invalidate D line / unified line
 	add	r0, r0, r2

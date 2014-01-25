@@ -84,6 +84,8 @@ static inline int get_pageblock_migratetype(struct page *page)
 	return get_pageblock_flags_group(page, PB_migrate, PB_migrate_end);
 }
 
+// ARM10C 20140125
+// MIGRATE_TYPES: 4
 struct free_area {
 	struct list_head	free_list[MIGRATE_TYPES];
 	unsigned long		nr_free;
@@ -97,15 +99,17 @@ struct pglist_data;
  * cachelines.  There are very few zone structures in the machine, so space
  * consumption is not a concern here.
  */
-#if defined(CONFIG_SMP)
+#if defined(CONFIG_SMP) // CONFIG_SMP=7
 struct zone_padding {
 	char x[0];
 } ____cacheline_internodealigned_in_smp;
+// ARM10C 20140125
 #define ZONE_PADDING(name)	struct zone_padding name;
 #else
 #define ZONE_PADDING(name)
 #endif
 
+// ARM10C 20140125
 enum zone_stat_item {
 	/* First 128 byte cacheline (assuming 64 bit words) */
 	NR_FREE_PAGES,
@@ -137,7 +141,7 @@ enum zone_stat_item {
 	NR_SHMEM,		/* shmem pages (included tmpfs/GEM pages) */
 	NR_DIRTIED,		/* page dirtyings since bootup */
 	NR_WRITTEN,		/* page writings since bootup */
-#ifdef CONFIG_NUMA
+#ifdef CONFIG_NUMA // CONFIG_NUMA=n
 	NUMA_HIT,		/* allocated in intended node */
 	NUMA_MISS,		/* allocated in non intended node */
 	NUMA_FOREIGN,		/* was intended here, hit elsewhere */
@@ -162,6 +166,7 @@ enum zone_stat_item {
 #define LRU_ACTIVE 1
 #define LRU_FILE 2
 
+// ARM10C 20140125
 enum lru_list {
 	LRU_INACTIVE_ANON = LRU_BASE,
 	LRU_ACTIVE_ANON = LRU_BASE + LRU_ACTIVE,
@@ -190,6 +195,7 @@ static inline int is_unevictable_lru(enum lru_list lru)
 	return (lru == LRU_UNEVICTABLE);
 }
 
+// ARM10C 20140125
 struct zone_reclaim_stat {
 	/*
 	 * The pageout code in vmscan.c keeps track of how many of the
@@ -204,6 +210,8 @@ struct zone_reclaim_stat {
 };
 
 // ARM10C 20140111 
+// ARM10C 20140125
+// NR_LRU_LISTS: 5
 struct lruvec {
 	struct list_head lists[NR_LRU_LISTS];
 	struct zone_reclaim_stat reclaim_stat;
@@ -229,6 +237,7 @@ struct lruvec {
 /* LRU Isolation modes. */
 typedef unsigned __bitwise__ isolate_mode_t;
 
+// KID 20140125
 enum zone_watermarks {
 	WMARK_MIN,
 	WMARK_LOW,
@@ -316,10 +325,14 @@ enum zone_type {
 
 #ifndef __GENERATING_BOUNDS_H
 
+// ARM10C 20140125
+// sizeof(struct zone): 804 bytes
 struct zone {
 	/* Fields commonly accessed by the page allocator */
 
 	/* zone watermarks, access with *_wmark_pages(zone) macros */
+        // ARM10C 20140125
+        // NR_WMARK: 3
 	unsigned long watermark[NR_WMARK];
 
 	/*
@@ -337,6 +350,8 @@ struct zone {
 	 * on the higher zones). This array is recalculated at runtime if the
 	 * sysctl_lowmem_reserve_ratio sysctl changes.
 	 */
+        // ARM10C 20140125
+        // MAX_NR_ZONES: 3
 	unsigned long		lowmem_reserve[MAX_NR_ZONES];
 
 	/*
@@ -345,7 +360,7 @@ struct zone {
 	 */
 	unsigned long		dirty_balance_reserve;
 
-#ifdef CONFIG_NUMA
+#ifdef CONFIG_NUMA // CONFIG_NUMA=n
 	int node;
 	/*
 	 * zone reclaim becomes active if more unmapped pages exist.
@@ -357,9 +372,11 @@ struct zone {
 	/*
 	 * free areas of different sizes
 	 */
+        // ARM10C 20140125
+        // sizeof(spinlock_t): 16 bytes
 	spinlock_t		lock;
 	int                     all_unreclaimable; /* All pages pinned */
-#if defined CONFIG_COMPACTION || defined CONFIG_CMA
+#if defined CONFIG_COMPACTION || defined CONFIG_CMA // CONFIG_COMPACTION=y, CONFIG_CMA=n
 	/* Set to true when the PG_migrate_skip bits should be cleared */
 	bool			compact_blockskip_flush;
 
@@ -367,13 +384,17 @@ struct zone {
 	unsigned long		compact_cached_free_pfn;
 	unsigned long		compact_cached_migrate_pfn;
 #endif
-#ifdef CONFIG_MEMORY_HOTPLUG
+#ifdef CONFIG_MEMORY_HOTPLUG // CONFIG_MEMORY_HOTPLUG=n
 	/* see spanned/present_pages for more description */
 	seqlock_t		span_seqlock;
 #endif
+        // ARM10C 20140125
+        // MAX_ORDER: 11
+        // sizeof(struct free_area): 36
+        // sizeof(free_area[MAX_ORDER]): 396
 	struct free_area	free_area[MAX_ORDER];
 
-#ifndef CONFIG_SPARSEMEM
+#ifndef CONFIG_SPARSEMEM // CONFIG_SPARSEMEM=y
 	/*
 	 * Flags for a pageblock_nr_pages block. See pageblock-flags.h.
 	 * In SPARSEMEM, this map is stored in struct mem_section
@@ -381,7 +402,7 @@ struct zone {
 	unsigned long		*pageblock_flags;
 #endif /* CONFIG_SPARSEMEM */
 
-#ifdef CONFIG_COMPACTION
+#ifdef CONFIG_COMPACTION // CONFIG_COMPACTION=y
 	/*
 	 * On compaction failure, 1<<compact_defer_shift compactions
 	 * are skipped before trying again. The number attempted since
@@ -392,16 +413,28 @@ struct zone {
 	int			compact_order_failed;
 #endif
 
+        // ARM10C 20140125
+        // #define ZONE_PADDING(_pad1_)	struct zone_padding _pad1_;
+        // sizeof(struct zone_padding): 64 bytes
 	ZONE_PADDING(_pad1_)
 
 	/* Fields commonly accessed by the page reclaim scanner */
+        // ARM10C 20140125
+        // sizeof(spinlock_t): 16 bytes
 	spinlock_t		lru_lock;
+
+        // ARM10C 20140125
+        // sizeof(struct lruvec): 56 bytes
 	struct lruvec		lruvec;
 
 	unsigned long		pages_scanned;	   /* since last reclaim */
 	unsigned long		flags;		   /* zone flags, see below */
 
 	/* Zone statistics */
+        // ARM10C 20140125
+        // sizeof(atomic_long_t): 4bytes
+        // NR_VM_ZONE_STAT_ITEMS: 28
+        // sizeof(vm_stat[NR_VM_ZONE_STAT_ITEMS]): 112 bytes
 	atomic_long_t		vm_stat[NR_VM_ZONE_STAT_ITEMS];
 
 	/*
@@ -411,6 +444,9 @@ struct zone {
 	unsigned int inactive_ratio;
 
 
+        // ARM10C 20140125
+        // #define ZONE_PADDING(_pad2_)	struct zone_padding _pad2_;
+        // sizeof(struct zone_padding): 64 bytes
 	ZONE_PADDING(_pad2_)
 	/* Rarely used or read-mostly fields */
 
@@ -893,13 +929,18 @@ static inline int is_highmem_idx(enum zone_type idx)
  *              to ZONE_{DMA/NORMAL/HIGHMEM/etc} in general code to a minimum.
  * @zone - pointer to struct zone variable
  */
+// ARM10C 20140125
 static inline int is_highmem(struct zone *zone)
 {
-#ifdef CONFIG_HIGHMEM
+#ifdef CONFIG_HIGHMEM // CONFIG_HIGHMEM=y
+        // zone_off: zone의 offset을 구함, zone_off: 0
 	int zone_off = (char *)zone - (char *)zone->zone_pgdat->node_zones;
+
+        // sizeof(*zone): 804, ZONE_HIGHMEM: 1, ZONE_MOVABLE: 2
 	return zone_off == ZONE_HIGHMEM * sizeof(*zone) ||
 	       (zone_off == ZONE_MOVABLE * sizeof(*zone) &&
 		zone_movable_is_highmem());
+        // return 0
 #else
 	return 0;
 #endif

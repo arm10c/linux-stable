@@ -486,8 +486,10 @@ static inline compound_page_dtor *get_compound_page_dtor(struct page *page)
 	return (compound_page_dtor *)page[1].lru.next;
 }
 
+// ARM10C 20140125
 static inline int compound_order(struct page *page)
 {
+        // PageHead(page): 0
 	if (!PageHead(page))
 		return 0;
 	return (unsigned long)page[1].lru.prev;
@@ -741,6 +743,7 @@ static inline void page_nid_reset_last(struct page *page)
 #endif
 
 // ARM10C 20140118
+// ARM10C 20140125
 static inline struct zone *page_zone(const struct page *page)
 {
 	return &NODE_DATA(page_to_nid(page))->node_zones[page_zonenum(page)];
@@ -810,6 +813,7 @@ static inline void set_page_links(struct page *page, enum zone_type zone,
  */
 #include <linux/vmstat.h>
 
+// ARM10C 20140125
 static __always_inline void *lowmem_page_address(const struct page *page)
 {
 	return __va(PFN_PHYS(page_to_pfn(page)));
@@ -819,7 +823,7 @@ static __always_inline void *lowmem_page_address(const struct page *page)
 #define HASHED_PAGE_VIRTUAL // ARM10C this 
 #endif
 
-#if defined(WANT_PAGE_VIRTUAL)
+#if defined(WANT_PAGE_VIRTUAL) // undefined
 #define page_address(page) ((page)->virtual)
 #define set_page_address(page, address)			\
 	do {						\
@@ -829,6 +833,7 @@ static __always_inline void *lowmem_page_address(const struct page *page)
 #endif
 
 #if defined(HASHED_PAGE_VIRTUAL)    // ARM10C Y 
+// ARM10C 20140125
 void *page_address(const struct page *page);
 void set_page_address(struct page *page, void *virtual);
 void page_address_init(void);	// ARM10C this 

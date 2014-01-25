@@ -164,6 +164,7 @@ typedef u64 phys_addr_t;
 typedef u32 phys_addr_t;
 #endif
 
+// ARM10C 20140125
 typedef phys_addr_t resource_size_t;
 
 /*

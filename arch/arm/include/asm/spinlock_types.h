@@ -7,6 +7,7 @@
 
 #define TICKET_SHIFT	16
 
+// ARM10C 20140125
 typedef struct {
 	union {
 		u32 slock;

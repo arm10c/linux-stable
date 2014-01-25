@@ -41,6 +41,7 @@ struct text_range {
 	unsigned long long start, end;
 };
 
+// ARM10C 20140125
 static unsigned long long _text;
 static struct text_range text_ranges[] = {
 	{ "_stext",     "_etext"     },

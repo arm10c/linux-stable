@@ -136,6 +136,9 @@ extern struct cpu_cache_fns cpu_cache;
 // vectors: 0xEF7FE000, vectors + PAGE_SIZE * 2: 0xEF800000
 #define __cpuc_coherent_kern_range	cpu_cache.coherent_kern_range
 #define __cpuc_coherent_user_range	cpu_cache.coherent_user_range
+// ARM10C 20140125
+// page_address(page): page의 virtual address, page_size: 4096(4K)
+// cpu_cache.flush_kern_dcache_area: v7_flush_kern_dcache_area
 #define __cpuc_flush_dcache_area	cpu_cache.flush_kern_dcache_area
 
 /*

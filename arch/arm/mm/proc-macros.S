@@ -70,6 +70,7 @@
  * on ARMv7.
  */
 	// ARM10C 20131116
+        // ARM10C 20140125
 	.macro	dcache_line_size, reg, tmp
 	// A.R.M: B4.1.42 CTR, Cache Type Register, VMSA
 	mrc	p15, 0, \tmp, c0, c0, 1		@ read ctr

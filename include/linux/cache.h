@@ -56,6 +56,7 @@
  */
 #ifndef INTERNODE_CACHE_SHIFT // undefined
 // ARM10C 20131207
+// ARM10C 20140125
 // L1_CACHE_SHIFT: 6
 // INTERNODE_CACHE_SHIFT: 6
 #define INTERNODE_CACHE_SHIFT L1_CACHE_SHIFT
@@ -64,6 +65,7 @@
 #if !defined(____cacheline_internodealigned_in_smp)
 #if defined(CONFIG_SMP) // CONFIG_SMP=y
 // ARM10C 20131207
+// ARM10C 20140125
 #define ____cacheline_internodealigned_in_smp \
 	__attribute__((__aligned__(1 << (INTERNODE_CACHE_SHIFT))))
 #else

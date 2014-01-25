@@ -1663,8 +1663,13 @@ void __init paging_init(struct machine_desc *mdesc)
 	// contig_page_data 내부 값을 설정
 	bootmem_init();
 
-	// empty_zero_page : ??
+	// empty_zero_page : ??, low_mem에 있으므로 zone normal 영역에 존재 (0)
 	empty_zero_page = virt_to_page(zero_page);
+
 // 2014/01/18 종료
+// 2014/01/25 시작
+
+        // empty_zero_page: ??
 	__flush_dcache_page(NULL, empty_zero_page);
+        // empty_zero_page를 dcache flush 수행함
 }

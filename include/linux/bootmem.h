@@ -146,6 +146,8 @@ extern void *__alloc_bootmem_low_node(pg_data_t *pgdat,
 #define alloc_bootmem_pages_node_nopanic(pgdat, x) \
 	__alloc_bootmem_node_nopanic(pgdat, x, PAGE_SIZE, BOOTMEM_LOW_LIMIT)
 
+// ARM10C 20140125
+// SMP_CACHE_BYTES: 64
 #define alloc_bootmem_low(x) \
 	__alloc_bootmem_low(x, SMP_CACHE_BYTES, 0)
 #define alloc_bootmem_low_pages_nopanic(x) \

@@ -276,7 +276,8 @@ int __lockfunc _raw_write_trylock(rwlock_t *lock)
 EXPORT_SYMBOL(_raw_write_trylock);
 #endif
 
-#ifndef CONFIG_INLINE_WRITE_LOCK
+#ifndef CONFIG_INLINE_WRITE_LOCK // CONFIG_INLINE_WRITE_LOCK=n
+// ARM10C 20140125
 void __lockfunc _raw_write_lock(rwlock_t *lock)
 {
 	__raw_write_lock(lock);
@@ -308,7 +309,8 @@ void __lockfunc _raw_write_lock_bh(rwlock_t *lock)
 EXPORT_SYMBOL(_raw_write_lock_bh);
 #endif
 
-#ifndef CONFIG_INLINE_WRITE_UNLOCK
+#ifndef CONFIG_INLINE_WRITE_UNLOCK // CONFIG_INLINE_WRITE_UNLOCK=n
+// ARM10C 20140125
 void __lockfunc _raw_write_unlock(rwlock_t *lock)
 {
 	__raw_write_unlock(lock);

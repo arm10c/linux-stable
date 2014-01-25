@@ -87,14 +87,18 @@ enum pageflags {
 	PG_private,		/* If pagecache, has fs-private data */
 	PG_private_2,		/* If pagecache, has fs aux data */
 	PG_writeback,		/* Page is under writeback */
-#ifdef CONFIG_PAGEFLAGS_EXTENDED
+#ifdef CONFIG_PAGEFLAGS_EXTENDED // CONFIG_PAGEFLAGS_EXTENDED=n
 	PG_head,		/* A head page */
 	PG_tail,		/* A tail page */
 #else
+        // ARM10C 20140125
+        // PG_compound: 14
 	PG_compound,		/* A compound page */
 #endif
 	PG_swapcache,		/* Swap page: swp_entry_t in private */
 	PG_mappedtodisk,	/* Has blocks allocated on-disk */
+        // ARM10C 20140125
+        // PG_reclaim: 17
 	PG_reclaim,		/* To be reclaimed asap */
 	PG_swapbacked,		/* Page is backed by RAM/swap */
 	PG_unevictable,		/* Page is "unevictable"  */
@@ -237,11 +241,13 @@ PAGEFLAG(MappedToDisk, mappedtodisk)
 PAGEFLAG(Reclaim, reclaim) TESTCLEARFLAG(Reclaim, reclaim)
 PAGEFLAG(Readahead, reclaim)		/* Reminder to do async read-ahead */
 
-#ifdef CONFIG_HIGHMEM
+#ifdef CONFIG_HIGHMEM // CONFIG_HIGHMEM=y
 /*
  * Must use a macro here due to header dependency issues. page_zone() is not
  * available at this point.
  */
+// ARM10C 20140125
+// page_zone(__p): node_zones의 주소 리턴
 #define PageHighMem(__p) is_highmem(page_zone(__p))
 #else
 PAGEFLAG_FALSE(HighMem)
@@ -371,12 +377,20 @@ __SETPAGEFLAG(Head, compound)  __CLEARPAGEFLAG(Head, compound)
  * PG_compound & PG_reclaim	=> Tail page
  * PG_compound & ~PG_reclaim	=> Head page
  */
+// ARM10C 20140125
+// PG_head_mask: 0x4000
 #define PG_head_mask ((1L << PG_compound))
+// ARM10C 20140125
+// PG_compound: 14, PG_reclaim: 17
+// PG_head_tail_mask: 0x24000
 #define PG_head_tail_mask ((1L << PG_compound) | (1L << PG_reclaim))
 
+// ARM10C 20140125
 static inline int PageHead(struct page *page)
 {
+        // PG_head_tail_mask: 0x24000, PG_head_mask: 0x4000
 	return ((page->flags & PG_head_tail_mask) == PG_head_mask);
+        // return 0
 }
 
 static inline int PageTail(struct page *page)

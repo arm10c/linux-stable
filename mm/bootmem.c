@@ -598,6 +598,8 @@ static unsigned long __init align_off(struct bootmem_data *bdata,
 // pgdat: ?, size: 0x1000, align: 64, goal: 0x5FFFFFFF, limit: 0
 // ARM10C 20131221
 // bdata: ?, size: 0x800, align: 64, goal: 0x5FFFFFFF, limit: 0
+// ARM10C 20140125
+// bdata: ?, size: 0x1C, align: 64, goal: 0x0, limit: 0xFFFFFFFF
 static void * __init alloc_bootmem_bdata(struct bootmem_data *bdata,
 					unsigned long size, unsigned long align,
 					unsigned long goal, unsigned long limit)
@@ -754,6 +756,8 @@ find_block:
 //
 // size: 0x40, align: 64, goal: 0x5FFFFFFF, limit: 0
 // size: 0x40, align: 64, goal: 0x0, limit: 0
+// ARM10C 20140125
+// size: 0x1C, align: 64, goal: 0, limit: 0xffffffffUL
 static void * __init alloc_bootmem_core(unsigned long size,
 					unsigned long align,
 					unsigned long goal,
@@ -767,14 +771,24 @@ static void * __init alloc_bootmem_core(unsigned long size,
 		return kzalloc(size, GFP_NOWAIT);
 
 	list_for_each_entry(bdata, &bdata_list, list) {
+                // ARM10C 20131214
 		// goal: 0x5FFFFFFF, bdata->node_low_pfn: 0x4f800, PFN_DOWN(0x5FFFFFFF): 0x5FFFF
+                // ARM10C 20140125
+		// goal: 0, bdata->node_low_pfn: 0x4f800, PFN_DOWN(0): 0
 		if (goal && bdata->node_low_pfn <= PFN_DOWN(goal))
 			continue;
+
+                // ARM10C 20131214
 		// limit: 0, bdata->node_min_pfn: 0x20000, PFN_DOWN(0): 0
+                // ARM10C 20140125
+		// limit: 0xffffffff, bdata->node_low_pfn: 0x4f800, PFN_DOWN(0xffffffff): 0xFFFFF
 		if (limit && bdata->node_min_pfn >= PFN_DOWN(limit))
 			break;
 
+                // ARM10C 20131214
 		// bdata: ?, size: 0x40, align: 64, goal: 0x0, limit: 0
+                // ARM10C 20140125
+		// bdata: ?, size: 0x1C, align: 64, goal: 0x0, limit: 0xFFFFFFFF
 		region = alloc_bootmem_bdata(bdata, size, align, goal, limit);
 		if (region)
 			return region;
@@ -785,6 +799,8 @@ static void * __init alloc_bootmem_core(unsigned long size,
 
 // ARM10C 20131214
 // size: 0x40, align: 64, goal: 0x5FFFFFFF, limit: 0
+// ARM10C 20140125
+// size: 0x1C, align: 64, goal: 0, limit: 0xffffffffUL
 static void * __init ___alloc_bootmem_nopanic(unsigned long size,
 					      unsigned long align,
 					      unsigned long goal,
@@ -793,8 +809,11 @@ static void * __init ___alloc_bootmem_nopanic(unsigned long size,
 	void *ptr;
 
 restart:
+        // ARM10C 20131214
 	// size: 0x40, align: 64, goal: 0x5FFFFFFF, limit: 0
 	// restart 이후: size: 0x40, align: 64, goal: 0x0, limit: 0
+        // ARM10C 20140125
+        // size: 0x1C, align: 64, goal: 0, limit: 0xffffffffUL
 	ptr = alloc_bootmem_core(size, align, goal, limit);
 	// restart 이후: ptr: NULL 아닌 값
 	if (ptr)
@@ -830,10 +849,13 @@ void * __init __alloc_bootmem_nopanic(unsigned long size, unsigned long align,
 
 // ARM10C 20131214
 // size: 0x40, align: 64, goal: 0x5FFFFFFF, limit: 0
+// ARM10C 20140125
+// size: 28, align: 64, goal: 0, ARCH_LOW_ADDRESS_LIMIT: 0xffffffffUL
 static void * __init ___alloc_bootmem(unsigned long size, unsigned long align,
 					unsigned long goal, unsigned long limit)
 {
 	// size: 0x40, align: 64, goal: 0x5FFFFFFF, limit: 0
+	// size: 0x1C, align: 64, goal: 0, limit: 0xffffffffUL
 	void *mem = ___alloc_bootmem_nopanic(size, align, goal, limit);
 
 	// mem: NULL 아닌 값
@@ -1002,6 +1024,7 @@ void * __init __alloc_bootmem_node_high(pg_data_t *pgdat, unsigned long size,
 }
 
 #ifndef ARCH_LOW_ADDRESS_LIMIT
+// ARM10C 20140125
 #define ARCH_LOW_ADDRESS_LIMIT	0xffffffffUL
 #endif
 
@@ -1018,10 +1041,14 @@ void * __init __alloc_bootmem_node_high(pg_data_t *pgdat, unsigned long size,
  *
  * The function panics if the request can not be satisfied.
  */
+// ARM10C 20140125
+// 28, SMP_CACHE_BYTES: 64, 0
 void * __init __alloc_bootmem_low(unsigned long size, unsigned long align,
 				  unsigned long goal)
 {
+        // size: 28, align: 64, goal: 0, ARCH_LOW_ADDRESS_LIMIT: 0xffffffffUL
 	return ___alloc_bootmem(size, align, goal, ARCH_LOW_ADDRESS_LIMIT);
+        // 4K 메모리 할당
 }
 
 void * __init __alloc_bootmem_low_nopanic(unsigned long size,
