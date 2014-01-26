@@ -792,37 +792,37 @@ static void __init request_standard_resources(struct machine_desc *mdesc)
 	struct memblock_region *region;
 	struct resource *res;
 
-        // 커널 text 영역의 시작과 끝의 주소값를 start, end에할당
+	// 커널 text 영역의 시작과 끝의 주소값를 start, end에할당
 	kernel_code.start   = virt_to_phys(_text);
 	kernel_code.end     = virt_to_phys(_etext - 1);
-        // 커널 data 영역 시작과 끝의 주소값를 start, end에할당
+	// 커널 data 영역 시작과 끝의 주소값를 start, end에할당
 	kernel_data.start   = virt_to_phys(_sdata);
 	kernel_data.end     = virt_to_phys(_end - 1);
 
 	for_each_memblock(memory, region) {
-                // sizeof(*res): 28 bytes
+		// sizeof(*res): 28 bytes
 		res = alloc_bootmem_low(sizeof(*res));
-                // res: 4K 메모리 할당 받은 주소
+		// res: 4K 메모리 할당 받은 주소
 
 		res->name  = "System RAM";
 		res->start = __pfn_to_phys(memblock_region_memory_base_pfn(region));
 		res->end = __pfn_to_phys(memblock_region_memory_end_pfn(region)) - 1;
 
-                // IORESOURCE_MEM: 0x00000200, IORESOURCE_BUSY: 0x80000000
+		// IORESOURCE_MEM: 0x00000200, IORESOURCE_BUSY: 0x80000000
 		res->flags = IORESOURCE_MEM | IORESOURCE_BUSY;
-                // res->flags: 0x80000200
+		// res->flags: 0x80000200
 
-                // iomem_resource, res->name  = "System RAM", res->flags: 0x80000200
-                // root의 영역이 잘못되어 속하지 않거나 기존에 값이 있다면
-                // 충돌이 난것이으므로 root를 반환 받는다.
-                // 여기서는 충돌나지 않기 때문에 NULL을 반환 받는다.
-                //
-                //            res
-                //     /      /          \
-                // parent  child       parent
-                //  /      /               \
-                // kernel_code  ------->  kernel_data ------> null
-                //                sibling
+		// iomem_resource, res->name  = "System RAM", res->flags: 0x80000200
+		// root의 영역이 잘못되어 속하지 않거나 기존에 값이 있다면
+		// 충돌이 난것이으므로 root를 반환 받는다.
+		// 여기서는 충돌나지 않기 때문에 NULL을 반환 받는다.
+		//
+		//            res
+		//     /      /          \
+		// parent  child       parent
+		//  /      /               \
+		// kernel_code  ------->  kernel_data ------> null
+		//                sibling
 		request_resource(&iomem_resource, res);
 
 		if (kernel_code.start >= res->start &&
@@ -833,7 +833,7 @@ static void __init request_standard_resources(struct machine_desc *mdesc)
 			request_resource(res, &kernel_data);
 	}
 
-        // mdesc->video_start: 0
+	// mdesc->video_start: 0
 	if (mdesc->video_start) {
 		video_ram.start = mdesc->video_start;
 		video_ram.end   = mdesc->video_end;
@@ -844,7 +844,7 @@ static void __init request_standard_resources(struct machine_desc *mdesc)
 	 * Some machines don't have the possibility of ever
 	 * possessing lp0, lp1 or lp2
 	 */
-        // mdesc->reserve_lp0: 0
+	// mdesc->reserve_lp0: 0
 	if (mdesc->reserve_lp0)
 		request_resource(&ioport_resource, &lp0);
 	if (mdesc->reserve_lp1)
@@ -1019,8 +1019,8 @@ void __init setup_arch(char **cmdline_p)
 // 2013/10/26 종료
 // 2013/11/02 시작
 
-        // mmu용 page table (pgd, pte)을 생성
-        // zone 영역 3개로 나누고 각 zone에 해당하는 page를 할당함
+	// mmu용 page table (pgd, pte)을 생성
+	// zone 영역 3개로 나누고 각 zone에 해당하는 page를 할당함
 	paging_init(mdesc);
 	request_standard_resources(mdesc);
 

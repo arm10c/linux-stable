@@ -214,10 +214,10 @@ static struct resource * __request_resource(struct resource *root, struct resour
 	if (end > root->end)
 		return root;
 
-        // root->child: NULL
+	// root->child: NULL
 	p = &root->child;
 	for (;;) {
-                // tmp: NULL
+		// tmp: NULL
 		tmp = *p;
 		if (!tmp || tmp->start > end) {
 			new->sibling = tmp;
@@ -314,10 +314,10 @@ int request_resource(struct resource *root, struct resource *new)
 	struct resource *conflict;
 
 	conflict = request_resource_conflict(root, new);
-        // conflict: NULL
+	// conflict: NULL
 
 	return conflict ? -EBUSY : 0;
-        // return 0
+	// return 0
 }
 
 EXPORT_SYMBOL(request_resource);

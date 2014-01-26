@@ -1669,7 +1669,7 @@ void __init paging_init(struct machine_desc *mdesc)
 // 2014/01/18 종료
 // 2014/01/25 시작
 
-        // empty_zero_page: ??
+	// empty_zero_page: ??
 	__flush_dcache_page(NULL, empty_zero_page);
-        // empty_zero_page를 dcache flush 수행함
+	// empty_zero_page를 dcache flush 수행함
 }

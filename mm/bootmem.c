@@ -771,23 +771,23 @@ static void * __init alloc_bootmem_core(unsigned long size,
 		return kzalloc(size, GFP_NOWAIT);
 
 	list_for_each_entry(bdata, &bdata_list, list) {
-                // ARM10C 20131214
+		// ARM10C 20131214
 		// goal: 0x5FFFFFFF, bdata->node_low_pfn: 0x4f800, PFN_DOWN(0x5FFFFFFF): 0x5FFFF
-                // ARM10C 20140125
+		// ARM10C 20140125
 		// goal: 0, bdata->node_low_pfn: 0x4f800, PFN_DOWN(0): 0
 		if (goal && bdata->node_low_pfn <= PFN_DOWN(goal))
 			continue;
 
-                // ARM10C 20131214
+		// ARM10C 20131214
 		// limit: 0, bdata->node_min_pfn: 0x20000, PFN_DOWN(0): 0
-                // ARM10C 20140125
+		// ARM10C 20140125
 		// limit: 0xffffffff, bdata->node_low_pfn: 0x4f800, PFN_DOWN(0xffffffff): 0xFFFFF
 		if (limit && bdata->node_min_pfn >= PFN_DOWN(limit))
 			break;
 
-                // ARM10C 20131214
+		// ARM10C 20131214
 		// bdata: ?, size: 0x40, align: 64, goal: 0x0, limit: 0
-                // ARM10C 20140125
+		// ARM10C 20140125
 		// bdata: ?, size: 0x1C, align: 64, goal: 0x0, limit: 0xFFFFFFFF
 		region = alloc_bootmem_bdata(bdata, size, align, goal, limit);
 		if (region)
@@ -809,11 +809,11 @@ static void * __init ___alloc_bootmem_nopanic(unsigned long size,
 	void *ptr;
 
 restart:
-        // ARM10C 20131214
+	// ARM10C 20131214
 	// size: 0x40, align: 64, goal: 0x5FFFFFFF, limit: 0
 	// restart 이후: size: 0x40, align: 64, goal: 0x0, limit: 0
-        // ARM10C 20140125
-        // size: 0x1C, align: 64, goal: 0, limit: 0xffffffffUL
+	// ARM10C 20140125
+	// size: 0x1C, align: 64, goal: 0, limit: 0xffffffffUL
 	ptr = alloc_bootmem_core(size, align, goal, limit);
 	// restart 이후: ptr: NULL 아닌 값
 	if (ptr)
@@ -1046,9 +1046,9 @@ void * __init __alloc_bootmem_node_high(pg_data_t *pgdat, unsigned long size,
 void * __init __alloc_bootmem_low(unsigned long size, unsigned long align,
 				  unsigned long goal)
 {
-        // size: 28, align: 64, goal: 0, ARCH_LOW_ADDRESS_LIMIT: 0xffffffffUL
+	// size: 28, align: 64, goal: 0, ARCH_LOW_ADDRESS_LIMIT: 0xffffffffUL
 	return ___alloc_bootmem(size, align, goal, ARCH_LOW_ADDRESS_LIMIT);
-        // 4K 메모리 할당
+	// 4K 메모리 할당
 }
 
 void * __init __alloc_bootmem_low_nopanic(unsigned long size,

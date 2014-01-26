@@ -237,7 +237,7 @@ struct lruvec {
 /* LRU Isolation modes. */
 typedef unsigned __bitwise__ isolate_mode_t;
 
-// KID 20140125
+// ARM10C 20140125
 enum zone_watermarks {
 	WMARK_MIN,
 	WMARK_LOW,
@@ -331,8 +331,8 @@ struct zone {
 	/* Fields commonly accessed by the page allocator */
 
 	/* zone watermarks, access with *_wmark_pages(zone) macros */
-        // ARM10C 20140125
-        // NR_WMARK: 3
+	// ARM10C 20140125
+	// NR_WMARK: 3
 	unsigned long watermark[NR_WMARK];
 
 	/*
@@ -350,8 +350,8 @@ struct zone {
 	 * on the higher zones). This array is recalculated at runtime if the
 	 * sysctl_lowmem_reserve_ratio sysctl changes.
 	 */
-        // ARM10C 20140125
-        // MAX_NR_ZONES: 3
+	// ARM10C 20140125
+	// MAX_NR_ZONES: 3
 	unsigned long		lowmem_reserve[MAX_NR_ZONES];
 
 	/*
@@ -372,8 +372,8 @@ struct zone {
 	/*
 	 * free areas of different sizes
 	 */
-        // ARM10C 20140125
-        // sizeof(spinlock_t): 16 bytes
+	// ARM10C 20140125
+	// sizeof(spinlock_t): 16 bytes
 	spinlock_t		lock;
 	int                     all_unreclaimable; /* All pages pinned */
 #if defined CONFIG_COMPACTION || defined CONFIG_CMA // CONFIG_COMPACTION=y, CONFIG_CMA=n
@@ -388,10 +388,10 @@ struct zone {
 	/* see spanned/present_pages for more description */
 	seqlock_t		span_seqlock;
 #endif
-        // ARM10C 20140125
-        // MAX_ORDER: 11
-        // sizeof(struct free_area): 36
-        // sizeof(free_area[MAX_ORDER]): 396
+	// ARM10C 20140125
+	// MAX_ORDER: 11
+	// sizeof(struct free_area): 36
+	// sizeof(free_area[MAX_ORDER]): 396
 	struct free_area	free_area[MAX_ORDER];
 
 #ifndef CONFIG_SPARSEMEM // CONFIG_SPARSEMEM=y
@@ -413,28 +413,28 @@ struct zone {
 	int			compact_order_failed;
 #endif
 
-        // ARM10C 20140125
-        // #define ZONE_PADDING(_pad1_)	struct zone_padding _pad1_;
-        // sizeof(struct zone_padding): 64 bytes
+	// ARM10C 20140125
+	// #define ZONE_PADDING(_pad1_)	struct zone_padding _pad1_;
+	// sizeof(struct zone_padding): 64 bytes
 	ZONE_PADDING(_pad1_)
 
 	/* Fields commonly accessed by the page reclaim scanner */
-        // ARM10C 20140125
-        // sizeof(spinlock_t): 16 bytes
+	// ARM10C 20140125
+	// sizeof(spinlock_t): 16 bytes
 	spinlock_t		lru_lock;
 
-        // ARM10C 20140125
-        // sizeof(struct lruvec): 56 bytes
+	// ARM10C 20140125
+	// sizeof(struct lruvec): 56 bytes
 	struct lruvec		lruvec;
 
 	unsigned long		pages_scanned;	   /* since last reclaim */
 	unsigned long		flags;		   /* zone flags, see below */
 
 	/* Zone statistics */
-        // ARM10C 20140125
-        // sizeof(atomic_long_t): 4bytes
-        // NR_VM_ZONE_STAT_ITEMS: 28
-        // sizeof(vm_stat[NR_VM_ZONE_STAT_ITEMS]): 112 bytes
+	// ARM10C 20140125
+	// sizeof(atomic_long_t): 4bytes
+	// NR_VM_ZONE_STAT_ITEMS: 28
+	// sizeof(vm_stat[NR_VM_ZONE_STAT_ITEMS]): 112 bytes
 	atomic_long_t		vm_stat[NR_VM_ZONE_STAT_ITEMS];
 
 	/*
@@ -444,9 +444,9 @@ struct zone {
 	unsigned int inactive_ratio;
 
 
-        // ARM10C 20140125
-        // #define ZONE_PADDING(_pad2_)	struct zone_padding _pad2_;
-        // sizeof(struct zone_padding): 64 bytes
+	// ARM10C 20140125
+	// #define ZONE_PADDING(_pad2_)	struct zone_padding _pad2_;
+	// sizeof(struct zone_padding): 64 bytes
 	ZONE_PADDING(_pad2_)
 	/* Rarely used or read-mostly fields */
 
@@ -933,14 +933,14 @@ static inline int is_highmem_idx(enum zone_type idx)
 static inline int is_highmem(struct zone *zone)
 {
 #ifdef CONFIG_HIGHMEM // CONFIG_HIGHMEM=y
-        // zone_off: zone의 offset을 구함, zone_off: 0
+	// zone_off: zone의 offset을 구함, zone_off: 0
 	int zone_off = (char *)zone - (char *)zone->zone_pgdat->node_zones;
 
-        // sizeof(*zone): 804, ZONE_HIGHMEM: 1, ZONE_MOVABLE: 2
+	// sizeof(*zone): 804, ZONE_HIGHMEM: 1, ZONE_MOVABLE: 2
 	return zone_off == ZONE_HIGHMEM * sizeof(*zone) ||
 	       (zone_off == ZONE_MOVABLE * sizeof(*zone) &&
 		zone_movable_is_highmem());
-        // return 0
+	// return 0
 #else
 	return 0;
 #endif

@@ -358,10 +358,10 @@ void *page_address(const struct page *page)
 	void *ret;
 	struct page_address_slot *pas;
 
-        // PageHighMem(page): 0
+	// PageHighMem(page): 0
 	if (!PageHighMem(page))
 		return lowmem_page_address(page);
-                // page의 virtual address 값을 리턴
+		// page의 virtual address 값을 리턴
 
 	pas = page_slot(page);
 	ret = NULL;

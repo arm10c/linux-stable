@@ -230,10 +230,10 @@ void do_raw_read_unlock(rwlock_t *lock)
 // ARM10C 20140125
 static inline void debug_write_lock_before(rwlock_t *lock)
 {
-        // RWLOCK_MAGIC: 0xdeaf1eed
-        // #define RWLOCK_BUG_ON(cond, lock, msg) if (unlikely(cond)) rwlock_bug(lock, msg)
+	// RWLOCK_MAGIC: 0xdeaf1eed
+	// #define RWLOCK_BUG_ON(cond, lock, msg) if (unlikely(cond)) rwlock_bug(lock, msg)
 	// if (unlikely(lock->magic != RWLOCK_MAGIC))
-        //    rwlock_bug(lock, "bad magic");
+	//    rwlock_bug(lock, "bad magic");
 	RWLOCK_BUG_ON(lock->magic != RWLOCK_MAGIC, lock, "bad magic");
 	RWLOCK_BUG_ON(lock->owner == current, lock, "recursion");
 	RWLOCK_BUG_ON(lock->owner_cpu == raw_smp_processor_id(),
@@ -243,9 +243,9 @@ static inline void debug_write_lock_before(rwlock_t *lock)
 // ARM10C 20140125
 static inline void debug_write_lock_after(rwlock_t *lock)
 {
-        // raw_smp_processor_id(): 0
+	// raw_smp_processor_id(): 0
 	lock->owner_cpu = raw_smp_processor_id();
-        // current: current_thread_info()->task
+	// current: current_thread_info()->task
 	lock->owner = current;
 }
 
@@ -256,7 +256,7 @@ static inline void debug_write_unlock(rwlock_t *lock)
 	RWLOCK_BUG_ON(lock->owner != current, lock, "wrong owner");
 	RWLOCK_BUG_ON(lock->owner_cpu != raw_smp_processor_id(),
 							lock, "wrong CPU");
-        // SPINLOCK_OWNER_INIT: 0xFFFFFFFF
+	// SPINLOCK_OWNER_INIT: 0xFFFFFFFF
 	lock->owner = SPINLOCK_OWNER_INIT;
 	lock->owner_cpu = -1;
 }

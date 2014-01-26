@@ -91,14 +91,14 @@ enum pageflags {
 	PG_head,		/* A head page */
 	PG_tail,		/* A tail page */
 #else
-        // ARM10C 20140125
-        // PG_compound: 14
+	// ARM10C 20140125
+	// PG_compound: 14
 	PG_compound,		/* A compound page */
 #endif
 	PG_swapcache,		/* Swap page: swp_entry_t in private */
 	PG_mappedtodisk,	/* Has blocks allocated on-disk */
-        // ARM10C 20140125
-        // PG_reclaim: 17
+	// ARM10C 20140125
+	// PG_reclaim: 17
 	PG_reclaim,		/* To be reclaimed asap */
 	PG_swapbacked,		/* Page is backed by RAM/swap */
 	PG_unevictable,		/* Page is "unevictable"  */
@@ -388,9 +388,9 @@ __SETPAGEFLAG(Head, compound)  __CLEARPAGEFLAG(Head, compound)
 // ARM10C 20140125
 static inline int PageHead(struct page *page)
 {
-        // PG_head_tail_mask: 0x24000, PG_head_mask: 0x4000
+	// PG_head_tail_mask: 0x24000, PG_head_mask: 0x4000
 	return ((page->flags & PG_head_tail_mask) == PG_head_mask);
-        // return 0
+	// return 0
 }
 
 static inline int PageTail(struct page *page)

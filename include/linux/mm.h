@@ -489,7 +489,7 @@ static inline compound_page_dtor *get_compound_page_dtor(struct page *page)
 // ARM10C 20140125
 static inline int compound_order(struct page *page)
 {
-        // PageHead(page): 0
+	// PageHead(page): 0
 	if (!PageHead(page))
 		return 0;
 	return (unsigned long)page[1].lru.prev;
