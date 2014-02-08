@@ -28,6 +28,7 @@
 
 LIST_HEAD(aliases_lookup);
 
+// ARM10C 20140208
 struct device_node *of_allnodes;
 EXPORT_SYMBOL(of_allnodes);
 struct device_node *of_chosen;
@@ -147,6 +148,7 @@ void of_node_put(struct device_node *node)
 EXPORT_SYMBOL(of_node_put);
 #endif /* CONFIG_OF_DYNAMIC */
 
+// ARM10C 20140208
 static struct property *__of_find_property(const struct device_node *np,
 					   const char *name, int *lenp)
 {
@@ -166,6 +168,7 @@ static struct property *__of_find_property(const struct device_node *np,
 	return pp;
 }
 
+// ARM10C 20140208
 struct property *of_find_property(const struct device_node *np,
 				  const char *name,
 				  int *lenp)
@@ -221,6 +224,7 @@ static const void *__of_get_property(const struct device_node *np,
  * Find a property with a given name for a given node
  * and return the value.
  */
+// ARM10C 20140208
 const void *of_get_property(const struct device_node *np, const char *name,
 			    int *lenp)
 {
@@ -468,6 +472,7 @@ EXPORT_SYMBOL(of_get_child_by_name);
  *	Returns a node pointer with refcount incremented, use
  *	of_node_put() on it when done.
  */
+// ARM10C 20140208
 struct device_node *of_find_node_by_path(const char *path)
 {
 	struct device_node *np = of_allnodes;
@@ -1588,19 +1593,26 @@ static void of_alias_add(struct alias_prop *ap, struct device_node *np,
  * @dt_alloc:	An allocator that provides a virtual address to memory
  *		for the resulting tree
  */
+// ARM10C 20140208
+// dt_alloc : early_init_dt_alloc_memory_arch
 void of_alias_scan(void * (*dt_alloc)(u64 size, u64 align))
 {
 	struct property *pp;
 
 	of_chosen = of_find_node_by_path("/chosen");
+	// of_chosen : chosen 노드의 struct device_node 주소
 	if (of_chosen == NULL)
 		of_chosen = of_find_node_by_path("/chosen@0");
+
 	of_aliases = of_find_node_by_path("/aliases");
+	// of_aliases : aliases 노드의 struct device_node 주소
+
 	if (!of_aliases)
 		return;
 
 	for_each_property_of_node(of_aliases, pp) {
 		const char *start = pp->name;
+		// pp->name : "pinctrl0"
 		const char *end = start + strlen(start);
 		struct device_node *np;
 		struct alias_prop *ap;
@@ -1613,6 +1625,7 @@ void of_alias_scan(void * (*dt_alloc)(u64 size, u64 align))
 			continue;
 
 		np = of_find_node_by_path(pp->value);
+		// np : pinctrl@13400000
 		if (!np)
 			continue;
 
@@ -1621,15 +1634,23 @@ void of_alias_scan(void * (*dt_alloc)(u64 size, u64 align))
 		while (isdigit(*(end-1)) && end > start)
 			end--;
 		len = end - start;
+		// 숫자 값은 빼고 이름 길이만 남김
+		// len : 7
 
 		if (kstrtoint(end, 10, &id) < 0)
+			// id : 0
 			continue;
 
 		/* Allocate an alias_prop with enough space for the stem */
+		// sizeof(*ap) + len + 1 : 32
 		ap = dt_alloc(sizeof(*ap) + len + 1, 4);
+		// ap : 할당받은 메모리의 시작 주소
+
 		if (!ap)
 			continue;
 		ap->alias = start;
+		// ap->alias : pp->name
+// 2014/02/08 종료
 		of_alias_add(ap, np, id, start, len);
 	}
 }

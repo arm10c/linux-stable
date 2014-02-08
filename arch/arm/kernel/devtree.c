@@ -32,6 +32,8 @@ void __init early_init_dt_add_memory_arch(u64 base, u64 size)
 	arm_add_memory(base, size);
 }
 
+// ARM10C 20140208
+// size + 4 : ?, __alignof__(struct device_node) : 4
 void * __init early_init_dt_alloc_memory_arch(u64 size, u64 align)
 {
 	return alloc_bootmem_align(size, align);

@@ -1025,8 +1025,9 @@ void __init setup_arch(char **cmdline_p)
 	request_standard_resources(mdesc);
 
 // 2014/01/25 종료
+// 2014/02/08 시작
 
-	if (mdesc->restart)
+	if (mdesc->restart)	// mdesc->restart : exynos5_restart
 		arm_pm_restart = mdesc->restart;
 
 	unflatten_device_tree();

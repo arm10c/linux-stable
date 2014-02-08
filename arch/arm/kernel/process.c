@@ -124,7 +124,9 @@ static void null_restart(enum reboot_mode reboot_mode, const char *cmd)
 void (*pm_power_off)(void);
 EXPORT_SYMBOL(pm_power_off);
 
+// ARM10C 20140208
 void (*arm_pm_restart)(enum reboot_mode reboot_mode, const char *cmd) = null_restart;
+// arm_pm_restart : exynos5_restart
 EXPORT_SYMBOL_GPL(arm_pm_restart);
 
 /*

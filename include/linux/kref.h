@@ -29,6 +29,7 @@ struct kref {
  * kref_init - initialize object.
  * @kref: object in question.
  */
+// ARM10C 20140208
 static inline void kref_init(struct kref *kref)
 {
 	atomic_set(&kref->refcount, 1);

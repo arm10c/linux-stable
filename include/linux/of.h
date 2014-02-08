@@ -30,6 +30,8 @@
 typedef u32 phandle;
 typedef u32 ihandle;
 
+// ARM10C 20140208
+// size : 24 byte
 struct property {
 	char	*name;
 	int	length;
@@ -43,6 +45,8 @@ struct property {
 struct of_irq_controller;
 #endif
 
+// ARM10C 20140208
+// size : 60 byte
 struct device_node {
 	const char *name;
 	const char *type;
@@ -270,6 +274,7 @@ extern int of_device_is_available(const struct device_node *device);
 extern const void *of_get_property(const struct device_node *node,
 				const char *name,
 				int *lenp);
+// ARM10C 20140208
 #define for_each_property_of_node(dn, pp) \
 	for (pp = dn->properties; pp != NULL; pp = pp->next)
 
