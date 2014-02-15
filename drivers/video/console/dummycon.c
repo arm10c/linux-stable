@@ -57,6 +57,8 @@ static int dummycon_dummy(void)
  *  Most of the operations are dummies.
  */
 
+// ARM10C 20140215
+// DUMMY: 0
 const struct consw dummy_con = {
     .owner =		THIS_MODULE,
     .con_startup =	dummycon_startup,

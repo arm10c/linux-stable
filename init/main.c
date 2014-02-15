@@ -537,6 +537,9 @@ asmlinkage void __init start_kernel(void)
 	// 	(prerelease) (GCC) ) #1 Fri Dec 21 17:27:08 IST 2012
 	pr_notice("%s", linux_banner);
 	setup_arch(&command_line);
+
+// 2014/02/15 종료
+
 	mm_init_owner(&init_mm, &init_task);
 	mm_init_cpumask(&init_mm);
 	setup_command_line(command_line);

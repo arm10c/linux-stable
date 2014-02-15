@@ -68,8 +68,10 @@ static void write_pen_release(int val)
 	outer_clean_range(__pa(&pen_release), __pa(&pen_release + 1));
 }
 
+// ARM10C 20140215
 static void __iomem *scu_base_addr(void)
 {
+	// S5P_VA_SCU: 0xF8800000
 	return (void __iomem *)(S5P_VA_SCU);
 }
 
@@ -177,11 +179,14 @@ static int exynos_boot_secondary(unsigned int cpu, struct task_struct *idle)
  * which may be present or become present in the system.
  */
 
+// ARM10C 20140215
 static void __init exynos_smp_init_cpus(void)
 {
 	void __iomem *scu_base = scu_base_addr();
+	// scu_base: 0xF8800000
 	unsigned int i, ncores;
 
+        // read_cpuid_part_number(): 0x0000C0F0, ARM_CPU_PART_CORTEX_A9: 0xC090
 	if (read_cpuid_part_number() == ARM_CPU_PART_CORTEX_A9)
 		ncores = scu_base ? scu_get_core_count(scu_base) : 1;
 	else
@@ -190,6 +195,7 @@ static void __init exynos_smp_init_cpus(void)
 		 * is set by "arm_dt_init_cpu_maps".
 		 */
 		return;
+		// return 수행
 
 	/* sanity check */
 	if (ncores > nr_cpu_ids) {
@@ -230,6 +236,7 @@ static void __init exynos_smp_prepare_cpus(unsigned int max_cpus)
 	}
 }
 
+// ARM10C 20140215
 struct smp_operations exynos_smp_ops __initdata = {
 	.smp_init_cpus		= exynos_smp_init_cpus,
 	.smp_prepare_cpus	= exynos_smp_prepare_cpus,

@@ -89,6 +89,8 @@ ENDPROC(_find_first_bit_le)
  * Purpose  : Find next 'one' bit
  * Prototype: int find_next_zero_bit(void *addr, unsigned int maxbit, int offset)
  */
+ // ARM10C 20140215
+// p: cpu_possible_mask->bits: 0xF , sz: 4, off: 0
 ENTRY(_find_next_bit_le)
 		teq	r1, #0
 		beq	3b

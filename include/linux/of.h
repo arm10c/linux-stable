@@ -78,19 +78,21 @@ struct of_phandle_args {
 	uint32_t args[MAX_PHANDLE_ARGS];
 };
 
-#ifdef CONFIG_OF_DYNAMIC
+#ifdef CONFIG_OF_DYNAMIC // CONFIG_OF_DYNAMIC=n
 extern struct device_node *of_node_get(struct device_node *node);
 extern void of_node_put(struct device_node *node);
 #else /* CONFIG_OF_DYNAMIC */
 /* Dummy ref counting routines - to be implemented later */
+// ARM10C 20140215
 static inline struct device_node *of_node_get(struct device_node *node)
 {
 	return node;
 }
+// ARM10C 20140215
 static inline void of_node_put(struct device_node *node) { }
 #endif /* !CONFIG_OF_DYNAMIC */
 
-#ifdef CONFIG_OF
+#ifdef CONFIG_OF // CONFIG_OF=y
 
 /* Pointer for first entry in chain of all nodes. */
 extern struct device_node *of_allnodes;
@@ -156,6 +158,9 @@ static inline unsigned long of_read_ulong(const __be32 *cell, int size)
 // ARM10C 20131005
 #define of_compat_cmp(s1, s2, l)	strcasecmp((s1), (s2))
 #define of_prop_cmp(s1, s2)		strcmp((s1), (s2))
+// ARM10C 20140215
+// cpu->type: "cpu", "cpu"
+// 대소문자 구분 없이 string 비교
 #define of_node_cmp(s1, s2)		strcasecmp((s1), (s2))
 #endif
 
@@ -215,6 +220,10 @@ extern struct device_node *of_get_next_available_child(
 
 extern struct device_node *of_get_child_by_name(const struct device_node *node,
 					const char *name);
+// ARM10C 20140215
+// for_each_child_of_node(cpus, cpu) 
+//   for (cpu = of_get_next_child(cpus, NULL); cpu != NULL; \
+//      cpu = of_get_next_child(cpus, cpu))
 #define for_each_child_of_node(parent, child) \
 	for (child = of_get_next_child(parent, NULL); child != NULL; \
 	     child = of_get_next_child(parent, child))
@@ -561,11 +570,15 @@ static inline int of_property_read_u16(const struct device_node *np,
 	return of_property_read_u16_array(np, propname, out_value, 1);
 }
 
+// ARM10C 20140215
+// [0] cpu: cpu0의 node의 주소값, "reg", &hwid
 static inline int of_property_read_u32(const struct device_node *np,
 				       const char *propname,
 				       u32 *out_value)
 {
+        // np: cpu0의 node의 주소값, propname: "reg", out_value: &hwid, 1
 	return of_property_read_u32_array(np, propname, out_value, 1);
+        // 0을 리턴, *out_value: 0,
 }
 
 #if defined(CONFIG_PROC_FS) && defined(CONFIG_PROC_DEVICETREE)

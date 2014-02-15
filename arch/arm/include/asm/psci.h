@@ -34,11 +34,13 @@ struct psci_operations {
 extern struct psci_operations psci_ops;
 extern struct smp_operations psci_smp_ops;
 
-#ifdef CONFIG_ARM_PSCI
+#ifdef CONFIG_ARM_PSCI // CONFIG_ARM_PSCI=n
 void psci_init(void);
 bool psci_smp_available(void);
 #else
+// ARM10C 20140215
 static inline void psci_init(void) { }
+// ARM10C 20140215
 static inline bool psci_smp_available(void) { return false; }
 #endif
 

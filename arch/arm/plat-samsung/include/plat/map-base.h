@@ -27,6 +27,8 @@
 
 #ifndef __ASSEMBLY__
 // ARM10C 20131123
+// ARM10C 20140215
+// S3C_ADDR_BASE: 0xF6000000
 #define S3C_ADDR(x)	((void __iomem __force *)S3C_ADDR_BASE + (x))
 #else
 #define S3C_ADDR(x)	(S3C_ADDR_BASE + (x))

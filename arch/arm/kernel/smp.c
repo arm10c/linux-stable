@@ -71,8 +71,12 @@ enum ipi_msg_type {
 
 static DECLARE_COMPLETION(cpu_running);
 
+// ARM10C 20140215
+// smp_ops: exynos_smp_ops
 static struct smp_operations smp_ops;
 
+// ARM10C 20140215
+// mdesc->smp: &exynos_smp_ops
 void __init smp_set_ops(struct smp_operations *ops)
 {
 	if (ops)
@@ -132,9 +136,12 @@ int __cpu_up(unsigned int cpu, struct task_struct *idle)
 }
 
 /* platform specific SMP operations */
+// ARM10C 20140215
 void __init smp_init_cpus(void)
 {
+	// smp_ops.smp_init_cpus: exynos_smp_init_cpus
 	if (smp_ops.smp_init_cpus)
+		// exynos_smp_init_cpus 호출
 		smp_ops.smp_init_cpus();
 }
 

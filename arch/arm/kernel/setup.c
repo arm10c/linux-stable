@@ -517,6 +517,7 @@ void notrace cpu_init(void)
 #endif
 }
 
+// ARM10C 20140215
 u32 __cpu_logical_map[NR_CPUS] = { [0 ... NR_CPUS-1] = MPIDR_INVALID };
 
 // ARM10C 20130824
@@ -554,14 +555,16 @@ void __init smp_setup_processor_id(void)
 	printk(KERN_INFO "Booting Linux on physical CPU 0x%x\n", mpidr);
 }
 
+// ARM10C 20140215
 struct mpidr_hash mpidr_hash;
-#ifdef CONFIG_SMP
+#ifdef CONFIG_SMP // CONFIG_SMP=y
 /**
  * smp_build_mpidr_hash - Pre-compute shifts required at each affinity
  *			  level in order to build a linear index from an
  *			  MPIDR value. Resulting algorithm is a collision
  *			  free hash carried out through shifting and ORing
  */
+// ARM10C 20140215
 static void __init smp_build_mpidr_hash(void)
 {
 	u32 i, affinity;
@@ -571,22 +574,51 @@ static void __init smp_build_mpidr_hash(void)
 	 * not contribute to affinity levels, ie they never toggle.
 	 */
 	for_each_possible_cpu(i)
+                // [0] i: 0x0
+                // cpu_logical_map(0): __cpu_logical_map[0], cpu_logical_map(0): __cpu_logical_map[0],
 		mask |= (cpu_logical_map(i) ^ cpu_logical_map(0));
+                // [0] mask: 0x0
+                // ...
+                // [3] mask: 0x3
+
 	pr_debug("mask of set bits 0x%x\n", mask);
 	/*
 	 * Find and stash the last and first bit set at all affinity levels to
 	 * check how many bits are required to represent them.
 	 */
 	for (i = 0; i < 3; i++) {
+                // i: 0, mask: 0x3
+                // i: 1, mask: 0x3
 		affinity = MPIDR_AFFINITY_LEVEL(mask, i);
+                // i: 0, affinity: 0x3
+                // i: 1, affinity: 0x0
+
 		/*
 		 * Find the MSB bit and LSB bits position
 		 * to determine how many bits are required
 		 * to express the affinity level.
 		 */
+                // i: 0, affinity: 0x3
+                // i: 1, affinity: 0x0
 		ls = fls(affinity);
+                // i: 0, ls: 2
+                // i: 1, ls: 0
+
+                // i:0 affinity: 0x3
+                // i:1 affinity: 0x0
 		fs[i] = affinity ? ffs(affinity) - 1 : 0;
+                // i:0 ffs(0x3): 1, fs[0]: 0
+                // i:1 fs[1]: 0
+                // ...
+                // i:2 fs[2]: 0
+
+                // i:0 ls: 2, fs[0]: 0;
+                // i:1 ls: 0, fs[1]: 0;
 		bits[i] = ls - fs[i];
+                // bits[0]: 2
+                // bits[1]: 0
+                // ...
+                // bits[2]: 0
 	}
 	/*
 	 * An index can be created from the MPIDR by isolating the
@@ -599,11 +631,24 @@ static void __init smp_build_mpidr_hash(void)
 	 * representation might contain holes, eg MPIDR[7:0] = {0x2, 0x80}.
 	 */
 	mpidr_hash.shift_aff[0] = fs[0];
+        // mpidr_hash.shift_aff[0]: 0
+
+        // MPIDR_LEVEL_BITS: 8, fs[1]: 0, bits[0]: 2
 	mpidr_hash.shift_aff[1] = MPIDR_LEVEL_BITS + fs[1] - bits[0];
+        // mpidr_hash.shift_aff[1]: 6
+
+        // MPIDR_LEVEL_BITS: 8, fs[2]: 0, bits[1]: 0, bits[0]: 2
 	mpidr_hash.shift_aff[2] = 2*MPIDR_LEVEL_BITS + fs[2] -
 						(bits[1] + bits[0]);
+        // mpidr_hash.shift_aff[2]: 14
+
 	mpidr_hash.mask = mask;
-	mpidr_hash.bits = bits[2] + bits[1] + bits[0];
+        // mpidr_hash.mask: 0x3
+
+        // bits[2]: 0, bits[1]: 0, bits[0]: 2
+        mpidr_hash.bits = bits[2] + bits[1] + bits[0];
+        // mpidr_hash.bits: 0x2
+
 	pr_debug("MPIDR hash: aff0[%u] aff1[%u] aff2[%u] mask[0x%x] bits[%u]\n",
 				mpidr_hash.shift_aff[0],
 				mpidr_hash.shift_aff[1],
@@ -614,9 +659,11 @@ static void __init smp_build_mpidr_hash(void)
 	 * 4x is an arbitrary value used to warn on a hash table much bigger
 	 * than expected on most systems.
 	 */
+        // mpidr_hash_size(): 4, num_possible_cpus(): 4
 	if (mpidr_hash_size() > 4 * num_possible_cpus())
 		pr_warn("Large number of MPIDR hash buckets detected\n");
 	sync_cache_w(&mpidr_hash);
+        // mpidr_hash 의 cache에 있는 값을 실제 메모리에 반영
 }
 #endif
 
@@ -891,7 +938,7 @@ static int __init init_machine_late(void)
 }
 late_initcall(init_machine_late);
 
-#ifdef CONFIG_KEXEC
+#ifdef CONFIG_KEXEC // CONFIG_KEXEC=n
 static inline unsigned long long get_total_mem(void)
 {
 	unsigned long total;
@@ -937,6 +984,7 @@ static void __init reserve_crashkernel(void)
 	insert_resource(&iomem_resource, &crashk_res);
 }
 #else
+// ARM10C 20140215
 static inline void reserve_crashkernel(void) {}
 #endif /* CONFIG_KEXEC */
 
@@ -1031,39 +1079,54 @@ void __init setup_arch(char **cmdline_p)
 		arm_pm_restart = mdesc->restart;
 
 	unflatten_device_tree();
+        // device tree를 flat tree에서 실제 tree로 생성
+        // of_allnodes, of_chosen, of_aliases, aliases_lookup 만들어 줌
 
 	arm_dt_init_cpu_maps();
-	psci_init();
-#ifdef CONFIG_SMP
+        // devtree에 cpu node의 reg 값을 읽어서
+        // cpu_possible_bits, __cpu_logical_map의 값을 업데이트 함
+
+	psci_init(); // null function
+#ifdef CONFIG_SMP // CONFIG_SMP=y
 	if (is_smp()) {
+                // mdesc->smp_init: NULL
 		if (!mdesc->smp_init || !mdesc->smp_init()) {
+                        // psci_smp_available(): false
 			if (psci_smp_available())
 				smp_set_ops(&psci_smp_ops);
+                        // mdesc->smp: &exynos_smp_ops
 			else if (mdesc->smp)
+                                // mdesc->smp: &exynos_smp_ops
 				smp_set_ops(mdesc->smp);
+                                // smp_ops: exynos_smp_ops 을 할당
 		}
 		smp_init_cpus();
 		smp_build_mpidr_hash();
+                // mpidr_hash 의 cache에 있는 값을 실제 메모리에 반영
 	}
 #endif
 
+        // is_smp(): 1
 	if (!is_smp())
 		hyp_mode_check();
 
-	reserve_crashkernel();
+	reserve_crashkernel(); // null function
 
-#ifdef CONFIG_MULTI_IRQ_HANDLER
+#ifdef CONFIG_MULTI_IRQ_HANDLER // ONFIG_MULTI_IRQ_HANDLER=y
+        // mdesc->handle_irq: null
 	handle_arch_irq = mdesc->handle_irq;
+        // handle_arch_irq: null
 #endif
 
-#ifdef CONFIG_VT
-#if defined(CONFIG_VGA_CONSOLE)
+#ifdef CONFIG_VT // CONFIG_VT=y
+#if defined(CONFIG_VGA_CONSOLE) // CONFIG_VGA_CONSOLE=n
 	conswitchp = &vga_con;
-#elif defined(CONFIG_DUMMY_CONSOLE)
+#elif defined(CONFIG_DUMMY_CONSOLE) // CONFIG_DUMMY_CONSOLE=y
 	conswitchp = &dummy_con;
 #endif
 #endif
 
+        // mdesc->init_early: null
 	if (mdesc->init_early)
 		mdesc->init_early();
 }

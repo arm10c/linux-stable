@@ -77,6 +77,7 @@ void __init arm_dt_memblock_reserve(void)
  *
  * Updates the cpu possible mask with the number of parsed cpu nodes
  */
+// ARM10C 20140215
 void __init arm_dt_init_cpu_maps(void)
 {
 	/*
@@ -87,37 +88,53 @@ void __init arm_dt_init_cpu_maps(void)
 	 */
 	struct device_node *cpu, *cpus;
 	u32 i, j, cpuidx = 1;
+        // A.R.M: B4.1.106 MPIDR, Multiprocessor Affinity Register, VMSA
+	// T.R.M: 4.3.5 Multiprocessor Affinity Register
+        // MPIDR_HWID_BITMASK: 0xFFFFFF
+	// mpidr: CPU ID를 가리킴
 	u32 mpidr = is_smp() ? read_cpuid_mpidr() & MPIDR_HWID_BITMASK : 0;
+	// mpidr 값은 0
 
+        // NR_CPUS: 4, MPIDR_INVALID: 0xFF000000
 	u32 tmp_map[NR_CPUS] = { [0 ... NR_CPUS-1] = MPIDR_INVALID };
 	bool bootcpu_valid = false;
 	cpus = of_find_node_by_path("/cpus");
+        // cpus: cpus의tree의주소값
 
 	if (!cpus)
 		return;
 
+        // for_each_child_of_node(cpus, cpu) 
+        //   for (cpu = of_get_next_child(cpus, NULL); cpu != NULL; \
+        //      cpu = of_get_next_child(cpus, cpu))
 	for_each_child_of_node(cpus, cpu) {
+		// [0] cpu: cpu0의 node의 주소값
 		u32 hwid;
 
+                // cpu->type: "cpu", "cpu"
 		if (of_node_cmp(cpu->type, "cpu"))
 			continue;
 
+		// cpu->full_name: "/cpus/cpu@0"
 		pr_debug(" * %s...\n", cpu->full_name);
 		/*
 		 * A device tree containing CPU nodes with missing "reg"
 		 * properties is considered invalid to build the
 		 * cpu_logical_map.
 		 */
+		// [0] cpu: cpu0의 node의 주소값, "reg", &hwid
 		if (of_property_read_u32(cpu, "reg", &hwid)) {
 			pr_debug(" * %s missing reg property\n",
 				     cpu->full_name);
 			return;
 		}
+		// hwid: 0
 
 		/*
 		 * 8 MSBs must be set to 0 in the DT since the reg property
 		 * defines the MPIDR[23:0].
 		 */
+		// ~MPIDR_HWID_BITMASK: 0xFF000000
 		if (hwid & ~MPIDR_HWID_BITMASK)
 			return;
 
@@ -128,7 +145,9 @@ void __init arm_dt_init_cpu_maps(void)
 		 * temp values were initialized to UINT_MAX
 		 * to avoid matching valid MPIDR[23:0] values.
 		 */
+		// cpuidx: 1
 		for (j = 0; j < cpuidx; j++)
+			// tmp_map[0]: 0xFF000000, hwid: 0
 			if (WARN(tmp_map[j] == hwid, "Duplicate /cpu reg "
 						     "properties in the DT\n"))
 				return;
@@ -142,6 +161,7 @@ void __init arm_dt_init_cpu_maps(void)
 		 * logical map built from DT is validated and can be used
 		 * to override the map created in smp_setup_processor_id().
 		 */
+		// hwid: 0, mpidr: 0
 		if (hwid == mpidr) {
 			i = 0;
 			bootcpu_valid = true;
@@ -149,6 +169,7 @@ void __init arm_dt_init_cpu_maps(void)
 			i = cpuidx++;
 		}
 
+		// cpuidx: 1,  nr_cpu_ids: 4
 		if (WARN(cpuidx > nr_cpu_ids, "DT /cpu %u nodes greater than "
 					       "max cores %u, capping them\n",
 					       cpuidx, nr_cpu_ids)) {
@@ -156,9 +177,12 @@ void __init arm_dt_init_cpu_maps(void)
 			break;
 		}
 
+		// i:0  hwid: 0
 		tmp_map[i] = hwid;
+		// tmp_map[0]: 0 
 	}
 
+	// bootcpu_valid: true
 	if (!bootcpu_valid) {
 		pr_warn("DT missing boot CPU MPIDR[23:0], fall back to default cpu_logical_map\n");
 		return;
@@ -169,9 +193,13 @@ void __init arm_dt_init_cpu_maps(void)
 	 * a reg property, the DT CPU list can be considered valid and the
 	 * logical map created in smp_setup_processor_id() can be overridden
 	 */
+	// cpuidx: 4
 	for (i = 0; i < cpuidx; i++) {
+		// i: 0, true
 		set_cpu_possible(i, true);
 		cpu_logical_map(i) = tmp_map[i];
+		// __cpu_logical_map[0]: tmp_map[0]: 0
+
 		pr_debug("cpu logical map 0x%x\n", cpu_logical_map(i));
 	}
 }

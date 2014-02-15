@@ -669,12 +669,17 @@ EXPORT_SYMBOL_GPL(cpu_bit_bitmap);
 const DECLARE_BITMAP(cpu_all_bits, NR_CPUS) = CPU_BITS_ALL;
 EXPORT_SYMBOL(cpu_all_bits);
 
-#ifdef CONFIG_INIT_ALL_POSSIBLE
+#ifdef CONFIG_INIT_ALL_POSSIBLE // CONFIG_INIT_ALL_POSSIBLE=n
 static DECLARE_BITMAP(cpu_possible_bits, CONFIG_NR_CPUS) __read_mostly
 	= CPU_BITS_ALL;
 #else
+// ARM10C 20140215
+// CONFIG_NR_CPUS: 4
+// cpu_possible_bits, 4
 static DECLARE_BITMAP(cpu_possible_bits, CONFIG_NR_CPUS) __read_mostly;
 #endif
+// ARM10C 20140215
+// cpu_possible_mask: cpu_possible_bits
 const struct cpumask *const cpu_possible_mask = to_cpumask(cpu_possible_bits);
 EXPORT_SYMBOL(cpu_possible_mask);
 
@@ -692,6 +697,8 @@ EXPORT_SYMBOL(cpu_active_mask);
 
 // ARM10C 20130907 cpu = 0, passible = 1
 // cpu_possible_bits[ 0 ] = 1 이됨  
+// ARM10C 20140215
+// i: 0, true
 void set_cpu_possible(unsigned int cpu, bool possible)
 {
 	if (possible)

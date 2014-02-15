@@ -57,7 +57,10 @@ static inline int cache_ops_need_broadcast(void)
 /*
  * Logical CPU mapping.
  */
+// ARM10C 20140215
 extern u32 __cpu_logical_map[];
+// ARM10C 20140215
+// cpu_logical_map(0): __cpu_logical_map[0]
 #define cpu_logical_map(cpu)	__cpu_logical_map[cpu]
 /*
  * Retrieve logical cpu index corresponding to a given MPIDR[23:0]
@@ -80,6 +83,8 @@ static inline int get_logical_index(u32 mpidr)
  * multiple from its base address. For more
  * information check arch/arm/kernel/sleep.S
  */
+// ARM10C 20140215
+// sizeof(struct mpidr_hash): 20 bytes
 struct mpidr_hash {
 	u32	mask; /* used by sleep.S */
 	u32	shift_aff[3]; /* used by sleep.S */
@@ -88,6 +93,7 @@ struct mpidr_hash {
 
 extern struct mpidr_hash mpidr_hash;
 
+// ARM10C 20140215
 static inline u32 mpidr_hash_size(void)
 {
 	return 1 << mpidr_hash.bits;

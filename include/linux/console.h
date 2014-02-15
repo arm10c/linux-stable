@@ -28,6 +28,7 @@ struct tty_struct;
 #define VT100ID "\033[?1;2c"
 #define VT102ID "\033[?6c"
 
+// ARM10C 20140215
 struct consw {
 	struct module *owner;
 	const char *(*con_startup)(void);

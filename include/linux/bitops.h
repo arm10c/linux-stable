@@ -64,9 +64,14 @@ static __inline__ int get_count_order(unsigned int count)
 	return order;
 }
 
+// ARM10C 20140215
+// src: cpu_possible_mask->bits, BITMAP_LAST_WORD_MASK(4): 0xF
 static inline unsigned long hweight_long(unsigned long w)
 {
+	// w: 0xF
+	// hweight32(0xF) 
 	return sizeof(w) == 4 ? hweight32(w) : hweight64(w);
+	// hweight32(0xF): 4
 }
 
 /**

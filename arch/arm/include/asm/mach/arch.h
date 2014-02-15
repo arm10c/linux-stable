@@ -17,7 +17,8 @@ struct tag;
 struct meminfo;
 struct pt_regs;
 struct smp_operations;
-#ifdef CONFIG_SMP
+#ifdef CONFIG_SMP // CONFIG_SMP=y
+// ARM10C 20140215
 #define smp_ops(ops) (&(ops))
 #define smp_init_ops(ops) (&(ops))
 #else

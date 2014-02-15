@@ -30,6 +30,7 @@ extern void __chk_io_ptr(const volatile void __iomem *);
 # define __safe
 # define __force
 # define __nocast
+// ARM10C 20140215
 # define __iomem
 # define __chk_user_ptr(x) (void)0
 # define __chk_io_ptr(x) (void)0

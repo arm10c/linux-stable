@@ -15,6 +15,7 @@
 	(!!((w) & (1ULL << 7)))	)
 
 #define __const_hweight16(w) (__const_hweight8(w)  + __const_hweight8((w)  >> 8 ))
+// ARM10C 20140215
 #define __const_hweight32(w) (__const_hweight16(w) + __const_hweight16((w) >> 16))
 #define __const_hweight64(w) (__const_hweight32(w) + __const_hweight32((w) >> 32))
 
@@ -23,6 +24,8 @@
  */
 #define hweight8(w)  (__builtin_constant_p(w) ? __const_hweight8(w)  : __arch_hweight8(w))
 #define hweight16(w) (__builtin_constant_p(w) ? __const_hweight16(w) : __arch_hweight16(w))
+// ARM10C 20140215
+// hweight32: w에 넘어온 값에 1로 갯수를 리턴
 #define hweight32(w) (__builtin_constant_p(w) ? __const_hweight32(w) : __arch_hweight32(w))
 #define hweight64(w) (__builtin_constant_p(w) ? __const_hweight64(w) : __arch_hweight64(w))
 

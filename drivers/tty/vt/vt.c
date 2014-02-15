@@ -120,6 +120,7 @@ struct con_driver {
 };
 
 static struct con_driver registered_con_driver[MAX_NR_CON_DRIVER];
+// ARM10C 20140215
 const struct consw *conswitchp;
 
 /* A bitmap for codes <32. A bit of 1 indicates that the code

@@ -139,6 +139,8 @@ extern struct cpu_cache_fns cpu_cache;
 // ARM10C 20140125
 // page_address(page): page의 virtual address, page_size: 4096(4K)
 // cpu_cache.flush_kern_dcache_area: v7_flush_kern_dcache_area
+// ARM10C 20140215
+// _p: &mpidr_hash, size: 20
 #define __cpuc_flush_dcache_area	cpu_cache.flush_kern_dcache_area
 
 /*
@@ -402,18 +404,27 @@ static inline void flush_cache_vunmap(unsigned long start, unsigned long end)
  * There is no __cpuc_clean_dcache_area but we use it anyway for
  * code intent clarity, and alias it to __cpuc_flush_dcache_area.
  */
+// ARM10C 20140215
+// _p: &mpidr_hash, size: 20
 #define __cpuc_clean_dcache_area __cpuc_flush_dcache_area
 
 /*
  * Ensure preceding writes to *p by this CPU are visible to
  * subsequent reads by other CPUs:
  */
+// ARM10C 20140215
+// __sync_cache_range_w(&mpidr_hash, 20) 
 static inline void __sync_cache_range_w(volatile void *p, size_t size)
 {
 	char *_p = (char *)p;
+	// _p: &mpidr_hash
 
+	// _p: &mpidr_hash, size: 20
 	__cpuc_clean_dcache_area(_p, size);
-	outer_clean_range(__pa(_p), __pa(_p + size));
+	// 실제 메모리에 mpidr_hash 값 반영
+
+	// __pa(_p): mpidr_hash의physical 주소시작점, __pa(_p + size): mpidr_hash의physical 주소끝점
+	outer_clean_range(__pa(_p), __pa(_p + size)); // null function
 }
 
 /*
@@ -443,6 +454,10 @@ static inline void __sync_cache_range_r(volatile void *p, size_t size)
 	__cpuc_flush_dcache_area(_p, size);
 }
 
+// ARM10C 20140215
+// sync_cache_w(&mpidr_hash)
+// sizeof(struct mpidr_hash): 20 bytes
+// __sync_cache_range_w(&mpidr_hash, 20) 
 #define sync_cache_w(ptr) __sync_cache_range_w(ptr, sizeof *(ptr))
 #define sync_cache_r(ptr) __sync_cache_range_r(ptr, sizeof *(ptr))
 
