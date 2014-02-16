@@ -221,9 +221,8 @@ extern struct device_node *of_get_next_available_child(
 extern struct device_node *of_get_child_by_name(const struct device_node *node,
 					const char *name);
 // ARM10C 20140215
-// for_each_child_of_node(cpus, cpu) 
-//   for (cpu = of_get_next_child(cpus, NULL); cpu != NULL; \
-//      cpu = of_get_next_child(cpus, cpu))
+// for_each_child_of_node(cpus, cpu)
+//   for (cpu = of_get_next_child(cpus, NULL); cpu != NULL; cpu = of_get_next_child(cpus, cpu))
 #define for_each_child_of_node(parent, child) \
 	for (child = of_get_next_child(parent, NULL); child != NULL; \
 	     child = of_get_next_child(parent, child))
