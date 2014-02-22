@@ -23,6 +23,7 @@ typedef struct cpumask { DECLARE_BITMAP(bits, NR_CPUS); } cpumask_t;
  * a macro so it's const-correct.
  */
 // ARM10C 20140215
+// ARM10C 20140222
 #define cpumask_bits(maskp) ((maskp)->bits)
 
 #if NR_CPUS == 1

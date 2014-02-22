@@ -5,6 +5,8 @@
 #include <linux/types.h>
 #endif
 
+// ARM10C 20140222
+// PFN_ALIGN(60) : 0x1000  (0x3C+0xFFF : 0x103B & FFFFF000)
 #define PFN_ALIGN(x)	(((unsigned long)(x) + (PAGE_SIZE - 1)) & PAGE_MASK)
 // ARM10C 20131207
 // PAGE_SIZE: 0x1000

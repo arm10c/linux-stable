@@ -74,6 +74,7 @@ static inline void kmemleak_alloc_recursive(const void *ptr, size_t size,
 static inline void kmemleak_alloc_percpu(const void __percpu *ptr, size_t size)
 {
 }
+// ARM10C 20140222
 static inline void kmemleak_free(const void *ptr)
 {
 }
