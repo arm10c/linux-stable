@@ -105,7 +105,7 @@ void __init arm_dt_init_cpu_maps(void)
 		return;
 
         // for_each_child_of_node(cpus, cpu) 
-        //   for (cpu = of_get_next_child(cpus, NULL); cpu != NULL; \
+        //   for (cpu = of_get_next_child(cpus, NULL); cpu != NULL;
         //      cpu = of_get_next_child(cpus, cpu))
 	for_each_child_of_node(cpus, cpu) {
 		// [0] cpu: cpu0의 node의 주소값

@@ -2615,11 +2615,11 @@ static inline void inc_syscw(struct task_struct *tsk)
 extern void mm_update_next_owner(struct mm_struct *mm);
 extern void mm_init_owner(struct mm_struct *mm, struct task_struct *p);
 #else
-// ARM10C 20140222
 static inline void mm_update_next_owner(struct mm_struct *mm)
 {
 }
 
+// ARM10C 20140222
 static inline void mm_init_owner(struct mm_struct *mm, struct task_struct *p)
 {
 }

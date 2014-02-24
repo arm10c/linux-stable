@@ -446,7 +446,7 @@ struct mm_struct {
 // ARM10C 20140222
 static inline void mm_init_cpumask(struct mm_struct *mm)
 {
-#ifdef CONFIG_CPUMASK_OFFSTACK//CONFIG_CPUMASK_OFFSTACK=n
+#ifdef CONFIG_CPUMASK_OFFSTACK // CONFIG_CPUMASK_OFFSTACK=n
 	mm->cpu_vm_mask_var = &mm->cpumask_allocation;
 #endif
 }

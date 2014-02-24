@@ -351,11 +351,12 @@ static void __init setup_command_line(char *command_line)
 {
 	saved_command_line = alloc_bootmem(strlen (boot_command_line)+1);
 	static_command_line = alloc_bootmem(strlen (command_line)+1);
-	//현재 boot_command_line 과 command_line 은 같은 문자열.
-	//saved_command_line 은 고정값 static_command_line 은 수정용.
+	// 현재 boot_command_line 과 command_line 은 같은 문자열.
+	// saved_command_line 은 고정값 static_command_line 은 수정용.
+
 	strcpy (saved_command_line, boot_command_line);
 	strcpy (static_command_line, command_line);
-	//saved_command_line 및 static_command_line 할당 
+	// saved_command_line 및 static_command_line 할당
 }
 
 /*
@@ -546,12 +547,15 @@ asmlinkage void __init start_kernel(void)
 
 // 2014/02/15 종료
 // 2014/02/22 시작
-	mm_init_owner(&init_mm, &init_task); //null function
-	mm_init_cpumask(&init_mm); //null function
+
+	mm_init_owner(&init_mm, &init_task); // null function
+	mm_init_cpumask(&init_mm); // null function
+
 	// command_line: exynos5420-smdk5420.dts 파일의 chosen node 의 bootarg 값
 	// "console=ttySAC2,115200 init=/linuxrc"
 	setup_command_line(command_line);
-	//saved_command_line 및 static_command_line 할당 
+	// saved_command_line 및 static_command_line 할당
+
 	setup_nr_cpu_ids();
 	setup_per_cpu_areas();
 	smp_prepare_boot_cpu();	/* arch-specific boot-cpu hooks */
