@@ -12,7 +12,7 @@
 /* enough to cover all DEFINE_PER_CPUs in modules */
 // ARM10C 20140222
 #ifdef CONFIG_MODULES // CONFIG_MODULES=y
-// PERCPU_MODULE_RESERVE: 0x2000	
+// PERCPU_MODULE_RESERVE: 0x2000
 #define PERCPU_MODULE_RESERVE		(8 << 10)
 #else
 #define PERCPU_MODULE_RESERVE		0
@@ -52,7 +52,7 @@
 
 /* minimum unit size, also is the maximum supported allocation size */
 // ARM10C 20140222
-// PCPU_MIN_UNIT_SIZE 0x8000		
+// PCPU_MIN_UNIT_SIZE: 0x8000
 #define PCPU_MIN_UNIT_SIZE		PFN_ALIGN(32 << 10)
 
 /*
@@ -64,7 +64,7 @@
  */
 #define PERCPU_DYNAMIC_EARLY_SLOTS	128
 // ARM10C 20140222
-//PERCPU_DYNAMIC_EARLY_SIZE 0x3000
+// PERCPU_DYNAMIC_EARLY_SIZE: 0x3000
 #define PERCPU_DYNAMIC_EARLY_SIZE	(12 << 10)
 
 /*
@@ -82,7 +82,7 @@
 #define PERCPU_DYNAMIC_RESERVE		(20 << 10)
 #else
 // ARM10C 20140222
-// PERCPU_DYNAMIC_RESERVE: 0x3000	
+// PERCPU_DYNAMIC_RESERVE: 0x3000
 #define PERCPU_DYNAMIC_RESERVE		(12 << 10)
 #endif
 
@@ -90,7 +90,7 @@ extern void *pcpu_base_addr;
 extern const unsigned long *pcpu_unit_offsets;
 
 // ARM10C 20140222
-// sizeof(pcpu_group_info): 12
+// sizeof(struct pcpu_group_info): 12
 struct pcpu_group_info {
 	int			nr_units;	/* aligned # of units */
 	unsigned long		base_offset;	/* base address offset */
@@ -99,7 +99,7 @@ struct pcpu_group_info {
 };
 
 // ARM10C 20140222
-// sizeof(pcpu_alloc_info): 32
+// sizeof(struct pcpu_alloc_info): 32
 struct pcpu_alloc_info {
 	size_t			static_size;
 	size_t			reserved_size;

@@ -127,9 +127,13 @@ extern void softirq_init(void);
 /* Untouched command line saved by arch-specific code. */
 // ARM10C 20140222
 char __initdata boot_command_line[COMMAND_LINE_SIZE];
+
 /* Untouched saved command line (eg. for /proc) */
+// ARM10C 20140222
 char *saved_command_line;
+
 /* Command line for parameter parsing */
+// ARM10C 20140222
 static char *static_command_line;
 
 static char *execute_command;
@@ -346,7 +350,7 @@ static inline void smp_prepare_cpus(unsigned int maxcpus) { }
  * store reference of name/value for future reference.
  */
 // ARM10C 20140222
-// command_line : "console=ttySAC2,115200 init=/linuxrc"
+// command_line: "console=ttySAC2,115200 init=/linuxrc"
 static void __init setup_command_line(char *command_line)
 {
 	saved_command_line = alloc_bootmem(strlen (boot_command_line)+1);

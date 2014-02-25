@@ -230,7 +230,16 @@ static inline unsigned long __phys_to_virt(unsigned long x)
 	return t;
 }
 #else
+// ARM10C 20140222
+// our config do not use this macro.
+// this comments are just to understand address conversion calculation.
+//
+// PAGE_OFFSET: 0xC0000000, PHYS_OFFSET: 0x20000000
+// (x) - PAGE_OFFSET + PHYS_OFFSET: (x) + 0x60000000
 #define __virt_to_phys(x)	((x) - PAGE_OFFSET + PHYS_OFFSET)
+// ARM10C 20140222
+// PAGE_OFFSET: 0xC0000000, PHYS_OFFSET: 0x20000000
+// (x) - PHYS_OFFSET + PAGE_OFFSET: (x) + 0xA0000000
 #define __phys_to_virt(x)	((x) - PHYS_OFFSET + PAGE_OFFSET)
 #endif
 #endif

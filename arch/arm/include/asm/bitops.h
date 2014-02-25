@@ -290,7 +290,9 @@ static inline int fls(int x)
 	// ret: 2
 }
 
+// ARM10C 20140222
 #define __fls(x) (fls(x) - 1)
+
 // ARM10C 20140215
 // ffs(0x3):
 // #define ffs(0x3) ({ unsigned long __t = (0x3); fls(0x3 & 0xFFFFFFFD); })
@@ -299,7 +301,8 @@ static inline int fls(int x)
 // ffs: find frist set의 의미로 1로set된 최상위 bit의 bit index를 리턴
 #define ffs(x) ({ unsigned long __t = (x); fls(__t & -__t); })
 #define __ffs(x) (ffs(x) - 1)
-// ARM10C 20140111 
+
+// ARM10C 20140111
 // find first zerobit
 #define ffz(x) __ffs( ~(x) )
 
