@@ -1739,6 +1739,8 @@ EXPORT_SYMBOL(snprintf);
  * the trailing '\0'. If @size is == 0 the function returns 0.
  */
 
+// ARM10C 20140301
+// len: 0, buflen-len: 4095, sep: "", chunksz: 4, (chunksz+3)/4: 1, val: 0xF
 int scnprintf(char *buf, size_t size, const char *fmt, ...)
 {
 	va_list args;

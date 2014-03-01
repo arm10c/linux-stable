@@ -58,19 +58,26 @@ bool is_power_of_2(unsigned long n)
 /*
  * round up to nearest power of two
  */
+// ARM10C 20140301
+// __roundup_pow_of_two(32)
 static inline __attribute__((const))
 unsigned long __roundup_pow_of_two(unsigned long n)
 {
+	// n: 32
 	return 1UL << fls_long(n - 1);
+	// 32
 }
 
 /*
  * round down to nearest power of two
  */
+// ARM10C 20140301
+// __rounddown_pow_of_two(10)
 static inline __attribute__((const))
 unsigned long __rounddown_pow_of_two(unsigned long n)
 {
 	return 1UL << (fls_long(n) - 1);
+	// return 8
 }
 
 /**
@@ -166,6 +173,8 @@ unsigned long __rounddown_pow_of_two(unsigned long n)
  * - the result is undefined when n == 0
  * - this can be used to initialise global variables from constant data
  */
+// ARM10C 20140301
+// roundup_pow_of_two(32)
 #define roundup_pow_of_two(n)			\
 (						\
 	__builtin_constant_p(n) ? (		\
@@ -183,7 +192,9 @@ unsigned long __rounddown_pow_of_two(unsigned long n)
  * - the result is undefined when n == 0
  * - this can be used to initialise global variables from constant data
  */
-// ARM10C 20140111 
+// ARM10C 20140111
+// ARM10C 20140301
+// rounddown_pow_of_two(10)
 #define rounddown_pow_of_two(n)			\
 (						\
 	__builtin_constant_p(n) ? (		\

@@ -1,6 +1,7 @@
 #ifndef __KERN_LEVELS_H__
 #define __KERN_LEVELS_H__
 
+// ARM10C 20140301
 #define KERN_SOH	"\001"		/* ASCII Start Of Header */
 #define KERN_SOH_ASCII	'\001'
 
@@ -12,6 +13,9 @@
 #define KERN_WARNING	KERN_SOH "4"	/* warning conditions */
 #define KERN_NOTICE	KERN_SOH "5"	/* normal but significant condition */
 #define KERN_INFO	KERN_SOH "6"	/* informational */
+// ARM10C 20140301
+// KERN_SOH: "\001"
+// KERN_DEBUG: "\001""7"
 #define KERN_DEBUG	KERN_SOH "7"	/* debug-level messages */
 
 #define KERN_DEFAULT	KERN_SOH "d"	/* the default kernel loglevel */

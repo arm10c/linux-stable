@@ -564,10 +564,14 @@ static inline void cpumask_copy(struct cpumask *dstp,
  * If len is zero, returns zero.  Otherwise returns the length of the
  * (nul-terminated) @buf string.
  */
+// ARM10C 20140301
+// sizeof(cpus_buf): 4096 cpu_possible_mask: cpu_possible_bits: 0xF
 static inline int cpumask_scnprintf(char *buf, int len,
 				    const struct cpumask *srcp)
 {
+	// len: 4096, cpumask_bits(cpu_possible_bits): 0xF, nr_cpumask_bits: 4
 	return bitmap_scnprintf(buf, len, cpumask_bits(srcp), nr_cpumask_bits);
+	// buf: "f", return: 1
 }
 
 /**

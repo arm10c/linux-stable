@@ -8,7 +8,9 @@
  */
 // ARM10C 20131005
 // ARM10C 20131207
+// ARM10C 20140301
 #define __ALIGN_KERNEL(x, a)		__ALIGN_KERNEL_MASK(x, (typeof(x))(a) - 1)
+// ARM10C 20140301
 #define __ALIGN_KERNEL_MASK(x, mask)	(((x) + (mask)) & ~(mask))
 
 
