@@ -97,8 +97,8 @@
 #define __pcpu_ptr_to_addr(ptr)		(void __force *)(ptr)
 #endif	/* CONFIG_SMP */
 
-// ARM10C 20140301 
-// sizeof(struct pcpu_chunk) : 40 byte 
+// ARM10C 20140301
+// sizeof(struct pcpu_chunk): 40 bytes
 struct pcpu_chunk {
 	struct list_head	list;		/* linked to pcpu_slot lists */
 	int			free_size;	/* free bytes in the chunk */
@@ -112,58 +112,79 @@ struct pcpu_chunk {
 	unsigned long		populated[];	/* populated bitmap */
 };
 
+// ARM10C 20140301
+// pcpu_unit_pages: 0x8
 static int pcpu_unit_pages __read_mostly;
-//ARM10C 20140301 pcpu_unit_pages : 0x8
+
+// ARM10C 20140301
+// pcpu_unit_size: 0x8000
 static int pcpu_unit_size __read_mostly;
-//ARM10C 20140301 pcpu_unit_size : 0x8000
+
+// ARM10C 20140301
+// pcpu_nr_units: 4
 static int pcpu_nr_units __read_mostly;
-//ARM10C 20140301 pcpu_nr_units : 4
+
+// ARM10C 20140301
+// pcpu_atom_size: 0x1000
 static int pcpu_atom_size __read_mostly;
-// ARM10C 20140301 pcpu_atom_size : 0x1000
+
+// ARM10C 20140301
+// pcpu_nr_slots: 15
 static int pcpu_nr_slots __read_mostly;
-// ARM10C 20140301 pcpu_nr_slots : 15 	 
+
+// ARM10C 20140301
+// pcpu_chunk_struct_size: 44
 static size_t pcpu_chunk_struct_size __read_mostly;
-// ARM10C 20140301 pcpu_chunk_struct_size : 44  
 
 /* cpus with the lowest and highest unit addresses */
+// ARM10C 20140301
+// pcpu_low_unit_cpu: 0
 static unsigned int pcpu_low_unit_cpu __read_mostly;
-// ARM10C 20140301 pcpu_low_unit_cpu = 0
+
+// ARM10C 20140301
+// pcpu_high_unit_cpu: 3
 static unsigned int pcpu_high_unit_cpu __read_mostly;
-// ARM10C 20140301 pcpu_high_unit_cpu = 3
 
 /* the address of the first chunk which starts with the kernel static area */
+// ARM10C 20140301
+// pcpu_base_addr: 128K 만큼 물리주소 0x5FFFFFFF 근처에 할당받은 주소
 void *pcpu_base_addr __read_mostly;
-// ARM10C 20140301 pcpu_base_addr = 128K 만큼 물리주소 0x5FFFFFFF 근처에 할당받은 주소
 EXPORT_SYMBOL_GPL(pcpu_base_addr);
 
+// ARM10C 20140301
+// unit_map[0]: 0
+// unit_map[1]: 1
+// unit_map[2]: 2
+// unit_map[3]: 3
 static const int *pcpu_unit_map __read_mostly;		/* cpu -> unit */
-// ARM10C 20140301 
-// unit_map[0]: 0, UINT_MAX: 0xFFFFFFF
-// unit_map[1]: 1, UINT_MAX: 0xFFFFFFF
-// unit_map[2]: 2, UINT_MAX: 0xFFFFFFF
-// unit_map[3]: 3, UINT_MAX: 0xFFFFFFF
+
+// ARM10C 20140301
+// unit_off[0]: 0
+// unit_off[1]: 0x8000
+// unit_off[2]: 0x8000 * 2: 0x10000
+// unit_off[3]: 0x8000 * 3: 0x18000
 const unsigned long *pcpu_unit_offsets __read_mostly;	/* cpu -> unit offset */
-// ARM10C 20140301 
-// [i: 0] unit_off[0]: 0
-// [i: 1] unit_off[1]: 0x8000
-// [i: 2] unit_off[2]: 0x8000 * 2
-// [i: 3] unit_off[3]: 0x8000 * 3
 
 /* group information, used for vm allocation */
-//ARM10C 20140301 
+// ARM10C 20140301
+// pcpu_nr_groups: 1
 static int pcpu_nr_groups __read_mostly;
-// ARM10C 20140301 pcpu_nr_groups = 1
+
+// ARM10C 20140301
+// pcpu_group_offsets[0]: 0
 static const unsigned long *pcpu_group_offsets __read_mostly;
-// ARM10C 20140301 pcpu_group_offsets[0] = 0
+
+// ARM10C 20140301
+// pcpu_group_sizes[0]: 0x20000
 static const size_t *pcpu_group_sizes __read_mostly;
-// ARM10C 20140301 pcpu_group_sizes[0] =0x20000
 /*
  * The first chunk which always exists.  Note that unlike other
  * chunks, this one can be allocated and mapped in several different
  * ways and thus often doesn't live in the vmalloc area.
  */
+// ARM10C 20140301
+// pcpu_first_chunk: pcpu_setup_first_chunk()함수에서 할당한 dchunk
 static struct pcpu_chunk *pcpu_first_chunk;
-// ARM10C 20140301 pcpu_first_chunk = pcpu_setup_first_chunk()함수에서 할당한 dchunk;
 
 /*
  * Optional reserved chunk.  This chunk reserves part of the first
@@ -172,10 +193,13 @@ static struct pcpu_chunk *pcpu_first_chunk;
  * area doesn't exist, the following variables contain NULL and 0
  * respectively.
  */
+// ARM10C 20140301
+// pcpu_reserved_chunk: pcpu_setup_first_chunk()함수에서 할당한 schunk
 static struct pcpu_chunk *pcpu_reserved_chunk;
-// ARM10C 20140301 pcpu_reserved_chunk = pcpu_setup_first_chunk()함수에서 할당한 schunk;
+
+// ARM10C 20140301
+// pcpu_reserved_chunk_limit: __per_cpu 실제 할당한 size + 0x2000
 static int pcpu_reserved_chunk_limit;
-// ARM10C 20140301 pcup 실제 할당한 size + 0x2000 
 
 /*
  * Synchronization rules.
@@ -204,6 +228,7 @@ static int pcpu_reserved_chunk_limit;
 static DEFINE_MUTEX(pcpu_alloc_mutex);	/* protects whole alloc and reclaim */
 static DEFINE_SPINLOCK(pcpu_lock);	/* protects index data structures */
 
+// ARM10C 20140301
 static struct list_head *pcpu_slot __read_mostly; /* chunk list slots */
 
 /* reclaim work to release fully free chunks, scheduled from free path */
@@ -225,38 +250,48 @@ static bool pcpu_addr_in_reserved_chunk(void *addr)
 		addr < first_start + pcpu_reserved_chunk_limit;
 }
 
-// ARM10C 20140301 size : 0x8000
-// ARM10C 20140301 size : 0x3000
+// ARM10C 20140301
+// __pcpu_size_to_slot(size: 0x8000)
+// __pcpu_size_to_slot(size: 0x3000)
 static int __pcpu_size_to_slot(int size)
 {	
+	// size: 0x8000
+	// size: 0x3000
 	int highbit = fls(size);	/* size is in bytes */
 	// highbit = 16
 	// highbit = 14
-	// PCPU_SLOT_BASE_SHIFT 5
+
+	// PCPU_SLOT_BASE_SHIFT: 5
 	return max(highbit - PCPU_SLOT_BASE_SHIFT + 2, 1);
 	// max(13, 1) = 13
 	// max(11, 1) = 11
 }
 
-// ARM10C 20140301  size : 0x3000
+// ARM10C 20140301
+// pcpu_size_to_slot(size: 0x3000)
 static int pcpu_size_to_slot(int size)
 {
-	// pcpu_unit_size : 0x8000
+	// size: 0x3000, pcpu_unit_size : 0x8000
 	if (size == pcpu_unit_size)
 		return pcpu_nr_slots - 1;
+
+	// size: 0x3000
 	return __pcpu_size_to_slot(size);
+	// __pcpu_size_to_slot(0x3000): 11
 }
 
-// ARM10C 20140301 chunk : pcpu_first_chunk = dchunk
+// ARM10C 20140301
+// chunk: pcpu_first_chunk: dchunk
 static int pcpu_chunk_slot(const struct pcpu_chunk *chunk)
 {
-	//  dchunk->free_size = 0x3000, dchunk->contig_hint = 0x3000
+	// chunk->free_size: dchunk->free_size: 0x3000
+	// chunk->contig_hint: dchunk->contig_hint: 0x3000
 	if (chunk->free_size < sizeof(int) || chunk->contig_hint < sizeof(int))
 		return 0;
 	
-	//  dchunk->free_size = 0x3000
+	// chunk->free_size: dchunk->free_size: 0x3000
 	return pcpu_size_to_slot(chunk->free_size);
-	//return 11;
+	// return 11
 }
 
 /* set the pointer to a chunk in a page struct */
@@ -366,18 +401,22 @@ static void pcpu_mem_free(void *ptr, size_t size)
  * CONTEXT:
  * pcpu_lock.
  */
-// ARM10C 20140301 chunk : pcpu_first_chunk = dchunk, oslot : -1);
+// ARM10C 20140301
+// chunk: pcpu_first_chunk: dchunk, oslot: -1
 static void pcpu_chunk_relocate(struct pcpu_chunk *chunk, int oslot)
 {
+	// chunk: dchunk
 	int nslot = pcpu_chunk_slot(chunk);
-	// nslot = 11;
+	// nslot: 11
 
-	//if(dchunk != schunk && -1 != 11)
+	// chunk: dchunk, pcpu_reserved_chunk: pcpu_setup_first_chunk()함수에서 할당한 schunk
+	// oslot: -1, nslot: 11
 	if (chunk != pcpu_reserved_chunk && oslot != nslot) {
-		if (oslot < nslot)	// -1 < 11 
-			//&chunk->list = &dchunk->list, &pcpu_slot[11]
+		// oslot: -1, nslot: 11
+		if (oslot < nslot)
+			// &chunk->list: &dchunk->list, nslot: 11, &pcpu_slot[11]
 			list_move(&chunk->list, &pcpu_slot[nslot]);
-			// &pcpu_slot[11](list)에  &dchunk->list 추가
+			// &pcpu_slot[11](list)에 &dchunk->list 추가
 		else
 			list_move_tail(&chunk->list, &pcpu_slot[nslot]);
 	}
@@ -1219,7 +1258,7 @@ static void pcpu_dump_alloc_info(const char *lvl,
 	       lvl, ai->static_size, ai->reserved_size, ai->dyn_size,
 	       ai->unit_size, ai->alloc_size / ai->atom_size, ai->atom_size);
 
-	//  ai->nr_groups: 1
+	// ai->nr_groups: 1
 	for (group = 0; group < ai->nr_groups; group++) {
 		const struct pcpu_group_info *gi = &ai->groups[group];
 		int unit = 0, unit_end = 0;
@@ -1242,11 +1281,11 @@ static void pcpu_dump_alloc_info(const char *lvl,
 			// group_width: 1, group: 0
 			printk(KERN_CONT "[%0*d] ", group_width, group);
 
-			// unit_end: 0, upa: 1
+			// unit_end: 0, upa: 1, unit: 0
 			for (unit_end += upa; unit < unit_end; unit++)
 				// unit_end: 1
 
-				// gi->cpu_map[0]: 0
+				// unit: 0, gi->cpu_map[0]: 0
 				if (gi->cpu_map[unit] != NR_CPUS)
 					// cpu_width: 1, gi->cpu_map[0]: 0
 					printk(KERN_CONT "%0*d ", cpu_width,
@@ -1315,7 +1354,7 @@ static void pcpu_dump_alloc_info(const char *lvl,
  * 0 on success, -errno on failure.
  */
 // ARM10C 20140301
-// base: ptr
+// base: 128K 만큼 물리주소 0x5FFFFFFF 근처에 할당받은 주소
 int __init pcpu_setup_first_chunk(const struct pcpu_alloc_info *ai,
 				  void *base_addr)
 {
@@ -1326,7 +1365,7 @@ int __init pcpu_setup_first_chunk(const struct pcpu_alloc_info *ai,
 	// ai->dyn_size: 0x3000
 	size_t dyn_size = ai->dyn_size;
 	// dyn_size: 0x3000
-	// ai->static_size: __per_cpu의 실제 메모리 할당된 size, ai->reserved_size: 0x2000, 
+	// ai->static_size: __per_cpu의 실제 메모리 할당된 size, ai->reserved_size: 0x2000
 	size_t size_sum = ai->static_size + ai->reserved_size + dyn_size;
 	// size_sum: __per_cpu의 실제 메모리 할당된 size + 0x5000
 	struct pcpu_chunk *schunk, *dchunk = NULL;
@@ -1337,7 +1376,7 @@ int __init pcpu_setup_first_chunk(const struct pcpu_alloc_info *ai,
 	int *unit_map;
 	int group, unit, i;
 
-	// sizeof(cpus_buf): 4096 cpu_possible_mask: cpu_possible_bits: 0xF
+	// sizeof(cpus_buf): 4096, cpu_possible_mask: cpu_possible_bits: 0xF
 	cpumask_scnprintf(cpus_buf, sizeof(cpus_buf), cpu_possible_mask);
 	// cpus_buf: "f"
 
@@ -1353,6 +1392,7 @@ int __init pcpu_setup_first_chunk(const struct pcpu_alloc_info *ai,
 	/* sanity checks */
 	// ai->nr_groups: 1
 	PCPU_SETUP_BUG_ON(ai->nr_groups <= 0);
+
 #ifdef CONFIG_SMP // CONFIG_SMP=y
 	// ai->static_size: __per_cpu의 실제 메모리 할당된 size
 	PCPU_SETUP_BUG_ON(!ai->static_size);
@@ -1378,6 +1418,8 @@ int __init pcpu_setup_first_chunk(const struct pcpu_alloc_info *ai,
 
 	// ai->dyn_size: 0x3000, PERCPU_DYNAMIC_EARLY_SIZE: 0x3000
 	PCPU_SETUP_BUG_ON(ai->dyn_size < PERCPU_DYNAMIC_EARLY_SIZE);
+
+	// pcpu_verify_alloc_info(ai): 0
 	PCPU_SETUP_BUG_ON(pcpu_verify_alloc_info(ai) < 0);
 
 	/* process group information and build config tables accordingly */
@@ -1413,11 +1455,11 @@ int __init pcpu_setup_first_chunk(const struct pcpu_alloc_info *ai,
 	for (group = 0, unit = 0; group < ai->nr_groups; group++, unit += i) {
 		const struct pcpu_group_info *gi = &ai->groups[group];
 
-		// gi->base_offset: 0
+		// group: 0, gi->base_offset: 0
 		group_offsets[group] = gi->base_offset;
 		// group_offsets[0]: 0
 
-		// gi->nr_units: 4, ai->unit_size: 0x8000
+		// group: 0, ggi->nr_units: 4, ai->unit_size: 0x8000
 		group_sizes[group] = gi->nr_units * ai->unit_size;
 		// group_sizes[0]: 0x20000
 
@@ -1426,8 +1468,8 @@ int __init pcpu_setup_first_chunk(const struct pcpu_alloc_info *ai,
 			// [i: 0] gi->cpu_map[0]: 0
 			// [i: 1] gi->cpu_map[1]: 1
 			cpu = gi->cpu_map[i];
-			// [i: 0] gcpu: 0
-			// [i: 1] gcpu: 1
+			// [i: 0] cpu: 0
+			// [i: 1] cpu: 1
 
 			// NR_CPUS: 4
 			if (cpu == NR_CPUS)
@@ -1437,15 +1479,15 @@ int __init pcpu_setup_first_chunk(const struct pcpu_alloc_info *ai,
 			// [i: 1] nr_cpu_ids: 4, cpu: 1
 			PCPU_SETUP_BUG_ON(cpu > nr_cpu_ids);
 
-			// cpu: 0, cpu_possible(cpu): 0xF
+			// cpu: 0, cpu_possible(0): 1
 			PCPU_SETUP_BUG_ON(!cpu_possible(cpu));
 
 			// [i: 0] unit_map[0]; 0xFFFFFFFF, UINT_MAX: 0xFFFFFFFF
 			// [i: 1] unit_map[1]; 0xFFFFFFFF, UINT_MAX: 0xFFFFFFFF
 			PCPU_SETUP_BUG_ON(unit_map[cpu] != UINT_MAX);
 
-			// [i: 0] unit_map[0]; 0xFFFFFFFF, unit:0, i: 0
-			// [i: 1] unit_map[1]; 0xFFFFFFFF, unit:0, i: 1
+			// [i: 0] unit_map[0]; 0xFFFFFFFF, unit: 0, i: 0
+			// [i: 1] unit_map[1]; 0xFFFFFFFF, unit: 0, i: 1
 			unit_map[cpu] = unit + i;
 			// [i: 0] unit_map[0]; 0
 			// [i: 1] unit_map[1]; 1
@@ -1457,8 +1499,8 @@ int __init pcpu_setup_first_chunk(const struct pcpu_alloc_info *ai,
 			unit_off[cpu] = gi->base_offset + i * ai->unit_size;
 			// [i: 0] unit_off[0]: 0
 			// [i: 1] unit_off[1]: 0x8000
-			// [i: 2] unit_off[2]: 0x8000 * 2
-			// [i: 3] unit_off[3]: 0x8000 * 3
+			// [i: 2] unit_off[2]: 0x8000 * 2: 0x10000
+			// [i: 3] unit_off[3]: 0x8000 * 3: 0x18000
 
 			/* determine low/high unit_cpu */
 			// [i: 0] pcpu_low_unit_cpu: 4, NR_CPUS: 4, unit_off[0]: 0, unit_off[4]: ???
@@ -1469,12 +1511,16 @@ int __init pcpu_setup_first_chunk(const struct pcpu_alloc_info *ai,
 				pcpu_low_unit_cpu = cpu;
 				// [i: 0] pcpu_low_unit_cpu: 0
 
-			// [i: 0] pcpu_high_unit_cpu: 4, NR_CPUS: 4, unit_off[0]: 0, unit_off[4]: ???
-			// [i: 1] pcpu_high_unit_cpu: 0, NR_CPUS: 4, unit_off[1]: 0x8000, unit_off[0]: 0
+			// [i: 0] pcpu_high_unit_cpu: 4, NR_CPUS: 4, cpu: 0, unit_off[0]: 0, unit_off[4]: ???
+			// [i: 1] pcpu_high_unit_cpu: 0, NR_CPUS: 4, cpu: 1, unit_off[1]: 0x8000, unit_off[0]: 0
+			// [i: 2] pcpu_high_unit_cpu: 1, NR_CPUS: 4, cpu: 2, unit_off[2]: 0x10000, unit_off[1]: 0x8000
+			// [i: 3] pcpu_high_unit_cpu: 2, NR_CPUS: 4, cpu: 3, unit_off[3]: 0x18000, unit_off[2]: 0x10000
 			if (pcpu_high_unit_cpu == NR_CPUS ||
 			    unit_off[cpu] > unit_off[pcpu_high_unit_cpu])
 				// [i: 0] cpu: 0
 				// [i: 1] cpu: 1
+				// [i: 2] cpu: 2
+				// [i: 3] cpu: 3
 				pcpu_high_unit_cpu = cpu;
 				// [i: 0] pcpu_high_unit_cpu: 0
 				// [i: 1] pcpu_high_unit_cpu: 1
@@ -1499,42 +1545,55 @@ int __init pcpu_setup_first_chunk(const struct pcpu_alloc_info *ai,
 	// KERN_DEBUG: "\001""7"
 	pcpu_dump_alloc_info(KERN_DEBUG, ai);
  
+	// ai->nr_groups: 1
 	pcpu_nr_groups = ai->nr_groups;
-	// pcpu_nr_groups = 1
-	pcpu_group_offsets = group_offsets;
-	// pcpu_group_offsets = group_offsets: 4K만큼 할당 받은 주소
+	// pcpu_nr_groups: 1
 
+	// group_offsets: 4K만큼 할당 받은 주소
+	pcpu_group_offsets = group_offsets;
+	// pcpu_group_offsets: group_offsets: 4K만큼 할당 받은 주소
+
+	// group_sizes: 4K만큼 할당 받은 주소
 	pcpu_group_sizes = group_sizes;
-	// pcpu_group_sizes = group_sizes: 4K만큼 할당 받은 주소
+	// pcpu_group_sizes: group_sizes: 4K만큼 할당 받은 주소
+
+	// unit_map: 4K만큼 할당 받은 주소
 	pcpu_unit_map = unit_map;
-	// pcpu_unit_map = unit_map: 4K만큼 할당 받은 주소
+	// pcpu_unit_map: unit_map: 4K만큼 할당 받은 주소
+
+	// unit_off: 4K만큼 할당 받은 주소
 	pcpu_unit_offsets = unit_off;
-	// pcpu_unit_offsets = unit_off: 4K만큼 할당 받은 주소
+	// pcpu_unit_offsets: unit_off: 4K만큼 할당 받은 주소
 
 	/* determine basic parameters */
-	//ai->unit_size : 0x8000 ,PAGE_SHIFT : 12
+	// ai->unit_size: 0x8000, PAGE_SHIFT : 12
 	pcpu_unit_pages = ai->unit_size >> PAGE_SHIFT;
-	//pcpu_unit_pages : 0x8
+	// pcpu_unit_pages: 0x8
 	
 	pcpu_unit_size = pcpu_unit_pages << PAGE_SHIFT;
-	//pcpu_unit_size : 0x8000
+	// pcpu_unit_size: 0x8000
 	
 	pcpu_atom_size = ai->atom_size;
-	//pcpu_atom_size : 0x1000
+	// pcpu_atom_size: 0x1000
 	
-	//sizeof(struct pcpu_chunk): 40 ,BITS_TO_LONGS(pcpu_unit_pages=0x8) : 1 * 4
+	// sizeof(struct pcpu_chunk): 40, BITS_TO_LONGS(pcpu_unit_pages: 0x8): 1 * 4
 	pcpu_chunk_struct_size = sizeof(struct pcpu_chunk) +
 		BITS_TO_LONGS(pcpu_unit_pages) * sizeof(unsigned long);
-	// pcpu_chunk_struct_size : 44  
+	// pcpu_chunk_struct_size : 44
+
 	/*
 	 * Allocate chunk slots.  The additional last slot is for
 	 * empty chunks.
-	 */	
-	//  __pcpu_size_to_slot(0x8000) : 13 
+	 */
+	// pcpu_unit_size: 0x8000, __pcpu_size_to_slot(0x8000): 13
 	pcpu_nr_slots = __pcpu_size_to_slot(pcpu_unit_size) + 2;
-	// pcpu_nr_slots : 15 	 
-	pcpu_slot = alloc_bootmem(pcpu_nr_slots * sizeof(pcpu_slot[0]));	// alloc_bootmem( 15 * 8 = 120 ) 
-	// pcpu_slot =  4K만큼 할당 받은 주소
+	// pcpu_nr_slots: 15
+
+	// sizeof(pcpu_slot[0]): 8
+	pcpu_slot = alloc_bootmem(pcpu_nr_slots * sizeof(pcpu_slot[0]));
+	// pcpu_slot: 4K만큼 할당 받은 주소
+
+	// pcpu_nr_slots: 15
 	for (i = 0; i < pcpu_nr_slots; i++)
 		INIT_LIST_HEAD(&pcpu_slot[i]);
 
@@ -1546,80 +1605,111 @@ int __init pcpu_setup_first_chunk(const struct pcpu_alloc_info *ai,
 	 * static percpu allocation).
 	 */
 
-	schunk = alloc_bootmem(pcpu_chunk_struct_size);	//alloc_bootmem(44)
-	//schunk =  4K만큼 할당 받은 주소
+	// pcpu_chunk_struct_size : 44
+	schunk = alloc_bootmem(pcpu_chunk_struct_size);
+	// schunk: 4K만큼 할당 받은 주소
 	
 	INIT_LIST_HEAD(&schunk->list);
+	// schunk->list 초기화
 	
+	// base_addr: 128K 만큼 물리주소 0x5FFFFFFF 근처에 할당받은 주소
 	schunk->base_addr = base_addr;
-	// schunk->base_addr = base_addr: 128K 만큼 물리주소 0x5FFFFFFF 근처에 할당받은 주소
+	// schunk->base_addr: base_addr: 128K 만큼 물리주소 0x5FFFFFFF 근처에 할당받은 주소
 	
 	schunk->map = smap;
-	//schunk->map = smap[PERCPU_DYNAMIC_EARLY_SLOTS]
+	// schunk->map: smap[PERCPU_DYNAMIC_EARLY_SLOTS]
 	
 	schunk->map_alloc = ARRAY_SIZE(smap);
-	// schunk->map_alloc = 128
-	 
+	// schunk->map_alloc: 128
+
 	schunk->immutable = true;
 
-	// pcpu_unit_pages : 8 
+	// pcpu_unit_pages: 8
 	bitmap_fill(schunk->populated, pcpu_unit_pages);
-	// schunk->populated[0] = 0xFF; 
+	// schunk->populated[0]: 0xFF
 
-	//  ai->reserved_size = 0x2000
+	// ai->reserved_size: 0x2000
 	if (ai->reserved_size) {
-		schunk->free_size = ai->reserved_size;	// = 0x2000 
+		// ai->reserved_size: 0x2000
+		schunk->free_size = ai->reserved_size;
+		// schunk->free_size: 0x2000
+
 		pcpu_reserved_chunk = schunk;
+
+		// ai->static_size: __per_cpu의 실제 메모리 할당된 size, ai->reserved_size: 0x2000
 		pcpu_reserved_chunk_limit = ai->static_size + ai->reserved_size;
-		// pcup 실제 할당한 size + 0x2000 
+		// pcpu_reserved_chunk_limit: __per_cpu 실제 할당한 size + 0x2000
 	} else {
 		schunk->free_size = dyn_size;
 		dyn_size = 0;			/* dynamic area covered */
 	}
-	schunk->contig_hint = schunk->free_size;	// = 0x2000 
 
-	schunk->map[schunk->map_used++] = -ai->static_size;	
-	//schunk->map[0] = -(pcup 실제 할당한 size); schunk->map_used = 1;
+	// schunk->free_size: 0x2000
+	schunk->contig_hint = schunk->free_size;
+	// schunk->contig_hint: 0x2000
+
+	// schunk->map_used: 0
+	schunk->map[schunk->map_used++] = -ai->static_size;
+	// schunk->map[0]: -(pcup 실제 할당한 size), schunk->map_used: 1
+
+	// schunk->free_size: 0x2000
 	if (schunk->free_size)
-		schunk->map[schunk->map_used++] = schunk->free_size;	//  
-		//schunk->map[1] = 0x2000; schunk->map_used = 2;
+		// schunk->map_used: 1, schunk->free_size: 0x2000
+		schunk->map[schunk->map_used++] = schunk->free_size;
+		// schunk->map[1]: 0x2000, schunk->map_used: 2
 
 	/* init dynamic chunk if necessary */
-	if (dyn_size) {	// dyn_size = 0x3000 
+	// dyn_size: 0x3000
+	if (dyn_size) {
+		// pcpu_chunk_struct_size : 44
 		dchunk = alloc_bootmem(pcpu_chunk_struct_size);
-		//dchunk =  4K만큼 할당 받은 주소
+		// dchunk: 4K만큼 할당 받은 주소
 
 		INIT_LIST_HEAD(&dchunk->list);
+		// dchunk->list 초기화
+
+		// base_addr: 128K 만큼 물리주소 0x5FFFFFFF 근처에 할당받은 주소
 		dchunk->base_addr = base_addr;
-		//dchunk->base_addr = base_addr: 128K 만큼 물리주소 0x5FFFFFFF 근처에 할당받은 주소
+		// dchunk->base_addr: base_addr: 128K 만큼 물리주소 0x5FFFFFFF 근처에 할당받은 주소
 
 		dchunk->map = dmap;
-		//dchunk->map = dmap[PERCPU_DYNAMIC_EARLY_SLOTS]
+		// dchunk->map: dmap[PERCPU_DYNAMIC_EARLY_SLOTS]
 
+		// ARRAY_SIZE(dmap): 128
 		dchunk->map_alloc = ARRAY_SIZE(dmap);
-		//dchunk->map_alloc = 128
+		// dchunk->map_alloc: 128
 		
 		dchunk->immutable = true;
+
+		// pcpu_unit_pages: 0x8
 		bitmap_fill(dchunk->populated, pcpu_unit_pages);
-		//dchunk->populated[0] = 0xFF; 
+		// dchunk->populated[0]: 0xFF
 
 		dchunk->contig_hint = dchunk->free_size = dyn_size;
-		//dchunk->contig_hint = dchunk->free_size = 0x3000;
+		// dchunk->contig_hint: 0x3000, dchunk->free_size: 0x3000
 
+		// dchunk->map_used: 0, pcpu_reserved_chunk_limit: __per_cpu 실제 할당한 size + 0x2000
 		dchunk->map[dchunk->map_used++] = -pcpu_reserved_chunk_limit;
-		//dchunk->map[0] = -(pcup 실제 할당한 size + 0x2000); dchunk->map_used = 1;
+		// dchunk->map[0]: -(__per_cpu 실제 할당한 size + 0x2000), dchunk->map_used: 1
+
+		// dchunk->map_used: 1, dchunk->free_size: 0x3000
 		dchunk->map[dchunk->map_used++] = dchunk->free_size;
-		//dchunk->map[1] = 0x3000; schunk->map_used = 2;
+		// dchunk->map[1]: 0x3000, schunk->map_used: 2
 	}
 
 	/* link the first chunk in */
-	pcpu_first_chunk = dchunk ?: schunk;	//  pcpu_first_chunk = dchunk 
+	// dchunk: 4K만큼 할당 받은 주소
+	pcpu_first_chunk = dchunk ?: schunk;
+	// pcpu_first_chunk: dchunk
+
 	pcpu_chunk_relocate(pcpu_first_chunk, -1);
-	// &pcpu_slot[11](list)에  pcpu_first_chunk(&dchunk)->list 추가
+	// &pcpu_slot[11](list)에 pcpu_first_chunk(&dchunk)->list 추가
 
 	/* we're done */
+	// base_addr: 128K 만큼 물리주소 0x5FFFFFFF 근처에 할당받은 주소
 	pcpu_base_addr = base_addr;
-	//pcpu_base_addr = 128K 만큼 물리주소 0x5FFFFFFF 근처에 할당받은 주소
+	// pcpu_base_addr: 128K 만큼 물리주소 0x5FFFFFFF 근처에 할당받은 주소
+
 	return 0;
 }
 
@@ -2083,8 +2173,11 @@ int __init pcpu_embed_first_chunk(size_t reserved_size, size_t dyn_size,
 		PFN_DOWN(size_sum), base, ai->static_size, ai->reserved_size,
 		ai->dyn_size, ai->unit_size);
 
-	// base: ptr
+	// base: 128K 만큼 물리주소 0x5FFFFFFF 근처에 할당받은 주소
 	rc = pcpu_setup_first_chunk(ai, base);
+
+// 2014/03/01 종료
+
 	goto out_free;
 
 out_free_areas:

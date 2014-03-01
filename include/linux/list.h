@@ -27,6 +27,7 @@
 	struct list_head name = LIST_HEAD_INIT(name)
 
 // ARM10C 20130824
+// ARM10C 20140301
 static inline void INIT_LIST_HEAD(struct list_head *list)
 {
 	list->next = list;
@@ -168,14 +169,18 @@ static inline void list_del_init(struct list_head *entry)
  * @list: the entry to move
  * @head: the head that will precede our entry
  */
-// ARM10C 20140301 //list = &dchunk->list, head = &pcpu_slot[11]
+// ARM10C 20140301
+// list: &dchunk->list, head: &pcpu_slot[11]
 static inline void list_move(struct list_head *list, struct list_head *head)
 {
+	// list: &dchunk->list
 	__list_del_entry(list);
-	//&dchunk->list->next = &dchunk->list;
-	//&dchunk->list->prev = &dchunk->list;
+	// &dchunk->list->next: &dchunk->list
+	// &dchunk->list->prev: &dchunk->list
+
+	// head: &pcpu_slot[11]
 	list_add(list, head);
-	// &pcpu_slot[11](list)에  &dchunk->list 추가
+	// &pcpu_slot[11](list)에 &dchunk->list 추가
 }
 
 /**

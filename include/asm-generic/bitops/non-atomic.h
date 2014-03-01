@@ -107,9 +107,13 @@ static inline int __test_and_change_bit(int nr,
  * @nr: bit number to test
  * @addr: Address to start counting from
  */
+// ARM10C 20140301
+// test_bit(0, cpu_possible_mask->bits)
 static inline int test_bit(int nr, const volatile unsigned long *addr)
 {
+	// nr: 0, BIT_WORD(0): 0, addr[0]: cpu_possible_mask->bits[0]: 0xF
 	return 1UL & (addr[BIT_WORD(nr)] >> (nr & (BITS_PER_LONG-1)));
+	// return 1 & (0xF >> 0): 1
 }
 
 #endif /* _ASM_GENERIC_BITOPS_NON_ATOMIC_H_ */

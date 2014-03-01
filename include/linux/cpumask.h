@@ -99,6 +99,8 @@ extern const struct cpumask *const cpu_active_mask;
 #define num_present_cpus()	cpumask_weight(cpu_present_mask)
 #define num_active_cpus()	cpumask_weight(cpu_active_mask)
 #define cpu_online(cpu)		cpumask_test_cpu((cpu), cpu_online_mask)
+// ARM10C 20140301
+// cpu_possible(0): cpumask_test_cpu((0), cpu_possible_mask): 1
 #define cpu_possible(cpu)	cpumask_test_cpu((cpu), cpu_possible_mask)
 #define cpu_present(cpu)	cpumask_test_cpu((cpu), cpu_present_mask)
 #define cpu_active(cpu)		cpumask_test_cpu((cpu), cpu_active_mask)
@@ -114,10 +116,12 @@ extern const struct cpumask *const cpu_active_mask;
 #endif
 
 /* verify cpu argument to cpumask_* operators */
-// ARM10C 20130907 
+// ARM10C 20130907
+// ARM10C 20140301
+// nr_cpumask_bits: 4
 static inline unsigned int cpumask_check(unsigned int cpu)
 {
-#ifdef CONFIG_DEBUG_PER_CPU_MAPS
+#ifdef CONFIG_DEBUG_PER_CPU_MAPS // CONFIG_DEBUG_PER_CPU_MAPS=n
 	WARN_ON_ONCE(cpu >= nr_cpumask_bits);
 #endif /* CONFIG_DEBUG_PER_CPU_MAPS */
 	return cpu;
@@ -297,6 +301,11 @@ static inline void cpumask_clear_cpu(int cpu, struct cpumask *dstp)
  *
  * No static inline type checking - see Subtlety (1) above.
  */
+// ARM10C 20140301
+// cpumask_test_cpu((0), cpu_possible_mask)
+// test_bit(cpumask_check(0), cpumask_bits((cpu_possible_mask)))
+// cpumask_check(0): 0, cpumask_bits((cpu_possible_mask)): cpu_possible_mask->bits: 0xF
+// test_bit(0, cpu_possible_mask->bits): 1
 #define cpumask_test_cpu(cpu, cpumask) \
 	test_bit(cpumask_check(cpu), cpumask_bits((cpumask)))
 
