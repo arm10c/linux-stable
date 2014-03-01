@@ -42,14 +42,19 @@ static inline void INIT_LIST_HEAD(struct list_head *list)
 #ifndef CONFIG_DEBUG_LIST // CONFIG_DEBUG_LIST=n
 // ARM10C 20131130
 // __list_add(new, head->prev, head);
+// ARM10C 20140301 //new = &dchunk->list, prev = &pcpu_slot[11], next = &pcpu_slot[11]->next(&pcpu_slot[11])
 static inline void __list_add(struct list_head *new,
 			      struct list_head *prev,
 			      struct list_head *next)
 {
 	next->prev = new;
+	//&pcpu_slot[11]->prev = &dchunk->list;
 	new->next = next;
+	//&dchunk->list->next = &pcpu_slot[11];
 	new->prev = prev;
+	//&dchunk->list->prev = &pcpu_slot[11];
 	prev->next = new;
+	//&pcpu_slot[11]->next = &dchunk->list;
 }
 #else
 extern void __list_add(struct list_head *new,
@@ -65,6 +70,8 @@ extern void __list_add(struct list_head *new,
  * Insert a new entry after the specified head.
  * This is good for implementing stacks.
  */
+// ARM10C 20140301 
+// ARM10C 20140301 //new = &dchunk->list, head = &pcpu_slot[11]
 static inline void list_add(struct list_head *new, struct list_head *head)
 {
 	__list_add(new, head, head->next);
@@ -106,6 +113,7 @@ static inline void __list_del(struct list_head * prev, struct list_head * next)
  * in an undefined state.
  */
 #ifndef CONFIG_DEBUG_LIST
+// ARM10C 20140301 
 static inline void __list_del_entry(struct list_head *entry)
 {
 	__list_del(entry->prev, entry->next);
@@ -160,10 +168,14 @@ static inline void list_del_init(struct list_head *entry)
  * @list: the entry to move
  * @head: the head that will precede our entry
  */
+// ARM10C 20140301 //list = &dchunk->list, head = &pcpu_slot[11]
 static inline void list_move(struct list_head *list, struct list_head *head)
 {
 	__list_del_entry(list);
+	//&dchunk->list->next = &dchunk->list;
+	//&dchunk->list->prev = &dchunk->list;
 	list_add(list, head);
+	// &pcpu_slot[11](list)에  &dchunk->list 추가
 }
 
 /**
