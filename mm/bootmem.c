@@ -499,6 +499,8 @@ void __init free_bootmem_node(pg_data_t *pgdat, unsigned long physaddr,
 // ARM10C 20131207
 // ARM10C 20131221
 // __pfn_to_phys(0x20000): 0x20000000, (end - start) << PAGE_SHIFT: 0x2f800000
+// ARM10C 20140308
+// __pa(ai): ???, ai->__ai_size: 0x1000
 void __init free_bootmem(unsigned long physaddr, unsigned long size)
 {
 	unsigned long start, end;

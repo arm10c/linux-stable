@@ -371,6 +371,7 @@ static inline void __nodes_fold(nodemask_t *dstp, const nodemask_t *origp,
 /*
  * Bitmasks that are kept for all the nodes.
  */
+// ARM10C 20140308
 enum node_states {
 	N_POSSIBLE,		/* The node could become online at some point */
 	N_ONLINE,		/* The node is online */
@@ -396,6 +397,8 @@ enum node_states {
 
 extern nodemask_t node_states[NR_NODE_STATES];
 
+// ARM10C 20140308
+// MAX_NUMNODES: 1
 #if MAX_NUMNODES > 1
 static inline int node_state(int node, enum node_states state)
 {
@@ -459,12 +462,14 @@ static inline int num_node_state(enum node_states state)
 	return 1;
 }
 
+// ARM10C 20140308
 #define for_each_node_state(node, __state) \
 	for ( (node) = 0; (node) == 0; (node) = 1)
 
 #define first_online_node	0
 #define next_online_node(nid)	(MAX_NUMNODES)
 #define nr_node_ids		1
+// ARM10C 20140308
 #define nr_online_nodes		1
 
 // ARM10C 20131207
@@ -491,6 +496,10 @@ static inline int node_random(const nodemask_t *mask)
 #define node_possible(node)	node_state((node), N_POSSIBLE)
 
 #define for_each_node(node)	   for_each_node_state(node, N_POSSIBLE)
+// ARM10C 20140308
+// N_ONLINE: 1
+// #define for_each_node_state(node, __state)
+// 	for ( (node) = 0; (node) == 0; (node) = 1)
 #define for_each_online_node(node) for_each_node_state(node, N_ONLINE)
 
 /*

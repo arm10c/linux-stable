@@ -18,6 +18,7 @@
 extern unsigned long __per_cpu_offset[NR_CPUS];
 
 // ARM10C 20130928
+// ARM10C 20140308
 #define per_cpu_offset(x) (__per_cpu_offset[x])
 #endif
 
@@ -43,6 +44,12 @@ extern unsigned long __per_cpu_offset[NR_CPUS];
  */
 #ifndef SHIFT_PERCPU_PTR
 /* Weird cast keeps both GCC and sparse happy. */
+// ARM10C 20140308
+// SHIFT_PERCPU_PTR(&boot_pageset, __per_cpu_offset[0])
+//
+// #define SHIFT_PERCPU_PTR(&boot_pageset, __per_cpu_offset[0])	({
+//      &boot_pageset + __per_cpu_offset[0]
+//})
 #define SHIFT_PERCPU_PTR(__p, __offset)	({				\
 	__verify_pcpu_ptr((__p));					\
 	RELOC_HIDE((typeof(*(__p)) __kernel __force *)(__p), (__offset)); \
@@ -54,6 +61,12 @@ extern unsigned long __per_cpu_offset[NR_CPUS];
  * established ways to produce a usable pointer from the percpu variable
  * offset.
  */
+// ARM10C 20140308
+// boot_pageset, 0
+// per_cpu_offset(0): __per_cpu_offset[0]
+// SHIFT_PERCPU_PTR(&boot_pageset, __per_cpu_offset[0]): &boot_pageset + __per_cpu_offset[0]
+//
+// per_cpu(boot_pageset, __per_cpu_offset[0]): *(&boot_pageset + __per_cpu_offset[0])
 #define per_cpu(var, cpu) \
 	(*SHIFT_PERCPU_PTR(&(var), per_cpu_offset(cpu)))
 
@@ -120,6 +133,7 @@ extern void setup_per_cpu_areas(void);
 #endif
 
 #ifndef PER_CPU_DEF_ATTRIBUTES
+// ARM10C 20140308
 #define PER_CPU_DEF_ATTRIBUTES
 #endif
 

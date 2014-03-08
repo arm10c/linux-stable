@@ -36,6 +36,14 @@
  * the inline assembly constraint from =g to =r, in this particular
  * case either is valid.
  */
+// ARM10C 20140308
+// RELOC_HIDE((struct per_cpu_pageset __kernel __force *)(&boot_pageset), (__per_cpu_offset[0])):
+// &boot_pageset + __per_cpu_offset[0]
+//
+// #define RELOC_HIDE((struct per_cpu_pageset __kernel __force *)(&boot_pageset), (__per_cpu_offset[0]))
+//  ({ unsigned long __ptr;
+//  __asm__ ("" : "=r"(__ptr) : "0"((struct per_cpu_pageset __kernel __force *)(&boot_pageset)));
+//  (typeof((struct per_cpu_pageset __kernel __force *)(&boot_pageset))) (__ptr + ((__per_cpu_offset[0]))); })
 #define RELOC_HIDE(ptr, off)					\
   ({ unsigned long __ptr;					\
     __asm__ ("" : "=r"(__ptr) : "0"(ptr));		\

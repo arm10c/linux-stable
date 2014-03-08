@@ -22,12 +22,15 @@
  */
 #if defined(CONFIG_SMP) && !defined(CONFIG_CPU_V6) // CONFIG_SMP=y, CONFIG_CPU_V6=n
 // ARM10C 20130928
+// ARM10C 20140308
+// __per_cpu_offset[0]: pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋
 static inline void set_my_cpu_offset(unsigned long off)
 {
 	// A.R.M: A3.6.1 Processor privilege levels, execution privilege, and access privilege
 	//        B4.1.150 TPIDRPRW, PL1 only Thread ID Register, VMSA 
 	// FIXME: TPIDRPRW를 사용하여 thread id를 설정하는 이유?
 	/* Set TPIDRPRW */
+	// off: __per_cpu_offset[0]: pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋
 	asm volatile("mcr p15, 0, %0, c13, c0, 4" : : "r" (off) : "memory");
 }
 

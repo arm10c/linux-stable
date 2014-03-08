@@ -110,6 +110,7 @@ extern void tc_init(void);
  */
 bool early_boot_irqs_disabled __read_mostly;
 
+// ARM10C 20140308
 enum system_states system_state __read_mostly;
 EXPORT_SYMBOL(system_state);
 
@@ -562,9 +563,15 @@ asmlinkage void __init start_kernel(void)
 
 	setup_nr_cpu_ids();
 	setup_per_cpu_areas();
+	// pcpu 구조체를 만들어 줌(mm/percpu.c)
+
 	smp_prepare_boot_cpu();	/* arch-specific boot-cpu hooks */
+	// boot cpu 0의 pcpu 영역의 base주소를 core register에 설정해줌
 
 	build_all_zonelists(NULL, NULL);
+
+// 2014/03/08 종료
+
 	page_alloc_init();
 
 	pr_notice("Kernel command line: %s\n", boot_command_line);

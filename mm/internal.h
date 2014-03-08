@@ -279,6 +279,7 @@ static inline struct page *mem_map_next(struct page *iter,
 #endif
 
 /* Memory initialisation debug and verification */
+// ARM10C 20140308
 enum mminit_level {
 	MMINIT_WARNING,
 	MMINIT_VERIFY,
@@ -301,6 +302,7 @@ do { \
 extern void mminit_verify_pageflags_layout(void);
 extern void mminit_verify_page_links(struct page *page,
 		enum zone_type zone, unsigned long nid, unsigned long pfn);
+// ARM10C 20140308
 extern void mminit_verify_zonelist(void);
 
 #else

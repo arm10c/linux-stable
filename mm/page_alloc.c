@@ -2846,6 +2846,8 @@ EXPORT_SYMBOL(free_pages_exact);
  * zone, the number of pages is calculated as:
  *     managed_pages - high_pages
  */
+// ARM10C 20140308
+// offset: 0
 static unsigned long nr_free_zone_pages(int offset)
 {
 	struct zoneref *z;
@@ -2854,16 +2856,46 @@ static unsigned long nr_free_zone_pages(int offset)
 	/* Just pick one node, since fallback list is circular */
 	unsigned long sum = 0;
 
+	// numa_node_id(): 0, GFP_KERNEL: 0xD0
 	struct zonelist *zonelist = node_zonelist(numa_node_id(), GFP_KERNEL);
+	// zonelist: contig_page_data->node_zonelists
 
+	// zonelist: contig_page_data->node_zonelists, offset: 0
 	for_each_zone_zonelist(zone, z, zonelist, offset) {
+	// for (z = first_zones_zonelist(contig_page_data->node_zonelists, 0, 0, &zone);
+	//          zone; z = next_zones_zonelist(++z, 0, 0, &zone))
+		// [1st] z: contig_page_data->node_zonelists->_zonerefs[1]
+		// [1st] zone: contig_page_data->node_zones[0]
+		// [2nd] z: contig_page_data->node_zonelists->_zonerefs[0]
+		// [2nd] zone: contig_page_data->node_zones[1]
+
+		// [1st]: zone->managed_pages: contig_page_data->node_zones[0]->managed_pages: 0x2efd6
+		// [2nd]: zone->managed_pages: contig_page_data->node_zones[1]->managed_pages: 0x50800
 		unsigned long size = zone->managed_pages;
+		// [1st]: size: 0x2efd6
+		// [2nd]: size: 0x50800
+
+		// [1st] zone: contig_page_data->node_zones[0]
+		// [1st] high_wmark_pages(contig_page_data->node_zones[0]): 0
+		// [2st] zone: contig_page_data->node_zones[1]
+		// [2st] high_wmark_pages(contig_page_data->node_zones[1]): 0
 		unsigned long high = high_wmark_pages(zone);
+		// [1st]: high: 0
+		// [2nd]: high: 0
+
+		// [1st]: size: 0x2efd6
+		// [2nd]: size: 0x50800
 		if (size > high)
+			// [1st] sum: 0
+			// [2nd]: sum: 0x2efd6
 			sum += size - high;
+			// [1st]: sum: 0x2efd6
+			// [2nd]: sum: 0x7f7d6
 	}
 
+	// sum: 0x7f7d6
 	return sum;
+	// return 0x7f7d6
 }
 
 /**
@@ -2884,9 +2916,12 @@ EXPORT_SYMBOL_GPL(nr_free_buffer_pages);
  * nr_free_pagecache_pages() counts the number of pages which are beyond the
  * high watermark within all zones.
  */
+// ARM10C 20140308
 unsigned long nr_free_pagecache_pages(void)
 {
+	// GFP_HIGHUSER_MOVABLE: 0x200DA, gfp_zone(GFP_HIGHUSER_MOVABLE): 0
 	return nr_free_zone_pages(gfp_zone(GFP_HIGHUSER_MOVABLE));
+	// return 0x7f7d6
 }
 
 static inline void show_node(struct zone *zone)
@@ -3147,10 +3182,26 @@ void show_free_areas(unsigned int filter)
 	show_swap_cache_info();
 }
 
+// ARM10C 20140308
+// zone: contig_page_data->node_zones[1]
+// zonelist->_zonerefs[0]: contig_page_data->node_zonelists[0]._zonerefs[0]
+// zone: contig_page_data->node_zones[0]
+// zonelist->_zonerefs[0]: contig_page_data->node_zonelists[0]._zonerefs[1]
 static void zoneref_set_zone(struct zone *zone, struct zoneref *zoneref)
 {
+	// zoneref->zone: contig_page_data->node_zonelists[0]._zonerefs[0].zone
+	// zoneref->zone: contig_page_data->node_zonelists[0]._zonerefs[1].zone
 	zoneref->zone = zone;
+	// zoneref->zone: contig_page_data->node_zonelists[0]._zonerefs[0].zone: contig_page_data->node_zones[1]
+	// zoneref->zone: contig_page_data->node_zonelists[0]._zonerefs[1].zone: contig_page_data->node_zones[0]
+
+	// zoneref->zone_idx: contig_page_data->node_zonelists[0]._zonerefs[0].zone_idx
+	// zone_idx(contig_page_data->node_zones[1]): 1
+	// zoneref->zone_idx: contig_page_data->node_zonelists[0]._zonerefs[1].zone_idx
+	// zone_idx(contig_page_data->node_zones[0]): 0
 	zoneref->zone_idx = zone_idx(zone);
+	// zoneref->zone_idx: contig_page_data->node_zonelists[0]._zonerefs[0].zone_idx: 1
+	// zoneref->zone_idx: contig_page_data->node_zonelists[0]._zonerefs[1].zone_idx: 0
 }
 
 /*
@@ -3158,23 +3209,51 @@ static void zoneref_set_zone(struct zone *zone, struct zoneref *zoneref)
  *
  * Add all populated zones of a node to the zonelist.
  */
+// ARM10C 20140308
+// pgdat: &contig_page_data, zonelist: contig_page_data->node_zonelists[0], 0
 static int build_zonelists_node(pg_data_t *pgdat, struct zonelist *zonelist,
 				int nr_zones)
 {
 	struct zone *zone;
+	// MAX_NR_ZONES: 3
 	enum zone_type zone_type = MAX_NR_ZONES;
+	// zone_type: __MAX_NR_ZONES (3)
 
 	do {
 		zone_type--;
+		// zone_type: ZONE_MOVABLE(2)
+		// zone_type: ZONE_HIGHMEM(1)
+		// zone_type: ZONE_NORMAL(0)
+
+		// pgdat->node_zones: contig_page_data->node_zones
 		zone = pgdat->node_zones + zone_type;
+		// zone: contig_page_data->node_zones[2]
+		// zone: contig_page_data->node_zones[1]
+		// zone: contig_page_data->node_zones[0]
+
+		// populated_zone(contig_page_data->node_zones[2]): 0
+		// populated_zone(contig_page_data->node_zones[1]): 1
+		// populated_zone(contig_page_data->node_zones[0]): 1
 		if (populated_zone(zone)) {
+			// nr_zones: 0
+			// zone: contig_page_data->node_zones[1]
+			// zonelist->_zonerefs[0]: contig_page_data->node_zonelists[0]._zonerefs[0]
+			// nr_zones: 1
+			// zone: contig_page_data->node_zones[0]
+			// zonelist->_zonerefs[0]: contig_page_data->node_zonelists[0]._zonerefs[1]
 			zoneref_set_zone(zone,
 				&zonelist->_zonerefs[nr_zones++]);
-			check_highest_zone(zone_type);
+			// nr_zones: 1
+			// nr_zones: 2
+
+			// zone_type: ZONE_HIGHMEM(1)
+			check_highest_zone(zone_type); // null function
 		}
 	} while (zone_type);
 
+	// nr_zones: 2
 	return nr_zones;
+	// return 2
 }
 
 
@@ -3189,16 +3268,19 @@ static int build_zonelists_node(pg_data_t *pgdat, struct zonelist *zonelist,
  */
 #define ZONELIST_ORDER_DEFAULT  0
 #define ZONELIST_ORDER_NODE     1
+// ARM10C 20140308
 #define ZONELIST_ORDER_ZONE     2
 
 /* zonelist order in the kernel.
  * set_zonelist_order() will set this to NODE or ZONE.
  */
+// ARM10C 20140308
+// current_zonelist_order: 2
 static int current_zonelist_order = ZONELIST_ORDER_DEFAULT;
 static char zonelist_order_name[3][8] = {"Default", "Node", "Zone"};
 
 
-#ifdef CONFIG_NUMA
+#ifdef CONFIG_NUMA // CONFIG_NUMA=n
 /* The value user specified ....changed by config */
 static int user_zonelist_order = ZONELIST_ORDER_DEFAULT;
 /* string for sysctl */
@@ -3575,21 +3657,33 @@ int local_memory_node(int node)
 
 #else	/* CONFIG_NUMA */
 
+// ARM10C 20140308
 static void set_zonelist_order(void)
 {
+	// ZONELIST_ORDER_ZONE: 2
 	current_zonelist_order = ZONELIST_ORDER_ZONE;
+	// current_zonelist_order: 2
 }
 
+// ARM10C 20140308
+// pgdat: &contig_page_data
 static void build_zonelists(pg_data_t *pgdat)
 {
 	int node, local_node;
 	enum zone_type j;
 	struct zonelist *zonelist;
 
+	// pgdat->node_id: contig_page_data->node_id
 	local_node = pgdat->node_id;
+	// local_node: 0
 
+	// pgdat->node_zonelists: contig_page_data->node_zonelists
 	zonelist = &pgdat->node_zonelists[0];
+	// zonelist: contig_page_data->node_zonelists[0]
+
+	// pgdat: &contig_page_data
 	j = build_zonelists_node(pgdat, zonelist, 0);
+	// j: 2
 
 	/*
 	 * Now we build the zonelist so that it contains the zones
@@ -3599,25 +3693,38 @@ static void build_zonelists(pg_data_t *pgdat)
 	 * zones coming right after the local ones are those from
 	 * node N+1 (modulo N)
 	 */
+	// local_node: 0, MAX_NUMNODES: 1
 	for (node = local_node + 1; node < MAX_NUMNODES; node++) {
 		if (!node_online(node))
 			continue;
 		j = build_zonelists_node(NODE_DATA(node), zonelist, j);
 	}
+
+	// local_node: 0
 	for (node = 0; node < local_node; node++) {
 		if (!node_online(node))
 			continue;
 		j = build_zonelists_node(NODE_DATA(node), zonelist, j);
 	}
 
+	// j: 2
+	// zonelist->_zonerefs[2].zone: contig_page_data->node_zonelists[0]->_zonerefs[2].zone
 	zonelist->_zonerefs[j].zone = NULL;
+	// zonelist->_zonerefs[2].zone: contig_page_data->node_zonelists[0]->_zonerefs[2].zone: NULL
+
+	// zonelist->_zonerefs[2].zone_idx: contig_page_data->node_zonelists[0]->_zonerefs[2].zone_id
 	zonelist->_zonerefs[j].zone_idx = 0;
+	// zonelist->_zonerefs[2].zone_idx: contig_page_data->node_zonelists[0]->_zonerefs[2].zone_id: 0
 }
 
 /* non-NUMA variant of zonelist performance cache - just NULL zlcache_ptr */
+// ARM10C 20140308
+// pgdat: &contig_page_data
 static void build_zonelist_cache(pg_data_t *pgdat)
 {
+	// pgdat->node_zonelists[0].zlcache_ptr: contig_page_data->node_zonelists[0].zlcache_ptr
 	pgdat->node_zonelists[0].zlcache_ptr = NULL;
+	// pgdat->node_zonelists[0].zlcache_ptr: contig_page_data->node_zonelists[0].zlcache_ptr: NULL
 }
 
 #endif	/* CONFIG_NUMA */
@@ -3638,8 +3745,9 @@ static void build_zonelist_cache(pg_data_t *pgdat)
  * Other parts of the kernel may not check if the zone is available.
  */
 static void setup_pageset(struct per_cpu_pageset *p, unsigned long batch);
-// ARM10C 20140111 
+// ARM10C 20140111
 // __attribute__((section(.data..percpu))) struct per_cpu_pageset boot_pageset
+// ARM10C 20140308
 static DEFINE_PER_CPU(struct per_cpu_pageset, boot_pageset);
 static void setup_zone_pageset(struct zone *zone);
 
@@ -3651,25 +3759,36 @@ static void setup_zone_pageset(struct zone *zone);
 DEFINE_MUTEX(zonelists_mutex);
 
 /* return values int ....just for stop_machine() */
+// ARM10C 20140308
+// NULL
 static int __build_all_zonelists(void *data)
 {
 	int nid;
 	int cpu;
+	// data: NULL
 	pg_data_t *self = data;
+	// self: NULL
 
-#ifdef CONFIG_NUMA
+#ifdef CONFIG_NUMA // CONFIG_NUMA=n
 	memset(node_load, 0, sizeof(node_load));
 #endif
 
+	// self: NULL
 	if (self && !node_online(self->node_id)) {
 		build_zonelists(self);
 		build_zonelist_cache(self);
 	}
 
 	for_each_online_node(nid) {
+	// for ( (node) = 0; (node) == 0; (node) = 1)
+		// nid: 0
+		// NODE_DATA(0): (&contig_page_data)
 		pg_data_t *pgdat = NODE_DATA(nid);
+		// pgdat: &contig_page_data
 
 		build_zonelists(pgdat);
+
+		// pgdat: &contig_page_data
 		build_zonelist_cache(pgdat);
 	}
 
@@ -3687,9 +3806,16 @@ static int __build_all_zonelists(void *data)
 	 * (a chicken-egg dilemma).
 	 */
 	for_each_possible_cpu(cpu) {
+	// for ((i) = -1; (i) = cpumask_next((i), (cpu_possible_mask)), (i) < nr_cpu_ids; )
+		// cpu: 0, per_cpu(boot_pageset, 0): *(&boot_pageset + __per_cpu_offset[0])
+		// cpu: 1, per_cpu(boot_pageset, 1): *(&boot_pageset + __per_cpu_offset[1])
+		// cpu: 2, per_cpu(boot_pageset, 2): *(&boot_pageset + __per_cpu_offset[2])
+		// cpu: 3, per_cpu(boot_pageset, 3): *(&boot_pageset + __per_cpu_offset[3])
 		setup_pageset(&per_cpu(boot_pageset, cpu), 0);
+		// boot_pageset의 pcp 맴버를 설정
 
-#ifdef CONFIG_HAVE_MEMORYLESS_NODES
+
+#ifdef CONFIG_HAVE_MEMORYLESS_NODES // CONFIG_HAVE_MEMORYLESS_NODES=n
 		/*
 		 * We now know the "local memory node" for each node--
 		 * i.e., the node of the first zone in the generic zonelist.
@@ -3710,16 +3836,22 @@ static int __build_all_zonelists(void *data)
  * Called with zonelists_mutex held always
  * unless system_state == SYSTEM_BOOTING.
  */
+// ARM10C 20140308
+// NULL, NULL
 void __ref build_all_zonelists(pg_data_t *pgdat, struct zone *zone)
 {
 	set_zonelist_order();
 
+	// system_state: SYSTEM_BOOTING
 	if (system_state == SYSTEM_BOOTING) {
 		__build_all_zonelists(NULL);
+		// contig_page_data의node_zonelist마다 값 설정
+		// 각 cpu core마다 boot_pageset의 pcp 맴버를 설정
+
 		mminit_verify_zonelist();
-		cpuset_init_current_mems_allowed();
+		cpuset_init_current_mems_allowed(); // null function
 	} else {
-#ifdef CONFIG_MEMORY_HOTPLUG
+#ifdef CONFIG_MEMORY_HOTPLUG // CONFIG_MEMORY_HOTPLUG=n
 		if (zone)
 			setup_zone_pageset(zone);
 #endif
@@ -3728,7 +3860,11 @@ void __ref build_all_zonelists(pg_data_t *pgdat, struct zone *zone)
 		stop_machine(__build_all_zonelists, pgdat, NULL);
 		/* cpuset refresh routine should be here */
 	}
+
+	// nr_free_pagecache_pages(): 0x7f7d6
 	vm_total_pages = nr_free_pagecache_pages();
+	// vm_total_pages: 0x7f7d6
+
 	/*
 	 * Disable grouping by mobility if the number of pages in the
 	 * system is too low to allow the mechanism to work. It would be
@@ -3736,18 +3872,22 @@ void __ref build_all_zonelists(pg_data_t *pgdat, struct zone *zone)
 	 * made on memory-hotadd so a system can start with mobility
 	 * disabled and enable it later
 	 */
+	// vm_total_pages: 0x7f7d6, pageblock_nr_pages : 0x400, MIGRATE_TYPES: 4
 	if (vm_total_pages < (pageblock_nr_pages * MIGRATE_TYPES))
 		page_group_by_mobility_disabled = 1;
 	else
 		page_group_by_mobility_disabled = 0;
+		// page_group_by_mobility_disabled: 0
 
+	// nr_online_nodes: 1, current_zonelist_order: 2, zonelist_order_name[2]: "Zone"
+	// page_group_by_mobility_disabled: 0, "off", vm_total_pages: 0x7f7d6
 	printk("Built %i zonelists in %s order, mobility grouping %s.  "
 		"Total pages: %ld\n",
 			nr_online_nodes,
 			zonelist_order_name[current_zonelist_order],
 			page_group_by_mobility_disabled ? "off" : "on",
 			vm_total_pages);
-#ifdef CONFIG_NUMA
+#ifdef CONFIG_NUMA // CONFIG_NUMA=n
 	printk("Policy zone: %s\n", zone_names[policy_zone]);
 #endif
 }
@@ -4125,42 +4265,70 @@ static int __meminit zone_batchsize(struct zone *zone)
  * outside of boot time (or some other assurance that no concurrent updaters
  * exist).
  */
+// ARM10C 20140308
+// p->pcp: [pcpu0] boot_pageset->pcp, 0, 1
 static void pageset_update(struct per_cpu_pages *pcp, unsigned long high,
 		unsigned long batch)
 {
        /* start with a fail safe value for batch */
+	// pcp->batch: [pcpu0] boot_pageset->pcp->batch
 	pcp->batch = 1;
+	// pcp->batch: [pcpu0] boot_pageset->pcp->batch: 1
+
 	smp_wmb();
 
        /* Update high, then batch, in order */
+	// pcp->high: [pcpu0] boot_pageset->pcp->high, high: 0
 	pcp->high = high;
+	// pcp->high: [pcpu0] boot_pageset->pcp->high: 0
+
 	smp_wmb();
 
+	// pcp->batch: [pcpu0] boot_pageset->pcp->batch
 	pcp->batch = batch;
+	// pcp->batch: [pcpu0] boot_pageset->pcp->batch: 1
 }
 
 /* a companion to pageset_set_high() */
+// ARM10C 20140308
+// p: (&boot_pageset + __per_cpu_offset[0]), batch: 0
 static void pageset_set_batch(struct per_cpu_pageset *p, unsigned long batch)
 {
+	// p->pcp: [pcpu0] boot_pageset->pcp, batch: 0, 1
 	pageset_update(&p->pcp, 6 * batch, max(1UL, 1 * batch));
 }
 
+// ARM10C 20140308
+// p: (&boot_pageset + __per_cpu_offset[0])
 static void pageset_init(struct per_cpu_pageset *p)
 {
 	struct per_cpu_pages *pcp;
 	int migratetype;
 
+	// p: (&boot_pageset + __per_cpu_offset[0]), sizeof(*p): 66
 	memset(p, 0, sizeof(*p));
 
+	// p->pcp: [pcpu0] boot_pageset->pcp
 	pcp = &p->pcp;
+	// pcp: [pcpu0] boot_pageset->pcp
+
 	pcp->count = 0;
+	// [pcpu0] boot_pageset->pcp->count: 0
+
+	// MIGRATE_PCPTYPES: 3
 	for (migratetype = 0; migratetype < MIGRATE_PCPTYPES; migratetype++)
+		// [pcpu0] boot_pageset->pcp->lists[0..2]
 		INIT_LIST_HEAD(&pcp->lists[migratetype]);
 }
 
+// ARM10C 20140308
+// &per_cpu(boot_pageset, 0): (&boot_pageset + __per_cpu_offset[0]), 0
 static void setup_pageset(struct per_cpu_pageset *p, unsigned long batch)
 {
+	// p: (&boot_pageset + __per_cpu_offset[0])
 	pageset_init(p);
+
+	// p: (&boot_pageset + __per_cpu_offset[0]), batch: 0
 	pageset_set_batch(p, batch);
 }
 

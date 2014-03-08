@@ -9,6 +9,7 @@
 
 // ARM10C 20130824
 // FIXME: notrace와 관련하여 프로파일링-함수가 무엇인가?
+// ARM10C 20140308
 notrace unsigned int debug_smp_processor_id(void)
 {
 	unsigned long preempt_count = preempt_count();//0x4000_0001

@@ -175,7 +175,7 @@ int arch_update_cpu_topology(void);
 #endif
 #endif /* CONFIG_SCHED_BOOK */
 
-#ifdef CONFIG_USE_PERCPU_NUMA_NODE_ID
+#ifdef CONFIG_USE_PERCPU_NUMA_NODE_ID // CONFIG_USE_PERCPU_NUMA_NODE_ID=n
 DECLARE_PER_CPU(int, numa_node);
 
 #ifndef numa_node_id
@@ -211,9 +211,13 @@ static inline void set_cpu_numa_node(int cpu, int node)
 
 /* Returns the number of the current Node. */
 #ifndef numa_node_id
+// ARM10C 20140308
 static inline int numa_node_id(void)
 {
+	// raw_smp_processor_id(): 0, cpu_to_node(0): 0
 	return cpu_to_node(raw_smp_processor_id());
+	// return 0
+
 }
 #endif
 

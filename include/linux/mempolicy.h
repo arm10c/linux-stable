@@ -290,6 +290,7 @@ static inline int do_migrate_pages(struct mm_struct *mm, const nodemask_t *from,
 	return 0;
 }
 
+// ARM10C 20140308
 static inline void check_highest_zone(int k)
 {
 }

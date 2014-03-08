@@ -27,11 +27,13 @@
 #ifndef _ASM_GENERIC_TOPOLOGY_H
 #define _ASM_GENERIC_TOPOLOGY_H
 
-#ifndef	CONFIG_NUMA
+#ifndef	CONFIG_NUMA // CONFIG_NUMA=n
 
 /* Other architectures wishing to use this simple topology API should fill
    in the below functions as appropriate in their own <asm/topology.h> file. */
 #ifndef cpu_to_node
+// ARM10C 20140308
+// cpu_to_node(0): 0
 #define cpu_to_node(cpu)	((void)(cpu),0)
 #endif
 #ifndef set_numa_node

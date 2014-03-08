@@ -223,7 +223,10 @@ SECTIONS
 	}
 #endif
 
-#ifdef CONFIG_SMP
+#ifdef CONFIG_SMP // CONFIG_SMP=y
+	/*
+	// ARM10C 20140308
+	*/
 	PERCPU_SECTION(L1_CACHE_BYTES)
 #endif
 

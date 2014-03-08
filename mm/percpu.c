@@ -148,6 +148,7 @@ static unsigned int pcpu_high_unit_cpu __read_mostly;
 /* the address of the first chunk which starts with the kernel static area */
 // ARM10C 20140301
 // pcpu_base_addr: 128K 만큼 물리주소 0x5FFFFFFF 근처에 할당받은 주소
+// ARM10C 20140308
 void *pcpu_base_addr __read_mostly;
 EXPORT_SYMBOL_GPL(pcpu_base_addr);
 
@@ -163,6 +164,7 @@ static const int *pcpu_unit_map __read_mostly;		/* cpu -> unit */
 // unit_off[1]: 0x8000
 // unit_off[2]: 0x8000 * 2: 0x10000
 // unit_off[3]: 0x8000 * 3: 0x18000
+// ARM10C 20140308
 const unsigned long *pcpu_unit_offsets __read_mostly;	/* cpu -> unit offset */
 
 /* group information, used for vm allocation */
@@ -1193,8 +1195,10 @@ struct pcpu_alloc_info * __init pcpu_alloc_alloc_info(int nr_groups,
  *
  * Free @ai which was allocated by pcpu_alloc_alloc_info().
  */
+// ARM10C 20140308
 void __init pcpu_free_alloc_info(struct pcpu_alloc_info *ai)
 {
+	// __pa(ai): ???, ai->__ai_size: 0x1000
 	free_bootmem(__pa(ai), ai->__ai_size);
 }
 
@@ -2175,8 +2179,10 @@ int __init pcpu_embed_first_chunk(size_t reserved_size, size_t dyn_size,
 
 	// base: 128K 만큼 물리주소 0x5FFFFFFF 근처에 할당받은 주소
 	rc = pcpu_setup_first_chunk(ai, base);
+	// rc: 0
 
 // 2014/03/01 종료
+// 2014/03/08 시작
 
 	goto out_free;
 
@@ -2186,9 +2192,17 @@ out_free_areas:
 			ai->groups[group].nr_units * ai->unit_size);
 out_free:
 	pcpu_free_alloc_info(ai);
+	// ai(pcpu_alloc_info) struct의 4K 사이즈 만큼사용한 memory를 free해줌
+
+	// areas[0]: ptr 주소 할당
 	if (areas)
+		// __pa(areas): ???, areas_size: 0x1000
 		free_bootmem(__pa(areas), areas_size);
+		// areas의 4K 사이즈 만큼사용한 memory를 free해줌
+
+	// rc: 0
 	return rc;
+	// return 0
 }
 #endif /* BUILD_EMBED_FIRST_CHUNK */
 
@@ -2321,6 +2335,8 @@ out_free_ar:
 // Percpu 용어 관련 링크
 // http://studyfoss.egloos.com/5375570
 // http://blog.naver.com/PostView.nhn?blogId=nix102guri&logNo=90098904482
+// ARM10C 20140308
+// __per_cpu_offset[cpu]: pcpu_unit_offsets[cpu] + __per_cpu_start에서의pcpu_base_addr의 옵셋
 unsigned long __per_cpu_offset[NR_CPUS] __read_mostly;
 EXPORT_SYMBOL(__per_cpu_offset);
 
@@ -2360,12 +2376,26 @@ void __init setup_per_cpu_areas(void)
 	rc = pcpu_embed_first_chunk(PERCPU_MODULE_RESERVE,
 				    PERCPU_DYNAMIC_RESERVE, PAGE_SIZE, NULL,
 				    pcpu_dfl_fc_alloc, pcpu_dfl_fc_free);
+	// rc: 0
+	// ai (pcpu_alloc_info) 를 구조체를 이용해 cpu core 에서를 사용할percpu 자료구조와 메모리 할당
+
+	// rc: 0
 	if (rc < 0)
 		panic("Failed to initialize percpu areas.");
 
+	// pcpu_base_addr: 128K 만큼 물리주소 0x5FFFFFFF 근처에 할당받은 주소
 	delta = (unsigned long)pcpu_base_addr - (unsigned long)__per_cpu_start;
+	// delta: __per_cpu_start에서의pcpu_base_addr의 옵셋
+
 	for_each_possible_cpu(cpu)
+	// for ((i) = -1; (i) = cpumask_next((i), (cpu_possible_mask)), (i) < nr_cpu_ids; )
+		// delta: __per_cpu_start에서의pcpu_base_addr의 옵셋
+		// pcpu_unit_offsets[0]: 0
+		// pcpu_unit_offsets[1]: 0x8000
+		// pcpu_unit_offsets[2]: 0x10000
+		// pcpu_unit_offsets[3]: 0x18000
 		__per_cpu_offset[cpu] = delta + pcpu_unit_offsets[cpu];
+		// __per_cpu_offset[cpu]: pcpu_unit_offsets[cpu] + __per_cpu_start에서의pcpu_base_addr의 옵셋
 }
 #endif	/* CONFIG_HAVE_SETUP_PER_CPU_AREA */
 

@@ -420,8 +420,10 @@ void __init smp_cpus_done(unsigned int max_cpus)
 	hyp_mode_check();
 }
 
+// ARM10C 20140308
 void __init smp_prepare_boot_cpu(void)
 {
+	// smp_processor_id(): 0, per_cpu_offset(0): __per_cpu_offset[0]
 	set_my_cpu_offset(per_cpu_offset(smp_processor_id()));
 }
 

@@ -14,6 +14,7 @@ struct vm_area_struct;
 #define ___GFP_HIGHMEM		0x02u
 #define ___GFP_DMA32		0x04u
 #define ___GFP_MOVABLE		0x08u
+// ARM10C 20140308
 #define ___GFP_WAIT		0x10u
 #define ___GFP_HIGH		0x20u
 #define ___GFP_IO		0x40u
@@ -50,6 +51,12 @@ struct vm_area_struct;
 #define __GFP_HIGHMEM	((__force gfp_t)___GFP_HIGHMEM)
 #define __GFP_DMA32	((__force gfp_t)___GFP_DMA32)
 #define __GFP_MOVABLE	((__force gfp_t)___GFP_MOVABLE)  /* Page is movable */
+// ARM10C 20140308
+// __GFP_DMA: 0x1
+// __GFP_HIGHMEM: 0x2
+// __GFP_DMA32: 0x4
+// __GFP_MOVABLE: 0x8
+// GFP_ZONEMASK: 0xF
 #define GFP_ZONEMASK	(__GFP_DMA|__GFP_HIGHMEM|__GFP_DMA32|__GFP_MOVABLE)
 /*
  * Action modifiers - doesn't change the zoning
@@ -66,6 +73,10 @@ struct vm_area_struct;
  * __GFP_MOVABLE: Flag that this page will be movable by the page migration
  * mechanism or reclaimed
  */
+// ARM10C 20140308
+// GFP 의 의미? Get Free Page
+// http://lwn.net/Articles/274971/
+// These are used to set parameters to allocating virtual memory
 #define __GFP_WAIT	((__force gfp_t)___GFP_WAIT)	/* Can wait and reschedule? */
 #define __GFP_HIGH	((__force gfp_t)___GFP_HIGH)	/* Should access emergency pools? */
 #define __GFP_IO	((__force gfp_t)___GFP_IO)	/* Can start physical IO? */
@@ -108,12 +119,25 @@ struct vm_area_struct;
 #define GFP_ATOMIC	(__GFP_HIGH)
 #define GFP_NOIO	(__GFP_WAIT)
 #define GFP_NOFS	(__GFP_WAIT | __GFP_IO)
+// ARM10C 20140308
+// __GFP_WAIT: 0x10
+// __GFP_IO: 0x40
+// __GFP_FS: 0x80
+// GFP_KERNEL: 0xD0
 #define GFP_KERNEL	(__GFP_WAIT | __GFP_IO | __GFP_FS)
 #define GFP_TEMPORARY	(__GFP_WAIT | __GFP_IO | __GFP_FS | \
 			 __GFP_RECLAIMABLE)
 #define GFP_USER	(__GFP_WAIT | __GFP_IO | __GFP_FS | __GFP_HARDWALL)
 #define GFP_HIGHUSER	(__GFP_WAIT | __GFP_IO | __GFP_FS | __GFP_HARDWALL | \
 			 __GFP_HIGHMEM)
+// ARM10C 20140308
+// __GFP_WAIT: 0x10
+// __GFP_IO: 0x40
+// __GFP_FS: 0x80
+// __GFP_HARDWALL: 0x20000
+// __GFP_HIGHMEM: 0x02
+// __GFP_MOVABLE: 0x08
+// GFP_HIGHUSER_MOVABLE: 0x200DA
 #define GFP_HIGHUSER_MOVABLE	(__GFP_WAIT | __GFP_IO | __GFP_FS | \
 				 __GFP_HARDWALL | __GFP_HIGHMEM | \
 				 __GFP_MOVABLE)
@@ -166,21 +190,27 @@ static inline int allocflags_to_migratetype(gfp_t gfp_flags)
 		((gfp_flags & __GFP_RECLAIMABLE) != 0);
 }
 
-#ifdef CONFIG_HIGHMEM
+#ifdef CONFIG_HIGHMEM // CONFIG_HIGHMEM=y
+// ARM10C 20140308
+// OPT_ZONE_HIGHMEM: 1
 #define OPT_ZONE_HIGHMEM ZONE_HIGHMEM
 #else
 #define OPT_ZONE_HIGHMEM ZONE_NORMAL
 #endif
 
-#ifdef CONFIG_ZONE_DMA
+#ifdef CONFIG_ZONE_DMA // CONFIG_ZONE_DMA=n
 #define OPT_ZONE_DMA ZONE_DMA
 #else
+// ARM10C 20140308
+// OPT_ZONE_DMA: 0
 #define OPT_ZONE_DMA ZONE_NORMAL
 #endif
 
-#ifdef CONFIG_ZONE_DMA32
+#ifdef CONFIG_ZONE_DMA32 // CONFIG_ZONE_DMA32=n
 #define OPT_ZONE_DMA32 ZONE_DMA32
 #else
+// ARM10C 20140308
+// OPT_ZONE_DMA32: 0
 #define OPT_ZONE_DMA32 ZONE_NORMAL
 #endif
 
@@ -221,6 +251,27 @@ static inline int allocflags_to_migratetype(gfp_t gfp_flags)
 #error ZONES_SHIFT too large to create GFP_ZONE_TABLE integer
 #endif
 
+// ARM10C 20140308
+// ZONE_NORMAL: 0, ZONES_SHIFT: 2,
+// OPT_ZONE_DMA: 0, ___GFP_DMA: 0x01
+// OPT_ZONE_HIGHMEM: 1, ___GFP_HIGHMEM: 0x02
+// OPT_ZONE_DMA32: 0, ___GFP_DMA32: 0x04
+// ZONE_NORMAL: 0, ___GFP_MOVABLE: 0x08
+// OPT_ZONE_DMA: 0, ___GFP_MOVABLE: 0x08, ___GFP_DMA: 0x01
+// ZONE_MOVABLE: 2, ___GFP_MOVABLE: 0x08, ___GFP_HIGHMEM: 0x02
+// OPT_ZONE_DMA32: 0, ___GFP_MOVABLE: 0x08, ___GFP_DMA32: 0x04
+//
+// #define GFP_ZONE_TABLE ( \
+// 	(0 << 0 * 2)
+// 	| (0 << 0x02 * 2): 0x0
+// 	| (1 << 0x02 * 2): 0x8
+// 	| (0 << 0x04 * 2): 0x0
+// 	| (0 << 0x08 * 2): 0x0
+// 	| (0 << (0x08 | 0x01) * 2): 0x0
+// 	| (2 << (0x08 | 0x02) * 2): 0x1000
+// 	| (0 << (0x08 | 0x04) * 2): 0x0
+//)
+// #define GFP_ZONE_TABLE: 0x1008
 #define GFP_ZONE_TABLE ( \
 	(ZONE_NORMAL << 0 * ZONES_SHIFT)				      \
 	| (OPT_ZONE_DMA << ___GFP_DMA * ZONES_SHIFT)			      \
@@ -238,6 +289,24 @@ static inline int allocflags_to_migratetype(gfp_t gfp_flags)
  * entry starting with bit 0. Bit is set if the combination is not
  * allowed.
  */
+// ARM10C 20140308
+// ___GFP_DMA: 0x01
+// ___GFP_HIGHMEM: 0x02
+// ___GFP_DMA32: 0x04
+// ___GFP_MOVABLE: 0x08
+//
+// #define GFP_ZONE_BAD (
+// 	1 << (0x01 | 0x02) : 0x8
+// 	| 1 << (0x01 | 0x04) : 0x20
+// 	| 1 << (0x04 | 0x02) : 0x40
+// 	| 1 << (0x01 | 0x04 | 0x02) : 0x80
+// 	| 1 << (0x08 | 0x02 | 0x01) : 0x800
+// 	| 1 << (0x08 | 0x04 | 0x01) : 0x2000
+// 	| 1 << (0x08 | 0x04 | 0x02) : 0x4000
+// 	| 1 << (0x08 | 0x04 | 0x01 | 0x02) : 0x8000
+// )
+//
+// #define GFP_ZONE_BAD: 0xE8E8
 #define GFP_ZONE_BAD ( \
 	1 << (___GFP_DMA | ___GFP_HIGHMEM)				      \
 	| 1 << (___GFP_DMA | ___GFP_DMA32)				      \
@@ -249,15 +318,26 @@ static inline int allocflags_to_migratetype(gfp_t gfp_flags)
 	| 1 << (___GFP_MOVABLE | ___GFP_DMA32 | ___GFP_DMA | ___GFP_HIGHMEM)  \
 )
 
+// ARM10C 20140308
+// GFP_HIGHUSER_MOVABLE: 0x200DA
 static inline enum zone_type gfp_zone(gfp_t flags)
 {
 	enum zone_type z;
+	// flags: GFP_HIGHUSER_MOVABLE: 0x200DA, GFP_ZONEMASK: 0xF
 	int bit = (__force int) (flags & GFP_ZONEMASK);
+	// bit: 0xA
 
+	// GFP_ZONE_TABLE: 0x1008, bit: 0xA, ZONES_SHIFT: 2
 	z = (GFP_ZONE_TABLE >> (bit * ZONES_SHIFT)) &
 					 ((1 << ZONES_SHIFT) - 1);
+	// z: 0
+
+	// GFP_ZONE_BAD: 0xE8E8, bit: 0xA, (GFP_ZONE_BAD >> bit): 0x3A
 	VM_BUG_ON((GFP_ZONE_BAD >> bit) & 1);
+
+	// z: 0
 	return z;
+	// return 0
 }
 
 /*
@@ -267,12 +347,16 @@ static inline enum zone_type gfp_zone(gfp_t flags)
  * virtual kernel addresses to the allocated page(s).
  */
 
+// ARM10C 20140308
+// flags: 0xD0
 static inline int gfp_zonelist(gfp_t flags)
 {
+	// CONFIG_NUMA=n
 	if (IS_ENABLED(CONFIG_NUMA) && unlikely(flags & __GFP_THISNODE))
 		return 1;
 
 	return 0;
+	// return 0
 }
 
 /*
@@ -284,9 +368,15 @@ static inline int gfp_zonelist(gfp_t flags)
  * For the normal case of non-DISCONTIGMEM systems the NODE_DATA() gets
  * optimized to &contig_page_data at compile-time.
  */
+// ARM10C 20140308
+// numa_node_id(): 0, GFP_KERNEL: 0xD0
 static inline struct zonelist *node_zonelist(int nid, gfp_t flags)
 {
+	// nid: 0, flags: 0xD0
+	// NODE_DATA(0)->node_zonelists: contig_page_data->node_zonelists
+	// gfp_zonelist(0xD0): 0
 	return NODE_DATA(nid)->node_zonelists + gfp_zonelist(flags);
+	// return contig_page_data->node_zonelists
 }
 
 #ifndef HAVE_ARCH_FREE_PAGE

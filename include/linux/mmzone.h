@@ -110,6 +110,7 @@ struct zone_padding {
 #endif
 
 // ARM10C 20140125
+// ARM10C 20140308
 enum zone_stat_item {
 	/* First 128 byte cacheline (assuming 64 bit words) */
 	NR_FREE_PAGES,
@@ -151,6 +152,7 @@ enum zone_stat_item {
 #endif
 	NR_ANON_TRANSPARENT_HUGEPAGES,
 	NR_FREE_CMA_PAGES,
+	// NR_VM_ZONE_STAT_ITEMS: 29
 	NR_VM_ZONE_STAT_ITEMS };
 
 /*
@@ -247,31 +249,42 @@ enum zone_watermarks {
 
 #define min_wmark_pages(z) (z->watermark[WMARK_MIN])
 #define low_wmark_pages(z) (z->watermark[WMARK_LOW])
+// ARM10C 20140308
+// zone: contig_page_data->node_zones[0]
+// WMARK_HIGH: 2
+// high_wmark_pages(contig_page_data->node_zones[0]): contig_page_data->node_zones[0]->watermark[2]: 0
 #define high_wmark_pages(z) (z->watermark[WMARK_HIGH])
 
+// ARM10C 20140308
+// sizeof(struct per_cpu_pages): 36 bytes
 struct per_cpu_pages {
 	int count;		/* number of pages in the list */
 	int high;		/* high watermark, emptying needed */
 	int batch;		/* chunk size for buddy add/remove */
 
 	/* Lists of pages, one per migrate type stored on the pcp-lists */
+	// MIGRATE_PCPTYPES: 3
 	struct list_head lists[MIGRATE_PCPTYPES];
 };
 
-// ARM10C 20140111 
+// ARM10C 20140111
+// ARM10C 20140308
+// sizeof(struct per_cpu_pageset): 66 bytes
 struct per_cpu_pageset {
 	struct per_cpu_pages pcp;
-#ifdef CONFIG_NUMA
+#ifdef CONFIG_NUMA // CONFIG_NUMA=n
 	s8 expire;
 #endif
-#ifdef CONFIG_SMP
+#ifdef CONFIG_SMP // CONFIG_SMP=y
 	s8 stat_threshold;
+	// NR_VM_ZONE_STAT_ITEMS: 29
 	s8 vm_stat_diff[NR_VM_ZONE_STAT_ITEMS];
 #endif
 };
 
 #endif /* !__GENERATING_BOUNDS.H */
 
+// ARM10C 20140308
 enum zone_type {
 #ifdef CONFIG_ZONE_DMA	// ARM10C CONFIG_ZONE_DMA = n 
 	/*
@@ -327,6 +340,7 @@ enum zone_type {
 
 // ARM10C 20140125
 // sizeof(struct zone): 804 bytes
+// ARM10C 20140308
 struct zone {
 	/* Fields commonly accessed by the page allocator */
 
@@ -708,6 +722,7 @@ struct zonelist_cache;
  * This struct contains information about a zone in a zonelist. It is stored
  * here to avoid dereferences into large structures and lookups of tables
  */
+// ARM10C 20140308
 struct zoneref {
 	struct zone *zone;	/* Pointer to actual zone */
 	int zone_idx;		/* zone_idx(zoneref->zone) */
@@ -765,6 +780,7 @@ extern struct page *mem_map;
 struct bootmem_data;
 
 // ARM10C 20131207
+// ARM10C 20140308
 typedef struct pglist_data {
 	struct zone node_zones[MAX_NR_ZONES];
 	struct zonelist node_zonelists[MAX_ZONELISTS];
@@ -890,12 +906,24 @@ unsigned long __init node_memmap_size_bytes(int, unsigned long, unsigned long);
 /*
  * zone_idx() returns 0 for the ZONE_DMA zone, 1 for the ZONE_NORMAL zone, etc.
  */
-// ARM10C 20140111 
+// ARM10C 20140111
+// ARM10C 20140308
+// zone: contig_page_data->node_zones[1]
 #define zone_idx(zone)		((zone) - (zone)->zone_pgdat->node_zones)
 
+// ARM10C 20140308
+// zone: contig_page_data->node_zones[2]
+// zone: contig_page_data->node_zones[1]
+// zone: contig_page_data->node_zones[0]
 static inline int populated_zone(struct zone *zone)
 {
+	// zone->present_pages: contig_page_data->node_zones[2].present_pages: 0
+	// zone->present_pages: contig_page_data->node_zones[1].present_pages: 0x50800
+	// zone->present_pages: contig_page_data->node_zones[1].present_pages: 0x2f800
 	return (!!zone->present_pages);
+	// return 0
+	// return 1
+	// return 1
 }
 
 extern int movable_zone;
@@ -969,6 +997,7 @@ extern char numa_zonelist_order[];
 
 extern struct pglist_data contig_page_data;	// bitmap 정보가 들어가있음 
 // ARM10C 20131207
+// ARM10C 20140308
 #define NODE_DATA(nid)		(&contig_page_data)
 #define NODE_MEM_MAP(nid)	mem_map
 
@@ -1010,14 +1039,22 @@ extern struct zone *next_zone(struct zone *zone);
 			; /* do nothing */		\
 		else
 
+// ARM10C 20140308
+// z: contig_page_data->node_zonelists->_zonerefs[1]
 static inline struct zone *zonelist_zone(struct zoneref *zoneref)
 {
+	// z: contig_page_data->node_zonelists->_zonerefs[1]->zone: contig_page_data->node_zones[0]
 	return zoneref->zone;
+	// zoneref->zone: contig_page_data->node_zones[0]
 }
 
+// ARM10C 20140308
+// z: contig_page_data->node_zonelists->_zonerefs
 static inline int zonelist_zone_idx(struct zoneref *zoneref)
 {
+	// zoneref->zone_idx: contig_page_data->node_zonelists[0]->_zonerefs[0]->zone_idx
 	return zoneref->zone_idx;
+	// zoneref->zone_idx: contig_page_data->node_zonelists[0]->_zonerefs[0]->zone_idx: 1
 }
 
 static inline int zonelist_node_idx(struct zoneref *zoneref)
@@ -1060,13 +1097,18 @@ struct zoneref *next_zones_zonelist(struct zoneref *z,
  * used to iterate the zonelist with next_zones_zonelist by advancing it by
  * one before calling.
  */
+// ARM10C 20140308
+// first_zones_zonelist(contig_page_data->node_zonelists, 0, 0, &zone);
 static inline struct zoneref *first_zones_zonelist(struct zonelist *zonelist,
 					enum zone_type highest_zoneidx,
 					nodemask_t *nodes,
 					struct zone **zone)
 {
+	// zonelist->_zonerefs: contig_page_data->node_zonelists->_zonerefs
+	// highest_zoneidx: 0, nodes: 0, &zone
 	return next_zones_zonelist(zonelist->_zonerefs, highest_zoneidx, nodes,
 								zone);
+	// return contig_page_data->node_zonelists->_zonerefs[1]
 }
 
 /**
@@ -1080,6 +1122,13 @@ static inline struct zoneref *first_zones_zonelist(struct zonelist *zonelist,
  * This iterator iterates though all zones at or below a given zone index and
  * within a given nodemask
  */
+// ARM10C 20140308
+// for_each_zone_zonelist_nodemask(zone, z, contig_page_data->node_zonelists, 0, NULL)
+//
+//#define for_each_zone_zonelist_0(zone, z, contig_page_data->node_zonelists, 0, 0)
+//	for (z = first_zones_zonelist(contig_page_data->node_zonelists, 0, 0, &zone);
+//		zone;
+//		z = next_zones_zonelist(++z, 0, 0, &zone))
 #define for_each_zone_zonelist_nodemask(zone, z, zlist, highidx, nodemask) \
 	for (z = first_zones_zonelist(zlist, highidx, nodemask, &zone);	\
 		zone;							\
@@ -1094,6 +1143,11 @@ static inline struct zoneref *first_zones_zonelist(struct zonelist *zonelist,
  *
  * This iterator iterates though all zones at or below a given zone index.
  */
+// ARM10C 20140308
+// zonelist: contig_page_data->node_zonelists, offset: 0
+//
+// #define for_each_zone_zonelist(zone, z, contig_page_data->node_zonelists, 0)
+// 	for_each_zone_zonelist_nodemask(zone, z, contig_page_data->node_zonelists, 0, NULL)
 #define for_each_zone_zonelist(zone, z, zlist, highidx) \
 	for_each_zone_zonelist_nodemask(zone, z, zlist, highidx, NULL)
 

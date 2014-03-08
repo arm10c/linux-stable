@@ -52,6 +52,9 @@ static inline int zref_in_nodemask(struct zoneref *zref, nodemask_t *nodes)
 }
 
 /* Returns the next zone at or below highest_zoneidx in a zonelist */
+// ARM10C 20140308
+// zonelist->_zonerefs: contig_page_data->node_zonelists->_zonerefs
+// highest_zoneidx: 0, nodes: 0, &zone
 struct zoneref *next_zones_zonelist(struct zoneref *z,
 					enum zone_type highest_zoneidx,
 					nodemask_t *nodes,
@@ -61,16 +64,27 @@ struct zoneref *next_zones_zonelist(struct zoneref *z,
 	 * Find the next suitable zone to use for the allocation.
 	 * Only filter based on nodemask if it's set
 	 */
+	// nodes: 0
 	if (likely(nodes == NULL))
+		// z: contig_page_data->node_zonelists->_zonerefs[0], highest_zoneidx: 0
+		// z: contig_page_data->node_zonelists->_zonerefs[1], highest_zoneidx: 0
+		// [2nd] zonelist_zone_idx(z): 0
 		while (zonelist_zone_idx(z) > highest_zoneidx)
+			// [1st] zonelist_zone_idx(z): 1
 			z++;
+			// [1st] z: contig_page_data->node_zonelists->_zonerefs[1]
 	else
 		while (zonelist_zone_idx(z) > highest_zoneidx ||
 				(z->zone && !zref_in_nodemask(z, nodes)))
 			z++;
 
+	// z: contig_page_data->node_zonelists->_zonerefs[1]
 	*zone = zonelist_zone(z);
+	// zone: contig_page_data->node_zones[0]
+
+	// z: contig_page_data->node_zonelists->_zonerefs[1]
 	return z;
+	// return contig_page_data->node_zonelists->_zonerefs[1]
 }
 
 #ifdef CONFIG_ARCH_HAS_HOLES_MEMORYMODEL

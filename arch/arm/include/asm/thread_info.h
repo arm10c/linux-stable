@@ -100,6 +100,7 @@ static inline struct thread_info *current_thread_info(void) __attribute_const__;
 
 // ARM10C 20130824
 // 모기향책: 133p
+// ARM10C 20140308
 static inline struct thread_info *current_thread_info(void)
 {
 	// stack이 8K로 정렬되어 있기 때문에 13비트를 clear시키면 stack의 맨 앞을 가리키게 된다.

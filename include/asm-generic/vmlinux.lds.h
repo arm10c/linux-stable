@@ -679,6 +679,9 @@
  * @cacheline is used to align subsections to avoid false cacheline
  * sharing between subsections for different purposes.
  */
+/*
+// ARM10C 20140308
+*/
 #define PERCPU_INPUT(cacheline)						\
 	VMLINUX_SYMBOL(__per_cpu_start) = .;				\
 	*(.data..percpu..first)						\
@@ -735,6 +738,9 @@
  * except that __per_cpu_load is defined as a relative symbol against
  * .data..percpu which is required for relocatable x86_32 configuration.
  */
+/*
+// ARM10C 20140308
+*/
 #define PERCPU_SECTION(cacheline)					\
 	. = ALIGN(PAGE_SIZE);						\
 	.data..percpu	: AT(ADDR(.data..percpu) - LOAD_OFFSET) {	\
