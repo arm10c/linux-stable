@@ -919,7 +919,7 @@ static inline int populated_zone(struct zone *zone)
 {
 	// zone->present_pages: contig_page_data->node_zones[2].present_pages: 0
 	// zone->present_pages: contig_page_data->node_zones[1].present_pages: 0x50800
-	// zone->present_pages: contig_page_data->node_zones[1].present_pages: 0x2f800
+	// zone->present_pages: contig_page_data->node_zones[0].present_pages: 0x2f800
 	return (!!zone->present_pages);
 	// return 0
 	// return 1
@@ -928,7 +928,7 @@ static inline int populated_zone(struct zone *zone)
 
 extern int movable_zone;
 
-// ARM10C 20140111 
+// ARM10C 20140111
 static inline int zone_movable_is_highmem(void)
 {
 #if defined(CONFIG_HIGHMEM) && defined(CONFIG_HAVE_MEMBLOCK_NODE_MAP)	// CONFIG_HIGHMEM = y, CONFIG_HAVE_MEMBLOCK_NODE_MAP = n 
@@ -1043,7 +1043,7 @@ extern struct zone *next_zone(struct zone *zone);
 // z: contig_page_data->node_zonelists->_zonerefs[1]
 static inline struct zone *zonelist_zone(struct zoneref *zoneref)
 {
-	// z: contig_page_data->node_zonelists->_zonerefs[1]->zone: contig_page_data->node_zones[0]
+	// zoneref->zone: contig_page_data->node_zonelists->_zonerefs[1]->zone: contig_page_data->node_zones[0]
 	return zoneref->zone;
 	// zoneref->zone: contig_page_data->node_zones[0]
 }
@@ -1125,7 +1125,7 @@ static inline struct zoneref *first_zones_zonelist(struct zonelist *zonelist,
 // ARM10C 20140308
 // for_each_zone_zonelist_nodemask(zone, z, contig_page_data->node_zonelists, 0, NULL)
 //
-//#define for_each_zone_zonelist_0(zone, z, contig_page_data->node_zonelists, 0, 0)
+// #define for_each_zone_zonelist_0(zone, z, contig_page_data->node_zonelists, 0, 0)
 //	for (z = first_zones_zonelist(contig_page_data->node_zonelists, 0, 0, &zone);
 //		zone;
 //		z = next_zones_zonelist(++z, 0, 0, &zone))

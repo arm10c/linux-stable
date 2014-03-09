@@ -261,7 +261,7 @@ static inline int allocflags_to_migratetype(gfp_t gfp_flags)
 // ZONE_MOVABLE: 2, ___GFP_MOVABLE: 0x08, ___GFP_HIGHMEM: 0x02
 // OPT_ZONE_DMA32: 0, ___GFP_MOVABLE: 0x08, ___GFP_DMA32: 0x04
 //
-// #define GFP_ZONE_TABLE ( \
+// #define GFP_ZONE_TABLE (
 // 	(0 << 0 * 2)
 // 	| (0 << 0x02 * 2): 0x0
 // 	| (1 << 0x02 * 2): 0x8

@@ -217,7 +217,6 @@ static inline int numa_node_id(void)
 	// raw_smp_processor_id(): 0, cpu_to_node(0): 0
 	return cpu_to_node(raw_smp_processor_id());
 	// return 0
-
 }
 #endif
 
