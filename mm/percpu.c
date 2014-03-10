@@ -2377,7 +2377,7 @@ void __init setup_per_cpu_areas(void)
 				    PERCPU_DYNAMIC_RESERVE, PAGE_SIZE, NULL,
 				    pcpu_dfl_fc_alloc, pcpu_dfl_fc_free);
 	// rc: 0
-	// ai (pcpu_alloc_info) 를 구조체를 이용해 cpu core 에서를 사용할percpu 자료구조와 메모리 할당
+	// ai (pcpu_alloc_info) 를 구조체를 이용해 cpu core 에서를 사용할 percpu 자료구조와 메모리 할당
 
 	// rc: 0
 	if (rc < 0)
@@ -2385,17 +2385,17 @@ void __init setup_per_cpu_areas(void)
 
 	// pcpu_base_addr: 128K 만큼 물리주소 0x5FFFFFFF 근처에 할당받은 주소
 	delta = (unsigned long)pcpu_base_addr - (unsigned long)__per_cpu_start;
-	// delta: __per_cpu_start에서의pcpu_base_addr의 옵셋
+	// delta: __per_cpu_start에서의 pcpu_base_addr의 옵셋
 
 	for_each_possible_cpu(cpu)
-	// for ((i) = -1; (i) = cpumask_next((i), (cpu_possible_mask)), (i) < nr_cpu_ids; )
+	// for ((cpu) = -1; (cpu) = cpumask_next((cpu), (cpu_possible_mask)), (cpu) < nr_cpu_ids; )
 		// delta: __per_cpu_start에서의pcpu_base_addr의 옵셋
 		// pcpu_unit_offsets[0]: 0
 		// pcpu_unit_offsets[1]: 0x8000
 		// pcpu_unit_offsets[2]: 0x10000
 		// pcpu_unit_offsets[3]: 0x18000
 		__per_cpu_offset[cpu] = delta + pcpu_unit_offsets[cpu];
-		// __per_cpu_offset[cpu]: pcpu_unit_offsets[cpu] + __per_cpu_start에서의pcpu_base_addr의 옵셋
+		// __per_cpu_offset[cpu]: pcpu_unit_offsets[cpu] + __per_cpu_start에서의 pcpu_base_addr의 옵셋
 }
 #endif	/* CONFIG_HAVE_SETUP_PER_CPU_AREA */
 

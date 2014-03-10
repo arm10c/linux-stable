@@ -563,7 +563,7 @@ asmlinkage void __init start_kernel(void)
 
 	setup_nr_cpu_ids();
 	setup_per_cpu_areas();
-	// pcpu 구조체를 만들어 줌(mm/percpu.c)
+	// pcpu 구조체를 만들어 줌 (mm/percpu.c)
 
 	smp_prepare_boot_cpu();	/* arch-specific boot-cpu hooks */
 	// boot cpu 0의 pcpu 영역의 base주소를 core register에 설정해줌

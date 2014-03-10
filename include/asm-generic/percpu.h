@@ -49,7 +49,7 @@ extern unsigned long __per_cpu_offset[NR_CPUS];
 //
 // #define SHIFT_PERCPU_PTR(&boot_pageset, __per_cpu_offset[0])	({
 //      &boot_pageset + __per_cpu_offset[0]
-//})
+// })
 #define SHIFT_PERCPU_PTR(__p, __offset)	({				\
 	__verify_pcpu_ptr((__p));					\
 	RELOC_HIDE((typeof(*(__p)) __kernel __force *)(__p), (__offset)); \

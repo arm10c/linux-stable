@@ -17,6 +17,7 @@
 // #define PER_CPU_BASE_SECTION ".data..percpu"
 // PER_CPU_ATTRIBUTES = undefined
 // ARM10C 20140308
+// __PCPU_ATTRS(""): __attribute__((section(".data..percpu" "")))
 #define __PCPU_ATTRS(sec)						\
 	__percpu __attribute__((section(PER_CPU_BASE_SECTION sec)))	\
 	PER_CPU_ATTRIBUTES
@@ -86,7 +87,12 @@
 // ARM10C 20140111 
 // type = struct per_cpu_pageset, name = boot_pageset
 // __attribute__((section(.data..percpu))) struct per_cpu_pageset boot_pageset
+//
 // ARM10C 20140308
+// __PCPU_ATTRS(""): __attribute__((section(".data..percpu" "")))
+// DEFINE_PER_CPU_SECTION(struct per_cpu_pageset, boot_pageset, "")
+//	__attribute__((section(".data..percpu" "")))
+//	__typeof__(struct per_cpu_pageset) boot_pageset
 #define DEFINE_PER_CPU_SECTION(type, name, sec)				\
 	__PCPU_ATTRS(sec) PER_CPU_DEF_ATTRIBUTES			\
 	__typeof__(type) name

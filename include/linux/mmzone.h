@@ -637,7 +637,7 @@ static inline bool zone_is_empty(struct zone *zone)
 /* Maximum number of zones on a zonelist */
 #define MAX_ZONES_PER_ZONELIST (MAX_NUMNODES * MAX_NR_ZONES)
 
-#ifdef CONFIG_NUMA
+#ifdef CONFIG_NUMA // CONFIG_NUMA=n
 
 /*
  * The NUMA zonelists are doubled because we need zonelists that restrict the
@@ -714,6 +714,7 @@ struct zonelist_cache {
 	unsigned long last_full_zap;		/* when last zap'd (jiffies) */
 };
 #else
+// ARM10C 20140308
 #define MAX_ZONELISTS 1
 struct zonelist_cache;
 #endif
@@ -782,7 +783,9 @@ struct bootmem_data;
 // ARM10C 20131207
 // ARM10C 20140308
 typedef struct pglist_data {
+	// MAX_NR_ZONES: 3
 	struct zone node_zones[MAX_NR_ZONES];
+	// MAX_ZONELISTS: 1
 	struct zonelist node_zonelists[MAX_ZONELISTS];
 	int nr_zones;
 #ifdef CONFIG_FLAT_NODE_MEM_MAP	/* means !SPARSEMEM */

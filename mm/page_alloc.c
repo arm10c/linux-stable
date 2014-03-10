@@ -3247,6 +3247,7 @@ static int build_zonelists_node(pg_data_t *pgdat, struct zonelist *zonelist,
 			// nr_zones: 2
 
 			// zone_type: ZONE_HIGHMEM(1)
+			// zone_type: ZONE_NORMAL(0)
 			check_highest_zone(zone_type); // null function
 		}
 	} while (zone_type);
@@ -3673,7 +3674,7 @@ static void build_zonelists(pg_data_t *pgdat)
 	enum zone_type j;
 	struct zonelist *zonelist;
 
-	// pgdat->node_id: contig_page_data->node_id
+	// pgdat->node_id: contig_page_data->node_id: 0
 	local_node = pgdat->node_id;
 	// local_node: 0
 
@@ -3780,7 +3781,7 @@ static int __build_all_zonelists(void *data)
 	}
 
 	for_each_online_node(nid) {
-	// for ( (node) = 0; (node) == 0; (node) = 1)
+	// for ( (nid) = 0; (nid) == 0; (nid) = 1)
 		// nid: 0
 		// NODE_DATA(0): (&contig_page_data)
 		pg_data_t *pgdat = NODE_DATA(nid);
@@ -3806,13 +3807,13 @@ static int __build_all_zonelists(void *data)
 	 * (a chicken-egg dilemma).
 	 */
 	for_each_possible_cpu(cpu) {
-	// for ((i) = -1; (i) = cpumask_next((i), (cpu_possible_mask)), (i) < nr_cpu_ids; )
+	// for ((cpu) = -1; (cpu) = cpumask_next((cpu), (cpu_possible_mask)), (cpu) < nr_cpu_ids; )
 		// cpu: 0, per_cpu(boot_pageset, 0): *(&boot_pageset + __per_cpu_offset[0])
 		// cpu: 1, per_cpu(boot_pageset, 1): *(&boot_pageset + __per_cpu_offset[1])
 		// cpu: 2, per_cpu(boot_pageset, 2): *(&boot_pageset + __per_cpu_offset[2])
 		// cpu: 3, per_cpu(boot_pageset, 3): *(&boot_pageset + __per_cpu_offset[3])
 		setup_pageset(&per_cpu(boot_pageset, cpu), 0);
-		// boot_pageset의 pcp 맴버를 설정
+		// boot_pageset의 pcp (per_cpu_pages) 맴버를 설정
 
 
 #ifdef CONFIG_HAVE_MEMORYLESS_NODES // CONFIG_HAVE_MEMORYLESS_NODES=n
@@ -3845,8 +3846,8 @@ void __ref build_all_zonelists(pg_data_t *pgdat, struct zone *zone)
 	// system_state: SYSTEM_BOOTING
 	if (system_state == SYSTEM_BOOTING) {
 		__build_all_zonelists(NULL);
-		// contig_page_data의node_zonelist마다 값 설정
-		// 각 cpu core마다 boot_pageset의 pcp 맴버를 설정
+		// contig_page_data의 node_zonelist마다 값 설정
+		// 각 cpu core마다 boot_pageset의 pcp (per_cpu_pages) 맴버를 설정
 
 		mminit_verify_zonelist();
 		cpuset_init_current_mems_allowed(); // null function

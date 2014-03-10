@@ -270,8 +270,8 @@ static inline int allocflags_to_migratetype(gfp_t gfp_flags)
 // 	| (0 << (0x08 | 0x01) * 2): 0x0
 // 	| (2 << (0x08 | 0x02) * 2): 0x1000
 // 	| (0 << (0x08 | 0x04) * 2): 0x0
-//)
-// #define GFP_ZONE_TABLE: 0x1008
+// )
+// GFP_ZONE_TABLE: 0x1008
 #define GFP_ZONE_TABLE ( \
 	(ZONE_NORMAL << 0 * ZONES_SHIFT)				      \
 	| (OPT_ZONE_DMA << ___GFP_DMA * ZONES_SHIFT)			      \
@@ -306,7 +306,7 @@ static inline int allocflags_to_migratetype(gfp_t gfp_flags)
 // 	| 1 << (0x08 | 0x04 | 0x01 | 0x02) : 0x8000
 // )
 //
-// #define GFP_ZONE_BAD: 0xE8E8
+// GFP_ZONE_BAD: 0xE8E8
 #define GFP_ZONE_BAD ( \
 	1 << (___GFP_DMA | ___GFP_HIGHMEM)				      \
 	| 1 << (___GFP_DMA | ___GFP_DMA32)				      \
