@@ -30,6 +30,7 @@ static DEFINE_MUTEX(cpu_add_remove_lock);
  * The following two API's must be used when attempting
  * to serialize the updates to cpu_online_mask, cpu_present_mask.
  */
+// ARM10C 20140315
 void cpu_maps_update_begin(void)
 {
 	mutex_lock(&cpu_add_remove_lock);
@@ -160,6 +161,8 @@ static void cpu_hotplug_done(void) {}
 #endif	/* #else #if CONFIG_HOTPLUG_CPU */
 
 /* Need to know about CPUs going up/down? */
+// ARM10C 20140315
+// *nb : page_alloc_cpu_nitify_nb
 int __ref register_cpu_notifier(struct notifier_block *nb)
 {
 	int ret;

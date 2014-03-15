@@ -118,15 +118,24 @@ enum {
 		{ .notifier_call = fn, .priority = pri };	\
 	register_cpu_notifier(&fn##_nb);			\
 }
+/* #define cpu_notifier(fn, pri) {				\
+ *	static struct notifier_block fn##_nb =			\
+ *	 fn: page_alloc_cpu_notify
+ *       pri : 0
+ *      { .NOTIFIER_CALL = FN, .PRIORITY = PRI };			\
+ *	REGISTER_CPU_NOTIFIER(&FN##_NB);			\
+ *}
+*/
 #else /* #if defined(CONFIG_HOTPLUG_CPU) || !defined(MODULE) */
 #define cpu_notifier(fn, pri)	do { (void)(fn); } while (0)
 #endif /* #else #if defined(CONFIG_HOTPLUG_CPU) || !defined(MODULE) */
-#ifdef CONFIG_HOTPLUG_CPU
+#ifdef CONFIG_HOTPLUG_CPU // defined
+// ARM10C 20140315
 extern int register_cpu_notifier(struct notifier_block *nb);
 extern void unregister_cpu_notifier(struct notifier_block *nb);
 #else
 
-#ifndef MODULE
+#ifndef MODULE // not define
 extern int register_cpu_notifier(struct notifier_block *nb);
 #else
 static inline int register_cpu_notifier(struct notifier_block *nb)

@@ -23,6 +23,9 @@
 #define swp_is_buggy
 #endif
 
+// ARM10C 20140315
+// ((__typeof__(*((&lock->count))->counter)__xchg((unsigned long)(-1),(&lock->count))->counter),sizeof(*((&lock->count))->counter))))
+// x : -1, *ptr : (&lock->count->counter) , size: 4
 static inline unsigned long __xchg(unsigned long x, volatile void *ptr, int size)
 {
 	extern void __bad_xchg(volatile void *, int);
@@ -100,7 +103,12 @@ static inline unsigned long __xchg(unsigned long x, volatile void *ptr, int size
 	return ret;
 }
 
-#define xchg(ptr,x) \
+// ARM10C 20140315
+// xchg((&lock->count))->counter), -1)
+// ptr : (&lock->count))->counter), x : -1
+// ((__typeof__(*((&lock->count))->counter)__xchg((unsigned long)(-1),(&lock->count))->counter),sizeof(*((&lock->count))->counter))))
+// 20140315 return : 1
+#define xchg(ptr,x)							\
 	((__typeof__(*(ptr)))__xchg((unsigned long)(x),(ptr),sizeof(*(ptr))))
 
 #include <asm-generic/cmpxchg-local.h>

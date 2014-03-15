@@ -75,6 +75,7 @@ static inline void dsb_sev(void)
 // http://lwn.net/Articles/267968/
 // http://studyfoss.egloos.com/5144295 <- 필독! spin_lock 설명
 //
+// ARM10C 20140315
 static inline void arch_spin_lock(arch_spinlock_t *lock)
 {
 	unsigned long tmp;
@@ -156,8 +157,12 @@ static inline void arch_spin_unlock(arch_spinlock_t *lock)
 	dsb_sev(); // ARM10C 이벤트발생
 }
 
+// ARM10C 20140315
+// return 1 
 static inline int arch_spin_is_locked(arch_spinlock_t *lock)
 {
+        /* ACCESS_ONCE(lock_tickets) (*(volatile typeof(lock_tickets) *)&(lock_tickets))
+	 */
 	struct __raw_tickets tickets = ACCESS_ONCE(lock->tickets);
 	return tickets.owner != tickets.next;
 }

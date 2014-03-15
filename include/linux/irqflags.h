@@ -92,6 +92,8 @@
 	do { trace_hardirqs_on(); raw_local_irq_enable(); } while (0)
 #define local_irq_disable() \
 	do { raw_local_irq_disable(); trace_hardirqs_off(); } while (0)
+// ARM10C 20140315
+// flags에 CPSR값을 저장함
 #define local_irq_save(flags)	/*ARM10C this*/		\
 	do {						\
 		raw_local_irq_save(flags);		\

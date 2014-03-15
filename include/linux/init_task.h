@@ -160,7 +160,8 @@ extern struct task_group root_task_group;
  */
 // ARM10C 20130831
 // .cpus_allowed : 3
-#define INIT_TASK(tsk)	\
+// ARM10C 20140315
+#define INIT_TASK(tsk)							\
 {									\
 	.state		= 0,						\
 	.stack		= &init_thread_info,				\

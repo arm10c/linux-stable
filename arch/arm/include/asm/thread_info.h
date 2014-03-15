@@ -90,6 +90,7 @@ struct thread_info {
 }
 
 // ARM10C 20130824
+// ARM10C 20140315
 #define init_thread_info	(init_thread_union.thread_info)
 #define init_stack		(init_thread_union.stack)
 

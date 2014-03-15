@@ -46,22 +46,23 @@
  * - detects multi-task circular deadlocks and prints out all affected
  *   locks and tasks (and only those tasks)
  */
+// ARM10C 20140315
 struct mutex {
 	/* 1: unlocked, 0: locked, negative: locked, possible waiters */
 	atomic_t		count;
 	spinlock_t		wait_lock;
 	struct list_head	wait_list;
-#if defined(CONFIG_DEBUG_MUTEXES) || defined(CONFIG_SMP)
+#if defined(CONFIG_DEBUG_MUTEXES) || defined(CONFIG_SMP) // CONFIG_SMP : define
 	struct task_struct	*owner;
 #endif
-#ifdef CONFIG_MUTEX_SPIN_ON_OWNER
+#ifdef CONFIG_MUTEX_SPIN_ON_OWNER // not define
 	void			*spin_mlock;	/* Spinner MCS lock */
 #endif
-#ifdef CONFIG_DEBUG_MUTEXES
+#ifdef CONFIG_DEBUG_MUTEXES // define
 	const char 		*name;
 	void			*magic;
 #endif
-#ifdef CONFIG_DEBUG_LOCK_ALLOC
+#ifdef CONFIG_DEBUG_LOCK_ALLOC // not define
 	struct lockdep_map	dep_map;
 #endif
 };
@@ -70,15 +71,17 @@ struct mutex {
  * This is the control structure for tasks blocked on mutex,
  * which resides on the blocked task's kernel stack:
  */
+// ARM10C 20140315
 struct mutex_waiter {
 	struct list_head	list;
 	struct task_struct	*task;
-#ifdef CONFIG_DEBUG_MUTEXES
+#ifdef CONFIG_DEBUG_MUTEXES // define
 	void			*magic;
 #endif
 };
 
-#ifdef CONFIG_DEBUG_MUTEXES
+#ifdef CONFIG_DEBUG_MUTEXES // define 
+// ARM10C 20140315
 # include <linux/mutex-debug.h>
 #else
 # define __DEBUG_MUTEX_INITIALIZER(lockname)
@@ -134,7 +137,7 @@ static inline int mutex_is_locked(struct mutex *lock)
  * See kernel/mutex.c for detailed documentation of these APIs.
  * Also see Documentation/mutex-design.txt.
  */
-#ifdef CONFIG_DEBUG_LOCK_ALLOC
+#ifdef CONFIG_DEBUG_LOCK_ALLOC // not define
 extern void mutex_lock_nested(struct mutex *lock, unsigned int subclass);
 extern void _mutex_lock_nest_lock(struct mutex *lock, struct lockdep_map *nest_lock);
 
@@ -154,6 +157,8 @@ do {									\
 } while (0)
 
 #else
+// ARM10C 20140315
+// 
 extern void mutex_lock(struct mutex *lock);
 extern int __must_check mutex_lock_interruptible(struct mutex *lock);
 extern int __must_check mutex_lock_killable(struct mutex *lock);

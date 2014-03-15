@@ -28,6 +28,8 @@
 
 // ARM10C 20130824
 // ARM10C 20140301
+// ARM10C 20140315
+// &waiter->list->next : list, &waiter->list->prev : list
 static inline void INIT_LIST_HEAD(struct list_head *list)
 {
 	list->next = list;
@@ -89,6 +91,7 @@ static inline void list_add(struct list_head *new, struct list_head *head)
  */
 // ARM10C 20131130
 // list_add_tail(&svm->list, &curr_svm->list);
+// ARM10C 20140315
 static inline void list_add_tail(struct list_head *new, struct list_head *head)
 {
 	__list_add(new, head->prev, head);
@@ -101,6 +104,9 @@ static inline void list_add_tail(struct list_head *new, struct list_head *head)
  * This is only for internal list manipulation where we know
  * the prev/next entries already!
  */
+// ARM10C 20140315
+// *entry : &waiter->list
+// &waiter->list->prev : prev &waiter->list->next : next
 static inline void __list_del(struct list_head * prev, struct list_head * next)
 {
 	next->prev = prev;
@@ -115,6 +121,8 @@ static inline void __list_del(struct list_head * prev, struct list_head * next)
  */
 #ifndef CONFIG_DEBUG_LIST
 // ARM10C 20140301 
+// ARM10C 20140315
+// *entry : &waiter->list
 static inline void __list_del_entry(struct list_head *entry)
 {
 	__list_del(entry->prev, entry->next);
@@ -158,10 +166,15 @@ static inline void list_replace_init(struct list_head *old,
  * list_del_init - deletes entry from list and reinitialize it.
  * @entry: the element to delete from the list.
  */
+// ARM10C 20140315
+// *entry : &waiter->list
 static inline void list_del_init(struct list_head *entry)
 {
 	__list_del_entry(entry);
+	// &waiter->list->prev : prev &waiter->list->next : next
 	INIT_LIST_HEAD(entry);
+	// &waiter->list->next : list, &waiter->list->prev : list
+
 }
 
 /**
@@ -210,6 +223,8 @@ static inline int list_is_last(const struct list_head *list,
  * list_empty - tests whether a list is empty
  * @head: the list to test.
  */
+// ARM10C 20140315
+// &waiter->list : &waiter->list == head
 static inline int list_empty(const struct list_head *head)
 {
 	return head->next == head;

@@ -98,6 +98,7 @@ ENDPROC(__vet_atags)
  *  r2  = atags/dtb pointer
  *  r9  = processor ID
  */
+// ARM10C 20140315
 	__INIT
 __mmap_switched:
 	adr	r3, __mmap_switched_data

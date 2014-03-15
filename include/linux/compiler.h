@@ -17,7 +17,7 @@
 # define __release(x)	__context__(x,-1)
 # define __cond_lock(x,c)	((c) ? ({ __acquire(x); 1; }) : 0)
 # define __percpu	__attribute__((noderef, address_space(3)))
-#ifdef CONFIG_SPARSE_RCU_POINTER
+#ifdef CONFIG_SPARSE_RCU_POINTER /* CONFIG_SPARSE_RCU_POINT = n */
 # define __rcu		__attribute__((noderef, address_space(4)))
 #else
 # define __rcu
@@ -353,6 +353,7 @@ void ftrace_likely_update(struct ftrace_branch_data *f, int val, int expect);
  * use is to mediate communication between process-level code and irq/NMI
  * handlers, all running on the same CPU.
  */
+// ARM10C 20140315
 #define ACCESS_ONCE(x) (*(volatile typeof(x) *)&(x))
 
 /* Ignore/forbid kprobes attach on very low level functions marked by this attribute: */

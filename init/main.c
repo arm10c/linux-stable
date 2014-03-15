@@ -571,6 +571,7 @@ asmlinkage void __init start_kernel(void)
 	build_all_zonelists(NULL, NULL);
 
 // 2014/03/08 종료
+// ARM10C 20140315
 
 	page_alloc_init();
 

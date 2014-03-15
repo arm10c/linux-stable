@@ -62,7 +62,8 @@ do { \
 #ifdef CONFIG_PREEMPT_COUNT // ARM10C Y 
 
 // ARM10C 20140125
-#define preempt_disable()/*ARM10C this*/ \
+// ARM10C 20140315
+#define preempt_disable()/*ARM10C this*/	\
 do { \
 	inc_preempt_count(); \
 	barrier(); \

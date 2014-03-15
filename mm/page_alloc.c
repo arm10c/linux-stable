@@ -5751,7 +5751,7 @@ static int page_alloc_cpu_notify(struct notifier_block *self,
 	}
 	return NOTIFY_OK;
 }
-
+// ARM10C 20140315
 void __init page_alloc_init(void)
 {
 	hotcpu_notifier(page_alloc_cpu_notify, 0);

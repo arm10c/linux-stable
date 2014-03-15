@@ -27,9 +27,11 @@
 /*
  * Must be called with lock->wait_lock held.
  */
+// ARM10C 20140315
 void debug_mutex_lock_common(struct mutex *lock, struct mutex_waiter *waiter)
 {
 	memset(waiter, MUTEX_DEBUG_INIT, sizeof(*waiter));
+	// #define MUTEX_DEBUG_INIT	0x11
 	waiter->magic = waiter;
 	INIT_LIST_HEAD(&waiter->list);
 }
@@ -48,24 +50,33 @@ void debug_mutex_free_waiter(struct mutex_waiter *waiter)
 	memset(waiter, MUTEX_DEBUG_FREE, sizeof(*waiter));
 }
 
+// ARM10C 20140315
+// lock, &waiter, task_thread_info((init_task)->stack)
 void debug_mutex_add_waiter(struct mutex *lock, struct mutex_waiter *waiter,
 			    struct thread_info *ti)
 {
+        // spin_is_locked (&lock->wait_lock)
 	SMP_DEBUG_LOCKS_WARN_ON(!spin_is_locked(&lock->wait_lock));
-
-	/* Mark the current thread as blocked on the lock: */
+	// 20140315 : raw_spin_is_locked : 1
+	/* Meark the current thread as blocked on the lock: */
 	ti->task->blocked_on = waiter;
+	// init_task->blocked_on : waiter
 }
 
+// ARM10C 20140315
 void mutex_remove_waiter(struct mutex *lock, struct mutex_waiter *waiter,
 			 struct thread_info *ti)
 {
 	DEBUG_LOCKS_WARN_ON(list_empty(&waiter->list));
+	// &waiter->list == head
 	DEBUG_LOCKS_WARN_ON(waiter->task != ti->task);
+	// waiter->task == ti->task 이므로 
 	DEBUG_LOCKS_WARN_ON(ti->task->blocked_on != waiter);
+	// ti->task->blocked_on == waiter 이므로
 	ti->task->blocked_on = NULL;
 
 	list_del_init(&waiter->list);
+	// &waiter->list 초기화 
 	waiter->task = NULL;
 }
 

@@ -294,6 +294,7 @@ static inline void lockup_detector_init(void)
 #endif
 
 /* Attach to any functions which should be ignored in wchan output. */
+// ARM10C 20140315
 #define __sched		__attribute__((__section__(".sched.text")))
 
 /* Linker adds these: start and end of __sched functions */
@@ -1023,7 +1024,7 @@ enum perf_event_task_context {
 	perf_sw_context,
 	perf_nr_task_contexts,
 };
-
+// ARM10C 20140315
 struct task_struct {
 	volatile long state;	/* -1 unrunnable, 0 runnable, >0 stopped */
 	void *stack;
@@ -1915,6 +1916,7 @@ void yield(void);
  */
 extern struct exec_domain	default_exec_domain;
 
+// ARM10C 20140315
 union thread_union {
 	struct thread_info thread_info;
 	unsigned long stack[THREAD_SIZE/sizeof(long)];
@@ -2288,6 +2290,7 @@ static inline void threadgroup_unlock(struct task_struct *tsk) {}
 
 #ifndef __HAVE_THREAD_FUNCTIONS
 
+// ARM10C 20140315
 #define task_thread_info(task)	((struct thread_info *)(task)->stack)
 #define task_stack_page(task)	((task)->stack)
 
