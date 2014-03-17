@@ -28,10 +28,11 @@
  * Must be called with lock->wait_lock held.
  */
 // ARM10C 20140315
+// lock: cpu_add_remove_lock, waiter
 void debug_mutex_lock_common(struct mutex *lock, struct mutex_waiter *waiter)
 {
+	// MUTEX_DEBUG_INIT: 0x11, sizeof(*waiter): 16
 	memset(waiter, MUTEX_DEBUG_INIT, sizeof(*waiter));
-	// #define MUTEX_DEBUG_INIT	0x11
 	waiter->magic = waiter;
 	INIT_LIST_HEAD(&waiter->list);
 }
@@ -51,33 +52,47 @@ void debug_mutex_free_waiter(struct mutex_waiter *waiter)
 }
 
 // ARM10C 20140315
-// lock, &waiter, task_thread_info((init_task)->stack)
+// lock: cpu_add_remove_lock, &waiter,
+// task_thread_info(init_task): ((struct thread_info *)(init_task)->stack)
+//
+// ((struct thread_info *)(init_task)->stack): &init_thread_info
 void debug_mutex_add_waiter(struct mutex *lock, struct mutex_waiter *waiter,
 			    struct thread_info *ti)
 {
-        // spin_is_locked (&lock->wait_lock)
+	// lock->wait_lock: cpu_add_remove_lock->wait_lock
+        // spin_is_locked(&cpu_add_remove_lock->wait_lock): 1
 	SMP_DEBUG_LOCKS_WARN_ON(!spin_is_locked(&lock->wait_lock));
-	// 20140315 : raw_spin_is_locked : 1
+
 	/* Meark the current thread as blocked on the lock: */
+	// ti->task->blocked_on: init_thread_info->task->blocked_on (init_task->blocked_on)
 	ti->task->blocked_on = waiter;
-	// init_task->blocked_on : waiter
+	// init_task->blocked_on: waiter
 }
 
 // ARM10C 20140315
+// lock: cpu_add_remove_lock, &waiter, current_thread_info(): init_thread_info	
 void mutex_remove_waiter(struct mutex *lock, struct mutex_waiter *waiter,
 			 struct thread_info *ti)
 {
+	// list_empty(&waiter->list): 0
 	DEBUG_LOCKS_WARN_ON(list_empty(&waiter->list));
-	// &waiter->list == head
+
+	// waiter->task: init_task, ti->task: init_thread_info.task: init_task
 	DEBUG_LOCKS_WARN_ON(waiter->task != ti->task);
-	// waiter->task == ti->task 이므로 
+
+	// ti->task->blocked_on: init_thread_info.task.blocked_on: waiter
 	DEBUG_LOCKS_WARN_ON(ti->task->blocked_on != waiter);
-	// ti->task->blocked_on == waiter 이므로
+
+	// ti->task->blocked_on: init_thread_info.task.blocked_on: waiter
 	ti->task->blocked_on = NULL;
+	// init_thread_info.task.blocked_on: NULL
 
 	list_del_init(&waiter->list);
-	// &waiter->list 초기화 
+	// &waiter->list 초기화
+
+	// waiter->task: init_task
 	waiter->task = NULL;
+	// waiter->task: NULL
 }
 
 void debug_mutex_unlock(struct mutex *lock)

@@ -22,8 +22,26 @@
 
 #include "smpboot.h"
 
-#ifdef CONFIG_SMP
+#ifdef CONFIG_SMP // CONFIG_SMP=y
 /* Serializes the updates to cpu_online_mask, cpu_present_mask */
+// ARM10C 20140315
+// DEFINE_MUTEX(cpu_add_remove_lock):
+// struct mutex cpu_add_remove_lock =
+// { .count = { (1) }
+//    , .wait_lock =
+//    (spinlock_t )
+//    { { .rlock =
+//	  {
+//	  .raw_lock = { { 0 } },
+//	  .magic = 0xdead4ead,
+//	  .owner_cpu = -1,
+//	  .owner = 0xffffffff,
+//	  }
+//    } }
+//    , .wait_list =
+//    { &(cpu_add_remove_lock.wait_list), &(cpu_add_remove_lock.wait_list) }
+//    , .magic = &cpu_add_remove_lock
+// }
 static DEFINE_MUTEX(cpu_add_remove_lock);
 
 /*
@@ -162,7 +180,7 @@ static void cpu_hotplug_done(void) {}
 
 /* Need to know about CPUs going up/down? */
 // ARM10C 20140315
-// *nb : page_alloc_cpu_nitify_nb
+// nb: page_alloc_cpu_nitify_nb
 int __ref register_cpu_notifier(struct notifier_block *nb)
 {
 	int ret;

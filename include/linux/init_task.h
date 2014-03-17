@@ -236,6 +236,7 @@ extern struct task_group root_task_group;
 }
 
 /* Attach to the init_task data structure for proper alignment */
+// ARM10C 20140315
 #define __init_task_data __attribute__((__section__(".data..init_task")))
 
 

@@ -24,6 +24,7 @@ typedef struct {
 	};
 } arch_spinlock_t;
 
+// ARM10C 20140315
 #define __ARCH_SPIN_LOCK_UNLOCKED	{ { 0 } }
 
 typedef struct {

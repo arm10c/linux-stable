@@ -43,6 +43,7 @@ extern void __chk_io_ptr(const volatile void __iomem *);
 # define __cond_lock(x,c) (c) //ARM10C this
 // ARM10C 20140308
 # define __percpu
+// ARM10C 20140315
 # define __rcu
 #endif
 
@@ -353,7 +354,11 @@ void ftrace_likely_update(struct ftrace_branch_data *f, int val, int expect);
  * use is to mediate communication between process-level code and irq/NMI
  * handlers, all running on the same CPU.
  */
+/*
 // ARM10C 20140315
+// ACCESS_ONCE(cpu_add_remove_lock->wait_lock->rlock->raw_lock->tickets):
+// (*(volatile struct __raw_tickets *)&(cpu_add_remove_lock->wait_lock->rlock->raw_lock->tickets))
+*/
 #define ACCESS_ONCE(x) (*(volatile typeof(x) *)&(x))
 
 /* Ignore/forbid kprobes attach on very low level functions marked by this attribute: */

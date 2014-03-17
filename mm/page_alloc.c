@@ -5723,6 +5723,7 @@ void __init free_area_init(unsigned long *zones_size)
 			__pa(PAGE_OFFSET) >> PAGE_SHIFT, NULL);
 }
 
+// ARM10C 20140315
 static int page_alloc_cpu_notify(struct notifier_block *self,
 				 unsigned long action, void *hcpu)
 {
@@ -5751,6 +5752,7 @@ static int page_alloc_cpu_notify(struct notifier_block *self,
 	}
 	return NOTIFY_OK;
 }
+
 // ARM10C 20140315
 void __init page_alloc_init(void)
 {

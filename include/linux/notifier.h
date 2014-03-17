@@ -47,9 +47,11 @@
  * runtime initialization.
  */
 
+// ARM10C 20140315
 typedef	int (*notifier_fn_t)(struct notifier_block *nb,
 			unsigned long action, void *data);
 
+// ARM10C 20140315
 struct notifier_block {
 	notifier_fn_t notifier_call;
 	struct notifier_block __rcu *next;

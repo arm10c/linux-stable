@@ -2227,9 +2227,11 @@ notrace unsigned long get_parent_ip(unsigned long addr)
 	return addr;
 }
 
+// CONFIG_PREEMPT=y, CONFIG_DEBUG_PREEMPT=y, CONFIG_PREEMPT_TRACER=n
 #if defined(CONFIG_PREEMPT) && (defined(CONFIG_DEBUG_PREEMPT) || \
 				defined(CONFIG_PREEMPT_TRACER))
-
+// ARM10C 20130907
+// ARM10C 20140315
 void __kprobes add_preempt_count(int val)
 {
 #ifdef CONFIG_DEBUG_PREEMPT // ARM10C Y 
@@ -2240,16 +2242,19 @@ void __kprobes add_preempt_count(int val)
 	if (DEBUG_LOCKS_WARN_ON((preempt_count() < 0)))
 		return;
 #endif
+	// preempt_count(): 0x40000001
 	preempt_count() += val;
-	// ARM10C 20130907 0x40000001 + 1(val)
-#ifdef CONFIG_DEBUG_PREEMPT
+	// preempt_count(): 0x40000001 + 1(val)
+
+#ifdef CONFIG_DEBUG_PREEMPT // CONFIG_DEBUG_PREEMPT=y
 	/*
 	 * Spinlock count overflowing soon?
 	 */
+	// preempt_count(): 0x40000002, PREEMPT_MASK: 0xFF, PREEMPT_MASK - 10: 0xF5
 	DEBUG_LOCKS_WARN_ON((preempt_count() & PREEMPT_MASK) >=
 				PREEMPT_MASK - 10);
 #endif
-	// ARM10C 20130907 preempt_count = 0x40000002
+	// preempt_count: 0x40000002, val: 1
 	if (preempt_count() == val)
 		trace_preempt_off(CALLER_ADDR0, get_parent_ip(CALLER_ADDR1));
 }

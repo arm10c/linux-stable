@@ -52,17 +52,17 @@ struct mutex {
 	atomic_t		count;
 	spinlock_t		wait_lock;
 	struct list_head	wait_list;
-#if defined(CONFIG_DEBUG_MUTEXES) || defined(CONFIG_SMP) // CONFIG_SMP : define
+#if defined(CONFIG_DEBUG_MUTEXES) || defined(CONFIG_SMP) // CONFIG_DEBUG_MUTEXES=y, CONFIG_SMP=y
 	struct task_struct	*owner;
 #endif
-#ifdef CONFIG_MUTEX_SPIN_ON_OWNER // not define
+#ifdef CONFIG_MUTEX_SPIN_ON_OWNER // CONFIG_MUTEX_SPIN_ON_OWNER=n
 	void			*spin_mlock;	/* Spinner MCS lock */
 #endif
-#ifdef CONFIG_DEBUG_MUTEXES // define
+#ifdef CONFIG_DEBUG_MUTEXES // CONFIG_DEBUG_MUTEXES=y
 	const char 		*name;
 	void			*magic;
 #endif
-#ifdef CONFIG_DEBUG_LOCK_ALLOC // not define
+#ifdef CONFIG_DEBUG_LOCK_ALLOC // CONFIG_DEBUG_LOCK_ALLOC=n
 	struct lockdep_map	dep_map;
 #endif
 };
@@ -72,10 +72,11 @@ struct mutex {
  * which resides on the blocked task's kernel stack:
  */
 // ARM10C 20140315
+// sizeof(struct mutex_waiter): 16 bytes
 struct mutex_waiter {
 	struct list_head	list;
 	struct task_struct	*task;
-#ifdef CONFIG_DEBUG_MUTEXES // define
+#ifdef CONFIG_DEBUG_MUTEXES // CONFIG_DEBUG_MUTEXES=y
 	void			*magic;
 #endif
 };
@@ -102,13 +103,49 @@ do {							\
 static inline void mutex_destroy(struct mutex *lock) {}
 #endif
 
-#ifdef CONFIG_DEBUG_LOCK_ALLOC
+#ifdef CONFIG_DEBUG_LOCK_ALLOC // CONFIG_DEBUG_LOCK_ALLOC=n
 # define __DEP_MAP_MUTEX_INITIALIZER(lockname) \
 		, .dep_map = { .name = #lockname }
 #else
+// ARM10C 20140315
+// __DEP_MAP_MUTEX_INITIALIZER(cpu_add_remove_lock):
 # define __DEP_MAP_MUTEX_INITIALIZER(lockname)
 #endif
 
+// ARM10C 20140315
+// ATOMIC_INIT(1): { (1) }
+// __SPIN_LOCK_UNLOCKED(cpu_add_remove_lock.wait_lock):
+//    (spinlock_t )
+//    { { .rlock =
+//	  {
+//	    .raw_lock = { { 0 } },
+//	    .magic = 0xdead4ead,
+//	    .owner_cpu = -1,
+//	    .owner = 0xffffffff,
+//	  }
+//    } }
+// LIST_HEAD_INIT(cpu_add_remove_lock.wait_list):
+// { &(cpu_add_remove_lock.wait_list), &(cpu_add_remove_lock.wait_list) }
+// __DEBUG_MUTEX_INITIALIZER(cpu_add_remove_lock):
+// , .magic = &cpu_add_remove_lock
+// __DEP_MAP_MUTEX_INITIALIZER(cpu_add_remove_lock):
+//
+// #define __MUTEX_INITIALIZER(cpu_add_remove_lock):
+// { .count = { (1) }
+//    , .wait_lock =
+//    (spinlock_t )
+//    { { .rlock =
+//	  {
+//	  .raw_lock = { { 0 } },
+//	  .magic = 0xdead4ead,
+//	  .owner_cpu = -1,
+//	  .owner = 0xffffffff,
+//	  }
+//    } }
+//    , .wait_list =
+//    { &(cpu_add_remove_lock.wait_list), &(cpu_add_remove_lock.wait_list) }
+//    , .magic = &cpu_add_remove_lock
+// }
 #define __MUTEX_INITIALIZER(lockname) \
 		{ .count = ATOMIC_INIT(1) \
 		, .wait_lock = __SPIN_LOCK_UNLOCKED(lockname.wait_lock) \
@@ -116,6 +153,41 @@ static inline void mutex_destroy(struct mutex *lock) {}
 		__DEBUG_MUTEX_INITIALIZER(lockname) \
 		__DEP_MAP_MUTEX_INITIALIZER(lockname) }
 
+// ARM10C 20140315
+// #define __MUTEX_INITIALIZER(cpu_add_remove_lock):
+// { .count = { (1) }
+//    , .wait_lock =
+//    (spinlock_t )
+//    { { .rlock =
+//	  {
+//	  .raw_lock = { { 0 } },
+//	  .magic = 0xdead4ead,
+//	  .owner_cpu = -1,
+//	  .owner = 0xffffffff,
+//	  }
+//    } }
+//    , .wait_list =
+//    { &(cpu_add_remove_lock.wait_list), &(cpu_add_remove_lock.wait_list) }
+//    , .magic = &cpu_add_remove_lock
+// }
+//
+// #define DEFINE_MUTEX(cpu_add_remove_lock):
+// struct mutex cpu_add_remove_lock =
+// { .count = { (1) }
+//    , .wait_lock =
+//    (spinlock_t )
+//    { { .rlock =
+//	  {
+//	  .raw_lock = { { 0 } },
+//	  .magic = 0xdead4ead,
+//	  .owner_cpu = -1,
+//	  .owner = 0xffffffff,
+//	  }
+//    } }
+//    , .wait_list =
+//    { &(cpu_add_remove_lock.wait_list), &(cpu_add_remove_lock.wait_list) }
+//    , .magic = &cpu_add_remove_lock
+// }
 #define DEFINE_MUTEX(mutexname) \
 	struct mutex mutexname = __MUTEX_INITIALIZER(mutexname)
 
@@ -137,7 +209,7 @@ static inline int mutex_is_locked(struct mutex *lock)
  * See kernel/mutex.c for detailed documentation of these APIs.
  * Also see Documentation/mutex-design.txt.
  */
-#ifdef CONFIG_DEBUG_LOCK_ALLOC // not define
+#ifdef CONFIG_DEBUG_LOCK_ALLOC // CONFIG_DEBUG_LOCK_ALLOC=n
 extern void mutex_lock_nested(struct mutex *lock, unsigned int subclass);
 extern void _mutex_lock_nest_lock(struct mutex *lock, struct lockdep_map *nest_lock);
 
@@ -158,7 +230,7 @@ do {									\
 
 #else
 // ARM10C 20140315
-// 
+// mutex_lock(&cpu_add_remove_lock)
 extern void mutex_lock(struct mutex *lock);
 extern int __must_check mutex_lock_interruptible(struct mutex *lock);
 extern int __must_check mutex_lock_killable(struct mutex *lock);

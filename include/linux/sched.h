@@ -141,6 +141,7 @@ print_cfs_rq(struct seq_file *m, int cpu, struct cfs_rq *cfs_rq);
  */
 #define TASK_RUNNING		0
 #define TASK_INTERRUPTIBLE	1
+// ARM10C 20140315
 #define TASK_UNINTERRUPTIBLE	2
 #define __TASK_STOPPED		4
 #define __TASK_TRACED		8
@@ -443,6 +444,9 @@ struct task_cputime {
  * We include PREEMPT_ACTIVE to avoid cond_resched() from working
  * before the scheduler is active -- see should_resched().
  */
+// ARM10C 20140315
+// PREEMPT_ACTIVE: 0x40000000
+// INIT_PREEMPT_COUNT: 0x40000001
 #define INIT_PREEMPT_COUNT	(1 + PREEMPT_ACTIVE)    /* PREEMPT_ACTIVE = 0x40000000*/
 
 /**
@@ -1244,7 +1248,7 @@ struct task_struct {
 	struct rt_mutex_waiter *pi_blocked_on;
 #endif
 
-#ifdef CONFIG_DEBUG_MUTEXES
+#ifdef CONFIG_DEBUG_MUTEXES // CONFIG_DEBUG_MUTEXES=y
 	/* mutex deadlock detection */
 	struct mutex_waiter *blocked_on;
 #endif
@@ -2291,6 +2295,7 @@ static inline void threadgroup_unlock(struct task_struct *tsk) {}
 #ifndef __HAVE_THREAD_FUNCTIONS
 
 // ARM10C 20140315
+// task_thread_info(init_task): ((struct thread_info *)(init_task)->stack)
 #define task_thread_info(task)	((struct thread_info *)(task)->stack)
 #define task_stack_page(task)	((task)->stack)
 

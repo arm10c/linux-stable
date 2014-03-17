@@ -75,6 +75,7 @@
 #define NETFILTER_LINK_POISON	0xdead57ac
 
 /********** kernel/mutexes **********/
+// ARM10C 20140315
 #define MUTEX_DEBUG_INIT	0x11
 #define MUTEX_DEBUG_FREE	0x22
 

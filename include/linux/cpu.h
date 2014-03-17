@@ -110,32 +110,32 @@ enum {
 #define CPU_STARTING_FROZEN	(CPU_STARTING | CPU_TASKS_FROZEN)
 
 
-#ifdef CONFIG_SMP
+#ifdef CONFIG_SMP // CONFIG_SMP=y
 /* Need to know about CPUs going up/down? */
-#if defined(CONFIG_HOTPLUG_CPU) || !defined(MODULE)
+#if defined(CONFIG_HOTPLUG_CPU) || !defined(MODULE) // CONFIG_HOTPLUG_CPU=y, MODULE: undefined
+// ARM10C 20140315
+// fn: page_alloc_cpu_notify, pri: 0
+// #define cpu_notifier(page_alloc_cpu_notify, 0) {
+//	static struct notifier_block page_alloc_cpu_notify_nb =
+//      { .notifier_call = page_alloc_cpu_notify, .priority = 0 };
+//	register_cpu_notifier(&page_alloc_cpu_notify_nb);
+// }
 #define cpu_notifier(fn, pri) {					\
 	static struct notifier_block fn##_nb =			\
 		{ .notifier_call = fn, .priority = pri };	\
 	register_cpu_notifier(&fn##_nb);			\
 }
-/* #define cpu_notifier(fn, pri) {				\
- *	static struct notifier_block fn##_nb =			\
- *	 fn: page_alloc_cpu_notify
- *       pri : 0
- *      { .NOTIFIER_CALL = FN, .PRIORITY = PRI };			\
- *	REGISTER_CPU_NOTIFIER(&FN##_NB);			\
- *}
-*/
 #else /* #if defined(CONFIG_HOTPLUG_CPU) || !defined(MODULE) */
 #define cpu_notifier(fn, pri)	do { (void)(fn); } while (0)
 #endif /* #else #if defined(CONFIG_HOTPLUG_CPU) || !defined(MODULE) */
-#ifdef CONFIG_HOTPLUG_CPU // defined
+#ifdef CONFIG_HOTPLUG_CPU // CONFIG_HOTPLUG_CPU=y
 // ARM10C 20140315
 extern int register_cpu_notifier(struct notifier_block *nb);
 extern void unregister_cpu_notifier(struct notifier_block *nb);
 #else
 
-#ifndef MODULE // not define
+#ifndef MODULE // MODULE: undefined
+// ARM10C 20140315
 extern int register_cpu_notifier(struct notifier_block *nb);
 #else
 static inline int register_cpu_notifier(struct notifier_block *nb)
@@ -151,6 +151,7 @@ static inline void unregister_cpu_notifier(struct notifier_block *nb)
 
 int cpu_up(unsigned int cpu);
 void notify_cpu_starting(unsigned int cpu);
+// ARM10C 20140315
 extern void cpu_maps_update_begin(void);
 extern void cpu_maps_update_done(void);
 
@@ -178,13 +179,15 @@ static inline void cpu_maps_update_done(void)
 #endif /* CONFIG_SMP */
 extern struct bus_type cpu_subsys;
 
-#ifdef CONFIG_HOTPLUG_CPU
+#ifdef CONFIG_HOTPLUG_CPU // CONFIG_HOTPLUG_CPU=y
 /* Stop CPUs going up and down. */
 
 extern void get_online_cpus(void);
 extern void put_online_cpus(void);
 extern void cpu_hotplug_disable(void);
 extern void cpu_hotplug_enable(void);
+// ARM10C 20140315
+// fn: page_alloc_cpu_notify, pri: 0
 #define hotcpu_notifier(fn, pri)	cpu_notifier(fn, pri)
 #define register_hotcpu_notifier(nb)	register_cpu_notifier(nb)
 #define unregister_hotcpu_notifier(nb)	unregister_cpu_notifier(nb)

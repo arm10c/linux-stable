@@ -18,6 +18,7 @@
 #include <asm/cmpxchg.h>
 
 // ARM10C 20131012
+// ARM10C 20140315
 #define ATOMIC_INIT(i)	{ (i) }
 
 #ifdef __KERNEL__
@@ -28,6 +29,7 @@
  * atomic_set() is the clrex or dummy strex done on every exception return.
  */
 // ARM10C 20140315
+// atomic_read(&(cpu_add_remove_lock)->count): (*(volatile int *)&(&(cpu_add_remove_lock)->count)->counter)
 #define atomic_read(v)	(*(volatile int *)&(v)->counter)
 // ARM10C 20140118
 #define atomic_set(v,i)	(((v)->counter) = (i))
@@ -212,9 +214,9 @@ static inline void atomic_clear_mask(unsigned long mask, unsigned long *addr)
 #endif /* __LINUX_ARM_ARCH__ */
 
 // ARM10C 20140315
-// v : &lock->count, new : -1
-// (xchg(&((&lock->count))->counter), -1))
-// 20140315 return : 1
+// lock->count: cpu_add_remove_lock->count
+// atomic_xchg(&cpu_add_remove_lock->count, -1):
+// xchg(&((&cpu_add_remove_lock->count)->counter), -1))
 #define atomic_xchg(v, new) (xchg(&((v)->counter), new))
 
 static inline int __atomic_add_unless(atomic_t *v, int a, int u)

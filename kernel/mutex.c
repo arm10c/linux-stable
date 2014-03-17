@@ -45,8 +45,8 @@
  * mutex.
  */
 // ARM10C 20140315
-//  atomic_read(v)	(*(volatile int *)&(mutex)->counter)
-// 0이상므로 리턴이 1일것이다. 
+// lock: cpu_add_remove_lock, lock->count: cpu_add_remove_lock->count
+// MUTEX_SHOW_NO_WAITER(cpu_add_remove_lock): 1
 #define	MUTEX_SHOW_NO_WAITER(mutex)	(atomic_read(&(mutex)->count) >= 0)
 
 void
@@ -97,16 +97,16 @@ __mutex_lock_slowpath(atomic_t *lock_count);
  * This function is similar to (but not equivalent to) down().
  */
 // ARM10C 20140315
-// *lock : cpu_add_remove_lock
-// __section__(".sched.text")
+// lock: cpu_add_remove_lock
+// __sched: __section__(".sched.text")
 void __sched mutex_lock(struct mutex *lock)
 {
-	might_sleep();
-	// null function
+	might_sleep(); // null function
 	/*
 	 * The locking fastpath is the 1->0 transition from
 	 * 'unlocked' into 'locked' state.
 	 */
+	// lock->count: cpu_add_remove_lock->count: 1
 	__mutex_fastpath_lock(&lock->count, __mutex_lock_slowpath);
 	mutex_set_owner(lock);
 }
@@ -419,25 +419,29 @@ ww_mutex_set_context_fastpath(struct ww_mutex *lock,
  * Lock a mutex (possibly interruptible), slowpath:
  */
 // ARM10C 20140315
-// struct mutex : &lock, long state : TASK_UNINTERRUPTIBLE, unsigned int subsclass: 0
-// lockdep_map *nest_lock :NULL, unsigned long ip :_RET_IP_, struct ww_acquire_ctx *ww_ctx : NULL
+// lock: cpu_add_remove_lock, state: TASK_UNINTERRUPTIBLE(2), subsclass: 0, 
+// nest_lock: NULL, ip: _RET_IP_, ww_ctx: NULL
 static __always_inline int __sched
 __mutex_lock_common(struct mutex *lock, long state, unsigned int subclass,
 		    struct lockdep_map *nest_lock, unsigned long ip,
 		    struct ww_acquire_ctx *ww_ctx)
 {
+	// current: init_task
 	struct task_struct *task = current;
+	// task: init_task
 	struct mutex_waiter waiter;
 	unsigned long flags;
 	int ret;
 
 	preempt_disable();
 	// 현재 task의 preempt count값을 증가시킨다
-	// &lock->dep_map, subclass : 0 , 0, nest_lock: NULL, ip: _REP_IP_
+
+	// lock->dep_map: cpu_add_remove_lock->dep_map, subclass: 0, 0, nest_lock: NULL, ip: _REP_IP_
 	mutex_acquire_nest(&lock->dep_map, subclass, 0, nest_lock, ip);
 	// mutex_acquire_nest : NULL 함수로 컴피일 do{} while 0로 의미가
 	// 사라지게 되어 lock->dep_map의 맴버가 선언되지 않아도 문제되지 않는다.
-#ifdef CONFIG_MUTEX_SPIN_ON_OWNER // not define
+
+#ifdef CONFIG_MUTEX_SPIN_ON_OWNER // CONFIG_MUTEX_SPIN_ON_OWNER=n
 	/*
 	 * Optimistic spinning.
 	 *
@@ -530,29 +534,37 @@ __mutex_lock_common(struct mutex *lock, long state, unsigned int subclass,
 	}
 slowpath:
 #endif
+	// lock->wait_lock: cpu_add_remove_lock->wait_lock
 	spin_lock_mutex(&lock->wait_lock, flags);
-	// mutex->wait_lock.rlock.raw_lock 를 스핀락했고 CPSR을 flag에 저장
+	// cpu_add_remove_lock->wait_lock->rlock.raw_lock에 스핀락했고 CPSR을 flag에 저장
 	
+	// lock: cpu_add_remove_lock
 	debug_mutex_lock_common(lock, &waiter);
-	// waiter를 magic으로 설정하고, INIT_LIST로 자료구조를 만듬
+	// waiter의 주소를 waiter.maigic에 설정하고, INIT_LIST_HEAD로 list 자료구조를 만듬
 
-	// lock, &waiter, task_thread_info((init_task)->stack)
+	// lock: cpu_add_remove_lock, &waiter, task: init_task,
+	// task_thread_info(init_task): ((struct thread_info *)(init_task)->stack)
 	debug_mutex_add_waiter(lock, &waiter, task_thread_info(task));
-	// current_thread_info->init_task->blocked_on : waiter
+	// current_thread_info->init_task->blocked_on: waiter
 	// 현재 thread가 spin lock이 걸렸다는 것을 blocked_on으로 표현함
-	// blocked_on은 dead_lock을 detection할때 사용한다. 
+	// blocked_on은 dead_lock을 detection할때 사용한다.
 	
 	/* add waiting tasks to the end of the waitqueue (FIFO): */
+	// lock->wait_list: cpu_add_remove_lock->wait_list
 	list_add_tail(&waiter.list, &lock->wait_list);
-	// __list_add(&waiter.list, &lock->wait_list->prev, &lock->wait_list->head);
-	waiter.task = task;
+	// __list_add(&waiter.list, &cpu_add_remove_lock->wait_list->prev, &cpu_add_remove_lock->wait_list)
 
+	// task: init_task
+	waiter.task = task;
+	// waiter.task: init_task
+
+	// lock: cpu_add_remove_lock, lock->count: cpu_add_remove_lock->count
+	// MUTEX_SHOW_NO_WAITER(cpu_add_remove_lock): 1, atomic_xchg(&lock->count, -1): 1
 	if (MUTEX_SHOW_NO_WAITER(lock) && (atomic_xchg(&lock->count, -1) == 1))
-	// MUTEX_SHOW_NO_WAITER(lock) : 1 && atomix_xchg : 1
-	// done으로 가는 조건 : count가 1일때 된다.
-	// atomic_xchg에 의해서 count가 -1로 바뀌고 
-	// 20140315: done으로 간다. 
+		// done으로 가는 조건: count가 1일때 된다.
+		// atomic_xchg에 의해서 count가 -1로 바뀌고 
  		goto done;
+		// done으로 간다.
 
 	lock_contended(&lock->dep_map, ip);
 
@@ -594,17 +606,22 @@ slowpath:
 	}
 
 done:
-	lock_acquired(&lock->dep_map, ip);
-	// NULL function
+	// lock->dep_map: cpu_add_remove_lock->dep_map, ip: _RET_IP_
+	lock_acquired(&lock->dep_map, ip); // NULL function
+
 	/* got the lock - rejoice! */
+	// lock: cpu_add_remove_lock, current_thread_info(): init_thread_info	
 	mutex_remove_waiter(lock, &waiter, current_thread_info());
-	// &waiter->list를 초기화함
+	// &waiter->list를 초기화함 waiter->task를 NULL로 초기화함
+	// init_task.blocked_on을 NULL로 초기화함
+
+	// lock: cpu_add_remove_lock
 	mutex_set_owner(lock);
-	// lock->owner : init_task 가 됨
+	// cpu_add_remove_lock->owner: init_task가 됨
 	
+	// ww_ctx: NULL
+	// __builtin_constant_p(NULL == NULL): 0, NULL == NULL: 상수므로: 0이되어 패스
 	if (!__builtin_constant_p(ww_ctx == NULL)) {
-	  // ww_ctx : NULL
-	  // __builtin_constant_p : 상수므로 !1 : 0이되어 패스 
 		struct ww_mutex *ww = container_of(lock,
 						      struct ww_mutex,
 						      base);
@@ -628,7 +645,9 @@ done:
 			wake_up_process(cur->task);
 		}
 	}
-// ARM10C 20140315 종료
+
+// 2014/03/15 종료
+
 	/* set it to 0 if there are no waiters left: */
 	if (likely(list_empty(&lock->wait_list)))
 		atomic_set(&lock->count, 0);
@@ -844,23 +863,17 @@ int __sched mutex_lock_killable(struct mutex *lock)
 EXPORT_SYMBOL(mutex_lock_killable);
 
 // ARM10C 20140315
+// __mutex_lock_slowpath(&cpu_add_remove_lock->count)
 // noinline : 절대로 인라인 함수로 사용하지 말것을 속성으로 정의,
 // 함수 콜로 반드시 사용할 것
-/* struct mutex {
- *1: unlocked, 0: locked, negative: locked, possible waiters 
- *	atomic_t		count;
- *	spinlock_t		wait_lock;
- *	struct list_head	wait_list;
- * 	struct task_struct	*owner;
- *	const char 		*name;
- *	void			*magic;
- *};
- */
 static __used noinline void __sched
 __mutex_lock_slowpath(atomic_t *lock_count)
 {
+	// lock_count: cpu_add_remove_lock->count
 	struct mutex *lock = container_of(lock_count, struct mutex, count);
+	// lock: cpu_add_remove_lock
 
+	// TASK_UNINTERRUPTIBLE: 2
 	__mutex_lock_common(lock, TASK_UNINTERRUPTIBLE, 0,
 			    NULL, _RET_IP_, NULL);
 }

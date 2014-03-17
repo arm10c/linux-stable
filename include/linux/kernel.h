@@ -160,14 +160,15 @@ struct completion;
 struct pt_regs;
 struct user;
 
-#ifdef CONFIG_PREEMPT_VOLUNTARY // not define
+#ifdef CONFIG_PREEMPT_VOLUNTARY // CONFIG_PREEMPT_VOLUNTARY=n
 extern int _cond_resched(void);
 # define might_resched() _cond_resched()
 #else
+// ARM10C 20140315
 # define might_resched() do { } while (0)
 #endif
 
-#ifdef CONFIG_DEBUG_ATOMIC_SLEEP // not define
+#ifdef CONFIG_DEBUG_ATOMIC_SLEEP // CONFIG_DEBUG_ATOMIC_SLEEP=n
   void __might_sleep(const char *file, int line, int preempt_offset);
 /**
  * might_sleep - annotation for functions that can sleep
@@ -185,7 +186,7 @@ extern int _cond_resched(void);
  static inline void __might_sleep(const char *file, int line,
 				   int preempt_offset) { }
 // ARM10C 20140315
-// might_resched() : NULL function
+// might_resched(): NULL function
 # define might_sleep() do { might_resched(); } while (0)
 #endif
 
@@ -811,12 +812,11 @@ static inline void ftrace_dump(enum ftrace_dump_mode oops_dump_mode) { }
 // ARM10C 20131130
 // #define offsetof(TYPE, MEMBER) ((size_t) &((TYPE *)0)->MEMBER)
 // ARM10C 20140315
-// prt : lock_count, type : struct mutex, member : count
-// 구조체의 주소를 시작 주소를 뽑아낸다. 
-// #define container_of(ptr, type, member) ({			\
-//	const typeof( ((type *)0)->count ) *__mptr = (lock_count);	\
-// (type *)( (char *)__mptr - offsetof(struct mutex,count) );})
-
+// ptr: lock_count, type: struct mutex, member: count
+// 구조체의 주소를 시작 주소를 뽑아낸다.
+// #define container_of(lock_count, struct mutex, count) ({
+//	const typeof( ((struct mutex *)0)->count ) *__mptr = (lock_count);
+//	(struct mutex *)( (char *)__mptr - offsetof(struct mutex,count) );})
 #define container_of(ptr, type, member) ({			\
 	const typeof( ((type *)0)->member ) *__mptr = (ptr);	\
 	(type *)( (char *)__mptr - offsetof(type,member) );})
