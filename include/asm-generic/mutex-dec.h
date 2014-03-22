@@ -60,6 +60,7 @@ __mutex_fastpath_unlock(atomic_t *count, void (*fail_fn)(atomic_t *))
 		fail_fn(count);
 }
 
+// ARM10C 20140322
 #define __mutex_slowpath_needs_to_unlock()		1
 
 /**

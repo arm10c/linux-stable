@@ -6096,6 +6096,8 @@ int percpu_pagelist_fraction_sysctl_handler(ctl_table *table, int write,
 	return 0;
 }
 
+// ARM10C 20140322
+// hashdist : HASHDIST_DEFAULT : 0
 int hashdist = HASHDIST_DEFAULT;
 
 #ifdef CONFIG_NUMA
@@ -6115,6 +6117,28 @@ __setup("hashdist=", set_hashdist);
  *   quantity of entries
  * - limit is the number of hash buckets, not the total allocation size
  */
+
+// ARM10C 20140322
+// [PID] tablename : "PID", bucketsize : sizeof(*pid_hash) : 4,
+// numentries :  0, scale : 18,
+// flags : 0x00000003 : HASH_EARLY : 0x00000001 | HASH_SMALL : 0x00000002,
+// *_hash_shift : &pidhash_shift : 4, *_hash_mask : NULL,
+// low_limit : 0, high_limit: 4096
+
+// ARM10C 20140322
+// [dCA] tablename : "Dentry cache", bucketsize : 4 : sizeof(struct hlist_bl_head),
+// numentries : 0 : dhash_entries, scale : 13
+// flags : HASH_EARLY : 0x00000001
+// *_hash_shift : &d_hash_shift, *_hash_mask : &d_hash_mask,
+// low_limit : 	0, high_limit : 0
+
+// ARM10C 20140322
+// [iCA] tablename : "Inode-cache", bucketsize : 4 : sizeof(struct hlist_bl_head),
+// numentries : 0 : ihash_entries, scale : 14
+// flags : HASH_EARLY : 0x00000001
+// *_hash_shift : &i_hash_shift, *_hash_mask : &i_hash_mask,
+// low_limit : 	0, high_limit : 0
+
 void *__init alloc_large_system_hash(const char *tablename,
 				     unsigned long bucketsize,
 				     unsigned long numentries,
@@ -6126,54 +6150,133 @@ void *__init alloc_large_system_hash(const char *tablename,
 				     unsigned long high_limit)
 {
 	unsigned long long max = high_limit;
+	// [PID] max : 4096
+	// [dCA] max : 0
+	// [iCA] max : 0
 	unsigned long log2qty, size;
 	void *table = NULL;
 
 	/* allow the kernel cmdline to have a say */
 	if (!numentries) {
+  	  // [PID] numentries : 0 이므로 if문 실행
+  	  // [dCA] numentries : 0 이므로 if문 실행
+  	  // [iCA] numentries : 0 이므로 if문 실행
+
 		/* round applicable memory size up to nearest megabyte */
 		numentries = nr_kernel_pages;
+		// [PID] static unsigned long __meminitdata nr_kernel_pages
+		// [PID] nr_kernel_pages : 0x2EFD6
+		// [dCA] static unsigned long __meminitdata nr_kernel_pages
+		// [dCA] nr_kernel_pages : 0x2EFD6
+		// [iCA] static unsigned long __meminitdata nr_kernel_pages
+		// [iCA] nr_kernel_pages : 0x2EFD6
 		numentries += (1UL << (20 - PAGE_SHIFT)) - 1;
+		// [PID] numentries = numentries + ( 1UL << (20 - 12 ) - 1)
+		// [PID] numentries : 0x2F0D5
+		// [dCA] numentries = numentries + ( 1UL << (20 - 12 ) - 1)
+		// [dCA] numentries : 0x2F0D5
+		// [iCA] numentries = numentries + ( 1UL << (20 - 12 ) - 1)
+		// [iCA] numentries : 0x2F0D5
 		numentries >>= 20 - PAGE_SHIFT;
+		// [PID] numentries : 0x2F0
+		// [dCA] numentries : 0x2F0
+		// [iCA] numentries : 0x2F0
 		numentries <<= 20 - PAGE_SHIFT;
+		// [PID] numentries : 0x2F000
+		// [dCA] numentries : 0x2F000
+		// [dCA] numentries : 0x2F000
 
 		/* limit to 1 bucket per 2^scale bytes of low memory */
+		// [PID] scale : ( 18 > 12)
+		// [dCA] scale : ( 13 > 12)
+		// [iCA] scale : ( 14 > 12)
 		if (scale > PAGE_SHIFT)
 			numentries >>= (scale - PAGE_SHIFT);
+		// [PID] numentries >>= (scale : 18 - PAGE_SHIFT :12);
+		// [PID] numentries : 0xBC0 : 0x2F000 >> 6: 
+		// [dCA] numentries >>= (scale : 13 - PAGE_SHIFT :12);
+		// [dCA] numentries : 0x17800 : 0x2F000 >> 1: 
+		// [iCA] numentries >>= (scale : 14 - PAGE_SHIFT :12);
+		// [iCA] numentries : 0xBC00 : 0x2F000 >> 2: 
 		else
 			numentries <<= (PAGE_SHIFT - scale);
 
 		/* Make sure we've got at least a 0-order allocation.. */
+		// [PID] unlikely (0x00000002) : flags : 0x00000003 & HASH_SMALL 0x00000002
+		// [dCA] unlikely (0x00000001) : flags : 0x00000003 & HASH_SMALL 0x00000002
+		// [iCA] unlikely (0x00000001) : flags : 0x00000003 & HASH_SMALL 0x00000002
 		if (unlikely(flags & HASH_SMALL)) {
 			/* Makes no sense without HASH_EARLY */
+		        // [PID] flags : 0x00000003 & HASH_EARLY : 0x00000001
 			WARN_ON(!(flags & HASH_EARLY));
+			// [PID] numentries : 0xBC : 0xBC0 >> 4 
 			if (!(numentries >> *_hash_shift)) {
 				numentries = 1UL << *_hash_shift;
 				BUG_ON(!numentries);
 			}
 		} else if (unlikely((numentries * bucketsize) < PAGE_SIZE))
+		  // [dCA] unlikely( 0x5E000 : (0x17800 * 4) < 0x1000)
+ 		  // [iCA] unlikely( 0x2F000 : (0xBC00 * 4) < 0x1000)
 			numentries = PAGE_SIZE / bucketsize;
 	}
+	// [PID] numentries : 0xBC0 : 3008  
+	// [dCA] numentries : 0x17800 : 96256
+	// [iCA] numentries : 0xBC00 : 48128	
 	numentries = roundup_pow_of_two(numentries);
-
+	// [PID] numentries : 4096
+	// [dCA] numentries : 131072
+	// [iCA] numentries : 65536
+	
 	/* limit allocation size to 1/16 total memory by default */
+	// [PID] max : 4096 
+	// [dCA] max : 0
+	// [iCA] max : 0
 	if (max == 0) {
 		max = ((unsigned long long)nr_all_pages << PAGE_SHIFT) >> 4;
+		// max = ( nr_all_pages : 0x7EA000 : 0x7EA0000 >> 4 : 0x7EA00  << 12) >> 4
+		// max : 0x7EA000, bucketsize : 4
 		do_div(max, bucketsize);
+		// max : 0x1FA800
 	}
+	// [PID] max : 4096 : min(4096, 0x80000000ULL)
+	// [dCA] max : 0x1FA800 : min(0x1FA800, 0x80000000ULL)
+	// [iCA] max : 0x1FA800 : min(0x1FA800, 0x80000000ULL)
 	max = min(max, 0x80000000ULL);
 
+	// [PID] numentries :   4096 < 0
+	// [dCA] numentries : 131072 < 0
+	// [iCA] numentries :  65536 < 0
 	if (numentries < low_limit)
 		numentries = low_limit;
+ 	// [PID] numentries :   4096 >    4096
+	// [dCA] numentries : 131072 > 2074624 : 0x1FA800
+	// [iCA] numentries :  65536 > 2074624 : 0x1FA800
 	if (numentries > max)
 		numentries = max;
 
 	log2qty = ilog2(numentries);
-
+	// [PID] log2qty : 12 : ilog2(4096)
+	// [dCA] log2qty : 17 : ilog2(131072)
+	// [iCA] log2qty : 16 : ilog2(65536)
+	
 	do {
 		size = bucketsize << log2qty;
+		// [PID] size =  0x4000 (16kB) :4 << 12
+		// [dCA] size =  0x80000 (512kB) : 4 << 17
+		// [iCA] size =  0x40000 (256kB) : 4 << 16
+
+		// [PID] 0x00000001 : flags : 0x00000003 & HASH_EARLY : 0x00000001
+		// [dCA] 0x00000001 : flags : 0x00000001 & HASH_EARLY : 0x00000001 
+		// [iCA] 0x00000001 : flags : 0x00000001 & HASH_EARLY : 0x00000001 
 		if (flags & HASH_EARLY)
+		// [PID] size : 0x4000 (16kB)
+  		// [dCA] size : 0x80000 (512kB)
+  		// [iCA] size : 0x40000 (256kB)
+
 			table = alloc_bootmem_nopanic(size);
+		// [PID] table : 16kB만큼 할당받은 메모리 주소
+		// [dCA] table : 512kB만큼 할당받은 메모리 주소		
+		// [iCA] table : 256kB만큼 할당받은 메모리 주소		
 		else if (hashdist)
 			table = __vmalloc(size, GFP_ATOMIC, PAGE_KERNEL);
 		else {
@@ -6188,7 +6291,7 @@ void *__init alloc_large_system_hash(const char *tablename,
 			}
 		}
 	} while (!table && size > PAGE_SIZE && --log2qty);
-
+    
 	if (!table)
 		panic("Failed to allocate %s hash table\n", tablename);
 
@@ -6197,10 +6300,18 @@ void *__init alloc_large_system_hash(const char *tablename,
 	       (1UL << log2qty),
 	       ilog2(size) - PAGE_SHIFT,
 	       size);
-
+	// [PID] PID hash table entries: 4096 (order: 0, 4096 bytes)
+	// [dCA] Dentry cache hash table entries: 131072 (order: 0, 512kB bytes)
+	// [iCA] Inode-cache hash table entries: 65536 (order: 0, 256kB bytes)	
 	if (_hash_shift)
 		*_hash_shift = log2qty;
+	// [PID] *_hash_shift : 12
+	// [PID] _hash_mask : NULL 이므로 if문은 패스
+	// [dCA]  *_hash_shift : 17
+	// [iCA]  *_hash_shift : 16
 	if (_hash_mask)
+	  // [dCA] *_hash_mask : (131071) 0x1FFFF : (1 << 17 ) - 1 
+	  // [iCA] *_hash_mask : (65535) 0xFFFF : (1 << 16 ) - 1 
 		*_hash_mask = (1 << log2qty) - 1;
 
 	return table;

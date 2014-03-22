@@ -101,7 +101,8 @@
 	} while (0)
 
 
- // ARM10C 20130907 
+// ARM10C 20130907 
+// ARM10C 20130322
 #define local_irq_restore(flags)			\
 	do {						\
 		if (raw_irqs_disabled_flags(flags)) {/*irq가 disabled 인가?*/	\

@@ -128,7 +128,9 @@ extern void *__alloc_bootmem_low_node(pg_data_t *pgdat,
 	__alloc_bootmem(x, SMP_CACHE_BYTES, BOOTMEM_LOW_LIMIT)
 #define alloc_bootmem_align(x, align) \
 	__alloc_bootmem(x, align, BOOTMEM_LOW_LIMIT)
-#define alloc_bootmem_nopanic(x) \
+// ARM10C 20140322
+// size : 0x4000 (16kB)
+#define alloc_bootmem_nopanic(x)					\
 	__alloc_bootmem_nopanic(x, SMP_CACHE_BYTES, BOOTMEM_LOW_LIMIT)
 #define alloc_bootmem_pages(x) \
 	__alloc_bootmem(x, PAGE_SIZE, BOOTMEM_LOW_LIMIT)
@@ -186,6 +188,7 @@ extern void *alloc_large_system_hash(const char *tablename,
 #if defined(CONFIG_NUMA) && defined(CONFIG_64BIT)
 #define HASHDIST_DEFAULT 1
 #else
+// ARM10C 20140322
 #define HASHDIST_DEFAULT 0
 #endif
 extern int hashdist;		/* Distribute hashes across NUMA nodes? */

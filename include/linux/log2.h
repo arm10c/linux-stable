@@ -61,6 +61,8 @@ bool is_power_of_2(unsigned long n)
 // ARM10C 20140301
 // __roundup_pow_of_two(32)
 static inline __attribute__((const))
+// ARM10C 20140322
+// __roundup_pow_of_two(3008) : 4096
 unsigned long __roundup_pow_of_two(unsigned long n)
 {
 	// n: 32
@@ -90,6 +92,9 @@ unsigned long __rounddown_pow_of_two(unsigned long n)
  *
  * selects the appropriately-sized optimised version depending on sizeof(n)
  */
+// ARM10C 20140322
+// n: 4096 , retrun 12
+// n: 2074624, return 20
 #define ilog2(n)				\
 (						\
 	__builtin_constant_p(n) ? (		\
@@ -175,6 +180,12 @@ unsigned long __rounddown_pow_of_two(unsigned long n)
  */
 // ARM10C 20140301
 // roundup_pow_of_two(32)
+// ARM10C 20140322
+// numentries : 0xBC0 : 3008
+// return : 4096
+// ARM10C 20140322
+// [dCA] numentries : 0x17800 : 96256
+// return : 131072
 #define roundup_pow_of_two(n)			\
 (						\
 	__builtin_constant_p(n) ? (		\

@@ -106,7 +106,8 @@ static inline __printf(1, 2) __cold
 void early_printk(const char *s, ...) { }
 #endif
 
-#ifdef CONFIG_PRINTK
+// ARM10C 20140322
+#ifdef CONFIG_PRINTK // CONFIG_PRINGK =y
 asmlinkage __printf(5, 0)
 int vprintk_emit(int facility, int level,
 		 const char *dict, size_t dictlen,

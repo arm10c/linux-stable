@@ -1739,6 +1739,7 @@ __setup("ihash_entries=", set_ihash_entries);
 /*
  * Initialize the waitqueues and inode hash table.
  */
+// ARM10C 20140322
 void __init inode_init_early(void)
 {
 	unsigned int loop;
@@ -1759,6 +1760,9 @@ void __init inode_init_early(void)
 					&i_hash_mask,
 					0,
 					0);
+	// 256kB만큼 Dentry cache용 메모리를 할당받고, hash 크기는 65536
+
+	// i_hash_shift : 16
 
 	for (loop = 0; loop < (1U << i_hash_shift); loop++)
 		INIT_HLIST_HEAD(&inode_hashtable[loop]);

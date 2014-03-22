@@ -34,6 +34,7 @@
 
 asmlinkage void preempt_schedule(void);
 
+// ARM10C 20130322
 #define preempt_check_resched() /*ARM10C this*/ \
 do { \
 	if (unlikely(test_thread_flag(TIF_NEED_RESCHED))) \
@@ -84,7 +85,8 @@ do { \
 #define preempt_enable_no_resched()	sched_preempt_enable_no_resched()
 
 // ARM10C 20140125
-#define preempt_enable() /*ARM10C this*/ \
+// ARM10C 20140322
+#define preempt_enable() /*ARM10C this*/	\
 do { \
 	preempt_enable_no_resched(); \
 	barrier(); \

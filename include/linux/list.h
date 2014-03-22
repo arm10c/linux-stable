@@ -235,6 +235,8 @@ static inline int list_is_last(const struct list_head *list,
  */
 // ARM10C 20140315
 // &waiter->list
+// ARM10C 20130322
+// ARM10C 20140322
 static inline int list_empty(const struct list_head *head)
 {
 	// head->next: waiter->list->next, head: waiter->list
@@ -402,7 +404,8 @@ static inline void list_splice_tail_init(struct list_head *list,
  * @member:	the name of the list_struct within the struct.
  */
 // ARM10C 20131130
-#define list_entry(ptr, type, member) \
+// ARM10C 20140322
+#define list_entry(ptr, type, member)		\
 	container_of(ptr, type, member)
 
 /**

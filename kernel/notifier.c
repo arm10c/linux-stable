@@ -18,6 +18,9 @@ BLOCKING_NOTIFIER_HEAD(reboot_notifier_list);
  *	are layered on top of these, with appropriate locking added.
  */
 
+// ARM10C 20140322
+// *nl : &cpu_chain : notifier_block->head : 초기화
+// n: page_alloc_cpu_notify_nb
 static int notifier_chain_register(struct notifier_block **nl,
 		struct notifier_block *n)
 {
@@ -27,7 +30,9 @@ static int notifier_chain_register(struct notifier_block **nl,
 		nl = &((*nl)->next);
 	}
 	n->next = *nl;
+	// page_alloc_cpu_notifier_nb->next : notifier_block->head
 	rcu_assign_pointer(*nl, n);
+	// notifirer_block : page_alloc_cpu_notifier 포인터 대입
 	return 0;
 }
 
@@ -341,10 +346,14 @@ EXPORT_SYMBOL_GPL(blocking_notifier_call_chain);
  *
  *	Currently always returns zero.
  */
+// ARM10C 20140322
+// *nh : &cpu_chain : notifier_block->head : 초기화
+// n: page_alloc_cpu_nitify_nb
 int raw_notifier_chain_register(struct raw_notifier_head *nh,
 		struct notifier_block *n)
 {
 	return notifier_chain_register(&nh->head, n);
+	// *nh는 n의 포인터를 대입함 
 }
 EXPORT_SYMBOL_GPL(raw_notifier_chain_register);
 

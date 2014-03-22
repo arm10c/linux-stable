@@ -109,6 +109,8 @@ static inline int __test_and_change_bit(int nr,
  */
 // ARM10C 20140301
 // test_bit(0, cpu_possible_mask->bits)
+// ARM10C 20130322
+// nr : 1 , *addr : current_thread_info()
 static inline int test_bit(int nr, const volatile unsigned long *addr)
 {
 	// nr: 0, BIT_WORD(0): 0, addr[0]: cpu_possible_mask->bits[0]: 0xF

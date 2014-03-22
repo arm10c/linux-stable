@@ -108,7 +108,9 @@ void __sched mutex_lock(struct mutex *lock)
 	 */
 	// lock->count: cpu_add_remove_lock->count: 1
 	__mutex_fastpath_lock(&lock->count, __mutex_lock_slowpath);
+	// __mutex_fastpath_lock : 0이 리턴됨
 	mutex_set_owner(lock);
+	// __mutex_lock_common에서 했던것을 왜 또할까? FIX_ME! (20140322)
 }
 
 EXPORT_SYMBOL(mutex_lock);
@@ -245,13 +247,14 @@ static __used noinline void __sched __mutex_unlock_slowpath(atomic_t *lock_count
  *
  * This function is similar to (but not equivalent to) up().
  */
+// ARM10C 20140322
 void __sched mutex_unlock(struct mutex *lock)
 {
 	/*
 	 * The unlocking fastpath is the 0->1 transition from 'locked'
 	 * into 'unlocked' state:
 	 */
-#ifndef CONFIG_DEBUG_MUTEXES
+#ifndef CONFIG_DEBUG_MUTEXES // CONFIG_DEBUG_MUTEXES = y
 	/*
 	 * When debugging is enabled we must not clear the owner before time,
 	 * the slow path will always be taken, and that clears the owner field
@@ -600,7 +603,7 @@ slowpath:
 		__set_task_state(task, state);
 
 		/* didn't get the lock, go to sleep: */
-		spin_unlock_mutex(&lock->wait_lock, flags);
+				spin_unlock_mutex(&lock->wait_lock, flags);
 		schedule_preempt_disabled();
 		spin_lock_mutex(&lock->wait_lock, flags);
 	}
@@ -621,6 +624,9 @@ done:
 	
 	// ww_ctx: NULL
 	// __builtin_constant_p(NULL == NULL): 0, NULL == NULL: 상수므로: 0이되어 패스
+	// ARM10C 20130322
+	// 3.11 커널에 추가된 이 코드는 __builtin_contant_p()에 대한 컴파일 논쟁이 있었다.
+	// 자세한 공유 문서를 참조, 여기서는 if문이 실행되지 않고 패스한다. 
 	if (!__builtin_constant_p(ww_ctx == NULL)) {
 		struct ww_mutex *ww = container_of(lock,
 						      struct ww_mutex,
@@ -645,16 +651,21 @@ done:
 			wake_up_process(cur->task);
 		}
 	}
-
+       
 // 2014/03/15 종료
-
+// 2014/03/22 시작
 	/* set it to 0 if there are no waiters left: */
 	if (likely(list_empty(&lock->wait_list)))
 		atomic_set(&lock->count, 0);
+	// cpu_add_remove_lock->wait_list 는
+	// mutex_remove_waiter(lock, &waiter, current_thread_info())에서
+	// list를 초기화했기 때문에 count는 0으로 만든다. 
 
 	spin_unlock_mutex(&lock->wait_lock, flags);
-
+	// spin unlock을 함
+	
 	debug_mutex_free_waiter(&waiter);
+	// waiter 리스트가 값이 있는지 확인하고 없다면 free시킨다. 
 	preempt_enable();
 
 	return 0;
@@ -770,33 +781,44 @@ EXPORT_SYMBOL_GPL(__ww_mutex_lock_interruptible);
 /*
  * Release the lock, slowpath:
  */
+// ARM10C 20140322
 static inline void
 __mutex_unlock_common_slowpath(atomic_t *lock_count, int nested)
 {
 	struct mutex *lock = container_of(lock_count, struct mutex, count);
+	// container_of mutex 구조체의 주소를 시작 주소를 뽑아낸다.
 	unsigned long flags;
 
 	spin_lock_mutex(&lock->wait_lock, flags);
+	// flags에 CPSR을 저장했고 &cpu_add_remove_lock->wait_lock->rlock.raw_lock에 spinlock 설정
+
 	mutex_release(&lock->dep_map, nested, _RET_IP_);
+	// null function
 	debug_mutex_unlock(lock);
+	// lock->owner : NULL 로 설정
 
 	/*
 	 * some architectures leave the lock unlocked in the fastpath failure
 	 * case, others need to leave it locked. In the later case we have to
 	 * unlock it here
 	 */
+	// __mutex_slowpath_needs_to_unlock() : 1
 	if (__mutex_slowpath_needs_to_unlock())
 		atomic_set(&lock->count, 1);
+	// lock->count :1 로 설정
 
 	if (!list_empty(&lock->wait_list)) {
+	  // 20140322 : 지금은 lock->wait_list가 NULL이므로 if문은 실행안함
 		/* get the first entry from the wait-list: */
 		struct mutex_waiter *waiter =
 				list_entry(lock->wait_list.next,
 					   struct mutex_waiter, list);
+		// *waiter : mutext_waiter 구조체의 주소 
 
 		debug_mutex_wake_waiter(lock, waiter);
-
+		// mutex를 기다리는 것이 있으면 깨운다. 
 		wake_up_process(waiter->task);
+		// mutex를 기다리는 task를 깨운다. 
 	}
 
 	spin_unlock_mutex(&lock->wait_lock, flags);
@@ -805,6 +827,7 @@ __mutex_unlock_common_slowpath(atomic_t *lock_count, int nested)
 /*
  * Release the lock, slowpath:
  */
+// ARM10C 20140322
 static __used noinline void
 __mutex_unlock_slowpath(atomic_t *lock_count)
 {
@@ -893,7 +916,7 @@ __mutex_lock_interruptible_slowpath(struct mutex *lock)
 }
 
 static noinline int __sched
-__ww_mutex_lock_slowpath(struct ww_mutex *lock, struct ww_acquire_ctx *ctx)
+__ww_mutex_lock_slowpath(struct wwu_mutex *lock, struct ww_acquire_ctx *ctx)
 {
 	return __mutex_lock_common(&lock->base, TASK_UNINTERRUPTIBLE, 0,
 				   NULL, _RET_IP_, ctx);

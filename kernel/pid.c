@@ -41,6 +41,8 @@
 
 #define pid_hashfn(nr, ns)	\
 	hash_long((unsigned long)nr + (unsigned long)ns, pidhash_shift)
+// ARM10C 20140322
+// sizeof(*pig_hash) : 4
 static struct hlist_head *pid_hash;
 static unsigned int pidhash_shift = 4;
 struct pid init_struct_pid = INIT_STRUCT_PID;
@@ -561,6 +563,7 @@ struct pid *find_ge_pid(int nr, struct pid_namespace *ns)
  * machine.  From a minimum of 16 slots up to 4096 slots at one gigabyte or
  * more.
  */
+// ARM10C 20140322
 void __init pidhash_init(void)
 {
 	unsigned int i, pidhash_size;
@@ -569,10 +572,13 @@ void __init pidhash_init(void)
 					   HASH_EARLY | HASH_SMALL,
 					   &pidhash_shift, NULL,
 					   0, 4096);
+	// hash를 16kB만큼 할당 받고, &pidhash_shift 가 12로 변경됨
 	pidhash_size = 1U << pidhash_shift;
-
+	// pidhash_size : 4096 : 1 << 12
+	
 	for (i = 0; i < pidhash_size; i++)
 		INIT_HLIST_HEAD(&pid_hash[i]);
+	// 4096개의 hash 리스트를 만듬
 }
 
 void __init pidmap_init(void)

@@ -531,6 +531,7 @@ static inline void print_irqtrace_events(struct task_struct *curr)
 # define mutex_acquire(l, s, t, i)		do { } while (0)
 // ARM10C 20140315
 # define mutex_acquire_nest(l, s, t, n, i)	do { } while (0)
+// ARM10C 20140322
 # define mutex_release(l, n, i)			do { } while (0)
 #endif
 

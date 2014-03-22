@@ -59,6 +59,7 @@
 #define smp_mb()	dmb()	// ARM10C this 
 #define smp_rmb()	dmb()
 // ARM10C 20140308
+// ARM10C 20140322
 #define smp_wmb()	dmb()
 #endif
 

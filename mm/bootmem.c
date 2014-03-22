@@ -841,6 +841,7 @@ restart:
  *
  * Returns NULL on failure.
  */
+// ARM10C 20140322
 void * __init __alloc_bootmem_nopanic(unsigned long size, unsigned long align,
 					unsigned long goal)
 {

@@ -7,6 +7,7 @@
 # define __user		__attribute__((noderef, address_space(1)))
 # define __kernel	__attribute__((address_space(0)))
 # define __safe		__attribute__((safe))
+// ARM10C 20140322
 # define __force	__attribute__((force))
 # define __nocast	__attribute__((nocast))
 # define __iomem	__attribute__((noderef, address_space(2)))
@@ -20,6 +21,7 @@
 #ifdef CONFIG_SPARSE_RCU_POINTER /* CONFIG_SPARSE_RCU_POINT = n */
 # define __rcu		__attribute__((noderef, address_space(4)))
 #else
+// ARM10C 20140322
 # define __rcu
 #endif
 extern void __chk_user_ptr(const volatile void __user *);

@@ -54,11 +54,13 @@ void cpu_maps_update_begin(void)
 	mutex_lock(&cpu_add_remove_lock);
 }
 
+// ARM10C 20140322
 void cpu_maps_update_done(void)
 {
 	mutex_unlock(&cpu_add_remove_lock);
 }
 
+// ARM10C 20140322
 static RAW_NOTIFIER_HEAD(cpu_chain);
 
 /* If set, cpu_up and cpu_down will return -EBUSY and do nothing.
@@ -185,8 +187,11 @@ int __ref register_cpu_notifier(struct notifier_block *nb)
 {
 	int ret;
 	cpu_maps_update_begin();
+	// &cpu_chain : notifier_block->head : 초기화
 	ret = raw_notifier_chain_register(&cpu_chain, nb);
+	// cpu_chain->head : page_alloc_cpu_notify_nb->next 포인터 대입
 	cpu_maps_update_done();
+	// mutex를 기다리는(waiter)가 있으면 깨우고 아니면 mutex unlock한다. 
 	return ret;
 }
 

@@ -2994,6 +2994,7 @@ static int __init set_dhash_entries(char *str)
 }
 __setup("dhash_entries=", set_dhash_entries);
 
+// ARM10C 20140322
 static void __init dcache_init_early(void)
 {
 	unsigned int loop;
@@ -3003,7 +3004,8 @@ static void __init dcache_init_early(void)
 	 */
 	if (hashdist)
 		return;
-
+	// hashdist : HASHDIST_DEFAULT : 0
+	
 	dentry_hashtable =
 		alloc_large_system_hash("Dentry cache",
 					sizeof(struct hlist_bl_head),
@@ -3014,9 +3016,12 @@ static void __init dcache_init_early(void)
 					&d_hash_mask,
 					0,
 					0);
+	// 512kB만큼 Dentry cache용 메모리를 할당받고, hash 크기는 131072
 
+	// d_hash_shift : 17 
 	for (loop = 0; loop < (1U << d_hash_shift); loop++)
 		INIT_HLIST_BL_HEAD(dentry_hashtable + loop);
+	// 128k만큼 hash를 만들었다. 총 hash크기는 512kB이다. 
 }
 
 static void __init dcache_init(void)
@@ -3056,10 +3061,13 @@ EXPORT_SYMBOL(names_cachep);
 
 EXPORT_SYMBOL(d_genocide);
 
+// ARM10C 20140322
 void __init vfs_caches_init_early(void)
 {
 	dcache_init_early();
+	// 128k만큼 hash를 만들었다. 총 hash크기는 512kB이다. 
 	inode_init_early();
+	// 64kB만큼 hash를 만들었다. 총 hash크기는 256kB이다. 
 }
 
 void __init vfs_caches_init(unsigned long mempages)

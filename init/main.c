@@ -430,6 +430,7 @@ void __init parse_early_options(char *cmdline)
 
 /* Arch code calls this early on, or if not, just before other parsing. */
 // ARM10C 20131019
+// ARM10C 20140322
 void __init parse_early_param(void)
 {
 	static __initdata int done = 0;
@@ -574,21 +575,26 @@ asmlinkage void __init start_kernel(void)
 // 2014/03/15 시작
 
 	page_alloc_init();
+	// cpu_chain에 page_alloc_cpu_notify를 연결함 (mutex lock/unlock 사용) 
 
 	pr_notice("Kernel command line: %s\n", boot_command_line);
+	// "Kernel command line : console=ttySAC2,115200 init=/linuxrc "
 	parse_early_param();
 	parse_args("Booting kernel", static_command_line, __start___param,
 		   __stop___param - __start___param,
 		   -1, -1, &unknown_bootoption);
 
 	jump_label_init();
+	// HAVE_JUMP_LABEL 이 undefined 이므로 NULL 함수
 
 	/*
 	 * These use large bootmem allocations and must precede
 	 * kmem_cache_init()
 	 */
 	setup_log_buf(0);
+	// early_param 에서 호출했던 buf가 있다면 크기를 0으로 만듬
 	pidhash_init();
+	// pidhash의 크기를 16kB만큼 할당 받고 4096개의 hash list를 만듬
 	vfs_caches_init_early();
 	sort_main_extable();
 	trap_init();

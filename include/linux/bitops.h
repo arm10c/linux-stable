@@ -169,6 +169,8 @@ static inline __s32 sign_extend32(__u32 value, int index)
 // ARM10C 20140301
 // fls_long(31)
 // fls_long(10)
+// ARM10C 20140322
+// fls_long(3008) : 4096
 static inline unsigned fls_long(unsigned long l)
 {
 	if (sizeof(l) == 4)

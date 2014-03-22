@@ -552,7 +552,17 @@ static inline void rcu_preempt_sleep_check(void)
 		smp_read_barrier_depends(); \
 		(_________p1); \
 	})
-#define __rcu_assign_pointer(p, v, space) \
+// ARM10C 20140322
+// p : &cpu_chain : notifier_block->head : 초기화
+// v : page_alloc_cpu_nitify_nb
+//#define __rcu_assign_pointer(p, v, space)	\
+//	do {					       \
+// 		smp_wmb();			       \
+//              // dmb();
+// 		(p) = (typeof(*v) __force space *)(v); \
+// 	} while (0)
+// 
+#define __rcu_assign_pointer(p, v, space)	\
 	do { \
 		smp_wmb(); \
 		(p) = (typeof(*v) __force space *)(v); \
@@ -916,7 +926,10 @@ static inline notrace void rcu_read_unlock_sched_notrace(void)
  * impossible-to-diagnose memory corruption.  So please be careful.
  * See the RCU_INIT_POINTER() comment header for details.
  */
-#define rcu_assign_pointer(p, v) \
+// ARM10C 20140322
+// p : &cpu_chain : notifier_block->head : 초기화
+// v : page_alloc_cpu_nitify_nb
+#define rcu_assign_pointer(p, v)		\
 	__rcu_assign_pointer((p), (v), __rcu)
 
 /**

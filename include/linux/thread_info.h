@@ -89,6 +89,8 @@ static inline int test_and_clear_ti_thread_flag(struct thread_info *ti, int flag
 }
 
 // ARM10C 20130907 
+// ARM10C 20130322
+// *ti : current_thread_info(), flag : 1
 static inline int test_ti_thread_flag(struct thread_info *ti, int flag)
 {
 	return test_bit(flag, (unsigned long *)&ti->flags);
@@ -102,7 +104,8 @@ static inline int test_ti_thread_flag(struct thread_info *ti, int flag)
 	test_and_set_ti_thread_flag(current_thread_info(), flag)
 #define test_and_clear_thread_flag(flag) \
 	test_and_clear_ti_thread_flag(current_thread_info(), flag)
-#define test_thread_flag(flag) \
+// ARM10C 20130322
+#define test_thread_flag(flag)					\
 	test_ti_thread_flag(current_thread_info(), flag)
 
 #define set_need_resched()	set_thread_flag(TIF_NEED_RESCHED)

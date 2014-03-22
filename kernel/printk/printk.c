@@ -748,6 +748,8 @@ static int __init log_buf_len_setup(char *str)
 }
 early_param("log_buf_len", log_buf_len_setup);
 
+// ARM10C 20140322
+// early : 0
 void __init setup_log_buf(int early)
 {
 	unsigned long flags;
@@ -755,6 +757,7 @@ void __init setup_log_buf(int early)
 	int free;
 
 	if (!new_log_buf_len)
+	  // new_log_buf_len : null 이므로 retrun함 
 		return;
 
 	if (early) {

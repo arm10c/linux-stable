@@ -45,6 +45,7 @@ void debug_mutex_wake_waiter(struct mutex *lock, struct mutex_waiter *waiter)
 	DEBUG_LOCKS_WARN_ON(list_empty(&waiter->list));
 }
 
+// ARM10C 20130322
 void debug_mutex_free_waiter(struct mutex_waiter *waiter)
 {
 	DEBUG_LOCKS_WARN_ON(!list_empty(&waiter->list));
@@ -95,8 +96,10 @@ void mutex_remove_waiter(struct mutex *lock, struct mutex_waiter *waiter,
 	// waiter->task: NULL
 }
 
+// ARM10C 20140322
 void debug_mutex_unlock(struct mutex *lock)
 {
+        // debug_locks : 1
 	if (unlikely(!debug_locks))
 		return;
 
@@ -104,6 +107,7 @@ void debug_mutex_unlock(struct mutex *lock)
 	DEBUG_LOCKS_WARN_ON(lock->owner != current);
 	DEBUG_LOCKS_WARN_ON(!lock->wait_list.prev && !lock->wait_list.next);
 	mutex_clear_owner(lock);
+	// lock->owner : NULL 로 설정
 }
 
 void debug_mutex_init(struct mutex *lock, const char *name,

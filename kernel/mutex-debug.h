@@ -29,6 +29,8 @@ extern void debug_mutex_init(struct mutex *lock, const char *name,
 
 // ARM10C 20140315
 // lock: cpu_add_remove_lock
+// ARM10C 20140322
+// lock: cpu_add_remove_lock
 static inline void mutex_set_owner(struct mutex *lock)
 {
 	// lock->owner: cpu_add_remove_lock->owner, current: init_task
@@ -36,6 +38,7 @@ static inline void mutex_set_owner(struct mutex *lock)
 	// cpu_add_remove_lock->owner: init_task
 }
 
+// ARM10C 20140322
 static inline void mutex_clear_owner(struct mutex *lock)
 {
 	lock->owner = NULL;
@@ -44,6 +47,8 @@ static inline void mutex_clear_owner(struct mutex *lock)
 // lock->wait_lock: cpu_add_remove_lock->wait_lock, flags
 // in_interrupt(): 0, local_irq_save(flags): flags에 CPSR값을 저장
 // flags에 CPSR을 저장했고 &cpu_add_remove_lock->wait_lock->rlock.raw_lock에 spinlock 설정
+// ARM10C 20140322
+// lock : &lock->wait_lock, flags : flags
 #define spin_lock_mutex(lock, flags)			\
 	do {						\
 		struct mutex *l = container_of(lock, struct mutex, wait_lock); \
@@ -54,6 +59,12 @@ static inline void mutex_clear_owner(struct mutex *lock)
 		DEBUG_LOCKS_WARN_ON(l->magic != l);	\
 	} while (0)
 
+// ARM10C 20130322
+// &lock->wait_lock : cpu_add_remove_lock->wait_lock, flags
+// lock  : cpu_add_remove_lock->wait_lock
+// flags : spin_lock_mutex(&lock->wait_lock, flags);에서 저장했던 CPSR값
+// ARM10C 20140322
+// lock : &lock->wait_lock, flags : flags
 #define spin_unlock_mutex(lock, flags)				\
 	do {							\
 		arch_spin_unlock(&(lock)->rlock.raw_lock);	\
