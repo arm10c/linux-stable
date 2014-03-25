@@ -35,6 +35,7 @@
 asmlinkage void preempt_schedule(void);
 
 // ARM10C 20130322
+// TIF_NEED_RESCHED: 1
 #define preempt_check_resched() /*ARM10C this*/ \
 do { \
 	if (unlikely(test_thread_flag(TIF_NEED_RESCHED))) \

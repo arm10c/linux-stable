@@ -28,7 +28,7 @@
  * Must be called with lock->wait_lock held.
  */
 // ARM10C 20140315
-// lock: cpu_add_remove_lock, waiter
+// lock: &cpu_add_remove_lock, waiter
 void debug_mutex_lock_common(struct mutex *lock, struct mutex_waiter *waiter)
 {
 	// MUTEX_DEBUG_INIT: 0x11, sizeof(*waiter): 16
@@ -48,20 +48,23 @@ void debug_mutex_wake_waiter(struct mutex *lock, struct mutex_waiter *waiter)
 // ARM10C 20130322
 void debug_mutex_free_waiter(struct mutex_waiter *waiter)
 {
+	// list_empty(&waiter->list): 1
 	DEBUG_LOCKS_WARN_ON(!list_empty(&waiter->list));
+
+	// MUTEX_DEBUG_FREE: 0x22, sizeof(*waiter): 16
 	memset(waiter, MUTEX_DEBUG_FREE, sizeof(*waiter));
 }
 
 // ARM10C 20140315
-// lock: cpu_add_remove_lock, &waiter,
+// lock: &cpu_add_remove_lock, &waiter,
 // task_thread_info(init_task): ((struct thread_info *)(init_task)->stack)
 //
 // ((struct thread_info *)(init_task)->stack): &init_thread_info
 void debug_mutex_add_waiter(struct mutex *lock, struct mutex_waiter *waiter,
 			    struct thread_info *ti)
 {
-	// lock->wait_lock: cpu_add_remove_lock->wait_lock
-        // spin_is_locked(&cpu_add_remove_lock->wait_lock): 1
+	// lock->wait_lock: (&cpu_add_remove_lock)->wait_lock
+        // spin_is_locked(&(&cpu_add_remove_lock)->wait_lock): 1
 	SMP_DEBUG_LOCKS_WARN_ON(!spin_is_locked(&lock->wait_lock));
 
 	/* Meark the current thread as blocked on the lock: */
@@ -71,7 +74,7 @@ void debug_mutex_add_waiter(struct mutex *lock, struct mutex_waiter *waiter,
 }
 
 // ARM10C 20140315
-// lock: cpu_add_remove_lock, &waiter, current_thread_info(): init_thread_info	
+// lock: &cpu_add_remove_lock, &waiter, current_thread_info(): init_thread_info	
 void mutex_remove_waiter(struct mutex *lock, struct mutex_waiter *waiter,
 			 struct thread_info *ti)
 {
@@ -97,17 +100,27 @@ void mutex_remove_waiter(struct mutex *lock, struct mutex_waiter *waiter,
 }
 
 // ARM10C 20140322
+// lock: &cpu_add_remove_lock
 void debug_mutex_unlock(struct mutex *lock)
 {
-        // debug_locks : 1
+        // debug_locks: 1
 	if (unlikely(!debug_locks))
 		return;
 
+	// lock->magic: (&cpu_add_remove_lock)->magic: &cpu_add_remove_lock,
+	// lock: &cpu_add_remove_lock
 	DEBUG_LOCKS_WARN_ON(lock->magic != lock);
+
+	// lock->owner: (&cpu_add_remove_lock)->owner: init_task, current: init_task
 	DEBUG_LOCKS_WARN_ON(lock->owner != current);
+
+	// lock->wait_list.prev: (&cpu_add_remove_lock)->wait_list.prev: &(cpu_add_remove_lock.wait_list),
+	// lock->wait_list.next: (&cpu_add_remove_lock)->wait_list.next: &(cpu_add_remove_lock.wait_list)
 	DEBUG_LOCKS_WARN_ON(!lock->wait_list.prev && !lock->wait_list.next);
+
+	// lock: &cpu_add_remove_lock
 	mutex_clear_owner(lock);
-	// lock->owner : NULL 로 설정
+	// lock->owner: (&cpu_add_remove_lock)->owner: NULL 로 설정
 }
 
 void debug_mutex_init(struct mutex *lock, const char *name,

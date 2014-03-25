@@ -153,18 +153,18 @@ static inline int arch_spin_trylock(arch_spinlock_t *lock)
 // ARM10C 20130322
 static inline void arch_spin_unlock(arch_spinlock_t *lock)
 {
-	smp_mb();   // ARM10C smb_mb(), dsb_sev() 중 dsb()는 owner를 보호하기위한 것 
+	smp_mb(); // smb_mb(), dsb_sev() 중 dsb()는 owner를 보호하기위한 것
 	lock->tickets.owner++;
-	dsb_sev(); // ARM10C 이벤트발생
+	dsb_sev(); // 이벤트발생
 }
 
 // ARM10C 20140315
-// arch_spin_is_locked(&cpu_add_remove_lock->wait_lock->rlock->raw_lock)
+// arch_spin_is_locked(&(&(&(&cpu_add_remove_lock)->wait_lock)->rlock)->raw_lock)
 static inline int arch_spin_is_locked(arch_spinlock_t *lock)
 {
-	// lock->tickets: cpu_add_remove_lock->wait_lock->rlock->raw_lock->tickets
-        // ACCESS_ONCE(cpu_add_remove_lock->wait_lock->rlock->raw_lock->tickets):
-	// (*(volatile struct __raw_tickets *)&(cpu_add_remove_lock->wait_lock->rlock->raw_lock->tickets))
+	// lock->tickets: (&(&(&(&cpu_add_remove_lock)->wait_lock)->rlock)->raw_lock)->tickets
+        // ACCESS_ONCE((&(&(&(&cpu_add_remove_lock)->wait_lock)->rlock)->raw_lock)->tickets):
+	// (*(volatile struct __raw_tickets *)&((&(&(&(&cpu_add_remove_lock)->wait_lock)->rlock)->raw_lock)->tickets))
 	struct __raw_tickets tickets = ACCESS_ONCE(lock->tickets);
 
 	// tickets.owner: 0, tickets.next: 1

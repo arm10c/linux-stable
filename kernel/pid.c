@@ -42,8 +42,9 @@
 #define pid_hashfn(nr, ns)	\
 	hash_long((unsigned long)nr + (unsigned long)ns, pidhash_shift)
 // ARM10C 20140322
-// sizeof(*pig_hash) : 4
+// sizeof(struct hlist_head): 4 bytes
 static struct hlist_head *pid_hash;
+// ARM10C 20140322
 static unsigned int pidhash_shift = 4;
 struct pid init_struct_pid = INIT_STRUCT_PID;
 
@@ -568,11 +569,14 @@ void __init pidhash_init(void)
 {
 	unsigned int i, pidhash_size;
 
+	// sizeof(*pid_hash): 4, HASH_EARLY: 0x00000001, HASH_SMALL: 0x00000002, pidhash_shift: 4
 	pid_hash = alloc_large_system_hash("PID", sizeof(*pid_hash), 0, 18,
 					   HASH_EARLY | HASH_SMALL,
 					   &pidhash_shift, NULL,
 					   0, 4096);
-	// hash를 16kB만큼 할당 받고, &pidhash_shift 가 12로 변경됨
+	// pid hash를 위한 메모리 공간을 16kB만큼 할당 받고, pidhash_shift 가 12로 변경됨
+
+	// pidhash_shift: 12
 	pidhash_size = 1U << pidhash_shift;
 	// pidhash_size : 4096 : 1 << 12
 	

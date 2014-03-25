@@ -88,6 +88,7 @@ bool parameq(const char *a, const char *b)
 
 // ARM10C 20131019
 // parse_one( param, val, "early options", "NULL, 0, 0, 0, do_early_param);
+// ARM10C 20140322
 static int parse_one(char *param,
 		     char *val,
 		     const char *doing,
@@ -243,6 +244,7 @@ int parse_args(const char *doing,
 }
 
 /* Lazy bastard, eh? */
+// ARM10C 20140322
 #define STANDARD_PARAM_DEF(name, type, format, tmptype, strtolfn)      	\
 	int param_set_##name(const char *val, const struct kernel_param *kp) \
 	{								\
@@ -271,6 +273,30 @@ int parse_args(const char *doing,
 STANDARD_PARAM_DEF(byte, unsigned char, "%c", unsigned long, strict_strtoul);
 STANDARD_PARAM_DEF(short, short, "%hi", long, strict_strtol);
 STANDARD_PARAM_DEF(ushort, unsigned short, "%hu", unsigned long, strict_strtoul);
+// ARM10C 20140322
+// #define STANDARD_PARAM_DEF(int, int, "%i", long, strict_strtol)
+// 	int param_set_int(const char *val, const struct kernel_param *kp)
+// 	{
+// 		long l;
+// 		int ret;
+//
+// 		ret = strict_strtol(val, 0, &l);
+// 		if (ret < 0 || ((int)l != l))
+// 			return ret < 0 ? ret : -EINVAL;
+// 		*((int *)kp->arg) = l;
+// 		return 0;
+// 	}
+// 	int param_get_int(char *buffer, const struct kernel_param *kp)
+// 	{
+// 		return sprintf(buffer, "%i", *((int *)kp->arg));
+// 	}
+// 	struct kernel_param_ops param_ops_int = {
+// 		.set = param_set_int,
+// 		.get = param_get_int,
+// 	};
+// 	EXPORT_SYMBOL(param_set_int);
+// 	EXPORT_SYMBOL(param_get_int);
+// 	EXPORT_SYMBOL(param_ops_int)
 STANDARD_PARAM_DEF(int, int, "%i", long, strict_strtol);
 STANDARD_PARAM_DEF(uint, unsigned int, "%u", unsigned long, strict_strtoul);
 STANDARD_PARAM_DEF(long, long, "%li", long, strict_strtol);
@@ -519,6 +545,7 @@ EXPORT_SYMBOL(param_ops_string);
 #define to_module_attr(n) container_of(n, struct module_attribute, attr)
 #define to_module_kobject(n) container_of(n, struct module_kobject, kobj)
 
+// ARM10C 20140322
 extern struct kernel_param __start___param[], __stop___param[];
 
 struct param_attribute

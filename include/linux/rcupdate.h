@@ -552,16 +552,14 @@ static inline void rcu_preempt_sleep_check(void)
 		smp_read_barrier_depends(); \
 		(_________p1); \
 	})
+
 // ARM10C 20140322
-// p : &cpu_chain : notifier_block->head : 초기화
-// v : page_alloc_cpu_nitify_nb
-//#define __rcu_assign_pointer(p, v, space)	\
-//	do {					       \
-// 		smp_wmb();			       \
-//              // dmb();
-// 		(p) = (typeof(*v) __force space *)(v); \
-// 	} while (0)
-// 
+// p: (&cpu_chain)->head: NULL, v: &page_alloc_cpu_nitify_nb, __rcu: ""
+// #define __rcu_assign_pointer((&cpu_chain)->head, page_alloc_cpu_nitify_nb, ""):
+// do {
+//	  smp_wmb(); // dmb();
+//	  ((&cpu_chain)->head) = (typeof(*&page_alloc_cpu_nitify_nb) __force *)(&page_alloc_cpu_nitify_nb);
+// } while (0)
 #define __rcu_assign_pointer(p, v, space)	\
 	do { \
 		smp_wmb(); \
@@ -927,8 +925,18 @@ static inline notrace void rcu_read_unlock_sched_notrace(void)
  * See the RCU_INIT_POINTER() comment header for details.
  */
 // ARM10C 20140322
-// p : &cpu_chain : notifier_block->head : 초기화
-// v : page_alloc_cpu_nitify_nb
+// __rcu_assign_pointer((&cpu_chain)->head, page_alloc_cpu_nitify_nb, ""):
+// do {
+//	  smp_wmb(); // dmb();
+//	  ((&cpu_chain)->head) = (typeof(*&page_alloc_cpu_nitify_nb) __force *)(&page_alloc_cpu_nitify_nb);
+// } while (0)
+//
+// p: (&cpu_chain)->head: NULL, v: &page_alloc_cpu_nitify_nb
+// #define rcu_assign_pointer((&cpu_chain)->head, &page_alloc_cpu_nitify_nb):
+// do {
+//	  smp_wmb(); // dmb();
+//	  ((&cpu_chain)->head) = (typeof(*&page_alloc_cpu_nitify_nb) __force *)(&page_alloc_cpu_nitify_nb);
+// } while (0)
 #define rcu_assign_pointer(p, v)		\
 	__rcu_assign_pointer((p), (v), __rcu)
 

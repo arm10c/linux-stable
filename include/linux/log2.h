@@ -181,11 +181,14 @@ unsigned long __rounddown_pow_of_two(unsigned long n)
 // ARM10C 20140301
 // roundup_pow_of_two(32)
 // ARM10C 20140322
-// numentries : 0xBC0 : 3008
+// [PID] numentries : 0xBC0 : 3008
 // return : 4096
 // ARM10C 20140322
 // [dCA] numentries : 0x17800 : 96256
 // return : 131072
+// ARM10C 20140322
+// [iCA] numentries : 0xBC00: 48128
+// return : 65536
 #define roundup_pow_of_two(n)			\
 (						\
 	__builtin_constant_p(n) ? (		\

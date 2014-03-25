@@ -21,6 +21,7 @@
  * that would just muddy the log. So we report the first one and
  * shut up after that.
  */
+// ARM10C 20140322
 int debug_locks = 1;
 EXPORT_SYMBOL_GPL(debug_locks);
 

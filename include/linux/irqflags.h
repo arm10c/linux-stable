@@ -101,7 +101,7 @@
 	} while (0)
 
 
-// ARM10C 20130907 
+// ARM10C 20130907
 // ARM10C 20130322
 #define local_irq_restore(flags)			\
 	do {						\

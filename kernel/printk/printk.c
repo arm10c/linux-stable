@@ -246,9 +246,15 @@ static u32 clear_idx;
 #else
 #define LOG_ALIGN __alignof__(struct printk_log)
 #endif
+// ARM10C 20140322
+// CONFIG_LOG_BUF_SHIFT: 17
+// __LOG_BUF_LEN: 0x20000 (128KB)
 #define __LOG_BUF_LEN (1 << CONFIG_LOG_BUF_SHIFT)
 static char __log_buf[__LOG_BUF_LEN] __aligned(LOG_ALIGN);
 static char *log_buf = __log_buf;
+// ARM10C 20140322
+// __LOG_BUF_LEN: 0x20000 (128KB)
+// log_buf_len: 0x20000 (128KB)
 static u32 log_buf_len = __LOG_BUF_LEN;
 
 /* cpu currently holding logbuf_lock */
@@ -732,6 +738,7 @@ void log_buf_kexec_setup(void)
 #endif
 
 /* requested log_buf_len from kernel cmdline */
+// ARM10C 20140322
 static unsigned long __initdata new_log_buf_len;
 
 /* save requested log_buf_len since it's too early to process it */
@@ -756,9 +763,14 @@ void __init setup_log_buf(int early)
 	char *new_log_buf;
 	int free;
 
+	// new_log_buf_len: 0
 	if (!new_log_buf_len)
-	  // new_log_buf_len : null 이므로 retrun함 
 		return;
+		// new_log_buf_len: 0 이므로 retrun함
+
+	// new_log_buf_len값은 ealry param으로
+	// log_buf_len=n[KMG] 형식으로 bootargs에 넘겨주면 0이 아닌 값을 갖게됨
+	// Documentation/kernel-parameters.txt 문서 참고
 
 	if (early) {
 		unsigned long mem;

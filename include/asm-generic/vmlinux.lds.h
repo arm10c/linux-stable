@@ -358,6 +358,7 @@
 	}								\
 									\
 	/* Built-in module parameters. */				\
+	/* ARM10C 20140322 */						\
 	__param : AT(ADDR(__param) - LOAD_OFFSET) {			\
 		VMLINUX_SYMBOL(__start___param) = .;			\
 		*(__param)						\

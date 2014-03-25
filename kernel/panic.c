@@ -464,6 +464,28 @@ EXPORT_SYMBOL(__stack_chk_fail);
 
 #endif
 
+// ARM10C 20140322
+// param_check_int(panic, &(panic_timeout)):
+// static inline int *__check_panic(void) { return(&(panic_timeout)); }
+//
+// __module_param_call("", panic, &param_ops_int, &panic_timeout, 0644, -1):
+// static int __param_perm_check_panic __attribute__((unused)) =
+// BUILD_BUG_ON_ZERO((0644) < 0 || (0644) > 0777 || ((0644) & 2))
+// + BUILD_BUG_ON_ZERO(sizeof("""") > 60);
+// static const char __param_str_panic[] = "" panic;
+// static struct kernel_param __moduleparam_const __param_panic
+// __used __attribute__ ((unused,__section__ ("__param"),aligned(sizeof(void *))))
+// = { __param_str_panic, &param_ops_int, 0644, -1, { &panic_timeout } }
+//
+// #define core_param(panic, panic_timeout, int, 0644):
+// static inline int *__check_panic(void) { return(&(panic_timeout)); }
+// static int __param_perm_check_panic __attribute__((unused)) =
+// BUILD_BUG_ON_ZERO((0644) < 0 || (0644) > 0777 || ((0644) & 2))
+// + BUILD_BUG_ON_ZERO(sizeof("""") > 60);
+// static const char __param_str_panic[] = "" "panic";
+// static struct kernel_param __moduleparam_const __param_panic
+// __used __attribute__ ((unused,__section__ ("__param"),aligned(sizeof(void *))))
+// = { __param_str_panic, &param_ops_int, 0644, -1, { &panic_timeout } }
 core_param(panic, panic_timeout, int, 0644);
 core_param(pause_on_oops, pause_on_oops, int, 0644);
 

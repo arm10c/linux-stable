@@ -14,6 +14,8 @@
 #endif
 
 /* Chosen so that structs with an unsigned long line up. */
+// ARM10C 20140322
+// MAX_PARAM_PREFIX_LEN: 60
 #define MAX_PARAM_PREFIX_LEN (64 - sizeof(unsigned long))
 
 #ifdef MODULE
@@ -45,6 +47,7 @@ struct kernel_param_ops {
 	void (*free)(void *arg);
 };
 
+// ARM10C 20140322
 struct kernel_param {
 	const char *name;
 	const struct kernel_param_ops *ops;
@@ -173,6 +176,17 @@ struct kparam_array
 
 /* This is the fundamental function for registering boot/module
    parameters. */
+// ARM10C 20140322
+// MAX_PARAM_PREFIX_LEN: 60
+//
+// #define __module_param_call("", panic, &param_ops_int, &panic_timeout, 0644, -1)
+// 	static int __param_perm_check_panic __attribute__((unused)) =
+// 	BUILD_BUG_ON_ZERO((0644) < 0 || (0644) > 0777 || ((0644) & 2))
+// 	+ BUILD_BUG_ON_ZERO(sizeof("""") > 60);
+// 	static const char __param_str_panic[] = "" "panic";
+// 	static struct kernel_param __moduleparam_const __param_panic
+// 	__used __attribute__ ((unused,__section__ ("__param"),aligned(sizeof(void *))))
+// 	= { __param_str_panic, &param_ops_int, 0644, -1, { &panic_timeout } }
 #define __module_param_call(prefix, name, ops, arg, perm, level)	\
 	/* Default value instead of permissions? */			\
 	static int __param_perm_check_##name __attribute__((unused)) =	\
@@ -312,6 +326,7 @@ extern bool parameq(const char *name1, const char *name2);
 extern bool parameqn(const char *name1, const char *name2, size_t n);
 
 /* Called on module insert or kernel boot */
+// ARM10C 20140322
 extern int parse_args(const char *name,
 		      char *args,
 		      const struct kernel_param *params,
@@ -334,6 +349,9 @@ static inline void destroy_params(const struct kernel_param *params,
 /* All the helper functions */
 /* The macros to do compile-time type checking stolen from Jakub
    Jelinek, who IIRC came up with this idea for the 2.4 module init code. */
+// ARM10C 20140322
+// #define __param_check(panic, &(panic_timeout), int)
+//	  static inline int *__check_panic(void) { return(&(panic_timeout)); }
 #define __param_check(name, p, type) \
 	static inline type *__check_##name(void) { return(p); }
 
@@ -355,6 +373,12 @@ extern int param_get_ushort(char *buffer, const struct kernel_param *kp);
 extern struct kernel_param_ops param_ops_int;
 extern int param_set_int(const char *val, const struct kernel_param *kp);
 extern int param_get_int(char *buffer, const struct kernel_param *kp);
+// ARM10C 20140322
+// __param_check(panic, &(panic_timeout), int):
+// static inline int *__check_panic(void) { return(&(panic_timeout)); }
+//
+// #define param_check_int(panic, &(panic_timeout)):
+// static inline int *__check_panic(void) { return(&(panic_timeout)); }
 #define param_check_int(name, p) __param_check(name, p, int)
 
 extern struct kernel_param_ops param_ops_uint;

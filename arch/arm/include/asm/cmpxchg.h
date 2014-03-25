@@ -116,9 +116,9 @@ static inline unsigned long __xchg(unsigned long x, volatile void *ptr, int size
 }
 
 // ARM10C 20140315
-// xchg(&((&cpu_add_remove_lock->count)->counter), -1):
-// ((__typeof__(*&((&cpu_add_remove_lock->count)->counter))__xchg((unsigned long)(-1),
-// (&lock->count))->counter),sizeof(*&((&cpu_add_remove_lock->count)->counter)))
+// xchg(&((&(&cpu_add_remove_lock)->count)->counter), -1):
+// ((__typeof__(*(&((&(&cpu_add_remove_lock)->count)->counter))))__xchg((unsigned long)(-1),
+// (&((&(&cpu_add_remove_lock)->count)->counter)),sizeof(*(&((&(&cpu_add_remove_lock)->count)->counter)))))
 #define xchg(ptr,x)							\
 	((__typeof__(*(ptr)))__xchg((unsigned long)(x),(ptr),sizeof(*(ptr))))
 

@@ -77,6 +77,7 @@
 /********** kernel/mutexes **********/
 // ARM10C 20140315
 #define MUTEX_DEBUG_INIT	0x11
+// ARM10C 20140322
 #define MUTEX_DEBUG_FREE	0x22
 
 /********** lib/flex_array.c **********/

@@ -178,6 +178,9 @@ extern int vfp_restore_user_hwstate(struct user_vfp __user *,
  *  TIF_POLLING_NRFLAG	- true if poll_idle() is polling TIF_NEED_RESCHED
  */
 #define TIF_SIGPENDING		0
+/*
+// ARM10C 20140322
+*/
 #define TIF_NEED_RESCHED	1
 #define TIF_NOTIFY_RESUME	2	/* callback before returning to user */
 #define TIF_SYSCALL_TRACE	8
