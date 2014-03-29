@@ -190,6 +190,7 @@ union offset_union {
 #define NEXT_BYTE	"lsr #8"
 #endif
 
+// ARM10C 20140329
 #define __get8_unaligned_check(ins,val,addr,err)	\
 	__asm__(					\
  ARM(	"1:	"ins"	%1, [%2], #1\n"	)		\

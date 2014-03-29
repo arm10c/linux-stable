@@ -623,7 +623,7 @@ asmlinkage void __init start_kernel(void)
 	// 131072, 65536개 만큼 hash table을 각각 만듬
 
 // 2014/03/22 종료
-
+// 2014/03/29 시작
 	sort_main_extable();
 	trap_init();
 	mm_init();

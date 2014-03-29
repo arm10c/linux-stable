@@ -116,10 +116,14 @@ SECTIONS
 
 	. = ALIGN(4);
 	__ex_table : AT(ADDR(__ex_table) - LOAD_OFFSET) {
+/* ARM10C 20140329
+ */
 		__start___ex_table = .;
-#ifdef CONFIG_MMU
+#ifdef CONFIG_MMU /* CONFIG_MMU = y */
 		*(__ex_table)
 #endif
+/* ARM10C 20140329
+ */	
 		__stop___ex_table = .;
 	}
 

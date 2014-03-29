@@ -168,6 +168,7 @@
 	.endm
 
 // ARM10C 20131116
+// ARM10C 20140329
 #define USER(x...)				\
 9999:	x;					\
 	.pushsection __ex_table,"a";		\
