@@ -794,6 +794,7 @@ void abort(void)
 }
 EXPORT_SYMBOL(abort);
 
+// ARM10C 20140329
 void __init trap_init(void)
 {
 	return;

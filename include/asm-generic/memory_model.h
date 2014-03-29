@@ -80,6 +80,16 @@
 //	__section_mem_map_addr(__sec) + __pfn;
 //	시작주소 + offset
 //})
+//
+// ARM10C 20140329
+// pfn_to_page(0xA0000)
+//#define __pfn_to_page(0xA0000)
+//({	unsigned long __pfn = (0xA0000);
+//	struct mem_section *__sec = __pfn_to_section(__pfn);
+//	__sec : &mem_section[0][0xA]
+//	__section_mem_map_addr(__sec) + __pfn;
+//	시작주소 + offset
+//})
 #define __pfn_to_page(pfn)				\
 ({	unsigned long __pfn = (pfn);			\
 	struct mem_section *__sec = __pfn_to_section(__pfn);	\
@@ -90,6 +100,8 @@
 // ARM10C 20140118
 #define page_to_pfn __page_to_pfn
 // ARM10C 20140118
+// ARM10C 20140329
+// pfn_to_page(0xA00000)
 #define pfn_to_page __pfn_to_page
 
 #endif /* __ASSEMBLY__ */

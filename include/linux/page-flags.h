@@ -215,6 +215,7 @@ PAGEFLAG(Checked, checked)		/* Used by some filesystems */
 PAGEFLAG(Pinned, pinned) TESTSCFLAG(Pinned, pinned)	/* Xen */
 PAGEFLAG(SavePinned, savepinned);			/* Xen */
 // ARM10C 20140118
+// ARM10C 20140329
 PAGEFLAG(Reserved, reserved) __CLEARPAGEFLAG(Reserved, reserved)
 PAGEFLAG(SwapBacked, swapbacked) __CLEARPAGEFLAG(SwapBacked, swapbacked)
 
@@ -381,6 +382,7 @@ __SETPAGEFLAG(Head, compound)  __CLEARPAGEFLAG(Head, compound)
 // PG_head_mask: 0x4000
 #define PG_head_mask ((1L << PG_compound))
 // ARM10C 20140125
+// ARM10C 20140329
 // PG_compound: 14, PG_reclaim: 17
 // PG_head_tail_mask: 0x24000
 #define PG_head_tail_mask ((1L << PG_compound) | (1L << PG_reclaim))
@@ -393,8 +395,11 @@ static inline int PageHead(struct page *page)
 	// return 0
 }
 
+// ARM10C 20140329
+// page: 0x20000의 해당하는 struct page의 주소
 static inline int PageTail(struct page *page)
 {
+	// PG_head_tail_mask: 0x24000
 	return ((page->flags & PG_head_tail_mask) == PG_head_tail_mask);
 }
 

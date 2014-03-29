@@ -93,6 +93,7 @@ void __init early_init_dt_setup_initrd_arch(unsigned long start, unsigned long e
  */
 // ARM10C 20131012
 // ARM10C 20131207
+// ARM10C 20140329
 struct meminfo meminfo;
 
 void show_mem(unsigned int filter)
@@ -568,6 +569,7 @@ free_memmap(unsigned long start_pfn, unsigned long end_pfn)
 /*
  * The mem_map array can get very big.  Free the unused area of the memory map.
  */
+// ARM10C 20140329
 static void __init free_unused_memmap(struct meminfo *mi)
 {
 	unsigned long bank_start, prev_bank_end = 0;
@@ -577,18 +579,30 @@ static void __init free_unused_memmap(struct meminfo *mi)
 	 * This relies on each bank being in address order.
 	 * The banks are sorted previously in bootmem_init().
 	 */
+	// mi: meminfo, (meminfo)->nr_banks: 2
 	for_each_bank(i, mi) {
+	// for (i = 0; i < (meminfo)->nr_banks; i++)
 		struct membank *bank = &mi->bank[i];
+		// [1st] bank: (meminfo)->bank[0]
+		// [2nd] bank: (meminfo)->bank[1]
 
+		// [1st] bank_pfn_start((meminfo)->bank[0]): 0x20000
+		// [2nd] bank_pfn_start((meminfo)->bank[1]): 0x4f800
 		bank_start = bank_pfn_start(bank);
+		// [1st] bank_start: 0x20000
+		// [2nd] bank_start: 0x4f800
 
-#ifdef CONFIG_SPARSEMEM
+#ifdef CONFIG_SPARSEMEM // CONFIG_SPARSEMEM=y
 		/*
 		 * Take care not to free memmap entries that don't exist
 		 * due to SPARSEMEM sections which aren't present.
 		 */
+		// [1st] bank_start: 0x20000, prev_bank_end: 0, PAGES_PER_SECTION: 0x10000
+		// [2nd] bank_start: 0x4f800, prev_bank_end: 0, PAGES_PER_SECTION: 0x10000
 		bank_start = min(bank_start,
 				 ALIGN(prev_bank_end, PAGES_PER_SECTION));
+		// [1st] bank_start: 0
+		// [2nd] bank_start: 0x4f800
 #else
 		/*
 		 * Align down here since the VM subsystem insists that the
@@ -601,6 +615,8 @@ static void __init free_unused_memmap(struct meminfo *mi)
 		 * If we had a previous bank, and there is a space
 		 * between the current bank and the previous, free it.
 		 */
+		// [1st] prev_bank_end: 0, bank_start: 0
+		// [2nd] prev_bank_end: 0x4f800, bank_start: 0x4f800
 		if (prev_bank_end && prev_bank_end < bank_start)
 			free_memmap(prev_bank_end, bank_start);
 
@@ -609,10 +625,17 @@ static void __init free_unused_memmap(struct meminfo *mi)
 		 * memmap entries are valid from the bank end aligned to
 		 * MAX_ORDER_NR_PAGES.
 		 */
+		// [1st] bank: (meminfo)->bank[0], MAX_ORDER_NR_PAGES: 0x400
+		// [1st] bank_pfn_end((meminfo)->bank[0]): 0x4f800
+		// [2nd] bank: (meminfo)->bank[1], MAX_ORDER_NR_PAGES: 0x400
+		// [2nd] bank_pfn_end((meminfo)->bank[1]): 0xa0000
 		prev_bank_end = ALIGN(bank_pfn_end(bank), MAX_ORDER_NR_PAGES);
+		// [1st] prev_bank_end: 0x4f800
+		// [2nd] prev_bank_end: 0xa0000
 	}
 
-#ifdef CONFIG_SPARSEMEM
+#ifdef CONFIG_SPARSEMEM // CONFIG_SPARSEMEM=y
+	// prev_bank_end: 0xa0000, PAGES_PER_SECTION: 0x10000
 	if (!IS_ALIGNED(prev_bank_end, PAGES_PER_SECTION))
 		free_memmap(prev_bank_end,
 			    ALIGN(prev_bank_end, PAGES_PER_SECTION));
@@ -680,18 +703,24 @@ static void __init free_highpages(void)
  * memory is free.  This is done after various parts of the system have
  * claimed their memory after the kernel image.
  */
+// ARM10C 20140329
 void __init mem_init(void)
 {
-#ifdef CONFIG_HAVE_TCM
+#ifdef CONFIG_HAVE_TCM // CONFIG_HAVE_TCM=n
 	/* These pointers are filled in on TCM detection */
 	extern u32 dtcm_end;
 	extern u32 itcm_end;
 #endif
 
+	// max_pfn : 0x80000, PHYS_PFN_OFFSET: 0x20000, *mem_map: NULL
+	// pfn_to_page(0xA0000): page 10번째 section 주소 + 0xA0000
 	max_mapnr   = pfn_to_page(max_pfn + PHYS_PFN_OFFSET) - mem_map;
+	// max_mapnr: page 10번째 section 주소 + 0xA0000
 
 	/* this will put all unused low memory onto the freelists */
 	free_unused_memmap(&meminfo);
+	// bank 0, 1에 대해 align이 되어 있지 않으면 free_memmap을 수행
+
 	free_all_bootmem();
 
 #ifdef CONFIG_SA1111

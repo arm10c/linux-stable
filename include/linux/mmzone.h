@@ -21,10 +21,14 @@
 
 /* Free memory management - zoned buddy allocator.  */
 #ifndef CONFIG_FORCE_MAX_ZONEORDER	// CONFIG_FORCE_MAX_ZONEORDER = 11 
+// ARM10C 20140329
 #define MAX_ORDER 11
 #else
 #define MAX_ORDER CONFIG_FORCE_MAX_ZONEORDER	// this MAX_ORDER 11 
 #endif
+// ARM10C 20140329
+// MAX_ORDER: 11
+// MAX_ORDER_NR_PAGES: 0x400
 #define MAX_ORDER_NR_PAGES (1 << (MAX_ORDER - 1))
 
 /*
@@ -1001,7 +1005,9 @@ extern char numa_zonelist_order[];
 extern struct pglist_data contig_page_data;	// bitmap 정보가 들어가있음 
 // ARM10C 20131207
 // ARM10C 20140308
+// ARM10C 20140329
 #define NODE_DATA(nid)		(&contig_page_data)
+// ARM10C 20140329
 #define NODE_MEM_MAP(nid)	mem_map
 
 #else /* CONFIG_NEED_MULTIPLE_NODES */
@@ -1018,6 +1024,7 @@ extern struct zone *next_zone(struct zone *zone);
  * for_each_online_pgdat - helper macro to iterate over all online nodes
  * @pgdat - pointer to a pg_data_t variable
  */
+// ARM10C 20140329
 #define for_each_online_pgdat(pgdat)			\
 	for (pgdat = first_online_pgdat();		\
 	     pgdat;					\
@@ -1190,6 +1197,7 @@ static inline unsigned long early_pfn_to_nid(unsigned long pfn)
 #define NR_MEM_SECTIONS		(1UL << SECTIONS_SHIFT)
 
 // ARM10C 20131207
+// ARM10C 20140329
 // PFN_SECTION_SHIFT: 16
 // PAGES_PER_SECTION: 0x10000
 #define PAGES_PER_SECTION       (1UL << PFN_SECTION_SHIFT)
@@ -1213,6 +1221,8 @@ static inline unsigned long early_pfn_to_nid(unsigned long pfn)
 // ARM10C 20131207
 // PFN_SECTION_SHIFT: 16
 // ARM10C 20140118
+// ARM10C 20140329
+// 0xA0000
 #define pfn_to_section_nr(pfn) ((pfn) >> PFN_SECTION_SHIFT)
 // ARM10C 20131221
 // PFN_SECTION_SHIFT: 16
@@ -1319,6 +1329,8 @@ extern unsigned long usemap_size(void);
 
 // ARM10C 20140118
 // __sec : &mem_section[0][2]
+// ARM10C 20140329
+// &mem_section[0][0xA]
 static inline struct page *__section_mem_map_addr(struct mem_section *section)
 {
 	unsigned long map = section->section_mem_map;
@@ -1352,11 +1364,15 @@ static inline int valid_section_nr(unsigned long nr)
 
 // ARM10C 20140118
 // pfn : 0x20000
+// ARM10C 20140329
+// __pfn_to_section(0xA0000)
 static inline struct mem_section *__pfn_to_section(unsigned long pfn)
 {
 	// pfn_to_section_nr(pfn) : 2
+	// pfn_to_section_nr(pfn) : 0xA
 	return __nr_to_section(pfn_to_section_nr(pfn));
-	// return : &mem_section[0][2] 
+	// return : &mem_section[0][2]
+	// return : &mem_section[0][0xA]
 }
 
 #ifndef CONFIG_HAVE_ARCH_PFN_VALID

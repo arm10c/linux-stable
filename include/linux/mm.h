@@ -284,9 +284,14 @@ static inline int get_freepage_migratetype(struct page *page)
 /*
  * Drop a ref, return true if the refcount fell to zero (the page has no users)
  */
+// ARM10C 20140329
+// page: 0x20000의 해당하는 struct page의 1st page
 static inline int put_page_testzero(struct page *page)
 {
+	// atomic_read(&page->_count): 1
 	VM_BUG_ON(atomic_read(&page->_count) == 0);
+
+	// atomic_dec_and_test(&page->_count): 1
 	return atomic_dec_and_test(&page->_count);
 }
 
@@ -744,9 +749,12 @@ static inline void page_nid_reset_last(struct page *page)
 
 // ARM10C 20140118
 // ARM10C 20140125
+// ARM10C 20140329
 static inline struct zone *page_zone(const struct page *page)
 {
+	// NODE_DATA(page_to_nid(page)): &contig_page_data
 	return &NODE_DATA(page_to_nid(page))->node_zones[page_zonenum(page)];
+	// (&contig_page_data)->node_zones[page_zonenum(page)]
 }
 
 #ifdef SECTION_IN_PAGE_FLAGS
@@ -861,6 +869,7 @@ void page_address_init(void);	// ARM10C this
  * address_space which maps the page from disk; whereas "page_mapped"
  * refers to user virtual address space into which the page is mapped.
  */
+// ARM10C 20140329
 #define PAGE_MAPPING_ANON	1
 #define PAGE_MAPPING_KSM	2
 #define PAGE_MAPPING_FLAGS	(PAGE_MAPPING_ANON | PAGE_MAPPING_KSM)
@@ -884,9 +893,13 @@ struct address_space *page_file_mapping(struct page *page)
 	return page->mapping;
 }
 
+// ARM10C 20140329
+// page: 0x20000의 해당하는 struct page의 1st page
 static inline int PageAnon(struct page *page)
 {
+	// page->mapping: 0, PAGE_MAPPING_ANON: 1
 	return ((unsigned long)page->mapping & PAGE_MAPPING_ANON) != 0;
+	// return 0
 }
 
 /*

@@ -98,7 +98,9 @@ static inline void tracepoint_synchronize_unregister(void)
 
 #ifndef DECLARE_TRACE
 
+// ARM10C 20140329
 #define TP_PROTO(args...)	args
+// ARM10C 20140329
 #define TP_ARGS(args...)	args
 #define TP_CONDITION(args...)	args
 
@@ -255,6 +257,7 @@ static inline void tracepoint_synchronize_unregister(void)
 #define DECLARE_TRACE_NOARGS(name)					\
 		__DECLARE_TRACE(name, void, , 1, void *__data, __data)
 
+// ARM10C 20140329
 #define DECLARE_TRACE(name, proto, args)				\
 		__DECLARE_TRACE(name, PARAMS(proto), PARAMS(args), 1,	\
 				PARAMS(void *__data, proto),		\
@@ -387,6 +390,18 @@ static inline void tracepoint_synchronize_unregister(void)
 	DECLARE_TRACE_CONDITION(name, PARAMS(proto),		\
 				PARAMS(args), PARAMS(cond))
 
+// ARM10C 20140329
+// TRACE_EVENT(mm_page_free,
+//	struct page *page, unsigned int order,
+//	page, order,
+//	__field(struct page *, page) __field(unsigned int, order),
+//	__entry->page = page; __entry->order = order;,
+//	"page=%p pfn=%lu order=%d", __entry->page, page_to_pfn(__entry->page), __entry->order
+// );
+//
+// DECLARE_TRACE(mm_page_free,
+//		struct page *page, unsigned int order,
+//		page, order,)
 #define TRACE_EVENT(name, proto, args, struct, assign, print)	\
 	DECLARE_TRACE(name, PARAMS(proto), PARAMS(args))
 #define TRACE_EVENT_FN(name, proto, args, struct,		\

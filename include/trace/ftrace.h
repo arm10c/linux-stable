@@ -54,6 +54,7 @@
 #define __string(item, src) __dynamic_array(char, item, -1)
 
 #undef TP_STRUCT__entry
+// ARM10C 20140329
 #define TP_STRUCT__entry(args...) args
 
 #undef DECLARE_EVENT_CLASS
@@ -184,6 +185,7 @@
 #define __entry field
 
 #undef TP_printk
+// ARM10C 20140329
 #define TP_printk(fmt, args...) fmt "\n", args
 
 #undef __get_dynamic_array
@@ -505,6 +507,7 @@ static inline notrace int ftrace_get_offsets_##call(			\
 	strcpy(__get_str(dst), src);
 
 #undef TP_fast_assign
+ // ARM10C 20140329
 #define TP_fast_assign(args...) args
 
 #undef TP_perf_assign

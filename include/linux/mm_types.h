@@ -38,7 +38,9 @@ struct address_space;
  * allows the use of atomic double word operations on the flags/mapping
  * and lru list pointers also.
  */
-//ARM10C 20140111 sizeof( struct page ) : 44byte
+// ARM10C 20140111
+// ARM10C 20140329
+// sizeof( struct page ) : 44byte
 struct page {
 	/* First double word block */
 	unsigned long flags;		/* Atomic flags, some possibly

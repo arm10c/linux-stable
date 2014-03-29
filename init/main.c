@@ -500,13 +500,14 @@ void __init __weak thread_info_cache_init(void)
 /*
  * Set up kernel memory allocators
  */
+// ARM10C 20140329
 static void __init mm_init(void)
 {
 	/*
 	 * page_cgroup requires contiguous pages,
 	 * bigger than MAX_ORDER unless SPARSEMEM.
 	 */
-	page_cgroup_init_flatmem();
+	page_cgroup_init_flatmem(); // null function
 	mem_init();
 	kmem_cache_init();
 	percpu_init_late();
@@ -624,8 +625,11 @@ asmlinkage void __init start_kernel(void)
 
 // 2014/03/22 종료
 // 2014/03/29 시작
+
 	sort_main_extable();
-	trap_init();
+	// extable 을 cmp_ex를 이용하여 sort수행
+
+	trap_init(); // null function
 	mm_init();
 
 	/*

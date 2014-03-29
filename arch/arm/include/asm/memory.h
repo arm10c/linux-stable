@@ -263,6 +263,9 @@ static inline unsigned long __phys_to_virt(unsigned long x)
  * direct-mapped view.  We assume this is the first page
  * of RAM in the mem_map as well.
  */
+// ARM10C 20140329
+// PHYS_OFFSET: 0x20000000, PAGE_SHIFT: 12
+// PHYS_PFN_OFFSET: 0x20000
 #define PHYS_PFN_OFFSET	((unsigned long)(PHYS_OFFSET >> PAGE_SHIFT))
 
 /*

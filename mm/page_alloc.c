@@ -709,17 +709,34 @@ static void free_one_page(struct zone *zone, struct page *page, int order,
 	spin_unlock(&zone->lock);
 }
 
+// ARM10C 20140329
+// page: 0x20000의 해당하는 struct page의 1st page, order: 5
 static bool free_pages_prepare(struct page *page, unsigned int order)
 {
 	int i;
 	int bad = 0;
 
-	trace_mm_page_free(page, order);
-	kmemcheck_free_shadow(page, order);
 
+	// mm_page_free이름으로 아래의 trace 관련 함수가 만들어져 있음
+	// trace_mm_page_free, register_trace_mm_page_free
+	// unregister_trace_mm_page_free, check_trace_callback_type_mm_page_free
+
+	// page: 0x20000의 해당하는 struct page의 1st page, order: 5
+	trace_mm_page_free(page, order);
+
+	// page: 0x20000의 해당하는 struct page의 1st page, order: 5
+	kmemcheck_free_shadow(page, order); // null function
+
+	// page: 0x20000의 해당하는 struct page의 1st page
+	// PageAnon(page): 0
 	if (PageAnon(page))
 		page->mapping = NULL;
+
+// 2014/03/29 종료
+
+	// order: 5
 	for (i = 0; i < (1 << order); i++)
+		// page: 0x20000 (pfn)
 		bad += free_pages_check(page + i);
 	if (bad)
 		return false;
@@ -735,11 +752,14 @@ static bool free_pages_prepare(struct page *page, unsigned int order)
 	return true;
 }
 
+// ARM10C 20140329
+// page: 0x20000의 해당하는 struct page의 1st page, order: 5
 static void __free_pages_ok(struct page *page, unsigned int order)
 {
 	unsigned long flags;
 	int migratetype;
 
+	// page: 0x20000의 해당하는 struct page의 1st page, order: 5
 	if (!free_pages_prepare(page, order))
 		return;
 
@@ -751,23 +771,62 @@ static void __free_pages_ok(struct page *page, unsigned int order)
 	local_irq_restore(flags);
 }
 
+// ARM10C 20140329
+// pfn_to_page(0x20000): 0x20000의 해당하는 struct page의 주소, order: 5
 void __init __free_pages_bootmem(struct page *page, unsigned int order)
 {
+	// order: 5
 	unsigned int nr_pages = 1 << order;
+	// nr_pages: 32
 	unsigned int loop;
 
+	// page: 0x20000의 해당하는 struct page의 주소
 	prefetchw(page);
-	for (loop = 0; loop < nr_pages; loop++) {
-		struct page *p = &page[loop];
+	// cache에 0x20000의 해당하는 struct page를 읽음
 
+	// nr_pages: 32
+	for (loop = 0; loop < nr_pages; loop++) {
+		// page[0]: 0x20000 (pfn)
+		// page[1]: 0x20001 (pfn)
+		struct page *p = &page[loop];
+		// p: 0x20000 (pfn)
+		// p: 0x20001 (pfn)
+
+		// loop: 0, nr_pages: 32
+		// loop: 1, nr_pages: 32
 		if (loop + 1 < nr_pages)
+			// p: 0x20000 (pfn)
+			// p: 0x20001 (pfn)
 			prefetchw(p + 1);
+			// 0x20001 (pfn) 을 cache에 추가
+			// 0x20002 (pfn) 을 cache에 추가
+
+		// p: 0x20000 (pfn)
+		// p: 0x20001 (pfn)
 		__ClearPageReserved(p);
+		// page reserved 속성을 clear
+
+		// p: 0x20000 (pfn)
+		// p: 0x20001 (pfn)
 		set_page_count(p, 0);
+		// p: 0x20000 (pfn) page count를 0으로 초기화
+		// p: 0x20001 (pfn) page count를 0으로 초기화
+
+		// ... loop: 2~31은 생략
 	}
 
+	// page: 0x20000의 해당하는 struct page의 주소
+	// page_zone(page)->managed_pages:
+	// (&contig_page_data)->node_zones[page_zonenum(page)].managed_pages: 0
 	page_zone(page)->managed_pages += 1 << order;
+	// page_zone(page)->managed_pages:
+	// (&contig_page_data)->node_zones[page_zonenum(page)].managed_pages: 32
+
+	// page: 0x20000의 해당하는 struct page의 주소
 	set_page_refcounted(page);
+	// page: 0x20000의 해당하는 struct page의 1st page의 count 1로 set
+
+	// order: 5
 	__free_pages(page, order);
 }
 
@@ -2711,12 +2770,20 @@ unsigned long get_zeroed_page(gfp_t gfp_mask)
 }
 EXPORT_SYMBOL(get_zeroed_page);
 
+// ARM10C 20140329
+// page: 0x20000의 해당하는 struct page의 1st page, order: 5
 void __free_pages(struct page *page, unsigned int order)
 {
+	// page: 0x20000의 해당하는 struct page의 1st page
 	if (put_page_testzero(page)) {
+		// put_page_testzero(page): 1
+
+		// order: 5
 		if (order == 0)
 			free_hot_cold_page(page, 0);
 		else
+			// page: 0x20000의 해당하는 struct page의 1st page
+			// order: 5
 			__free_pages_ok(page, order);
 	}
 }
@@ -5121,12 +5188,15 @@ static void __paginginit free_area_init_core(struct pglist_data *pgdat,
 }
 
 // ARM10C 20140111
+// ARM10C 20140329
 static void __init_refok alloc_node_mem_map(struct pglist_data *pgdat)
 {
 	/* Skip empty nodes */
 	if (!pgdat->node_spanned_pages)
 		return;
 
+	// ARM10C 20140329
+	// mem_map은NUMA에서 사용하는 것으로 보임
 #ifdef CONFIG_FLAT_NODE_MEM_MAP // CONFIG_FLAG_NODE_MEM_MAP = n
 	/* ia64 gets its own node_mem_map, before this, without bootmem */
 	if (!pgdat->node_mem_map) {

@@ -405,6 +405,7 @@ static inline void list_splice_tail_init(struct list_head *list,
  */
 // ARM10C 20131130
 // ARM10C 20140322
+// ARM10C 20140329
 #define list_entry(ptr, type, member)		\
 	container_of(ptr, type, member)
 
@@ -474,6 +475,7 @@ static inline void list_splice_tail_init(struct list_head *list,
  * @member:	the name of the list_struct within the struct.
  */
 // ARM10C 20131130
+// ARM10C 20140329
 #define list_for_each_entry(pos, head, member)				\
 	for (pos = list_entry((head)->next, typeof(*pos), member);	\
 	     &pos->member != (head); 	\

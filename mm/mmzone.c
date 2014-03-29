@@ -9,17 +9,28 @@
 #include <linux/mm.h>
 #include <linux/mmzone.h>
 
+// ARM10C 20140329
 struct pglist_data *first_online_pgdat(void)
 {
+	// first_online_node: 0
 	return NODE_DATA(first_online_node);
+	// return &contig_page_data
 }
 
+// ARM10C 20140329
+// pgdat: &contig_page_data
 struct pglist_data *next_online_pgdat(struct pglist_data *pgdat)
 {
+	// pgdat->node_id: (&contig_page_data)->node_id: 0
+	// next_online_node((&contig_page_data)->node_id): 1
 	int nid = next_online_node(pgdat->node_id);
+	// nid: 1
 
+	// MAX_NUMNODES: 1
 	if (nid == MAX_NUMNODES)
 		return NULL;
+		// return NULL
+
 	return NODE_DATA(nid);
 }
 

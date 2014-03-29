@@ -16,6 +16,8 @@
 void free_pgtables(struct mmu_gather *tlb, struct vm_area_struct *start_vma,
 		unsigned long floor, unsigned long ceiling);
 
+// ARM10C 20140329
+// p: 0x20000 (pfn)
 static inline void set_page_count(struct page *page, int v)
 {
 	atomic_set(&page->_count, v);
@@ -25,11 +27,19 @@ static inline void set_page_count(struct page *page, int v)
  * Turn a non-refcounted page (->_count == 0) into refcounted with
  * a count of one.
  */
+// ARM10C 20140329
+// page: 0x20000의 해당하는 struct page의 주소
 static inline void set_page_refcounted(struct page *page)
 {
+	// page: 0x20000의 해당하는 struct page의 주소
 	VM_BUG_ON(PageTail(page));
+
+	// atomic_read(&page->_count): 0
 	VM_BUG_ON(atomic_read(&page->_count));
+
+	// page: 0x20000의 해당하는 struct page의 주소
 	set_page_count(page, 1);
+	// page: 0x20000의 해당하는 struct page의 1st page의 count 1로 set
 }
 
 static inline void __get_page_tail_foll(struct page *page,

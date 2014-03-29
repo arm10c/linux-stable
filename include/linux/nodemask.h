@@ -466,7 +466,10 @@ static inline int num_node_state(enum node_states state)
 #define for_each_node_state(node, __state) \
 	for ( (node) = 0; (node) == 0; (node) = 1)
 
+// ARM10C 20140329
 #define first_online_node	0
+// ARM10C 20140329
+// MAX_NUMNODES: 1
 #define next_online_node(nid)	(MAX_NUMNODES)
 #define nr_node_ids		1
 // ARM10C 20140308

@@ -147,6 +147,29 @@ DEFINE_EVENT(kmem_free, kmem_cache_free,
 	TP_ARGS(call_site, ptr)
 );
 
+// ARM10C 20140329
+// page: 0x20000의 해당하는 struct page의 1st page, order: 5
+//
+// TP_PROTO(struct page *page, unsigned int order): struct page *page, unsigned int order
+// TP_ARGS(page, order): page, order
+// TP_STRUCT__entry(__field(struct page *, page) __field(unsigned int, order)):
+// __field(struct page *, page) __field(unsigned int, order)
+//
+// TP_fast_assign(__entry->page = page; __entry->order = order;):
+// __entry->page = page; __entry->order = order;
+//
+// TP_printk("page=%p pfn=%lu order=%d", __entry->page,
+//            page_to_pfn(__entry->page), __entry->order):
+// "page=%p pfn=%lu order=%d", __entry->page, page_to_pfn(__entry->page), __entry->order
+//
+// TRACE_EVENT(mm_page_free,
+//	struct page *page, unsigned int order,
+//	page, order,
+//	__field(struct page *, page) __field(unsigned int, order),
+//	__entry->page = page; __entry->order = order;,
+//	"page=%p pfn=%lu order=%d", __entry->page, page_to_pfn(__entry->page), __entry->order
+// );
+//
 TRACE_EVENT(mm_page_free,
 
 	TP_PROTO(struct page *page, unsigned int order),

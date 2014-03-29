@@ -36,13 +36,17 @@ EXPORT_SYMBOL(contig_page_data);
 // max_pfn : 0x80000
 unsigned long max_low_pfn;
 unsigned long min_low_pfn;
+// ARM10C 20140329
+// max_pfn : 0x80000
 unsigned long max_pfn;
 
 // ARM10C 20131207
 // MAX_NUMNODES: 1
+// ARM10C 20140329
 bootmem_data_t bootmem_node_data[MAX_NUMNODES] __initdata;
 
 // ARM10C 20131207
+// ARM10C 20140329
 static struct list_head bdata_list __initdata = LIST_HEAD_INIT(bdata_list);
 
 static int bootmem_debug;
@@ -198,33 +202,57 @@ void __init free_bootmem_late(unsigned long physaddr, unsigned long size)
 	}
 }
 
+// ARM10C 20140329
+// bdata: &bdata_list
 static unsigned long __init free_all_bootmem_core(bootmem_data_t *bdata)
 {
 	struct page *page;
 	unsigned long start, end, pages, count = 0;
 
+	// bdata->node_bootmem_map: (&bdata_list)->node_bootmem_map: NULL 아닌 값
 	if (!bdata->node_bootmem_map)
 		return 0;
 
+	// bdata->node_min_pfn: (&bdata_list)->node_min_pfn: 0x20000
 	start = bdata->node_min_pfn;
+	// start: 0x20000
+
+	// bdata->node_low_pfn: (&bdata_list)->node_low_pfn: 0x4f800
 	end = bdata->node_low_pfn;
+	// end: 0x4f800
 
 	bdebug("nid=%td start=%lx end=%lx\n",
 		bdata - bootmem_node_data, start, end);
+	// "nid=0 start=0x20000 end=0x4f800"
 
+	// start: 0x20000, end: 0x4f800
 	while (start < end) {
 		unsigned long *map, idx, vec;
 		unsigned shift;
 
+		// bdata->node_bootmem_map: (&bdata_list)-bdata->node_bootmem_map
 		map = bdata->node_bootmem_map;
+		// map: (&bdata_list)->node_bootmem_map
+
+		// start: 0x20000
+		// bdata->node_min_pfn: (&bdata_list)->node_min_pfn: 0x20000
 		idx = start - bdata->node_min_pfn;
+		// idx: 0
+
+		// BITS_PER_LONG: 32
 		shift = idx & (BITS_PER_LONG - 1);
+		// shift: 0
+
 		/*
 		 * vec holds at most BITS_PER_LONG map bits,
 		 * bit 0 corresponds to start.
 		 */
+		// idx: 0, BITS_PER_LONG: 32
+		// map: (&bdata_list)->node_bootmem_map
 		vec = ~map[idx / BITS_PER_LONG];
+		// vec: ~((&bdata_list)->node_bootmem_map[0])
 
+		// shift: 0
 		if (shift) {
 			vec >>= shift;
 			if (end - start >= BITS_PER_LONG)
@@ -236,9 +264,14 @@ static unsigned long __init free_all_bootmem_core(bootmem_data_t *bdata)
 		 * BITS_PER_LONG block of pages in front of us, free
 		 * it in one go.
 		 */
+		// start: 0x20000, BITS_PER_LONG: 32, ~0: 0xFFFFFFFF
+		// vec: ~((&bdata_list)->node_bootmem_map[0])
 		if (IS_ALIGNED(start, BITS_PER_LONG) && vec == ~0UL) {
+			// BITS_PER_LONG: 32, ilog2(BITS_PER_LONG): 5
 			int order = ilog2(BITS_PER_LONG);
+			// order: 5
 
+			// start: 0x20000, pfn_to_page(0x20000): 0x20000의 해당하는 struct page의 주소
 			__free_pages_bootmem(pfn_to_page(start), order);
 			count += BITS_PER_LONG;
 			start += BITS_PER_LONG;
@@ -270,26 +303,44 @@ static unsigned long __init free_all_bootmem_core(bootmem_data_t *bdata)
 	return count;
 }
 
+// ARM10C 20140329
+// reset_managed_pages_done: 1
 static int reset_managed_pages_done __initdata;
 
+// ARM10C 20140329
+// pgdat: &contig_page_data
 static inline void __init reset_node_managed_pages(pg_data_t *pgdat)
 {
 	struct zone *z;
 
+	// reset_managed_pages_done: 0
 	if (reset_managed_pages_done)
 		return;
 
+	// pgdat->node_zones: (&contig_page_data)->node_zones, MAX_NR_ZONES: 3
 	for (z = pgdat->node_zones; z < pgdat->node_zones + MAX_NR_ZONES; z++)
+		// [1st] z->managed_pages: (&contig_page_data)->node_zones[0].managed_pages: 0x2efd6
+		// [2nd] z->managed_pages: (&contig_page_data)->node_zones[1].managed_pages: 0x50800
+		// [3rd] z->managed_pages: (&contig_page_data)->node_zones[2].managed_pages: 0x0
 		z->managed_pages = 0;
+		// [1st] z->managed_pages: (&contig_page_data)->node_zones[0].managed_pages: 0x0
+		// [2nd] z->managed_pages: (&contig_page_data)->node_zones[1].managed_pages: 0x0
+		// [3rd] z->managed_pages: (&contig_page_data)->node_zones[2].managed_pages: 0x0
 }
 
+// ARM10C 20140329
 void __init reset_all_zones_managed_pages(void)
 {
 	struct pglist_data *pgdat;
 
 	for_each_online_pgdat(pgdat)
+	// for (pgdat = first_online_pgdat(); pgdat; pgdat = next_online_pgdat(pgdat))
+		// first_online_pgdat(): &contig_page_data, pgdat: &contig_page_data
 		reset_node_managed_pages(pgdat);
+
+	// reset_managed_pages_done: 0
 	reset_managed_pages_done = 1;
+	// reset_managed_pages_done: 1
 }
 
 /**
@@ -297,6 +348,7 @@ void __init reset_all_zones_managed_pages(void)
  *
  * Returns the number of pages actually released.
  */
+// ARM10C 20140329
 unsigned long __init free_all_bootmem(void)
 {
 	unsigned long total_pages = 0;
@@ -305,6 +357,10 @@ unsigned long __init free_all_bootmem(void)
 	reset_all_zones_managed_pages();
 
 	list_for_each_entry(bdata, &bdata_list, list)
+	// for (bdata = list_entry((&bdata_list)->next, typeof(*bdata), list);
+	//     &bdata->list != (&bdata_list);
+	//     bdata = list_entry(bdata->list.next, typeof(*bdata), list))
+		// bdata: &bdata_list, &bdata->list: (&bdata_list)->list
 		total_pages += free_all_bootmem_core(bdata);
 
 	totalram_pages += total_pages;
