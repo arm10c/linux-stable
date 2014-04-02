@@ -35,6 +35,8 @@
  * on our cache or tlb entries.
  */
 
+// ARM10C 20140329
+// sizeof(struct exception_table_entry): 8 bytes
 struct exception_table_entry
 {
 	unsigned long insn, fixup;

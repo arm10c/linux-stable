@@ -579,15 +579,16 @@ static void __init free_unused_memmap(struct meminfo *mi)
 	 * This relies on each bank being in address order.
 	 * The banks are sorted previously in bootmem_init().
 	 */
-	// mi: meminfo, (meminfo)->nr_banks: 2
+	// mi: &meminfo, (&meminfo)->nr_banks: 2
 	for_each_bank(i, mi) {
-	// for (i = 0; i < (meminfo)->nr_banks; i++)
-		struct membank *bank = &mi->bank[i];
-		// [1st] bank: (meminfo)->bank[0]
-		// [2nd] bank: (meminfo)->bank[1]
+	// for (i = 0; i < (&meminfo)->nr_banks; i++)
 
-		// [1st] bank_pfn_start((meminfo)->bank[0]): 0x20000
-		// [2nd] bank_pfn_start((meminfo)->bank[1]): 0x4f800
+		struct membank *bank = &mi->bank[i];
+		// [1st] bank: &(&meminfo)->bank[0]
+		// [2nd] bank: &(&meminfo)->bank[1]
+
+		// [1st] bank_pfn_start(&(&meminfo)->bank[0]): 0x20000
+		// [2nd] bank_pfn_start(&(&meminfo)->bank[1]): 0x4f800
 		bank_start = bank_pfn_start(bank);
 		// [1st] bank_start: 0x20000
 		// [2nd] bank_start: 0x4f800
@@ -598,7 +599,9 @@ static void __init free_unused_memmap(struct meminfo *mi)
 		 * due to SPARSEMEM sections which aren't present.
 		 */
 		// [1st] bank_start: 0x20000, prev_bank_end: 0, PAGES_PER_SECTION: 0x10000
-		// [2nd] bank_start: 0x4f800, prev_bank_end: 0, PAGES_PER_SECTION: 0x10000
+		// [1st] ALIGN(0x0, 0x10000): 0x0
+		// [2nd] bank_start: 0x4f800, prev_bank_end: 0x4f800, PAGES_PER_SECTION: 0x10000
+		// [2nd] ALIGN(0x4f800, 0x10000): 0x50000
 		bank_start = min(bank_start,
 				 ALIGN(prev_bank_end, PAGES_PER_SECTION));
 		// [1st] bank_start: 0
@@ -625,10 +628,10 @@ static void __init free_unused_memmap(struct meminfo *mi)
 		 * memmap entries are valid from the bank end aligned to
 		 * MAX_ORDER_NR_PAGES.
 		 */
-		// [1st] bank: (meminfo)->bank[0], MAX_ORDER_NR_PAGES: 0x400
-		// [1st] bank_pfn_end((meminfo)->bank[0]): 0x4f800
-		// [2nd] bank: (meminfo)->bank[1], MAX_ORDER_NR_PAGES: 0x400
-		// [2nd] bank_pfn_end((meminfo)->bank[1]): 0xa0000
+		// [1st] bank: &(&meminfo)->bank[0], MAX_ORDER_NR_PAGES: 0x400
+		// [1st] bank_pfn_end(&(&meminfo)->bank[0]): 0x4f800
+		// [2nd] bank: &(&meminfo)->bank[1], MAX_ORDER_NR_PAGES: 0x400
+		// [2nd] bank_pfn_end(&(&meminfo)->bank[1]): 0xa0000
 		prev_bank_end = ALIGN(bank_pfn_end(bank), MAX_ORDER_NR_PAGES);
 		// [1st] prev_bank_end: 0x4f800
 		// [2nd] prev_bank_end: 0xa0000
@@ -719,7 +722,8 @@ void __init mem_init(void)
 
 	/* this will put all unused low memory onto the freelists */
 	free_unused_memmap(&meminfo);
-	// bank 0, 1에 대해 align이 되어 있지 않으면 free_memmap을 수행
+	// bank 0, 1에 대해 bank 0, 1 사이에 사용하지 않는 공간이 있거나
+	// align이 되어 있지 않으면 free_memmap을 수행
 
 	free_all_bootmem();
 

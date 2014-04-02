@@ -120,7 +120,7 @@ SECTIONS
 		// ARM10C 20140329
 		*/
 		__start___ex_table = .;
-#ifdef CONFIG_MMU /* CONFIG_MMU = y */
+#ifdef CONFIG_MMU // CONFIG_MMU=y
 		*(__ex_table)
 #endif
 		/*

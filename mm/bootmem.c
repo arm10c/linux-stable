@@ -230,7 +230,7 @@ static unsigned long __init free_all_bootmem_core(bootmem_data_t *bdata)
 		unsigned long *map, idx, vec;
 		unsigned shift;
 
-		// bdata->node_bootmem_map: (&bdata_list)-bdata->node_bootmem_map
+		// bdata->node_bootmem_map: (&bdata_list)->node_bootmem_map
 		map = bdata->node_bootmem_map;
 		// map: (&bdata_list)->node_bootmem_map
 

@@ -46,6 +46,7 @@ void __init sort_main_extable(void)
 	if (main_extable_sort_needed) {
 		pr_notice("Sorting __ex_table...\n");
 		sort_extable(__start___ex_table, __stop___ex_table);
+		// extable 을 cmp_ex를 이용하여 sort수행
 	}
 }
 

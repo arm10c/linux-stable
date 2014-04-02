@@ -38,6 +38,7 @@ static int cmp_ex(const void *a, const void *b)
 void sort_extable(struct exception_table_entry *start,
 		  struct exception_table_entry *finish)
 {
+	// sizeof(struct exception_table_entry): 8 bytes
 	sort(start, finish - start, sizeof(struct exception_table_entry),
 	     cmp_ex, NULL);
 }
