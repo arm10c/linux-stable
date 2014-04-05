@@ -34,6 +34,7 @@ static inline void set_my_cpu_offset(unsigned long off)
 	asm volatile("mcr p15, 0, %0, c13, c0, 4" : : "r" (off) : "memory");
 }
 
+// ARM10C 20140405
 static inline unsigned long __my_cpu_offset(void)
 {
 	unsigned long off;

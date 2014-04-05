@@ -6,6 +6,7 @@
 #define NODES_SHIFT     CONFIG_NODES_SHIFT
 #else
 // ARM10C 20131214
+// ARM10C 20140405
 #define NODES_SHIFT     0
 #endif
 

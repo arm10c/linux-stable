@@ -246,10 +246,14 @@ struct vm_operations_struct {
 struct mmu_gather;
 struct inode;
 
+// ARM10C 20140405
 #define page_private(page)		((page)->private)
+// ARM10C 20140405
 #define set_page_private(page, v)	((page)->private = (v))
 
 /* It's valid only if the page is free path or free_list */
+// ARM10C 20140405
+// page : 0x20000 (fpn), migratetype : 0x2
 static inline void set_freepage_migratetype(struct page *page, int migratetype)
 {
 	page->index = migratetype;
@@ -382,14 +386,20 @@ static inline struct page *compound_head(struct page *page)
  * both from it and to it can be tracked, using atomic_inc_and_test
  * and atomic_add_negative(-1).
  */
+// ARM10C 20140118
 static inline void page_mapcount_reset(struct page *page)
 {
 	atomic_set(&(page)->_mapcount, -1);
 }
 
+// ARM10C 20140405
+// page: 0x20000 (pfn)
 static inline int page_mapcount(struct page *page)
 {
+	// &(page)->_mapcount : -1
+	// memmap_init_zone 에서 -1로 설정
 	return atomic_read(&(page)->_mapcount) + 1;
+	// return 0
 }
 
 static inline int page_count(struct page *page)
@@ -450,15 +460,21 @@ static inline void init_page_count(struct page *page)
  */
 #define PAGE_BUDDY_MAPCOUNT_VALUE (-128)
 
+// ARM10C 20140405
 static inline int PageBuddy(struct page *page)
 {
+	// page->_mapcount : -1		(memmap_init 함수에서 설정)
 	return atomic_read(&page->_mapcount) == PAGE_BUDDY_MAPCOUNT_VALUE;
+	// return 0
 }
 
+// ARM10C 20140405
 static inline void __SetPageBuddy(struct page *page)
 {
+	// page->_mapcount : -1
 	VM_BUG_ON(atomic_read(&page->_mapcount) != -1);
 	atomic_set(&page->_mapcount, PAGE_BUDDY_MAPCOUNT_VALUE);
+	// page->_mapcount : -128
 }
 
 static inline void __ClearPageBuddy(struct page *page)
@@ -633,11 +649,23 @@ static inline pte_t maybe_mkwrite(pte_t pte, struct vm_area_struct *vma)
 #define ZONEID_PGOFF		((SECTIONS_PGOFF < ZONES_PGOFF)? \
 						SECTIONS_PGOFF : ZONES_PGOFF)
 #else
+// ARM10C 20140405
+// NODES_SHIFT : 0
+// ZONES_SHIFT : 2
+// ZONEID_SHIFT : 2
 #define ZONEID_SHIFT		(NODES_SHIFT + ZONES_SHIFT)
+// ARM10C 20140405
+// NODES_PGOFF : 28
+// ZONES_PGOFF : 26
+// ZONEID_PGOFF : 26
 #define ZONEID_PGOFF		((NODES_PGOFF < ZONES_PGOFF)? \
 						NODES_PGOFF : ZONES_PGOFF)
 #endif
 
+// ARM10C 20140405
+// ZONEID_PGOFF : 26
+// ZONEID_SHIFT : 2
+// ZONEID_PGSHIFT : 26
 #define ZONEID_PGSHIFT		(ZONEID_PGOFF * (ZONEID_SHIFT != 0))
 
 #if SECTIONS_WIDTH+NODES_WIDTH+ZONES_WIDTH > BITS_PER_LONG - NR_PAGEFLAGS
@@ -655,6 +683,9 @@ static inline pte_t maybe_mkwrite(pte_t pte, struct vm_area_struct *vma)
 // SECTIONS_MASK : 15
 #define SECTIONS_MASK		((1UL << SECTIONS_WIDTH) - 1)
 #define LAST_NID_MASK		((1UL << LAST_NID_WIDTH) - 1)
+// ARM10C 20140405
+// ZONEID_SHIFT : 2
+// ZONEID_MASK : 0x3
 #define ZONEID_MASK		((1UL << ZONEID_SHIFT) - 1)
 
 // ARM10C 20140118
@@ -675,9 +706,13 @@ static inline enum zone_type page_zonenum(const struct page *page)
  * We guarantee only that it will return the same value for two
  * combinable pages in a zone.
  */
+// ARM10C 20140405
 static inline int page_zone_id(struct page *page)
 {
+	// ZONEID_PGSHIFT : 26, ZONEID_MASK : 0x3
+	// page->flags : 0x20000000
 	return (page->flags >> ZONEID_PGSHIFT) & ZONEID_MASK;
+	// return 0
 }
 
 static inline int zone_to_nid(struct zone *zone)
@@ -699,7 +734,7 @@ static inline int page_to_nid(const struct page *page)
 }
 #endif
 
-#ifdef CONFIG_NUMA_BALANCING
+#ifdef CONFIG_NUMA_BALANCING	// n
 #ifdef LAST_NID_NOT_IN_PAGE_FLAGS
 static inline int page_nid_xchg_last(struct page *page, int nid)
 {
@@ -742,6 +777,7 @@ static inline int page_nid_last(struct page *page)
 }
 
 // ARM10C 20140118
+// ARM10C 20140405
 static inline void page_nid_reset_last(struct page *page)
 {
 }
@@ -1804,6 +1840,7 @@ extern void kernel_map_pages(struct page *page, int numpages, int enable);
 extern bool kernel_page_present(struct page *page);
 #endif /* CONFIG_HIBERNATION */
 #else
+// ARM10C 20140405
 static inline void
 kernel_map_pages(struct page *page, int numpages, int enable) {}
 #ifdef CONFIG_HIBERNATION
@@ -1888,7 +1925,7 @@ extern void copy_user_huge_page(struct page *dst, struct page *src,
 				unsigned int pages_per_huge_page);
 #endif /* CONFIG_TRANSPARENT_HUGEPAGE || CONFIG_HUGETLBFS */
 
-#ifdef CONFIG_DEBUG_PAGEALLOC
+#ifdef CONFIG_DEBUG_PAGEALLOC		// n
 extern unsigned int _debug_guardpage_minorder;
 
 static inline unsigned int debug_guardpage_minorder(void)
@@ -1902,6 +1939,7 @@ static inline bool page_is_guard(struct page *page)
 }
 #else
 static inline unsigned int debug_guardpage_minorder(void) { return 0; }
+// ARM10C 20140405
 static inline bool page_is_guard(struct page *page) { return false; }
 #endif /* CONFIG_DEBUG_PAGEALLOC */
 

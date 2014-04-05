@@ -131,6 +131,7 @@ static void __spin_lock_debug(raw_spinlock_t *lock)
 	arch_spin_lock(&lock->raw_lock);
 }
 
+// ARM10C 20140405
 void do_raw_spin_lock(raw_spinlock_t *lock)
 {
 	debug_spin_lock_before(lock);
@@ -288,6 +289,7 @@ static void __write_lock_debug(rwlock_t *lock)
 #endif
 
 // ARM10C 20140125
+// ARM10C 20140405
 void do_raw_write_lock(rwlock_t *lock)
 {
 	debug_write_lock_before(lock);

@@ -65,6 +65,7 @@ static inline void debug_show_held_locks(struct task_struct *task)
 {
 }
 
+// ARM10C 20140405
 static inline void
 debug_check_no_locks_freed(const void *from, unsigned long len)
 {

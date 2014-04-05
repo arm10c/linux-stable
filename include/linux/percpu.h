@@ -241,6 +241,7 @@ extern void __bad_size_call_parameter(void);
 	pdcrb_ret__;							\
 })
 
+// ARM10C 20140405
 #define __pcpu_size_call(stem, variable, ...)				\
 do {									\
 	__verify_pcpu_ptr(&(variable));					\
@@ -590,11 +591,13 @@ do {									\
 #  define __this_cpu_add_2(pcp, val)	__this_cpu_generic_to_op((pcp), (val), +=)
 # endif
 # ifndef __this_cpu_add_4
+// ARM10C 20140405
 #  define __this_cpu_add_4(pcp, val)	__this_cpu_generic_to_op((pcp), (val), +=)
 # endif
 # ifndef __this_cpu_add_8
 #  define __this_cpu_add_8(pcp, val)	__this_cpu_generic_to_op((pcp), (val), +=)
 # endif
+// ARM10C 20140405
 # define __this_cpu_add(pcp, val)	__pcpu_size_call(__this_cpu_add_, (pcp), (val))
 #endif
 

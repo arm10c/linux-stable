@@ -156,6 +156,7 @@ isolate_migratepages_range(struct zone *zone, struct compact_control *cc,
  * zone->lock is already acquired when we use these.
  * So, we don't need atomic page->flags operations here.
  */
+// ARM10C 20140405
 static inline unsigned long page_order(struct page *page)
 {
 	/* PageBuddy() must be checked by the caller */

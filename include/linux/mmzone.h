@@ -83,9 +83,13 @@ enum {
 
 extern int page_group_by_mobility_disabled;
 
+// ARM10C 20140405
+// page : 0x20000 (fpn)
 static inline int get_pageblock_migratetype(struct page *page)
 {
+	// PB_migrate : 0, PB_migrate_end : 2 
 	return get_pageblock_flags_group(page, PB_migrate, PB_migrate_end);
+	// return 0x2
 }
 
 // ARM10C 20140125
@@ -393,6 +397,7 @@ struct zone {
 	// ARM10C 20140125
 	// sizeof(spinlock_t): 16 bytes
 	spinlock_t		lock;
+	// ARM10C 20140405
 	int                     all_unreclaimable; /* All pages pinned */
 #if defined CONFIG_COMPACTION || defined CONFIG_CMA // CONFIG_COMPACTION=y, CONFIG_CMA=n
 	/* Set to true when the PG_migrate_skip bits should be cleared */
@@ -445,6 +450,7 @@ struct zone {
 	// sizeof(struct lruvec): 56 bytes
 	struct lruvec		lruvec;
 
+	// ARM10C 20140405
 	unsigned long		pages_scanned;	   /* since last reclaim */
 	unsigned long		flags;		   /* zone flags, see below */
 
@@ -621,6 +627,7 @@ static inline bool zone_spans_pfn(const struct zone *zone, unsigned long pfn)
 	return zone->zone_start_pfn <= pfn && pfn < zone_end_pfn(zone);
 }
 
+// ARM10C 20140405
 static inline bool zone_is_initialized(struct zone *zone)
 {
 	return !!zone->wait_table;
@@ -1434,7 +1441,7 @@ unsigned long __init node_memmap_size_bytes(int, unsigned long, unsigned long);
  * pfn_valid_within() should be used in this case; we optimise this away
  * when we have no holes within a MAX_ORDER_NR_PAGES block.
  */
-#ifdef CONFIG_HOLES_IN_ZONE
+#ifdef CONFIG_HOLES_IN_ZONE	// n
 #define pfn_valid_within(pfn) pfn_valid(pfn)
 #else
 #define pfn_valid_within(pfn) (1)

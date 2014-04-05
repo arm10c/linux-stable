@@ -19,6 +19,7 @@
 #define ZONES_SHIFT 1
 #elif MAX_NR_ZONES <= 4
 // ARM10C 20131214
+// ARM10C 20140405
 #define ZONES_SHIFT 2
 #else
 #error ZONES_SHIFT -- too many zones configured adjust calculation

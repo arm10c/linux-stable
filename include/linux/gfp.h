@@ -380,6 +380,7 @@ static inline struct zonelist *node_zonelist(int nid, gfp_t flags)
 }
 
 #ifndef HAVE_ARCH_FREE_PAGE
+// ARM10C 20140405
 static inline void arch_free_page(struct page *page, int order) { }
 #endif
 #ifndef HAVE_ARCH_ALLOC_PAGE

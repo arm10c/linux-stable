@@ -50,6 +50,7 @@ extern unsigned long __per_cpu_offset[NR_CPUS];
 // #define SHIFT_PERCPU_PTR(&boot_pageset, __per_cpu_offset[0])	({
 //      &boot_pageset + __per_cpu_offset[0]
 // })
+// ARM10C 20140405
 #define SHIFT_PERCPU_PTR(__p, __offset)	({				\
 	__verify_pcpu_ptr((__p));					\
 	RELOC_HIDE((typeof(*(__p)) __kernel __force *)(__p), (__offset)); \
@@ -71,6 +72,7 @@ extern unsigned long __per_cpu_offset[NR_CPUS];
 	(*SHIFT_PERCPU_PTR(&(var), per_cpu_offset(cpu)))
 
 #ifndef __this_cpu_ptr
+// ARM10C 20140405
 #define __this_cpu_ptr(ptr) SHIFT_PERCPU_PTR(ptr, __my_cpu_offset)
 #endif
 #ifdef CONFIG_DEBUG_PREEMPT

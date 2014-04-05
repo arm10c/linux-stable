@@ -439,12 +439,12 @@ do {								\
 #else /* CONFIG_LOCK_STAT */
 
 #define lock_contended(lockdep_map, ip) do {} while (0)
-// ARM10C 20140315
 #define lock_acquired(lockdep_map, ip) do {} while (0)
 
 // ARM10C 20140125
 // LOCK_CONTENDED(lock, do_raw_write_trylock, do_raw_write_lock);
 // => do_raw_write_lock(lock)
+// ARM10C 20140405
 #define LOCK_CONTENDED(_lock, try, lock) \
 	lock(_lock)
 

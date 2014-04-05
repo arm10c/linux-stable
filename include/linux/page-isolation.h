@@ -1,7 +1,7 @@
 #ifndef __LINUX_PAGEISOLATION_H
 #define __LINUX_PAGEISOLATION_H
 
-#ifdef CONFIG_MEMORY_ISOLATION
+#ifdef CONFIG_MEMORY_ISOLATION	// n
 static inline bool is_migrate_isolate_page(struct page *page)
 {
 	return get_pageblock_migratetype(page) == MIGRATE_ISOLATE;
@@ -15,6 +15,7 @@ static inline bool is_migrate_isolate_page(struct page *page)
 {
 	return false;
 }
+// ARM10C 20140405
 static inline bool is_migrate_isolate(int migratetype)
 {
 	return false;

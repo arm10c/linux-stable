@@ -66,7 +66,8 @@ struct page {
 						 * this page is only used to
 						 * free other pages.
 						 */
-		};
+						// ARM10C 20140405
+		};				// index : migratetype이 저장됨
 
 		union {
 #if defined(CONFIG_HAVE_CMPXCHG_DOUBLE) && \

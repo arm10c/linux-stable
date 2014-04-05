@@ -128,6 +128,7 @@
  * A trick to suppress uninitialized variable warning without generating any
  * code
  */
+// ARM10C 20140405
 #define uninitialized_var(x) x = x
 
 #define __always_inline		inline __attribute__((always_inline))
