@@ -9,6 +9,7 @@
 # endif
 #endif
 
+// ARM10C 20140405
 #define __used			__attribute__((__used__))
 #define __must_check 		__attribute__((warn_unused_result))
 #define __compiler_offsetof(a,b) __builtin_offsetof(a,b)

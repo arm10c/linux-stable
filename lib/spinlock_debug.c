@@ -78,6 +78,7 @@ static void spin_bug(raw_spinlock_t *lock, const char *msg)
 
 #define SPIN_BUG_ON(cond, lock, msg) if (unlikely(cond)) spin_bug(lock, msg)
 
+// ARM10C 20140405
 static inline void
 debug_spin_lock_before(raw_spinlock_t *lock)
 {
@@ -87,6 +88,7 @@ debug_spin_lock_before(raw_spinlock_t *lock)
 							lock, "cpu recursion");
 }
 
+// ARM10C 20140405
 static inline void debug_spin_lock_after(raw_spinlock_t *lock)
 {
 	lock->owner_cpu = raw_smp_processor_id();

@@ -20,8 +20,22 @@
 #include <linux/writeback.h>
 #include <linux/compaction.h>
 
-#ifdef CONFIG_VM_EVENT_COUNTERS
+#ifdef CONFIG_VM_EVENT_COUNTERS // CONFIG_VM_EVENT_COUNTERS=y
+// ARM10C 20140405
+// DEFINE_PER_CPU(struct vm_event_state, vm_event_states):
+// __attribute__((section(".data..percpu" "")))
+// __typeof__(struct vm_event_state) vm_event_states = {{0}};
 DEFINE_PER_CPU(struct vm_event_state, vm_event_states) = {{0}};
+// ARM10C 20140405
+// EXPORT_PER_CPU_SYMBOL(vm_event_states):
+// extern typeof(vm_event_states) vm_event_states;
+// static const char __kstrtab_vm_event_states[]
+// __attribute__((section("__ksymtab_strings"), aligned(1)))
+// = "vm_event_states";
+// static const struct kernel_symbol __ksymtab_vm_event_states
+// __attribute__((__used__))
+// __attribute__((section("___ksymtab" "" "+" "vm_event_states"), unused))
+// = { (unsigned long)&vm_event_states, __kstrtab_vm_event_states }
 EXPORT_PER_CPU_SYMBOL(vm_event_states);
 
 static void sum_vm_events(unsigned long *ret)

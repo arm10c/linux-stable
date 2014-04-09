@@ -139,9 +139,9 @@ enum pageflags {
  * Macros to create function definitions for page flags
  */
 // ARM10C 20140405
+// PG_compound: 14
 // PageCompound(const struct page *page)
 // { return test_bit(PG_compound, &page->flags); }
-// PG_compound : 14
 #define TESTPAGEFLAG(uname, lname)					\
 static inline int Page##uname(const struct page *page)			\
 			{ return test_bit(PG_##lname, &page->flags); }
@@ -342,7 +342,7 @@ static inline void set_page_writeback(struct page *page)
 	test_set_page_writeback(page);
 }
 
-#ifdef CONFIG_PAGEFLAGS_EXTENDED		// n
+#ifdef CONFIG_PAGEFLAGS_EXTENDED // CONFIG_PAGEFLAGS_EXTENDED=n
 /*
  * System with lots of page flags available. This allows separate
  * flags for PageHead() and PageTail() checks of compound pages so that bit
@@ -557,9 +557,9 @@ static inline void ClearPageSlabPfmemalloc(struct page *page)
  * there has been a kernel bug or struct page corruption.
  */
 // ARM10C 20140405
-// NR_PAGEFLAGS : 21
+// NR_PAGEFLAGS: 21
+// PAGE_FLAGS_CHECK_AT_PREP: 0x1FFFFF
 #define PAGE_FLAGS_CHECK_AT_PREP	((1 << NR_PAGEFLAGS) - 1)
-// PAGE_FLAGS_CHECK_AT_PREP : 0x1FFFFF
 
 #define PAGE_FLAGS_PRIVATE				\
 	(1 << PG_private | 1 << PG_private_2)

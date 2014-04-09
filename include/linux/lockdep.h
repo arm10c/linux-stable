@@ -445,6 +445,8 @@ do {								\
 // LOCK_CONTENDED(lock, do_raw_write_trylock, do_raw_write_lock);
 // => do_raw_write_lock(lock)
 // ARM10C 20140405
+// LOCK_CONTENDED(lock, do_raw_spin_trylock, do_raw_spin_lock);
+// => do_raw_spin_lock(lock)
 #define LOCK_CONTENDED(_lock, try, lock) \
 	lock(_lock)
 
@@ -487,7 +489,7 @@ static inline void print_irqtrace_events(struct task_struct *curr)
  * on the per lock-class debug mode:
  */
 
-#ifdef CONFIG_DEBUG_LOCK_ALLOC	// ARM10C N 
+#ifdef CONFIG_DEBUG_LOCK_ALLOC	// CONFIG_DEBUG_LOCK_ALLOC=n
 # ifdef CONFIG_PROVE_LOCKING
 #  define spin_acquire(l, s, t, i)		lock_acquire(l, s, t, 0, 2, NULL, i)
 #  define spin_acquire_nest(l, s, t, n, i)	lock_acquire(l, s, t, 0, 2, n, i)
@@ -497,6 +499,7 @@ static inline void print_irqtrace_events(struct task_struct *curr)
 # endif
 # define spin_release(l, n, i)			lock_release(l, n, i)
 #else
+// ARM10C 20140405
 # define spin_acquire(l, s, t, i)		do { } while (0)    // ARM10C this 
 # define spin_release(l, n, i)			do { } while (0)    // ARM10C this 
 #endif

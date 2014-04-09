@@ -242,6 +242,39 @@ extern void __bad_size_call_parameter(void);
 })
 
 // ARM10C 20140405
+// __this_cpu_add_,  vm_event_states.event[PGFREE]: 0, delta: 32
+//
+// __verify_pcpu_ptr(&(vm_event_states.event[PGFREE])):
+// do {
+// 	const void __percpu *__vpp_verify = (typeof(&(vm_event_states.event[PGFREE]))NULL;
+// 	(void)__vpp_verify;
+// } while (0)
+// __this_cpu_add_4(vm_event_states.event[PGFREE], delta):
+// do {
+//	*({
+//		do {
+//			const void __percpu *__vpp_verify = (typeof(&(vm_event_states.event[PGFREE]))NULL;
+//			(void)__vpp_verify;
+//		} while (0)
+//		&(vm_event_states.event[PGFREE]) + __my_cpu_offset;
+//	}) += delta;
+// } while (0)
+//
+// #define __pcpu_size_call(__this_cpu_add_, vm_event_states.event[PGFREE], delta):
+// do {
+// 	do {
+// 		const void __percpu *__vpp_verify = (typeof(&(vm_event_states.event[PGFREE]))NULL;
+// 		(void)__vpp_verify;
+// 	} while (0)
+// 	switch(sizeof(vm_event_states.event[PGFREE])) {
+// 		case 1: __this_cpu_add_1(vm_event_states.event[PGFREE], delta);break;
+// 		case 2: __this_cpu_add_2(vm_event_states.event[PGFREE], delta);break;
+// 		case 4: __this_cpu_add_4(vm_event_states.event[PGFREE], delta);break;
+// 		case 8: __this_cpu_add_8(vm_event_states.event[PGFREE], delta);break;
+// 		default:
+// 			__bad_size_call_parameter();break;
+// 	}
+// } while (0)
 #define __pcpu_size_call(stem, variable, ...)				\
 do {									\
 	__verify_pcpu_ptr(&(variable));					\
@@ -562,6 +595,26 @@ do {									\
 # define __this_cpu_read(pcp)	__pcpu_size_call_return(__this_cpu_read_, (pcp))
 #endif
 
+// ARM10C 20140405
+// __this_cpu_ptr(&(vm_event_states.event[PGFREE])):
+// ({
+// 	do {
+// 		const void __percpu *__vpp_verify = (typeof(&(vm_event_states.event[PGFREE]))NULL;
+// 		(void)__vpp_verify;
+// 	} while (0)
+// 	&(vm_event_states.event[PGFREE]) + __my_cpu_offset;
+// })
+//
+// #define __this_cpu_generic_to_op(vm_event_states.event[PGFREE], delta, +=):
+// do {
+//	*({
+//		do {
+//			const void __percpu *__vpp_verify = (typeof(&(vm_event_states.event[PGFREE]))NULL;
+//			(void)__vpp_verify;
+//		} while (0)
+//		&(vm_event_states.event[PGFREE]) + __my_cpu_offset;
+//	}) += delta;
+// } while (0)
 #define __this_cpu_generic_to_op(pcp, val, op)				\
 do {									\
 	*__this_cpu_ptr(&(pcp)) op val;					\
@@ -592,12 +645,34 @@ do {									\
 # endif
 # ifndef __this_cpu_add_4
 // ARM10C 20140405
+// __this_cpu_generic_to_op(vm_event_states.event[PGFREE], delta, +=):
+// do {
+//	*({
+//		do {
+//			const void __percpu *__vpp_verify = (typeof(&(vm_event_states.event[PGFREE]))NULL;
+//			(void)__vpp_verify;
+//		} while (0)
+//		&(vm_event_states.event[PGFREE]) + __my_cpu_offset;
+//	}) += delta;
+// } while (0)
+//
+// __this_cpu_add_4(vm_event_states.event[PGFREE], delta):
+// do {
+//	*({
+//		do {
+//			const void __percpu *__vpp_verify = (typeof(&(vm_event_states.event[PGFREE]))NULL;
+//			(void)__vpp_verify;
+//		} while (0)
+//		&(vm_event_states.event[PGFREE]) + __my_cpu_offset;
+//	}) += delta;
+// } while (0)
 #  define __this_cpu_add_4(pcp, val)	__this_cpu_generic_to_op((pcp), (val), +=)
 # endif
 # ifndef __this_cpu_add_8
 #  define __this_cpu_add_8(pcp, val)	__this_cpu_generic_to_op((pcp), (val), +=)
 # endif
 // ARM10C 20140405
+// vm_event_states.event[PGFREE]: 0, delta: 32
 # define __this_cpu_add(pcp, val)	__pcpu_size_call(__this_cpu_add_, (pcp), (val))
 #endif
 

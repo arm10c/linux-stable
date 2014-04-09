@@ -380,7 +380,7 @@ static inline void mem_cgroup_replace_page_cache(struct page *oldpage,
 }
 #endif /* CONFIG_MEMCG */
 
-#if !defined(CONFIG_MEMCG) || !defined(CONFIG_DEBUG_VM)
+#if !defined(CONFIG_MEMCG) || !defined(CONFIG_DEBUG_VM) // CONFIG_MEMCG=n, CONFIG_DEBUG_VM=n
 // ARM10C 20140405
 static inline bool
 mem_cgroup_bad_page_check(struct page *page)

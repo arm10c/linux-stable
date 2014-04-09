@@ -253,7 +253,7 @@ struct inode;
 
 /* It's valid only if the page is free path or free_list */
 // ARM10C 20140405
-// page : 0x20000 (fpn), migratetype : 0x2
+// page: 0x20000 (pfn), migratetype: 0x2
 static inline void set_freepage_migratetype(struct page *page, int migratetype)
 {
 	page->index = migratetype;
@@ -463,7 +463,8 @@ static inline void init_page_count(struct page *page)
 // ARM10C 20140405
 static inline int PageBuddy(struct page *page)
 {
-	// page->_mapcount : -1		(memmap_init 함수에서 설정)
+	// page->_mapcount: -1 (memmap_init 함수에서 설정)
+	// PAGE_BUDDY_MAPCOUNT_VALUE: (-128)
 	return atomic_read(&page->_mapcount) == PAGE_BUDDY_MAPCOUNT_VALUE;
 	// return 0
 }
@@ -471,10 +472,12 @@ static inline int PageBuddy(struct page *page)
 // ARM10C 20140405
 static inline void __SetPageBuddy(struct page *page)
 {
-	// page->_mapcount : -1
+	// page->_mapcount: -1
 	VM_BUG_ON(atomic_read(&page->_mapcount) != -1);
+
+	// page->_mapcount: -1, PAGE_BUDDY_MAPCOUNT_VALUE: (-128)
 	atomic_set(&page->_mapcount, PAGE_BUDDY_MAPCOUNT_VALUE);
-	// page->_mapcount : -128
+	// page->_mapcount: -128
 }
 
 static inline void __ClearPageBuddy(struct page *page)
@@ -1834,7 +1837,7 @@ static inline void vm_stat_account(struct mm_struct *mm,
 }
 #endif /* CONFIG_PROC_FS */
 
-#ifdef CONFIG_DEBUG_PAGEALLOC
+#ifdef CONFIG_DEBUG_PAGEALLOC // CONFIG_DEBUG_PAGEALLOC=n
 extern void kernel_map_pages(struct page *page, int numpages, int enable);
 #ifdef CONFIG_HIBERNATION
 extern bool kernel_page_present(struct page *page);
@@ -1925,7 +1928,7 @@ extern void copy_user_huge_page(struct page *dst, struct page *src,
 				unsigned int pages_per_huge_page);
 #endif /* CONFIG_TRANSPARENT_HUGEPAGE || CONFIG_HUGETLBFS */
 
-#ifdef CONFIG_DEBUG_PAGEALLOC		// n
+#ifdef CONFIG_DEBUG_PAGEALLOC // CONFIG_DEBUG_PAGEALLOC=n
 extern unsigned int _debug_guardpage_minorder;
 
 static inline unsigned int debug_guardpage_minorder(void)

@@ -73,6 +73,7 @@
 #define LOCK_SECTION_END                        \
         ".previous\n\t"
 
+// ARM10C 20140405
 #define __lockfunc __attribute__((section(".spinlock.text")))
 
 /*
@@ -144,7 +145,8 @@ do {								\
  */
 #define raw_spin_unlock_wait(lock)	arch_spin_unlock_wait(&(lock)->raw_lock)
 
-#ifdef CONFIG_DEBUG_SPINLOCK	// ARM10C Y 
+#ifdef CONFIG_DEBUG_SPINLOCK // CONFIG_DEBUG_SPINLOCK=y
+// ARM10C 20140405
  extern void do_raw_spin_lock(raw_spinlock_t *lock) __acquires(lock);
 #define do_raw_spin_lock_flags(lock, flags) do_raw_spin_lock(lock)
  extern int do_raw_spin_trylock(raw_spinlock_t *lock);	// ARM10C this 

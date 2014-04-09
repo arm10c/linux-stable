@@ -131,8 +131,8 @@ int __lockfunc _raw_spin_trylock_bh(raw_spinlock_t *lock)
 EXPORT_SYMBOL(_raw_spin_trylock_bh);
 #endif
 
+#ifndef CONFIG_INLINE_SPIN_LOCK // CONFIG_INLINE_SPIN_LOCK=n
 // ARM10C 20140405
-#ifndef CONFIG_INLINE_SPIN_LOCK		// n
 void __lockfunc _raw_spin_lock(raw_spinlock_t *lock)
 {
 	__raw_spin_lock(lock);

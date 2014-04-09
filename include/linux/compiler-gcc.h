@@ -44,6 +44,15 @@
 //  ({ unsigned long __ptr;
 //  __asm__ ("" : "=r"(__ptr) : "0"((struct per_cpu_pageset __kernel __force *)(&boot_pageset)));
 //  (typeof((struct per_cpu_pageset __kernel __force *)(&boot_pageset))) (__ptr + ((__per_cpu_offset[0]))); })
+//
+// ARM10C 20140405
+// RELOC_HIDE((typeof(*(&(vm_event_states.event[PGFREE]))) __kernel __force *)(&(vm_event_states.event[PGFREE])), (__my_cpu_offset)):
+// &(vm_event_states.event[PGFREE]) + __my_cpu_offset
+//
+// #define RELOC_HIDE((typeof(*(&(vm_event_states.event[PGFREE]))) __kernel __force *)(&(vm_event_states.event[PGFREE])), __my_cpu_offset)
+//  ({ unsigned long __ptr;
+//  __asm__ ("" : "=r"(__ptr) : "0"((typeof(*(&(vm_event_states.event[PGFREE]))) __kernel __force *)(&(vm_event_states.event[PGFREE]))));
+//  (typeof((typeof(*(&(vm_event_states.event[PGFREE]))) __kernel __force *)(&(vm_event_states.event[PGFREE])))) (__ptr + (__my_cpu_offset)); })
 #define RELOC_HIDE(ptr, off)					\
   ({ unsigned long __ptr;					\
     __asm__ ("" : "=r"(__ptr) : "0"(ptr));		\
