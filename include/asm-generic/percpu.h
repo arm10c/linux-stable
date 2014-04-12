@@ -106,6 +106,7 @@ extern unsigned long __per_cpu_offset[NR_CPUS];
 // 	} while (0)
 //	&(vm_event_states.event[PGFREE]) + __my_cpu_offset;
 // })
+// ARM10C 20140412
 #define __this_cpu_ptr(ptr) SHIFT_PERCPU_PTR(ptr, __my_cpu_offset)
 #endif
 #ifdef CONFIG_DEBUG_PREEMPT

@@ -30,9 +30,13 @@ struct vm_event_state {
 
 DECLARE_PER_CPU(struct vm_event_state, vm_event_states);
 
+// ARM10C 20140412
+// PGFREE: 7
 static inline void __count_vm_event(enum vm_event_item item)
 {
+	// item: PGFREE: 7, vm_event_states.event[7]: 0
 	__this_cpu_inc(vm_event_states.event[item]);
+	// *(&(vm_event_states.event[PGFREE]) + __my_cpu_offset): 1
 }
 
 static inline void count_vm_event(enum vm_event_item item)
@@ -118,11 +122,18 @@ static inline void vm_events_fold_cpu(int cpu)
  */
 extern atomic_long_t vm_stat[NR_VM_ZONE_STAT_ITEMS];
 
+// ARM10C 20140412
+// x: 32, zone: &contig_page_data->node_zones[ZONE_NORMAL], item: 0
 static inline void zone_page_state_add(long x, struct zone *zone,
 				 enum zone_stat_item item)
 {
+	// x: 32, item: 0, &zone->vm_stat[0]: &contig_page_data->node_zones[ZONE_NORMAL].vm_stat[0]: 0
 	atomic_long_add(x, &zone->vm_stat[item]);
+	// &zone->vm_stat[0]: &contig_page_data->node_zones[ZONE_NORMAL].vm_stat[0]: 32
+
+	// item: 0, vm_stat[0]: 0
 	atomic_long_add(x, &vm_stat[item]);
+	// vm_stat[0]: 32
 }
 
 static inline unsigned long global_page_state(enum zone_stat_item item)
@@ -210,7 +221,8 @@ extern void zone_statistics(struct zone *, struct zone *, gfp_t gfp);
 
 extern void inc_zone_state(struct zone *, enum zone_stat_item);
 
-#ifdef CONFIG_SMP
+#ifdef CONFIG_SMP // CONFIG_SMP=y
+// ARM10C 20140412
 void __mod_zone_page_state(struct zone *, enum zone_stat_item item, int);
 void __inc_zone_page_state(struct page *, enum zone_stat_item);
 void __dec_zone_page_state(struct page *, enum zone_stat_item);
@@ -287,13 +299,18 @@ static inline void drain_zonestat(struct zone *zone,
 #endif		/* CONFIG_SMP */
 
 // ARM10C 20140405
-// zone : &contig_page_data->node_zones[ZONE_NORMAL], nr_pages : 32
-// migratetype : 0x2
+// ARM10C 20140412
+// zone: &contig_page_data->node_zones[ZONE_NORMAL], nr_pages: 32, migratetype: 0x2
 static inline void __mod_zone_freepage_state(struct zone *zone, int nr_pages,
 					     int migratetype)
 {
-	// NR_FREE_PAGES : 0, nr_pages : 32
+	// zone: &contig_page_data->node_zones[ZONE_NORMAL], NR_FREE_PAGES: 0, nr_pages: 32
 	__mod_zone_page_state(zone, NR_FREE_PAGES, nr_pages);
+	// &contig_page_data->node_zones[ZONE_NORMAL].vm_stat[NR_FREE_PAGES]: 32 로 설정
+	// vmstat.c의 vm_stat[NR_FREE_PAGES] 전역 변수에도 32로 설정
+
+	// migratetype: 0x2
+	// is_migrate_cma(0x2): false
 	if (is_migrate_cma(migratetype))
 		__mod_zone_page_state(zone, NR_FREE_CMA_PAGES, nr_pages);
 }

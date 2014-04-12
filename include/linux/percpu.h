@@ -185,6 +185,25 @@ extern phys_addr_t per_cpu_ptr_to_phys(void *addr);
 
 extern void __bad_size_call_parameter(void);
 
+// ARM10C 20140412
+// __this_cpu_read_, p: (&(&boot_pageset)->vm_stat_diff[0])
+//
+// __this_cpu_read_1((&(&boot_pageset)->vm_stat_diff[0])):
+// (&(&boot_pageset)->vm_stat_diff[0]) + __my_cpu_offset;
+//
+// #define __pcpu_size_call_return(__this_cpu_read_, (&(&boot_pageset)->vm_stat_diff[0]))
+// ({	typeof((&(&boot_pageset)->vm_stat_diff[0])) pscr_ret__;
+// 	__verify_pcpu_ptr(&((&(&boot_pageset)->vm_stat_diff[0])));
+// 	switch(sizeof((&(&boot_pageset)->vm_stat_diff[0]))) {
+// 	case 1: pscr_ret__ = __this_cpu_read_1((&(&boot_pageset)->vm_stat_diff[0]));break;
+// 	case 2: pscr_ret__ = __this_cpu_read_2((&(&boot_pageset)->vm_stat_diff[0]));break;
+// 	case 4: pscr_ret__ = __this_cpu_read_4((&(&boot_pageset)->vm_stat_diff[0]));break;
+// 	case 8: pscr_ret__ = __this_cpu_read_8((&(&boot_pageset)->vm_stat_diff[0]));break;
+// 	default:
+// 		__bad_size_call_parameter();break;
+// 	}
+// 	pscr_ret__;
+// })
 #define __pcpu_size_call_return(stem, variable)				\
 ({	typeof(variable) pscr_ret__;					\
 	__verify_pcpu_ptr(&(variable));					\
@@ -271,6 +290,22 @@ extern void __bad_size_call_parameter(void);
 // 		case 2: __this_cpu_add_2(vm_event_states.event[PGFREE], delta);break;
 // 		case 4: __this_cpu_add_4(vm_event_states.event[PGFREE], delta);break;
 // 		case 8: __this_cpu_add_8(vm_event_states.event[PGFREE], delta);break;
+// 		default:
+// 			__bad_size_call_parameter();break;
+// 	}
+// } while (0)
+
+// ARM10C 20140412
+// __this_cpu_write_, p: (&boot_pageset)->vm_stat_diff[0], x: 0
+//
+// #define __pcpu_size_call(__this_cpu_write_, (&boot_pageset)->vm_stat_diff[0], x):
+// do {
+// 	__verify_pcpu_ptr(&((&boot_pageset)->vm_stat_diff[0]));
+// 	switch(sizeof((&boot_pageset)->vm_stat_diff[0])) {
+// 		case 1: __this_cpu_write_1((&boot_pageset)->vm_stat_diff[0], x);break;
+// 		case 2: __this_cpu_write_2((&boot_pageset)->vm_stat_diff[0], x);break;
+// 		case 4: __this_cpu_write_4((&boot_pageset)->vm_stat_diff[0], x);break;
+// 		case 8: __this_cpu_write_8((&boot_pageset)->vm_stat_diff[0], x);break;
 // 		default:
 // 			__bad_size_call_parameter();break;
 // 	}
@@ -581,6 +616,9 @@ do {									\
  */
 #ifndef __this_cpu_read
 # ifndef __this_cpu_read_1
+// ARM10C 20140412
+// __this_cpu_read_1((&(&boot_pageset)->vm_stat_diff[0])):
+// (&(&boot_pageset)->vm_stat_diff[0]) + __my_cpu_offset;
 #  define __this_cpu_read_1(pcp)	(*__this_cpu_ptr(&(pcp)))
 # endif
 # ifndef __this_cpu_read_2
@@ -592,6 +630,8 @@ do {									\
 # ifndef __this_cpu_read_8
 #  define __this_cpu_read_8(pcp)	(*__this_cpu_ptr(&(pcp)))
 # endif
+// ARM10C 20140412
+//p: &(&boot_pageset)->vm_stat_diff[0]
 # define __this_cpu_read(pcp)	__pcpu_size_call_return(__this_cpu_read_, (pcp))
 #endif
 
@@ -615,12 +655,46 @@ do {									\
 //		&(vm_event_states.event[PGFREE]) + __my_cpu_offset;
 //	}) += delta;
 // } while (0)
+//
+// ARM10C 20140412
+// __this_cpu_generic_to_op(((&boot_pageset)->vm_stat_diff[0]), (x), =):
+// do {
+//	*({
+//		do {
+//			const void __percpu *__vpp_verify = (typeof(((&boot_pageset)->vm_stat_diff[0]))NULL;
+//			(void)__vpp_verify;
+//		} while (0)
+//		&((&boot_pageset)->vm_stat_diff[0]) + __my_cpu_offset;
+//	}) = x;
+// } while (0)
 #define __this_cpu_generic_to_op(pcp, val, op)				\
 do {									\
 	*__this_cpu_ptr(&(pcp)) op val;					\
 } while (0)
 
 #ifndef __this_cpu_write
+// ARM10C 20140412
+// __this_cpu_generic_to_op(((&boot_pageset)->vm_stat_diff[0]), (x), =):
+// do {
+//	*({
+//		do {
+//			const void __percpu *__vpp_verify = (typeof(((&boot_pageset)->vm_stat_diff[0]))NULL;
+//			(void)__vpp_verify;
+//		} while (0)
+//		&((&boot_pageset)->vm_stat_diff[0]) + __my_cpu_offset;
+//	}) = x;
+// } while (0)
+//
+// __this_cpu_write_1((&boot_pageset)->vm_stat_diff[0], x):
+// do {
+//	*({
+//		do {
+//			const void __percpu *__vpp_verify = (typeof(((&boot_pageset)->vm_stat_diff[0]))NULL;
+//			(void)__vpp_verify;
+//		} while (0)
+//		&((&boot_pageset)->vm_stat_diff[0]) + __my_cpu_offset;
+//	}) = x;
+// } while (0)
 # ifndef __this_cpu_write_1
 #  define __this_cpu_write_1(pcp, val)	__this_cpu_generic_to_op((pcp), (val), =)
 # endif
@@ -633,6 +707,8 @@ do {									\
 # ifndef __this_cpu_write_8
 #  define __this_cpu_write_8(pcp, val)	__this_cpu_generic_to_op((pcp), (val), =)
 # endif
+// ARM10C 20140412
+// p: (&boot_pageset)->vm_stat_diff[0], x: 0
 # define __this_cpu_write(pcp, val)	__pcpu_size_call(__this_cpu_write_, (pcp), (val))
 #endif
 
@@ -673,6 +749,8 @@ do {									\
 # endif
 // ARM10C 20140405
 // vm_event_states.event[PGFREE]: 0, delta: 32
+// ARM10C 20140412
+// vm_event_states.event[7]: 0, 1
 # define __this_cpu_add(pcp, val)	__pcpu_size_call(__this_cpu_add_, (pcp), (val))
 #endif
 
@@ -681,6 +759,8 @@ do {									\
 #endif
 
 #ifndef __this_cpu_inc
+// ARM10C 20140412
+// vm_event_states.event[7]: 0
 # define __this_cpu_inc(pcp)		__this_cpu_add((pcp), 1)
 #endif
 

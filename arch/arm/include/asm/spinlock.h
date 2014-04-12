@@ -152,6 +152,7 @@ static inline int arch_spin_trylock(arch_spinlock_t *lock)
 }
 
 // ARM10C 20130322
+// ARM10C 20140412
 static inline void arch_spin_unlock(arch_spinlock_t *lock)
 {
 	smp_mb(); // smb_mb(), dsb_sev() 중 dsb()는 owner를 보호하기위한 것

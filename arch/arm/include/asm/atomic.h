@@ -44,6 +44,8 @@
  * store exclusive to ensure that these are atomic.  We may loop
  * to ensure that the update happens.
  */
+// ARM10C 20140412
+// i: 32, v: &contig_page_data->node_zones[ZONE_NORMAL].vm_stat[0]
 static inline void atomic_add(int i, atomic_t *v)
 {
 	unsigned long tmp;

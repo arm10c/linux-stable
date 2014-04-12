@@ -39,6 +39,7 @@ extern void __chk_io_ptr(const volatile void __iomem *);
 # define __must_hold(x)
 // ARM10C 20140405
 # define __acquires(x)
+// ARM10C 20140412
 # define __releases(x)
 # define __acquire(x) (void)0
 # define __release(x) (void)0
@@ -361,6 +362,9 @@ void ftrace_likely_update(struct ftrace_branch_data *f, int val, int expect);
 // ARM10C 20140315
 // ACCESS_ONCE((&(&(&(&cpu_add_remove_lock)->wait_lock)->rlock)->raw_lock)->tickets):
 // (*(volatile struct __raw_tickets *)&((&(&(&(&cpu_add_remove_lock)->wait_lock)->rlock)->raw_lock)->tickets))
+*/
+/*
+// ARM10C 20140412
 */
 #define ACCESS_ONCE(x) (*(volatile typeof(x) *)&(x))
 

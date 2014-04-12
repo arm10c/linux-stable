@@ -249,17 +249,21 @@ struct inode;
 // ARM10C 20140405
 #define page_private(page)		((page)->private)
 // ARM10C 20140405
+// ARM10C 20140412
 #define set_page_private(page, v)	((page)->private = (v))
 
 /* It's valid only if the page is free path or free_list */
 // ARM10C 20140405
 // page: 0x20000 (pfn), migratetype: 0x2
+// ARM10C 20140412
 static inline void set_freepage_migratetype(struct page *page, int migratetype)
 {
 	page->index = migratetype;
 }
 
 /* It's valid only if the page is free path or free_list */
+// ARM10C 20140412
+// page: 0x20000 (pfn)
 static inline int get_freepage_migratetype(struct page *page)
 {
 	return page->index;
@@ -480,10 +484,16 @@ static inline void __SetPageBuddy(struct page *page)
 	// page->_mapcount: -128
 }
 
+// ARM10C 20140412
+// page: 0x20000 (pfn)
 static inline void __ClearPageBuddy(struct page *page)
 {
+	// page: 0x20000 (pfn)
 	VM_BUG_ON(!PageBuddy(page));
+
+	// page->_mapcount: -128
 	atomic_set(&page->_mapcount, -1);
+	// page->_mapcount: -1
 }
 
 void put_page(struct page *page);
@@ -1943,6 +1953,7 @@ static inline bool page_is_guard(struct page *page)
 #else
 static inline unsigned int debug_guardpage_minorder(void) { return 0; }
 // ARM10C 20140405
+// ARM10C 20140412
 static inline bool page_is_guard(struct page *page) { return false; }
 #endif /* CONFIG_DEBUG_PAGEALLOC */
 

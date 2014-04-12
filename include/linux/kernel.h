@@ -44,6 +44,7 @@
 // ARM10C 20131207
 // ARM10C 20140301
 // ARM10C 20140329
+// ARM10C 20140412
 #define ALIGN(x, a)		__ALIGN_KERNEL((x), (a))
 #define __ALIGN_MASK(x, mask)	__ALIGN_KERNEL_MASK((x), (mask))
 #define PTR_ALIGN(p, a)		((typeof(p))ALIGN((unsigned long)(p), (a)))

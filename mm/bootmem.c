@@ -83,6 +83,8 @@ static unsigned long __init bootmap_bytes(unsigned long pages)
  */
 // ARM10C 20131207
 // end_pfn - start_pfn: 0x2f800
+// ARM10C 20140412
+// 0x2f800
 unsigned long __init bootmem_bootmap_pages(unsigned long pages)
 {
 	// pages: 0x2f800, bytes: 0x5F00
@@ -267,39 +269,110 @@ static unsigned long __init free_all_bootmem_core(bootmem_data_t *bdata)
 		// start: 0x20000, BITS_PER_LONG: 32, ~0: 0xFFFFFFFF
 		// vec: ~((&bdata_list)->node_bootmem_map[0])
 		if (IS_ALIGNED(start, BITS_PER_LONG) && vec == ~0UL) {
+			// node_bootmem_map[0]의 값이 0일 경우로 가정
+
 			// BITS_PER_LONG: 32, ilog2(BITS_PER_LONG): 5
 			int order = ilog2(BITS_PER_LONG);
 			// order: 5
 
 			// start: 0x20000, pfn_to_page(0x20000): 0x20000의 해당하는 struct page의 주소
 			__free_pages_bootmem(pfn_to_page(start), order);
-			count += BITS_PER_LONG;
-			start += BITS_PER_LONG;
-		} else {
-			unsigned long cur = start;
+			// CPU0의 vm_event_states.event[PGFREE] 를 32로 설정함
+			// page에 해당하는 pageblock의 migrate flag를 반환함
+			// struct page의 index 멤버에 migratetype을 저장함
+			// order 5 buddy를 contig_page_data에 추가함
+			// &contig_page_data->node_zones[ZONE_NORMAL].vm_stat[NR_FREE_PAGES]: 32 로 설정
+			// vmstat.c의 vm_stat[NR_FREE_PAGES] 전역 변수에도 32로 설정
 
+			// count: 0, BITS_PER_LONG: 32
+			count += BITS_PER_LONG;
+			// count: 32
+
+			// start: 0x20000 (pfn), BITS_PER_LONG: 32
+			start += BITS_PER_LONG;
+			// start: 0x20020
+		} else {
+			// node_bootmem_map[0]의 값이 0아닐 경우로 가정
+			// node_bootmem_map[0]의 값이 0x000000F0 로 가정하고 분석
+
+			// start: 0x20000
+			unsigned long cur = start;
+			// cur: 0x20000
+
+			// start: 0x20000, BITS_PER_LONG: 32
 			start = ALIGN(start + 1, BITS_PER_LONG);
+			// start: 0x20020
+
+			// vec: ~((&bdata_list)->node_bootmem_map[0]): 0xffffff0f,
+			// start: 0x20020, cur: 0x20000
 			while (vec && cur != start) {
+				// vec: 0xffffff0f
 				if (vec & 1) {
+					// cur: 0x20000
 					page = pfn_to_page(cur);
+					// page: 0x20000 (pfn)
+
+					// page: 0x20000 (pfn), 0
 					__free_pages_bootmem(page, 0);
+					// CPU0의 vm_event_states.event[PGFREE] 를 1로 설정함
+					// page에 해당하는 pageblock의 migrate flag를 반환함
+					// struct page의 index 멤버에 migratetype을 저장함
+					// order 0 buddy를 contig_page_data에 추가함
+					// &contig_page_data->node_zones[ZONE_NORMAL].vm_stat[NR_FREE_PAGES]: 1 로 설정
+					// vmstat.c의 vm_stat[NR_FREE_PAGES] 전역 변수에도 1로 설정
+
+					// count: 0
 					count++;
+					// count: 1
 				}
+				// vec: 0xffffff0f
 				vec >>= 1;
+				// vec: 0x7fffff87
+
+				// cur: 0x20000
 				++cur;
+				// cur: 0x20001
 			}
+			// cur이 0x20000 ~ 0x20020까지 수행됨
 		}
 	}
+	
+	// CPU0의 vm_event_states.event[PGFREE] 를 order로 설정함
+	// page에 해당하는 pageblock의 migrate flag를 반환함
+	// struct page의 index 멤버에 migratetype을 저장함
+	// order 값의 buddy를 contig_page_data에 추가함
+	// &contig_page_data->node_zones[ZONE_NORMAL].vm_stat[NR_FREE_PAGES]: 2^order 값으로 설정
+	// vmstat.c의 vm_stat[NR_FREE_PAGES] 전역 변수에도 2^order 로 설정
+	// 현재 page의 page->private값과 buddy의 page->private값이 같으면 page order를 합치는 작업 수행
 
+	// bdata->node_bootmem_map: (&bdata_list)->node_bootmem_map: NULL 아닌 값
 	page = virt_to_page(bdata->node_bootmem_map);
+	// page: bdata->node_bootmem_map (pfn)
+
+	// bdata->node_low_pfn: (&bdata_list)->node_low_pfn: 0x4f800
+	// bdata->node_min_pfn: (&bdata_list)->node_min_pfn: 0x20000
 	pages = bdata->node_low_pfn - bdata->node_min_pfn;
+	// pages: 0x2f800
+
+	// bootmem_bootmap_pages(0x2f800): 0x6
 	pages = bootmem_bootmap_pages(pages);
+	// pages: 0x6
+
+	// count: 총 free된 page 수
 	count += pages;
+	// count: 총 free된 page 수 + 0x6
+
+	// pages: 0x6
 	while (pages--)
 		__free_pages_bootmem(page++, 0);
+		// bdata->node_bootmem_map에서 사용하던 page를 free시킴
+		// 이제부터는 buddy로 관리
 
+	// count: 총 free된 page 수 + 0x6
 	bdebug("nid=%td released=%lx\n", bdata - bootmem_node_data, count);
+	// "nid=0 released=????"
 
+	// count: 총 free된 page 수 + 0x6
 	return count;
 }
 
@@ -362,9 +435,13 @@ unsigned long __init free_all_bootmem(void)
 	//     bdata = list_entry(bdata->list.next, typeof(*bdata), list))
 		// bdata: &bdata_list, &bdata->list: (&bdata_list)->list
 		total_pages += free_all_bootmem_core(bdata);
+		// total_page: 총 free된 page 수 + 0x6
 
+	// totalram_pages: 0
 	totalram_pages += total_pages;
+	// totalram_pages: 총 free된 page 수 + 0x6
 
+	// total_page: 총 free된 page 수 + 0x6
 	return total_pages;
 }
 

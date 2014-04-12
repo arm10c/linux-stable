@@ -116,6 +116,7 @@ static inline void list_add_tail(struct list_head *new, struct list_head *head)
 // ARM10C 20140315
 // *entry : &waiter->list
 // &waiter->list->prev: prev, &waiter->list->next: next
+// ARM10C 20140412
 static inline void __list_del(struct list_head * prev, struct list_head * next)
 {
 	next->prev = prev;
@@ -137,10 +138,15 @@ static inline void __list_del_entry(struct list_head *entry)
 	__list_del(entry->prev, entry->next);
 }
 
+// ARM10C 20140412
 static inline void list_del(struct list_head *entry)
 {
 	__list_del(entry->prev, entry->next);
+
+	// LIST_POISON1  ((void *) 0x00100100 + 0)
 	entry->next = LIST_POISON1;
+
+	// LIST_POISON2  ((void *) 0x00200200 + 0)
 	entry->prev = LIST_POISON2;
 }
 #else
@@ -406,6 +412,7 @@ static inline void list_splice_tail_init(struct list_head *list,
 // ARM10C 20131130
 // ARM10C 20140322
 // ARM10C 20140329
+// ARM10C 20140412
 #define list_entry(ptr, type, member)		\
 	container_of(ptr, type, member)
 

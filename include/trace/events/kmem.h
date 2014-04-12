@@ -276,6 +276,7 @@ DEFINE_EVENT(mm_page, mm_page_alloc_zone_locked,
 	TP_ARGS(page, order, migratetype)
 );
 
+// ARM10C 20140412
 DEFINE_EVENT_PRINT(mm_page, mm_page_pcpu_drain,
 
 	TP_PROTO(struct page *page, unsigned int order, int migratetype),

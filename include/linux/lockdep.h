@@ -501,6 +501,7 @@ static inline void print_irqtrace_events(struct task_struct *curr)
 #else
 // ARM10C 20140405
 # define spin_acquire(l, s, t, i)		do { } while (0)    // ARM10C this 
+// ARM10C 20140412
 # define spin_release(l, n, i)			do { } while (0)    // ARM10C this 
 #endif
 

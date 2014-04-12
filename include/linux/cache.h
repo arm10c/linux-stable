@@ -36,13 +36,16 @@
 #endif
 
 #ifndef __cacheline_aligned
+// ARM10C 20140412
+// SMP_CACHE_BYTES: 64
 #define __cacheline_aligned					\
   __attribute__((__aligned__(SMP_CACHE_BYTES),			\
 		 __section__(".data..cacheline_aligned")))
 #endif /* __cacheline_aligned */
 
 #ifndef __cacheline_aligned_in_smp
-#ifdef CONFIG_SMP
+#ifdef CONFIG_SMP // CONFIG_SMP=y
+// ARM10C 20140412
 #define __cacheline_aligned_in_smp __cacheline_aligned
 #else
 #define __cacheline_aligned_in_smp

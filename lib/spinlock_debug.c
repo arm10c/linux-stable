@@ -95,6 +95,7 @@ static inline void debug_spin_lock_after(raw_spinlock_t *lock)
 	lock->owner = current;
 }
 
+// ARM10C 20140412
 static inline void debug_spin_unlock(raw_spinlock_t *lock)
 {
 	SPIN_BUG_ON(lock->magic != SPINLOCK_MAGIC, lock, "bad magic");
@@ -158,6 +159,7 @@ int do_raw_spin_trylock(raw_spinlock_t *lock)
 	return ret;
 }
 
+// ARM10C 20140412
 void do_raw_spin_unlock(raw_spinlock_t *lock)
 {
 	debug_spin_unlock(lock);

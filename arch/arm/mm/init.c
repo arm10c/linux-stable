@@ -727,6 +727,8 @@ void __init mem_init(void)
 
 	free_all_bootmem();
 
+// 2014/04/12 종료
+
 #ifdef CONFIG_SA1111
 	/* now that our DMA memory is actually so designated, we can free it */
 	free_reserved_area(__va(PHYS_OFFSET), swapper_pg_dir, -1, NULL);

@@ -150,6 +150,7 @@ do {								\
  extern void do_raw_spin_lock(raw_spinlock_t *lock) __acquires(lock);
 #define do_raw_spin_lock_flags(lock, flags) do_raw_spin_lock(lock)
  extern int do_raw_spin_trylock(raw_spinlock_t *lock);	// ARM10C this 
+// ARM10C 20140412
  extern void do_raw_spin_unlock(raw_spinlock_t *lock) __releases(lock);
 #else
 static inline void do_raw_spin_lock(raw_spinlock_t *lock) __acquires(lock)
@@ -240,6 +241,7 @@ static inline void do_raw_spin_unlock(raw_spinlock_t *lock) __releases(lock)
 
 #define raw_spin_lock_irq(lock)		_raw_spin_lock_irq(lock)
 #define raw_spin_lock_bh(lock)		_raw_spin_lock_bh(lock)
+// ARM10C 20140412
 #define raw_spin_unlock(lock)		_raw_spin_unlock(lock)
 #define raw_spin_unlock_irq(lock)	_raw_spin_unlock_irq(lock)
 
@@ -345,6 +347,7 @@ do {									\
 	raw_spin_lock_irqsave_nested(spinlock_check(lock), flags, subclass); \
 } while (0)
 
+// ARM10C 20140412
 static inline void spin_unlock(spinlock_t *lock)
 {
 	raw_spin_unlock(&lock->rlock);

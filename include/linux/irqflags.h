@@ -30,6 +30,7 @@
 # define INIT_TRACE_IRQFLAGS	.softirqs_enabled = 1,
 #else
 # define trace_hardirqs_on()		do { } while (0)    // ARM10C this 
+  // ARM10C 20140412
 # define trace_hardirqs_off()		do { } while (0)    // ARM10C this 
 # define trace_softirqs_on(ip)		do { } while (0)
 # define trace_softirqs_off(ip)		do { } while (0)
@@ -63,7 +64,8 @@
 		typecheck(unsigned long, flags);	\
 		flags = arch_local_irq_save();/*ARM10C 현재 cpsr을 flag로가져옴*/	\
 	} while (0)
- // ARM10C 20130907 
+// ARM10C 20130907
+// ARM10C 20140412
 #define raw_local_irq_restore(flags)			\
 	do {						\
 		typecheck(unsigned long, flags);	\
@@ -75,6 +77,7 @@
 		typecheck(unsigned long, flags);	\
 		flags = arch_local_save_flags();	\
 	} while (0)
+ // ARM10C 20140412
 #define raw_irqs_disabled_flags(flags)			\
 	({						\
 		typecheck(unsigned long, flags);	\
@@ -104,6 +107,7 @@
 
 // ARM10C 20130907
 // ARM10C 20130322
+// ARM10C 20140412
 #define local_irq_restore(flags)			\
 	do {						\
 		if (raw_irqs_disabled_flags(flags)) {/*irq가 disabled 인가?*/	\

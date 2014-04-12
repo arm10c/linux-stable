@@ -87,6 +87,7 @@ do { \
 
 // ARM10C 20140125
 // ARM10C 20140322
+// ARM10C 20140412
 #define preempt_enable() /*ARM10C this*/	\
 do { \
 	preempt_enable_no_resched(); \

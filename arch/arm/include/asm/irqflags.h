@@ -151,6 +151,7 @@ static inline unsigned long arch_local_save_flags(void)
 /*
  * restore saved IRQ & FIQ state
  */
+// ARM10C 20140412
 static inline void arch_local_irq_restore(unsigned long flags)
 {
 	asm volatile(
@@ -161,6 +162,7 @@ static inline void arch_local_irq_restore(unsigned long flags)
 }
 
 // ARM10C 20130907 this
+// ARM10C 20140412
 static inline int arch_irqs_disabled_flags(unsigned long flags)
 {
 	return flags & IRQMASK_I_BIT;

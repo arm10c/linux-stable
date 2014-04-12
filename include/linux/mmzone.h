@@ -42,6 +42,7 @@
 #define PAGE_ALLOC_COSTLY_ORDER 3
 
 // ARM10C 20140111
+// ARM10C 20140412
 enum {
 	MIGRATE_UNMOVABLE,
 	MIGRATE_RECLAIMABLE,
@@ -70,9 +71,10 @@ enum {
 	MIGRATE_TYPES	// 4
 };
 
-#ifdef CONFIG_CMA
+#ifdef CONFIG_CMA // CONFIG_CMA=n
 #  define is_migrate_cma(migratetype) unlikely((migratetype) == MIGRATE_CMA)
 #else
+// ARM10C 20140412
 #  define is_migrate_cma(migratetype) false
 #endif
 
@@ -87,6 +89,7 @@ extern int page_group_by_mobility_disabled;
 
 // ARM10C 20140405
 // page : 0x20000 (pfn)
+// ARM10C 20140412
 static inline int get_pageblock_migratetype(struct page *page)
 {
 	// page : 0x20000 (pfn), PB_migrate: 0, PB_migrate_end: 2 
@@ -279,6 +282,7 @@ struct per_cpu_pages {
 
 // ARM10C 20140111
 // ARM10C 20140308
+// ARM10C 20140412
 // sizeof(struct per_cpu_pageset): 66 bytes
 struct per_cpu_pageset {
 	struct per_cpu_pages pcp;
