@@ -46,6 +46,11 @@
 #ifndef __cacheline_aligned_in_smp
 #ifdef CONFIG_SMP // CONFIG_SMP=y
 // ARM10C 20140412
+// __cacheline_aligned:
+// __attribute__((__aligned__(64), __section__(".data..cacheline_aligned")))
+//
+// __cacheline_aligned_in_smp:
+// __attribute__((__aligned__(64), __section__(".data..cacheline_aligned")))
 #define __cacheline_aligned_in_smp __cacheline_aligned
 #else
 #define __cacheline_aligned_in_smp

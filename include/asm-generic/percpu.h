@@ -19,6 +19,8 @@ extern unsigned long __per_cpu_offset[NR_CPUS];
 
 // ARM10C 20130928
 // ARM10C 20140308
+// ARM10C 20140412
+// per_cpu_offset(0): (__per_cpu_offset[0])
 #define per_cpu_offset(x) (__per_cpu_offset[x])
 #endif
 
@@ -31,7 +33,11 @@ extern unsigned long __per_cpu_offset[NR_CPUS];
 #ifndef __my_cpu_offset
 #define __my_cpu_offset per_cpu_offset(raw_smp_processor_id())
 #endif
-#ifdef CONFIG_DEBUG_PREEMPT
+#ifdef CONFIG_DEBUG_PREEMPT // CONFIG_DEBUG_PREEMPT=y
+// ARM10C 20140412
+// smp_processor_id(): 0
+// per_cpu_offset(0): (__per_cpu_offset[0])
+// my_cpu_offset: (__per_cpu_offset[0])
 #define my_cpu_offset per_cpu_offset(smp_processor_id())
 #else
 #define my_cpu_offset __my_cpu_offset
@@ -54,7 +60,7 @@ extern unsigned long __per_cpu_offset[NR_CPUS];
 // ARM10C 20140405
 // __verify_pcpu_ptr((&(vm_event_states.event[PGFREE]))):
 // do {
-// 	const void __percpu *__vpp_verify = (typeof(&(vm_event_states.event[PGFREE]))NULL;
+// 	const void __percpu *__vpp_verify = (typeof(&(vm_event_states.event[PGFREE])))NULL;
 // 	(void)__vpp_verify;
 // } while (0)
 // RELOC_HIDE((typeof(*(&(vm_event_states.event[PGFREE]))) __kernel __force *)(&(vm_event_states.event[PGFREE])), (__my_cpu_offset)):
@@ -66,6 +72,31 @@ extern unsigned long __per_cpu_offset[NR_CPUS];
 // 		(void)__vpp_verify;
 // 	} while (0)
 //	&(vm_event_states.event[PGFREE]) + __my_cpu_offset;
+// })
+//
+// ARM10C 20140412
+// __verify_pcpu_ptr((&(((&boot_pageset)->vm_stat_diff[0])))):
+// do {
+// 	const void __percpu *__vpp_verify = (typeof((&(((&boot_pageset)->vm_stat_diff[0])))))NULL;
+// 	(void)__vpp_verify;
+// } while (0)
+// RELOC_HIDE((typeof(*(&(((&boot_pageset)->vm_stat_diff[0])))) __kernel __force *)(&(((&boot_pageset)->vm_stat_diff[0]))), (__my_cpu_offset)):
+// &(((&boot_pageset)->vm_stat_diff[0])) + __my_cpu_offset;
+//
+// #define SHIFT_PERCPU_PTR(&(((&boot_pageset)->vm_stat_diff[0])), __my_cpu_offset)	({
+//  	do {
+// 	 	const void __percpu *__vpp_verify = (typeof((&(((&boot_pageset)->vm_stat_diff[0])))))NULL;
+// 	 	(void)__vpp_verify;
+//  	} while (0)
+//  	&(((&boot_pageset)->vm_stat_diff[0])) + __my_cpu_offset;
+// })
+//
+// #define SHIFT_PERCPU_PTR(&boot_pageset, (__per_cpu_offset[0]))   ({
+//  	do {
+// 	 	const void __percpu *__vpp_verify = (typeof(&boot_pageset))NULL;
+// 	 	(void)__vpp_verify;
+//  	} while (0)
+//  	&boot_pageset + (__per_cpu_offset[0]);
 // })
 #define SHIFT_PERCPU_PTR(__p, __offset)	({				\
 	__verify_pcpu_ptr((__p));					\
@@ -106,10 +137,47 @@ extern unsigned long __per_cpu_offset[NR_CPUS];
 // 	} while (0)
 //	&(vm_event_states.event[PGFREE]) + __my_cpu_offset;
 // })
+//
 // ARM10C 20140412
+// SHIFT_PERCPU_PTR(&(((&boot_pageset)->vm_stat_diff[0])), __my_cpu_offset):
+// ({
+//  	do {
+// 	 	const void __percpu *__vpp_verify = (typeof((&(((&boot_pageset)->vm_stat_diff[0])))))NULL;
+// 	 	(void)__vpp_verify;
+//  	} while (0)
+//  	&(((&boot_pageset)->vm_stat_diff[0])) + __my_cpu_offset;
+// })
+//
+// #define __this_cpu_ptr(&(((&boot_pageset)->vm_stat_diff[0]))):
+// ({
+//  	do {
+// 	 	const void __percpu *__vpp_verify = (typeof((&(((&boot_pageset)->vm_stat_diff[0])))))NULL;
+// 	 	(void)__vpp_verify;
+//  	} while (0)
+//  	&(((&boot_pageset)->vm_stat_diff[0])) + __my_cpu_offset;
+// })
 #define __this_cpu_ptr(ptr) SHIFT_PERCPU_PTR(ptr, __my_cpu_offset)
 #endif
-#ifdef CONFIG_DEBUG_PREEMPT
+#ifdef CONFIG_DEBUG_PREEMPT // CONFIG_DEBUG_PREEMPT=y
+// ARM10C 20140412
+// my_cpu_offset: (__per_cpu_offset[0])
+// SHIFT_PERCPU_PTR(&boot_pageset, (__per_cpu_offset[0])):
+// ({
+//  	do {
+// 	 	const void __percpu *__vpp_verify = (typeof(&boot_pageset))NULL;
+// 	 	(void)__vpp_verify;
+//  	} while (0)
+//  	&boot_pageset + (__per_cpu_offset[0]);
+// })
+//
+// this_cpu_ptr(&boot_pageset):
+// ({
+//  	do {
+// 	 	const void __percpu *__vpp_verify = (typeof(&boot_pageset))NULL;
+// 	 	(void)__vpp_verify;
+//  	} while (0)
+//  	&boot_pageset + (__per_cpu_offset[0]);
+// })
 #define this_cpu_ptr(ptr) SHIFT_PERCPU_PTR(ptr, my_cpu_offset)
 #else
 #define this_cpu_ptr(ptr) __this_cpu_ptr(ptr)

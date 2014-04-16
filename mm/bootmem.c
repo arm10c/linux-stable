@@ -281,7 +281,7 @@ static unsigned long __init free_all_bootmem_core(bootmem_data_t *bdata)
 			// page에 해당하는 pageblock의 migrate flag를 반환함
 			// struct page의 index 멤버에 migratetype을 저장함
 			// order 5 buddy를 contig_page_data에 추가함
-			// &contig_page_data->node_zones[ZONE_NORMAL].vm_stat[NR_FREE_PAGES]: 32 로 설정
+			// (&contig_page_data)->node_zones[ZONE_NORMAL].vm_stat[NR_FREE_PAGES]: 32 로 설정
 			// vmstat.c의 vm_stat[NR_FREE_PAGES] 전역 변수에도 32로 설정
 
 			// count: 0, BITS_PER_LONG: 32
@@ -318,7 +318,7 @@ static unsigned long __init free_all_bootmem_core(bootmem_data_t *bdata)
 					// page에 해당하는 pageblock의 migrate flag를 반환함
 					// struct page의 index 멤버에 migratetype을 저장함
 					// order 0 buddy를 contig_page_data에 추가함
-					// &contig_page_data->node_zones[ZONE_NORMAL].vm_stat[NR_FREE_PAGES]: 1 로 설정
+					// (&contig_page_data)->node_zones[ZONE_NORMAL].vm_stat[NR_FREE_PAGES]: 1 로 설정
 					// vmstat.c의 vm_stat[NR_FREE_PAGES] 전역 변수에도 1로 설정
 
 					// count: 0
@@ -341,7 +341,7 @@ static unsigned long __init free_all_bootmem_core(bootmem_data_t *bdata)
 	// page에 해당하는 pageblock의 migrate flag를 반환함
 	// struct page의 index 멤버에 migratetype을 저장함
 	// order 값의 buddy를 contig_page_data에 추가함
-	// &contig_page_data->node_zones[ZONE_NORMAL].vm_stat[NR_FREE_PAGES]: 2^order 값으로 설정
+	// (&contig_page_data)->node_zones[ZONE_NORMAL].vm_stat[NR_FREE_PAGES]: 2^order 값으로 설정
 	// vmstat.c의 vm_stat[NR_FREE_PAGES] 전역 변수에도 2^order 로 설정
 	// 현재 page의 page->private값과 buddy의 page->private값이 같으면 page order를 합치는 작업 수행
 

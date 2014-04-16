@@ -143,10 +143,10 @@ static inline void list_del(struct list_head *entry)
 {
 	__list_del(entry->prev, entry->next);
 
-	// LIST_POISON1  ((void *) 0x00100100 + 0)
+	// LIST_POISON1: ((void *) 0x00100100)
 	entry->next = LIST_POISON1;
 
-	// LIST_POISON2  ((void *) 0x00200200 + 0)
+	// LIST_POISON2: ((void *) 0x00200200)
 	entry->prev = LIST_POISON2;
 }
 #else

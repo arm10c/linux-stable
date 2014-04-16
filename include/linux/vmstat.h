@@ -123,13 +123,13 @@ static inline void vm_events_fold_cpu(int cpu)
 extern atomic_long_t vm_stat[NR_VM_ZONE_STAT_ITEMS];
 
 // ARM10C 20140412
-// x: 32, zone: &contig_page_data->node_zones[ZONE_NORMAL], item: 0
+// x: 32, zone: &(&contig_page_data)->node_zones[ZONE_NORMAL], item: 0
 static inline void zone_page_state_add(long x, struct zone *zone,
 				 enum zone_stat_item item)
 {
-	// x: 32, item: 0, &zone->vm_stat[0]: &contig_page_data->node_zones[ZONE_NORMAL].vm_stat[0]: 0
+	// x: 32, item: 0, &zone->vm_stat[0]: &(&contig_page_data)->node_zones[ZONE_NORMAL].vm_stat[0]: 0
 	atomic_long_add(x, &zone->vm_stat[item]);
-	// &zone->vm_stat[0]: &contig_page_data->node_zones[ZONE_NORMAL].vm_stat[0]: 32
+	// zone->vm_stat[0]: (&contig_page_data)->node_zones[ZONE_NORMAL].vm_stat[0]: 32
 
 	// item: 0, vm_stat[0]: 0
 	atomic_long_add(x, &vm_stat[item]);

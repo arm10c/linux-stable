@@ -630,6 +630,7 @@ static inline void __free_one_page(struct page *page,
 	// bad_range(zone, page): 0
 	VM_BUG_ON(bad_range(zone, page));
 
+	// MAX_ORDER: 11
 	// [order: 5] order  5, MAX_ORDER-1: 10
 	// [order: 0] order  0, MAX_ORDER-1: 10
 	while (order < MAX_ORDER-1) {
@@ -810,7 +811,7 @@ static inline int free_pages_check(struct page *page)
  */
 // ARM10C 20140412
 // zone: &(&contig_page_data)->node_zones[ZONE_NORMAL], batch: 1,
-// pcp: (&((&boot_pageset) + __my_cpu_offset))->pcp
+// pcp: &(&((&boot_pageset) + (__per_cpu_offset[0])))->pcp
 static void free_pcppages_bulk(struct zone *zone, int count,
 					struct per_cpu_pages *pcp)
 {
@@ -825,10 +826,10 @@ static void free_pcppages_bulk(struct zone *zone, int count,
 	// zone 의 spin lock 획득
 
 	zone->all_unreclaimable = 0;
-	// zone->all_unreclaimable: &(&contig_page_data)->node_zones[ZONE_NORMAL].all_unreclaimable: 0
+	// zone->all_unreclaimable: (&contig_page_data)->node_zones[ZONE_NORMAL].all_unreclaimable: 0
 
 	zone->pages_scanned = 0;
-	// zone->pages_scanned : &(&contig_page_data)->node_zones[ZONE_NORMAL].pages_scanned: 0
+	// zone->pages_scanned : (&contig_page_data)->node_zones[ZONE_NORMAL].pages_scanned: 0
 
 	// to_free: 1
 	while (to_free) {
@@ -856,13 +857,13 @@ static void free_pcppages_bulk(struct zone *zone, int count,
 			// [1st] migratetype: 1
 			// [2nd] migratetype: 2
 
-			// [1st] &pcp->lists: &(&((&boot_pageset) + __my_cpu_offset))->pcp.lists
-			// [2nd] &pcp->lists: &(&((&boot_pageset) + __my_cpu_offset))->pcp.lists
+			// [1st] &pcp->lists: &(&((&boot_pageset) + (__per_cpu_offset[0])))->pcp.lists
+			// [2nd] &pcp->lists: &(&((&boot_pageset) + (__per_cpu_offset[0])))->pcp.lists
 			list = &pcp->lists[migratetype];
-			// [1st] list: &(&((&boot_pageset) + __my_cpu_offset))->pcp.lists[1]
-			// [2nd] list: &(&((&boot_pageset) + __my_cpu_offset))->pcp.lists[2]
+			// [1st] list: &(&((&boot_pageset) + (__per_cpu_offset[0])))->pcp.lists[1]
+			// [2nd] list: &(&((&boot_pageset) + (__per_cpu_offset[0])))->pcp.lists[2]
 		} while (list_empty(list));
-		// [2nd]에서 &(&((&boot_pageset) + __my_cpu_offset))->pcp.lists[2]에 page->lru 연결
+		// [2nd]에서 &(&((&boot_pageset) + (__per_cpu_offset[0])))->pcp.lists[2]에 page->lru 연결
 		// 되었으므로 빠져나옴
 
 		/* This is the only non-empty list. Free them all. */
@@ -873,7 +874,7 @@ static void free_pcppages_bulk(struct zone *zone, int count,
 		do {
 			int mt;	/* migratetype of the to-be-freed page */
 
-			// list->prev: &(&((&boot_pageset) + __my_cpu_offset))->pcp.lists[2].prev
+			// list->prev: &(&((&boot_pageset) + (__per_cpu_offset[0])))->pcp.lists[2].prev
 			page = list_entry(list->prev, struct page, lru);
 			// page: 0x20000 (pfn)
 
@@ -909,7 +910,7 @@ static void free_pcppages_bulk(struct zone *zone, int count,
 			if (likely(!is_migrate_isolate_page(page))) {
 				// zone: &(&contig_page_data)->node_zones[ZONE_NORMAL], NR_FREE_PAGES: 0
 				__mod_zone_page_state(zone, NR_FREE_PAGES, 1);
-				// &contig_page_data->node_zones[ZONE_NORMAL].vm_stat[NR_FREE_PAGES]: 1 로 설정
+				// (&contig_page_data)->node_zones[ZONE_NORMAL].vm_stat[NR_FREE_PAGES]: 1 로 설정
 				// vmstat.c의 vm_stat[NR_FREE_PAGES] 전역 변수에도 1로 설정
 
 				// mt: 0x2, is_migrate_cma(0x2): 0
@@ -956,7 +957,7 @@ static void free_one_page(struct zone *zone, struct page *page, int order,
 // ARM10C 20140329
 // page: 0x20000의 해당하는 struct page의 1st page, order: 5
 // ARM10C 20140412
-// page: 0x20000 (pfn)
+// page: 0x20000 (pfn), order: 0
 static bool free_pages_prepare(struct page *page, unsigned int order)
 {
 	int i;
@@ -1039,7 +1040,7 @@ static void __free_pages_ok(struct page *page, unsigned int order)
 	// order: 5, migratetype: 0x2
 	free_one_page(page_zone(page), page, order, migratetype);
 	// order 5 buddy를 contig_page_data에 추가함
-	// &contig_page_data->node_zones[ZONE_NORMAL].vm_stat[NR_FREE_PAGES]: 32 로 설정
+	// (&contig_page_data)->node_zones[ZONE_NORMAL].vm_stat[NR_FREE_PAGES]: 32 로 설정
 	// vmstat.c의 vm_stat[NR_FREE_PAGES] 전역 변수에도 32로 설정
 
 	local_irq_restore(flags);
@@ -1097,7 +1098,8 @@ void __init __free_pages_bootmem(struct page *page, unsigned int order)
 
 	// page: 0x20000의 해당하는 struct page의 주소
 	// page_zone(page)->managed_pages:
-	// [order: 5] (&contig_page_data)->node_zones[page_zonenum(page)].managed_pages: 0
+	// (&contig_page_data)->node_zones[page_zonenum(page)].managed_pages: 0
+	// [order: 5] page: 0x20000 (pfn), order: 5
 	// [order: 0] page: 0x20000 (pfn), order: 0
 	page_zone(page)->managed_pages += 1 << order;
 	// [order: 5] page_zone(page)->managed_pages:
@@ -1107,7 +1109,7 @@ void __init __free_pages_bootmem(struct page *page, unsigned int order)
 
 	// page: 0x20000의 해당하는 struct page의 주소
 	set_page_refcounted(page);
-	// page: 0x20000의 해당하는 struct page의 1st page의 count 1로 set
+	// page: 0x20000의 해당하는 struct page의 1st page의 _count를 1로 set
 
 	// [order: 5] order: 5
 	// [order: 0] order: 0
@@ -1116,13 +1118,13 @@ void __init __free_pages_bootmem(struct page *page, unsigned int order)
 	// [order: 5] page에 해당하는 pageblock의 migrate flag를 반환함
 	// [order: 5] struct page의 index 멤버에 migratetype을 저장함
 	// [order: 5] order 5 buddy를 contig_page_data에 추가함
-	// [order: 5] &contig_page_data->node_zones[ZONE_NORMAL].vm_stat[NR_FREE_PAGES]: 32 로 설정
+	// [order: 5] (&contig_page_data)->node_zones[ZONE_NORMAL].vm_stat[NR_FREE_PAGES]: 32 로 설정
 	// [order: 5] vmstat.c의 vm_stat[NR_FREE_PAGES] 전역 변수에도 32로 설정
 	// [order: 0] CPU0의 vm_event_states.event[PGFREE] 를 1로 설정함
 	// [order: 0] page에 해당하는 pageblock의 migrate flag를 반환함
 	// [order: 0] struct page의 index 멤버에 migratetype을 저장함
 	// [order: 0] order 0 buddy를 contig_page_data에 추가함
-	// [order: 0] &contig_page_data->node_zones[ZONE_NORMAL].vm_stat[NR_FREE_PAGES]: 1 로 설정
+	// [order: 0] (&contig_page_data)->node_zones[ZONE_NORMAL].vm_stat[NR_FREE_PAGES]: 1 로 설정
 	// [order: 0] vmstat.c의 vm_stat[NR_FREE_PAGES] 전역 변수에도 1로 설정
 }
 
@@ -1719,36 +1721,40 @@ void free_hot_cold_page(struct page *page, int cold)
 	}
 
 	// zone->pageset: &contig_page_data->node_zones[ZONE_NORMAL].pageset: &boot_pageset
-	// this_cpu_ptr(zone->pageset): (&boot_pageset) + __my_cpu_offset;
+	// this_cpu_ptr(zone->pageset): (&boot_pageset) + (__per_cpu_offset[0]);
 	pcp = &this_cpu_ptr(zone->pageset)->pcp;
-	// pcp: (&((&boot_pageset) + __my_cpu_offset))->pcp
+	// pcp: &((&boot_pageset) + (__per_cpu_offset[0]))->pcp
 
 	// cold: 0
 	if (cold)
 		list_add_tail(&page->lru, &pcp->lists[migratetype]);
 	else
-		// migratetype: 0x2, &pcp->lists[2]: &(&((&boot_pageset) + __my_cpu_offset))->pcp.lists[2]
+		// migratetype: 0x2, &pcp->lists[2]: &(&((&boot_pageset) + (__per_cpu_offset[0])))->pcp.lists[2]
 		list_add(&page->lru, &pcp->lists[migratetype]);
-		// &(&((&boot_pageset) + __my_cpu_offset))->pcp.lists[2]에 page->lru 연결
+		// &(&((&boot_pageset) + (__per_cpu_offset[0])))->pcp.lists[2]에 page->lru 연결
 
-	// pcp->count: (&((&boot_pageset) + __my_cpu_offset))->pcp.count: 0
+	// pcp->count: (&((&boot_pageset) + (__per_cpu_offset[0])))->pcp.count: 0
 	pcp->count++;
-	// pcp->count: (&((&boot_pageset) + __my_cpu_offset))->pcp.count: 1
+	// pcp->count: (&((&boot_pageset) + (__per_cpu_offset[0])))->pcp.count: 1
 
-	// pcp->high: (&((&boot_pageset) + __my_cpu_offset))->pcp.high: 0
+	// pcp->high: (&((&boot_pageset) + (__per_cpu_offset[0])))->pcp.high: 0
 	if (pcp->count >= pcp->high) {
-		// pcp->batch: (&((&boot_pageset) + __my_cpu_offset))->pcp.batch: 1
+		// pcp->batch: (&((&boot_pageset) + (__per_cpu_offset[0])))->pcp.batch: 1
 		unsigned long batch = ACCESS_ONCE(pcp->batch);
 		// batch: 1
 
 		// zone: &(&contig_page_data)->node_zones[ZONE_NORMAL], batch: 1,
-		// pcp: (&((&boot_pageset) + __my_cpu_offset))->pcp
+		// pcp: &(&((&boot_pageset) + (__per_cpu_offset[0])))->pcp
 		free_pcppages_bulk(zone, batch, pcp);
+
+		// pcp->count: (&((&boot_pageset) + (__per_cpu_offset[0])))->pcp.count: 1, batch: 1
 		pcp->count -= batch;
+		// pcp->count: (&((&boot_pageset) + (__per_cpu_offset[0])))->pcp.count: 0
 	}
 
 out:
 	local_irq_restore(flags);
+	// flags에 저장된 cpsr 값 restore
 }
 
 /*
@@ -3113,12 +3119,13 @@ void __free_pages(struct page *page, unsigned int order)
 		// [order: 5] order: 5
 		// [order: 0] order: 0
 		if (order == 0)
+			// page: 0x20000 (pfn)
 			free_hot_cold_page(page, 0);
 			// CPU0의 vm_event_states.event[PGFREE] 를 1로 설정함
 			// page에 해당하는 pageblock의 migrate flag를 반환함
 			// struct page의 index 멤버에 migratetype을 저장함
 			// order 0 buddy를 contig_page_data에 추가함
-			// &contig_page_data->node_zones[ZONE_NORMAL].vm_stat[NR_FREE_PAGES]: 1 로 설정
+			// (&contig_page_data)->node_zones[ZONE_NORMAL].vm_stat[NR_FREE_PAGES]: 1 로 설정
 			// vmstat.c의 vm_stat[NR_FREE_PAGES] 전역 변수에도 1로 설정
 		else
 			// page: 0x20000의 해당하는 struct page의 1st page
@@ -3128,7 +3135,7 @@ void __free_pages(struct page *page, unsigned int order)
 			// page에 해당하는 pageblock의 migrate flag를 반환함
 			// struct page의 index 멤버에 migratetype을 저장함
 			// order 5 buddy를 contig_page_data에 추가함
-			// &contig_page_data->node_zones[ZONE_NORMAL].vm_stat[NR_FREE_PAGES]: 32 로 설정
+			// (&contig_page_data)->node_zones[ZONE_NORMAL].vm_stat[NR_FREE_PAGES]: 32 로 설정
 			// vmstat.c의 vm_stat[NR_FREE_PAGES] 전역 변수에도 32로 설정
 	}
 }
@@ -6808,7 +6815,7 @@ static inline int pfn_to_bitidx(struct zone *zone, unsigned long pfn)
  * returns pageblock_bits flags
  */
 // ARM10C 20140405
-// page: 0x20000 (pfn), PB_migrate: 0, PB_migrate_end: 2 
+// page: 0x20000 (pfn), PB_migrate: 0, PB_migrate_end: 2
 unsigned long get_pageblock_flags_group(struct page *page,
 					int start_bitidx, int end_bitidx)
 {
@@ -6824,7 +6831,7 @@ unsigned long get_pageblock_flags_group(struct page *page,
 
 	// page: 0x20000 (pfn)
 	pfn = page_to_pfn(page);
-	// pfn : 0x20000
+	// pfn: 0x20000
 
 	// zone: (&contig_page_data)->node_zones[0]
 	bitmap = get_pageblock_bitmap(zone, pfn);

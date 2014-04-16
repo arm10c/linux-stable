@@ -161,6 +161,8 @@ static inline void ClearPage##uname(struct page *page)			\
 static inline void __SetPage##uname(struct page *page)			\
 			{ __set_bit(PG_##lname, &page->flags); }
 
+// ARM10C 20140118
+// ARM10C 20140329
 #define __CLEARPAGEFLAG(uname, lname)					\
 static inline void __ClearPage##uname(struct page *page)		\
 			{ __clear_bit(PG_##lname, &page->flags); }
@@ -283,13 +285,13 @@ PAGEFLAG(Uncached, uncached)
 PAGEFLAG_FALSE(Uncached)
 #endif
 
-// ARM10C 20140405
-#ifdef CONFIG_MEMORY_FAILURE	// n
+#ifdef CONFIG_MEMORY_FAILURE // CONFIG_MEMORY_FAILURE=n
 PAGEFLAG(HWPoison, hwpoison)
 TESTSCFLAG(HWPoison, hwpoison)
 #define __PG_HWPOISON (1UL << PG_hwpoison)
 #else
 PAGEFLAG_FALSE(HWPoison)
+// ARM10C 20140405
 #define __PG_HWPOISON 0
 #endif
 
@@ -511,16 +513,19 @@ static inline void ClearPageSlabPfmemalloc(struct page *page)
 	ClearPageActive(page);
 }
 
+#ifdef CONFIG_MMU // CONFIG_MMU=y
 // ARM10C 20140405
-#ifdef CONFIG_MMU		// y
+// PG_mlocked: 20
+// __PG_MLOCKED: 0x100000
 #define __PG_MLOCKED		(1 << PG_mlocked)
 #else
 #define __PG_MLOCKED		0
 #endif
 
-#ifdef CONFIG_TRANSPARENT_HUGEPAGE
+#ifdef CONFIG_TRANSPARENT_HUGEPAGE // CONFIG_TRANSPARENT_HUGEPAGE=n
 #define __PG_COMPOUND_LOCK		(1 << PG_compound_lock)
 #else
+// ARM10C 20140405
 #define __PG_COMPOUND_LOCK		0
 #endif
 

@@ -74,6 +74,21 @@ extern struct module __this_module;
 // __attribute__((__used__))
 // __attribute__((section("___ksymtab" "" "+" "vm_event_states"), unused))
 // = { (unsigned long)&vm_event_states, __kstrtab_vm_event_states }
+//
+// ARM10C 20140412
+// __CRC_SYMBOL(vm_stat, ""):
+// VMLINUX_SYMBOL_STR(vm_stat): "vm_stat"
+// __used: __attribute__((__used__))
+//
+// __EXPORT_SYMBOL(vm_stat, ""):
+// extern typeof(vm_stat) vm_stat;
+// static const char __kstrtab_vm_stat[]
+// __attribute__((section("__ksymtab_strings"), aligned(1)))
+// = "vm_stat";
+// static const struct kernel_symbol __ksymtab_vm_stat
+// __attribute__((__used__))
+// __attribute__((section("___ksymtab" "" "+" "vm_stat"), unused))
+// = { (unsigned long)&vm_stat, __kstrtab_vm_stat }
 #define __EXPORT_SYMBOL(sym, sec)				\
 	extern typeof(sym) sym;					\
 	__CRC_SYMBOL(sym, sec)					\
@@ -105,6 +120,17 @@ extern struct module __this_module;
 // __attribute__((__used__))
 // __attribute__((section("___ksymtab" "" "+" "vm_event_states"), unused))
 // = { (unsigned long)&vm_event_states, __kstrtab_vm_event_states }
+//
+// ARM10C 20140412
+// EXPORT_SYMBOL(vm_stat):
+// extern typeof(vm_stat) vm_stat;
+// static const char __kstrtab_vm_stat[]
+// __attribute__((section("__ksymtab_strings"), aligned(1)))
+// = "vm_stat";
+// static const struct kernel_symbol __ksymtab_vm_stat
+// __attribute__((__used__))
+// __attribute__((section("___ksymtab" "" "+" "vm_stat"), unused))
+// = { (unsigned long)&vm_stat, __kstrtab_vm_stat }
 #define EXPORT_SYMBOL(sym)					\
 	__EXPORT_SYMBOL(sym, "")
 

@@ -20,7 +20,7 @@
 #include <asm/page.h>
 
 /* Free memory management - zoned buddy allocator.  */
-#ifndef CONFIG_FORCE_MAX_ZONEORDER
+#ifndef CONFIG_FORCE_MAX_ZONEORDER // CONFIG_FORCE_MAX_ZONEORDER=y
 #define MAX_ORDER 11
 #else
 // ARM10C 20140329
@@ -124,6 +124,7 @@ struct zone_padding {
 
 // ARM10C 20140125
 // ARM10C 20140308
+// ARM10C 20140412
 enum zone_stat_item {
 	/* First 128 byte cacheline (assuming 64 bit words) */
 	NR_FREE_PAGES,

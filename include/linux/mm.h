@@ -301,6 +301,7 @@ static inline int put_page_testzero(struct page *page)
 
 	// atomic_dec_and_test(&page->_count): 1
 	return atomic_dec_and_test(&page->_count);
+	// page->_count: 0
 }
 
 /*
@@ -747,7 +748,7 @@ static inline int page_to_nid(const struct page *page)
 }
 #endif
 
-#ifdef CONFIG_NUMA_BALANCING	// n
+#ifdef CONFIG_NUMA_BALANCING // CONFIG_NUMA_BALANCING=n
 #ifdef LAST_NID_NOT_IN_PAGE_FLAGS
 static inline int page_nid_xchg_last(struct page *page, int nid)
 {

@@ -39,7 +39,7 @@ static inline void set_page_refcounted(struct page *page)
 
 	// page: 0x20000의 해당하는 struct page의 주소
 	set_page_count(page, 1);
-	// page: 0x20000의 해당하는 struct page의 1st page의 count 1로 set
+	// page: 0x20000의 해당하는 struct page의 1st page의 _count를 1로 set
 }
 
 static inline void __get_page_tail_foll(struct page *page,

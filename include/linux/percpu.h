@@ -186,19 +186,25 @@ extern phys_addr_t per_cpu_ptr_to_phys(void *addr);
 extern void __bad_size_call_parameter(void);
 
 // ARM10C 20140412
-// __this_cpu_read_, p: (&(&boot_pageset)->vm_stat_diff[0])
+// __this_cpu_read_, p: ((&boot_pageset)->vm_stat_diff[0])
 //
-// __this_cpu_read_1((&(&boot_pageset)->vm_stat_diff[0])):
-// (&(&boot_pageset)->vm_stat_diff[0]) + __my_cpu_offset;
+// __this_cpu_read_1(((&boot_pageset)->vm_stat_diff[0])):
+// *({
+//  	do {
+// 	 	const void __percpu *__vpp_verify = (typeof((&(((&boot_pageset)->vm_stat_diff[0])))))NULL;
+// 	 	(void)__vpp_verify;
+//  	} while (0)
+//  	&(((&boot_pageset)->vm_stat_diff[0])) + __my_cpu_offset;
+// })
 //
-// #define __pcpu_size_call_return(__this_cpu_read_, (&(&boot_pageset)->vm_stat_diff[0]))
-// ({	typeof((&(&boot_pageset)->vm_stat_diff[0])) pscr_ret__;
-// 	__verify_pcpu_ptr(&((&(&boot_pageset)->vm_stat_diff[0])));
-// 	switch(sizeof((&(&boot_pageset)->vm_stat_diff[0]))) {
-// 	case 1: pscr_ret__ = __this_cpu_read_1((&(&boot_pageset)->vm_stat_diff[0]));break;
-// 	case 2: pscr_ret__ = __this_cpu_read_2((&(&boot_pageset)->vm_stat_diff[0]));break;
-// 	case 4: pscr_ret__ = __this_cpu_read_4((&(&boot_pageset)->vm_stat_diff[0]));break;
-// 	case 8: pscr_ret__ = __this_cpu_read_8((&(&boot_pageset)->vm_stat_diff[0]));break;
+// #define __pcpu_size_call_return(__this_cpu_read_, ((&boot_pageset)->vm_stat_diff[0]))
+// ({	typeof(((&boot_pageset)->vm_stat_diff[0])) pscr_ret__;
+// 	__verify_pcpu_ptr(&(((&boot_pageset)->vm_stat_diff[0])));
+// 	switch(sizeof(((&boot_pageset)->vm_stat_diff[0]))) {
+// 	case 1: pscr_ret__ = __this_cpu_read_1(((&boot_pageset)->vm_stat_diff[0]));break;
+// 	case 2: pscr_ret__ = __this_cpu_read_2(((&boot_pageset)->vm_stat_diff[0]));break;
+// 	case 4: pscr_ret__ = __this_cpu_read_4(((&boot_pageset)->vm_stat_diff[0]));break;
+// 	case 8: pscr_ret__ = __this_cpu_read_8(((&boot_pageset)->vm_stat_diff[0]));break;
 // 	default:
 // 		__bad_size_call_parameter();break;
 // 	}
@@ -617,8 +623,23 @@ do {									\
 #ifndef __this_cpu_read
 # ifndef __this_cpu_read_1
 // ARM10C 20140412
-// __this_cpu_read_1((&(&boot_pageset)->vm_stat_diff[0])):
-// (&(&boot_pageset)->vm_stat_diff[0]) + __my_cpu_offset;
+// __this_cpu_ptr(&(((&boot_pageset)->vm_stat_diff[0]))):
+// ({
+//  	do {
+// 	 	const void __percpu *__vpp_verify = (typeof((&(((&boot_pageset)->vm_stat_diff[0])))))NULL;
+// 	 	(void)__vpp_verify;
+//  	} while (0)
+//  	&(((&boot_pageset)->vm_stat_diff[0])) + __my_cpu_offset;
+// })
+//
+// __this_cpu_read_1(((&boot_pageset)->vm_stat_diff[0])):
+// *({
+//  	do {
+// 	 	const void __percpu *__vpp_verify = (typeof((&(((&boot_pageset)->vm_stat_diff[0])))))NULL;
+// 	 	(void)__vpp_verify;
+//  	} while (0)
+//  	&(((&boot_pageset)->vm_stat_diff[0])) + __my_cpu_offset;
+// })
 #  define __this_cpu_read_1(pcp)	(*__this_cpu_ptr(&(pcp)))
 # endif
 # ifndef __this_cpu_read_2
@@ -631,7 +652,7 @@ do {									\
 #  define __this_cpu_read_8(pcp)	(*__this_cpu_ptr(&(pcp)))
 # endif
 // ARM10C 20140412
-//p: &(&boot_pageset)->vm_stat_diff[0]
+// pcp: (&boot_pageset)->vm_stat_diff[0]
 # define __this_cpu_read(pcp)	__pcpu_size_call_return(__this_cpu_read_, (pcp))
 #endif
 
@@ -657,7 +678,7 @@ do {									\
 // } while (0)
 //
 // ARM10C 20140412
-// __this_cpu_generic_to_op(((&boot_pageset)->vm_stat_diff[0]), (x), =):
+// #define __this_cpu_generic_to_op(((&boot_pageset)->vm_stat_diff[0]), (x), =):
 // do {
 //	*({
 //		do {
@@ -673,6 +694,7 @@ do {									\
 } while (0)
 
 #ifndef __this_cpu_write
+# ifndef __this_cpu_write_1
 // ARM10C 20140412
 // __this_cpu_generic_to_op(((&boot_pageset)->vm_stat_diff[0]), (x), =):
 // do {
@@ -685,7 +707,7 @@ do {									\
 //	}) = x;
 // } while (0)
 //
-// __this_cpu_write_1((&boot_pageset)->vm_stat_diff[0], x):
+// #define __this_cpu_write_1((&boot_pageset)->vm_stat_diff[0], x):
 // do {
 //	*({
 //		do {
@@ -695,7 +717,6 @@ do {									\
 //		&((&boot_pageset)->vm_stat_diff[0]) + __my_cpu_offset;
 //	}) = x;
 // } while (0)
-# ifndef __this_cpu_write_1
 #  define __this_cpu_write_1(pcp, val)	__this_cpu_generic_to_op((pcp), (val), =)
 # endif
 # ifndef __this_cpu_write_2
