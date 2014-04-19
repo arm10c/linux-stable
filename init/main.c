@@ -509,7 +509,12 @@ static void __init mm_init(void)
 	 */
 	page_cgroup_init_flatmem(); // null function
 	mem_init();
+	// bootmem으로 관리하던 메모리를 buddy로 이관.
+	// 각 section 메모리 크기를 출력.
+	
 	kmem_cache_init();
+	// mm/Makefile 에서 CONFIG_SLUB 설정으로 slub.c 로 jump
+	
 	percpu_init_late();
 	pgtable_cache_init();
 	vmalloc_init();

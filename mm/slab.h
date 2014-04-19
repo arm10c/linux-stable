@@ -247,6 +247,8 @@ static inline struct kmem_cache *cache_from_obj(struct kmem_cache *s, void *x)
 /*
  * The slab lists for all objects.
  */
+// ARM10C 20140419
+// sizeof(struct kmem_cache_node) : 44 byte
 struct kmem_cache_node {
 	spinlock_t list_lock;
 
@@ -263,10 +265,10 @@ struct kmem_cache_node {
 	int free_touched;		/* updated without locking */
 #endif
 
-#ifdef CONFIG_SLUB
-	unsigned long nr_partial;
-	struct list_head partial;
-#ifdef CONFIG_SLUB_DEBUG
+#ifdef CONFIG_SLUB // CONFIG_SLUB = y
+	unsigned long nr_partial; 
+	struct list_head partial;  
+#ifdef CONFIG_SLUB_DEBUG // CONFIG_SLUB_DEBUG = y
 	atomic_long_t nr_slabs;
 	atomic_long_t total_objects;
 	struct list_head full;

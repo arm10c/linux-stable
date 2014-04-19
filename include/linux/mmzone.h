@@ -39,6 +39,7 @@
  * coalesce naturally under reasonable reclaim pressure and those which
  * will not.
  */
+// ARM10C 20140419
 #define PAGE_ALLOC_COSTLY_ORDER 3
 
 // ARM10C 20140111
@@ -855,6 +856,7 @@ typedef struct pglist_data {
 #endif
 } pg_data_t;
 
+// ARM10C 20140419
 #define node_present_pages(nid)	(NODE_DATA(nid)->node_present_pages)
 #define node_spanned_pages(nid)	(NODE_DATA(nid)->node_spanned_pages)
 #ifdef CONFIG_FLAT_NODE_MEM_MAP

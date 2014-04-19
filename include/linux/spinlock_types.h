@@ -20,8 +20,10 @@
 // ARM10C 20130914
 // arch_spinlock_t의 wrapper다.
 // ARM10C 20140315
+// ARM10C 20140419
+// sizeof(raw_spinlock_t) : 16byte
 typedef struct raw_spinlock {
-	arch_spinlock_t raw_lock;
+	arch_spinlock_t raw_lock; 
 #ifdef CONFIG_GENERIC_LOCKBREAK // CONFIG_GENERIC_LOCKBREAK=n
 	unsigned int break_lock;
 #endif
@@ -93,6 +95,8 @@ typedef struct raw_spinlock {
 // ARM10C 20130914
 // 여기도 raw_spinlock의 wrapper다.
 // ARM10C 20140315
+// ARM10C 20140419
+// sizeof(spinlock_t) : 16 byte
 typedef struct spinlock {
 	union {
 		struct raw_spinlock rlock;

@@ -21,6 +21,7 @@
 #define SLAB_DEBUG_FREE		0x00000100UL	/* DEBUG: Perform (expensive) checks on free */
 #define SLAB_RED_ZONE		0x00000400UL	/* DEBUG: Red zone objs in a cache */
 #define SLAB_POISON		0x00000800UL	/* DEBUG: Poison objects */
+// ARM10C 20140419
 #define SLAB_HWCACHE_ALIGN	0x00002000UL	/* Align objs on cache lines */
 #define SLAB_CACHE_DMA		0x00004000UL	/* Use GFP_DMA memory */
 #define SLAB_STORE_USER		0x00010000UL	/* DEBUG: Store the last owner for bug hunting */
@@ -138,7 +139,11 @@ size_t ksize(const void *);
  * alignment larger than the alignment of a 64-bit integer.
  * Setting ARCH_KMALLOC_MINALIGN in arch headers allows that.
  */
+// ARM10C 20140419
+// ARCH_DMA_MINALIGN : 64
 #if defined(ARCH_DMA_MINALIGN) && ARCH_DMA_MINALIGN > 8
+// ARM10C 20140419
+// ARCH_DMA_MINALIGN : 64
 #define ARCH_KMALLOC_MINALIGN ARCH_DMA_MINALIGN
 #define KMALLOC_MIN_SIZE ARCH_DMA_MINALIGN
 #define KMALLOC_SHIFT_LOW ilog2(ARCH_DMA_MINALIGN)
@@ -293,7 +298,8 @@ static __always_inline int kmalloc_index(size_t size)
 #include <linux/slab_def.h>
 #endif
 
-#ifdef CONFIG_SLUB
+// ARM10C 20140419
+#ifdef CONFIG_SLUB // CONFIG_SLUB = y
 #include <linux/slub_def.h>
 #endif
 

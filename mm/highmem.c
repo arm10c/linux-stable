@@ -42,8 +42,10 @@ DEFINE_PER_CPU(int, __kmap_atomic_idx);
  *    since the last TLB flush - so we can't use it.
  *  n means that there are (n-1) current users of it.
  */
-#ifdef CONFIG_HIGHMEM
+// ARM10C 20140419
+#ifdef CONFIG_HIGHMEM // CONFIG_HIGHMEM = y
 
+// ARM10C 20140419
 unsigned long totalhigh_pages __read_mostly;
 EXPORT_SYMBOL(totalhigh_pages);
 

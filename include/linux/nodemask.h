@@ -500,6 +500,7 @@ static inline int node_random(const nodemask_t *mask)
 
 #define for_each_node(node)	   for_each_node_state(node, N_POSSIBLE)
 // ARM10C 20140308
+// ARM10C 20140419
 // N_ONLINE: 1
 // #define for_each_node_state(node, __state)
 // 	for ( (node) = 0; (node) == 0; (node) = 1)

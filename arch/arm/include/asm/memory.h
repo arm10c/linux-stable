@@ -28,6 +28,8 @@
  * Allow for constants defined here to be used from assembly code
  * by prepending the UL suffix only with actual C code compilation.
  */
+// ARM10C 20140419
+// UL(x) : xUL
 #define UL(x) _AC(x, UL)
 
 #ifdef CONFIG_MMU // CONFIG_MMU=y
@@ -43,6 +45,7 @@
 #define PAGE_OFFSET		UL(CONFIG_PAGE_OFFSET)
 /*
 // ARM10C 20131102
+// ARM10C 20140419
 // TASK_SIZE: 0xBF000000
 */
 #define TASK_SIZE		(UL(CONFIG_PAGE_OFFSET) - UL(SZ_16M))
@@ -60,6 +63,7 @@
 #ifndef CONFIG_THUMB2_KERNEL // CONFIG_THUMB2_KERNEL=n
 /*
 // ARM10C 20131102
+// ARM10C 20140419
 // MODULES_VADDR: 0xBF000000: 0xC0000000 - 0x01000000
 */
 #define MODULES_VADDR		(PAGE_OFFSET - SZ_16M)

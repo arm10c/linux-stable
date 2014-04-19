@@ -1725,6 +1725,9 @@ void free_hot_cold_page(struct page *page, int cold)
 	pcp = &this_cpu_ptr(zone->pageset)->pcp;
 	// pcp: &((&boot_pageset) + (__per_cpu_offset[0]))->pcp
 
+	// cold 와 hot의 의미? 
+	// cold 변수가 1 이면 (cold)  리스트의 마지막에 붙여 천천히 리스트에서 검색되도록 하며
+	// 0 이면 (hot) 리스트의 처음에 붙여 빨리 검색되어 사용되도록 한다.
 	// cold: 0
 	if (cold)
 		list_add_tail(&page->lru, &pcp->lists[migratetype]);
@@ -3110,6 +3113,7 @@ EXPORT_SYMBOL(get_zeroed_page);
 // page: 0x20000의 해당하는 struct page의 1st page, order: 5
 // ARM10C 20140412
 // [order: 0] order: 0
+// ARM10C 20140419
 void __free_pages(struct page *page, unsigned int order)
 {
 	// page: 0x20000 (pfn)
@@ -6062,24 +6066,35 @@ unsigned long free_reserved_area(void *start, void *end, int poison, char *s)
 }
 EXPORT_SYMBOL(free_reserved_area);
 
-#ifdef	CONFIG_HIGHMEM
+#ifdef	CONFIG_HIGHMEM // CONFIG_HIGHMEM = y
+// ARM10C 20140419
+// pfn_to_page(0x4F800) : 0x4F800(pfn)
 void free_highmem_page(struct page *page)
 {
+	// page : 0x4F800(pfn)
 	__free_reserved_page(page);
+	// page를 order 0 으로 buddy에 추가.
 	totalram_pages++;
+	// 총 free된 page 수 + 0x6 + 1 (결국 free된 page 만큼 증가)
 	page_zone(page)->managed_pages++;
+	// (&contig_page_data)->node_zones[1]->managed_pages++;
+	// higemem 영역, 결국 free된 page 만큼 managed_pages 증가
 	totalhigh_pages++;
+	// free된 page 만큼 totalhigh_pages 증가
 }
 #endif
 
 
+// ARM10C 20140419
 void __init mem_init_print_info(const char *str)
 {
 	unsigned long physpages, codesize, datasize, rosize, bss_size;
 	unsigned long init_code_size, init_data_size;
 
 	physpages = get_num_physpages();
+        // physpages : 0x80000
 	codesize = _etext - _stext;
+	// codesize : System.map 에서 영역 계산 가능 (이하 적용)
 	datasize = _edata - _sdata;
 	rosize = __end_rodata - __start_rodata;
 	bss_size = __bss_stop - __bss_start;
@@ -6093,6 +6108,9 @@ void __init mem_init_print_info(const char *str)
 	 *    please refer to arch/tile/kernel/vmlinux.lds.S.
 	 * 3) .rodata.* may be embedded into .text or .data sections.
 	 */
+
+	// .init.* , .init.text.* , .rodata.* 섹션은 이후 다른 섹션으로 변경되기 
+	// 때문에 현재 section의 size를 미리 계산하여 로그용으로 사용.
 #define adj_init_size(start, end, size, pos, adj) \
 	if (start <= pos && pos < end && size > adj) \
 		size -= adj;

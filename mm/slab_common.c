@@ -26,6 +26,7 @@
 enum slab_state slab_state;
 LIST_HEAD(slab_caches);
 DEFINE_MUTEX(slab_mutex);
+// ARM10C 20140419
 struct kmem_cache *kmem_cache;
 
 #ifdef CONFIG_DEBUG_VM
@@ -114,6 +115,8 @@ out:
  * Figure out what the alignment of the objects will be given a set of
  * flags, a user specified alignment and the size of the objects.
  */
+// ARM10C 20140419
+// SLAB_HWCACHE_ALIGN : 0x00002000UL, ARCH_KMALLOC_MINALIGN : 64, size : 44
 unsigned long calculate_alignment(unsigned long flags,
 		unsigned long align, unsigned long size)
 {
@@ -124,17 +127,25 @@ unsigned long calculate_alignment(unsigned long flags,
 	 * The hardware cache alignment cannot override the specified
 	 * alignment though. If that is greater then use it.
 	 */
+	// flags : SLAB_HWCACHE_ALIGN
 	if (flags & SLAB_HWCACHE_ALIGN) {
+		// cache_line_size() : 64
 		unsigned long ralign = cache_line_size();
+		// ralign : 64
+		// size : 44
 		while (size <= ralign / 2)
 			ralign /= 2;
+		// align: 64, ralign : 64
 		align = max(align, ralign);
+		// align : 64
 	}
 
+	// align : 64 , ARCH_SLAB_MINALIGN : 8
 	if (align < ARCH_SLAB_MINALIGN)
 		align = ARCH_SLAB_MINALIGN;
 
 	return ALIGN(align, sizeof(void *));
+	// return 64
 }
 
 
@@ -288,16 +299,27 @@ int slab_is_available(void)
 	return slab_state >= UP;
 }
 
-#ifndef CONFIG_SLOB
+#ifndef CONFIG_SLOB // CONFIG_SLOB = n
 /* Create a cache during boot when no slab services are available yet */
+// ARM10C 20140419
+// &boot_kmem_cache_node , "kmem_cache_node" , sizeof(struct kmem_cache_node) : 44 byte, 
+// SLAB_HWCACHE_ALIGN : 0x00002000UL(8K)
 void __init create_boot_cache(struct kmem_cache *s, const char *name, size_t size,
 		unsigned long flags)
 {
 	int err;
 
+	// s : &boot_kmem_cache_node
 	s->name = name;
+	// boot_kmem_cache_node.name : "kmem_cache_node"
 	s->size = s->object_size = size;
+	// boot_kmem_cache_node.size : boot_kmem_cache_node.object_size : 44
+	
+	// SLAB_HWCACHE_ALIGN : 0x00002000UL, ARCH_KMALLOC_MINALIGN : 64, size : 44
 	s->align = calculate_alignment(flags, ARCH_KMALLOC_MINALIGN, size);
+	// boot_kmem_cache_node.align : 64
+	
+	// s : &boot_kmem_cache_node , flags : SLAB_HWCACHE_ALIGN : 0x00002000UL(8K)
 	err = __kmem_cache_create(s, flags);
 
 	if (err)

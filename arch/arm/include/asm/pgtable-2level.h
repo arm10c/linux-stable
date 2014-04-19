@@ -69,6 +69,7 @@
  * switch which changes the user space mapping occurs.
  */
 // ARM10C 20131123
+// ARM10C 20140419
 #define PTRS_PER_PTE		512
 #define PTRS_PER_PMD		1
 // ARM10C 20131026

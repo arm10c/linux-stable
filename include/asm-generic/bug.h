@@ -53,6 +53,7 @@ struct bug_entry {
 
 #ifndef HAVE_ARCH_BUG_ON
 // ARM10C 20131005
+// ARM10C 20140419
 #define BUG_ON(condition) do { if (unlikely(condition)) BUG(); } while(0)
 #endif
 

@@ -58,6 +58,7 @@ struct kmem_cache_cpu {
  * contains both the order and the number of objects that a slab of the
  * given order would contain.
  */
+// ARM10C 20140419
 struct kmem_cache_order_objects {
 	unsigned long x;
 };
@@ -65,6 +66,7 @@ struct kmem_cache_order_objects {
 /*
  * Slab cache management.
  */
+// ARM10C 20140419
 struct kmem_cache {
 	struct kmem_cache_cpu __percpu *cpu_slab;
 	/* Used for retriving partial slabs etc */

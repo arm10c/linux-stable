@@ -93,8 +93,10 @@ unsigned long __rounddown_pow_of_two(unsigned long n)
  * selects the appropriately-sized optimised version depending on sizeof(n)
  */
 // ARM10C 20140322
+// ARM10C 20140419
 // n: 4096 , retrun 12
 // n: 2074624, return 20
+// n: 64, return 6
 #define ilog2(n)				\
 (						\
 	__builtin_constant_p(n) ? (		\

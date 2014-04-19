@@ -176,6 +176,7 @@ typedef phys_addr_t resource_size_t;
 typedef unsigned long irq_hw_number_t;
 
 // ARM10C 20140329
+// ARM10C 20140419
 typedef struct {
 	int counter;
 } atomic_t;
@@ -219,10 +220,13 @@ struct ustat {
  * @next: next update requests in a list
  * @func: actual update function to call after the grace period.
  */
+// ARM10C 20140419
+// sizeof(callback_head) : 8 bytes
 struct callback_head {
 	struct callback_head *next;
 	void (*func)(struct callback_head *head);
 };
+// ARM10C 20140419
 #define rcu_head callback_head
 
 #endif /*  __ASSEMBLY__ */

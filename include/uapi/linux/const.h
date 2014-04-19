@@ -19,7 +19,9 @@
 */
 #define _AT(T,X)	X
 #else
+// ARM10C 20140419
 #define __AC(X,Y)	(X##Y)
+// ARM10C 20140419
 #define _AC(X,Y)	__AC(X,Y)
 #define _AT(T,X)	((T)(X))
 #endif
