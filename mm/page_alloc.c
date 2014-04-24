@@ -108,6 +108,7 @@ EXPORT_SYMBOL(node_states);
 static DEFINE_SPINLOCK(managed_page_count_lock);
 
 // ARM10C 20140412
+// ARM10C 20140419
 unsigned long totalram_pages __read_mostly;
 unsigned long totalreserve_pages __read_mostly;
 /*
@@ -6066,19 +6067,24 @@ unsigned long free_reserved_area(void *start, void *end, int poison, char *s)
 }
 EXPORT_SYMBOL(free_reserved_area);
 
-#ifdef	CONFIG_HIGHMEM // CONFIG_HIGHMEM = y
+#ifdef	CONFIG_HIGHMEM // CONFIG_HIGHMEM=y
 // ARM10C 20140419
-// pfn_to_page(0x4F800) : 0x4F800(pfn)
+// pfn_to_page(0x4F800): 0x4F800 (pfn)
 void free_highmem_page(struct page *page)
 {
-	// page : 0x4F800(pfn)
+	// page: 0x4F800 (pfn)
 	__free_reserved_page(page);
 	// page를 order 0 으로 buddy에 추가.
+
+	// totalram_pages: 총 free된 page 수 + 0x6
 	totalram_pages++;
-	// 총 free된 page 수 + 0x6 + 1 (결국 free된 page 만큼 증가)
+	// totalram_pages: 총 free된 page 수 + 0x6 + 1 (결국 free된 page 만큼 증가)
+
+	// page_zone(page)->managed_pages: (&(&contig_page_data)->node_zones[1])->managed_pages
 	page_zone(page)->managed_pages++;
-	// (&contig_page_data)->node_zones[1]->managed_pages++;
 	// higemem 영역, 결국 free된 page 만큼 managed_pages 증가
+
+	// totalhigh_pages: 0
 	totalhigh_pages++;
 	// free된 page 만큼 totalhigh_pages 증가
 }
@@ -6086,15 +6092,18 @@ void free_highmem_page(struct page *page)
 
 
 // ARM10C 20140419
+// str: NULL
 void __init mem_init_print_info(const char *str)
 {
 	unsigned long physpages, codesize, datasize, rosize, bss_size;
 	unsigned long init_code_size, init_data_size;
 
+	// get_num_physpages(): 0x80000
 	physpages = get_num_physpages();
-        // physpages : 0x80000
+        // physpages: 0x80000
+
+	// System.map 에서 영역 계산 가능 (이하 적용)
 	codesize = _etext - _stext;
-	// codesize : System.map 에서 영역 계산 가능 (이하 적용)
 	datasize = _edata - _sdata;
 	rosize = __end_rodata - __start_rodata;
 	bss_size = __bss_stop - __bss_start;
@@ -6109,8 +6118,9 @@ void __init mem_init_print_info(const char *str)
 	 * 3) .rodata.* may be embedded into .text or .data sections.
 	 */
 
-	// .init.* , .init.text.* , .rodata.* 섹션은 이후 다른 섹션으로 변경되기 
+	// .init.* , .init.text.* , .rodata.* 섹션은 이후 다른 섹션으로 변경되기
 	// 때문에 현재 section의 size를 미리 계산하여 로그용으로 사용.
+
 #define adj_init_size(start, end, size, pos, adj) \
 	if (start <= pos && pos < end && size > adj) \
 		size -= adj;
@@ -6127,15 +6137,16 @@ void __init mem_init_print_info(const char *str)
 	printk("Memory: %luK/%luK available "
 	       "(%luK kernel code, %luK rwdata, %luK rodata, "
 	       "%luK init, %luK bss, %luK reserved"
-#ifdef	CONFIG_HIGHMEM
+#ifdef	CONFIG_HIGHMEM // CONFIG_HIGHMEM=y
 	       ", %luK highmem"
 #endif
 	       "%s%s)\n",
+	       // PAGE_SHIFT: 12
 	       nr_free_pages() << (PAGE_SHIFT-10), physpages << (PAGE_SHIFT-10),
 	       codesize >> 10, datasize >> 10, rosize >> 10,
 	       (init_data_size + init_code_size) >> 10, bss_size >> 10,
 	       (physpages - totalram_pages) << (PAGE_SHIFT-10),
-#ifdef	CONFIG_HIGHMEM
+#ifdef	CONFIG_HIGHMEM // CONFIG_HIGHMEM=y
 	       totalhigh_pages << (PAGE_SHIFT-10),
 #endif
 	       str ? ", " : "", str ? str : "");

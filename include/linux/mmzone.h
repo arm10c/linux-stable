@@ -126,6 +126,7 @@ struct zone_padding {
 // ARM10C 20140125
 // ARM10C 20140308
 // ARM10C 20140412
+// ARM10C 20140419
 enum zone_stat_item {
 	/* First 128 byte cacheline (assuming 64 bit words) */
 	NR_FREE_PAGES,
@@ -857,6 +858,8 @@ typedef struct pglist_data {
 } pg_data_t;
 
 // ARM10C 20140419
+// node_present_pages(nid):
+// (&contig_page_data)->node_present_pages
 #define node_present_pages(nid)	(NODE_DATA(nid)->node_present_pages)
 #define node_spanned_pages(nid)	(NODE_DATA(nid)->node_spanned_pages)
 #ifdef CONFIG_FLAT_NODE_MEM_MAP
@@ -1023,6 +1026,7 @@ extern struct pglist_data contig_page_data;	// bitmap 정보가 들어가있음
 // ARM10C 20131207
 // ARM10C 20140308
 // ARM10C 20140329
+// ARM10C 20140419
 #define NODE_DATA(nid)		(&contig_page_data)
 // ARM10C 20140329
 #define NODE_MEM_MAP(nid)	mem_map

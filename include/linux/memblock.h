@@ -20,6 +20,7 @@
 #define INIT_MEMBLOCK_REGIONS	128
 
 // ARM10C 20131019
+// ARM10C 20140419
 struct memblock_region {
 	phys_addr_t base;
 	phys_addr_t size;
@@ -205,12 +206,12 @@ void memblock_set_current_limit(phys_addr_t limit);
  * @reg: memblock_region structure
  */
 // ARM10C 20140419
-// mem : memblock.memory.regions
+// mem: memblock.memory.regions
 static inline unsigned long memblock_region_memory_base_pfn(const struct memblock_region *reg)
 {
-    // reg->base : 0x20000000
+	// reg->base: memblock.memory.regions[0].base: 0x20000000
 	return PFN_UP(reg->base);
-    // return : 0x20000
+	// return 0x20000
 }
 
 /**
@@ -218,18 +219,21 @@ static inline unsigned long memblock_region_memory_base_pfn(const struct membloc
  * @reg: memblock_region structure
  */
 // ARM10C 20140419
-// mem : memblock.memory.regions
+// mem: memblock.memory.regions
 static inline unsigned long memblock_region_memory_end_pfn(const struct memblock_region *reg)
 {
-    // reg->base : 0x20000000 , reg->size : 0x80000000
+	// reg->base: memblock.memory.regions[0].base: 0x20000000
+	// reg->base: memblock.memory.regions[0].size: 0x80000000
 	return PFN_DOWN(reg->base + reg->size);
-    // return 0xA0000
+	// return 0xA0000
 }
 
 /**
  * memblock_region_reserved_base_pfn - Return the lowest pfn intersecting with the reserved region
  * @reg: memblock_region structure
  */
+// ARM10C 20140419
+// res: memblock.reserved.regions
 static inline unsigned long memblock_region_reserved_base_pfn(const struct memblock_region *reg)
 {
 	return PFN_DOWN(reg->base);
@@ -239,6 +243,8 @@ static inline unsigned long memblock_region_reserved_base_pfn(const struct membl
  * memblock_region_reserved_end_pfn - Return the end_pfn this region
  * @reg: memblock_region structure
  */
+// ARM10C 20140419
+// res: memblock.reserved.regions
 static inline unsigned long memblock_region_reserved_end_pfn(const struct memblock_region *reg)
 {
 	return PFN_UP(reg->base + reg->size);

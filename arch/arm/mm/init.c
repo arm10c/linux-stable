@@ -645,80 +645,106 @@ static void __init free_unused_memmap(struct meminfo *mi)
 #endif
 }
 
-#ifdef CONFIG_HIGHMEM // CONFIG_HIGHMEM = y
+#ifdef CONFIG_HIGHMEM // CONFIG_HIGHMEM=y
 // ARM10C 20140419
-// start : 0x4F800 , res_start : 0x50000(pfn)
+// start: 0x4F800, res_start: 0x50000
 static inline void free_area_high(unsigned long pfn, unsigned long end)
 {
-	// pfn : 0x4F800 , end : 0x50000
+	// pfn: 0x4F800, end: 0x50000
 	for (; pfn < end; pfn++)
+		// pfn_to_page(0x4F800): 0x4F800 (pfn)
 		free_highmem_page(pfn_to_page(pfn));
-		// order 0의 buddy에 추가 
-		// totalram_pages,page_zone(page)->managed_pages,totalhigh_pages  변수를 free 한 만큼 증가
+		// page를 order 0 으로 buddy에 추가.
+		// totalram_pages, (&(&contig_page_data)->node_zones[1])->managed_pages, totalhigh_pages
+		// 변수를 free된 page 만큼 증가
 }
 #endif
 
 // ARM10C 20140419
 static void __init free_highpages(void)
 {
-#ifdef CONFIG_HIGHMEM // CONFIG_HIGHMEM = y
-	// max_low_pfn : 0x2F800 PHYS_PFN_OFFSET : 0x20000
+#ifdef CONFIG_HIGHMEM // CONFIG_HIGHMEM=y
+	// max_low_pfn: 0x2F800, PHYS_PFN_OFFSET: 0x20000
 	unsigned long max_low = max_low_pfn + PHYS_PFN_OFFSET;
-	// max_low : 0x4F800
+	// max_low: 0x4F800
 	struct memblock_region *mem, *res;
 	
 	/* set highmem page free */
+	// memblock.memory.cnt : 1
 	for_each_memblock(memory, mem) {
-	// mem : memblock.memory.regions , memblock.memory.cnt : 1
-	//for (mem = memblock.memory.regions;				
-	//           mem < (memblock.memory.regions + memblock.memory.cnt); mem++)
+	// for (mem = memblock.memory.regions;
+	//      mem < (memblock.memory.regions + memblock.memory.cnt); mem++)
 
-		// mem : memblock.memory.regions
+		// mem: memblock.memory.regions
 		unsigned long start = memblock_region_memory_base_pfn(mem);
 		// start: 0x20000
+		// mem: memblock.memory.regions
 		unsigned long end = memblock_region_memory_end_pfn(mem);
-		// end : 0xA0000
+		// end: 0xA0000
 
 		/* Ignore complete lowmem entries */
-		// end : 0xA0000 , max_low : 0x4F800
+		// end: 0xA0000, max_low: 0x4F800
 		if (end <= max_low)
 			continue;
 
 		/* Truncate partial highmem entries */
-		// start: 0x20000 , max_low : 0x4F800
+		// start: 0x20000, max_low: 0x4F800
 		if (start < max_low)
 			start = max_low;
-			// start : 0x4F800
+			// start: 0x4F800
 
 		/* Find and exclude any reserved regions */
+		// res: memblock.reserved.regions, memblock.reserved.cnt: ??(4개 이상)
 		for_each_memblock(reserved, res) {
-		// res : memblock.reserved.regions , memblock.reserved.cnt : ??(4개 이상)
-		// 현재 highmem은 매핑되지 않았다. 가정: 0x50000(pfn) ~ 0x50100 highmem 영역이 reserved 되어있다.
-		//for (res = memblock.reserved.regions;				
-		//           res < (memblock.reserved.regions + memblock.reserved.cnt); res++)
-			   
+		// for (res = memblock.reserved.regions;
+		//      res < (memblock.reserved.regions + memblock.reserved.cnt); res++)
+		
+			// 현재 highmem은 매핑되지 않았다.
+			// 가정: 0x50000 (pfn) ~ 0x50100 (pfn) highmem 영역이 reserved 되어있다.
+
 			unsigned long res_start, res_end;
 
+			// res: memblock.reserved.regions
 			res_start = memblock_region_reserved_base_pfn(res);
-			res_end = memblock_region_reserved_end_pfn(res);
-			// 가정값  res_start : 0x50000(pfn) , res_end : 0x50100 
 
-			// res_start : 0x50000(pfn) res_end : 0x50100 , start : 0x4F800 , end : 0xA0000
+			// res: memblock.reserved.regions
+			res_end = memblock_region_reserved_end_pfn(res);
+
+			// 가정값:
+			// res_start: 0x50000 (pfn), res_end: 0x50100 (pfn)
+
+			// res_end: 0x50100, start: 0x4F800
 			if (res_end < start)
 				continue;
-				//highmem의 reserve 영역만 체크
+				// lowmem의 reserved 영역은 skip
+
+			// highmem의 reserved 영역만 체크
+
+			// res_start: 0x50000, start: 0x4F800
 			if (res_start < start)
 				res_start = start;
+
+			// res_start: 0x50000, end: 0xA0000
 			if (res_start > end)
 				res_start = end;
+
+			// res_end: 0x50100, end: 0xA0000
 			if (res_end > end)
 				res_end = end;
+
+			// res_start: 0x50000, start: 0x4F800
 			if (res_start != start)
-				//start : 0x4F800 , res_start : 0x50000(pfn)
+				// start: 0x4F800, res_start: 0x50000
 				free_area_high(start, res_start);
-				// order 0의 buddy에 추가 
-				// totalram_pages,page_zone(page)->managed_pages,totalhigh_pages  변수를 free 한 만큼 증가
+				// page를 order 0 으로 buddy에 추가.
+				// totalram_pages, (&(&contig_page_data)->node_zones[1])->managed_pages, totalhigh_pages
+				// 변수를 free된 page 만큼 증가
+
+			// start: 0x4F800, res_end: 0x50100
 			start = res_end;
+			// start: 0x50100
+
+			// start: 0x50100, end: 0xA0000
 			if (start == end)
 				break;
 		}
@@ -756,6 +782,7 @@ void __init mem_init(void)
 	// align이 되어 있지 않으면 free_memmap을 수행
 
 	free_all_bootmem();
+	// bootmem으로 관리하던 메모리를 buddy로 이관.
 
 // 2014/04/12 종료
 // 2014/04/19 시작
@@ -777,17 +804,17 @@ void __init mem_init(void)
 
 	printk(KERN_NOTICE "Virtual kernel memory layout:\n"
 			"    vector  : 0x%08lx - 0x%08lx   (%4ld kB)\n"
-#ifdef CONFIG_HAVE_TCM
+#ifdef CONFIG_HAVE_TCM // CONFIG_HAVE_TCM=n
 			"    DTCM    : 0x%08lx - 0x%08lx   (%4ld kB)\n"
 			"    ITCM    : 0x%08lx - 0x%08lx   (%4ld kB)\n"
 #endif
 			"    fixmap  : 0x%08lx - 0x%08lx   (%4ld kB)\n"
 			"    vmalloc : 0x%08lx - 0x%08lx   (%4ld MB)\n"
 			"    lowmem  : 0x%08lx - 0x%08lx   (%4ld MB)\n"
-#ifdef CONFIG_HIGHMEM
+#ifdef CONFIG_HIGHMEM // CONFIG_HIGHMEM=y
 			"    pkmap   : 0x%08lx - 0x%08lx   (%4ld MB)\n"
 #endif
-#ifdef CONFIG_MODULES
+#ifdef CONFIG_MODULES // CONFIG_MODULES=y
 			"    modules : 0x%08lx - 0x%08lx   (%4ld MB)\n"
 #endif
 			"      .text : 0x%p" " - 0x%p" "   (%4d kB)\n"
@@ -795,22 +822,28 @@ void __init mem_init(void)
 			"      .data : 0x%p" " - 0x%p" "   (%4d kB)\n"
 			"       .bss : 0x%p" " - 0x%p" "   (%4d kB)\n",
 
-			// CONFIG_VECTORS_BASE : 0xffff0000 , PAGE_SIZE: 0x1000
-			// MLK( 0xffff0000UL , 0xffff1000UL ) : 0xffff0000UL , 0xffff1000UL , 4
+			// CONFIG_VECTORS_BASE: 0xffff0000, PAGE_SIZE: 0x1000
+			// MLK(0xffff0000UL, 0xffff1000UL): 0xffff0000UL, 0xffff1000UL, 4
 			MLK(UL(CONFIG_VECTORS_BASE), UL(CONFIG_VECTORS_BASE) +
 				(PAGE_SIZE)),
-#ifdef CONFIG_HAVE_TCM
+#ifdef CONFIG_HAVE_TCM // CONFIG_HAVE_TCM=n
 			MLK(DTCM_OFFSET, (unsigned long) dtcm_end),
 			MLK(ITCM_OFFSET, (unsigned long) itcm_end),
 #endif
+			// FIXADDR_START: 0xfff00000, FIXADDR_TOP: 0xfffe0000
 			MLK(FIXADDR_START, FIXADDR_TOP),
+
+			// VMALLOC_START: 0xf0000000, VMALLOC_END: 0xff000000
 			MLM(VMALLOC_START, VMALLOC_END),
+			// PAGE_OFFSET: 0xC0000000
 			MLM(PAGE_OFFSET, (unsigned long)high_memory),
-#ifdef CONFIG_HIGHMEM
+#ifdef CONFIG_HIGHMEM // CONFIG_HIGHMEM=y
+			// PKMAP_BASE: 0xBFE00000, LAST_PKMAP: 512, PAGE_SIZE: 0x1000
 			MLM(PKMAP_BASE, (PKMAP_BASE) + (LAST_PKMAP) *
 				(PAGE_SIZE)),
 #endif
-#ifdef CONFIG_MODULES
+#ifdef CONFIG_MODULES // CONFIG_MODULES=y
+			// MODULES_VADDR: 0xBF000000, MODULES_END: 0xBFE00000
 			MLM(MODULES_VADDR, MODULES_END),
 #endif
 
@@ -827,18 +860,18 @@ void __init mem_init(void)
 	 * Check boundaries twice: Some fundamental inconsistencies can
 	 * be detected at build time already.
 	 */
-#ifdef CONFIG_MMU // CONFIG_MMU = y
-	// TASK_SIZE: 0xBF000000  MODULES_VADDR: 0xBF000000
+#ifdef CONFIG_MMU // CONFIG_MMU=y
+	// TASK_SIZE: 0xBF000000, MODULES_VADDR: 0xBF000000
 	BUILD_BUG_ON(TASK_SIZE				> MODULES_VADDR);
 	BUG_ON(TASK_SIZE 				> MODULES_VADDR);
 #endif
 
-#ifdef CONFIG_HIGHMEM // CONFIG_HIGHMEM = y
-	// PKMAP_BASE: 0xBFE00000 , LAST_PKMAP : 512 , PAGE_SIZE : 0x1000 , PAGE_OFFSET : 0xC0000000
+#ifdef CONFIG_HIGHMEM // CONFIG_HIGHMEM=y
+	// PKMAP_BASE: 0xBFE00000, LAST_PKMAP: 512, PAGE_SIZE: 0x1000, PAGE_OFFSET: 0xC0000000
 	BUILD_BUG_ON(PKMAP_BASE + LAST_PKMAP * PAGE_SIZE > PAGE_OFFSET);
 	BUG_ON(PKMAP_BASE + LAST_PKMAP * PAGE_SIZE	> PAGE_OFFSET);
 #endif
-	//PAGE_SIZE : 0x1000(4096) : get_num_physpages(): 0x80000
+	// PAGE_SIZE: 0x1000 (4096), get_num_physpages(): 0x80000
 	if (PAGE_SIZE >= 16384 && get_num_physpages() <= 128) {
 		// PAGE_SIZE 가 16K 보다 크고 물리 메모리가 512K 이하면 수행.
 		extern int sysctl_overcommit_memory;

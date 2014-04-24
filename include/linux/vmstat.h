@@ -136,10 +136,12 @@ static inline void zone_page_state_add(long x, struct zone *zone,
 	// vm_stat[0]: 32
 }
 
+// ARM10C 20140419
+// NR_FREE_PAGES: 0
 static inline unsigned long global_page_state(enum zone_stat_item item)
 {
 	long x = atomic_long_read(&vm_stat[item]);
-#ifdef CONFIG_SMP
+#ifdef CONFIG_SMP // CONFIG_SMP=y
 	if (x < 0)
 		x = 0;
 #endif

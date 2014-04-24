@@ -43,7 +43,7 @@ DEFINE_PER_CPU(int, __kmap_atomic_idx);
  *  n means that there are (n-1) current users of it.
  */
 // ARM10C 20140419
-#ifdef CONFIG_HIGHMEM // CONFIG_HIGHMEM = y
+#ifdef CONFIG_HIGHMEM // CONFIG_HIGHMEM=y
 
 // ARM10C 20140419
 unsigned long totalhigh_pages __read_mostly;

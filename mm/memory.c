@@ -93,6 +93,7 @@ EXPORT_SYMBOL(mem_map);
  */
 // ARM10C 20131019
 // ARM10C 20131102
+// ARM10C 20140419
 void * high_memory;
 
 EXPORT_SYMBOL(high_memory);

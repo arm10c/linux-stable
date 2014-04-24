@@ -91,6 +91,7 @@ void vm_events_fold_cpu(int cpu)
  * vm_stat contains the global counters
  */
 // ARM10C 20140412
+// ARM10C 20140419
 // NR_VM_ZONE_STAT_ITEMS: 29
 // __cacheline_aligned_in_smp:
 // __attribute__((__aligned__(64), __section__(".data..cacheline_aligned")))

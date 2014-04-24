@@ -13,7 +13,9 @@
  * 0xfffe0000 and 0xfffeffff.
  */
 
+// ARM10C 20140419
 #define FIXADDR_START		0xfff00000UL
+// ARM10C 20140419
 #define FIXADDR_TOP		0xfffe0000UL
 #define FIXADDR_SIZE		(FIXADDR_TOP - FIXADDR_START)
 

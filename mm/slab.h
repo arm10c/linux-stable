@@ -70,9 +70,13 @@ __kmem_cache_alias(struct mem_cgroup *memcg, const char *name, size_t size,
 #define SLAB_CORE_FLAGS (SLAB_HWCACHE_ALIGN | SLAB_CACHE_DMA | SLAB_PANIC | \
 			 SLAB_DESTROY_BY_RCU | SLAB_DEBUG_OBJECTS )
 
-#if defined(CONFIG_DEBUG_SLAB)
+#if defined(CONFIG_DEBUG_SLAB) // CONFIG_DEBUG_SLAB=n
 #define SLAB_DEBUG_FLAGS (SLAB_RED_ZONE | SLAB_POISON | SLAB_STORE_USER)
-#elif defined(CONFIG_SLUB_DEBUG)
+#elif defined(CONFIG_SLUB_DEBUG) // CONFIG_SLUB_DEBUG=y
+// ARM10C 20140419
+// SLAB_RED_ZONE: 0x00000400UL, SLAB_POISON: 0x00000800UL, SLAB_STORE_USER: 0x00010000UL
+// SLAB_TRACE: 0x00200000UL, SLAB_DEBUG_FREE: 0x00000100UL
+// SLAB_DEBUG_FLAGS: 0x210D00
 #define SLAB_DEBUG_FLAGS (SLAB_RED_ZONE | SLAB_POISON | SLAB_STORE_USER | \
 			  SLAB_TRACE | SLAB_DEBUG_FREE)
 #else
@@ -248,11 +252,11 @@ static inline struct kmem_cache *cache_from_obj(struct kmem_cache *s, void *x)
  * The slab lists for all objects.
  */
 // ARM10C 20140419
-// sizeof(struct kmem_cache_node) : 44 byte
+// sizeof(struct kmem_cache_node): 44 bytes
 struct kmem_cache_node {
 	spinlock_t list_lock;
 
-#ifdef CONFIG_SLAB
+#ifdef CONFIG_SLAB // CONFIG_SLAB=n
 	struct list_head slabs_partial;	/* partial list first, better asm code */
 	struct list_head slabs_full;
 	struct list_head slabs_free;
@@ -265,10 +269,10 @@ struct kmem_cache_node {
 	int free_touched;		/* updated without locking */
 #endif
 
-#ifdef CONFIG_SLUB // CONFIG_SLUB = y
-	unsigned long nr_partial; 
-	struct list_head partial;  
-#ifdef CONFIG_SLUB_DEBUG // CONFIG_SLUB_DEBUG = y
+#ifdef CONFIG_SLUB // CONFIG_SLUB=y
+	unsigned long nr_partial;
+	struct list_head partial;
+#ifdef CONFIG_SLUB_DEBUG // CONFIG_SLUB_DEBUG=y
 	atomic_long_t nr_slabs;
 	atomic_long_t total_objects;
 	struct list_head full;

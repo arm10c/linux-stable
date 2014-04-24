@@ -452,7 +452,7 @@ static inline struct page *virt_to_head_page(const void *x)
 static inline void init_page_count(struct page *page)
 {
 	atomic_set(&page->_count, 1);
-	// (&page->__count)->counter : 1
+	// (&page->__count)->counter: 1
 }
 
 /*
@@ -806,7 +806,7 @@ static inline struct zone *page_zone(const struct page *page)
 {
 	// NODE_DATA(page_to_nid(page)): &contig_page_data
 	return &NODE_DATA(page_to_nid(page))->node_zones[page_zonenum(page)];
-	// (&contig_page_data)->node_zones[page_zonenum(page)]
+	// &(&contig_page_data)->node_zones[page_zonenum(page)]
 }
 
 #ifdef SECTION_IN_PAGE_FLAGS
@@ -1448,15 +1448,17 @@ extern void mem_init_print_info(const char *str);
 
 /* Free the reserved page into the buddy system, so it gets managed. */
 // ARM10C 20140419
-// page : 0x4F800(pfn)
+// page: 0x4F800 (pfn)
 static inline void __free_reserved_page(struct page *page)
 {
 	ClearPageReserved(page);
-    // page의 Reserved flags를 지운다.
+	// page의 Reserved flags를 지운다.
+
 	init_page_count(page);
-    // &page->__count : 1 로 set.
+	// (&page)->__count: 1 로 set.
+
 	__free_page(page);
-    // order 0 으로 buddy에 추가.
+	// order 0 으로 buddy에 추가.
 }
 
 static inline void free_reserved_page(struct page *page)
@@ -1492,11 +1494,14 @@ static inline unsigned long get_num_physpages(void)
 	unsigned long phys_pages = 0;
 
 	for_each_online_node(nid)
-    // for ( (nid) = 0; (nid) == 0; (nid) = 1)
-    // node_present_pages(0) : &contig_page_data->node_present_pages: 0x80000
+	// for ((nid) = 0; (nid) == 0; (nid) = 1)
+		// phys_pages: 0, node_present_pages(0): (&contig_page_data)->node_present_pages: 0x80000
 		phys_pages += node_present_pages(nid);
-        // phys_pages : 0x80000
+		// phys_pages: 0x80000
+
+	// phys_pages: 0x80000
 	return phys_pages;
+	// return 0x80000
 
 }
 

@@ -7,14 +7,15 @@
 /*
 // ARM10C 20130914
 // ARM10C 20131207
-// CONFIG_ARM_L1_CACHE_SHIFT = 6
+// CONFIG_ARM_L1_CACHE_SHIFT: 6
 // L1_CACHE_SHIFT: 6
 */
 #define L1_CACHE_SHIFT		CONFIG_ARM_L1_CACHE_SHIFT
 /*
 // ARM10C 20131207
-// // ARM10C 20140419
-// L1_CACHE_BYTES = 64
+// ARM10C 20140419
+// L1_CACHE_SHIFT: 6
+// L1_CACHE_BYTES: 64
 */
 #define L1_CACHE_BYTES		(1 << L1_CACHE_SHIFT)
 
@@ -25,16 +26,19 @@
  * cache before the transfer is done, causing old data to be seen by
  * the CPU.
  */
+/*
 // ARM10C 20140419
-// L1_CACHE_BYTES = 64
+// L1_CACHE_BYTES: 64
+// ARCH_DMA_MINALIGN: 64
+ */
 #define ARCH_DMA_MINALIGN	L1_CACHE_BYTES
 
 /*
  * With EABI on ARMv5 and above we must have 64-bit aligned slab pointers.
  */
+
+#if defined(CONFIG_AEABI) && (__LINUX_ARM_ARCH__ >= 5) // CONFIG_AEABI=y, __LINUX_ARM_ARCH__: 7
 // ARM10C 20140419
-// CONFIG_AEABI = y , __LINUX_ARM_ARCH__ : 7
-#if defined(CONFIG_AEABI) && (__LINUX_ARM_ARCH__ >= 5)
 #define ARCH_SLAB_MINALIGN 8
 #endif
 

@@ -10,23 +10,30 @@
  * Runtime evaluation of get_order()
  */
 // ARM10C 20140419
-// size : 64
+// size: 64
 static inline __attribute_const__
 int __get_order(unsigned long size)
 {
 	int order;
 
+	// size: 64
 	size--;
+	// size: 63
+
+	// size: 63, PAGE_SHIFT: 12
 	size >>= PAGE_SHIFT;
-    // size : 0
-#if BITS_PER_LONG == 32
+	// size : 0
+
+#if BITS_PER_LONG == 32 // BITS_PER_LONG: 32
+	// size : 0
 	order = fls(size);
-    // order : 0
+	// order: 0
 #else
 	order = fls64(size);
 #endif
+	// order: 0
 	return order;
-    // order : 0
+	// return 0
 }
 
 /**

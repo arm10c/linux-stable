@@ -21,11 +21,13 @@
 #include <linux/memblock.h>
 
 // ARM10C 20131019
+// ARM10C 20140419
 static struct memblock_region memblock_memory_init_regions[INIT_MEMBLOCK_REGIONS] __initdata_memblock;
 static struct memblock_region memblock_reserved_init_regions[INIT_MEMBLOCK_REGIONS] __initdata_memblock;
 
 // ARM10C 20131019
 // ARM10C 20131026
+// ARM10C 20140419
 struct memblock memblock __initdata_memblock = {
 	.memory.regions		= memblock_memory_init_regions,
 	.memory.cnt		= 1,	/* empty dummy entry */
