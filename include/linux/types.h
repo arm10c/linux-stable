@@ -156,6 +156,7 @@ typedef u32 dma_addr_t;
 #ifdef __CHECK_ENDIAN__
 #else
 #endif
+// ARM10C 20140426
 typedef unsigned __bitwise__ gfp_t;
 typedef unsigned __bitwise__ fmode_t;
 typedef unsigned __bitwise__ oom_flags_t;

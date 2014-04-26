@@ -361,9 +361,13 @@ static inline struct kmem_cache_order_objects oo_make(int order,
 	return x;
 }
 
+// ARM10C 20140426
+// oo: boot_kmem_cache_node.oo
 static inline int oo_order(struct kmem_cache_order_objects x)
 {
+	// x.x: boot_kmem_cache_node.oo.x: 64, OO_SHIFT: 16
 	return x.x >> OO_SHIFT;
+	// return 0
 }
 
 // ARM10C 20140419
@@ -1310,38 +1314,59 @@ static inline void slab_free_hook(struct kmem_cache *s, void *x) {}
 /*
  * Slab allocation and freeing
  */
+// ARM10C 20140426
+// alloc_gfp: 0x1200, node: 0, oo: boot_kmem_cache_node.oo
 static inline struct page *alloc_slab_page(gfp_t flags, int node,
 					struct kmem_cache_order_objects oo)
 {
+	// oo: boot_kmem_cache_node.oo
 	int order = oo_order(oo);
+	// order: 0
 
+	// flags: 0x1200, __GFP_NOTRACK: 0x200000u
 	flags |= __GFP_NOTRACK;
+	// flags: 0x201200
 
+	// node: 0, NUMA_NO_NODE: -1
 	if (node == NUMA_NO_NODE)
 		return alloc_pages(flags, order);
 	else
+		// node: 0, flags: 0x201200, order: 0
 		return alloc_pages_exact_node(node, flags, order);
 }
 
+// ARM10C 20140426
+// s: &boot_kmem_cache_node, flags: GFP_NOWAIT: 0, node: 0
 static struct page *allocate_slab(struct kmem_cache *s, gfp_t flags, int node)
 {
 	struct page *page;
+	// s->oo: boot_kmem_cache_node.oo
 	struct kmem_cache_order_objects oo = s->oo;
+	// oo: boot_kmem_cache_node.oo
 	gfp_t alloc_gfp;
 
+	// flags: GFP_NOWAIT: 0, gfp_allowed_mask: 0x1ffff2f
 	flags &= gfp_allowed_mask;
+	// flags: GFP_NOWAIT: 0
 
+	// flags: GFP_NOWAIT: 0, __GFP_WAIT: 0x10u
 	if (flags & __GFP_WAIT)
 		local_irq_enable();
 
+	// s->allocflags: boot_kmem_cache_node.allocflags: 0
 	flags |= s->allocflags;
+	// flags: GFP_NOWAIT: 0
 
 	/*
 	 * Let the initial higher-order allocation fail under memory pressure
 	 * so we fall-back to the minimum order allocation.
 	 */
+	// flags: GFP_NOWAIT: 0, __GFP_NOWARN: 0x200u, __GFP_NORETRY: 0x1000u
+	// __GFP_NOFAIL: 0x800u
 	alloc_gfp = (flags | __GFP_NOWARN | __GFP_NORETRY) & ~__GFP_NOFAIL;
+	// alloc_gfp: 0x1200
 
+	// alloc_gfp: 0x1200, node: 0, oo: boot_kmem_cache_node.oo
 	page = alloc_slab_page(alloc_gfp, node, oo);
 	if (unlikely(!page)) {
 		oo = s->min;
@@ -1393,6 +1418,8 @@ static void setup_object(struct kmem_cache *s, struct page *page,
 		s->ctor(object);
 }
 
+// ARM10C 20140426
+// kmem_cache_node: &boot_kmem_cache_node, GFP_NOWAIT: 0, node: 0
 static struct page *new_slab(struct kmem_cache *s, gfp_t flags, int node)
 {
 	struct page *page;
@@ -1401,8 +1428,10 @@ static struct page *new_slab(struct kmem_cache *s, gfp_t flags, int node)
 	void *p;
 	int order;
 
+	// flags: GFP_NOWAIT: 0, GFP_SLAB_BUG_MASK: 0xfe000005
 	BUG_ON(flags & GFP_SLAB_BUG_MASK);
 
+	// s: &boot_kmem_cache_node, flags: GFP_NOWAIT: 0, node: 0
 	page = allocate_slab(s,
 		flags & (GFP_RECLAIM_MASK | GFP_CONSTRAINT_MASK), node);
 	if (!page)
@@ -2909,6 +2938,7 @@ static inline int alloc_kmem_cache_cpus(struct kmem_cache *s)
 }
 
 // ARM10C 20140419
+// ARM10C 20140426
 static struct kmem_cache *kmem_cache_node;
 
 /*
@@ -2920,13 +2950,17 @@ static struct kmem_cache *kmem_cache_node;
  * when allocating for the kmalloc_node_cache. This is used for bootstrapping
  * memory on a fresh node that has no slab structures yet.
  */
+// ARM10C 20140426
+// node: 0
 static void early_kmem_cache_node_alloc(int node)
 {
 	struct page *page;
 	struct kmem_cache_node *n;
 
+	// kmem_cache_node->size: boot_kmem_cache_node.size: 64, sizeof(struct kmem_cache_node): 44 bytes
 	BUG_ON(kmem_cache_node->size < sizeof(struct kmem_cache_node));
 
+	// kmem_cache_node: &boot_kmem_cache_node, GFP_NOWAIT: 0, node: 0
 	page = new_slab(kmem_cache_node, GFP_NOWAIT, node);
 
 	BUG_ON(!page);
@@ -2967,14 +3001,21 @@ static void free_kmem_cache_nodes(struct kmem_cache *s)
 	}
 }
 
+// ARM10C 20140426
+// s: &boot_kmem_cache_node
 static int init_kmem_cache_nodes(struct kmem_cache *s)
 {
 	int node;
 
+	// N_NORMAL_MEMORY: 2
 	for_each_node_state(node, N_NORMAL_MEMORY) {
+	// for ( (node) = 0; (node) == 0; (node) = 1)
+
 		struct kmem_cache_node *n;
 
+		// slab_state: DOWN: 1
 		if (slab_state == DOWN) {
+			// node: 0
 			early_kmem_cache_node_alloc(node);
 			continue;
 		}
@@ -3260,10 +3301,12 @@ static int kmem_cache_open(struct kmem_cache *s, unsigned long flags)
 		// boot_kmem_cache_node.cpu_partial: 30
 
 // 2014/04/19 종료
+// 2014/04/26 시작
 
-#ifdef CONFIG_NUMA
+#ifdef CONFIG_NUMA // CONFIG_NUMA=n
 	s->remote_node_defrag_ratio = 1000;
 #endif
+	// s: &boot_kmem_cache_node, 
 	if (!init_kmem_cache_nodes(s))
 		goto error;
 

@@ -23,6 +23,7 @@
 #include "slab.h"
 
 // ARM10C 20131207
+// ARM10C 20140426
 enum slab_state slab_state;
 LIST_HEAD(slab_caches);
 DEFINE_MUTEX(slab_mutex);

@@ -142,6 +142,10 @@ static inline nodemask_t cpuset_mems_allowed(struct task_struct *p)
 	return node_possible_map;
 }
 
+// ARM10C 20140426
+// N_MEMORY: 3
+// N_HIGH_MEMORY: 3
+// cpuset_current_mems_allowed: node_states[N_HIGH_MEMORY]
 #define cpuset_current_mems_allowed (node_states[N_MEMORY])
 // ARM10C 20140308
 static inline void cpuset_init_current_mems_allowed(void) {}
@@ -222,6 +226,7 @@ static inline void set_mems_allowed(nodemask_t nodemask)
 {
 }
 
+// ARM10C 20140426
 static inline unsigned int get_mems_allowed(void)
 {
 	return 0;

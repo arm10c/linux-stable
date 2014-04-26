@@ -13,6 +13,7 @@
  * allocated from slab caches themselves.
  */
 // ARM10C 20131207
+// ARM10C 20140426
 enum slab_state {
 	DOWN,			/* No slab functionality yet */
 	PARTIAL,		/* SLUB: kmem_cache_node available */
@@ -252,6 +253,7 @@ static inline struct kmem_cache *cache_from_obj(struct kmem_cache *s, void *x)
  * The slab lists for all objects.
  */
 // ARM10C 20140419
+// ARM10C 20140426
 // sizeof(struct kmem_cache_node): 44 bytes
 struct kmem_cache_node {
 	spinlock_t list_lock;

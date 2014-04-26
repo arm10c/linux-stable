@@ -256,6 +256,7 @@ struct lruvec {
 typedef unsigned __bitwise__ isolate_mode_t;
 
 // ARM10C 20140125
+// ARM10C 20140426
 enum zone_watermarks {
 	WMARK_MIN,
 	WMARK_LOW,
@@ -655,6 +656,9 @@ static inline bool zone_is_empty(struct zone *zone)
 #define DEF_PRIORITY 12
 
 /* Maximum number of zones on a zonelist */
+// ARM10C 20140426
+// MAX_NUMNODES: 1, MAX_NR_ZONES 3
+// MAX_ZONES_PER_ZONELIST: 3
 #define MAX_ZONES_PER_ZONELIST (MAX_NUMNODES * MAX_NR_ZONES)
 
 #ifdef CONFIG_NUMA // CONFIG_NUMA=n
@@ -766,8 +770,10 @@ struct zoneref {
  * zonelist_zone_idx()	- Return the index of the zone for an entry
  * zonelist_node_idx()	- Return the index of the node for an entry
  */
+// ARM10C 20140426
 struct zonelist {
 	struct zonelist_cache *zlcache_ptr;		     // NULL or &zlcache
+	// MAX_ZONES_PER_ZONELIST: 3
 	struct zoneref _zonerefs[MAX_ZONES_PER_ZONELIST + 1];
 #ifdef CONFIG_NUMA
 	struct zonelist_cache zlcache;			     // optional ...
@@ -1071,6 +1077,7 @@ extern struct zone *next_zone(struct zone *zone);
 		else
 
 // ARM10C 20140308
+// ARM10C 20140426
 // z: contig_page_data->node_zonelists->_zonerefs[1]
 static inline struct zone *zonelist_zone(struct zoneref *zoneref)
 {
@@ -1080,6 +1087,8 @@ static inline struct zone *zonelist_zone(struct zoneref *zoneref)
 }
 
 // ARM10C 20140308
+// z: contig_page_data->node_zonelists->_zonerefs
+// ARM10C 20140426
 // z: contig_page_data->node_zonelists->_zonerefs
 static inline int zonelist_zone_idx(struct zoneref *zoneref)
 {
@@ -1130,6 +1139,9 @@ struct zoneref *next_zones_zonelist(struct zoneref *z,
  */
 // ARM10C 20140308
 // first_zones_zonelist(contig_page_data->node_zonelists, 0, 0, &zone);
+// ARM10C 20140426
+// zonelist: contig_page_data->node_zonelists, high_zoneidx: ZONE_NORMAL: 0
+// cpuset_current_mems_allowed: node_states[N_HIGH_MEMORY], &preferred_zone
 static inline struct zoneref *first_zones_zonelist(struct zonelist *zonelist,
 					enum zone_type highest_zoneidx,
 					nodemask_t *nodes,
@@ -1137,6 +1149,9 @@ static inline struct zoneref *first_zones_zonelist(struct zonelist *zonelist,
 {
 	// zonelist->_zonerefs: contig_page_data->node_zonelists->_zonerefs
 	// highest_zoneidx: 0, nodes: 0, &zone
+	// ARM10C 20140426
+	// zonelist->_zonerefs: contig_page_data->node_zonelists->_zonerefs
+	// highest_zoneidx: 0, nodes: &node_states[N_HIGH_MEMORY], zone: &preferred_zone
 	return next_zones_zonelist(zonelist->_zonerefs, highest_zoneidx, nodes,
 								zone);
 	// return contig_page_data->node_zonelists->_zonerefs[1]

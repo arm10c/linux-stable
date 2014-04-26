@@ -413,7 +413,7 @@ static inline void sock_release_memcg(struct sock *sk)
 }
 #endif /* CONFIG_INET && CONFIG_MEMCG_KMEM */
 
-#ifdef CONFIG_MEMCG_KMEM
+#ifdef CONFIG_MEMCG_KMEM // CONFIG_MEMCG_KMEM=n
 extern struct static_key memcg_kmem_enabled_key;
 
 extern int memcg_limited_groups_array_size;
@@ -572,6 +572,7 @@ static inline bool memcg_kmem_enabled(void)
 	return false;
 }
 
+// ARM10C 20140426
 static inline bool
 memcg_kmem_newpage_charge(gfp_t gfp, struct mem_cgroup **memcg, int order)
 {

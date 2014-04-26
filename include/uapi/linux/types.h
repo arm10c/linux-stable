@@ -21,6 +21,7 @@
 #ifdef __CHECKER__
 #define __bitwise__ __attribute__((bitwise))
 #else
+// ARM10C 20140426
 #define __bitwise__
 #endif
 #ifdef __CHECK_ENDIAN__

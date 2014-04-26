@@ -66,6 +66,9 @@ static inline int zref_in_nodemask(struct zoneref *zref, nodemask_t *nodes)
 // ARM10C 20140308
 // zonelist->_zonerefs: contig_page_data->node_zonelists->_zonerefs
 // highest_zoneidx: 0, nodes: 0, &zone
+// ARM10C 20140426
+// zonelist->_zonerefs: contig_page_data->node_zonelists->_zonerefs
+// highest_zoneidx: 0, nodes: &node_states[N_HIGH_MEMORY], zone: &preferred_zone
 struct zoneref *next_zones_zonelist(struct zoneref *z,
 					enum zone_type highest_zoneidx,
 					nodemask_t *nodes,
@@ -76,6 +79,8 @@ struct zoneref *next_zones_zonelist(struct zoneref *z,
 	 * Only filter based on nodemask if it's set
 	 */
 	// nodes: 0
+	// ARM10C 20140426
+	// nodes: &node_states[N_HIGH_MEMORY]
 	if (likely(nodes == NULL))
 		// z: contig_page_data->node_zonelists->_zonerefs[0], highest_zoneidx: 0
 		// z: contig_page_data->node_zonelists->_zonerefs[1], highest_zoneidx: 0
@@ -85,6 +90,9 @@ struct zoneref *next_zones_zonelist(struct zoneref *z,
 			z++;
 			// [1st] z: contig_page_data->node_zonelists->_zonerefs[1]
 	else
+		// ARM10C 20140426
+		// z: contig_page_data->node_zonelists->_zonerefs, zonelist_zone_idx(z): 1
+		// highest_zoneidx: 0
 		while (zonelist_zone_idx(z) > highest_zoneidx ||
 				(z->zone && !zref_in_nodemask(z, nodes)))
 			z++;
