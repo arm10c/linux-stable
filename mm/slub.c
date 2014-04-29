@@ -1432,6 +1432,7 @@ static struct page *new_slab(struct kmem_cache *s, gfp_t flags, int node)
 	BUG_ON(flags & GFP_SLAB_BUG_MASK);
 
 	// s: &boot_kmem_cache_node, flags: GFP_NOWAIT: 0, node: 0
+	// GFP_RECLAIM_MASK: 0x13ef0, GFP_CONSTRAINT_MASK: 0x60000
 	page = allocate_slab(s,
 		flags & (GFP_RECLAIM_MASK | GFP_CONSTRAINT_MASK), node);
 	if (!page)
@@ -3306,7 +3307,7 @@ static int kmem_cache_open(struct kmem_cache *s, unsigned long flags)
 #ifdef CONFIG_NUMA // CONFIG_NUMA=n
 	s->remote_node_defrag_ratio = 1000;
 #endif
-	// s: &boot_kmem_cache_node, 
+	// s: &boot_kmem_cache_node
 	if (!init_kmem_cache_nodes(s))
 		goto error;
 

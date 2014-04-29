@@ -29,17 +29,21 @@ struct vm_area_struct;
 #define ___GFP_COLD		0x100u
 // ARM10C 20140426
 #define ___GFP_NOWARN		0x200u
+// ARM10C 20140426
 #define ___GFP_REPEAT		0x400u
 // ARM10C 20140426
 #define ___GFP_NOFAIL		0x800u
 // ARM10C 20140426
 #define ___GFP_NORETRY		0x1000u
+// ARM10C 20140426
 #define ___GFP_MEMALLOC		0x2000u
 #define ___GFP_COMP		0x4000u
 #define ___GFP_ZERO		0x8000u
+// ARM10C 20140426
 #define ___GFP_NOMEMALLOC	0x10000u
 // ARM10C 20140426
 #define ___GFP_HARDWALL		0x20000u
+// ARM10C 20140426
 #define ___GFP_THISNODE		0x40000u
 // ARM10C 20140426
 #define ___GFP_RECLAIMABLE	0x80000u
@@ -122,6 +126,9 @@ struct vm_area_struct;
 // ___GFP_NOWARN: 0x200u
 // __GFP_NOWARN: 0x200u
 #define __GFP_NOWARN	((__force gfp_t)___GFP_NOWARN)	/* Suppress page allocation failure warning */
+// ARM10C 20140426
+// ___GFP_REPEAT: 0x400u
+// __GFP_REPEAT: 0x400u
 #define __GFP_REPEAT	((__force gfp_t)___GFP_REPEAT)	/* See above */
 // ARM10C 20140426
 // ___GFP_NOFAIL: 0x800u
@@ -131,9 +138,15 @@ struct vm_area_struct;
 // ___GFP_NORETRY: 0x1000u
 // __GFP_NORETRY: 0x1000u
 #define __GFP_NORETRY	((__force gfp_t)___GFP_NORETRY) /* See above */
+// ARM10C 20140426
+// ___GFP_MEMALLOC: 0x2000u
+// __GFP_MEMALLOC: 0x2000u
 #define __GFP_MEMALLOC	((__force gfp_t)___GFP_MEMALLOC)/* Allow access to emergency reserves */
 #define __GFP_COMP	((__force gfp_t)___GFP_COMP)	/* Add compound page metadata */
 #define __GFP_ZERO	((__force gfp_t)___GFP_ZERO)	/* Return zeroed page on success */
+// ARM10C 20140426
+// ___GFP_NOMEMALLOC: 0x10000u
+// __GFP_NOMEMALLOC: 0x10000u
 #define __GFP_NOMEMALLOC ((__force gfp_t)___GFP_NOMEMALLOC) /* Don't use emergency reserves.
 							 * This takes precedence over the
 							 * __GFP_MEMALLOC flag if both are
@@ -143,6 +156,9 @@ struct vm_area_struct;
 // ___GFP_HARDWALL: 0x20000u
 // __GFP_HARDWALL: 0x20000u
 #define __GFP_HARDWALL   ((__force gfp_t)___GFP_HARDWALL) /* Enforce hardwall cpuset memory allocs */
+// ARM10C 20140426
+// ___GFP_THISNODE: 0x40000u
+// __GFP_THISNODE: 0x40000u
 #define __GFP_THISNODE	((__force gfp_t)___GFP_THISNODE)/* No fallback, no policies */
 // ARM10C 20140426
 // ___GFP_RECLAIMABLE: 0x80000u
@@ -224,6 +240,18 @@ struct vm_area_struct;
 #define GFP_MOVABLE_MASK (__GFP_RECLAIMABLE|__GFP_MOVABLE)
 
 /* Control page allocator reclaim behavior */
+// ARM10C 20140426
+// __GFP_WAIT: 0x10
+// __GFP_HIGH: 0x20
+// __GFP_IO: 0x40
+// __GFP_FS: 0x80
+// __GFP_NOWARN: 0x200
+// __GFP_REPEAT: 0x400
+// __GFP_NOFAIL: 0x800
+// __GFP_NORETRY: 0x1000
+// __GFP_MEMALLOC: 0x2000
+// __GFP_NOMEMALLOC: 0x10000
+// GFP_RECLAIM_MASK: 0x13ef0
 #define GFP_RECLAIM_MASK (__GFP_WAIT|__GFP_HIGH|__GFP_IO|__GFP_FS|\
 			__GFP_NOWARN|__GFP_REPEAT|__GFP_NOFAIL|\
 			__GFP_NORETRY|__GFP_MEMALLOC|__GFP_NOMEMALLOC)
@@ -235,6 +263,10 @@ struct vm_area_struct;
 #define GFP_BOOT_MASK (__GFP_BITS_MASK & ~(__GFP_WAIT|__GFP_IO|__GFP_FS))
 
 /* Control allocation constraints */
+// ARM10C 20140426
+// __GFP_HARDWALL: 0x20000
+// __GFP_THISNODE: 0x40000
+// GFP_CONSTRAINT_MASK: 0x60000
 #define GFP_CONSTRAINT_MASK (__GFP_HARDWALL|__GFP_THISNODE)
 
 /* Do not use these with a slab allocator */
