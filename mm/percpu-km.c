@@ -87,18 +87,24 @@ static struct page *pcpu_addr_to_page(void *addr)
 	return virt_to_page(addr);
 }
 
+// ARM10C 20140301
 static int __init pcpu_verify_alloc_info(const struct pcpu_alloc_info *ai)
 {
 	size_t nr_pages, alloc_pages;
 
 	/* all units must be in a single group */
+	// ai->nr_groups: 1
 	if (ai->nr_groups != 1) {
 		printk(KERN_CRIT "percpu: can't handle more than one groups\n");
 		return -EINVAL;
 	}
 
+	// ai->groups[0].nr_units: 4, ai->unit_size: 0x8000, PAGE_SHIFT: 12
 	nr_pages = (ai->groups[0].nr_units * ai->unit_size) >> PAGE_SHIFT;
+	// nr_pages: 32
+
 	alloc_pages = roundup_pow_of_two(nr_pages);
+	// alloc_pages: 32
 
 	if (alloc_pages > nr_pages)
 		printk(KERN_WARNING "percpu: wasting %zu pages per chunk\n",

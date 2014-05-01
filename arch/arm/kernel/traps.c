@@ -44,6 +44,7 @@ static const char *handler[]= {
 	"undefined instruction",
 };
 
+// ARM10C 20131109
 void *vectors_page;
 
 #ifdef CONFIG_DEBUG_USER
@@ -843,23 +844,30 @@ void abort(void)
 }
 EXPORT_SYMBOL(abort);
 
+// ARM10C 20140329
 void __init trap_init(void)
 {
 	return;
 }
 
-#ifdef CONFIG_KUSER_HELPERS
+#ifdef CONFIG_KUSER_HELPERS // CONFIG_KUSER_HELPERS=y
+// ARM10C 20131116
+// vectors_base: 0xEF7FE000
 static void __init kuser_init(void *vectors)
 {
+	// kuser function 코드 주소
 	extern char __kuser_helper_start[], __kuser_helper_end[];
+	// kuser function 코드 사이즈
 	int kuser_sz = __kuser_helper_end - __kuser_helper_start;
 
+	// vectors: 0xEF7FE000
 	memcpy(vectors + 0x1000 - kuser_sz, __kuser_helper_start, kuser_sz);
 
 	/*
 	 * vectors + 0xfe0 = __kuser_get_tls
 	 * vectors + 0xfe8 = hardware TLS instruction at 0xffff0fe8
 	 */
+	// tls_emu:	0, has_tls_reg:	1
 	if (tls_emu || has_tls_reg)
 		memcpy(vectors + 0xfe0, vectors + 0xfe8, 4);
 }
@@ -869,14 +877,17 @@ static inline void __init kuser_init(void *vectors)
 }
 #endif
 
+// ARM10C 20131109
+// vectors: 0xEF7FE000
 void __init early_trap_init(void *vectors_base)
 {
-#ifndef CONFIG_CPU_V7M
+#ifndef CONFIG_CPU_V7M // CONFIG_CPU_V7M=n
 	unsigned long vectors = (unsigned long)vectors_base;
 	extern char __stubs_start[], __stubs_end[];
 	extern char __vectors_start[], __vectors_end[];
 	unsigned i;
 
+	// vectors_base: 0xEF7FE000
 	vectors_page = vectors_base;
 
 	/*
@@ -886,6 +897,7 @@ void __init early_trap_init(void *vectors_base)
 	 * branch back to the undefined instruction.
 	 */
 	for (i = 0; i < PAGE_SIZE / sizeof(u32); i++)
+		// 0xe7fddef1: undefined instruction
 		((u32 *)vectors_base)[i] = 0xe7fddef1;
 
 	/*
@@ -893,12 +905,23 @@ void __init early_trap_init(void *vectors_base)
 	 * into the vector page, mapped at 0xffff0000, and ensure these
 	 * are visible to the instruction stream.
 	 */
+	// vectors: 0xEF7FE000
 	memcpy((void *)vectors, __vectors_start, __vectors_end - __vectors_start);
+	// vectors +  0x1000: 0xEF7FE000 + 0x1000
 	memcpy((void *)vectors + 0x1000, __stubs_start, __stubs_end - __stubs_start);
 
+// 2013/11/09 종료
+// 2013/11/16 시작
+
+	// vectors_base: 0xEF7FE000
+	// kuser helper 기능을 위한 코드를 카피
 	kuser_init(vectors_base);
 
+	// vectors: 0xEF7FE000, vectors + PAGE_SIZE * 2: 0xEF800000
+	// vectors 주소의 값을 메모리에 반영
 	flush_icache_range(vectors, vectors + PAGE_SIZE * 2);
+
+	// DOMAIN_USER: 1, DOMAIN_CLIENT: 1
 	modify_domain(DOMAIN_USER, DOMAIN_CLIENT);
 #else /* ifndef CONFIG_CPU_V7M */
 	/*

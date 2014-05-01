@@ -5,6 +5,8 @@
 
 #define PREEMPT_ENABLED	(0)
 
+// ARM10C 20130824
+// ARM10C 20140315
 static __always_inline int preempt_count(void)
 {
 	return current_thread_info()->preempt_count;

@@ -112,6 +112,7 @@ extern void tc_init(void);
  */
 bool early_boot_irqs_disabled __read_mostly;
 
+// ARM10C 20140308
 enum system_states system_state __read_mostly;
 EXPORT_SYMBOL(system_state);
 
@@ -126,10 +127,15 @@ extern void time_init(void);
 void (*__initdata late_time_init)(void);
 
 /* Untouched command line saved by arch-specific code. */
+// ARM10C 20140222
 char __initdata boot_command_line[COMMAND_LINE_SIZE];
+
 /* Untouched saved command line (eg. for /proc) */
+// ARM10C 20140222
 char *saved_command_line;
+
 /* Command line for parameter parsing */
+// ARM10C 20140222
 static char *static_command_line;
 /* Command line for per-initcall parameter parsing */
 static char *initcall_command_line;
@@ -168,6 +174,7 @@ static const char * argv_init[MAX_INIT_ARGS+2] = { "init", NULL, };
 const char * envp_init[MAX_INIT_ENVS+2] = { "HOME=/", "TERM=linux", NULL, };
 static const char *panic_later, *panic_param;
 
+// ARM10C 20131019
 extern const struct obs_kernel_param __setup_start[], __setup_end[];
 
 static int __init obsolete_checksetup(char *line)
@@ -262,6 +269,7 @@ static int __init repair_env_string(char *param, char *val, const char *unused)
  * Unknown boot options get handed to init, unless they look like
  * unused parameters (modprobe will find them in /proc/cmdline).
  */
+// ARM10C 20140322
 static int __init unknown_bootoption(char *param, char *val, const char *unused)
 {
 	repair_env_string(param, val, unused);
@@ -353,13 +361,19 @@ static inline void smp_prepare_cpus(unsigned int maxcpus) { }
  * parsing is performed in place, and we should allow a component to
  * store reference of name/value for future reference.
  */
+// ARM10C 20140222
+// command_line: "console=ttySAC2,115200 init=/linuxrc"
 static void __init setup_command_line(char *command_line)
 {
 	saved_command_line = alloc_bootmem(strlen (boot_command_line)+1);
 	initcall_command_line = alloc_bootmem(strlen (boot_command_line)+1);
 	static_command_line = alloc_bootmem(strlen (command_line)+1);
+	// 현재 boot_command_line 과 command_line 은 같은 문자열.
+	// saved_command_line 은 고정값 static_command_line 은 수정용.
+
 	strcpy (saved_command_line, boot_command_line);
 	strcpy (static_command_line, command_line);
+	// saved_command_line 및 static_command_line 할당
 }
 
 /*
@@ -402,6 +416,7 @@ static noinline void __init_refok rest_init(void)
 }
 
 /* Check for early params. */
+// ARM10C 20131019
 static int __init do_early_param(char *param, char *val, const char *unused)
 {
 	const struct obs_kernel_param *p;
@@ -419,33 +434,55 @@ static int __init do_early_param(char *param, char *val, const char *unused)
 	return 0;
 }
 
+// ARM10C 20131019
+// ARM10C 20140322
+// tmp_cmdline: "console=ttySAC2,115200 init=/linuxrc"
 void __init parse_early_options(char *cmdline)
 {
+	// cmdline: "console=ttySAC2,115200 init=/linuxrc"
 	parse_args("early options", cmdline, NULL, 0, 0, 0, do_early_param);
 }
 
 /* Arch code calls this early on, or if not, just before other parsing. */
+// ARM10C 20131019
+// ARM10C 20140322
 void __init parse_early_param(void)
 {
 	static __initdata int done = 0;
 	static __initdata char tmp_cmdline[COMMAND_LINE_SIZE];
 
+	// done: 0
 	if (done)
 		return;
 
 	/* All fall through to do_early_param. */
+	// boot_command_line: "console=ttySAC2,115200 init=/linuxrc", COMMAND_LINE_SIZE: 1024
 	strlcpy(tmp_cmdline, boot_command_line, COMMAND_LINE_SIZE);
+	// tmp_cmdline: "console=ttySAC2,115200 init=/linuxrc"
+
 	parse_early_options(tmp_cmdline);
+
+	// done: 0
 	done = 1;
+	// done: 1
 }
 
 /*
  *	Activate the first processor.
  */
 
+// ARM10C 20130907
+// 현재 cpu(core id)를 얻어서 cpu_XXX_bits[] 의 cpu를 셋한다.
+//
+// 참조 : http://cafe.daum.net/lksas/8HoZ/42?docid=1K80b8HoZ4220110218025952
+// 시스템 상에 존재하는 CPU의 상태 정보는 다음과 같은 4개의 비트맵 (cpumask_t)으로 관리한다.
+// cpu_possible_mask - 해당 비트에 대한 CPU가 존재할 수 있다.
+// cpu_present_mask - 해당 비트에 대한 CPU가 존재한다.
+// cpu_online_mask - 해당 비트에 대한 CPU가 존재하며 스케줄러가 이를 관리한다.
+// cpu_active_mask - 해당 비트에 대한 CPU가 존재하며 task migration 시 이를 이용할 수 있다.
 static void __init boot_cpu_init(void)
 {
-	int cpu = smp_processor_id();
+	int cpu = smp_processor_id();	// ARM10C FIXME cpu = 0 일 가능성이 큼 
 	/* Mark the boot cpu "present", "online" etc for SMP and UP case */
 	set_cpu_online(cpu, true);
 	set_cpu_active(cpu, true);
@@ -453,6 +490,14 @@ static void __init boot_cpu_init(void)
 	set_cpu_possible(cpu, true);
 }
 
+// ARM10C 20130824
+// weak 정의: gcc 메뉴얼 일부 참조
+// weak
+// The weak attribute causes the declaration to be emitted as a weak symbol rather than a global. 
+// This is primarily useful in defining library functions which can be overridden in user code, 
+// though it can also be used with non-function declarations. 
+// Weak symbols are supported for ELF targets, 
+// and also for a.out targets when using the GNU assembler and linker. 
 void __init __weak smp_setup_processor_id(void)
 {
 }
@@ -466,22 +511,32 @@ void __init __weak thread_info_cache_init(void)
 /*
  * Set up kernel memory allocators
  */
+// ARM10C 20140329
 static void __init mm_init(void)
 {
 	/*
 	 * page_cgroup requires contiguous pages,
 	 * bigger than MAX_ORDER unless SPARSEMEM.
 	 */
-	page_cgroup_init_flatmem();
+	page_cgroup_init_flatmem(); // null function
 	mem_init();
+	// bootmem으로 관리하던 메모리를 buddy로 이관.
+	// 각 section 메모리 크기를 출력.
+	
+	// mm/Makefile 에서 CONFIG_SLUB 설정으로 slub.c 로 jump
 	kmem_cache_init();
+	
 	percpu_init_late();
 	pgtable_cache_init();
 	vmalloc_init();
 }
 
+// ARM10C 20130824
+// asmlinkage의 의미
+// http://www.spinics.net/lists/arm-kernel/msg87677.html
 asmlinkage void __init start_kernel(void)
 {
+	// ATAG,DTB 정보로 사용
 	char * command_line;
 	extern const struct kernel_param __start___param[], __stop___param[];
 
@@ -500,6 +555,7 @@ asmlinkage void __init start_kernel(void)
 
 	cgroup_init_early();
 
+	// IRQ를 disable한다.
 	local_irq_disable();
 	early_boot_irqs_disabled = true;
 
@@ -507,37 +563,89 @@ asmlinkage void __init start_kernel(void)
  * Interrupts are still disabled. Do necessary setups, then
  * enable them
  */
+	// 현재 cpu(core id)를 얻어서 cpu_XXX_bits[] 의 cpu를 셋한다.
 	boot_cpu_init();
+
+// 2013/09/07 종료
+// 2013/09/14 시작
+	
+	// 128개의 page_address_htable 배열을 초기화
 	page_address_init();
+
+	// 배너:
+	//	Linux version 2.6.37_DM385_IPNC_3.50.00
+	// 	(a0875405@bangvideoapps01) (gcc version 4.5.3 20110311 
+	// 	(prerelease) (GCC) ) #1 Fri Dec 21 17:27:08 IST 2012
 	pr_notice("%s", linux_banner);
 	setup_arch(&command_line);
-	mm_init_owner(&init_mm, &init_task);
-	mm_init_cpumask(&init_mm);
+
+// 2014/02/15 종료
+// 2014/02/22 시작
+
+	mm_init_owner(&init_mm, &init_task); // null function
+	mm_init_cpumask(&init_mm); // null function
+
+	// command_line: exynos5420-smdk5420.dts 파일의 chosen node 의 bootarg 값
+	// "console=ttySAC2,115200 init=/linuxrc"
 	setup_command_line(command_line);
+	// saved_command_line 및 static_command_line 할당
+
 	setup_nr_cpu_ids();
 	setup_per_cpu_areas();
+	// pcpu 구조체를 만들어 줌 (mm/percpu.c)
+
 	smp_prepare_boot_cpu();	/* arch-specific boot-cpu hooks */
+	// boot cpu 0의 pcpu 영역의 base주소를 core register에 설정해줌
 
 	build_all_zonelists(NULL, NULL);
-	page_alloc_init();
 
+// 2014/03/08 종료
+// 2014/03/15 시작
+
+	page_alloc_init();
+	// cpu_chain에 page_alloc_cpu_notify를 연결함 (mutex lock/unlock 사용)
+
+	// boot_command_line: "console=ttySAC2,115200 init=/linuxrc"
 	pr_notice("Kernel command line: %s\n", boot_command_line);
+	// "Kernel command line: console=ttySAC2,115200 init=/linuxrc"
+
 	parse_early_param();
+	// setup_arch에서 수행했던 작업 다시 수행
+	// command arg에서 각 요소들을 파싱하여 early init section으로 설정된 디바이스 초기화.
+	// 우리는 serial device가 검색이 되지만 config설정은 없어서 아무것도 안함.
+
+	// static_command_line: "console=ttySAC2,115200 init=/linuxrc"
 	parse_args("Booting kernel", static_command_line, __start___param,
 		   __stop___param - __start___param,
 		   -1, -1, &unknown_bootoption);
+	// DTB에서 넘어온 bootargs를 파싱하여 param, val을 뽑아내고 그에 대응되는
+	// kernel_param 구조체에 값을 등록함.
 
 	jump_label_init();
+	// HAVE_JUMP_LABEL 이 undefined 이므로 NULL 함수
 
 	/*
 	 * These use large bootmem allocations and must precede
 	 * kmem_cache_init()
 	 */
 	setup_log_buf(0);
+	// defalut log_buf의 크기는 __LOG_BUF_LEN: 0x20000 (128KB) 임
+	// early_param 에서 호출했던 log_buf_len 값이 있다면 log_buf의 크기를 넘어온 크기로 만듬
+
 	pidhash_init();
+	// pidhash의 크기를 16kB만큼 할당 받고 4096개의 hash list를 만듬
+
 	vfs_caches_init_early();
+	// Dentry cache, Inode-cache용 hash를 위한 메모리 공간을 각각 512kB, 256kB만큼 할당 받고,
+	// 131072, 65536개 만큼 hash table을 각각 만듬
+
+// 2014/03/22 종료
+// 2014/03/29 시작
+
 	sort_main_extable();
-	trap_init();
+	// extable 을 cmp_ex를 이용하여 sort수행
+
+	trap_init(); // null function
 	mm_init();
 
 	/*

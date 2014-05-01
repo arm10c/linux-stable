@@ -12,6 +12,7 @@
 #include <linux/uaccess.h>
 #include <asm/errno.h>
 
+// ARM10C 20140329
 #define __futex_atomic_ex_table(err_reg)			\
 	"3:\n"							\
 	"	.pushsection __ex_table,\"a\"\n"		\

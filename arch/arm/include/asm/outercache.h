@@ -87,6 +87,7 @@ static inline void outer_inv_range(phys_addr_t start, phys_addr_t end)
 { }
 static inline void outer_clean_range(phys_addr_t start, phys_addr_t end)
 { }
+// ARM10C 20140215
 static inline void outer_flush_range(phys_addr_t start, phys_addr_t end)
 { }
 static inline void outer_flush_all(void) { }

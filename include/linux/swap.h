@@ -268,6 +268,8 @@ extern unsigned long nr_free_buffer_pages(void);
 extern unsigned long nr_free_pagecache_pages(void);
 
 /* Definition of global_page_state not available yet */
+// ARM10C 20140419
+// NR_FREE_PAGES: 0
 #define nr_free_pages() global_page_state(NR_FREE_PAGES)
 
 

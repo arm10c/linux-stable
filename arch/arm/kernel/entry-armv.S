@@ -484,6 +484,7 @@ ENDPROC(__und_usr)
 	.align	2
 4:	mov	pc, r9
 	.popsection
+/* ARM10C 20140329 */
 	.pushsection __ex_table,"a"
 	.long	1b, 4b
 #if CONFIG_ARM_THUMB && __LINUX_ARM_ARCH__ >= 6 && CONFIG_CPU_V7
@@ -754,7 +755,8 @@ ENDPROC(__switch_to)
 	.endr
 	.endm
 
-#ifdef CONFIG_KUSER_HELPERS
+#ifdef CONFIG_KUSER_HELPERS // CONFIG_KUSER_HELPERS=y
+// ARM10C 20131116
 	.align	5
 	.globl	__kuser_helper_start
 __kuser_helper_start:
@@ -938,6 +940,7 @@ __kuser_get_tls:				@ 0xffff0fe0
 __kuser_helper_version:				@ 0xffff0ffc
 	.word	((__kuser_helper_end - __kuser_helper_start) >> 5)
 
+// ARM10C 20131116
 	.globl	__kuser_helper_end
 __kuser_helper_end:
 
@@ -998,6 +1001,7 @@ ENDPROC(vector_\name)
 	.endm
 
 	.section .stubs, "ax", %progbits
+// ARM10C 20131109
 __stubs_start:
 	@ This must be the first word
 	.word	vector_swi
@@ -1128,6 +1132,7 @@ vector_fiq:
 	.equ	vector_fiq_offset, vector_fiq
 
 	.section .vectors, "ax", %progbits
+// ARM10C 20131109
 __vectors_start:
 	W(b)	vector_rst
 	W(b)	vector_und
@@ -1140,6 +1145,7 @@ __vectors_start:
 
 	.data
 
+// ARM10C 20130914
 	.globl	cr_alignment
 	.globl	cr_no_alignment
 cr_alignment:

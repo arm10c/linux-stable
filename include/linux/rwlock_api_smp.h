@@ -206,15 +206,18 @@ static inline void __raw_write_lock_bh(rwlock_t *lock)
 	LOCK_CONTENDED(lock, do_raw_write_trylock, do_raw_write_lock);
 }
 
+// ARM10C 20140125
 static inline void __raw_write_lock(rwlock_t *lock)
 {
 	preempt_disable();
-	rwlock_acquire(&lock->dep_map, 0, 0, _RET_IP_);
+	rwlock_acquire(&lock->dep_map, 0, 0, _RET_IP_); // null function
 	LOCK_CONTENDED(lock, do_raw_write_trylock, do_raw_write_lock);
+	// do_raw_write_lock(lock) 을 실행
 }
 
 #endif /* CONFIG_PREEMPT */
 
+// ARM10C 20140125
 static inline void __raw_write_unlock(rwlock_t *lock)
 {
 	rwlock_release(&lock->dep_map, 1, _RET_IP_);

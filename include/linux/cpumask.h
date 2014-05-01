@@ -11,6 +11,8 @@
 #include <linux/bitmap.h>
 #include <linux/bug.h>
 
+// ARM10C 20130831
+// struct cpumask { bits[1]; }
 typedef struct cpumask { DECLARE_BITMAP(bits, NR_CPUS); } cpumask_t;
 
 /**
@@ -20,19 +22,26 @@ typedef struct cpumask { DECLARE_BITMAP(bits, NR_CPUS); } cpumask_t;
  * You should only assume nr_cpu_ids bits of this mask are valid.  This is
  * a macro so it's const-correct.
  */
+// ARM10C 20140215
+// ARM10C 20140222
 #define cpumask_bits(maskp) ((maskp)->bits)
 
 #if NR_CPUS == 1
 #define nr_cpu_ids		1
 #else
+// ARM10C 20140215
+// nr_cpu_ids: 4
 extern int nr_cpu_ids;
 #endif
 
-#ifdef CONFIG_CPUMASK_OFFSTACK
+#ifdef CONFIG_CPUMASK_OFFSTACK // CONFIG_CPUMASK_OFFSTACK=n
 /* Assuming NR_CPUS is huge, a runtime limit is more efficient.  Also,
  * not all bits may be allocated. */
 #define nr_cpumask_bits	nr_cpu_ids
 #else
+// ARM10C 20140215
+// NR_CPUS: 4
+// nr_cpumask_bits: 4
 #define nr_cpumask_bits	NR_CPUS
 #endif
 
@@ -83,10 +92,15 @@ extern const struct cpumask *const cpu_active_mask;
 
 #if NR_CPUS > 1
 #define num_online_cpus()	cpumask_weight(cpu_online_mask)
+// ARM10C 20140215
+// cpu_possible_mask: 0xF
+// num_possible_cpus(): 4
 #define num_possible_cpus()	cpumask_weight(cpu_possible_mask)
 #define num_present_cpus()	cpumask_weight(cpu_present_mask)
 #define num_active_cpus()	cpumask_weight(cpu_active_mask)
 #define cpu_online(cpu)		cpumask_test_cpu((cpu), cpu_online_mask)
+// ARM10C 20140301
+// cpu_possible(0): cpumask_test_cpu((0), cpu_possible_mask): 1
 #define cpu_possible(cpu)	cpumask_test_cpu((cpu), cpu_possible_mask)
 #define cpu_present(cpu)	cpumask_test_cpu((cpu), cpu_present_mask)
 #define cpu_active(cpu)		cpumask_test_cpu((cpu), cpu_active_mask)
@@ -102,9 +116,12 @@ extern const struct cpumask *const cpu_active_mask;
 #endif
 
 /* verify cpu argument to cpumask_* operators */
+// ARM10C 20130907
+// ARM10C 20140301
+// nr_cpumask_bits: 4
 static inline unsigned int cpumask_check(unsigned int cpu)
 {
-#ifdef CONFIG_DEBUG_PER_CPU_MAPS
+#ifdef CONFIG_DEBUG_PER_CPU_MAPS // CONFIG_DEBUG_PER_CPU_MAPS=n
 	WARN_ON_ONCE(cpu >= nr_cpumask_bits);
 #endif /* CONFIG_DEBUG_PER_CPU_MAPS */
 	return cpu;
@@ -167,12 +184,17 @@ static inline unsigned int cpumask_first(const struct cpumask *srcp)
  *
  * Returns >= nr_cpu_ids if no further cpus set.
  */
+// ARM10C 20140215
+// n: -1, srcp: cpu_possible_mask
 static inline unsigned int cpumask_next(int n, const struct cpumask *srcp)
 {
 	/* -1 is a legal arg here. */
+	// n: -1
 	if (n != -1)
 		cpumask_check(n);
+	// cpumask_bits(cpu_possible_mask): cpu_possible_mask->bits: 0xF, nr_cpumask_bits: 4, n: -1+1
 	return find_next_bit(cpumask_bits(srcp), nr_cpumask_bits, n+1);
+	// return 0
 }
 
 /**
@@ -200,6 +222,7 @@ int cpumask_any_but(const struct cpumask *mask, unsigned int cpu);
  *
  * After the loop, cpu is >= nr_cpu_ids.
  */
+// ARM10C 20140215
 #define for_each_cpu(cpu, mask)				\
 	for ((cpu) = -1;				\
 		(cpu) = cpumask_next((cpu), (mask)),	\
@@ -252,9 +275,11 @@ int cpumask_any_but(const struct cpumask *mask, unsigned int cpu);
  * @cpu: cpu number (< nr_cpu_ids)
  * @dstp: the cpumask pointer
  */
+// ARM10C 20130907 
 static inline void cpumask_set_cpu(unsigned int cpu, struct cpumask *dstp)
 {
 	set_bit(cpumask_check(cpu), cpumask_bits(dstp));
+	// ARM10C 20130907 set_bit( 0, dstp->bits) --> dstp->bits[0] = 1;
 }
 
 /**
@@ -276,6 +301,11 @@ static inline void cpumask_clear_cpu(int cpu, struct cpumask *dstp)
  *
  * No static inline type checking - see Subtlety (1) above.
  */
+// ARM10C 20140301
+// cpumask_test_cpu((0), cpu_possible_mask)
+// test_bit(cpumask_check(0), cpumask_bits((cpu_possible_mask)))
+// cpumask_check(0): 0, cpumask_bits((cpu_possible_mask)): cpu_possible_mask->bits: 0xF
+// test_bit(0, cpu_possible_mask->bits): 1
 #define cpumask_test_cpu(cpu, cpumask) \
 	test_bit(cpumask_check(cpu), cpumask_bits((cpumask)))
 
@@ -456,9 +486,13 @@ static inline bool cpumask_full(const struct cpumask *srcp)
  * cpumask_weight - Count of bits in *srcp
  * @srcp: the cpumask to count bits (< nr_cpu_ids) in.
  */
+// ARM10C 20140215
+// cpu_possible_mask: 0xF
 static inline unsigned int cpumask_weight(const struct cpumask *srcp)
 {
+	// cpumask_bits(cpu_possible_mask): cpu_possible_mask->bits, nr_cpumask_bits: 4
 	return bitmap_weight(cpumask_bits(srcp), nr_cpumask_bits);
+	// return 4
 }
 
 /**
@@ -539,10 +573,14 @@ static inline void cpumask_copy(struct cpumask *dstp,
  * If len is zero, returns zero.  Otherwise returns the length of the
  * (nul-terminated) @buf string.
  */
+// ARM10C 20140301
+// sizeof(cpus_buf): 4096 cpu_possible_mask: cpu_possible_bits: 0xF
 static inline int cpumask_scnprintf(char *buf, int len,
 				    const struct cpumask *srcp)
 {
+	// len: 4096, cpumask_bits(cpu_possible_bits): 0xF, nr_cpumask_bits: 4
 	return bitmap_scnprintf(buf, len, cpumask_bits(srcp), nr_cpumask_bits);
+	// buf: "f", return: 1
 }
 
 /**
@@ -718,6 +756,9 @@ extern const DECLARE_BITMAP(cpu_all_bits, NR_CPUS);
 /* First bits of cpu_bit_bitmap are in fact unset. */
 #define cpu_none_mask to_cpumask(cpu_bit_bitmap[0])
 
+// ARM10C 20140215
+// #define for_each_cpu(i, cpu_possible_mask)
+//	for ((i) = -1; (i) = cpumask_next((i), (cpu_possible_mask)), (i) < nr_cpu_ids; )
 #define for_each_possible_cpu(cpu) for_each_cpu((cpu), cpu_possible_mask)
 #define for_each_online_cpu(cpu)   for_each_cpu((cpu), cpu_online_mask)
 #define for_each_present_cpu(cpu)  for_each_cpu((cpu), cpu_present_mask)
@@ -741,6 +782,9 @@ void init_cpu_online(const struct cpumask *src);
  *
  * This does the conversion, and can be used as a constant initializer.
  */
+// ARM10C 20130831
+// 1 ? (bitmap) : bitmap의 type을 체크하기 위해
+// ARM10C 20140215
 #define to_cpumask(bitmap)						\
 	((struct cpumask *)(1 ? (bitmap)				\
 			    : (void *)sizeof(__check_is_bitmap(bitmap))))
@@ -796,6 +840,7 @@ static inline const struct cpumask *get_cpu_mask(unsigned int cpu)
 
 #if NR_CPUS <= BITS_PER_LONG
 
+// ARM10C 20130831
 #define CPU_MASK_ALL							\
 (cpumask_t) { {								\
 	[BITS_TO_LONGS(NR_CPUS)-1] = CPU_MASK_LAST_WORD			\

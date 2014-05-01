@@ -14,7 +14,7 @@
 #include <linux/typecheck.h>
 #include <asm/irqflags.h>
 
-#ifdef CONFIG_TRACE_IRQFLAGS
+#ifdef CONFIG_TRACE_IRQFLAGS	// ARM10C N 
   extern void trace_softirqs_on(unsigned long ip);
   extern void trace_softirqs_off(unsigned long ip);
   extern void trace_hardirqs_on(void);
@@ -29,8 +29,9 @@
 # define lockdep_softirq_exit()	do { current->softirq_context--; } while (0)
 # define INIT_TRACE_IRQFLAGS	.softirqs_enabled = 1,
 #else
-# define trace_hardirqs_on()		do { } while (0)
-# define trace_hardirqs_off()		do { } while (0)
+# define trace_hardirqs_on()		do { } while (0)    // ARM10C this 
+  // ARM10C 20140412
+# define trace_hardirqs_off()		do { } while (0)    // ARM10C this 
 # define trace_softirqs_on(ip)		do { } while (0)
 # define trace_softirqs_off(ip)		do { } while (0)
 # define trace_hardirq_context(p)	0
@@ -61,18 +62,22 @@
 #define raw_local_irq_save(flags)			\
 	do {						\
 		typecheck(unsigned long, flags);	\
-		flags = arch_local_irq_save();		\
+		flags = arch_local_irq_save();/*ARM10C 현재 cpsr을 flag로가져옴*/	\
 	} while (0)
+// ARM10C 20130907
+// ARM10C 20140412
 #define raw_local_irq_restore(flags)			\
 	do {						\
 		typecheck(unsigned long, flags);	\
 		arch_local_irq_restore(flags);		\
 	} while (0)
+// ARM10C 20130831
 #define raw_local_save_flags(flags)			\
 	do {						\
 		typecheck(unsigned long, flags);	\
 		flags = arch_local_save_flags();	\
 	} while (0)
+ // ARM10C 20140412
 #define raw_irqs_disabled_flags(flags)			\
 	({						\
 		typecheck(unsigned long, flags);	\
@@ -85,21 +90,27 @@
  * The local_irq_*() APIs are equal to the raw_local_irq*()
  * if !TRACE_IRQFLAGS.
  */
-#ifdef CONFIG_TRACE_IRQFLAGS_SUPPORT
+#ifdef CONFIG_TRACE_IRQFLAGS_SUPPORT	// ARM10C Y 
 #define local_irq_enable() \
 	do { trace_hardirqs_on(); raw_local_irq_enable(); } while (0)
 #define local_irq_disable() \
 	do { raw_local_irq_disable(); trace_hardirqs_off(); } while (0)
-#define local_irq_save(flags)				\
+// ARM10C 20140315
+// flags에 CPSR값을 저장함
+// ARM10C 20140405
+#define local_irq_save(flags)	/*ARM10C this*/		\
 	do {						\
 		raw_local_irq_save(flags);		\
 		trace_hardirqs_off();			\
 	} while (0)
 
 
+// ARM10C 20130907
+// ARM10C 20130322
+// ARM10C 20140412
 #define local_irq_restore(flags)			\
 	do {						\
-		if (raw_irqs_disabled_flags(flags)) {	\
+		if (raw_irqs_disabled_flags(flags)) {/*irq가 disabled 인가?*/	\
 			raw_local_irq_restore(flags);	\
 			trace_hardirqs_off();		\
 		} else {				\
@@ -117,6 +128,8 @@
 		raw_irqs_disabled_flags(flags);		\
 	})
 
+// ARM10C 20130831
+// ARM10C 20131019
 #define irqs_disabled()					\
 	({						\
 		unsigned long _flags;			\

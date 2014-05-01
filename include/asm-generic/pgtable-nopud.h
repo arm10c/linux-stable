@@ -35,6 +35,7 @@ static inline void pgd_clear(pgd_t *pgd)	{ }
  */
 #define set_pgd(pgdptr, pgdval)			set_pud((pud_t *)(pgdptr), (pud_t) { pgdval })
 
+// ARM10C 20131102
 static inline pud_t * pud_offset(pgd_t * pgd, unsigned long address)
 {
 	return (pud_t *)pgd;

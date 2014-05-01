@@ -69,11 +69,17 @@
  * dcache_line_size - get the minimum D-cache line size from the CTR register
  * on ARMv7.
  */
+	// ARM10C 20131116
+	// ARM10C 20140125
 	.macro	dcache_line_size, reg, tmp
+	// A.R.M: B4.1.42 CTR, Cache Type Register, VMSA
 	mrc	p15, 0, \tmp, c0, c0, 1		@ read ctr
 	lsr	\tmp, \tmp, #16
+	// T.R.M: 4.3.2 Cache Type Register
+	// tmp: 0x4 - DminLine 
 	and	\tmp, \tmp, #0xf		@ cache line size encoding
 	mov	\reg, #4			@ bytes per word
+	// reg: 0x40, tmp: 0x4
 	mov	\reg, \reg, lsl \tmp		@ actual cache line size
 	.endm
 

@@ -10,6 +10,7 @@
 #define SYS_HALT	0x0002	/* Notify of system halt */
 #define SYS_POWER_OFF	0x0003	/* Notify of system power off */
 
+// ARM10C 20130928
 enum reboot_mode {
 	REBOOT_COLD = 0,
 	REBOOT_WARM,

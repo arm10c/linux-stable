@@ -1,4 +1,4 @@
-/*
+﻿/*
  *  arch/arm/include/asm/mach/arch.h
  *
  *  Copyright (C) 2000 Russell King
@@ -17,7 +17,8 @@ struct tag;
 struct meminfo;
 struct pt_regs;
 struct smp_operations;
-#ifdef CONFIG_SMP
+#ifdef CONFIG_SMP // CONFIG_SMP=y
+// ARM10C 20140215
 #define smp_ops(ops) (&(ops))
 #define smp_init_ops(ops) (&(ops))
 #else
@@ -25,6 +26,7 @@ struct smp_operations;
 #define smp_init_ops(ops) (bool (*)(void))NULL
 #endif
 
+// ARM10C 20130928
 struct machine_desc {
 	unsigned int		nr;		/* architecture number	*/
 	const char		*name;		/* architecture name	*/
@@ -34,6 +36,7 @@ struct machine_desc {
 
 	unsigned int		nr_irqs;	/* number of IRQs */
 
+//CONFIG_ZONE_DMA = n
 #ifdef CONFIG_ZONE_DMA
 	phys_addr_t		dma_zone_size;	/* size of DMA-able area */
 #endif
@@ -57,7 +60,7 @@ struct machine_desc {
 	void			(*init_time)(void);
 	void			(*init_machine)(void);
 	void			(*init_late)(void);
-#ifdef CONFIG_MULTI_IRQ_HANDLER
+#ifdef CONFIG_MULTI_IRQ_HANDLER	// CONFIG_MULTI_IRQ_HANDLER=y
 	void			(*handle_irq)(struct pt_regs *);
 #endif
 	void			(*restart)(enum reboot_mode, const char *);
@@ -71,6 +74,7 @@ extern const struct machine_desc *machine_desc;
 /*
  * Machine type table - also only accessible during boot
  */
+// ARM10C 20131005
 extern const struct machine_desc __arch_info_begin[], __arch_info_end[];
 #define for_each_machine_desc(p)			\
 	for (p = __arch_info_begin; p < __arch_info_end; p++)
@@ -89,6 +93,7 @@ static const struct machine_desc __mach_desc_##_type	\
 #define MACHINE_END				\
 };
 
+// ARM10C 20131012
 #define DT_MACHINE_START(_name, _namestr)		\
 static const struct machine_desc __mach_desc_##_name	\
  __used							\

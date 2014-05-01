@@ -41,6 +41,8 @@
  * the job of everybody. It's just a list of u64 pairs (base/size) that
  * ends when size is 0
  */
+// ARM10C 20130928
+// ARM10C 20131026
 struct boot_param_header {
 	__be32	magic;			/* magic word OF_DT_HEADER */
 	__be32	totalsize;		/* total size of DT block */
@@ -57,7 +59,7 @@ struct boot_param_header {
 	__be32	dt_struct_size;		/* size of the DT structure block */
 };
 
-#if defined(CONFIG_OF_FLATTREE)
+#if defined(CONFIG_OF_FLATTREE) //=y
 
 struct device_node;
 

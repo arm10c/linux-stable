@@ -39,7 +39,12 @@
 
 /* These are for everybody (although not all archs will actually
    discard it in modules) */
+
+// ARM10C 20130824
+// __cold: size 를 최적화 하기 위한 옵션
+// http://gcc.gnu.org/onlinedocs/gcc/Function-Attributes.html
 #define __init		__section(.init.text) __cold notrace
+// ARM10C 20130928
 #define __initdata	__section(.init.data)
 #define __initconst	__constsection(.init.rodata)
 #define __exitdata	__section(.exit.data)
@@ -73,11 +78,14 @@
  *
  * The markers follow same syntax rules as __init / __initdata.
  */
+// ARM10C 20131207
 #define __ref            __section(.ref.text) noinline
+// ARM10C 20131207
 #define __refdata        __section(.ref.data)
 #define __refconst       __constsection(.ref.rodata)
 
 /* compatibility defines */
+// ARM10C 20131207
 #define __init_refok     __ref
 #define __initdata_refok __refdata
 #define __exit_refok     __ref
@@ -112,6 +120,8 @@
 #define __INIT		.section	".init.text","ax"
 #define __FINIT		.previous
 
+// ARM10C 20130928
+// http://stackoverflow.com/questions/8832114/what-does-init-mean-in-this-linux-kernel-code
 #define __INITDATA	.section	".init.data","aw",%progbits
 #define __INITRODATA	.section	".init.rodata","a",%progbits
 #define __FINITDATA	.previous
@@ -222,6 +232,7 @@ extern bool initcall_debug;
 	static initcall_t __initcall_##fn \
 	__used __section(.security_initcall.init) = fn
 
+// ARM10C 20131019
 struct obs_kernel_param {
 	const char *str;
 	int (*setup_func)(char *);
@@ -234,6 +245,17 @@ struct obs_kernel_param {
  * Force the alignment so the compiler doesn't space elements of the
  * obs_kernel_param "array" too far apart in .init.setup.
  */
+// ARM10C 20131019
+/*
+// __setup__param("earlycon", setup_early_serial8250_console, setup_early_serial8250_console, 1);
+//
+//	static const char __setup_str_setup_early_serial8250_console[] __initconst	\
+//		__aligned(1) = "earlycon"; \
+//	static struct obs_kernel_param __setup_setup_early_serial8250_console	\
+//		__used __section(.init.setup)			\
+//		__attribute__((aligned((sizeof(long)))))	\
+//		= { __setup_str_setup_early_serial8250_console, setup_early_serial8250_console, 1}
+*/
 #define __setup_param(str, unique_id, fn, early)			\
 	static const char __setup_str_##unique_id[] __initconst	\
 		__aligned(1) = str; \
@@ -247,6 +269,9 @@ struct obs_kernel_param {
 
 /* NOTE: fn is as per module_param, not __setup!  Emits warning if fn
  * returns non-zero. */
+// ARM10C 20131019
+// early_param("earlycon", setup_early_serial8250_console);
+// __setup__param("earlycon", setup_early_serial8250_console, setup_early_serial8250_console, 1);
 #define early_param(str, fn)					\
 	__setup_param(str, fn, fn, 1)
 

@@ -1,4 +1,4 @@
-#ifndef _LINUX_MM_TYPES_H
+﻿#ifndef _LINUX_MM_TYPES_H
 #define _LINUX_MM_TYPES_H
 
 #include <linux/auxvec.h>
@@ -41,6 +41,9 @@ struct address_space;
  * allows the use of atomic double word operations on the flags/mapping
  * and lru list pointers also.
  */
+// ARM10C 20140111
+// ARM10C 20140329
+// sizeof( struct page ) : 44byte
 struct page {
 	/* First double word block */
 	unsigned long flags;		/* Atomic flags, some possibly
@@ -70,7 +73,8 @@ struct page {
 						 * this page is only used to
 						 * free other pages.
 						 */
-		};
+						// ARM10C 20140405
+		};				// index : migratetype이 저장됨
 
 		union {
 #if defined(CONFIG_HAVE_CMPXCHG_DOUBLE) && \
@@ -341,6 +345,7 @@ struct mm_rss_stat {
 };
 
 struct kioctx_table;
+// ARM10C 20131012
 struct mm_struct {
 	struct vm_area_struct * mmap;		/* list of VMAs */
 	struct rb_root mm_rb;
@@ -455,9 +460,10 @@ struct mm_struct {
 	struct uprobes_state uprobes_state;
 };
 
+// ARM10C 20140222
 static inline void mm_init_cpumask(struct mm_struct *mm)
 {
-#ifdef CONFIG_CPUMASK_OFFSTACK
+#ifdef CONFIG_CPUMASK_OFFSTACK // CONFIG_CPUMASK_OFFSTACK=n
 	mm->cpu_vm_mask_var = &mm->cpumask_allocation;
 #endif
 }

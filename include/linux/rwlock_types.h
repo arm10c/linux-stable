@@ -22,6 +22,7 @@ typedef struct {
 #endif
 } rwlock_t;
 
+// ARM10C 20140125
 #define RWLOCK_MAGIC		0xdeaf1eed
 
 #ifdef CONFIG_DEBUG_LOCK_ALLOC
@@ -30,7 +31,8 @@ typedef struct {
 # define RW_DEP_MAP_INIT(lockname)
 #endif
 
-#ifdef CONFIG_DEBUG_SPINLOCK
+#ifdef CONFIG_DEBUG_SPINLOCK // CONFIG_DEBUG_SPINLOCK=y
+// ARM10C 20140125
 #define __RW_LOCK_UNLOCKED(lockname)					\
 	(rwlock_t)	{	.raw_lock = __ARCH_RW_LOCK_UNLOCKED,	\
 				.magic = RWLOCK_MAGIC,			\
@@ -43,6 +45,7 @@ typedef struct {
 				RW_DEP_MAP_INIT(lockname) }
 #endif
 
+// ARM10C 20140125
 #define DEFINE_RWLOCK(x)	rwlock_t x = __RW_LOCK_UNLOCKED(x)
 
 #endif /* __LINUX_RWLOCK_TYPES_H */

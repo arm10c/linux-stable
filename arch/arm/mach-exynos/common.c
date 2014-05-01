@@ -59,6 +59,7 @@ static void exynos4_map_io(void);
 static void exynos5_map_io(void);
 static int exynos_init(void);
 
+// ARM10C 20131130
 static struct cpu_table cpu_ids[] __initdata = {
 	{
 		.idcode		= EXYNOS4210_CPU_ID,
@@ -224,6 +225,7 @@ static struct map_desc exynos5250_iodesc[] __initdata = {
 	},
 };
 
+// ARM10C 20131130
 static struct map_desc exynos5_iodesc[] __initdata = {
 	{
 		.virtual	= (unsigned long)S3C_VA_SYS,
@@ -312,6 +314,7 @@ void __init exynos_init_late(void)
 	exynos_pm_late_initcall();
 }
 
+// ARM10C 20131116
 static int __init exynos_fdt_map_chipid(unsigned long node, const char *uname,
 					int depth, void *data)
 {
@@ -323,14 +326,21 @@ static int __init exynos_fdt_map_chipid(unsigned long node, const char *uname,
 		!of_flat_dt_is_compatible(node, "samsung,exynos5440-clock"))
 		return 0;
 
+	// dtb - reg: <0x10000000 0x100>
 	reg = of_get_flat_dt_prop(node, "reg", &len);
 	if (reg == NULL || len != (sizeof(unsigned long) * 2))
 		return 0;
 
+	// reg[0]=0x10000000, reg[1]=0x100
+	// iodesc.pfn: 0x10000
 	iodesc.pfn = __phys_to_pfn(be32_to_cpu(reg[0]));
+	// iodesc.length: 0xFF
 	iodesc.length = be32_to_cpu(reg[1]) - 1;
+	// iodesc.virtual: 0xF8000000
 	iodesc.virtual = (unsigned long)S5P_VA_CHIPID;
 	iodesc.type = MT_DEVICE;
+// 2013/11/23 종료
+// 2013/11/30 시작
 	iotable_init(&iodesc, 1);
 	return 1;
 }
@@ -341,10 +351,12 @@ static int __init exynos_fdt_map_chipid(unsigned long node, const char *uname,
  * register the standard cpu IO areas
  */
 
+// ARM10C 20131116
 void __init exynos_init_io(void)
 {
 	debug_ll_io_init();
 
+	// chipid 레지스터를 0xF8000000 에 할당, vmlist, static_vmlist에 chipid를 주소를 등록
 	of_scan_flat_dt(exynos_fdt_map_chipid, NULL);
 
 	/* detect cpu id and rev. */
@@ -368,10 +380,13 @@ static void __init exynos4_map_io(void)
 		iotable_init(exynos4x12_iodesc, ARRAY_SIZE(exynos4x12_iodesc));
 }
 
+// ARM10C 20131130
 static void __init exynos5_map_io(void)
 {
+	// exynos의 io 메모리 맵핑, vmlist 설정
 	iotable_init(exynos5_iodesc, ARRAY_SIZE(exynos5_iodesc));
 
+	// soc_is_exynos5250(): 0
 	if (soc_is_exynos5250())
 		iotable_init(exynos5250_iodesc, ARRAY_SIZE(exynos5250_iodesc));
 }

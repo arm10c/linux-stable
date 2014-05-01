@@ -13,7 +13,8 @@
 #include <linux/notifier.h>
 #include "internal.h"
 
-#ifdef CONFIG_DEBUG_MEMORY_INIT
+#ifdef CONFIG_DEBUG_MEMORY_INIT // CONFIG_DEBUG_MEMORY_INIT=y
+// ARM10C 20140308
 int mminit_loglevel;
 
 #ifndef SECTIONS_SHIFT
@@ -21,12 +22,15 @@ int mminit_loglevel;
 #endif
 
 /* The zonelists are simply reported, validation is manual. */
+// ARM10C 20140308
 void mminit_verify_zonelist(void)
 {
 	int nid;
 
+	// mminit_loglevel: 0, MMINIT_VERIFY: 1
 	if (mminit_loglevel < MMINIT_VERIFY)
 		return;
+		// return
 
 	for_each_online_node(nid) {
 		pg_data_t *pgdat = NODE_DATA(nid);
@@ -130,14 +134,18 @@ void __init mminit_verify_pageflags_layout(void)
 	BUG_ON(or_mask != add_mask);
 }
 
+// ARM10C 20140118
+// page : ?, zone : 0, nid : 0, pfn : 0x20000
 void __meminit mminit_verify_page_links(struct page *page, enum zone_type zone,
 			unsigned long nid, unsigned long pfn)
 {
 	BUG_ON(page_to_nid(page) != nid);
 	BUG_ON(page_zonenum(page) != zone);
 	BUG_ON(page_to_pfn(page) != pfn);
+	// flag에 제대로 설정이 되었는지 확인
 }
 
+// ARM10C 20140308
 static __init int set_mminit_loglevel(char *str)
 {
 	get_option(&str, &mminit_loglevel);

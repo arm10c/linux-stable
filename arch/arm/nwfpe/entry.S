@@ -117,7 +117,7 @@ next:
 	.align	2
 .Lfix:	mov	pc, r9			@ let the user eat segfaults
 	.popsection
-
+	// ARM10C 20140329
 	.pushsection __ex_table,"a"
 	.align	3
 	.long	.Lx1, .Lfix

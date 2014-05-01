@@ -60,6 +60,9 @@ extern unsigned long sysctl_admin_reserve_kbytes;
 #define nth_page(page,n) pfn_to_page(page_to_pfn((page)) + (n))
 
 /* to align the pointer to the (next) page boundary */
+// ARM10C 20131012
+// ARM10C 20131109
+// ARM10C 20131207
 #define PAGE_ALIGN(addr) ALIGN(addr, PAGE_SIZE)
 
 /* test whether an address (unsigned long or pointer) is aligned to PAGE_SIZE */
@@ -254,16 +257,24 @@ struct vm_operations_struct {
 struct mmu_gather;
 struct inode;
 
+// ARM10C 20140405
 #define page_private(page)		((page)->private)
+// ARM10C 20140405
+// ARM10C 20140412
 #define set_page_private(page, v)	((page)->private = (v))
 
 /* It's valid only if the page is free path or free_list */
+// ARM10C 20140405
+// page: 0x20000 (pfn), migratetype: 0x2
+// ARM10C 20140412
 static inline void set_freepage_migratetype(struct page *page, int migratetype)
 {
 	page->index = migratetype;
 }
 
 /* It's valid only if the page is free path or free_list */
+// ARM10C 20140412
+// page: 0x20000 (pfn)
 static inline int get_freepage_migratetype(struct page *page)
 {
 	return page->index;
@@ -292,10 +303,16 @@ static inline int get_freepage_migratetype(struct page *page)
 /*
  * Drop a ref, return true if the refcount fell to zero (the page has no users)
  */
+// ARM10C 20140329
+// page: 0x20000의 해당하는 struct page의 1st page
 static inline int put_page_testzero(struct page *page)
 {
+	// atomic_read(&page->_count): 1
 	VM_BUG_ON(atomic_read(&page->_count) == 0);
+
+	// atomic_dec_and_test(&page->_count): 1
 	return atomic_dec_and_test(&page->_count);
+	// page->_count: 0
 }
 
 /*
@@ -409,14 +426,20 @@ static inline struct page *compound_head(struct page *page)
  * both from it and to it can be tracked, using atomic_inc_and_test
  * and atomic_add_negative(-1).
  */
+// ARM10C 20140118
 static inline void page_mapcount_reset(struct page *page)
 {
 	atomic_set(&(page)->_mapcount, -1);
 }
 
+// ARM10C 20140405
+// page: 0x20000 (pfn)
 static inline int page_mapcount(struct page *page)
 {
+	// &(page)->_mapcount : -1
+	// memmap_init_zone 에서 -1로 설정
 	return atomic_read(&(page)->_mapcount) + 1;
+	// return 0
 }
 
 static inline int page_count(struct page *page)
@@ -460,9 +483,11 @@ static inline struct page *virt_to_head_page(const void *x)
  * Setup the page count before being freed into the page allocator for
  * the first time (boot or memory hotplug)
  */
+// ARM10C 20140419
 static inline void init_page_count(struct page *page)
 {
 	atomic_set(&page->_count, 1);
+	// (&page->__count)->counter: 1
 }
 
 /*
@@ -476,21 +501,36 @@ static inline void init_page_count(struct page *page)
  */
 #define PAGE_BUDDY_MAPCOUNT_VALUE (-128)
 
+// ARM10C 20140405
 static inline int PageBuddy(struct page *page)
 {
+	// page->_mapcount: -1 (memmap_init 함수에서 설정)
+	// PAGE_BUDDY_MAPCOUNT_VALUE: (-128)
 	return atomic_read(&page->_mapcount) == PAGE_BUDDY_MAPCOUNT_VALUE;
+	// return 0
 }
 
+// ARM10C 20140405
 static inline void __SetPageBuddy(struct page *page)
 {
+	// page->_mapcount: -1
 	VM_BUG_ON(atomic_read(&page->_mapcount) != -1);
+
+	// page->_mapcount: -1, PAGE_BUDDY_MAPCOUNT_VALUE: (-128)
 	atomic_set(&page->_mapcount, PAGE_BUDDY_MAPCOUNT_VALUE);
+	// page->_mapcount: -128
 }
 
+// ARM10C 20140412
+// page: 0x20000 (pfn)
 static inline void __ClearPageBuddy(struct page *page)
 {
+	// page: 0x20000 (pfn)
 	VM_BUG_ON(!PageBuddy(page));
+
+	// page->_mapcount: -128
 	atomic_set(&page->_mapcount, -1);
+	// page->_mapcount: -1
 }
 
 void put_page(struct page *page);
@@ -517,8 +557,10 @@ static inline compound_page_dtor *get_compound_page_dtor(struct page *page)
 	return (compound_page_dtor *)page[1].lru.next;
 }
 
+// ARM10C 20140125
 static inline int compound_order(struct page *page)
 {
+	// PageHead(page): 0
 	if (!PageHead(page))
 		return 0;
 	return (unsigned long)page[1].lru.prev;
@@ -610,8 +652,15 @@ static inline pte_t maybe_mkwrite(pte_t pte, struct vm_area_struct *vma)
  */
 
 /* Page flags: | [SECTION] | [NODE] | ZONE | [LAST_CPUPID] | ... | FLAGS | */
+// ARM10C 20140118
+// SECTIONS_SHIFT : 4
+// SECTIONS_PGOFF : 28
 #define SECTIONS_PGOFF		((sizeof(unsigned long)*8) - SECTIONS_WIDTH)
+// ARM10C 20140118
+// NODES_PGOFF : 28
 #define NODES_PGOFF		(SECTIONS_PGOFF - NODES_WIDTH)
+// ARM10C 20140118
+// ZONES_PGOFF : 26
 #define ZONES_PGOFF		(NODES_PGOFF - ZONES_WIDTH)
 #define LAST_CPUPID_PGOFF	(ZONES_PGOFF - LAST_CPUPID_WIDTH)
 
@@ -620,8 +669,13 @@ static inline pte_t maybe_mkwrite(pte_t pte, struct vm_area_struct *vma)
  * sections we define the shift as 0; that plus a 0 mask ensures
  * the compiler will optimise away reference to them.
  */
+// ARM10C 20140118
+// SECTIONS_PGOFF : 28
+// SECTIONS_SHIFT: 4
 #define SECTIONS_PGSHIFT	(SECTIONS_PGOFF * (SECTIONS_WIDTH != 0))
 #define NODES_PGSHIFT		(NODES_PGOFF * (NODES_WIDTH != 0))
+// ARM10C 20140118
+// ZONES_PGSHIFT : 26
 #define ZONES_PGSHIFT		(ZONES_PGOFF * (ZONES_WIDTH != 0))
 #define LAST_CPUPID_PGSHIFT	(LAST_CPUPID_PGOFF * (LAST_CPUPID_WIDTH != 0))
 
@@ -631,23 +685,46 @@ static inline pte_t maybe_mkwrite(pte_t pte, struct vm_area_struct *vma)
 #define ZONEID_PGOFF		((SECTIONS_PGOFF < ZONES_PGOFF)? \
 						SECTIONS_PGOFF : ZONES_PGOFF)
 #else
+// ARM10C 20140405
+// NODES_SHIFT : 0
+// ZONES_SHIFT : 2
+// ZONEID_SHIFT : 2
 #define ZONEID_SHIFT		(NODES_SHIFT + ZONES_SHIFT)
+// ARM10C 20140405
+// NODES_PGOFF : 28
+// ZONES_PGOFF : 26
+// ZONEID_PGOFF : 26
 #define ZONEID_PGOFF		((NODES_PGOFF < ZONES_PGOFF)? \
 						NODES_PGOFF : ZONES_PGOFF)
 #endif
 
+// ARM10C 20140405
+// ZONEID_PGOFF : 26
+// ZONEID_SHIFT : 2
+// ZONEID_PGSHIFT : 26
 #define ZONEID_PGSHIFT		(ZONEID_PGOFF * (ZONEID_SHIFT != 0))
 
 #if SECTIONS_WIDTH+NODES_WIDTH+ZONES_WIDTH > BITS_PER_LONG - NR_PAGEFLAGS
 #error SECTIONS_WIDTH+NODES_WIDTH+ZONES_WIDTH > BITS_PER_LONG - NR_PAGEFLAGS
 #endif
 
+// ARM10C 20140118
+// ZONES_WIDTH: 2
+// ZONES_MASK : 3
 #define ZONES_MASK		((1UL << ZONES_WIDTH) - 1)
+// ARM10C 20140118
+// NODES_MASK : 0
 #define NODES_MASK		((1UL << NODES_WIDTH) - 1)
+// ARM10C 20140118
+// SECTIONS_MASK : 15
 #define SECTIONS_MASK		((1UL << SECTIONS_WIDTH) - 1)
 #define LAST_CPUPID_MASK	((1UL << LAST_CPUPID_WIDTH) - 1)
+// ARM10C 20140405
+// ZONEID_SHIFT : 2
+// ZONEID_MASK : 0x3
 #define ZONEID_MASK		((1UL << ZONEID_SHIFT) - 1)
 
+// ARM10C 20140118
 static inline enum zone_type page_zonenum(const struct page *page)
 {
 	return (page->flags >> ZONES_PGSHIFT) & ZONES_MASK;
@@ -665,9 +742,13 @@ static inline enum zone_type page_zonenum(const struct page *page)
  * We only guarantee that it will return the same value for two combinable
  * pages in a zone.
  */
+// ARM10C 20140405
 static inline int page_zone_id(struct page *page)
 {
+	// ZONEID_PGSHIFT : 26, ZONEID_MASK : 0x3
+	// page->flags : 0x20000000
 	return (page->flags >> ZONEID_PGSHIFT) & ZONEID_MASK;
+	// return 0
 }
 
 static inline int zone_to_nid(struct zone *zone)
@@ -682,13 +763,14 @@ static inline int zone_to_nid(struct zone *zone)
 #ifdef NODE_NOT_IN_PAGE_FLAGS
 extern int page_to_nid(const struct page *page);
 #else
+// ARM10C 20140118
 static inline int page_to_nid(const struct page *page)
 {
 	return (page->flags >> NODES_PGSHIFT) & NODES_MASK;
 }
 #endif
 
-#ifdef CONFIG_NUMA_BALANCING
+#ifdef CONFIG_NUMA_BALANCING // CONFIG_NUMA_BALANCING=n
 static inline int cpu_pid_to_cpupid(int cpu, int pid)
 {
 	return ((cpu & LAST__CPU_MASK) << LAST__PID_SHIFT) | (pid & LAST__PID_MASK);
@@ -761,6 +843,8 @@ static inline int page_cpupid_xchg_last(struct page *page, int cpupid)
 	return page_to_nid(page); /* XXX */
 }
 
+// ARM10C 20140118
+// ARM10C 20140405
 static inline int page_cpupid_last(struct page *page)
 {
 	return page_to_nid(page); /* XXX */
@@ -801,42 +885,72 @@ static inline bool cpupid_match_pid(struct task_struct *task, int cpupid)
 }
 #endif /* CONFIG_NUMA_BALANCING */
 
+// ARM10C 20140118
+// ARM10C 20140125
+// ARM10C 20140329
+// ARM10C 20140419
 static inline struct zone *page_zone(const struct page *page)
 {
+	// NODE_DATA(page_to_nid(page)): &contig_page_data
 	return &NODE_DATA(page_to_nid(page))->node_zones[page_zonenum(page)];
+	// &(&contig_page_data)->node_zones[page_zonenum(page)]
 }
 
 #ifdef SECTION_IN_PAGE_FLAGS
+// ARM10C 20140118
+// pfn_to_section_nr(0x20000) : 2
 static inline void set_page_section(struct page *page, unsigned long section)
 {
+	// SECTIONS_MASK : 15
+	// SECTIONS_PGSHIFT : 28
 	page->flags &= ~(SECTIONS_MASK << SECTIONS_PGSHIFT);
+	// page->flags의 SECTION 관련 비트를 초기화
 	page->flags |= (section & SECTIONS_MASK) << SECTIONS_PGSHIFT;
+	// page->flags : 0x20000000 (상위 4비트에 section 번호를 저장)
 }
 
+// ARM10C 20140118
 static inline unsigned long page_to_section(const struct page *page)
 {
 	return (page->flags >> SECTIONS_PGSHIFT) & SECTIONS_MASK;
 }
 #endif
 
+// ARM10C 20140118
+// page : ?, zone : 0
 static inline void set_page_zone(struct page *page, enum zone_type zone)
 {
+	// ZONES_MASK : 3
+	// ZONES_PGSHIFT : 26
+	// page->flags &= 0xF3FFFFFF
+	// flag에서 zone에 해당하는 비트를 초기화
 	page->flags &= ~(ZONES_MASK << ZONES_PGSHIFT);
+	// page->flags : 0
+	// zone 값에 따라 flag 값이 변화됨
 	page->flags |= (zone & ZONES_MASK) << ZONES_PGSHIFT;
 }
 
+// ARM10C 20140118
 static inline void set_page_node(struct page *page, unsigned long node)
 {
 	page->flags &= ~(NODES_MASK << NODES_PGSHIFT);
 	page->flags |= (node & NODES_MASK) << NODES_PGSHIFT;
 }
 
+// ARM10C 20140118
+// page : ?, zone : 0, nid : 0, pfn : 0x20000
 static inline void set_page_links(struct page *page, enum zone_type zone,
 	unsigned long node, unsigned long pfn)
 {
+	// page : ?, zone : 0
+	// page->flags의 zone 관련 비트를 설정
 	set_page_zone(page, zone);
+	// page->flags의 node 관련 비트를 설정
+	// node는 사용하지 않음
 	set_page_node(page, node);
 #ifdef SECTION_IN_PAGE_FLAGS
+	// pfn_to_section_nr(0x20000) : 2
+	// page->flags : 0x20000000 (상위 4비트에 section 번호를 저장)
 	set_page_section(page, pfn_to_section_nr(pfn));
 #endif
 }
@@ -846,16 +960,17 @@ static inline void set_page_links(struct page *page, enum zone_type zone,
  */
 #include <linux/vmstat.h>
 
+// ARM10C 20140125
 static __always_inline void *lowmem_page_address(const struct page *page)
 {
 	return __va(PFN_PHYS(page_to_pfn(page)));
 }
 
-#if defined(CONFIG_HIGHMEM) && !defined(WANT_PAGE_VIRTUAL)
-#define HASHED_PAGE_VIRTUAL
+#if defined(CONFIG_HIGHMEM) && !defined(WANT_PAGE_VIRTUAL)  // ARM10C Y 
+#define HASHED_PAGE_VIRTUAL // ARM10C this 
 #endif
 
-#if defined(WANT_PAGE_VIRTUAL)
+#if defined(WANT_PAGE_VIRTUAL) // undefined
 static inline void *page_address(const struct page *page)
 {
 	return page->virtual;
@@ -867,13 +982,14 @@ static inline void set_page_address(struct page *page, void *address)
 #define page_address_init()  do { } while(0)
 #endif
 
-#if defined(HASHED_PAGE_VIRTUAL)
+#if defined(HASHED_PAGE_VIRTUAL)    // ARM10C Y 
+// ARM10C 20140125
 void *page_address(const struct page *page);
 void set_page_address(struct page *page, void *virtual);
-void page_address_init(void);
+void page_address_init(void);	// ARM10C this 
 #endif
 
-#if !defined(HASHED_PAGE_VIRTUAL) && !defined(WANT_PAGE_VIRTUAL)
+#if !defined(HASHED_PAGE_VIRTUAL) && !defined(WANT_PAGE_VIRTUAL) 
 #define page_address(page) lowmem_page_address(page)
 #define set_page_address(page, address)  do { } while(0)
 #define page_address_init()  do { } while(0)
@@ -895,6 +1011,7 @@ void page_address_init(void);
  * address_space which maps the page from disk; whereas "page_mapped"
  * refers to user virtual address space into which the page is mapped.
  */
+// ARM10C 20140329
 #define PAGE_MAPPING_ANON	1
 #define PAGE_MAPPING_KSM	2
 #define PAGE_MAPPING_FLAGS	(PAGE_MAPPING_ANON | PAGE_MAPPING_KSM)
@@ -918,9 +1035,13 @@ struct address_space *page_file_mapping(struct page *page)
 	return page->mapping;
 }
 
+// ARM10C 20140329
+// page: 0x20000의 해당하는 struct page의 1st page
 static inline int PageAnon(struct page *page)
 {
+	// page->mapping: 0, PAGE_MAPPING_ANON: 1
 	return ((unsigned long)page->mapping & PAGE_MAPPING_ANON) != 0;
+	// return 0
 }
 
 /*
@@ -1507,11 +1628,18 @@ extern void adjust_managed_page_count(struct page *page, long count);
 extern void mem_init_print_info(const char *str);
 
 /* Free the reserved page into the buddy system, so it gets managed. */
+// ARM10C 20140419
+// page: 0x4F800 (pfn)
 static inline void __free_reserved_page(struct page *page)
 {
 	ClearPageReserved(page);
+	// page의 Reserved flags를 지운다.
+
 	init_page_count(page);
+	// (&page)->__count: 1 로 set.
+
 	__free_page(page);
+	// order 0 으로 buddy에 추가.
 }
 
 static inline void free_reserved_page(struct page *page)
@@ -1540,15 +1668,22 @@ static inline unsigned long free_initmem_default(int poison)
 				  poison, "unused kernel");
 }
 
+// ARM10C 20140419
 static inline unsigned long get_num_physpages(void)
 {
 	int nid;
 	unsigned long phys_pages = 0;
 
 	for_each_online_node(nid)
+	// for ((nid) = 0; (nid) == 0; (nid) = 1)
+		// phys_pages: 0, node_present_pages(0): (&contig_page_data)->node_present_pages: 0x80000
 		phys_pages += node_present_pages(nid);
+		// phys_pages: 0x80000
 
+	// phys_pages: 0x80000
 	return phys_pages;
+	// return 0x80000
+
 }
 
 #ifdef CONFIG_HAVE_MEMBLOCK_NODE_MAP
@@ -1910,12 +2045,13 @@ static inline void vm_stat_account(struct mm_struct *mm,
 }
 #endif /* CONFIG_PROC_FS */
 
-#ifdef CONFIG_DEBUG_PAGEALLOC
+#ifdef CONFIG_DEBUG_PAGEALLOC // CONFIG_DEBUG_PAGEALLOC=n
 extern void kernel_map_pages(struct page *page, int numpages, int enable);
 #ifdef CONFIG_HIBERNATION
 extern bool kernel_page_present(struct page *page);
 #endif /* CONFIG_HIBERNATION */
 #else
+// ARM10C 20140405
 static inline void
 kernel_map_pages(struct page *page, int numpages, int enable) {}
 #ifdef CONFIG_HIBERNATION
@@ -2001,7 +2137,7 @@ extern void copy_user_huge_page(struct page *dst, struct page *src,
 				unsigned int pages_per_huge_page);
 #endif /* CONFIG_TRANSPARENT_HUGEPAGE || CONFIG_HUGETLBFS */
 
-#ifdef CONFIG_DEBUG_PAGEALLOC
+#ifdef CONFIG_DEBUG_PAGEALLOC // CONFIG_DEBUG_PAGEALLOC=n
 extern unsigned int _debug_guardpage_minorder;
 
 static inline unsigned int debug_guardpage_minorder(void)
@@ -2014,7 +2150,10 @@ static inline bool page_is_guard(struct page *page)
 	return test_bit(PAGE_DEBUG_FLAG_GUARD, &page->debug_flags);
 }
 #else
+// ARM10C 20140419
 static inline unsigned int debug_guardpage_minorder(void) { return 0; }
+// ARM10C 20140405
+// ARM10C 20140412
 static inline bool page_is_guard(struct page *page) { return false; }
 #endif /* CONFIG_DEBUG_PAGEALLOC */
 

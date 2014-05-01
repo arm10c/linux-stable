@@ -42,6 +42,8 @@
  * on our cache or tlb entries.
  */
 
+// ARM10C 20140329
+// sizeof(struct exception_table_entry): 8 bytes
 struct exception_table_entry
 {
 	unsigned long insn, fixup;
@@ -262,6 +264,7 @@ do {									\
 	(x) = (__typeof__(*(ptr)))__gu_val;				\
 } while (0)
 
+// ARM10C 20140329
 #define __get_user_asm_byte(x,addr,err)				\
 	__asm__ __volatile__(					\
 	"1:	" TUSER(ldrb) "	%1,[%2],#0\n"			\

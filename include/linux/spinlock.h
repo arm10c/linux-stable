@@ -73,6 +73,7 @@
 #define LOCK_SECTION_END                        \
         ".previous\n\t"
 
+// ARM10C 20140405
 #define __lockfunc __attribute__((section(".spinlock.text")))
 
 /*
@@ -89,12 +90,14 @@
 # include <linux/spinlock_up.h>
 #endif
 
+// ARM10C 20130914
+// CONFIG_DEBUG_SPINLOCK = y
 #ifdef CONFIG_DEBUG_SPINLOCK
   extern void __raw_spin_lock_init(raw_spinlock_t *lock, const char *name,
 				   struct lock_class_key *key);
 # define raw_spin_lock_init(lock)				\
 do {								\
-	static struct lock_class_key __key;			\
+	static struct lock_class_key __key;	/* struct lock_class_key { }; */	\
 								\
 	__raw_spin_lock_init((lock), #lock, &__key);		\
 } while (0)
@@ -104,6 +107,12 @@ do {								\
 	do { *(lock) = __RAW_SPIN_LOCK_UNLOCKED(lock); } while (0)
 #endif
 
+// ARM10C 20140315
+// raw_spin_is_locked : 1
+// &lock->rlock: &(&(&cpu_add_remove_lock)->wait_lock)->rlock
+//
+// raw_spin_is_locked(&(&(&cpu_add_remove_lock)->wait_lock)->rlock):
+// arch_spin_is_locked(&(&(&(&cpu_add_remove_lock)->wait_lock)->rlock)->raw_lock)
 #define raw_spin_is_locked(lock)	arch_spin_is_locked(&(lock)->raw_lock)
 
 #ifdef CONFIG_GENERIC_LOCKBREAK
@@ -136,10 +145,12 @@ do {								\
  */
 #define raw_spin_unlock_wait(lock)	arch_spin_unlock_wait(&(lock)->raw_lock)
 
-#ifdef CONFIG_DEBUG_SPINLOCK
+#ifdef CONFIG_DEBUG_SPINLOCK // CONFIG_DEBUG_SPINLOCK=y
+// ARM10C 20140405
  extern void do_raw_spin_lock(raw_spinlock_t *lock) __acquires(lock);
 #define do_raw_spin_lock_flags(lock, flags) do_raw_spin_lock(lock)
- extern int do_raw_spin_trylock(raw_spinlock_t *lock);
+ extern int do_raw_spin_trylock(raw_spinlock_t *lock);	// ARM10C this 
+// ARM10C 20140412
  extern void do_raw_spin_unlock(raw_spinlock_t *lock) __releases(lock);
 #else
 static inline void do_raw_spin_lock(raw_spinlock_t *lock) __acquires(lock)
@@ -173,8 +184,10 @@ static inline void do_raw_spin_unlock(raw_spinlock_t *lock) __releases(lock)
  * various methods are defined as nops in the case they are not
  * required.
  */
+// ARM10C 20130907 _raw_spin_trylock(lock) = 1 
 #define raw_spin_trylock(lock)	__cond_lock(lock, _raw_spin_trylock(lock))
 
+// ARM10C 20140405
 #define raw_spin_lock(lock)	_raw_spin_lock(lock)
 
 #ifdef CONFIG_DEBUG_LOCK_ALLOC
@@ -228,6 +241,7 @@ static inline void do_raw_spin_unlock(raw_spinlock_t *lock) __releases(lock)
 
 #define raw_spin_lock_irq(lock)		_raw_spin_lock_irq(lock)
 #define raw_spin_lock_bh(lock)		_raw_spin_lock_bh(lock)
+// ARM10C 20140412
 #define raw_spin_unlock(lock)		_raw_spin_unlock(lock)
 #define raw_spin_unlock_irq(lock)	_raw_spin_unlock_irq(lock)
 
@@ -277,17 +291,22 @@ static inline void do_raw_spin_unlock(raw_spinlock_t *lock) __releases(lock)
  * Map the spin_lock functions to the raw variants for PREEMPT_RT=n
  */
 
+// ARM10C 20130914
+// DESC: 이 함수는 inline함수를 사용해서 인자가 spinlock_t*인지
+//       컴파일 타임에 확인하는 트릭을 사용하고 있다.
 static inline raw_spinlock_t *spinlock_check(spinlock_t *lock)
 {
 	return &lock->rlock;
 }
 
+// ARM10C 20130914
 #define spin_lock_init(_lock)				\
 do {							\
 	spinlock_check(_lock);				\
 	raw_spin_lock_init(&(_lock)->rlock);		\
 } while (0)
 
+// ARM10C 20140405
 static inline void spin_lock(spinlock_t *lock)
 {
 	raw_spin_lock(&lock->rlock);
@@ -328,6 +347,7 @@ do {									\
 	raw_spin_lock_irqsave_nested(spinlock_check(lock), flags, subclass); \
 } while (0)
 
+// ARM10C 20140412
 static inline void spin_unlock(spinlock_t *lock)
 {
 	raw_spin_unlock(&lock->rlock);
@@ -368,8 +388,12 @@ static inline void spin_unlock_wait(spinlock_t *lock)
 	raw_spin_unlock_wait(&lock->rlock);
 }
 
+// ARM10C 20140315
+// spin_is_locked(&(&cpu_add_remove_lock)->wait_lock)
 static inline int spin_is_locked(spinlock_t *lock)
 {
+	// lock->rlock: (&(&cpu_add_remove_lock)->wait_lock)->rlock
+	// raw_spin_is_locked(&(&(&cpu_add_remove_lock)->wait_lock)->rlock): 1
 	return raw_spin_is_locked(&lock->rlock);
 }
 

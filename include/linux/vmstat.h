@@ -10,7 +10,8 @@
 
 extern int sysctl_stat_interval;
 
-#ifdef CONFIG_VM_EVENT_COUNTERS
+// ARM10C 20140405
+#ifdef CONFIG_VM_EVENT_COUNTERS // CONFIG_VM_EVENT_COUNTERS=y
 /*
  * Light weight per cpu counter implementation.
  *
@@ -21,15 +22,21 @@ extern int sysctl_stat_interval;
  * generated will simply be the increment of a global address.
  */
 
+// ARM10C 20140405
 struct vm_event_state {
+	// NR_VM_EVENT_ITEMS: 52
 	unsigned long event[NR_VM_EVENT_ITEMS];
 };
 
 DECLARE_PER_CPU(struct vm_event_state, vm_event_states);
 
+// ARM10C 20140412
+// PGFREE: 7
 static inline void __count_vm_event(enum vm_event_item item)
 {
+	// item: PGFREE: 7, vm_event_states.event[7]: 0
 	__this_cpu_inc(vm_event_states.event[item]);
+	// *(&(vm_event_states.event[PGFREE]) + __my_cpu_offset): 1
 }
 
 static inline void count_vm_event(enum vm_event_item item)
@@ -37,9 +44,32 @@ static inline void count_vm_event(enum vm_event_item item)
 	this_cpu_inc(vm_event_states.event[item]);
 }
 
+// ARM10C 20140405
+// item: 7, delta: 32
 static inline void __count_vm_events(enum vm_event_item item, long delta)
 {
+	// vm_event_states.event[PGFREE]: 0, delta: 32
 	__this_cpu_add(vm_event_states.event[item], delta);
+
+	// __pcpu_size_call(__this_cpu_add_, vm_event_states.event[PGFREE], delta)
+
+	//	__verify_pcpu_ptr(&(vm_event_states.event[PGFREE]));
+	//		경고용
+	//	
+	//	sizeof(vm_event_states.event[PGFREE]): 4
+	//	switch(sizeof(vm_event_states.event[PGFREE])) {
+	//		case 1: __this_cpu_add_1(vm_event_states.event[PGFREE], __VA_ARGS__);break;
+	//		case 2: __this_cpu_add_2(vm_event_states.event[PGFREE], __VA_ARGS__);break;
+	//		case 4: __this_cpu_add_4(vm_event_states.event[PGFREE], __VA_ARGS__);break;
+	//		case 8: __this_cpu_add_8(vm_event_states.event[PGFREE], __VA_ARGS__);break;
+	//		default:
+	//			__bad_size_call_parameter();break;
+	//	}
+	//
+	//	__this_cpu_add_4:
+	//		*__this_cpu_ptr(&(vm_event_states.event[7])) += delta;
+	//	
+	// vm_event_states.event[PGFREE]: 32
 }
 
 static inline void count_vm_events(enum vm_event_item item, long delta)
@@ -92,17 +122,26 @@ static inline void vm_events_fold_cpu(int cpu)
  */
 extern atomic_long_t vm_stat[NR_VM_ZONE_STAT_ITEMS];
 
+// ARM10C 20140412
+// x: 32, zone: &(&contig_page_data)->node_zones[ZONE_NORMAL], item: 0
 static inline void zone_page_state_add(long x, struct zone *zone,
 				 enum zone_stat_item item)
 {
+	// x: 32, item: 0, &zone->vm_stat[0]: &(&contig_page_data)->node_zones[ZONE_NORMAL].vm_stat[0]: 0
 	atomic_long_add(x, &zone->vm_stat[item]);
+	// zone->vm_stat[0]: (&contig_page_data)->node_zones[ZONE_NORMAL].vm_stat[0]: 32
+
+	// item: 0, vm_stat[0]: 0
 	atomic_long_add(x, &vm_stat[item]);
+	// vm_stat[0]: 32
 }
 
+// ARM10C 20140419
+// NR_FREE_PAGES: 0
 static inline unsigned long global_page_state(enum zone_stat_item item)
 {
 	long x = atomic_long_read(&vm_stat[item]);
-#ifdef CONFIG_SMP
+#ifdef CONFIG_SMP // CONFIG_SMP=y
 	if (x < 0)
 		x = 0;
 #endif
@@ -181,7 +220,8 @@ extern void zone_statistics(struct zone *, struct zone *, gfp_t gfp);
 
 extern void inc_zone_state(struct zone *, enum zone_stat_item);
 
-#ifdef CONFIG_SMP
+#ifdef CONFIG_SMP // CONFIG_SMP=y
+// ARM10C 20140412
 void __mod_zone_page_state(struct zone *, enum zone_stat_item item, int);
 void __inc_zone_page_state(struct page *, enum zone_stat_item);
 void __dec_zone_page_state(struct page *, enum zone_stat_item);
@@ -258,10 +298,19 @@ static inline void drain_zonestat(struct zone *zone,
 			struct per_cpu_pageset *pset) { }
 #endif		/* CONFIG_SMP */
 
+// ARM10C 20140405
+// ARM10C 20140412
+// zone: &contig_page_data->node_zones[ZONE_NORMAL], nr_pages: 32, migratetype: 0x2
 static inline void __mod_zone_freepage_state(struct zone *zone, int nr_pages,
 					     int migratetype)
 {
+	// zone: &contig_page_data->node_zones[ZONE_NORMAL], NR_FREE_PAGES: 0, nr_pages: 32
 	__mod_zone_page_state(zone, NR_FREE_PAGES, nr_pages);
+	// &contig_page_data->node_zones[ZONE_NORMAL].vm_stat[NR_FREE_PAGES]: 32 로 설정
+	// vmstat.c의 vm_stat[NR_FREE_PAGES] 전역 변수에도 32로 설정
+
+	// migratetype: 0x2
+	// is_migrate_cma(0x2): false
 	if (is_migrate_cma(migratetype))
 		__mod_zone_page_state(zone, NR_FREE_CMA_PAGES, nr_pages);
 }

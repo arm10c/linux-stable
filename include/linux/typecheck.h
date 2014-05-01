@@ -5,6 +5,9 @@
  * Check at compile time that something is of a particular type.
  * Always evaluates to 1 so you may use it easily in comparisons.
  */
+// ARM10C 20130831
+// type이 같지 않으면 warnnig 발생.
+// http://stackoverflow.com/questions/10393844/about-typecheck-in-linux-kernel
 #define typecheck(type,x) \
 ({	type __dummy; \
 	typeof(x) __dummy2; \

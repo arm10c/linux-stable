@@ -71,34 +71,39 @@
  * SPARSEMEM section (for variants of SPARSEMEM that require section ids like
  * SPARSEMEM_EXTREME with !SPARSEMEM_VMEMMAP).
  */
+// ARM10C 20140118
 enum pageflags {
-	PG_locked,		/* Page is locked. Don't touch. */
-	PG_error,
+	PG_locked,		/* Page is locked. Don't touch. */	// 0
+	PG_error,							
 	PG_referenced,
 	PG_uptodate,
 	PG_dirty,
-	PG_lru,
-	PG_active,
-	PG_slab,
+	PG_lru,			// 5
+	PG_active,		// 6
+	PG_slab,		// 7
 	PG_owner_priv_1,	/* Owner use. If pagecache, fs may use*/
 	PG_arch_1,
-	PG_reserved,
-	PG_private,		/* If pagecache, has fs-private data */
-	PG_private_2,		/* If pagecache, has fs aux data */
-	PG_writeback,		/* Page is under writeback */
-#ifdef CONFIG_PAGEFLAGS_EXTENDED
+	PG_reserved,		// ARM10C 20140118, 10
+	PG_private,		/* If pagecache, has fs-private data */	// 11
+	PG_private_2,		/* If pagecache, has fs aux data */	// 12
+	PG_writeback,		/* Page is under writeback */		// 13
+#ifdef CONFIG_PAGEFLAGS_EXTENDED // CONFIG_PAGEFLAGS_EXTENDED=n
 	PG_head,		/* A head page */
 	PG_tail,		/* A tail page */
 #else
+	// ARM10C 20140125
+	// PG_compound: 14
 	PG_compound,		/* A compound page */
 #endif
-	PG_swapcache,		/* Swap page: swp_entry_t in private */
+	PG_swapcache,		/* Swap page: swp_entry_t in private */	// 15
 	PG_mappedtodisk,	/* Has blocks allocated on-disk */
+	// ARM10C 20140125
+	// PG_reclaim: 17
 	PG_reclaim,		/* To be reclaimed asap */
 	PG_swapbacked,		/* Page is backed by RAM/swap */
-	PG_unevictable,		/* Page is "unevictable"  */
+	PG_unevictable,		/* Page is "unevictable"  */		// 19
 #ifdef CONFIG_MMU
-	PG_mlocked,		/* Page is vma mlocked */
+	PG_mlocked,		/* Page is vma mlocked */		// 20
 #endif
 #ifdef CONFIG_ARCH_USES_PG_UNCACHED
 	PG_uncached,		/* Page has been mapped as uncached */
@@ -133,10 +138,17 @@ enum pageflags {
 /*
  * Macros to create function definitions for page flags
  */
+// ARM10C 20140405
+// PG_compound: 14
+// PageCompound(const struct page *page)
+// { return test_bit(PG_compound, &page->flags); }
 #define TESTPAGEFLAG(uname, lname)					\
 static inline int Page##uname(const struct page *page)			\
 			{ return test_bit(PG_##lname, &page->flags); }
 
+// ARM10C 20140118
+// SetPageReserved()
+// set_bit(PG_reserved, &page->flags)
 #define SETPAGEFLAG(uname, lname)					\
 static inline void SetPage##uname(struct page *page)			\
 			{ set_bit(PG_##lname, &page->flags); }
@@ -149,6 +161,8 @@ static inline void ClearPage##uname(struct page *page)			\
 static inline void __SetPage##uname(struct page *page)			\
 			{ __set_bit(PG_##lname, &page->flags); }
 
+// ARM10C 20140118
+// ARM10C 20140329
 #define __CLEARPAGEFLAG(uname, lname)					\
 static inline void __ClearPage##uname(struct page *page)		\
 			{ __clear_bit(PG_##lname, &page->flags); }
@@ -206,6 +220,9 @@ __PAGEFLAG(Slab, slab)
 PAGEFLAG(Checked, checked)		/* Used by some filesystems */
 PAGEFLAG(Pinned, pinned) TESTSCFLAG(Pinned, pinned)	/* Xen */
 PAGEFLAG(SavePinned, savepinned);			/* Xen */
+// ARM10C 20140118
+// ARM10C 20140329
+// ARM10C 20140419
 PAGEFLAG(Reserved, reserved) __CLEARPAGEFLAG(Reserved, reserved)
 PAGEFLAG(SwapBacked, swapbacked) __CLEARPAGEFLAG(SwapBacked, swapbacked)
 
@@ -232,11 +249,14 @@ PAGEFLAG(MappedToDisk, mappedtodisk)
 PAGEFLAG(Reclaim, reclaim) TESTCLEARFLAG(Reclaim, reclaim)
 PAGEFLAG(Readahead, reclaim)		/* Reminder to do async read-ahead */
 
-#ifdef CONFIG_HIGHMEM
+#ifdef CONFIG_HIGHMEM // CONFIG_HIGHMEM=y
 /*
  * Must use a macro here due to header dependency issues. page_zone() is not
  * available at this point.
  */
+// ARM10C 20140125
+// ARM10C 20140405
+// page_zone(__p): node_zones의 주소 리턴
 #define PageHighMem(__p) is_highmem(page_zone(__p))
 #else
 PAGEFLAG_FALSE(HighMem)
@@ -266,12 +286,13 @@ PAGEFLAG(Uncached, uncached)
 PAGEFLAG_FALSE(Uncached)
 #endif
 
-#ifdef CONFIG_MEMORY_FAILURE
+#ifdef CONFIG_MEMORY_FAILURE // CONFIG_MEMORY_FAILURE=n
 PAGEFLAG(HWPoison, hwpoison)
 TESTSCFLAG(HWPoison, hwpoison)
 #define __PG_HWPOISON (1UL << PG_hwpoison)
 #else
 PAGEFLAG_FALSE(HWPoison)
+// ARM10C 20140405
 #define __PG_HWPOISON 0
 #endif
 
@@ -324,7 +345,7 @@ static inline void set_page_writeback(struct page *page)
 	test_set_page_writeback(page);
 }
 
-#ifdef CONFIG_PAGEFLAGS_EXTENDED
+#ifdef CONFIG_PAGEFLAGS_EXTENDED // CONFIG_PAGEFLAGS_EXTENDED=n
 /*
  * System with lots of page flags available. This allows separate
  * flags for PageHead() and PageTail() checks of compound pages so that bit
@@ -355,6 +376,7 @@ static inline void ClearPageCompound(struct page *page)
  * because PageCompound is always set for compound pages and not for
  * pages on the LRU and/or pagecache.
  */
+// ARM10C 20140405
 TESTPAGEFLAG(Compound, compound)
 __SETPAGEFLAG(Head, compound)  __CLEARPAGEFLAG(Head, compound)
 
@@ -368,16 +390,28 @@ __SETPAGEFLAG(Head, compound)  __CLEARPAGEFLAG(Head, compound)
  * PG_compound & PG_reclaim	=> Tail page
  * PG_compound & ~PG_reclaim	=> Head page
  */
+// ARM10C 20140125
+// PG_head_mask: 0x4000
 #define PG_head_mask ((1L << PG_compound))
+// ARM10C 20140125
+// ARM10C 20140329
+// PG_compound: 14, PG_reclaim: 17
+// PG_head_tail_mask: 0x24000
 #define PG_head_tail_mask ((1L << PG_compound) | (1L << PG_reclaim))
 
+// ARM10C 20140125
 static inline int PageHead(struct page *page)
 {
+	// PG_head_tail_mask: 0x24000, PG_head_mask: 0x4000
 	return ((page->flags & PG_head_tail_mask) == PG_head_mask);
+	// return 0
 }
 
+// ARM10C 20140329
+// page: 0x20000의 해당하는 struct page의 주소
 static inline int PageTail(struct page *page)
 {
+	// PG_head_tail_mask: 0x24000
 	return ((page->flags & PG_head_tail_mask) == PG_head_tail_mask);
 }
 
@@ -482,15 +516,19 @@ static inline void ClearPageSlabPfmemalloc(struct page *page)
 	ClearPageActive(page);
 }
 
-#ifdef CONFIG_MMU
+#ifdef CONFIG_MMU // CONFIG_MMU=y
+// ARM10C 20140405
+// PG_mlocked: 20
+// __PG_MLOCKED: 0x100000
 #define __PG_MLOCKED		(1 << PG_mlocked)
 #else
 #define __PG_MLOCKED		0
 #endif
 
-#ifdef CONFIG_TRANSPARENT_HUGEPAGE
+#ifdef CONFIG_TRANSPARENT_HUGEPAGE // CONFIG_TRANSPARENT_HUGEPAGE=n
 #define __PG_COMPOUND_LOCK		(1 << PG_compound_lock)
 #else
+// ARM10C 20140405
 #define __PG_COMPOUND_LOCK		0
 #endif
 
@@ -498,6 +536,21 @@ static inline void ClearPageSlabPfmemalloc(struct page *page)
  * Flags checked when a page is freed.  Pages being freed should not have
  * these flags set.  It they are, there is a problem.
  */
+// ARM10C 20140405
+// PG_lru: 5, 1 << 5: 0x20
+// PG_locked: 0, 1 << 0: 0x1
+// PG_private: 11, 1 << 11: 0x800
+// PG_private_2: 12, 1 << 12: 0x1000
+// PG_writeback: 13, 1 << 13: 0x2000
+// PG_reserved: 10, 1 << 10: 0x400
+// PG_slab: 7, 1 << 7: 0x80
+// PG_swapcache: 15, 1 << 15: 0x8000
+// PG_active: 6, 1 << 6: 0x40
+// PG_unevictable: 19, 1 << 19: 0x80000
+// __PG_MLOCKED: 20, 1 << 20: 0x100000
+// __PG_HWPOISON: 0
+// __PG_COMPOUND_LOCK: 0
+// PAGE_FLAGS_CHECK_AT_FREE: 0x18bce1
 #define PAGE_FLAGS_CHECK_AT_FREE \
 	(1 << PG_lru	 | 1 << PG_locked    | \
 	 1 << PG_private | 1 << PG_private_2 | \
@@ -511,6 +564,9 @@ static inline void ClearPageSlabPfmemalloc(struct page *page)
  * Pages being prepped should not have any flags set.  It they are set,
  * there has been a kernel bug or struct page corruption.
  */
+// ARM10C 20140405
+// NR_PAGEFLAGS: 21
+// PAGE_FLAGS_CHECK_AT_PREP: 0x1FFFFF
 #define PAGE_FLAGS_CHECK_AT_PREP	((1 << NR_PAGEFLAGS) - 1)
 
 #define PAGE_FLAGS_PRIVATE				\

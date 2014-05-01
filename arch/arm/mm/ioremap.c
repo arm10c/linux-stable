@@ -40,6 +40,16 @@
 #include "mm.h"
 
 
+// ARM10C 20131116
+// ARM10C 20131130
+// SYSC: 0xf6100000 +  64kB   PA:0x10050000 
+// TMR : 0xf6300000 +  16kB   PA:0x12DD0000
+// WDT : 0xf6400000 +   4kB   PA:0x101D0000 
+// CHID: 0xf8000000 +   4kB   PA:0x10000000
+// CMU : 0xf8100000 + 144kB   PA:0x10010000 
+// PMU : 0xf8180000 +  64kB   PA:0x10040000
+// SRAM: 0xf8400000 +   4kB   PA:0x02020000 
+// ROMC: 0xf84c0000 +   4kB   PA:0x12250000
 LIST_HEAD(static_vmlist);
 
 static struct static_vm *find_static_vm_paddr(phys_addr_t paddr,
@@ -84,6 +94,18 @@ struct static_vm *find_static_vm_vaddr(void *vaddr)
 	return NULL;
 }
 
+// ARM10C 20131116
+// ARM10C 20131130
+// vm->addr: 0xF8000000
+// vm->phys_addr: 0x10000000
+// vm->size: 0x1000
+// vm->flags: 0x40000001
+//
+// S3C_VA_SYS
+// vm->addr: 0xF6100000
+// vm->size: 0x10000 
+// vm->phys_addr: 0x10050000
+// vm->flags: 0x40000001
 void __init add_static_vm_early(struct static_vm *svm)
 {
 	struct static_vm *curr_svm;
@@ -91,15 +113,25 @@ void __init add_static_vm_early(struct static_vm *svm)
 	void *vaddr;
 
 	vm = &svm->vm;
+	// vm 을 vmlist에 삽입, vmlist은 오름차순 정렬
 	vm_area_add_early(vm);
+	// vm->addr: 0xF8000000, vaddr: 0xF8000000
+	// vm->addr: 0xF6100000, vaddr: 0xF6100000
 	vaddr = vm->addr;
+
+	// #define list_for_each_entry(curr_svm, &static_vmlist, list)
+	// for (curr_svm = list_entry((&static_vmlist)->next, typeof(*curr_svm), list);
+	//     &curr_svm->list != (&static_vmlist);
+	//     curr_svm = list_entry(curr_svm->list.next, typeof(*curr_svm), list))
 
 	list_for_each_entry(curr_svm, &static_vmlist, list) {
 		vm = &curr_svm->vm;
 
+		// vm->addr:0xF8000000, vaddr: 0xF6100000
 		if (vm->addr > vaddr)
 			break;
 	}
+	// svm 을 static_vmlist에 insert함
 	list_add_tail(&svm->list, &curr_svm->list);
 }
 

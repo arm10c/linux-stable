@@ -70,6 +70,8 @@
  * sufficiently recent to perform proper long long constant propagation.
  * (It is unfortunate that gcc doesn't perform all this internally.)
  */
+// ARM10C 20140322
+// max: 0x7EA0000, bucketsize: 4
 #define do_div(n, base)							\
 ({									\
 	unsigned int __r, __b = (base);					\

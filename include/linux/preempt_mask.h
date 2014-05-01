@@ -23,21 +23,41 @@
  *     NMI_MASK:	0x00100000
  * PREEMPT_ACTIVE:	0x00200000
  */
+// ARM10C 20140315
 #define PREEMPT_BITS	8
+// ARM10C 20140315
 #define SOFTIRQ_BITS	8
+// ARM10C 20140315
 #define HARDIRQ_BITS	4
 #define NMI_BITS	1
 
 #define PREEMPT_SHIFT	0
+// ARM10C 20140315
+// SOFTIRQ_SHIFT : 8 : (PREEMPT_SHIFT :0  + PREEMPT_BITS : 8)
 #define SOFTIRQ_SHIFT	(PREEMPT_SHIFT + PREEMPT_BITS)
+// ARM10C 20140315
+// HARDIQR_SHIFT : 16 : SOFTIRQ_SHIFT : 8   + SOFTIRQ_BITS : 8 
 #define HARDIRQ_SHIFT	(SOFTIRQ_SHIFT + SOFTIRQ_BITS)
+// ARM10C 20140315
+// NMI_SHIFT : 26 : HARDIRQ_SHIFT : 16 + HARDIRQ_BITS : 10 )
 #define NMI_SHIFT	(HARDIRQ_SHIFT + HARDIRQ_BITS)
 
+// ARM10C 20140315
+// HARDIRQ_BITS x : 10 : 0x3FF
+// SOFTIRQ_BITS x : 8 : 0xFF
 #define __IRQ_MASK(x)	((1UL << (x))-1)
 
+// ARM10C 20140315
+// PREEMPT_BITS: 8, PREEMPT_SHIFT: 0
+// PREEMPT_MASK: 0xFF
 #define PREEMPT_MASK	(__IRQ_MASK(PREEMPT_BITS) << PREEMPT_SHIFT)
+// ARM10C 20140315
+// SOFTIRQ_MASK : 0xFF00 : 0xFF << 8 : __IRQ_MASK(SOFTIRQ_BITS : 8) << SOFTIRQ_SHIFT : 8
 #define SOFTIRQ_MASK	(__IRQ_MASK(SOFTIRQ_BITS) << SOFTIRQ_SHIFT)
+// ARM10C 20140315
 #define HARDIRQ_MASK	(__IRQ_MASK(HARDIRQ_BITS) << HARDIRQ_SHIFT)
+// ARM10C 20140315
+// NMI_MASK : 0x4000000 : 0x1 << 26 : __IQR_MASK(NMI_BITS :1) << 26
 #define NMI_MASK	(__IRQ_MASK(NMI_BITS)     << NMI_SHIFT)
 
 #define PREEMPT_OFFSET	(1UL << PREEMPT_SHIFT)
@@ -53,6 +73,13 @@
 
 #define hardirq_count()	(preempt_count() & HARDIRQ_MASK)
 #define softirq_count()	(preempt_count() & SOFTIRQ_MASK)
+// ARM10C 20140315
+// preept_count() : 0x4000 0001, & HARDIRQ_BITS : 10 
+// HARDIRQ_MASK : 0x3FF0000 : 0x3FF << 16 : (__IRQ_MASK(HARDIRQ_BITS : 10 ) : 0x3FF << HARDIRQ_SHIFT : 16)
+// SOFTIRQ_MASK : 0xFF00
+// NMI_MASK     : 0x4000000
+// irq_count() : 0 : (0x4000 0001 & 0x07FFFF00)
+// 지금(140315)은 인터럽트가 0이다. 
 #define irq_count()	(preempt_count() & (HARDIRQ_MASK | SOFTIRQ_MASK \
 				 | NMI_MASK))
 
@@ -64,6 +91,8 @@
  */
 #define in_irq()		(hardirq_count())
 #define in_softirq()		(softirq_count())
+// ARM10C 20140315
+// in_interrupt() : 0
 #define in_interrupt()		(irq_count())
 #define in_serving_softirq()	(softirq_count() & SOFTIRQ_OFFSET)
 

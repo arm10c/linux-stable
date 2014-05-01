@@ -221,8 +221,9 @@
 # endif
 #endif
 
-#ifdef CONFIG_CPU_V7
-# ifdef CPU_NAME
+// ARM10C 20130928
+#ifdef CONFIG_CPU_V7	// CONFIG_CPU_V7=y
+# ifdef CPU_NAME	// not defined
 #  undef  MULTI_CPU
 #  define MULTI_CPU
 # else
@@ -248,14 +249,17 @@
 # endif
 #endif
 
-#ifndef MULTI_CPU
-#define cpu_proc_init			__glue(CPU_NAME,_proc_init)
+// ARM10C 20130928
+#ifndef MULTI_CPU	// not defined	
+#define cpu_proc_init			__glue(CPU_NAME,_proc_init) // cpu_v7_proc_init
 #define cpu_proc_fin			__glue(CPU_NAME,_proc_fin)
 #define cpu_reset			__glue(CPU_NAME,_reset)
 #define cpu_do_idle			__glue(CPU_NAME,_do_idle)
 #define cpu_dcache_clean_area		__glue(CPU_NAME,_dcache_clean_area)
 #define cpu_do_switch_mm		__glue(CPU_NAME,_switch_mm)
-#define cpu_set_pte_ext			__glue(CPU_NAME,_set_pte_ext)
+// ARM10C 20131123
+// ptep: 0xEF7FD1F0, pte: 0x4F7FEXXX, ext:0
+#define cpu_set_pte_ext			__glue(CPU_NAME,_set_pte_ext) // cpu_v7_set_pte_ext
 #define cpu_suspend_size		__glue(CPU_NAME,_suspend_size)
 #define cpu_do_suspend			__glue(CPU_NAME,_do_suspend)
 #define cpu_do_resume			__glue(CPU_NAME,_do_resume)

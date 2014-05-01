@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright (2004) Linus Torvalds
  *
  * Author: Zwane Mwaikambo <zwane@fsmlabs.com>
@@ -129,7 +129,7 @@ BUILD_LOCK_OPS(write, rwlock);
 
 #endif
 
-#ifndef CONFIG_INLINE_SPIN_TRYLOCK
+#ifndef CONFIG_INLINE_SPIN_TRYLOCK  // ARM10C Y 
 int __lockfunc _raw_spin_trylock(raw_spinlock_t *lock)
 {
 	return __raw_spin_trylock(lock);
@@ -145,7 +145,8 @@ int __lockfunc _raw_spin_trylock_bh(raw_spinlock_t *lock)
 EXPORT_SYMBOL(_raw_spin_trylock_bh);
 #endif
 
-#ifndef CONFIG_INLINE_SPIN_LOCK
+#ifndef CONFIG_INLINE_SPIN_LOCK // CONFIG_INLINE_SPIN_LOCK=n
+// ARM10C 20140405
 void __lockfunc _raw_spin_lock(raw_spinlock_t *lock)
 {
 	__raw_spin_lock(lock);
@@ -177,7 +178,8 @@ void __lockfunc _raw_spin_lock_bh(raw_spinlock_t *lock)
 EXPORT_SYMBOL(_raw_spin_lock_bh);
 #endif
 
-#ifdef CONFIG_UNINLINE_SPIN_UNLOCK
+#ifdef CONFIG_UNINLINE_SPIN_UNLOCK // CONFIG_UNINLINE_SPIN_UNLOCK=y
+// ARM10C 20140412
 void __lockfunc _raw_spin_unlock(raw_spinlock_t *lock)
 {
 	__raw_spin_unlock(lock);
@@ -185,6 +187,7 @@ void __lockfunc _raw_spin_unlock(raw_spinlock_t *lock)
 EXPORT_SYMBOL(_raw_spin_unlock);
 #endif
 
+// ARM10C 20130907 
 #ifndef CONFIG_INLINE_SPIN_UNLOCK_IRQRESTORE
 void __lockfunc _raw_spin_unlock_irqrestore(raw_spinlock_t *lock, unsigned long flags)
 {
@@ -289,7 +292,8 @@ int __lockfunc _raw_write_trylock(rwlock_t *lock)
 EXPORT_SYMBOL(_raw_write_trylock);
 #endif
 
-#ifndef CONFIG_INLINE_WRITE_LOCK
+#ifndef CONFIG_INLINE_WRITE_LOCK // CONFIG_INLINE_WRITE_LOCK=n
+// ARM10C 20140125
 void __lockfunc _raw_write_lock(rwlock_t *lock)
 {
 	__raw_write_lock(lock);
@@ -321,7 +325,8 @@ void __lockfunc _raw_write_lock_bh(rwlock_t *lock)
 EXPORT_SYMBOL(_raw_write_lock_bh);
 #endif
 
-#ifndef CONFIG_INLINE_WRITE_UNLOCK
+#ifndef CONFIG_INLINE_WRITE_UNLOCK // CONFIG_INLINE_WRITE_UNLOCK=n
+// ARM10C 20140125
 void __lockfunc _raw_write_unlock(rwlock_t *lock)
 {
 	__raw_write_unlock(lock);

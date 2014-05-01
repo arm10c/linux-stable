@@ -12,7 +12,7 @@
 #ifndef __ASSEMBLY__
 #include <linux/kernel.h>
 
-#ifdef CONFIG_BUG
+#ifdef CONFIG_BUG // CONFIG_BUG=y
 
 #ifdef CONFIG_GENERIC_BUG
 struct bug_entry {
@@ -52,6 +52,8 @@ struct bug_entry {
 #endif
 
 #ifndef HAVE_ARCH_BUG_ON
+// ARM10C 20131005
+// ARM10C 20140419
 #define BUG_ON(condition) do { if (unlikely(condition)) BUG(); } while(0)
 #endif
 
@@ -70,6 +72,7 @@ void warn_slowpath_fmt_taint(const char *file, const int line, unsigned taint,
 			     const char *fmt, ...);
 extern void warn_slowpath_null(const char *file, const int line);
 #define WANT_WARN_ON_SLOWPATH
+// ARM10C 20131109
 #define __WARN()		warn_slowpath_null(__FILE__, __LINE__)
 #define __WARN_printf(arg...)	warn_slowpath_fmt(__FILE__, __LINE__, arg)
 #define __WARN_printf_taint(taint, arg...)				\
@@ -82,6 +85,7 @@ extern void warn_slowpath_null(const char *file, const int line);
 #endif
 
 #ifndef WARN_ON
+// ARM10C 20131109
 #define WARN_ON(condition) ({						\
 	int __ret_warn_on = !!(condition);				\
 	if (unlikely(__ret_warn_on))					\
@@ -133,6 +137,7 @@ extern void warn_slowpath_null(const char *file, const int line);
 
 #endif
 
+// ARM10C 20131207
 #define WARN_ON_ONCE(condition)	({				\
 	static bool __section(.data.unlikely) __warned;		\
 	int __ret_warn_once = !!(condition);			\

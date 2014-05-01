@@ -435,6 +435,7 @@ struct dma_contig_early_reserve {
 
 static struct dma_contig_early_reserve dma_mmu_remap[MAX_CMA_AREAS] __initdata;
 
+// ARM10C 20131109
 static int dma_mmu_remap_num __initdata;
 
 void __init dma_contiguous_early_fixup(phys_addr_t base, unsigned long size)
@@ -444,9 +445,12 @@ void __init dma_contiguous_early_fixup(phys_addr_t base, unsigned long size)
 	dma_mmu_remap_num++;
 }
 
+// ARM10C 20131109
 void __init dma_contiguous_remap(void)
 {
 	int i;
+
+	// dma_mmu_remap_num: 0
 	for (i = 0; i < dma_mmu_remap_num; i++) {
 		phys_addr_t start = dma_mmu_remap[i].base;
 		phys_addr_t end = start + dma_mmu_remap[i].size;

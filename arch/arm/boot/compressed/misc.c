@@ -16,6 +16,7 @@
  *  This allows for a much quicker boot time.
  */
 
+// ARM10C 20131012
 unsigned int __machine_arch_type;
 
 #include <linux/compiler.h>	/* for inline */
@@ -142,9 +143,13 @@ decompress_kernel(unsigned long output_start, unsigned long free_mem_ptr_p,
 	free_mem_end_ptr	= free_mem_ptr_end_p;
 	__machine_arch_type	= arch_id;
 
+	// Uart 관련 설정 작업 수행
 	arch_decomp_setup();
 
 	putstr("Uncompressing Linux...");
+	// inpu_data, inpu_data_end: piggy.gzip.S global 변수로 선언 되어 있음 
+	// arch/arm/boot/compressed/decompress.c 의 소스로 점프 
+	// ARM10C 20130727
 	ret = do_decompress(input_data, input_data_end - input_data,
 			    output_data, error);
 	if (ret)

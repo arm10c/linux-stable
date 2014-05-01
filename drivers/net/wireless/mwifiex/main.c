@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Marvell Wireless LAN device driver: major functions
  *
  * Copyright (C) 2011, Marvell International Ltd.

@@ -142,9 +142,10 @@ IS_SAMSUNG_CPU(exynos5440, EXYNOS5440_SOC_ID, EXYNOS5_SOC_MASK)
 #define EXYNOS4210_REV_1_0	(0x10)
 #define EXYNOS4210_REV_1_1	(0x11)
 
-#if defined(CONFIG_SOC_EXYNOS5250)
+#if defined(CONFIG_SOC_EXYNOS5250) // CONFIG_SOC_EXYNOS5250=n
 # define soc_is_exynos5250()	is_samsung_exynos5250()
 #else
+// ARM10C 20131130
 # define soc_is_exynos5250()	0
 #endif
 
@@ -180,6 +181,7 @@ struct map_desc;
 
 /* per-cpu initialisation function table. */
 
+// ARM10C 20131130
 struct cpu_table {
 	unsigned long	idcode;
 	unsigned long	idmask;

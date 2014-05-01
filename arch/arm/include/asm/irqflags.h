@@ -20,6 +20,8 @@
 
 #if __LINUX_ARM_ARCH__ >= 6
 
+// ARM10C 20130907 
+// 현재 모드 CPSR 을 리턴한다.
 static inline unsigned long arch_local_irq_save(void)
 {
 	unsigned long flags;
@@ -40,6 +42,8 @@ static inline void arch_local_irq_enable(void)
 		: "memory", "cc");
 }
 
+// ARM10C 20130824
+// 인터럽트를 disable한다.
 static inline void arch_local_irq_disable(void)
 {
 	asm volatile(
@@ -147,6 +151,7 @@ static inline unsigned long arch_local_save_flags(void)
 /*
  * restore saved IRQ & FIQ state
  */
+// ARM10C 20140412
 static inline void arch_local_irq_restore(unsigned long flags)
 {
 	asm volatile(
@@ -156,6 +161,8 @@ static inline void arch_local_irq_restore(unsigned long flags)
 		: "memory", "cc");
 }
 
+// ARM10C 20130907 this
+// ARM10C 20140412
 static inline int arch_irqs_disabled_flags(unsigned long flags)
 {
 	return flags & IRQMASK_I_BIT;

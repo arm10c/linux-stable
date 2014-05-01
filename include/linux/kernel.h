@@ -18,14 +18,21 @@
 #define USHRT_MAX	((u16)(~0U))
 #define SHRT_MAX	((s16)(USHRT_MAX>>1))
 #define SHRT_MIN	((s16)(-SHRT_MAX - 1))
+// ARM10C 20140222
+// INT_MAX 0x7FFFFFFF
 #define INT_MAX		((int)(~0U>>1))
 #define INT_MIN		(-INT_MAX - 1)
+// ARM10C 20140301
+// UINT_MAX: 0xFFFFFFFF
 #define UINT_MAX	(~0U)
 #define LONG_MAX	((long)(~0UL>>1))
 #define LONG_MIN	(-LONG_MAX - 1)
+// ARM10C 20140222
+// ULONG_MAX 0xFFFFFFFF	
 #define ULONG_MAX	(~0UL)
 #define LLONG_MAX	((long long)(~0ULL>>1))
 #define LLONG_MIN	(-LLONG_MAX - 1)
+// ARM10C 20131019
 #define ULLONG_MAX	(~0ULL)
 #define SIZE_MAX	(~(size_t)0)
 
@@ -33,11 +40,17 @@
 
 #define REPEAT_BYTE(x)	((~0ul / 0xff) * (x))
 
+// ARM10C 20131005
+// ARM10C 20131207
+// ARM10C 20140301
+// ARM10C 20140329
+// ARM10C 20140412
 #define ALIGN(x, a)		__ALIGN_KERNEL((x), (a))
 #define __ALIGN_MASK(x, mask)	__ALIGN_KERNEL_MASK((x), (mask))
 #define PTR_ALIGN(p, a)		((typeof(p))ALIGN((unsigned long)(p), (a)))
 #define IS_ALIGNED(x, a)		(((x) & ((typeof(x))(a) - 1)) == 0)
 
+// ARM10C 20140301 
 #define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]) + __must_be_array(arr))
 
 /*
@@ -46,11 +59,16 @@
  * as wide as the result!), and we want to evaluate the macro
  * arguments just once each.
  */
+// ARM10C 20131109
+// size: 0x00002000, align: 0x00002000
 #define __round_mask(x, y) ((__typeof__(x))((y)-1))
+// ARM10C 20131109
+// size: 0x00002000, align: 0x00002000
 #define round_up(x, y) ((((x)-1) | __round_mask(x, y))+1)
 #define round_down(x, y) ((x) & ~__round_mask(x, y))
 
 #define FIELD_SIZEOF(t, f) (sizeof(((t*)0)->f))
+// ARM10C 20131207
 #define DIV_ROUND_UP(n,d) (((n) + (d) - 1) / (d))
 #define DIV_ROUND_UP_ULL(ll,d) \
 	({ unsigned long long _tmp = (ll)+(d)-1; do_div(_tmp, d); _tmp; })
@@ -104,6 +122,9 @@
 )
 
 
+// ARM10C 20131026
+// ARM10C 20140125
+// ARM10C 20140315
 #define _RET_IP_		(unsigned long)__builtin_return_address(0)
 #define _THIS_IP_  ({ __label__ __here; __here: (unsigned long)&&__here; })
 
@@ -141,14 +162,15 @@ struct completion;
 struct pt_regs;
 struct user;
 
-#ifdef CONFIG_PREEMPT_VOLUNTARY
+#ifdef CONFIG_PREEMPT_VOLUNTARY // CONFIG_PREEMPT_VOLUNTARY=n
 extern int _cond_resched(void);
 # define might_resched() _cond_resched()
 #else
+// ARM10C 20140315
 # define might_resched() do { } while (0)
 #endif
 
-#ifdef CONFIG_DEBUG_ATOMIC_SLEEP
+#ifdef CONFIG_DEBUG_ATOMIC_SLEEP // CONFIG_DEBUG_ATOMIC_SLEEP=n
   void __might_sleep(const char *file, int line, int preempt_offset);
 /**
  * might_sleep - annotation for functions that can sleep
@@ -163,11 +185,14 @@ extern int _cond_resched(void);
 # define might_sleep() \
 	do { __might_sleep(__FILE__, __LINE__, 0); might_resched(); } while (0)
 #else
-  static inline void __might_sleep(const char *file, int line,
+ static inline void __might_sleep(const char *file, int line,
 				   int preempt_offset) { }
+// ARM10C 20140315
+// might_resched(): NULL function
 # define might_sleep() do { might_resched(); } while (0)
 #endif
 
+// ARM10C 20140426
 #define might_sleep_if(cond) do { if (cond) might_sleep(); } while (0)
 
 /*
@@ -407,6 +432,7 @@ extern int root_mountflags;
 extern bool early_boot_irqs_disabled;
 
 /* Values used for system_state */
+// ARM10C 20140308
 extern enum system_states {
 	SYSTEM_BOOTING,
 	SYSTEM_RUNNING,
@@ -665,6 +691,7 @@ static inline void ftrace_dump(enum ftrace_dump_mode oops_dump_mode) { }
  * strict type-checking.. See the
  * "unnecessary" pointer comparison.
  */
+// ARM10C 20131019
 #define min(x, y) ({				\
 	typeof(x) _min1 = (x);			\
 	typeof(y) _min2 = (y);			\
@@ -714,6 +741,11 @@ static inline void ftrace_dump(enum ftrace_dump_mode oops_dump_mode) { }
  * This macro does strict typechecking of min/max to make sure they are of the
  * same type as val.  See the unnecessary pointer comparisons.
  */
+// ARM10C 20131109
+// start: 0x00001000, end: 0x4f800000
+// 가정: this_start: 0x4F800000, this_end: 0xA0000000
+// this_start: 0x4F800000, start: 0x00001000, end: 0x4f800000
+// this_end: 0xA0000000, start: 0x00001000, end: 0x4f800000
 #define clamp(val, min, max) ({			\
 	typeof(val) __val = (val);		\
 	typeof(min) __min = (min);		\
@@ -734,6 +766,8 @@ static inline void ftrace_dump(enum ftrace_dump_mode oops_dump_mode) { }
 	type __min2 = (y);			\
 	__min1 < __min2 ? __min1: __min2; })
 
+// ARM10C 20131109
+// ARM10C 20140222
 #define max_t(type, x, y) ({			\
 	type __max1 = (x);			\
 	type __max2 = (y);			\
@@ -788,6 +822,16 @@ static inline void ftrace_dump(enum ftrace_dump_mode oops_dump_mode) { }
  * @member:	the name of the member within the struct.
  *
  */
+// ARM10C 20131130
+// #define offsetof(TYPE, MEMBER) ((size_t) &((TYPE *)0)->MEMBER)
+// ARM10C 20140315
+// ptr: lock_count, type: struct mutex, member: count
+// 구조체의 주소를 시작 주소를 뽑아낸다.
+// #define container_of(lock_count, struct mutex, count) ({
+//	const typeof( ((struct mutex *)0)->count ) *__mptr = (lock_count);
+//	(struct mutex *)( (char *)__mptr - offsetof(struct mutex,count) );})
+// ARM10C 20140322
+// ptr : lock_count, type : struct mutex, member : count
 #define container_of(ptr, type, member) ({			\
 	const typeof( ((type *)0)->member ) *__mptr = (ptr);	\
 	(type *)( (char *)__mptr - offsetof(type,member) );})

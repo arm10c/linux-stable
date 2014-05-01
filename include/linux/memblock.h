@@ -2,7 +2,7 @@
 #define _LINUX_MEMBLOCK_H
 #ifdef __KERNEL__
 
-#ifdef CONFIG_HAVE_MEMBLOCK
+#ifdef CONFIG_HAVE_MEMBLOCK // CONFIG_HAVE_MEMBLOCK=y
 /*
  * Logical memory blocks.
  *
@@ -19,14 +19,18 @@
 
 #define INIT_MEMBLOCK_REGIONS	128
 
+// ARM10C 20131019
+// ARM10C 20140419
 struct memblock_region {
 	phys_addr_t base;
 	phys_addr_t size;
-#ifdef CONFIG_HAVE_MEMBLOCK_NODE_MAP
+#ifdef CONFIG_HAVE_MEMBLOCK_NODE_MAP // CONFIG_HAVE_MEMBLOCK_NODE_MAP=n
 	int nid;
 #endif
 };
 
+// ARM10C 20131019
+// ARM10C 20131207
 struct memblock_type {
 	unsigned long cnt;	/* number of regions */
 	unsigned long max;	/* size of the allocated array */
@@ -34,6 +38,8 @@ struct memblock_type {
 	struct memblock_region *regions;
 };
 
+// ARM10C 20131019
+// ARM10C 20131207
 struct memblock {
 	bool bottom_up;  /* is bottom up direction? */
 	phys_addr_t current_limit;
@@ -115,13 +121,15 @@ void __next_free_mem_range_rev(u64 *idx, int nid, phys_addr_t *out_start,
  * Walks over free (memory && !reserved) areas of memblock in reverse
  * order.  Available as soon as memblock is initialized.
  */
+// ARM10C 20131109
+// nid: 1
 #define for_each_free_mem_range_reverse(i, nid, p_start, p_end, p_nid)	\
 	for (i = (u64)ULLONG_MAX,					\
 	     __next_free_mem_range_rev(&i, nid, p_start, p_end, p_nid);	\
 	     i != (u64)ULLONG_MAX;					\
 	     __next_free_mem_range_rev(&i, nid, p_start, p_end, p_nid))
 
-#ifdef CONFIG_HAVE_MEMBLOCK_NODE_MAP
+#ifdef CONFIG_HAVE_MEMBLOCK_NODE_MAP // CONFIG_HAVE_MEMBLOCK_NODE_MAP=n
 int memblock_set_node(phys_addr_t base, phys_addr_t size, int nid);
 
 static inline void memblock_set_region_node(struct memblock_region *r, int nid)
@@ -134,6 +142,7 @@ static inline int memblock_get_region_node(const struct memblock_region *r)
 	return r->nid;
 }
 #else
+// ARM10C 20131019
 static inline void memblock_set_region_node(struct memblock_region *r, int nid)
 {
 }
@@ -174,6 +183,7 @@ static inline bool memblock_bottom_up(void) { return false; }
 
 /* Flags for memblock_alloc_base() amd __memblock_alloc_base() */
 #define MEMBLOCK_ALLOC_ANYWHERE	(~(phys_addr_t)0)
+// ARM10C 20131109
 #define MEMBLOCK_ALLOC_ACCESSIBLE	0
 
 phys_addr_t memblock_alloc_base(phys_addr_t size, phys_addr_t align,
@@ -192,8 +202,10 @@ int memblock_is_region_reserved(phys_addr_t base, phys_addr_t size);
 
 extern void __memblock_dump_all(void);
 
+// ARM10C 20131026
 static inline void memblock_dump_all(void)
 {
+	// memblock_debug: 0
 	if (memblock_debug)
 		__memblock_dump_all();
 }
@@ -219,24 +231,35 @@ void memblock_set_current_limit(phys_addr_t limit);
  * memblock_region_memory_base_pfn - Return the lowest pfn intersecting with the memory region
  * @reg: memblock_region structure
  */
+// ARM10C 20140419
+// mem: memblock.memory.regions
 static inline unsigned long memblock_region_memory_base_pfn(const struct memblock_region *reg)
 {
+	// reg->base: memblock.memory.regions[0].base: 0x20000000
 	return PFN_UP(reg->base);
+	// return 0x20000
 }
 
 /**
  * memblock_region_memory_end_pfn - Return the end_pfn this region
  * @reg: memblock_region structure
  */
+// ARM10C 20140419
+// mem: memblock.memory.regions
 static inline unsigned long memblock_region_memory_end_pfn(const struct memblock_region *reg)
 {
+	// reg->base: memblock.memory.regions[0].base: 0x20000000
+	// reg->base: memblock.memory.regions[0].size: 0x80000000
 	return PFN_DOWN(reg->base + reg->size);
+	// return 0xA0000
 }
 
 /**
  * memblock_region_reserved_base_pfn - Return the lowest pfn intersecting with the reserved region
  * @reg: memblock_region structure
  */
+// ARM10C 20140419
+// res: memblock.reserved.regions
 static inline unsigned long memblock_region_reserved_base_pfn(const struct memblock_region *reg)
 {
 	return PFN_DOWN(reg->base);
@@ -246,21 +269,27 @@ static inline unsigned long memblock_region_reserved_base_pfn(const struct membl
  * memblock_region_reserved_end_pfn - Return the end_pfn this region
  * @reg: memblock_region structure
  */
+// ARM10C 20140419
+// res: memblock.reserved.regions
 static inline unsigned long memblock_region_reserved_end_pfn(const struct memblock_region *reg)
 {
 	return PFN_UP(reg->base + reg->size);
 }
 
+// ARM10C 20131102
+// ARM10C 20131207
+// ARM10C 20140419
 #define for_each_memblock(memblock_type, region)					\
 	for (region = memblock.memblock_type.regions;				\
 	     region < (memblock.memblock_type.regions + memblock.memblock_type.cnt);	\
 	     region++)
 
 
-#ifdef CONFIG_ARCH_DISCARD_MEMBLOCK
+#ifdef CONFIG_ARCH_DISCARD_MEMBLOCK // CONFIG_ARCH_DISCARD_MEMBLOCK=n
 #define __init_memblock __meminit
 #define __initdata_memblock __meminitdata
 #else
+// ARM10C 20131026
 #define __init_memblock
 #define __initdata_memblock
 #endif

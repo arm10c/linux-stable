@@ -72,6 +72,7 @@ int console_printk[4] = {
  * Low level drivers may need that to know if they can schedule in
  * their unblank() callback or not. So let's export it.
  */
+// ARM10C 20140315
 int oops_in_progress;
 EXPORT_SYMBOL(oops_in_progress);
 
@@ -245,9 +246,15 @@ static u32 clear_idx;
 #else
 #define LOG_ALIGN __alignof__(struct printk_log)
 #endif
+// ARM10C 20140322
+// CONFIG_LOG_BUF_SHIFT: 17
+// __LOG_BUF_LEN: 0x20000 (128KB)
 #define __LOG_BUF_LEN (1 << CONFIG_LOG_BUF_SHIFT)
 static char __log_buf[__LOG_BUF_LEN] __aligned(LOG_ALIGN);
 static char *log_buf = __log_buf;
+// ARM10C 20140322
+// __LOG_BUF_LEN: 0x20000 (128KB)
+// log_buf_len: 0x20000 (128KB)
 static u32 log_buf_len = __LOG_BUF_LEN;
 
 /* cpu currently holding logbuf_lock */
@@ -731,6 +738,7 @@ void log_buf_kexec_setup(void)
 #endif
 
 /* requested log_buf_len from kernel cmdline */
+// ARM10C 20140322
 static unsigned long __initdata new_log_buf_len;
 
 /* save requested log_buf_len since it's too early to process it */
@@ -747,14 +755,22 @@ static int __init log_buf_len_setup(char *str)
 }
 early_param("log_buf_len", log_buf_len_setup);
 
+// ARM10C 20140322
+// early : 0
 void __init setup_log_buf(int early)
 {
 	unsigned long flags;
 	char *new_log_buf;
 	int free;
 
+	// new_log_buf_len: 0
 	if (!new_log_buf_len)
 		return;
+		// new_log_buf_len: 0 이므로 retrun함
+
+	// new_log_buf_len값은 ealry param으로
+	// log_buf_len=n[KMG] 형식으로 bootargs에 넘겨주면 0이 아닌 값을 갖게됨
+	// Documentation/kernel-parameters.txt 문서 참고
 
 	if (early) {
 		unsigned long mem;
@@ -2496,8 +2512,10 @@ int printk_sched(const char *fmt, ...)
  * This enforces a rate limit: not more than 10 kernel messages
  * every 5s to make a denial-of-service attack impossible.
  */
+// ARM10C 20130831
 DEFINE_RATELIMIT_STATE(printk_ratelimit_state, 5 * HZ, 10);
 
+// ARM10C 20130831
 int __printk_ratelimit(const char *func)
 {
 	return ___ratelimit(&printk_ratelimit_state, func);

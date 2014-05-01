@@ -16,7 +16,9 @@
 void foo(void)
 {
 	/* The enum constants to put into include/generated/bounds.h */
+	// ARM10C 20140405
 	DEFINE(NR_PAGEFLAGS, __NR_PAGEFLAGS);
+	// ARM10C 20140308
 	DEFINE(MAX_NR_ZONES, __MAX_NR_ZONES);
 	DEFINE(NR_PCG_FLAGS, __NR_PCG_FLAGS);
 #ifdef CONFIG_SMP

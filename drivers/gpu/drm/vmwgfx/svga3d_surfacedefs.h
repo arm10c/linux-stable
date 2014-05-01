@@ -36,6 +36,7 @@
 #define ARRAY_SIZE(_A) (sizeof(_A) / sizeof((_A)[0]))
 #endif /* ARRAY_SIZE */
 
+// ARM10C 20140301 
 #define DIV_ROUND_UP(x, y)  (((x) + (y) - 1) / (y))
 #define max_t(type, x, y)  ((x) > (y) ? (x) : (y))
 #define surf_size_struct SVGA3dSize

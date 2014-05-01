@@ -18,6 +18,8 @@
 #include <asm/barrier.h>
 #include <asm/cmpxchg.h>
 
+// ARM10C 20131012
+// ARM10C 20140315
 #define ATOMIC_INIT(i)	{ (i) }
 
 #ifdef __KERNEL__
@@ -27,7 +29,13 @@
  * strex/ldrex monitor on some implementations. The reason we can use it for
  * atomic_set() is the clrex or dummy strex done on every exception return.
  */
+// ARM10C 20140315
+// atomic_read(&(&cpu_add_remove_lock)->count): (*(volatile int *)&(&(&cpu_add_remove_lock)->count)->counter)
+// ARM10C 20140329
 #define atomic_read(v)	(*(volatile int *)&(v)->counter)
+// ARM10C 20140118
+// ARM10C 20140322
+// atomic_set(&(&cpu_add_remove_lock)->count, 1): (((&(&cpu_add_remove_lock)->count)->counter) = (1))
 #define atomic_set(v,i)	(((v)->counter) = (i))
 
 #if __LINUX_ARM_ARCH__ >= 6
@@ -37,6 +45,8 @@
  * store exclusive to ensure that these are atomic.  We may loop
  * to ensure that the update happens.
  */
+// ARM10C 20140412
+// i: 32, v: &contig_page_data->node_zones[ZONE_NORMAL].vm_stat[0]
 static inline void atomic_add(int i, atomic_t *v)
 {
 	unsigned long tmp;
@@ -93,6 +103,8 @@ static inline void atomic_sub(int i, atomic_t *v)
 	: "cc");
 }
 
+// ARM10C 20140329
+// 1, &page->_count
 static inline int atomic_sub_return(int i, atomic_t *v)
 {
 	unsigned long tmp;
@@ -100,6 +112,13 @@ static inline int atomic_sub_return(int i, atomic_t *v)
 
 	smp_mb();
 
+	// i: 1, v: &page->_count
+// 	__asm__ __volatile__("@ atomic_sub_return\n"
+// "1:	ldrex	result, [v->counter]\n"
+// "	sub	result, result, i\n"
+// "	strex	tmp, result, [v->counter]\n"
+// "	teq	tmp, #0\n"
+// "	bne	1b"
 	__asm__ __volatile__("@ atomic_sub_return\n"
 "1:	ldrex	%0, [%3]\n"
 "	sub	%0, %0, %4\n"
@@ -188,6 +207,10 @@ static inline int atomic_cmpxchg(atomic_t *v, int old, int new)
 
 #endif /* __LINUX_ARM_ARCH__ */
 
+// ARM10C 20140315
+// &lock->count: &(&cpu_add_remove_lock)->count
+// atomic_xchg(&(&cpu_add_remove_lock)->count, -1):
+// xchg(&((&(&cpu_add_remove_lock)->count)->counter), -1)
 #define atomic_xchg(v, new) (xchg(&((v)->counter), new))
 
 static inline int __atomic_add_unless(atomic_t *v, int a, int u)
@@ -204,6 +227,9 @@ static inline int __atomic_add_unless(atomic_t *v, int a, int u)
 #define atomic_dec(v)		atomic_sub(1, v)
 
 #define atomic_inc_and_test(v)	(atomic_add_return(1, v) == 0)
+// ARM10C 20140329
+// &page->_count: 1
+// atomic_sub_return(1, &page->_count): 0
 #define atomic_dec_and_test(v)	(atomic_sub_return(1, v) == 0)
 #define atomic_inc_return(v)    (atomic_add_return(1, v))
 #define atomic_dec_return(v)    (atomic_sub_return(1, v))

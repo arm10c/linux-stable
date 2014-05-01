@@ -12,7 +12,7 @@ enum {
 #ifndef __GENERATING_BOUNDS_H
 #include <generated/bounds.h>
 
-#ifdef CONFIG_MEMCG
+#ifdef CONFIG_MEMCG	//CONFIG_MEMCG = N
 #include <linux/bit_spinlock.h>
 
 /*
@@ -29,7 +29,8 @@ struct page_cgroup {
 
 void __meminit pgdat_page_cgroup_init(struct pglist_data *pgdat);
 
-#ifdef CONFIG_SPARSEMEM
+#ifdef CONFIG_SPARSEMEM // CONFIG_SPARSEMEM=y
+// ARM10C 20140329
 static inline void __init page_cgroup_init_flatmem(void)
 {
 }
@@ -85,6 +86,7 @@ static inline void unlock_page_cgroup(struct page_cgroup *pc)
 #else /* CONFIG_MEMCG */
 struct page_cgroup;
 
+// ARM10C 20140111
 static inline void __meminit pgdat_page_cgroup_init(struct pglist_data *pgdat)
 {
 }

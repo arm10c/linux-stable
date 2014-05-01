@@ -161,6 +161,8 @@ void copy_to_user_page(struct vm_area_struct *vma, struct page *page,
 #endif
 }
 
+// ARM10C 20140125
+// mapping: NULL, page: ??
 void __flush_dcache_page(struct address_space *mapping, struct page *page)
 {
 	/*
@@ -168,8 +170,13 @@ void __flush_dcache_page(struct address_space *mapping, struct page *page)
 	 * page.  This ensures that data in the physical page is mutually
 	 * coherent with the kernels mapping.
 	 */
+	// PageHighMem(page): 0
 	if (!PageHighMem(page)) {
+		// PAGE_SIZE: 0x00001000, compound_order(??): 0
+		// page_size: 4096(4K)
 		size_t page_size = PAGE_SIZE << compound_order(page);
+
+		// page_address(page): page의 virtual address, page_size: 4096(4K)
 		__cpuc_flush_dcache_area(page_address(page), page_size);
 	} else {
 		unsigned long i;
@@ -195,6 +202,7 @@ void __flush_dcache_page(struct address_space *mapping, struct page *page)
 	 * we only need to do one flush - which would be at the relevant
 	 * userspace colour, which is congruent with page->index.
 	 */
+	// mapping: NULL
 	if (mapping && cache_is_vipt_aliasing())
 		flush_pfn_alias(page_to_pfn(page),
 				page->index << PAGE_CACHE_SHIFT);

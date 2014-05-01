@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright 2009 Sascha Hauer <s.hauer@pengutronix.de>
  *
  * This code is based on code copyrighted by Freescale,

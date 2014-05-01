@@ -174,23 +174,28 @@ extern int _find_next_zero_bit_be(const void * p, int size, int offset);
 extern int _find_first_bit_be(const unsigned long *p, unsigned size);
 extern int _find_next_bit_be(const unsigned long *p, int size, int offset);
 
-#ifndef CONFIG_SMP
+#ifndef CONFIG_SMP // CONFIG_SMP=y
 /*
  * The __* form of bitops are non-atomic and may be reordered.
  */
 #define ATOMIC_BITOP(name,nr,p)			\
 	(__builtin_constant_p(nr) ? ____atomic_##name(nr, p) : _##name(nr,p))
-#else
-#define ATOMIC_BITOP(name,nr,p)		_##name(nr,p)
+#else	// ARM10C Y 
+// ARM10C 20131207
+// _test_and_clear_bit
+// _test_and_set_bit
+#define ATOMIC_BITOP(name,nr,p)		_##name(nr,p)	// ARM10C this 
 #endif
 
 /*
  * Native endian atomic definitions.
  */
-#define set_bit(nr,p)			ATOMIC_BITOP(set_bit,nr,p)
+#define set_bit(nr,p)			ATOMIC_BITOP(set_bit,nr,p)  // _set_bit(nr,p)로 치환 
 #define clear_bit(nr,p)			ATOMIC_BITOP(clear_bit,nr,p)
 #define change_bit(nr,p)		ATOMIC_BITOP(change_bit,nr,p)
+// ARM10C 20131207
 #define test_and_set_bit(nr,p)		ATOMIC_BITOP(test_and_set_bit,nr,p)
+// ARM10C 20131207
 #define test_and_clear_bit(nr,p)	ATOMIC_BITOP(test_and_clear_bit,nr,p)
 #define test_and_change_bit(nr,p)	ATOMIC_BITOP(test_and_change_bit,nr,p)
 
@@ -199,8 +204,12 @@ extern int _find_next_bit_be(const unsigned long *p, int size, int offset);
  * These are the little endian, atomic definitions.
  */
 #define find_first_zero_bit(p,sz)	_find_first_zero_bit_le(p,sz)
+// ARM10C 20131207
 #define find_next_zero_bit(p,sz,off)	_find_next_zero_bit_le(p,sz,off)
 #define find_first_bit(p,sz)		_find_first_bit_le(p,sz)
+// ARM10C 20140215
+// cpumask_bits(cpu_possible_mask): cpu_possible_mask->bits: 0xF , nr_cpumask_bits: 4, n: -1+1
+// p: cpu_possible_mask->bits: 0xF , sz: 4, off: 0
 #define find_next_bit(p,sz,off)		_find_next_bit_le(p,sz,off)
 
 #else
@@ -258,6 +267,14 @@ static inline int constant_fls(int x)
  * the clz instruction for much better code efficiency.
  */
 
+// ARM10C 20140215
+// fls(0x3): 2
+// ARM10C 20140222
+// fls(0xf): 4
+// ARM10C 20140322
+// fls(3008) : 4096
+// ARM10C 20140419
+// fls(0x4): 3
 static inline int fls(int x)
 {
 	int ret;
@@ -265,14 +282,32 @@ static inline int fls(int x)
 	if (__builtin_constant_p(x))
 	       return constant_fls(x);
 
+	// x: 0x3
+	// asm("clz\t ret, x")
 	asm("clz\t%0, %1" : "=r" (ret) : "r" (x));
+	// ret: 30
+
        	ret = 32 - ret;
+	// ret: 2
+
 	return ret;
+	// ret: 2
 }
 
+// ARM10C 20140222
 #define __fls(x) (fls(x) - 1)
+
+// ARM10C 20140215
+// ffs(0x3):
+// #define ffs(0x3) ({ unsigned long __t = (0x3); fls(0x3 & 0xFFFFFFFD); })
+// fls(0x3 & 0xFFFFFFFD): fls(0x1): 1
+// ffs(0x3): 1
+// ffs: find frist set의 의미로 1로set된 최상위 bit의 bit index를 리턴
 #define ffs(x) ({ unsigned long __t = (x); fls(__t & -__t); })
 #define __ffs(x) (ffs(x) - 1)
+
+// ARM10C 20140111
+// find first zerobit
 #define ffz(x) __ffs( ~(x) )
 
 #endif

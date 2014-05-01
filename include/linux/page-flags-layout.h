@@ -11,11 +11,15 @@
  * are used to select a priority ordered list of memory zones which
  * match the requested limits. See gfp_zone() in include/linux/gfp.h
  */
+// ARM10C 20131214
+// MAX_NR_ZONES: 3
 #if MAX_NR_ZONES < 2
 #define ZONES_SHIFT 0
 #elif MAX_NR_ZONES <= 2
 #define ZONES_SHIFT 1
 #elif MAX_NR_ZONES <= 4
+// ARM10C 20131214
+// ARM10C 20140405
 #define ZONES_SHIFT 2
 #else
 #error ZONES_SHIFT -- too many zones configured adjust calculation
@@ -25,6 +29,9 @@
 #include <asm/sparsemem.h>
 
 /* SECTION_SHIFT	#bits space required to store a section # */
+// ARM10C 20131207
+// MAX_PHYSMEM_BITS: 32, SECTION_SIZE_BITS: 28
+// SECTIONS_SHIFT: 4
 #define SECTIONS_SHIFT	(MAX_PHYSMEM_BITS - SECTION_SIZE_BITS)
 
 #endif /* CONFIG_SPARSEMEM */
@@ -43,16 +50,28 @@
  * classic sparse with space for node:| SECTION | NODE | ZONE |             ... | FLAGS |
  *      " plus space for last_cpupid: | SECTION | NODE | ZONE | LAST_CPUPID ... | FLAGS |
  * classic sparse no space for node:  | SECTION |     ZONE    | ... | FLAGS |
- */
+ */ 
+// CONFIG_SPARSEMEM=y, CONFIG_SPARSEMEM_VMEMMAP=n
 #if defined(CONFIG_SPARSEMEM) && !defined(CONFIG_SPARSEMEM_VMEMMAP)
+// ARM10C 20131214
+// SECTIONS_SHIFT: 4
 #define SECTIONS_WIDTH		SECTIONS_SHIFT
 #else
 #define SECTIONS_WIDTH		0
 #endif
 
+// ARM10C 20131214
+// ZONES_WIDTH: 2
 #define ZONES_WIDTH		ZONES_SHIFT
 
+// ARM10C 20131214
+// SECTIONS_WIDTH: 4, ZONES_WIDTH: 2, NODES_SHIFT: 0
+// BITS_PER_LONG: 32, NR_PAGEFLAGS: 21
+// SECTIONS_WIDTH+ZONES_WIDTH+NODES_SHIFT: 6
+// BITS_PER_LONG - NR_PAGEFLAGS: 11
 #if SECTIONS_WIDTH+ZONES_WIDTH+NODES_SHIFT <= BITS_PER_LONG - NR_PAGEFLAGS
+// ARM10C 20131214
+// NODES_WIDTH: 0
 #define NODES_WIDTH		NODES_SHIFT
 #else
 #ifdef CONFIG_SPARSEMEM_VMEMMAP
@@ -83,8 +102,9 @@
  * We are going to use the flags for the page to node mapping if its in
  * there.  This includes the case where there is no node, so it is implicit.
  */
+// ARM10C 20131214
 #if !(NODES_WIDTH > 0 || NODES_SHIFT == 0)
-#define NODE_NOT_IN_PAGE_FLAGS
+#define NODE_NOT_IN_PAGE_FLAGS // undefined
 #endif
 
 #if defined(CONFIG_NUMA_BALANCING) && LAST_CPUPID_WIDTH == 0

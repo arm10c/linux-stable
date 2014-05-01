@@ -4,7 +4,9 @@
 /*
  * This is the maximum virtual address which can be DMA'd from.
  */
-#ifndef CONFIG_ZONE_DMA
+#ifndef CONFIG_ZONE_DMA // CONFIG_ZONE_DMA=n
+// ARM10C 20131207
+// ARM10C 20140222
 #define MAX_DMA_ADDRESS	0xffffffffUL
 #else
 #define MAX_DMA_ADDRESS	({ \

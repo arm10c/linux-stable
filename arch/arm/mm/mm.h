@@ -31,11 +31,15 @@ static inline pte_t get_top_pte(unsigned long va)
 	return *ptep;
 }
 
+// ARM10C 20131102
+// ARM10C 20131130
 static inline pmd_t *pmd_off_k(unsigned long virt)
 {
+	// section table의 위치를 리턴 (2MB 단위)
 	return pmd_offset(pud_offset(pgd_offset_k(virt), virt), virt);
 }
 
+// ARM10C 20131026
 struct mem_type {
 	pteval_t prot_pte;
 	pteval_t prot_pte_s2;
@@ -56,12 +60,15 @@ extern void __flush_dcache_page(struct address_space *mapping, struct page *page
 #define VM_ARM_SECTION_MAPPING	0x80000000
 
 /* permanent static mappings from iotable_init() */
+// ARM10C 20131130
 #define VM_ARM_STATIC_MAPPING	0x40000000
 
 /* empty mapping */
 #define VM_ARM_EMPTY_MAPPING	0x20000000
 
 /* mapping type (attributes) for permanent static mappings */
+// ARM10C 20131130
+// md->type = MT_DEVICE
 #define VM_ARM_MTYPE(mt)		((mt) << 20)
 #define VM_ARM_MTYPE_MASK	(0x1f << 20)
 
@@ -69,6 +76,7 @@ extern void __flush_dcache_page(struct address_space *mapping, struct page *page
 #define VM_ARM_DMA_CONSISTENT	0x20000000
 
 
+// ARM10C 20131116
 struct static_vm {
 	struct vm_struct vm;
 	struct list_head list;
@@ -80,10 +88,11 @@ extern __init void add_static_vm_early(struct static_vm *svm);
 
 #endif
 
-#ifdef CONFIG_ZONE_DMA
+#ifdef CONFIG_ZONE_DMA // CONFIG_ZONE_DMA=n
 extern phys_addr_t arm_dma_limit;
 extern unsigned long arm_dma_pfn_limit;
 #else
+// ARM10C 20131026
 #define arm_dma_limit ((phys_addr_t)~0)
 #define arm_dma_pfn_limit (~0ul >> PAGE_SHIFT)
 #endif

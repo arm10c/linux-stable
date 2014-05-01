@@ -20,11 +20,16 @@
  * Flags to pass to kmem_cache_create().
  * The ones marked DEBUG are only valid if CONFIG_SLAB_DEBUG is set.
  */
+// ARM10C 20140419
 #define SLAB_DEBUG_FREE		0x00000100UL	/* DEBUG: Perform (expensive) checks on free */
+// ARM10C 20140419
 #define SLAB_RED_ZONE		0x00000400UL	/* DEBUG: Red zone objs in a cache */
+// ARM10C 20140419
 #define SLAB_POISON		0x00000800UL	/* DEBUG: Poison objects */
+// ARM10C 20140419
 #define SLAB_HWCACHE_ALIGN	0x00002000UL	/* Align objs on cache lines */
 #define SLAB_CACHE_DMA		0x00004000UL	/* Use GFP_DMA memory */
+// ARM10C 20140419
 #define SLAB_STORE_USER		0x00010000UL	/* DEBUG: Store the last owner for bug hunting */
 #define SLAB_PANIC		0x00040000UL	/* Panic if kmem_cache_create() fails */
 /*
@@ -62,8 +67,10 @@
  * rcu_read_lock before reading the address, then rcu_read_unlock after
  * taking the spinlock within the structure expected at that address.
  */
+// ARM10C 20140419
 #define SLAB_DESTROY_BY_RCU	0x00080000UL	/* Defer freeing slabs to RCU */
 #define SLAB_MEM_SPREAD		0x00100000UL	/* Spread some memory over cpuset */
+// ARM10C 20140419
 #define SLAB_TRACE		0x00200000UL	/* Trace allocations and frees */
 
 /* Flag to prevent checks on free */
@@ -148,7 +155,12 @@ size_t ksize(const void *);
  * alignment larger than the alignment of a 64-bit integer.
  * Setting ARCH_KMALLOC_MINALIGN in arch headers allows that.
  */
+// ARM10C 20140419
+// ARCH_DMA_MINALIGN: 64
 #if defined(ARCH_DMA_MINALIGN) && ARCH_DMA_MINALIGN > 8
+// ARM10C 20140419
+// ARCH_DMA_MINALIGN: 64
+// ARCH_KMALLOC_MINALIGN: 64
 #define ARCH_KMALLOC_MINALIGN ARCH_DMA_MINALIGN
 #define KMALLOC_MIN_SIZE ARCH_DMA_MINALIGN
 #define KMALLOC_SHIFT_LOW ilog2(ARCH_DMA_MINALIGN)
@@ -354,7 +366,8 @@ kmem_cache_alloc_node_trace(struct kmem_cache *s,
 #include <linux/slab_def.h>
 #endif
 
-#ifdef CONFIG_SLUB
+// ARM10C 20140419
+#ifdef CONFIG_SLUB // CONFIG_SLUB = y
 #include <linux/slub_def.h>
 #endif
 

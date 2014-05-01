@@ -8,9 +8,10 @@
  * into some well-recognized area such as 0xdead000000000000,
  * that is also not mappable by user-space exploits:
  */
-#ifdef CONFIG_ILLEGAL_POINTER_VALUE
+#ifdef CONFIG_ILLEGAL_POINTER_VALUE // CONFIG_ILLEGAL_POINTER_VALUE=n
 # define POISON_POINTER_DELTA _AC(CONFIG_ILLEGAL_POINTER_VALUE, UL)
 #else
+// ARM10C 20140412
 # define POISON_POINTER_DELTA 0
 #endif
 
@@ -19,7 +20,14 @@
  * under normal circumstances, used to verify that nobody uses
  * non-initialized list entries.
  */
+// ARM10C 20140301
+// ARM10C 20140412
+// POISON_POINTER_DELTA: 0
+// LIST_POISON1: ((void *) 0x00100100)
 #define LIST_POISON1  ((void *) 0x00100100 + POISON_POINTER_DELTA)
+// ARM10C 20140412
+// POISON_POINTER_DELTA: 0
+// LIST_POISON2: ((void *) 0x00200200)
 #define LIST_POISON2  ((void *) 0x00200200 + POISON_POINTER_DELTA)
 
 /********** include/linux/timer.h **********/
@@ -74,7 +82,9 @@
 #define NETFILTER_LINK_POISON	0xdead57ac
 
 /********** kernel/mutexes **********/
+// ARM10C 20140315
 #define MUTEX_DEBUG_INIT	0x11
+// ARM10C 20140322
 #define MUTEX_DEBUG_FREE	0x22
 
 /********** lib/flex_array.c **********/

@@ -103,9 +103,13 @@ static inline u8 __raw_readb(const volatile void __iomem *addr)
 	return val;
 }
 
+// ARM10C 20131130
 static inline u32 __raw_readl(const volatile void __iomem *addr)
 {
 	u32 val;
+
+	// +, Q, o : inline asm의 문법 
+	// FIXME: (*(volatile u32 __force *)addr) 의 문법? addr에 *해서 쓰는 이유?
 	asm volatile("ldr %1, %0"
 		     : "+Qo" (*(volatile u32 __force *)addr),
 		       "=r" (val));

@@ -1,4 +1,4 @@
-#ifndef _LINUX_OF_H
+﻿#ifndef _LINUX_OF_H
 #define _LINUX_OF_H
 /*
  * Definitions for talking to the Open Firmware PROM on
@@ -30,6 +30,8 @@
 typedef u32 phandle;
 typedef u32 ihandle;
 
+// ARM10C 20140208
+// size : 24 byte
 struct property {
 	char	*name;
 	int	length;
@@ -43,6 +45,8 @@ struct property {
 struct of_irq_controller;
 #endif
 
+// ARM10C 20140208
+// size : 60 byte
 struct device_node {
 	const char *name;
 	const char *type;
@@ -74,19 +78,21 @@ struct of_phandle_args {
 	uint32_t args[MAX_PHANDLE_ARGS];
 };
 
-#ifdef CONFIG_OF_DYNAMIC
+#ifdef CONFIG_OF_DYNAMIC // CONFIG_OF_DYNAMIC=n
 extern struct device_node *of_node_get(struct device_node *node);
 extern void of_node_put(struct device_node *node);
 #else /* CONFIG_OF_DYNAMIC */
 /* Dummy ref counting routines - to be implemented later */
+// ARM10C 20140215
 static inline struct device_node *of_node_get(struct device_node *node)
 {
 	return node;
 }
+// ARM10C 20140215
 static inline void of_node_put(struct device_node *node) { }
 #endif /* !CONFIG_OF_DYNAMIC */
 
-#ifdef CONFIG_OF
+#ifdef CONFIG_OF // CONFIG_OF=y
 
 /* Pointer for first entry in chain of all nodes. */
 extern struct device_node *of_allnodes;
@@ -121,6 +127,7 @@ extern struct device_node *of_find_all_nodes(struct device_node *prev);
  */
 
 /* Helper to read a big number; size is in cells (not bytes) */
+// ARM10C 20131012
 static inline u64 of_read_number(const __be32 *cell, int size)
 {
 	u64 r = 0;
@@ -130,6 +137,7 @@ static inline u64 of_read_number(const __be32 *cell, int size)
 }
 
 /* Like of_read_number, but we want an unsigned long result */
+// ARM10C 20131012
 static inline unsigned long of_read_ulong(const __be32 *cell, int size)
 {
 	/* toss away upper bits if unsigned long is smaller than u64 */
@@ -142,14 +150,19 @@ static inline unsigned long of_read_ulong(const __be32 *cell, int size)
 
 /* Default #address and #size cells.  Allow arch asm/prom.h to override */
 #if !defined(OF_ROOT_NODE_ADDR_CELLS_DEFAULT)
+// ARM10C 20131012
 #define OF_ROOT_NODE_ADDR_CELLS_DEFAULT 1
 #define OF_ROOT_NODE_SIZE_CELLS_DEFAULT 1
 #endif
 
 /* Default string compare functions, Allow arch asm/prom.h to override */
 #if !defined(of_compat_cmp)
+// ARM10C 20131005
 #define of_compat_cmp(s1, s2, l)	strcasecmp((s1), (s2))
 #define of_prop_cmp(s1, s2)		strcmp((s1), (s2))
+// ARM10C 20140215
+// cpu->type: "cpu", "cpu"
+// 대소문자 구분 없이 string 비교
 #define of_node_cmp(s1, s2)		strcasecmp((s1), (s2))
 #endif
 
@@ -209,6 +222,9 @@ extern struct device_node *of_get_next_available_child(
 
 extern struct device_node *of_get_child_by_name(const struct device_node *node,
 					const char *name);
+// ARM10C 20140215
+// for_each_child_of_node(cpus, cpu)
+//   for (cpu = of_get_next_child(cpus, NULL); cpu != NULL; cpu = of_get_next_child(cpus, cpu))
 #define for_each_child_of_node(parent, child) \
 	for (child = of_get_next_child(parent, NULL); child != NULL; \
 	     child = of_get_next_child(parent, child))
@@ -282,6 +298,7 @@ extern const void *of_get_property(const struct device_node *node,
 				const char *name,
 				int *lenp);
 extern struct device_node *of_get_cpu_node(int cpu, unsigned int *thread);
+// ARM10C 20140208
 #define for_each_property_of_node(dn, pp) \
 	for (pp = dn->properties; pp != NULL; pp = pp->next)
 
@@ -594,11 +611,15 @@ static inline int of_property_read_u16(const struct device_node *np,
 	return of_property_read_u16_array(np, propname, out_value, 1);
 }
 
+// ARM10C 20140215
+// [0] cpu: cpu0의 node의 주소값, "reg", &hwid
 static inline int of_property_read_u32(const struct device_node *np,
 				       const char *propname,
 				       u32 *out_value)
 {
+        // np: cpu0의 node의 주소값, propname: "reg", out_value: &hwid, 1
 	return of_property_read_u32_array(np, propname, out_value, 1);
+        // 0을 리턴, *out_value: 0,
 }
 
 #define of_property_for_each_u32(np, propname, prop, p, u)	\

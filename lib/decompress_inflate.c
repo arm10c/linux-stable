@@ -31,6 +31,10 @@ static int INIT nofill(void *buffer, unsigned int len)
 	return -1;
 }
 
+// ARM10C 20130727
+// fill = null
+// flush = null
+// pos = null
 /* Included from initramfs et al code */
 STATIC int INIT gunzip(unsigned char *buf, int len,
 		       int(*fill)(void*, unsigned int),
@@ -180,4 +184,5 @@ gunzip_nomem1:
 	return rc; /* returns Z_OK (0) if successful */
 }
 
+// ARM10C 20130727
 #define decompress gunzip

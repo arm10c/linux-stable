@@ -1,4 +1,4 @@
-/*
+﻿/*
  * SLUB: A slab allocator that limits cache line use instead of queuing
  * objects in per cpu and per node lists.
  *
@@ -114,19 +114,28 @@
  * 			the fast path and disables lockless freelists.
  */
 
+// ARM10C 20140419
+// s: &boot_kmem_cache_node
 static inline int kmem_cache_debug(struct kmem_cache *s)
 {
-#ifdef CONFIG_SLUB_DEBUG
+#ifdef CONFIG_SLUB_DEBUG // CONFIG_SLUB_DEBUG=y
+	// s->flags: boot_kmem_cache_node.flags: SLAB_HWCACHE_ALIGN: 0x00002000UL
+	// SLAB_DEBUG_FLAGS: 0x210D00
 	return unlikely(s->flags & SLAB_DEBUG_FLAGS);
+	// return 0
 #else
 	return 0;
 #endif
 }
 
+// ARM10C 20140419
+// s: &boot_kmem_cache_node
 static inline bool kmem_cache_has_cpu_partial(struct kmem_cache *s)
 {
-#ifdef CONFIG_SLUB_CPU_PARTIAL
+#ifdef CONFIG_SLUB_CPU_PARTIAL // CONFIG_SLUB_CPU_PARTIAL=y
+	// s: &boot_kmem_cache_node, kmem_cache_debug(&boot_kmem_cache_node): 0
 	return !kmem_cache_debug(s);
+	// return 1
 #else
 	return false;
 #endif
@@ -150,6 +159,7 @@ static inline bool kmem_cache_has_cpu_partial(struct kmem_cache *s)
  * Mininum number of partial slabs. These will be left on the partial
  * lists even if they are empty. kmem_cache_shrink may reclaim them.
  */
+// ARM10C 20140419
 #define MIN_PARTIAL 5
 
 /*
@@ -179,11 +189,18 @@ static inline bool kmem_cache_has_cpu_partial(struct kmem_cache *s)
 #define SLUB_MERGE_SAME (SLAB_DEBUG_FREE | SLAB_RECLAIM_ACCOUNT | \
 		SLAB_CACHE_DMA | SLAB_NOTRACK)
 
+// ARM10C 20140419
 #define OO_SHIFT	16
+// ARM10C 20140419
+// OO_SHIFT: 16
+// OO_MASK: 0xFFFF
 #define OO_MASK		((1 << OO_SHIFT) - 1)
+// ARM10C 20140419
+// MAX_OBJS_PER_PAGE: 0x7fff
 #define MAX_OBJS_PER_PAGE	32767 /* since page.objects is u15 */
 
 /* Internal SLUB flags */
+// ARM10C 20140419
 #define __OBJECT_POISON		0x80000000UL /* Poison object */
 #define __CMPXCHG_DOUBLE	0x40000000UL /* Use cmpxchg_double */
 
@@ -317,29 +334,50 @@ static inline size_t slab_ksize(const struct kmem_cache *s)
 	return s->size;
 }
 
+// ARM10C 20140419
+// slub_max_order: 3, size: 64, reserved: 0
+// min_order: 0, size: 64, reserved: 0
 static inline int order_objects(int order, unsigned long size, int reserved)
 {
+	// order: 3, PAGE_SIZE: 0x1000, (0x1000 << 3): 0x8000, reserved: 0, size: 64
+	// order: 0, PAGE_SIZE: 0x1000, (0x1000 << 0): 0x1000, reserved: 0, size: 64
 	return ((PAGE_SIZE << order) - reserved) / size;
+	// return 0x200
+	// return 0x40
 }
 
+// ARM10C 20140419
+// order: 0, size: 64, s->reserved: boot_kmem_cache_node.reserved: 0
 static inline struct kmem_cache_order_objects oo_make(int order,
 		unsigned long size, int reserved)
 {
 	struct kmem_cache_order_objects x = {
+		// order: 0, OO_SHIFT: 16, size: 64, reserved: 0
+		// order_objects(0, 64, 0): 0x40
 		(order << OO_SHIFT) + order_objects(order, size, reserved)
 	};
+	// x.x: 64
 
 	return x;
 }
 
+// ARM10C 20140426
+// oo: boot_kmem_cache_node.oo
 static inline int oo_order(struct kmem_cache_order_objects x)
 {
+	// x.x: boot_kmem_cache_node.oo.x: 64, OO_SHIFT: 16
 	return x.x >> OO_SHIFT;
+	// return 0
 }
 
+// ARM10C 20140419
+// boot_kmem_cache_node.oo.x : 64
 static inline int oo_objects(struct kmem_cache_order_objects x)
 {
+
+	// boot_kmem_cache_node.oo.x : 64, OO_MASK : 0xFFFF
 	return x.x & OO_MASK;
+	// return 64
 }
 
 /*
@@ -434,7 +472,7 @@ static inline bool cmpxchg_double_slab(struct kmem_cache *s, struct page *page,
 	return 0;
 }
 
-#ifdef CONFIG_SLUB_DEBUG
+#ifdef CONFIG_SLUB_DEBUG // CONFIG_SLUB_DEBUG=y
 /*
  * Determine a map of object in use on a page.
  *
@@ -453,13 +491,16 @@ static void get_map(struct kmem_cache *s, struct page *page, unsigned long *map)
 /*
  * Debug settings:
  */
-#ifdef CONFIG_SLUB_DEBUG_ON
+#ifdef CONFIG_SLUB_DEBUG_ON // CONFIG_SLUB_DEBUG_ON=n
 static int slub_debug = DEBUG_DEFAULT_FLAGS;
 #else
+// ARM10C 20140419
 static int slub_debug;
 #endif
 
+// ARM10C 20140419
 static char *slub_debug_slabs;
+// ARM10C 20140419
 static int disable_higher_order_debug;
 
 /*
@@ -1220,6 +1261,10 @@ out:
 
 __setup("slub_debug", setup_slub_debug);
 
+
+// ARM10C 20140419
+// s->size: boot_kmem_cache_node.size: 44, flags: SLAB_HWCACHE_ALIGN: 0x00002000UL,
+// s->name: boot_kmem_cache_node.name: "kmem_cache_node, s->ctor: boot_kmem_cache_node.ctor: NULL
 static unsigned long kmem_cache_flags(unsigned long object_size,
 	unsigned long flags, const char *name,
 	void (*ctor)(void *))
@@ -1227,11 +1272,14 @@ static unsigned long kmem_cache_flags(unsigned long object_size,
 	/*
 	 * Enable debugging if selected on the kernel commandline.
 	 */
+	// slub_debug: 0, slub_debug_slabs: NULL	
 	if (slub_debug && (!slub_debug_slabs || (name &&
 		!strncmp(slub_debug_slabs, name, strlen(slub_debug_slabs)))))
 		flags |= slub_debug;
 
+	// flags: SLAB_HWCACHE_ALIGN: 0x00002000UL
 	return flags;
+	// return SLAB_HWCACHE_ALIGN: 0x00002000UL
 }
 #else
 static inline void setup_object_debug(struct kmem_cache *s,
@@ -1300,38 +1348,59 @@ static inline void slab_free_hook(struct kmem_cache *s, void *x)
 /*
  * Slab allocation and freeing
  */
+// ARM10C 20140426
+// alloc_gfp: 0x1200, node: 0, oo: boot_kmem_cache_node.oo
 static inline struct page *alloc_slab_page(gfp_t flags, int node,
 					struct kmem_cache_order_objects oo)
 {
+	// oo: boot_kmem_cache_node.oo
 	int order = oo_order(oo);
+	// order: 0
 
+	// flags: 0x1200, __GFP_NOTRACK: 0x200000u
 	flags |= __GFP_NOTRACK;
+	// flags: 0x201200
 
+	// node: 0, NUMA_NO_NODE: -1
 	if (node == NUMA_NO_NODE)
 		return alloc_pages(flags, order);
 	else
+		// node: 0, flags: 0x201200, order: 0
 		return alloc_pages_exact_node(node, flags, order);
 }
 
+// ARM10C 20140426
+// s: &boot_kmem_cache_node, flags: GFP_NOWAIT: 0, node: 0
 static struct page *allocate_slab(struct kmem_cache *s, gfp_t flags, int node)
 {
 	struct page *page;
+	// s->oo: boot_kmem_cache_node.oo
 	struct kmem_cache_order_objects oo = s->oo;
+	// oo: boot_kmem_cache_node.oo
 	gfp_t alloc_gfp;
 
+	// flags: GFP_NOWAIT: 0, gfp_allowed_mask: 0x1ffff2f
 	flags &= gfp_allowed_mask;
+	// flags: GFP_NOWAIT: 0
 
+	// flags: GFP_NOWAIT: 0, __GFP_WAIT: 0x10u
 	if (flags & __GFP_WAIT)
 		local_irq_enable();
 
+	// s->allocflags: boot_kmem_cache_node.allocflags: 0
 	flags |= s->allocflags;
+	// flags: GFP_NOWAIT: 0
 
 	/*
 	 * Let the initial higher-order allocation fail under memory pressure
 	 * so we fall-back to the minimum order allocation.
 	 */
+	// flags: GFP_NOWAIT: 0, __GFP_NOWARN: 0x200u, __GFP_NORETRY: 0x1000u
+	// __GFP_NOFAIL: 0x800u
 	alloc_gfp = (flags | __GFP_NOWARN | __GFP_NORETRY) & ~__GFP_NOFAIL;
+	// alloc_gfp: 0x1200
 
+	// alloc_gfp: 0x1200, node: 0, oo: boot_kmem_cache_node.oo
 	page = alloc_slab_page(alloc_gfp, node, oo);
 	if (unlikely(!page)) {
 		oo = s->min;
@@ -1383,6 +1452,8 @@ static void setup_object(struct kmem_cache *s, struct page *page,
 		s->ctor(object);
 }
 
+// ARM10C 20140426
+// kmem_cache_node: &boot_kmem_cache_node, GFP_NOWAIT: 0, node: 0
 static struct page *new_slab(struct kmem_cache *s, gfp_t flags, int node)
 {
 	struct page *page;
@@ -1391,8 +1462,11 @@ static struct page *new_slab(struct kmem_cache *s, gfp_t flags, int node)
 	void *p;
 	int order;
 
+	// flags: GFP_NOWAIT: 0, GFP_SLAB_BUG_MASK: 0xfe000005
 	BUG_ON(flags & GFP_SLAB_BUG_MASK);
 
+	// s: &boot_kmem_cache_node, flags: GFP_NOWAIT: 0, node: 0
+	// GFP_RECLAIM_MASK: 0x13ef0, GFP_CONSTRAINT_MASK: 0x60000
 	page = allocate_slab(s,
 		flags & (GFP_RECLAIM_MASK | GFP_CONSTRAINT_MASK), node);
 	if (!page)
@@ -1458,6 +1532,9 @@ static void __free_slab(struct kmem_cache *s, struct page *page)
 	__free_memcg_kmem_pages(page, order);
 }
 
+// ARM10C 20140419
+// sizeof(((struct page *)NULL)->lru): 8, sizeof(struct rcu_head): 8
+// need_reserve_slab_rcu: 0
 #define need_reserve_slab_rcu						\
 	(sizeof(((struct page *)NULL)->lru) < sizeof(struct rcu_head))
 
@@ -2702,8 +2779,13 @@ EXPORT_SYMBOL(kmem_cache_free);
  * and increases the number of allocations possible without having to
  * take the list_lock.
  */
+// ARM10C 20140419
 static int slub_min_order;
+// ARM10C 20140419
+// PAGE_ALLOC_COSTLY_ORDER: 3
+// slub_max_order: 3
 static int slub_max_order = PAGE_ALLOC_COSTLY_ORDER;
+// ARM10C 20140419
 static int slub_min_objects;
 
 /*
@@ -2737,35 +2819,54 @@ static int slub_nomerge;
  * requested a higher mininum order then we start with that one instead of
  * the smallest order which will fit the object.
  */
+// ARM10C 20140419
+// size: 64, min_objects: 16, slub_max_order: 3
+// fraction: 16, reserved: 0
 static inline int slab_order(int size, int min_objects,
 				int max_order, int fract_leftover, int reserved)
 {
 	int order;
 	int rem;
+	// slub_min_order: 0
 	int min_order = slub_min_order;
+	// min_order: 0
 
+	// min_order: 0, size: 64, reserved: 0
+	// order_objects(0, 64, 0): 0x40, MAX_OBJS_PER_PAGE: 32767 (0x7fff)
 	if (order_objects(min_order, size, reserved) > MAX_OBJS_PER_PAGE)
 		return get_order(size * MAX_OBJS_PER_PAGE) - 1;
 
+	// min_order: 0, min_objects: 16, size: 64, fls(0x3ff): 10, PAGE_SHIFT: 12
+	// order: 0, max_order: 3
 	for (order = max(min_order,
 				fls(min_objects * size - 1) - PAGE_SHIFT);
 			order <= max_order; order++) {
-
+		// PAGE_SIZE: 0x1000, order : 0	
 		unsigned long slab_size = PAGE_SIZE << order;
+		// slab_size: 0x1000	
 
+		// slab_size: 0x1000, min_objects: 16, size: 64, reserved: 0
 		if (slab_size < min_objects * size + reserved)
 			continue;
 
+		// slab_size: 0x1000, reserved: 0, size: 64
 		rem = (slab_size - reserved) % size;
+		// rem: 0	
 
+		// rem: 0, slab_size: 0x1000, fract_leftover: 16
 		if (rem <= slab_size / fract_leftover)
 			break;
+			// 빠져나감
 
 	}
 
+	// order: 0
 	return order;
+	// return 0
 }
 
+// ARM10C 20140419
+// size: 64, s->reserved: boot_kmem_cache_node.reserved: 0
 static inline int calculate_order(int size, int reserved)
 {
 	int order;
@@ -2781,19 +2882,41 @@ static inline int calculate_order(int size, int reserved)
 	 * First we reduce the acceptable waste in a slab. Then
 	 * we reduce the minimum objects required in a slab.
 	 */
+	// slub_min_objects: 0
 	min_objects = slub_min_objects;
-	if (!min_objects)
-		min_objects = 4 * (fls(nr_cpu_ids) + 1);
-	max_objects = order_objects(slub_max_order, size, reserved);
-	min_objects = min(min_objects, max_objects);
+	// min_objects: 0
 
+	if (!min_objects)
+		// nr_cpu_ids: 4, fls(4): 3
+		min_objects = 4 * (fls(nr_cpu_ids) + 1);
+		// min_objects: 16
+
+	// slub_max_order: 3, size: 64, reserved: 0
+	max_objects = order_objects(slub_max_order, size, reserved);
+	// max_objects: 0x200
+	
+	// min_objects: 16, max_objects: 0x200
+	min_objects = min(min_objects, max_objects);
+	// min_objects: 16
+
+	// min_objects: 16
 	while (min_objects > 1) {
 		fraction = 16;
+
+		// fraction: 16
 		while (fraction >= 4) {
+			// size: 64, min_objects: 16, slub_max_order: 3
+			// fraction: 16, reserved: 0
 			order = slab_order(size, min_objects,
 					slub_max_order, fraction, reserved);
+			// order: 0
+
+			// order: 0, slub_max_order: 3
 			if (order <= slub_max_order)
+				// order: 0
 				return order;
+				// return 0
+
 			fraction /= 2;
 		}
 		min_objects--;
@@ -2849,6 +2972,8 @@ static inline int alloc_kmem_cache_cpus(struct kmem_cache *s)
 	return 1;
 }
 
+// ARM10C 20140419
+// ARM10C 20140426
 static struct kmem_cache *kmem_cache_node;
 
 /*
@@ -2860,13 +2985,17 @@ static struct kmem_cache *kmem_cache_node;
  * when allocating for the kmem_cache_node. This is used for bootstrapping
  * memory on a fresh node that has no slab structures yet.
  */
+// ARM10C 20140426
+// node: 0
 static void early_kmem_cache_node_alloc(int node)
 {
 	struct page *page;
 	struct kmem_cache_node *n;
 
+	// kmem_cache_node->size: boot_kmem_cache_node.size: 64, sizeof(struct kmem_cache_node): 44 bytes
 	BUG_ON(kmem_cache_node->size < sizeof(struct kmem_cache_node));
 
+	// kmem_cache_node: &boot_kmem_cache_node, GFP_NOWAIT: 0, node: 0
 	page = new_slab(kmem_cache_node, GFP_NOWAIT, node);
 
 	BUG_ON(!page);
@@ -2907,14 +3036,21 @@ static void free_kmem_cache_nodes(struct kmem_cache *s)
 	}
 }
 
+// ARM10C 20140426
+// s: &boot_kmem_cache_node
 static int init_kmem_cache_nodes(struct kmem_cache *s)
 {
 	int node;
 
+	// N_NORMAL_MEMORY: 2
 	for_each_node_state(node, N_NORMAL_MEMORY) {
+	// for ( (node) = 0; (node) == 0; (node) = 1)
+
 		struct kmem_cache_node *n;
 
+		// slab_state: DOWN: 1
 		if (slab_state == DOWN) {
+			// node: 0
 			early_kmem_cache_node_alloc(node);
 			continue;
 		}
@@ -2932,23 +3068,37 @@ static int init_kmem_cache_nodes(struct kmem_cache *s)
 	return 1;
 }
 
+// ARM10C 20140419
+// s: &boot_kmem_cache_node, 3
 static void set_min_partial(struct kmem_cache *s, unsigned long min)
 {
+	// min: 3, MIN_PARTIAL: 5
 	if (min < MIN_PARTIAL)
 		min = MIN_PARTIAL;
+		// min : 5
 	else if (min > MAX_PARTIAL)
 		min = MAX_PARTIAL;
+
+	// s->min_partial: boot_kmem_cache_node.min_partial: 0, min: 5
 	s->min_partial = min;
+	// s->min_partial: boot_kmem_cache_node.min_partial: 5
 }
 
 /*
  * calculate_sizes() determines the order and the distribution of data within
  * a slab object.
  */
+// ARM10C 20140419
+// s: &boot_kmem_cache_node, -1
 static int calculate_sizes(struct kmem_cache *s, int forced_order)
 {
+	// s->flags: boot_kmem_cache_node.flags: SLAB_HWCACHE_ALIGN
 	unsigned long flags = s->flags;
+	// flags: SLAB_HWCACHE_ALIGN: 0x00002000UL
+
+	// s->object_size: boot_kmem_cache_node.object_size: 44
 	unsigned long size = s->object_size;
+	// size: 44
 	int order;
 
 	/*
@@ -2956,19 +3106,27 @@ static int calculate_sizes(struct kmem_cache *s, int forced_order)
 	 * place the free pointer at word boundaries and this determines
 	 * the possible location of the free pointer.
 	 */
+	// size: 44, sizeof(void *): 4
 	size = ALIGN(size, sizeof(void *));
+	// size: 44
 
-#ifdef CONFIG_SLUB_DEBUG
+#ifdef CONFIG_SLUB_DEBUG // CONFIG_SLUB_DEBUG=y
 	/*
 	 * Determine if we can poison the object itself. If the user of
 	 * the slab may touch the object after free or before allocation
 	 * then we should never poison the object itself.
 	 */
+
+	// flags: SLAB_HWCACHE_ALIGN: 0x00002000UL, SLAB_POISON: 0x00000800UL
+	// SLAB_DESTROY_BY_RCU: 0x00080000UL
 	if ((flags & SLAB_POISON) && !(flags & SLAB_DESTROY_BY_RCU) &&
 			!s->ctor)
 		s->flags |= __OBJECT_POISON;
 	else
+		// s->flags: boot_kmem_cache_node.flags: SLAB_HWCACHE_ALIGN: 0x00002000UL
+		// __OBJECT_POISON : 0x80000000UL
 		s->flags &= ~__OBJECT_POISON;
+		// s->flags: boot_kmem_cache_node.flags: SLAB_HWCACHE_ALIGN: 0x00002000UL
 
 
 	/*
@@ -2976,6 +3134,8 @@ static int calculate_sizes(struct kmem_cache *s, int forced_order)
 	 * end of the object and the free pointer. If not then add an
 	 * additional word to have some bytes to store Redzone information.
 	 */
+	// flags: SLAB_HWCACHE_ALIGN: 0x00002000UL, SLAB_RED_ZONE: 0x00000400UL, size: 44,
+	// s->object_size: boot_kmem_cache_node.object_size: 44
 	if ((flags & SLAB_RED_ZONE) && size == s->object_size)
 		size += sizeof(void *);
 #endif
@@ -2984,8 +3144,12 @@ static int calculate_sizes(struct kmem_cache *s, int forced_order)
 	 * With that we have determined the number of bytes in actual use
 	 * by the object. This is the potential offset to the free pointer.
 	 */
+	// s->inuse: boot_kmem_cache_node.inuse: 0, size: 44
 	s->inuse = size;
+	// s->inuse: boot_kmem_cache_node.inuse: 44
 
+	// flags: SLAB_HWCACHE_ALIGN: 0x00002000UL, SLAB_DESTROY_BY_RCU: 0x00080000UL,
+	// SLAB_POISON: 0x00000800UL, s->ctor: boot_kmem_cache_node.ctor: NULL
 	if (((flags & (SLAB_DESTROY_BY_RCU | SLAB_POISON)) ||
 		s->ctor)) {
 		/*
@@ -3000,7 +3164,8 @@ static int calculate_sizes(struct kmem_cache *s, int forced_order)
 		size += sizeof(void *);
 	}
 
-#ifdef CONFIG_SLUB_DEBUG
+#ifdef CONFIG_SLUB_DEBUG // CONFIG_SLUB_DEBUG=y
+	// flags: SLAB_HWCACHE_ALIGN: 0x00002000UL, SLAB_STORE_USER: 0x00010000UL
 	if (flags & SLAB_STORE_USER)
 		/*
 		 * Need to store information about allocs and frees after
@@ -3008,6 +3173,7 @@ static int calculate_sizes(struct kmem_cache *s, int forced_order)
 		 */
 		size += 2 * sizeof(struct track);
 
+	// flags: SLAB_HWCACHE_ALIGN: 0x00002000UL, SLAB_RED_ZONE: 0x00000400UL
 	if (flags & SLAB_RED_ZONE)
 		/*
 		 * Add some empty padding so that we can catch
@@ -3024,47 +3190,88 @@ static int calculate_sizes(struct kmem_cache *s, int forced_order)
 	 * offset 0. In order to align the objects we have to simply size
 	 * each object to conform to the alignment.
 	 */
+	// size: 44, s->align: boot_kmem_cache_node.align: 64
 	size = ALIGN(size, s->align);
+	// size: 64
+
+	// s->size: boot_kmem_cache_node.size: 44, size: 64
 	s->size = size;
+	// s->size: boot_kmem_cache_node.size: 64
+	
+	// forced_order: -1
 	if (forced_order >= 0)
 		order = forced_order;
 	else
+		// size: 64, s->reserved: boot_kmem_cache_node.reserved: 0
 		order = calculate_order(size, s->reserved);
+		// order: 0
 
 	if (order < 0)
 		return 0;
 
+	// s->allocflags: boot_kmem_cache_node.allocflags: 0
 	s->allocflags = 0;
+	// s->allocflags: boot_kmem_cache_node.allocflags: 0
+
+	// order: 0
 	if (order)
 		s->allocflags |= __GFP_COMP;
 
+	// s->flags: boot_kmem_cache_node.flags: SLAB_HWCACHE_ALIGN: 0x00002000UL
+	// SLAB_CACHE_DMA: 0x00004000UL
 	if (s->flags & SLAB_CACHE_DMA)
 		s->allocflags |= GFP_DMA;
 
+	// s->flags: boot_kmem_cache_node.flags: SLAB_HWCACHE_ALIGN: 0x00002000UL
+	// SLAB_RECLAIM_ACCOUNT: 0x00020000UL
 	if (s->flags & SLAB_RECLAIM_ACCOUNT)
 		s->allocflags |= __GFP_RECLAIMABLE;
 
 	/*
 	 * Determine the number of objects per slab
 	 */
+	// order: 0, size: 64, s->reserved: boot_kmem_cache_node.reserved: 0
 	s->oo = oo_make(order, size, s->reserved);
+	// s->oo: boot_kmem_cache_node.oo.x: 64
+	
+	// size: 64, get_order(64): 0, s->reserved: boot_kmem_cache_node.reserved: 0
 	s->min = oo_make(get_order(size), size, s->reserved);
+	// s->min: boot_kmem_cache_node.min.x: 64
+	
+	// s->oo: boot_kmem_cache_node.oo, s->max: boot_kmem_cache_node.max
+	// oo_objects(boot_kmem_cache_node.oo): 64, oo_objects(boot_kmem_cache_node.max): 0
 	if (oo_objects(s->oo) > oo_objects(s->max))
+		// s->oo: boot_kmem_cache_node.oo.x: 64
 		s->max = s->oo;
+		// s->max: boot_kmem_cache_node.max.x: 64
 
+	// s->oo: boot_kmem_cache_node.oo, oo_objects(boot_kmem_cache_node.oo): 64
 	return !!oo_objects(s->oo);
+	// return 1
 }
 
+// ARM10C 20140419
+// s: &boot_kmem_cache_node, flags: SLAB_HWCACHE_ALIGN: 0x00002000UL
 static int kmem_cache_open(struct kmem_cache *s, unsigned long flags)
 {
+	// s->size: boot_kmem_cache_node.size: 44, flags: SLAB_HWCACHE_ALIGN: 0x00002000UL,
+	// s->name: boot_kmem_cache_node.name: "kmem_cache_node, s->ctor: boot_kmem_cache_node.ctor: NULL
 	s->flags = kmem_cache_flags(s->size, flags, s->name, s->ctor);
-	s->reserved = 0;
+	// s->flags: boot_kmem_cache_node.flags: SLAB_HWCACHE_ALIGN: 0x00002000UL
 
+	// s->reserved: boot_kmem_cache_node.reserved: 0
+	s->reserved = 0;
+	// s->reserved: boot_kmem_cache_node.reserved: 0
+
+	// need_reserve_slab_rcu: 0 , s->flags: boot_kmem_cache_node.flags: SLAB_HWCACHE_ALIGN
 	if (need_reserve_slab_rcu && (s->flags & SLAB_DESTROY_BY_RCU))
 		s->reserved = sizeof(struct rcu_head);
 
+	// s: &boot_kmem_cache_node, -1, calculate_sizes(&boot_kmem_cache_node, -1): 1
 	if (!calculate_sizes(s, -1))
 		goto error;
+
+	// disable_higher_order_debug: 0
 	if (disable_higher_order_debug) {
 		/*
 		 * Disable debugging flags that store metadata if the min slab
@@ -3078,6 +3285,7 @@ static int kmem_cache_open(struct kmem_cache *s, unsigned long flags)
 		}
 	}
 
+// CONFIG_HAVE_CMPXCHG_DOUBLE=n, CONFIG_HAVE_ALIGNED_STRUCT_PAGE=n
 #if defined(CONFIG_HAVE_CMPXCHG_DOUBLE) && \
     defined(CONFIG_HAVE_ALIGNED_STRUCT_PAGE)
 	if (system_has_cmpxchg_double() && (s->flags & SLAB_DEBUG_FLAGS) == 0)
@@ -3089,7 +3297,10 @@ static int kmem_cache_open(struct kmem_cache *s, unsigned long flags)
 	 * The larger the object size is, the more pages we want on the partial
 	 * list to avoid pounding the page allocator excessively.
 	 */
+	// s->size: boot_kmem_cache_node.size: 64, ilog2(64): 6
+	// s: &boot_kmem_cache_node, 3
 	set_min_partial(s, ilog2(s->size) / 2);
+	// boot_kmem_cache_node.min_partial: 5
 
 	/*
 	 * cpu_partial determined the maximum number of objects kept in the
@@ -3108,6 +3319,9 @@ static int kmem_cache_open(struct kmem_cache *s, unsigned long flags)
 	 *    per node list when we run out of per cpu objects. We only fetch
 	 *    50% to keep some capacity around for frees.
 	 */
+
+	// s: &boot_kmem_cache_node, kmem_cache_has_cpu_partial(&boot_kmem_cache_node): 1
+	// s->size: boot_kmem_cache_node.size: 64, PAGE_SIZE: 0x1000
 	if (!kmem_cache_has_cpu_partial(s))
 		s->cpu_partial = 0;
 	else if (s->size >= PAGE_SIZE)
@@ -3117,11 +3331,17 @@ static int kmem_cache_open(struct kmem_cache *s, unsigned long flags)
 	else if (s->size >= 256)
 		s->cpu_partial = 13;
 	else
+		// s->cpu_partial: boot_kmem_cache_node.cpu_partial: 0
 		s->cpu_partial = 30;
+		// boot_kmem_cache_node.cpu_partial: 30
 
-#ifdef CONFIG_NUMA
+// 2014/04/19 종료
+// 2014/04/26 시작
+
+#ifdef CONFIG_NUMA // CONFIG_NUMA=n
 	s->remote_node_defrag_ratio = 1000;
 #endif
+	// s: &boot_kmem_cache_node
 	if (!init_kmem_cache_nodes(s))
 		goto error;
 
@@ -3599,17 +3819,26 @@ static struct kmem_cache * __init bootstrap(struct kmem_cache *static_cache)
 	return s;
 }
 
+// ARM10C 20140419
 void __init kmem_cache_init(void)
 {
 	static __initdata struct kmem_cache boot_kmem_cache,
 		boot_kmem_cache_node;
 
+	// debug_guardpage_minorder(): 0
 	if (debug_guardpage_minorder())
 		slub_max_order = 0;
 
+	// kmem_cache_node: NULL
 	kmem_cache_node = &boot_kmem_cache_node;
-	kmem_cache = &boot_kmem_cache;
+	// kmem_cache_node: &boot_kmem_cache_node
 
+	// kmem_cache: NULL
+	kmem_cache = &boot_kmem_cache;
+	// kmem_cache: &boot_kmem_cache
+
+	// &boot_kmem_cache_node, "kmem_cache_node", sizeof(struct kmem_cache_node): 44 byte,
+	// SLAB_HWCACHE_ALIGN: 0x00002000UL
 	create_boot_cache(kmem_cache_node, "kmem_cache_node",
 		sizeof(struct kmem_cache_node), SLAB_HWCACHE_ALIGN);
 
@@ -3740,10 +3969,13 @@ __kmem_cache_alias(struct mem_cgroup *memcg, const char *name, size_t size,
 	return s;
 }
 
+// ARM10C 20140419
+// s: &boot_kmem_cache_node, flags: SLAB_HWCACHE_ALIGN: 0x00002000UL
 int __kmem_cache_create(struct kmem_cache *s, unsigned long flags)
 {
 	int err;
 
+	// s: &boot_kmem_cache_node, flags: SLAB_HWCACHE_ALIGN: 0x00002000UL
 	err = kmem_cache_open(s, flags);
 	if (err)
 		return err;

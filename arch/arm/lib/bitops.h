@@ -26,19 +26,33 @@ UNWIND(	.fnend		)
 ENDPROC(\name		)
 	.endm
 
+// ARM10C 20131207
+// r0: idx, r1: bdata->node_bootmem_map
+// example idx: 0x1f807 (r0)
+// testop	_test_and_clear_bit, bicne, strne
+// testop	_test_and_set_bit, orreq, streq
 	.macro	testop, name, instr, store
 ENTRY(	\name		)
 UNWIND(	.fnstart	)
+	// ip: r12, 2bit align 확인
 	ands	ip, r1, #3
+	// data exception 처리로 보임
 	strneb	r1, [ip]		@ assert word-aligned
 	mov	r2, #1
+	// r3 = 0x1f807 & 0x1F: 0x07
 	and	r3, r0, #31		@ Get bit offset
+	// r0 = 0x1f807 >> 5: 0xFC0
 	mov	r0, r0, lsr #5
+	// r1 = r1 + 0xFC0 * 4
 	add	r1, r1, r0, lsl #2	@ Get word offset
+	// r3 =  0x1 << 0x7: 0x80
 	mov	r3, r2, lsl r3		@ create mask
 	smp_dmb
 1:	ldrex	r2, [r1]
+	// r0 = r2 &  0x80
 	ands	r0, r2, r3		@ save old value of bit
+	// \instr: bicne
+	// \instr: orreq
 	\instr	r2, r2, r3		@ toggle bit
 	strex	ip, r2, [r1]
 	cmp	ip, #0

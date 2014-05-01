@@ -15,6 +15,7 @@
  * Resources are tree-like, allowing
  * nesting etc..
  */
+// ARM10C 20140125
 struct resource {
 	resource_size_t start;
 	resource_size_t end;

@@ -25,6 +25,7 @@
 #include "proc-v7-2level.S"
 #endif
 
+// ARM10C 20130928
 ENTRY(cpu_v7_proc_init)
 	mov	pc, lr
 ENDPROC(cpu_v7_proc_init)
@@ -196,6 +197,7 @@ __v7_ca15mp_setup:
 	mov	r10, #0
 1:
 #ifdef CONFIG_SMP
+	// T.R.M: 4.3.28: Auxiliary Control Register
 	ALT_SMP(mrc	p15, 0, r0, c1, c0, 1)
 	ALT_UP(mov	r0, #(1 << 6))		@ fake it for UP
 	tst	r0, #(1 << 6)			@ SMP/nAMP mode enabled?
@@ -271,13 +273,16 @@ __v7_setup:
 	and	r10, r0, #0xff000000		@ ARM?
 	teq	r10, #0x41000000
 	bne	3f
+	// variant: major, revision: minor
 	and	r5, r0, #0x00f00000		@ variant
 	and	r6, r0, #0x0000000f		@ revision
 	orr	r6, r6, r5, lsr #20-4		@ combine variant and revision
 	ubfx	r0, r0, #4, #12			@ primary part number
 
 	/* Cortex-A8 Errata */
+	// T.R.M: 4.3.1 Main ID Register
 	ldr	r10, =0x00000c08		@ Cortex-A8 primary part number
+	// r0: 0x00000c0f : Cortex-A15
 	teq	r0, r10
 	bne	2f
 #if defined(CONFIG_ARM_ERRATA_430973) && !defined(CONFIG_ARCH_MULTIPLATFORM)
@@ -352,6 +357,12 @@ __v7_setup:
 4:	mov	r10, #0
 	mcr	p15, 0, r10, c7, c5, 0		@ I+BTB cache invalidate
 #ifdef CONFIG_MMU
+	//A.R.M: B4.1.127, B3.8.3, B4.1.110
+	//FIXME: 내용이 다소 복잡하므로 추후 업데이트 요망
+	// 
+	//.equ	PRRR,	0xff0a81a8
+	//.equ	NMRR,	0x40e040e0
+	// 
 	mcr	p15, 0, r10, c8, c7, 0		@ invalidate I + D TLBs
 	v7_ttb_setup r10, r4, r8, r5		@ TTBCR, TTBRx setup
 	ldr	r5, =PRRR			@ PRRR
@@ -361,10 +372,15 @@ __v7_setup:
 #endif
 	dsb					@ Complete invalidations
 #ifndef CONFIG_ARM_THUMBEE
+	//CONFIG_ARM_THUMBEE 옵션이 꺼져있을때 실행되는 부분으로
+	//ThumbEE관련 옵션을 끄고 간다고 이해하고 넘어감
+	
+	// ThumbEE를 지원하는지 확인하고
 	mrc	p15, 0, r0, c0, c1, 0		@ read ID_PFR0 for ThumbEE
 	and	r0, r0, #(0xf << 12)		@ ThumbEE enabled field
 	teq	r0, #(1 << 12)			@ check if ThumbEE is present
 	bne	1f
+	// ThumbEE를 지원하면 관련 레지스터 셋팅
 	mov	r5, #0
 	mcr	p14, 6, r5, c1, c0, 0		@ Initialize TEEHBR to 0
 	mrc	p14, 6, r0, c0, c0, 0		@ load TEECR
@@ -372,10 +388,16 @@ __v7_setup:
 	mcr	p14, 6, r0, c0, c0, 0		@ stop userspace TEEHBR access
 1:
 #endif
+	// v7_crval: 
+	//	.word 0x2120c302  (r5) (clear)
+	//	.word 0x10c03c7d  (r6) (mmuset)
 	adr	r5, v7_crval
 	ldmia	r5, {r5, r6}
  ARM_BE8(orr	r6, r6, #1 << 25)		@ big-endian page tables
 #ifdef CONFIG_SWP_EMULATE
+	// SWP 명령은 v7에서 없어짐. 
+	// SWP는 lock(세마포어)을 구현하기 위하여 사용하였으나 현재는 ldrex, strex를 사용함.
+	// x86에서도 swp가 있었는데 cas로 대체됨.
 	orr     r5, r5, #(1 << 10)              @ set SW bit in "clear"
 	bic     r6, r6, #(1 << 10)              @ clear it in "mmuset"
 #endif
@@ -423,6 +445,7 @@ __v7_setup_stack:
 		HWCAP_EDSP | HWCAP_TLS | \hwcaps
 	.long	cpu_v7_name
 	.long	\proc_fns
+	// ARM10C 20131130
 	.long	v7wbi_tlb_fns
 	.long	v6_user_fns
 	.long	v7_cache_fns

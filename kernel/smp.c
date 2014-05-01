@@ -517,13 +517,19 @@ static int __init maxcpus(char *str)
 early_param("maxcpus", maxcpus);
 
 /* Setup number of possible processor ids */
+// ARM10C 20140215
+// NR_CPUS: 4
+// nr_cpu_ids: 4
 int nr_cpu_ids __read_mostly = NR_CPUS;
 EXPORT_SYMBOL(nr_cpu_ids);
 
 /* An arch may set nr_cpu_ids earlier if needed, so this would be redundant */
+// ARM10C 20140222
 void __init setup_nr_cpu_ids(void)
 {
+	// cpumask_bits(cpu_possible_mask): cpu_possible_bits, NR_CPUS: 4
 	nr_cpu_ids = find_last_bit(cpumask_bits(cpu_possible_mask),NR_CPUS) + 1;
+	// nr_cpu_ids: 4 (3 + 1)
 }
 
 void __weak smp_announce(void)

@@ -29,7 +29,8 @@
 #define LIST_BL_BUG_ON(x)
 #endif
 
-
+// ARM10C 2014/03/22
+// 4: sizeof(hlist_bl_head)
 struct hlist_bl_head {
 	struct hlist_bl_node *first;
 };

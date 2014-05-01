@@ -96,8 +96,11 @@ static inline void __list_add(struct list_head *_new,
  * Insert a new entry before the specified head.
  * This is useful for implementing queues.
  */
+// ARM10C 20140215
+// &ap->link, &aliases_lookup
 static inline void list_add_tail(struct list_head *_new, struct list_head *head)
 {
+        // _nem: &ap->link, head->prev: aliases_lookup->prev, head: aliases_lookup
 	__list_add(_new, head->prev, head);
 }
 

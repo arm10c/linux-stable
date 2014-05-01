@@ -51,8 +51,11 @@
  *   inode_hash_lock
  */
 
+// ARM10C 20140322
 static unsigned int i_hash_mask __read_mostly;
+// ARM10C 20140322
 static unsigned int i_hash_shift __read_mostly;
+// ARM10C 20140322
 static struct hlist_head *inode_hashtable __read_mostly;
 static __cacheline_aligned_in_smp DEFINE_SPINLOCK(inode_hash_lock);
 
@@ -1740,6 +1743,7 @@ __setup("ihash_entries=", set_ihash_entries);
 /*
  * Initialize the waitqueues and inode hash table.
  */
+// ARM10C 20140322
 void __init inode_init_early(void)
 {
 	unsigned int loop;
@@ -1747,6 +1751,7 @@ void __init inode_init_early(void)
 	/* If hashes are distributed across NUMA nodes, defer
 	 * hash allocation until vmalloc space is available.
 	 */
+	// hashdist: 0
 	if (hashdist)
 		return;
 
@@ -1760,9 +1765,13 @@ void __init inode_init_early(void)
 					&i_hash_mask,
 					0,
 					0);
+	// Inode-cache용 inode hash를 위한 메모리 공간을 256kB만큼 할당 받고,
+	// i_hash_shift: 16, i_hash_mask: 0xFFFF로 변경됨
 
+	// i_hash_shift : 16
 	for (loop = 0; loop < (1U << i_hash_shift); loop++)
 		INIT_HLIST_HEAD(&inode_hashtable[loop]);
+	// 65536개 만큼 hash를 만들었다. 총 hash크기는 256kB이다.
 }
 
 void __init inode_init(void)

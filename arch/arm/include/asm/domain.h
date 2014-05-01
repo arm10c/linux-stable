@@ -33,8 +33,11 @@
  * CPUs based on ARMv6+ or the Intel XSC3 core.
  */
 #ifndef CONFIG_IO_36
+// ARM10C 20131102
+// ARM10C 20131130
 #define DOMAIN_KERNEL	0
 #define DOMAIN_TABLE	0
+// ARM10C 20131116
 #define DOMAIN_USER	1
 #define DOMAIN_IO	2
 #else
@@ -48,6 +51,7 @@
  * Domain types
  */
 #define DOMAIN_NOACCESS	0
+// ARM10C 20131116
 #define DOMAIN_CLIENT	1
 #ifdef CONFIG_CPU_USE_DOMAINS
 #define DOMAIN_MANAGER	3
@@ -59,7 +63,7 @@
 
 #ifndef __ASSEMBLY__
 
-#ifdef CONFIG_CPU_USE_DOMAINS
+#ifdef CONFIG_CPU_USE_DOMAINS // CONFIG_CPU_USE_DOMAINS=n
 static inline void set_domain(unsigned val)
 {
 	asm volatile(
@@ -79,6 +83,7 @@ static inline void set_domain(unsigned val)
 
 #else
 static inline void set_domain(unsigned val) { }
+// ARM10C 20131116
 static inline void modify_domain(unsigned dom, unsigned type)	{ }
 #endif
 

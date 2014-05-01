@@ -21,6 +21,7 @@
 #endif
 
 
+// ARM10C 20131005
 #define BUG() _BUG(__FILE__, __LINE__, BUG_INSTR_VALUE)
 #define _BUG(file, line, value) __BUG(file, line, value)
 
@@ -33,6 +34,7 @@
  * avoid multiple copies of the string appearing in the kernel image.
  */
 
+// ARM10C 20131005
 #define __BUG(__file, __line, __value)				\
 do {								\
 	asm volatile("1:\t" BUG_INSTR(__value) "\n"  \

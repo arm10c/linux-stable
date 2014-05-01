@@ -380,18 +380,22 @@ static inline void __nodes_fold(nodemask_t *dstp, const nodemask_t *origp,
 /*
  * Bitmasks that are kept for all the nodes.
  */
+// ARM10C 20140308
+// ARM10C 20140426
 enum node_states {
 	N_POSSIBLE,		/* The node could become online at some point */
 	N_ONLINE,		/* The node is online */
 	N_NORMAL_MEMORY,	/* The node has regular memory */
-#ifdef CONFIG_HIGHMEM
+#ifdef CONFIG_HIGHMEM // CONFIG_HIGHMEM=y
+	// N_HIGH_MEMORY: 3
 	N_HIGH_MEMORY,		/* The node has regular or high memory */
 #else
 	N_HIGH_MEMORY = N_NORMAL_MEMORY,
 #endif
-#ifdef CONFIG_MOVABLE_NODE
+#ifdef CONFIG_MOVABLE_NODE // CONFIG_MOVABLE_NODE=n
 	N_MEMORY,		/* The node has memory(regular, high, movable) */
 #else
+	// N_MEMORY: 3
 	N_MEMORY = N_HIGH_MEMORY,
 #endif
 	N_CPU,		/* The node has one or more cpus */
@@ -405,6 +409,8 @@ enum node_states {
 
 extern nodemask_t node_states[NR_NODE_STATES];
 
+// ARM10C 20140308
+// MAX_NUMNODES: 1
 #if MAX_NUMNODES > 1
 static inline int node_state(int node, enum node_states state)
 {
@@ -449,11 +455,16 @@ static inline void node_set_offline(int nid)
 
 #else
 
+// ARM10C 20140426
+// nid: 0, N_ONLINE: 1
 static inline int node_state(int node, enum node_states state)
 {
+	// node: 0
 	return node == 0;
+	// return 1
 }
 
+// ARM10C 20131207
 static inline void node_set_state(int node, enum node_states state)
 {
 }
@@ -467,14 +478,22 @@ static inline int num_node_state(enum node_states state)
 	return 1;
 }
 
+// ARM10C 20140308
+// ARM10C 20140419
+// ARM10C 20140426
 #define for_each_node_state(node, __state) \
 	for ( (node) = 0; (node) == 0; (node) = 1)
 
+// ARM10C 20140329
 #define first_online_node	0
+// ARM10C 20140329
+// MAX_NUMNODES: 1
 #define next_online_node(nid)	(MAX_NUMNODES)
 #define nr_node_ids		1
+// ARM10C 20140308
 #define nr_online_nodes		1
 
+// ARM10C 20131207
 #define node_set_online(node)	   node_set_state((node), N_ONLINE)
 #define node_set_offline(node)	   node_clear_state((node), N_ONLINE)
 
@@ -494,10 +513,17 @@ static inline int node_random(const nodemask_t *mask)
 
 #define num_online_nodes()	num_node_state(N_ONLINE)
 #define num_possible_nodes()	num_node_state(N_POSSIBLE)
+// ARM10C 20140426
+// nid: 0, N_ONLINE: 1
 #define node_online(node)	node_state((node), N_ONLINE)
 #define node_possible(node)	node_state((node), N_POSSIBLE)
 
 #define for_each_node(node)	   for_each_node_state(node, N_POSSIBLE)
+// ARM10C 20140308
+// ARM10C 20140419
+// N_ONLINE: 1
+// #define for_each_node_state(node, __state)
+// 	for ((node) = 0; (node) == 0; (node) = 1)
 #define for_each_online_node(node) for_each_node_state(node, N_ONLINE)
 
 /*

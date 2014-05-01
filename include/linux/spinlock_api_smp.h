@@ -19,6 +19,7 @@ int in_lock_functions(unsigned long addr);
 
 #define assert_raw_spin_locked(x)	BUG_ON(!raw_spin_is_locked(x))
 
+// ARM10C 20140405
 void __lockfunc _raw_spin_lock(raw_spinlock_t *lock)		__acquires(lock);
 void __lockfunc _raw_spin_lock_nested(raw_spinlock_t *lock, int subclass)
 								__acquires(lock);
@@ -36,6 +37,7 @@ _raw_spin_lock_irqsave_nested(raw_spinlock_t *lock, int subclass)
 								__acquires(lock);
 int __lockfunc _raw_spin_trylock(raw_spinlock_t *lock);
 int __lockfunc _raw_spin_trylock_bh(raw_spinlock_t *lock);
+// ARM10C 20140412
 void __lockfunc _raw_spin_unlock(raw_spinlock_t *lock)		__releases(lock);
 void __lockfunc _raw_spin_unlock_bh(raw_spinlock_t *lock)	__releases(lock);
 void __lockfunc _raw_spin_unlock_irq(raw_spinlock_t *lock)	__releases(lock);
@@ -43,7 +45,7 @@ void __lockfunc
 _raw_spin_unlock_irqrestore(raw_spinlock_t *lock, unsigned long flags)
 								__releases(lock);
 
-#ifdef CONFIG_INLINE_SPIN_LOCK
+#ifdef CONFIG_INLINE_SPIN_LOCK	// CONFIG_INLINE_SPIN_LOCK=n
 #define _raw_spin_lock(lock) __raw_spin_lock(lock)
 #endif
 
@@ -59,7 +61,7 @@ _raw_spin_unlock_irqrestore(raw_spinlock_t *lock, unsigned long flags)
 #define _raw_spin_lock_irqsave(lock) __raw_spin_lock_irqsave(lock)
 #endif
 
-#ifdef CONFIG_INLINE_SPIN_TRYLOCK
+#ifdef CONFIG_INLINE_SPIN_TRYLOCK   // ARM10C N 
 #define _raw_spin_trylock(lock) __raw_spin_trylock(lock)
 #endif
 
@@ -83,6 +85,7 @@ _raw_spin_unlock_irqrestore(raw_spinlock_t *lock, unsigned long flags)
 #define _raw_spin_unlock_irqrestore(lock, flags) __raw_spin_unlock_irqrestore(lock, flags)
 #endif
 
+// ARM10C 20130831
 static inline int __raw_spin_trylock(raw_spinlock_t *lock)
 {
 	preempt_disable();
@@ -137,15 +140,18 @@ static inline void __raw_spin_lock_bh(raw_spinlock_t *lock)
 	LOCK_CONTENDED(lock, do_raw_spin_trylock, do_raw_spin_lock);
 }
 
+// ARM10C 20140405
 static inline void __raw_spin_lock(raw_spinlock_t *lock)
 {
 	preempt_disable();
-	spin_acquire(&lock->dep_map, 0, 0, _RET_IP_);
+	spin_acquire(&lock->dep_map, 0, 0, _RET_IP_); // null function
 	LOCK_CONTENDED(lock, do_raw_spin_trylock, do_raw_spin_lock);
+	// => do_raw_spin_lock(lock)
 }
 
 #endif /* !CONFIG_GENERIC_LOCKBREAK || CONFIG_DEBUG_LOCK_ALLOC */
 
+// ARM10C 20140412
 static inline void __raw_spin_unlock(raw_spinlock_t *lock)
 {
 	spin_release(&lock->dep_map, 1, _RET_IP_);
@@ -153,6 +159,8 @@ static inline void __raw_spin_unlock(raw_spinlock_t *lock)
 	preempt_enable();
 }
 
+// ARM10C 20130907 
+// spin_unlock 하고, cpsr_c(제어 필드 마스크 바이트) 원복
 static inline void __raw_spin_unlock_irqrestore(raw_spinlock_t *lock,
 					    unsigned long flags)
 {

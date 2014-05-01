@@ -23,6 +23,11 @@
 #define swp_is_buggy
 #endif
 
+// ARM10C 20140315
+// ((__typeof__(*&((&cpu_add_remove_lock->count)->counter))__xchg((unsigned long)(-1),
+// (&lock->count))->counter),sizeof(*&((&cpu_add_remove_lock->count)->counter)))
+//
+// x: -1, ptr: (&cpu_add_remove_lock->count)->counter, size: 4
 static inline unsigned long __xchg(unsigned long x, volatile void *ptr, int size)
 {
 	extern void __bad_xchg(volatile void *, int);
@@ -30,14 +35,15 @@ static inline unsigned long __xchg(unsigned long x, volatile void *ptr, int size
 #ifdef swp_is_buggy
 	unsigned long flags;
 #endif
-#if __LINUX_ARM_ARCH__ >= 6
+#if __LINUX_ARM_ARCH__ >= 6 // __LINUX_ARM_ARCH__: 7
 	unsigned int tmp;
 #endif
 
 	smp_mb();
 
+	// size: 4
 	switch (size) {
-#if __LINUX_ARM_ARCH__ >= 6
+#if __LINUX_ARM_ARCH__ >= 6 // __LINUX_ARM_ARCH__: 7
 	case 1:
 		asm volatile("@	__xchg1\n"
 		"1:	ldrexb	%0, [%3]\n"
@@ -49,6 +55,12 @@ static inline unsigned long __xchg(unsigned long x, volatile void *ptr, int size
 			: "memory", "cc");
 		break;
 	case 4:
+		// ptr: (&cpu_add_remove_lock->count)->counter: 1, x: -1
+		// asm volatile("@	__xchg4\n"
+		// "1:	ldrex	ret, [ptr]\n"
+		// "	strex	tmp, x, [ptr]\n"
+		// "	teq	tmp, ret\n"
+		// "	bne	1b"
 		asm volatile("@	__xchg4\n"
 		"1:	ldrex	%0, [%3]\n"
 		"	strex	%1, %2, [%3]\n"
@@ -57,6 +69,7 @@ static inline unsigned long __xchg(unsigned long x, volatile void *ptr, int size
 			: "=&r" (ret), "=&r" (tmp)
 			: "r" (x), "r" (ptr)
 			: "memory", "cc");
+		// ret: 1, (&cpu_add_remove_lock->count)->counter: -1
 		break;
 #elif defined(swp_is_buggy)
 #ifdef CONFIG_SMP
@@ -97,10 +110,16 @@ static inline unsigned long __xchg(unsigned long x, volatile void *ptr, int size
 	}
 	smp_mb();
 
+	// ret: 1
 	return ret;
+	// return 1
 }
 
-#define xchg(ptr,x) \
+// ARM10C 20140315
+// xchg(&((&(&cpu_add_remove_lock)->count)->counter), -1):
+// ((__typeof__(*(&((&(&cpu_add_remove_lock)->count)->counter))))__xchg((unsigned long)(-1),
+// (&((&(&cpu_add_remove_lock)->count)->counter)),sizeof(*(&((&(&cpu_add_remove_lock)->count)->counter)))))
+#define xchg(ptr,x)							\
 	((__typeof__(*(ptr)))__xchg((unsigned long)(x),(ptr),sizeof(*(ptr))))
 
 #include <asm-generic/cmpxchg-local.h>

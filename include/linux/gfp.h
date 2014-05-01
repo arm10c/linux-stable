@@ -10,27 +10,45 @@
 struct vm_area_struct;
 
 /* Plain integer GFP bitmasks. Do not use this directly. */
+// ARM10C 20140426
 #define ___GFP_DMA		0x01u
+// ARM10C 20140426
 #define ___GFP_HIGHMEM		0x02u
+// ARM10C 20140426
 #define ___GFP_DMA32		0x04u
+// ARM10C 20140426
 #define ___GFP_MOVABLE		0x08u
+// ARM10C 20140308
 #define ___GFP_WAIT		0x10u
+// ARM10C 20140426
 #define ___GFP_HIGH		0x20u
+// ARM10C 20140426
 #define ___GFP_IO		0x40u
+// ARM10C 20140426
 #define ___GFP_FS		0x80u
 #define ___GFP_COLD		0x100u
+// ARM10C 20140426
 #define ___GFP_NOWARN		0x200u
+// ARM10C 20140426
 #define ___GFP_REPEAT		0x400u
+// ARM10C 20140426
 #define ___GFP_NOFAIL		0x800u
+// ARM10C 20140426
 #define ___GFP_NORETRY		0x1000u
+// ARM10C 20140426
 #define ___GFP_MEMALLOC		0x2000u
 #define ___GFP_COMP		0x4000u
 #define ___GFP_ZERO		0x8000u
+// ARM10C 20140426
 #define ___GFP_NOMEMALLOC	0x10000u
+// ARM10C 20140426
 #define ___GFP_HARDWALL		0x20000u
+// ARM10C 20140426
 #define ___GFP_THISNODE		0x40000u
+// ARM10C 20140426
 #define ___GFP_RECLAIMABLE	0x80000u
 #define ___GFP_KMEMCG		0x100000u
+// ARM10C 20140426
 #define ___GFP_NOTRACK		0x200000u
 #define ___GFP_NO_KSWAPD	0x400000u
 #define ___GFP_OTHER_NODE	0x800000u
@@ -46,10 +64,27 @@ struct vm_area_struct;
  * without the underscores and use them consistently. The definitions here may
  * be used in bit comparisons.
  */
+// ARM10C 20140426
+// ___GFP_DMA: 0x01u
 #define __GFP_DMA	((__force gfp_t)___GFP_DMA)
+// ARM10C 20140426
+// ___GFP_HIGHMEM: 0x02u
+// __GFP_HIGHMEM: 0x02u
 #define __GFP_HIGHMEM	((__force gfp_t)___GFP_HIGHMEM)
+// ARM10C 20140426
+// ___GFP_DMA32: 0x04u
+// __GFP_DMA32: 0x04u
 #define __GFP_DMA32	((__force gfp_t)___GFP_DMA32)
+// ARM10C 20140426
+// ___GFP_MOVABLE: 0x08u
+// __GFP_MOVABLE: 0x08u
 #define __GFP_MOVABLE	((__force gfp_t)___GFP_MOVABLE)  /* Page is movable */
+// ARM10C 20140308
+// __GFP_DMA: 0x1
+// __GFP_HIGHMEM: 0x2
+// __GFP_DMA32: 0x4
+// __GFP_MOVABLE: 0x8
+// GFP_ZONEMASK: 0xF
 #define GFP_ZONEMASK	(__GFP_DMA|__GFP_HIGHMEM|__GFP_DMA32|__GFP_MOVABLE)
 /*
  * Action modifiers - doesn't change the zoning
@@ -66,26 +101,72 @@ struct vm_area_struct;
  * __GFP_MOVABLE: Flag that this page will be movable by the page migration
  * mechanism or reclaimed
  */
+// ARM10C 20140308
+// GFP 의 의미? Get Free Page
+// http://lwn.net/Articles/274971/
+// These are used to set parameters to allocating virtual memory
+// ARM10C 20140426
+// ___GFP_WAIT: 0x10u
+// __GFP_WAIT: 0x10u
 #define __GFP_WAIT	((__force gfp_t)___GFP_WAIT)	/* Can wait and reschedule? */
+// ARM10C 20140426
+// ___GFP_HIGH: 0x20u
+// __GFP_HIGH: 0x20u
 #define __GFP_HIGH	((__force gfp_t)___GFP_HIGH)	/* Should access emergency pools? */
+// ARM10C 20140426
+// ___GFP_IO: 0x40u
+// __GFP_IO: 0x40u
 #define __GFP_IO	((__force gfp_t)___GFP_IO)	/* Can start physical IO? */
+// ARM10C 20140426
+// ___GFP_FS: 0x80u
+// __GFP_FS: 0x80u
 #define __GFP_FS	((__force gfp_t)___GFP_FS)	/* Can call down to low-level FS? */
 #define __GFP_COLD	((__force gfp_t)___GFP_COLD)	/* Cache-cold page required */
+// ARM10C 20140426
+// ___GFP_NOWARN: 0x200u
+// __GFP_NOWARN: 0x200u
 #define __GFP_NOWARN	((__force gfp_t)___GFP_NOWARN)	/* Suppress page allocation failure warning */
+// ARM10C 20140426
+// ___GFP_REPEAT: 0x400u
+// __GFP_REPEAT: 0x400u
 #define __GFP_REPEAT	((__force gfp_t)___GFP_REPEAT)	/* See above */
+// ARM10C 20140426
+// ___GFP_NOFAIL: 0x800u
+// __GFP_NOFAIL: 0x800u
 #define __GFP_NOFAIL	((__force gfp_t)___GFP_NOFAIL)	/* See above */
+// ARM10C 20140426
+// ___GFP_NORETRY: 0x1000u
+// __GFP_NORETRY: 0x1000u
 #define __GFP_NORETRY	((__force gfp_t)___GFP_NORETRY) /* See above */
+// ARM10C 20140426
+// ___GFP_MEMALLOC: 0x2000u
+// __GFP_MEMALLOC: 0x2000u
 #define __GFP_MEMALLOC	((__force gfp_t)___GFP_MEMALLOC)/* Allow access to emergency reserves */
 #define __GFP_COMP	((__force gfp_t)___GFP_COMP)	/* Add compound page metadata */
 #define __GFP_ZERO	((__force gfp_t)___GFP_ZERO)	/* Return zeroed page on success */
+// ARM10C 20140426
+// ___GFP_NOMEMALLOC: 0x10000u
+// __GFP_NOMEMALLOC: 0x10000u
 #define __GFP_NOMEMALLOC ((__force gfp_t)___GFP_NOMEMALLOC) /* Don't use emergency reserves.
 							 * This takes precedence over the
 							 * __GFP_MEMALLOC flag if both are
 							 * set
 							 */
+// ARM10C 20140426
+// ___GFP_HARDWALL: 0x20000u
+// __GFP_HARDWALL: 0x20000u
 #define __GFP_HARDWALL   ((__force gfp_t)___GFP_HARDWALL) /* Enforce hardwall cpuset memory allocs */
+// ARM10C 20140426
+// ___GFP_THISNODE: 0x40000u
+// __GFP_THISNODE: 0x40000u
 #define __GFP_THISNODE	((__force gfp_t)___GFP_THISNODE)/* No fallback, no policies */
+// ARM10C 20140426
+// ___GFP_RECLAIMABLE: 0x80000u
+// __GFP_RECLAIMABLE: 0x80000u
 #define __GFP_RECLAIMABLE ((__force gfp_t)___GFP_RECLAIMABLE) /* Page is reclaimable */
+// ARM10C 20140426
+// ___GFP_NOTRACK: 0x200000u
+// __GFP_NOTRACK: 0x200000u
 #define __GFP_NOTRACK	((__force gfp_t)___GFP_NOTRACK)  /* Don't track with kmemcheck */
 
 #define __GFP_NO_KSWAPD	((__force gfp_t)___GFP_NO_KSWAPD)
@@ -99,21 +180,45 @@ struct vm_area_struct;
  */
 #define __GFP_NOTRACK_FALSE_POSITIVE (__GFP_NOTRACK)
 
+// ARM10C 20140426
 #define __GFP_BITS_SHIFT 25	/* Room for N __GFP_FOO bits */
+// ARM10C 20140426
+// __GFP_BITS_SHIFT: 25
+// __GFP_BITS_MASK: 0x1ffffff
 #define __GFP_BITS_MASK ((__force gfp_t)((1 << __GFP_BITS_SHIFT) - 1))
 
 /* This equals 0, but use constants in case they ever change */
+// ARM10C 20140426
+// GFP_ATOMIC: 0x20u
+// __GFP_HIGH: 0x20u
+// GFP_NOWAIT: 0
 #define GFP_NOWAIT	(GFP_ATOMIC & ~__GFP_HIGH)
 /* GFP_ATOMIC means both !wait (__GFP_WAIT not set) and use emergency pool */
+// ARM10C 20140426
+// __GFP_HIGH: 0x20u
+// GFP_ATOMIC: 0x20u
 #define GFP_ATOMIC	(__GFP_HIGH)
 #define GFP_NOIO	(__GFP_WAIT)
 #define GFP_NOFS	(__GFP_WAIT | __GFP_IO)
+// ARM10C 20140308
+// __GFP_WAIT: 0x10
+// __GFP_IO: 0x40
+// __GFP_FS: 0x80
+// GFP_KERNEL: 0xD0
 #define GFP_KERNEL	(__GFP_WAIT | __GFP_IO | __GFP_FS)
 #define GFP_TEMPORARY	(__GFP_WAIT | __GFP_IO | __GFP_FS | \
 			 __GFP_RECLAIMABLE)
 #define GFP_USER	(__GFP_WAIT | __GFP_IO | __GFP_FS | __GFP_HARDWALL)
 #define GFP_HIGHUSER	(__GFP_WAIT | __GFP_IO | __GFP_FS | __GFP_HARDWALL | \
 			 __GFP_HIGHMEM)
+// ARM10C 20140308
+// __GFP_WAIT: 0x10
+// __GFP_IO: 0x40
+// __GFP_FS: 0x80
+// __GFP_HARDWALL: 0x20000
+// __GFP_HIGHMEM: 0x02
+// __GFP_MOVABLE: 0x08
+// GFP_HIGHUSER_MOVABLE: 0x200DA
 #define GFP_HIGHUSER_MOVABLE	(__GFP_WAIT | __GFP_IO | __GFP_FS | \
 				 __GFP_HARDWALL | __GFP_HIGHMEM | \
 				 __GFP_MOVABLE)
@@ -129,20 +234,45 @@ struct vm_area_struct;
 #endif
 
 /* This mask makes up all the page movable related flags */
+// ARM10C 20140426
+// __GFP_RECLAIMABLE: 0x80000u, __GFP_MOVABLE: 0x08u
+// GFP_MOVABLE_MASK: 0x80008
 #define GFP_MOVABLE_MASK (__GFP_RECLAIMABLE|__GFP_MOVABLE)
 
 /* Control page allocator reclaim behavior */
+// ARM10C 20140426
+// __GFP_WAIT: 0x10
+// __GFP_HIGH: 0x20
+// __GFP_IO: 0x40
+// __GFP_FS: 0x80
+// __GFP_NOWARN: 0x200
+// __GFP_REPEAT: 0x400
+// __GFP_NOFAIL: 0x800
+// __GFP_NORETRY: 0x1000
+// __GFP_MEMALLOC: 0x2000
+// __GFP_NOMEMALLOC: 0x10000
+// GFP_RECLAIM_MASK: 0x13ef0
 #define GFP_RECLAIM_MASK (__GFP_WAIT|__GFP_HIGH|__GFP_IO|__GFP_FS|\
 			__GFP_NOWARN|__GFP_REPEAT|__GFP_NOFAIL|\
 			__GFP_NORETRY|__GFP_MEMALLOC|__GFP_NOMEMALLOC)
 
 /* Control slab gfp mask during early boot */
+// ARM10C 20140426
+// __GFP_BITS_MASK: 0x1ffffff, __GFP_WAIT: 0x10u, __GFP_IO: 0x40u, __GFP_FS: 0x80u
+// GFP_BOOT_MASK: 0x1ffff2f
 #define GFP_BOOT_MASK (__GFP_BITS_MASK & ~(__GFP_WAIT|__GFP_IO|__GFP_FS))
 
 /* Control allocation constraints */
+// ARM10C 20140426
+// __GFP_HARDWALL: 0x20000
+// __GFP_THISNODE: 0x40000
+// GFP_CONSTRAINT_MASK: 0x60000
 #define GFP_CONSTRAINT_MASK (__GFP_HARDWALL|__GFP_THISNODE)
 
 /* Do not use these with a slab allocator */
+// ARM10C 20140426
+// __GFP_DMA32: 0x04u, __GFP_HIGHMEM: 0x02u, __GFP_BITS_MASK: 0x1ffffff
+// GFP_SLAB_BUG_MASK: 0xfe000005
 #define GFP_SLAB_BUG_MASK (__GFP_DMA32|__GFP_HIGHMEM|~__GFP_BITS_MASK)
 
 /* Flag - indicates that the buffer will be suitable for DMA.  Ignored on some
@@ -154,33 +284,45 @@ struct vm_area_struct;
 #define GFP_DMA32	__GFP_DMA32
 
 /* Convert GFP flags to their corresponding migrate type */
+// ARM10C 20140426
+// gfp_mask: 0x201200
 static inline int allocflags_to_migratetype(gfp_t gfp_flags)
 {
+	// gfp_flags: 0x201200, GFP_MOVABLE_MASK: 0x80008
 	WARN_ON((gfp_flags & GFP_MOVABLE_MASK) == GFP_MOVABLE_MASK);
 
+	// page_group_by_mobility_disabled: 0
 	if (unlikely(page_group_by_mobility_disabled))
 		return MIGRATE_UNMOVABLE;
 
 	/* Group based on mobility */
+	// gfp_flags: 0x201200, __GFP_RECLAIMABLE: 0x80000u, __GFP_MOVABLE: 0x08u
 	return (((gfp_flags & __GFP_MOVABLE) != 0) << 1) |
 		((gfp_flags & __GFP_RECLAIMABLE) != 0);
+	// return 0
 }
 
-#ifdef CONFIG_HIGHMEM
+#ifdef CONFIG_HIGHMEM // CONFIG_HIGHMEM=y
+// ARM10C 20140308
+// OPT_ZONE_HIGHMEM: 1
 #define OPT_ZONE_HIGHMEM ZONE_HIGHMEM
 #else
 #define OPT_ZONE_HIGHMEM ZONE_NORMAL
 #endif
 
-#ifdef CONFIG_ZONE_DMA
+#ifdef CONFIG_ZONE_DMA // CONFIG_ZONE_DMA=n
 #define OPT_ZONE_DMA ZONE_DMA
 #else
+// ARM10C 20140308
+// OPT_ZONE_DMA: 0
 #define OPT_ZONE_DMA ZONE_NORMAL
 #endif
 
-#ifdef CONFIG_ZONE_DMA32
+#ifdef CONFIG_ZONE_DMA32 // CONFIG_ZONE_DMA32=n
 #define OPT_ZONE_DMA32 ZONE_DMA32
 #else
+// ARM10C 20140308
+// OPT_ZONE_DMA32: 0
 #define OPT_ZONE_DMA32 ZONE_NORMAL
 #endif
 
@@ -221,6 +363,27 @@ static inline int allocflags_to_migratetype(gfp_t gfp_flags)
 #error ZONES_SHIFT too large to create GFP_ZONE_TABLE integer
 #endif
 
+// ARM10C 20140308
+// ZONE_NORMAL: 0, ZONES_SHIFT: 2,
+// OPT_ZONE_DMA: 0, ___GFP_DMA: 0x01
+// OPT_ZONE_HIGHMEM: 1, ___GFP_HIGHMEM: 0x02
+// OPT_ZONE_DMA32: 0, ___GFP_DMA32: 0x04
+// ZONE_NORMAL: 0, ___GFP_MOVABLE: 0x08
+// OPT_ZONE_DMA: 0, ___GFP_MOVABLE: 0x08, ___GFP_DMA: 0x01
+// ZONE_MOVABLE: 2, ___GFP_MOVABLE: 0x08, ___GFP_HIGHMEM: 0x02
+// OPT_ZONE_DMA32: 0, ___GFP_MOVABLE: 0x08, ___GFP_DMA32: 0x04
+//
+// #define GFP_ZONE_TABLE (
+// 	(0 << 0 * 2)
+// 	| (0 << 0x02 * 2): 0x0
+// 	| (1 << 0x02 * 2): 0x8
+// 	| (0 << 0x04 * 2): 0x0
+// 	| (0 << 0x08 * 2): 0x0
+// 	| (0 << (0x08 | 0x01) * 2): 0x0
+// 	| (2 << (0x08 | 0x02) * 2): 0x1000
+// 	| (0 << (0x08 | 0x04) * 2): 0x0
+// )
+// GFP_ZONE_TABLE: 0x1008
 #define GFP_ZONE_TABLE ( \
 	(ZONE_NORMAL << 0 * ZONES_SHIFT)				      \
 	| (OPT_ZONE_DMA << ___GFP_DMA * ZONES_SHIFT)			      \
@@ -238,6 +401,24 @@ static inline int allocflags_to_migratetype(gfp_t gfp_flags)
  * entry starting with bit 0. Bit is set if the combination is not
  * allowed.
  */
+// ARM10C 20140308
+// ___GFP_DMA: 0x01
+// ___GFP_HIGHMEM: 0x02
+// ___GFP_DMA32: 0x04
+// ___GFP_MOVABLE: 0x08
+//
+// #define GFP_ZONE_BAD (
+// 	1 << (0x01 | 0x02) : 0x8
+// 	| 1 << (0x01 | 0x04) : 0x20
+// 	| 1 << (0x04 | 0x02) : 0x40
+// 	| 1 << (0x01 | 0x04 | 0x02) : 0x80
+// 	| 1 << (0x08 | 0x02 | 0x01) : 0x800
+// 	| 1 << (0x08 | 0x04 | 0x01) : 0x2000
+// 	| 1 << (0x08 | 0x04 | 0x02) : 0x4000
+// 	| 1 << (0x08 | 0x04 | 0x01 | 0x02) : 0x8000
+// )
+//
+// GFP_ZONE_BAD: 0xE8E8
 #define GFP_ZONE_BAD ( \
 	1 << (___GFP_DMA | ___GFP_HIGHMEM)				      \
 	| 1 << (___GFP_DMA | ___GFP_DMA32)				      \
@@ -249,15 +430,35 @@ static inline int allocflags_to_migratetype(gfp_t gfp_flags)
 	| 1 << (___GFP_MOVABLE | ___GFP_DMA32 | ___GFP_DMA | ___GFP_HIGHMEM)  \
 )
 
+// ARM10C 20140308
+// GFP_HIGHUSER_MOVABLE: 0x200DA
+// ARM10C 20140426
+// gfp_mask: 0x201200
 static inline enum zone_type gfp_zone(gfp_t flags)
 {
 	enum zone_type z;
+	// flags: GFP_HIGHUSER_MOVABLE: 0x200DA, GFP_ZONEMASK: 0xF
+	// flags: 0x201200, GFP_ZONEMASK: 0xF
 	int bit = (__force int) (flags & GFP_ZONEMASK);
+	// bit: 0xA
+	// bit: 0x0
 
+	// GFP_ZONE_TABLE: 0x1008, bit: 0xA, ZONES_SHIFT: 2
+	// GFP_ZONE_TABLE: 0x1008, bit: 0x0, ZONES_SHIFT: 2
 	z = (GFP_ZONE_TABLE >> (bit * ZONES_SHIFT)) &
 					 ((1 << ZONES_SHIFT) - 1);
+	// z: 0
+	// z: 0
+
+	// GFP_ZONE_BAD: 0xE8E8, bit: 0xA, (GFP_ZONE_BAD >> bit): 0x3A
+	// GFP_ZONE_BAD: 0xE8E8, bit: 0x0, (GFP_ZONE_BAD >> bit): 0xE8E8
 	VM_BUG_ON((GFP_ZONE_BAD >> bit) & 1);
+
+	// z: 0
+	// z: 0
 	return z;
+	// return 0
+	// return 0
 }
 
 /*
@@ -267,12 +468,18 @@ static inline enum zone_type gfp_zone(gfp_t flags)
  * virtual kernel addresses to the allocated page(s).
  */
 
+// ARM10C 20140308
+// flags: 0xD0
+// ARM10C 20140426
+// flags: 0x201200
 static inline int gfp_zonelist(gfp_t flags)
 {
+	// CONFIG_NUMA=n
 	if (IS_ENABLED(CONFIG_NUMA) && unlikely(flags & __GFP_THISNODE))
 		return 1;
 
 	return 0;
+	// return 0
 }
 
 /*
@@ -284,12 +491,25 @@ static inline int gfp_zonelist(gfp_t flags)
  * For the normal case of non-DISCONTIGMEM systems the NODE_DATA() gets
  * optimized to &contig_page_data at compile-time.
  */
+// ARM10C 20140308
+// numa_node_id(): 0, GFP_KERNEL: 0xD0
+// ARM10C 20140426
+// nid: 0, gfp_mask: 0x201200
 static inline struct zonelist *node_zonelist(int nid, gfp_t flags)
 {
+	// nid: 0, flags: 0xD0
+	// NODE_DATA(0)->node_zonelists: contig_page_data->node_zonelists
+	// gfp_zonelist(0xD0): 0
+	// ARM10C 20140426
+	// nid: 0, flags: 0x201200
+	// NODE_DATA(0)->node_zonelists: contig_page_data->node_zonelists
+	// gfp_zonelist(0x201200): 0
 	return NODE_DATA(nid)->node_zonelists + gfp_zonelist(flags);
+	// return contig_page_data->node_zonelists
 }
 
 #ifndef HAVE_ARCH_FREE_PAGE
+// ARM10C 20140405
 static inline void arch_free_page(struct page *page, int order) { }
 #endif
 #ifndef HAVE_ARCH_ALLOC_PAGE
@@ -300,10 +520,15 @@ struct page *
 __alloc_pages_nodemask(gfp_t gfp_mask, unsigned int order,
 		       struct zonelist *zonelist, nodemask_t *nodemask);
 
+// ARM10C 20140426
+// gfp_mask: 0x201200, order: 0, nid: 0,
+// node_zonelist(0, 0x201200): contig_page_data->node_zonelists
 static inline struct page *
 __alloc_pages(gfp_t gfp_mask, unsigned int order,
 		struct zonelist *zonelist)
 {
+	// gfp_mask: 0x201200, order: 0
+	// zonelist: contig_page_data->node_zonelists, NULL
 	return __alloc_pages_nodemask(gfp_mask, order, zonelist, NULL);
 }
 
@@ -317,11 +542,16 @@ static inline struct page *alloc_pages_node(int nid, gfp_t gfp_mask,
 	return __alloc_pages(gfp_mask, order, node_zonelist(nid, gfp_mask));
 }
 
+// ARM10C 20140426
+// node: 0, flags: 0x201200, order: 0
 static inline struct page *alloc_pages_exact_node(int nid, gfp_t gfp_mask,
 						unsigned int order)
 {
+	// nid: 0, MAX_NUMNODES: 1, node_online(0): 1
 	VM_BUG_ON(nid < 0 || nid >= MAX_NUMNODES || !node_online(nid));
 
+	// gfp_mask: 0x201200, order: 0, nid: 0,
+	// node_zonelist(0, 0x201200): contig_page_data->node_zonelists
 	return __alloc_pages(gfp_mask, order, node_zonelist(nid, gfp_mask));
 }
 
@@ -370,6 +600,7 @@ extern void free_hot_cold_page_list(struct list_head *list, int cold);
 extern void __free_memcg_kmem_pages(struct page *page, unsigned int order);
 extern void free_memcg_kmem_pages(unsigned long addr, unsigned int order);
 
+// ARM10C 20140419
 #define __free_page(page) __free_pages((page), 0)
 #define free_page(addr) free_pages((addr), 0)
 

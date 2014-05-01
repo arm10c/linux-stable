@@ -5,6 +5,7 @@
  */
 
 / {
+	/* ARM10C 20131012 */
 	#address-cells = <1>;
 	#size-cells = <1>;
 	chosen { };

@@ -26,6 +26,8 @@
 	0xF7E08000 | (((imm16) & 0xF000) << 4) | ((imm16) & 0x0FFF)	\
 )
 
+// disasembler 해서 instruction이 어떻게 구성되는지 확인 필요
+// __ERET, __MSR_ELR_HYP(14)
 #define __ERET	__inst_arm_thumb32(					\
 	0xE160006E,							\
 	0xF3DE8F00							\

@@ -116,10 +116,16 @@ SECTIONS
 
 	. = ALIGN(4);
 	__ex_table : AT(ADDR(__ex_table) - LOAD_OFFSET) {
+		/*
+		// ARM10C 20140329
+		*/
 		__start___ex_table = .;
-#ifdef CONFIG_MMU
+#ifdef CONFIG_MMU // CONFIG_MMU=y
 		*(__ex_table)
 #endif
+		/*
+		// ARM10C 20140329
+		*/	
 		__stop___ex_table = .;
 	}
 
@@ -152,18 +158,30 @@ SECTIONS
 	 * The vectors and stubs are relocatable code, and the
 	 * only thing that matters is their relative offsets
 	 */
+	/*
+	// ARM10C 20131109
+	*/
 	__vectors_start = .;
 	.vectors 0 : AT(__vectors_start) {
 		*(.vectors)
 	}
 	. = __vectors_start + SIZEOF(.vectors);
+	/*
+	// ARM10C 20131109
+	*/
 	__vectors_end = .;
 
+	/*
+	// ARM10C 20131109
+	*/
 	__stubs_start = .;
 	.stubs 0x1000 : AT(__stubs_start) {
 		*(.stubs)
 	}
 	. = __stubs_start + SIZEOF(.stubs);
+	/*
+	// ARM10C 20131109
+	*/
 	__stubs_end = .;
 
 	INIT_TEXT_SECTION(8)
@@ -211,7 +229,10 @@ SECTIONS
 	}
 #endif
 
-#ifdef CONFIG_SMP
+#ifdef CONFIG_SMP // CONFIG_SMP=y
+	/*
+	// ARM10C 20140308
+	*/
 	PERCPU_SECTION(L1_CACHE_BYTES)
 #endif
 
@@ -314,6 +335,16 @@ SECTIONS
 	}
 #endif
 
+	/*
+	// vmlinux.lds.h 에 정의됨
+	//	 #define BSS_SECTION(sbss_align, bss_align, stop_align)			\
+	//	 	. = ALIGN(sbss_align);						\
+	//	 	VMLINUX_SYMBOL(__bss_start) = .;				\
+	//	 	SBSS(sbss_align)						\
+	//	 	BSS(bss_align)							\
+	//	 	. = ALIGN(stop_align);						\
+	//	 	VMLINUX_SYMBOL(__bss_stop) = .;
+	*/
 	BSS_SECTION(0, 0, 0)
 	_end = .;
 

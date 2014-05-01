@@ -1,4 +1,4 @@
-/*
+﻿/*
  *  arch/arm/include/asm/tlbflush.h
  *
  *  Copyright (C) 1999-2003 Russell King
@@ -10,7 +10,7 @@
 #ifndef _ASMARM_TLBFLUSH_H
 #define _ASMARM_TLBFLUSH_H
 
-#ifdef CONFIG_MMU
+#ifdef CONFIG_MMU // CONFIG_MMU=y
 
 #include <asm/glue.h>
 
@@ -36,13 +36,18 @@
 
 /* Unified Inner Shareable TLB operations (ARMv7 MP extensions) */
 #define TLB_V7_UIS_PAGE	(1 << 20)
+// ARM10C 20131130
 #define TLB_V7_UIS_FULL (1 << 21)
 #define TLB_V7_UIS_ASID (1 << 22)
 #define TLB_V7_UIS_BP	(1 << 23)
 
+// ARM10C 20131130
 #define TLB_BARRIER	(1 << 28)
 #define TLB_L2CLEAN_FR	(1 << 29)		/* Feroceon */
+// ARM10C 20131102
 #define TLB_DCLEAN	(1 << 30)
+// ARM10C 20131109
+// ARM10C 20131130
 #define TLB_WB		(1 << 31)
 
 /*
@@ -61,13 +66,13 @@
 #undef _TLB
 #undef MULTI_TLB
 
-#ifdef CONFIG_SMP_ON_UP
+#ifdef CONFIG_SMP_ON_UP // CONFIG_SMP_ON_UP = y
 #define MULTI_TLB 1
 #endif
 
 #define v4_tlb_flags	(TLB_V4_U_FULL | TLB_V4_U_PAGE)
 
-#ifdef CONFIG_CPU_TLB_V4WT
+#ifdef CONFIG_CPU_TLB_V4WT // CONFIG_CPU_TLB_V4WT=n
 # define v4_possible_flags	v4_tlb_flags
 # define v4_always_flags	v4_tlb_flags
 # ifdef _TLB
@@ -77,13 +82,14 @@
 # endif
 #else
 # define v4_possible_flags	0
+// ARM10C 20131102
 # define v4_always_flags	(-1UL)
 #endif
 
 #define fa_tlb_flags	(TLB_WB | TLB_DCLEAN | TLB_BARRIER | \
 			 TLB_V4_U_FULL | TLB_V4_U_PAGE)
 
-#ifdef CONFIG_CPU_TLB_FA
+#ifdef CONFIG_CPU_TLB_FA // CONFIG_CPU_TLB_FA=n
 # define fa_possible_flags	fa_tlb_flags
 # define fa_always_flags	fa_tlb_flags
 # ifdef _TLB
@@ -93,6 +99,7 @@
 # endif
 #else
 # define fa_possible_flags	0
+// ARM10C 20131102
 # define fa_always_flags	(-1UL)
 #endif
 
@@ -100,7 +107,7 @@
 			 TLB_V4_I_FULL | TLB_V4_D_FULL | \
 			 TLB_V4_I_PAGE | TLB_V4_D_PAGE)
 
-#ifdef CONFIG_CPU_TLB_V4WBI
+#ifdef CONFIG_CPU_TLB_V4WBI // CONFIG_CPU_TLB_V4WBI=n
 # define v4wbi_possible_flags	v4wbi_tlb_flags
 # define v4wbi_always_flags	v4wbi_tlb_flags
 # ifdef _TLB
@@ -110,6 +117,7 @@
 # endif
 #else
 # define v4wbi_possible_flags	0
+// ARM10C 20131102
 # define v4wbi_always_flags	(-1UL)
 #endif
 
@@ -117,7 +125,7 @@
 			 TLB_V4_I_FULL | TLB_V4_D_FULL | \
 			 TLB_V4_I_PAGE | TLB_V4_D_PAGE)
 
-#ifdef CONFIG_CPU_TLB_FEROCEON
+#ifdef CONFIG_CPU_TLB_FEROCEON // CONFIG_CPU_TLB_FEROCEON=n
 # define fr_possible_flags	fr_tlb_flags
 # define fr_always_flags	fr_tlb_flags
 # ifdef _TLB
@@ -127,6 +135,7 @@
 # endif
 #else
 # define fr_possible_flags	0
+// ARM10C 20131102
 # define fr_always_flags	(-1UL)
 #endif
 
@@ -134,7 +143,7 @@
 			 TLB_V4_I_FULL | TLB_V4_D_FULL | \
 			 TLB_V4_D_PAGE)
 
-#ifdef CONFIG_CPU_TLB_V4WB
+#ifdef CONFIG_CPU_TLB_V4WB // CONFIG_CPU_TLB_V4WB=n
 # define v4wb_possible_flags	v4wb_tlb_flags
 # define v4wb_always_flags	v4wb_tlb_flags
 # ifdef _TLB
@@ -144,6 +153,7 @@
 # endif
 #else
 # define v4wb_possible_flags	0
+// ARM10C 20131102
 # define v4wb_always_flags	(-1UL)
 #endif
 
@@ -153,7 +163,7 @@
 			 TLB_V6_I_ASID | TLB_V6_D_ASID | \
 			 TLB_V6_BP)
 
-#ifdef CONFIG_CPU_TLB_V6
+#ifdef CONFIG_CPU_TLB_V6 // CONFIG_CPU_TLB_V6=n
 # define v6wbi_possible_flags	v6wbi_tlb_flags
 # define v6wbi_always_flags	v6wbi_tlb_flags
 # ifdef _TLB
@@ -163,20 +173,25 @@
 # endif
 #else
 # define v6wbi_possible_flags	0
+// ARM10C 20131102
 # define v6wbi_always_flags	(-1UL)
 #endif
 
+// ARM10C 20131102
 #define v7wbi_tlb_flags_smp	(TLB_WB | TLB_BARRIER | \
 				 TLB_V7_UIS_FULL | TLB_V7_UIS_PAGE | \
 				 TLB_V7_UIS_ASID | TLB_V7_UIS_BP)
+// ARM10C 20131102
 #define v7wbi_tlb_flags_up	(TLB_WB | TLB_DCLEAN | TLB_BARRIER | \
 				 TLB_V6_U_FULL | TLB_V6_U_PAGE | \
 				 TLB_V6_U_ASID | TLB_V6_BP)
 
-#ifdef CONFIG_CPU_TLB_V7
+#ifdef CONFIG_CPU_TLB_V7 // CONFIG_CPU_TLB_V7=y
 
-# ifdef CONFIG_SMP_ON_UP
+# ifdef CONFIG_SMP_ON_UP // CONFIG_SMP_ON_UP=y
+// ARM10C 20131102
 #  define v7wbi_possible_flags	(v7wbi_tlb_flags_smp | v7wbi_tlb_flags_up)
+// ARM10C 20131102
 #  define v7wbi_always_flags	(v7wbi_tlb_flags_smp & v7wbi_tlb_flags_up)
 # elif defined(CONFIG_SMP)
 #  define v7wbi_possible_flags	v7wbi_tlb_flags_smp
@@ -203,6 +218,9 @@
 
 #include <linux/sched.h>
 
+// ARM10C 20130914
+// ARM10C 20131102
+// ARM10C 20131130
 struct cpu_tlb_fns {
 	void (*flush_user_range)(unsigned long, unsigned long, struct vm_area_struct *);
 	void (*flush_kern_range)(unsigned long, unsigned long);
@@ -229,6 +247,8 @@ extern void __cpu_flush_kern_tlb_range(unsigned long, unsigned long);
 
 extern struct cpu_tlb_fns cpu_tlb;
 
+// ARM10C 20131102
+// ARM10C 20131130
 #define __cpu_tlb_flags			cpu_tlb.tlb_flags
 
 /*
@@ -286,6 +306,7 @@ extern struct cpu_tlb_fns cpu_tlb;
  * implemented the "%?" method, but this has been discontinued due to too
  * many people getting it wrong.
  */
+// ARM10C 20131102
 #define possible_tlb_flags	(v4_possible_flags | \
 				 v4wbi_possible_flags | \
 				 fr_possible_flags | \
@@ -294,6 +315,8 @@ extern struct cpu_tlb_fns cpu_tlb;
 				 v6wbi_possible_flags | \
 				 v7wbi_possible_flags)
 
+// ARM10C 20131102
+// always_tlb_flags: TLB_WB | TLB_BARRIER
 #define always_tlb_flags	(v4_always_flags & \
 				 v4wbi_always_flags & \
 				 fr_always_flags & \
@@ -302,8 +325,23 @@ extern struct cpu_tlb_fns cpu_tlb;
 				 v6wbi_always_flags & \
 				 v7wbi_always_flags)
 
+// ARM10C 20131109
+// ARM10C 20131130
 #define tlb_flag(f)	((always_tlb_flags & (f)) || (__tlb_flag & possible_tlb_flags & (f)))
 
+// ARM10C 20131102
+// always_tlb_flags: TLB_WB | TLB_BARRIER
+// possible_tlb_flags:
+// TLB_WB | TLB_BARRIER | TLB_V7_UIS_FULL | TLB_V7_UIS_PAGE | 
+// TLB_V7_UIS_ASID | TLB_V7_UIS_BP | TLB_DCLEAN | TLB_V6_U_FULL | TLB_V6_U_PAGE | 
+// TLB_V6_U_ASID | TLB_V6_BP
+// 
+// __tlb_op(TLB_DCLEAN, "p15, 0, %0, " "c7, c10, 1	@ flush_pmd", pmd)
+// asm("tst %1, %2\n\t"				
+//      "mcrne " "p15, 0, %0, " "c7, c10, 1	@ flush_pmd"	
+//	: : "r" (pmd), "r" (__tlb_flag), "Ir" (TLB_DCLEAN)	
+//	: "cc");					
+// A.R.M: B4.1.46 DCCMVAC, Data Cache Clean by MVA to PoC, VMSA
 #define __tlb_op(f, insnarg, arg)					\
 	do {								\
 		if (always_tlb_flags & (f))				\
@@ -316,9 +354,16 @@ extern struct cpu_tlb_fns cpu_tlb;
 			    : "cc");					\
 	} while (0)
 
+// ARM10C 20131102
+// tlb_op(TLB_DCLEAN, "c7, c10, 1	@ flush_pmd", pmd);
+// __tlb_op(TLB_DCLEAN, "p15, 0, %0, " "c7, c10, 1	@ flush_pmd", pmd)
 #define tlb_op(f, regs, arg)	__tlb_op(f, "p15, 0, %0, " regs, arg)
+// ARM10C 20131102
+// tlb_l2_op(TLB_L2CLEAN_FR, "c15, c9, 1  @ L2 flush_pmd", pmd);
+//      "mcrne " "p15, 0, %0, " "c15, c9, 1  @ L2 flush_pmd"
 #define tlb_l2_op(f, regs, arg)	__tlb_op(f, "p15, 1, %0, " regs, arg)
 
+// ARM10C 20131130
 static inline void __local_flush_tlb_all(void)
 {
 	const int zero = 0;
@@ -329,17 +374,25 @@ static inline void __local_flush_tlb_all(void)
 	tlb_op(TLB_V4_I_FULL | TLB_V6_I_FULL, "c8, c5, 0", zero);
 }
 
+// ARM10C 20131130
 static inline void local_flush_tlb_all(void)
 {
 	const int zero = 0;
 	const unsigned int __tlb_flag = __cpu_tlb_flags;
 
+	// tlb_flag(TLB_WB)): 0아닌 값
 	if (tlb_flag(TLB_WB))
 		dsb(nshst);
 
 	__local_flush_tlb_all();
+	
+	// T.R.M: 4.2.8 c8 registers
+	// c8, c3, 0: Invalidate entire TLB Inner Shareable
+	// TLB_V7_UIS_FULL: (1 << 21)
 	tlb_op(TLB_V7_UIS_FULL, "c8, c7, 0", zero);
 
+	// TLB_BARRIER:	(1 << 28)
+	// tlb_flag(TLB_BARRIER): 0이 아닌값
 	if (tlb_flag(TLB_BARRIER)) {
 		dsb(nsh);
 		isb();
@@ -573,22 +626,30 @@ static inline void __flush_bp_all(void)
  *	these operations.  This is typically used when we are removing
  *	PMD entries.
  */
+// ARM10C 20131109
 static inline void flush_pmd_entry(void *pmd)
 {
+	// __cpu_tlb_flags: 0
 	const unsigned int __tlb_flag = __cpu_tlb_flags;
 
+	// Data cache clean 수행
 	tlb_op(TLB_DCLEAN, "c7, c10, 1	@ flush_pmd", pmd);
+	// TLB_L2CLEAN_FR 은 exynos에서 사용 안함 
 	tlb_l2_op(TLB_L2CLEAN_FR, "c15, c9, 1  @ L2 flush_pmd", pmd);
 
 	if (tlb_flag(TLB_WB))
 		dsb(ishst);
 }
 
+// ARM10C 20131102
 static inline void clean_pmd_entry(void *pmd)
 {
+	// __cpu_tlb_flags: 0
 	const unsigned int __tlb_flag = __cpu_tlb_flags;
 
+	// Data cache clean 수행
 	tlb_op(TLB_DCLEAN, "c7, c10, 1	@ flush_pmd", pmd);
+	// TLB_L2CLEAN_FR 은 exynos에서 사용 안함 
 	tlb_l2_op(TLB_L2CLEAN_FR, "c15, c9, 1  @ L2 flush_pmd", pmd);
 }
 
@@ -641,7 +702,7 @@ static inline void update_mmu_cache(struct vm_area_struct *vma,
 
 #endif
 
-#elif defined(CONFIG_SMP)	/* !CONFIG_MMU */
+#elif defined(CONFIG_SMP) // CONFIG_SMP=y	/* !CONFIG_MMU */
 
 #ifndef __ASSEMBLY__
 

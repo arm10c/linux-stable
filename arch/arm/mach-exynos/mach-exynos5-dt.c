@@ -55,12 +55,15 @@ static char const *exynos5_dt_compat[] __initdata = {
 	NULL
 };
 
+// ARM10C 20131026
 static void __init exynos5_reserve(void)
 {
-#ifdef CONFIG_S5P_DEV_MFC
+#ifdef CONFIG_S5P_DEV_MFC // CONFIG_S5P_DEV_MFC=n, 분석.
+	// mfc: multi format codec
 	struct s5p_mfc_dt_meminfo mfc_mem;
 
 	/* Reserve memory for MFC only if it's available */
+	// mfc 용 memory buffer영역을  reserve 함 
 	mfc_mem.compatible = "samsung,mfc-v6";
 	if (of_scan_flat_dt(s5p_fdt_find_mfc_mem, &mfc_mem))
 		s5p_mfc_reserve_mem(mfc_mem.roff, mfc_mem.rsize, mfc_mem.loff,
@@ -68,9 +71,30 @@ static void __init exynos5_reserve(void)
 #endif
 }
 
+// ARM10C 20131005
+// ARM10C 20131012
+/*
+//static const struct machine_desc __mach_desc_EXYNOS5_DT	\
+// __used							\
+// __attribute__((__section__(".arch.info.init"))) = {	\
+//	.nr		= ~0,				\
+//	.name		= "SAMSUNG EXYNOS5 (Flattened Device Tree)",
+//	.smp		= smp_ops(exynos_smp_ops),
+//	.map_io		= exynos_init_io,
+//	.init_machine	= exynos5_dt_machine_init,
+//	.init_late	= exynos_init_late,
+//	.init_time	= exynos_init_time,
+//	.dt_compat	= exynos5_dt_compat,
+//	.restart        = exynos5_restart,
+//	.reserve	= exynos5_reserve,
+// };
+*/
 DT_MACHINE_START(EXYNOS5_DT, "SAMSUNG EXYNOS5 (Flattened Device Tree)")
 	/* Maintainer: Kukjin Kim <kgene.kim@samsung.com> */
+	// ARM10C 20140215
+	// smp: &exynos_smp_ops
 	.smp		= smp_ops(exynos_smp_ops),
+	// ARM10C 20131116
 	.map_io		= exynos_init_io,
 	.init_machine	= exynos5_dt_machine_init,
 	.init_late	= exynos_init_late,

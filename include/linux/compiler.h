@@ -17,7 +17,7 @@
 # define __release(x)	__context__(x,-1)
 # define __cond_lock(x,c)	((c) ? ({ __acquire(x); 1; }) : 0)
 # define __percpu	__attribute__((noderef, address_space(3)))
-#ifdef CONFIG_SPARSE_RCU_POINTER
+#ifdef CONFIG_SPARSE_RCU_POINTER // CONFIG_SPARSE_RCU_POINT=n
 # define __rcu		__attribute__((noderef, address_space(4)))
 #else
 # define __rcu
@@ -28,19 +28,26 @@ extern void __chk_io_ptr(const volatile void __iomem *);
 # define __user
 # define __kernel
 # define __safe
+// ARM10C 20140322
 # define __force
 # define __nocast
+// ARM10C 20140215
 # define __iomem
 # define __chk_user_ptr(x) (void)0
 # define __chk_io_ptr(x) (void)0
 # define __builtin_warning(x, y...) (1)
 # define __must_hold(x)
+// ARM10C 20140405
 # define __acquires(x)
+// ARM10C 20140412
 # define __releases(x)
 # define __acquire(x) (void)0
 # define __release(x) (void)0
-# define __cond_lock(x,c) (c)
+# define __cond_lock(x,c) (c) //ARM10C this
+// ARM10C 20140308
 # define __percpu
+// ARM10C 20140315
+// ARM10C 20140322
 # define __rcu
 #endif
 
@@ -90,6 +97,7 @@ struct ftrace_branch_data {
  * Note: DISABLE_BRANCH_PROFILING can be used by special lowlevel code
  * to disable branch tracing on a per file basis.
  */
+// CONFIG_TRACE_BRANCH_PROFILING=n
 #if defined(CONFIG_TRACE_BRANCH_PROFILING) \
     && !defined(DISABLE_BRANCH_PROFILING) && !defined(__CHECKER__)
 void ftrace_likely_update(struct ftrace_branch_data *f, int val, int expect);
@@ -150,6 +158,7 @@ void ftrace_likely_update(struct ftrace_branch_data *f, int val, int expect);
 
 #else
 # define likely(x)	__builtin_expect(!!(x), 1)
+// ARM10C 20131109
 # define unlikely(x)	__builtin_expect(!!(x), 0)
 #endif
 
@@ -349,12 +358,20 @@ void ftrace_likely_update(struct ftrace_branch_data *f, int val, int expect);
  * use is to mediate communication between process-level code and irq/NMI
  * handlers, all running on the same CPU.
  */
+/*
+// ARM10C 20140315
+// ACCESS_ONCE((&(&(&(&cpu_add_remove_lock)->wait_lock)->rlock)->raw_lock)->tickets):
+// (*(volatile struct __raw_tickets *)&((&(&(&(&cpu_add_remove_lock)->wait_lock)->rlock)->raw_lock)->tickets))
+*/
+/*
+// ARM10C 20140412
+*/
 #define ACCESS_ONCE(x) (*(volatile typeof(x) *)&(x))
 
 /* Ignore/forbid kprobes attach on very low level functions marked by this attribute: */
-#ifdef CONFIG_KPROBES
+#ifdef CONFIG_KPROBES	// ARM10C N : kprobes : 커널코드에 원하는 기법을 동적으로 추가할수 있는기법
 # define __kprobes	__attribute__((__section__(".kprobes.text")))
 #else
-# define __kprobes
+# define __kprobes  // ARM10C this 
 #endif
 #endif /* __LINUX_COMPILER_H */

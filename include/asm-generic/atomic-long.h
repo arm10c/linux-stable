@@ -18,7 +18,7 @@
  * macros of a platform may have.
  */
 
-#if BITS_PER_LONG == 64
+#if BITS_PER_LONG == 64 // BITS_PER_LONG: 32
 
 typedef atomic64_t atomic_long_t;
 
@@ -138,9 +138,12 @@ static inline long atomic_long_add_unless(atomic_long_t *l, long a, long u)
 
 #else  /*  BITS_PER_LONG == 64  */
 
+// ARM10C 20140419
 typedef atomic_t atomic_long_t;
 
 #define ATOMIC_LONG_INIT(i)	ATOMIC_INIT(i)
+
+// ARM10C 20140419
 static inline long atomic_long_read(atomic_long_t *l)
 {
 	atomic_t *v = (atomic_t *)l;
@@ -169,10 +172,15 @@ static inline void atomic_long_dec(atomic_long_t *l)
 	atomic_dec(v);
 }
 
+// ARM10C 20140412
+// x: 32, item: 0, &zone->vm_stat[0]: &contig_page_data->node_zones[ZONE_NORMAL].vm_stat[0]
 static inline void atomic_long_add(long i, atomic_long_t *l)
 {
+	// l: &contig_page_data->node_zones[ZONE_NORMAL].vm_stat[0]
 	atomic_t *v = (atomic_t *)l;
+	// v: &contig_page_data->node_zones[ZONE_NORMAL].vm_stat[0]
 
+	// i: 32
 	atomic_add(i, v);
 }
 

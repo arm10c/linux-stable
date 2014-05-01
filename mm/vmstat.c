@@ -23,8 +23,22 @@
 
 #include "internal.h"
 
-#ifdef CONFIG_VM_EVENT_COUNTERS
+#ifdef CONFIG_VM_EVENT_COUNTERS // CONFIG_VM_EVENT_COUNTERS=y
+// ARM10C 20140405
+// DEFINE_PER_CPU(struct vm_event_state, vm_event_states):
+// __attribute__((section(".data..percpu" "")))
+// __typeof__(struct vm_event_state) vm_event_states = {{0}};
 DEFINE_PER_CPU(struct vm_event_state, vm_event_states) = {{0}};
+// ARM10C 20140405
+// EXPORT_PER_CPU_SYMBOL(vm_event_states):
+// extern typeof(vm_event_states) vm_event_states;
+// static const char __kstrtab_vm_event_states[]
+// __attribute__((section("__ksymtab_strings"), aligned(1)))
+// = "vm_event_states";
+// static const struct kernel_symbol __ksymtab_vm_event_states
+// __attribute__((__used__))
+// __attribute__((section("___ksymtab" "" "+" "vm_event_states"), unused))
+// = { (unsigned long)&vm_event_states, __kstrtab_vm_event_states }
 EXPORT_PER_CPU_SYMBOL(vm_event_states);
 
 static void sum_vm_events(unsigned long *ret)
@@ -79,6 +93,11 @@ void vm_events_fold_cpu(int cpu)
  *
  * vm_stat contains the global counters
  */
+// ARM10C 20140412
+// ARM10C 20140419
+// NR_VM_ZONE_STAT_ITEMS: 29
+// __cacheline_aligned_in_smp:
+// __attribute__((__aligned__(64), __section__(".data..cacheline_aligned")))
 atomic_long_t vm_stat[NR_VM_ZONE_STAT_ITEMS] __cacheline_aligned_in_smp;
 EXPORT_SYMBOL(vm_stat);
 
@@ -209,23 +228,104 @@ void set_pgdat_percpu_threshold(pg_data_t *pgdat,
 /*
  * For use when we know that interrupts are disabled.
  */
+// ARM10C 20140412
+// zone: &(&contig_page_data)->node_zones[ZONE_NORMAL], NR_FREE_PAGES: 0, nr_pages: 32
+// zone: &(&contig_page_data)->node_zones[ZONE_NORMAL], NR_FREE_PAGES: 0, nr_pages: 1
 void __mod_zone_page_state(struct zone *zone, enum zone_stat_item item,
 				int delta)
 {
+	// zone->pageset: (&(&contig_page_data)->node_zones[ZONE_NORMAL])->pageset: &boot_pageset
 	struct per_cpu_pageset __percpu *pcp = zone->pageset;
+	// pcp: &boot_pageset
+	// item: 0
 	s8 __percpu *p = pcp->vm_stat_diff + item;
+	// p: &(&boot_pageset)->vm_stat_diff[0]
 	long x;
 	long t;
 
+	// delta:32, p: &(&boot_pageset)->vm_stat_diff[0]
 	x = delta + __this_cpu_read(*p);
 
-	t = __this_cpu_read(pcp->stat_threshold);
+	// # define __this_cpu_read((&boot_pageset)->vm_stat_diff[0]):
+	// __pcpu_size_call_return(__this_cpu_read_, ((&boot_pageset)->vm_stat_diff[0]))
 
+	// __this_cpu_read_1(((&boot_pageset)->vm_stat_diff[0])):
+	// *({
+	//  	do {
+	// 	 	const void __percpu *__vpp_verify = (typeof((&(((&boot_pageset)->vm_stat_diff[0])))))NULL;
+	// 	 	(void)__vpp_verify;
+	//  	} while (0)
+	//  	&(((&boot_pageset)->vm_stat_diff[0])) + __my_cpu_offset;
+	// })
+
+	// __pcpu_size_call_return(__this_cpu_read_, ((&boot_pageset)->vm_stat_diff[0])):
+	// ({	typeof(((&boot_pageset)->vm_stat_diff[0])) pscr_ret__;
+	// 	__verify_pcpu_ptr(&(((&boot_pageset)->vm_stat_diff[0])));
+	// 	switch(sizeof(((&boot_pageset)->vm_stat_diff[0]))) {
+	// 	case 1: pscr_ret__ =
+	// 	 	*({
+	//  		 	do {
+	// 	 		 	const void __percpu *__vpp_verify = (typeof((&(((&boot_pageset)->vm_stat_diff[0])))))NULL;
+	// 	 		 	(void)__vpp_verify;
+	//  		 	} while (0)
+	//  		 	&(((&boot_pageset)->vm_stat_diff[0])) + __my_cpu_offset;
+	// 	 	}); break;
+	// 	}
+	// 	pscr_ret__;
+	// })
+
+	// __this_cpu_read((&boot_pageset)->vm_stat_diff[0]): 0
+	// x: 32
+
+	// pcp->stat_threshold: (&boot_pageset)->stat_threshold
+	// __this_cpu_read((&boot_pageset)->stat_threshold): 0
+	t = __this_cpu_read(pcp->stat_threshold);
+	// t: 0
+
+	// x: 32, t: 0
 	if (unlikely(x > t || x < -t)) {
+		// x: 32, zone: &(&contig_page_data)->node_zones[ZONE_NORMAL], item: 0
 		zone_page_state_add(x, zone, item);
+		// zone->vm_stat[0]: (&contig_page_data)->node_zones[ZONE_NORMAL].vm_stat[0]: 32
+		// NR_FREE_PAGES: 0, vm_stat[0]: 32
+
 		x = 0;
 	}
+
+	// p: &(&boot_pageset)->vm_stat_diff[0], x: 0
 	__this_cpu_write(*p, x);
+
+	// __this_cpu_write(pcp, val):
+	// __pcpu_size_call(__this_cpu_write_, (&boot_pageset)->vm_stat_diff[0], (x))
+
+	// __this_cpu_write_1((&boot_pageset)->vm_stat_diff[0], x):
+	// do {
+	//	*({
+	//		do {
+	//			const void __percpu *__vpp_verify = (typeof(((&boot_pageset)->vm_stat_diff[0]))NULL;
+	//			(void)__vpp_verify;
+	//		} while (0)
+	//		&((&boot_pageset)->vm_stat_diff[0]) + __my_cpu_offset;
+	//	}) = x;
+	// } while (0)
+
+	// __pcpu_size_call(__this_cpu_write_, (&boot_pageset)->vm_stat_diff[0], x):
+	// do {
+	// 	__verify_pcpu_ptr(&((&boot_pageset)->vm_stat_diff[0]));
+	// 	switch(sizeof((&boot_pageset)->vm_stat_diff[0])) {
+	// 		case 1:
+	// 		do {
+	// 			*({
+	// 				do {
+	// 					const void __percpu *__vpp_verify = (typeof(((&boot_pageset)->vm_stat_diff[0]))NULL;
+	// 					(void)__vpp_verify;
+	// 				} while (0)
+	// 				&((&boot_pageset)->vm_stat_diff[0]) + __my_cpu_offset;
+	// 			}) = x;
+	// 		} while (0)
+	// 		break;
+	// 	}
+	// } while (0)
 }
 EXPORT_SYMBOL(__mod_zone_page_state);
 

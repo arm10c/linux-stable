@@ -16,6 +16,8 @@ struct lockdep_map;
 extern int prove_locking;
 extern int lock_stat;
 
+// ARM10C 20130914
+// CONFIG_LOCKDEP = n
 #ifdef CONFIG_LOCKDEP
 
 #include <linux/linkage.h>
@@ -381,12 +383,14 @@ static inline void lockdep_on(void)
 # define lock_set_subclass(l, s, i)		do { } while (0)
 # define lockdep_set_current_reclaim_state(g)	do { } while (0)
 # define lockdep_clear_current_reclaim_state()	do { } while (0)
+// ARM10C 20140426
 # define lockdep_trace_alloc(g)			do { } while (0)
 # define lockdep_init()				do { } while (0)
 # define lockdep_info()				do { } while (0)
 # define lockdep_init_map(lock, name, key, sub) \
 		do { (void)(name); (void)(key); } while (0)
 # define lockdep_set_class(lock, key)		do { (void)(key); } while (0)
+// ARM10C 20140111
 # define lockdep_set_class_and_name(lock, key, name) \
 		do { (void)(key); (void)(name); } while (0)
 #define lockdep_set_class_and_subclass(lock, key, sub) \
@@ -408,6 +412,7 @@ static inline void lockdep_on(void)
 /*
  * The class key takes no space if lockdep is disabled:
  */
+// ARM10C 20140111
 struct lock_class_key { };
 
 #define lockdep_depth(tsk)	(0)
@@ -418,7 +423,7 @@ struct lock_class_key { };
 
 #endif /* !LOCKDEP */
 
-#ifdef CONFIG_LOCK_STAT
+#ifdef CONFIG_LOCK_STAT // CONFIG_LOCK_STAT=n
 
 extern void lock_contended(struct lockdep_map *lock, unsigned long ip);
 extern void lock_acquired(struct lockdep_map *lock, unsigned long ip);
@@ -437,6 +442,12 @@ do {								\
 #define lock_contended(lockdep_map, ip) do {} while (0)
 #define lock_acquired(lockdep_map, ip) do {} while (0)
 
+// ARM10C 20140125
+// LOCK_CONTENDED(lock, do_raw_write_trylock, do_raw_write_lock);
+// => do_raw_write_lock(lock)
+// ARM10C 20140405
+// LOCK_CONTENDED(lock, do_raw_spin_trylock, do_raw_spin_lock);
+// => do_raw_spin_lock(lock)
 #define LOCK_CONTENDED(_lock, try, lock) \
 	lock(_lock)
 
@@ -489,12 +500,16 @@ static inline void print_irqtrace_events(struct task_struct *curr)
  #define lock_acquire_shared_recursive(l, s, t, n, i)	lock_acquire(l, s, t, 2, 1, n, i)
 #endif
 
+// ARM10C 20140405
 #define spin_acquire(l, s, t, i)		lock_acquire_exclusive(l, s, t, NULL, i)
 #define spin_acquire_nest(l, s, t, n, i)	lock_acquire_exclusive(l, s, t, n, i)
+// ARM10C 20140412
 #define spin_release(l, n, i)			lock_release(l, n, i)
 
+// ARM10C 20140125
 #define rwlock_acquire(l, s, t, i)		lock_acquire_exclusive(l, s, t, NULL, i)
 #define rwlock_acquire_read(l, s, t, i)		lock_acquire_shared_recursive(l, s, t, NULL, i)
+// ARM10C 20140125
 #define rwlock_release(l, n, i)			lock_release(l, n, i)
 
 #define seqcount_acquire(l, s, t, i)		lock_acquire_exclusive(l, s, t, NULL, i)
@@ -502,7 +517,9 @@ static inline void print_irqtrace_events(struct task_struct *curr)
 #define seqcount_release(l, n, i)		lock_release(l, n, i)
 
 #define mutex_acquire(l, s, t, i)		lock_acquire_exclusive(l, s, t, NULL, i)
+// ARM10C 20140315
 #define mutex_acquire_nest(l, s, t, n, i)	lock_acquire_exclusive(l, s, t, n, i)
+// ARM10C 20140322
 #define mutex_release(l, n, i)			lock_release(l, n, i)
 
 #define rwsem_acquire(l, s, t, i)		lock_acquire_exclusive(l, s, t, NULL, i)

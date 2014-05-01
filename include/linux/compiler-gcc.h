@@ -12,6 +12,10 @@
 
 /* Optimization barrier */
 /* The "volatile" is due to gcc bugs */
+
+// ARM10C 20130831
+// 컴파일러적으로 memory barrier 를 만들어 줌
+// http://studyfoss.egloos.com/5128961
 #define barrier() __asm__ __volatile__("": : :"memory")
 
 /*
@@ -32,6 +36,23 @@
  * the inline assembly constraint from =g to =r, in this particular
  * case either is valid.
  */
+// ARM10C 20140308
+// RELOC_HIDE((struct per_cpu_pageset __kernel __force *)(&boot_pageset), (__per_cpu_offset[0])):
+// &boot_pageset + __per_cpu_offset[0]
+//
+// #define RELOC_HIDE((struct per_cpu_pageset __kernel __force *)(&boot_pageset), (__per_cpu_offset[0]))
+//  ({ unsigned long __ptr;
+//  __asm__ ("" : "=r"(__ptr) : "0"((struct per_cpu_pageset __kernel __force *)(&boot_pageset)));
+//  (typeof((struct per_cpu_pageset __kernel __force *)(&boot_pageset))) (__ptr + ((__per_cpu_offset[0]))); })
+//
+// ARM10C 20140405
+// RELOC_HIDE((typeof(*(&(vm_event_states.event[PGFREE]))) __kernel __force *)(&(vm_event_states.event[PGFREE])), (__my_cpu_offset)):
+// &(vm_event_states.event[PGFREE]) + __my_cpu_offset
+//
+// #define RELOC_HIDE((typeof(*(&(vm_event_states.event[PGFREE]))) __kernel __force *)(&(vm_event_states.event[PGFREE])), __my_cpu_offset)
+//  ({ unsigned long __ptr;
+//  __asm__ ("" : "=r"(__ptr) : "0"((typeof(*(&(vm_event_states.event[PGFREE]))) __kernel __force *)(&(vm_event_states.event[PGFREE]))));
+//  (typeof((typeof(*(&(vm_event_states.event[PGFREE]))) __kernel __force *)(&(vm_event_states.event[PGFREE])))) (__ptr + (__my_cpu_offset)); })
 #define RELOC_HIDE(ptr, off)					\
   ({ unsigned long __ptr;					\
     __asm__ ("" : "=r"(__ptr) : "0"(ptr));		\
@@ -88,10 +109,16 @@
  * would be.
  * [...]
  */
+// ARM10C 20130914
+// pure의 의미?
+// http://gcc.gnu.org/onlinedocs/gcc/Function-Attributes.html
+// http://www.iamroot.org/xe/Hypervisor_1_Xen/7536
 #define __pure				__attribute__((pure))
 #define __aligned(x)			__attribute__((aligned(x)))
 #define __printf(a, b)			__attribute__((format(printf, a, b)))
 #define __scanf(a, b)			__attribute__((format(scanf, a, b)))
+// ARM10C 20140315
+// 절대로 inline으로 사용하지 말라는 의미
 #define  noinline			__attribute__((noinline))
 #define __attribute_const__		__attribute__((__const__))
 #define __maybe_unused			__attribute__((unused))
@@ -110,6 +137,7 @@
  * A trick to suppress uninitialized variable warning without generating any
  * code
  */
+// ARM10C 20140405
 #define uninitialized_var(x) x = x
 
 #define __always_inline		inline __attribute__((always_inline))

@@ -14,6 +14,7 @@
 
 #include <asm/io.h>
 
+// ARM10C 20131102
 struct map_desc {
 	unsigned long virtual;
 	unsigned long pfn;
@@ -35,15 +36,16 @@ struct map_desc {
 #define MT_MEMORY_SO		14
 #define MT_MEMORY_DMA_READY	15
 
-#ifdef CONFIG_MMU
+#ifdef CONFIG_MMU // CONFIG_MMU=y
 extern void iotable_init(struct map_desc *, int);
 extern void vm_reserve_area_early(unsigned long addr, unsigned long size,
 				  void *caller);
 
-#ifdef CONFIG_DEBUG_LL
+#ifdef CONFIG_DEBUG_LL // CONFIG_DEBUG_LL=n
 extern void debug_ll_addr(unsigned long *paddr, unsigned long *vaddr);
 extern void debug_ll_io_init(void);
 #else
+// ARM10C 20131116
 static inline void debug_ll_io_init(void) {}
 #endif
 

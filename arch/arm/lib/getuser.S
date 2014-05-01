@@ -72,6 +72,7 @@ __get_user_bad:
 	mov	pc, lr
 ENDPROC(__get_user_bad)
 
+// ARM10C 20140329
 .pushsection __ex_table, "a"
 	.long	1b, __get_user_bad
 	.long	2b, __get_user_bad

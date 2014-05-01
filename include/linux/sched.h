@@ -1,4 +1,4 @@
-#ifndef _LINUX_SCHED_H
+﻿#ifndef _LINUX_SCHED_H
 #define _LINUX_SCHED_H
 
 #include <uapi/linux/sched.h>
@@ -134,6 +134,7 @@ print_cfs_rq(struct seq_file *m, int cpu, struct cfs_rq *cfs_rq);
  */
 #define TASK_RUNNING		0
 #define TASK_INTERRUPTIBLE	1
+// ARM10C 20140315
 #define TASK_UNINTERRUPTIBLE	2
 #define __TASK_STOPPED		4
 #define __TASK_TRACED		8
@@ -295,6 +296,7 @@ static inline void reset_hung_task_detector(void)
 #endif
 
 /* Attach to any functions which should be ignored in wchan output. */
+// ARM10C 20140315
 #define __sched		__attribute__((__section__(".sched.text")))
 
 /* Linker adds these: start and end of __sched functions */
@@ -453,6 +455,9 @@ struct task_cputime {
  * We include PREEMPT_ACTIVE to avoid cond_resched() from working
  * before the scheduler is active -- see should_resched().
  */
+// ARM10C 20140315
+// PREEMPT_ACTIVE: 0x40000000
+// INIT_PREEMPT_COUNT: 0x40000001
 #define INIT_PREEMPT_COUNT	(PREEMPT_DISABLED + PREEMPT_ACTIVE)
 
 /**
@@ -1038,7 +1043,7 @@ enum perf_event_task_context {
 	perf_sw_context,
 	perf_nr_task_contexts,
 };
-
+// ARM10C 20140315
 struct task_struct {
 	volatile long state;	/* -1 unrunnable, 0 runnable, >0 stopped */
 	void *stack;
@@ -1254,7 +1259,7 @@ struct task_struct {
 	struct rt_mutex_waiter *pi_blocked_on;
 #endif
 
-#ifdef CONFIG_DEBUG_MUTEXES
+#ifdef CONFIG_DEBUG_MUTEXES // CONFIG_DEBUG_MUTEXES=y
 	/* mutex deadlock detection */
 	struct mutex_waiter *blocked_on;
 #endif
@@ -1308,7 +1313,7 @@ struct task_struct {
 	u64 acct_vm_mem1;	/* accumulated virtual memory usage */
 	cputime_t acct_timexpd;	/* stime + utime since last update */
 #endif
-#ifdef CONFIG_CPUSETS
+#ifdef CONFIG_CPUSETS // CONFIG_CPUSETS=n
 	nodemask_t mems_allowed;	/* Protected by alloc_lock */
 	seqcount_t mems_allowed_seq;	/* Seqence no to catch updates */
 	int cpuset_mem_spread_rotor;
@@ -1980,6 +1985,7 @@ void yield(void);
  */
 extern struct exec_domain	default_exec_domain;
 
+// ARM10C 20140315
 union thread_union {
 	struct thread_info thread_info;
 	unsigned long stack[THREAD_SIZE/sizeof(long)];
@@ -2353,6 +2359,8 @@ static inline void threadgroup_unlock(struct task_struct *tsk) {}
 
 #ifndef __HAVE_THREAD_FUNCTIONS
 
+// ARM10C 20140315
+// task_thread_info(init_task): ((struct thread_info *)(init_task)->stack)
 #define task_thread_info(task)	((struct thread_info *)(task)->stack)
 #define task_stack_page(task)	((task)->stack)
 
@@ -2745,7 +2753,7 @@ static inline void inc_syscw(struct task_struct *tsk)
 #define TASK_SIZE_OF(tsk)	TASK_SIZE
 #endif
 
-#ifdef CONFIG_MM_OWNER
+#ifdef CONFIG_MM_OWNER // CONFIG_MM_OWNER=n
 extern void mm_update_next_owner(struct mm_struct *mm);
 extern void mm_init_owner(struct mm_struct *mm, struct task_struct *p);
 #else
@@ -2753,6 +2761,7 @@ static inline void mm_update_next_owner(struct mm_struct *mm)
 {
 }
 
+// ARM10C 20140222
 static inline void mm_init_owner(struct mm_struct *mm, struct task_struct *p)
 {
 }

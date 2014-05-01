@@ -9,6 +9,7 @@
 #define CPUID_TCM	2
 #define CPUID_TLBTYPE	3
 #define CPUID_MPUIR	4
+// ARM10C 20140215
 #define CPUID_MPIDR	5
 #define CPUID_REVIDR	6
 
@@ -49,13 +50,24 @@
 
 #define MPIDR_MT_BITMASK (0x1 << 24)
 
+// ARM10C 20140215
 #define MPIDR_HWID_BITMASK 0xFFFFFF
 
+// ARM10C 20140215
+// MPIDR_INVALID: 0xFF000000
 #define MPIDR_INVALID (~MPIDR_HWID_BITMASK)
 
+// ARM10C 20140215
 #define MPIDR_LEVEL_BITS 8
+// ARM10C 20140215
+// MPIDR_LEVEL_MASK: 0xFF
 #define MPIDR_LEVEL_MASK ((1 << MPIDR_LEVEL_BITS) - 1)
 
+// ARM10C 20140215
+// MPIDR_LEVEL_BITS 8, MPIDR_LEVEL_MASK: 0xFF
+// #define MPIDR_AFFINITY_LEVEL(0x3, 0)
+//	((0x3 >> (8 * 0)) & 0xFF)
+// MPIDR_AFFINITY_LEVEL(0x3, 0): 0x3
 #define MPIDR_AFFINITY_LEVEL(mpidr, level) \
 	((mpidr >> (MPIDR_LEVEL_BITS * level)) & MPIDR_LEVEL_MASK)
 
@@ -67,6 +79,7 @@
 #define ARM_CPU_PART_ARM1176		0xB760
 #define ARM_CPU_PART_ARM11MPCORE	0xB020
 #define ARM_CPU_PART_CORTEX_A8		0xC080
+// ARM10C 20140215
 #define ARM_CPU_PART_CORTEX_A9		0xC090
 #define ARM_CPU_PART_CORTEX_A5		0xC050
 #define ARM_CPU_PART_CORTEX_A15		0xC0F0
@@ -80,6 +93,11 @@
 extern unsigned int processor_id;
 
 #ifdef CONFIG_CPU_CP15
+// ARM10C 20130824
+// 인라인 어셈블리 링크 참조
+// http://wiki.kldp.org/wiki.php/DocbookSgml/GCC_Inline_Assembly-KLDP
+// "cc" 의 의미는? 아래 링크 참조
+// http://rootfriend.tistory.com/371
 #define read_cpuid(reg)							\
 	({								\
 		unsigned int __val;					\
@@ -95,6 +113,8 @@ extern unsigned int processor_id;
  * any is_smp() tests, which can cause undefined instruction aborts on
  * ARM1136 r0 due to the missing extended CP15 registers.
  */
+// ARM10C 20130914
+// CPUID_EXT_ISAR0	"c2, 0"
 #define read_cpuid_ext(ext_reg)						\
 	({								\
 		unsigned int __val;					\
@@ -137,15 +157,21 @@ static inline unsigned int __attribute_const__ read_cpuid_ext(unsigned offset)
 
 #endif /* ifdef CONFIG_CPU_CP15 / else */
 
+// ARM10C 20130914
+// CONFIG_CPU_CP15 = y
 #ifdef CONFIG_CPU_CP15
 /*
  * The CPU ID never changes at run time, so we might as well tell the
  * compiler that it's constant.  Use this function to read the CPU ID
  * rather than directly reading processor_id or read_cpuid() directly.
  */
+// ARM10C 20130914 this
+// ARM10C 20140215
 static inline unsigned int __attribute_const__ read_cpuid_id(void)
 {
+        // CPUID_ID: 0
 	return read_cpuid(CPUID_ID);
+        // read_cpuid(0): 0x413FC0F3
 }
 
 #elif defined(CONFIG_CPU_V7M)
@@ -169,9 +195,12 @@ static inline unsigned int __attribute_const__ read_cpuid_implementor(void)
 	return (read_cpuid_id() & 0xFF000000) >> 24;
 }
 
+// ARM10C 20140215
 static inline unsigned int __attribute_const__ read_cpuid_part_number(void)
 {
+        // read_cpuid_id(): 0x413FC0F3
 	return read_cpuid_id() & 0xFFF0;
+        // return 0x0000C0F0
 }
 
 static inline unsigned int __attribute_const__ xscale_cpu_arch_version(void)
@@ -179,6 +208,7 @@ static inline unsigned int __attribute_const__ xscale_cpu_arch_version(void)
 	return read_cpuid_part_number() & ARM_CPU_XSCALE_ARCH_MASK;
 }
 
+// ARM10C 20130914
 static inline unsigned int __attribute_const__ read_cpuid_cachetype(void)
 {
 	return read_cpuid(CPUID_CACHETYPE);
@@ -189,6 +219,11 @@ static inline unsigned int __attribute_const__ read_cpuid_tcmstatus(void)
 	return read_cpuid(CPUID_TCM);
 }
 
+// ARM10C 20130824
+// __attribute_const__ 정보 아래링크 참조 
+// http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.dui0348bk/Cacgigch.html
+// ARM10C 20140215
+// A.R.M: B4.1.106 MPIDR, Multiprocessor Affinity Register, VMSA
 static inline unsigned int __attribute_const__ read_cpuid_mpidr(void)
 {
 	return read_cpuid(CPUID_MPIDR);

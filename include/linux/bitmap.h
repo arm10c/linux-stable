@@ -147,12 +147,23 @@ extern void bitmap_copy_le(void *dst, const unsigned long *src, int nbits);
 extern int bitmap_ord_to_pos(const unsigned long *bitmap, int n, int bits);
 
 #define BITMAP_FIRST_WORD_MASK(start) (~0UL << ((start) % BITS_PER_LONG))
+// ARM10C 20140215
+// BITS_PER_LONG: 32
+// BITMAP_LAST_WORD_MASK(4): 0xF
+// ARM10C 20140301
+// BITMAP_LAST_WORD_MASK(8): 0xFF
 #define BITMAP_LAST_WORD_MASK(nbits)					\
 (									\
 	((nbits) % BITS_PER_LONG) ?					\
 		(1UL<<((nbits) % BITS_PER_LONG))-1 : ~0UL		\
 )
 
+// ARM10C 20130831
+// 연산자 우선 순위 : <= 이 && 보다 먼저 수행됨
+// ARM10C 20140215
+// nbits: 4
+// ARM10C 20140301
+// nbits: 8
 #define small_const_nbits(nbits) \
 	(__builtin_constant_p(nbits) && (nbits) <= BITS_PER_LONG)
 
@@ -166,14 +177,25 @@ static inline void bitmap_zero(unsigned long *dst, int nbits)
 	}
 }
 
+// ARM10C 20140301
+// dst: schunk->populated, nbits: 8
+// dst: dchunk->populated, nbits: 8
 static inline void bitmap_fill(unsigned long *dst, int nbits)
 {
+	// nbits: 8, BITS_TO_LONGS(8): 1
 	size_t nlongs = BITS_TO_LONGS(nbits);
+	// nlongs: 1
+
+	// nbits: 8, small_const_nbits(8): 1
 	if (!small_const_nbits(nbits)) {
 		int len = (nlongs - 1) * sizeof(unsigned long);
 		memset(dst, 0xff,  len);
 	}
+
+	// dst: schunk->populated, nlongs: 1, nbits: 8, BITMAP_LAST_WORD_MASK(8): 0xFF
 	dst[nlongs - 1] = BITMAP_LAST_WORD_MASK(nbits);
+	// schunk->populated[0]: 0xFF
+	// dchunk->populated[0]: 0xFF
 }
 
 static inline void bitmap_copy(unsigned long *dst, const unsigned long *src,
@@ -273,10 +295,17 @@ static inline int bitmap_full(const unsigned long *src, int nbits)
 		return __bitmap_full(src, nbits);
 }
 
+// ARM10C 20140215
+// cpumask_bits(cpu_possible_mask): cpu_possible_mask->bits, nr_cpumask_bits: 4
 static inline int bitmap_weight(const unsigned long *src, int nbits)
 {
+	// nbits: 4
+	// small_const_nbits(4): 1
 	if (small_const_nbits(nbits))
+		// src: cpu_possible_mask->bits, BITMAP_LAST_WORD_MASK(4): 0xF
 		return hweight_long(*src & BITMAP_LAST_WORD_MASK(nbits));
+		// return 4 
+
 	return __bitmap_weight(src, nbits);
 }
 

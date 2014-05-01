@@ -28,17 +28,29 @@
  * Allow for constants defined here to be used from assembly code
  * by prepending the UL suffix only with actual C code compilation.
  */
+/*
+// ARM10C 20140419
+// UL(x) : xUL
+*/
 #define UL(x) _AC(x, UL)
 
 /* PAGE_OFFSET - the virtual address of the start of the kernel image */
+/*
+// PAGE_OFFSET: 0xC0000000
+*/
 #define PAGE_OFFSET		UL(CONFIG_PAGE_OFFSET)
 
-#ifdef CONFIG_MMU
+#ifdef CONFIG_MMU // CONFIG_MMU=y
 
 /*
  * TASK_SIZE - the maximum size of a user space task.
  * TASK_UNMAPPED_BASE - the lower boundary of the mmap VM area
  */
+/*
+// ARM10C 20131102
+// ARM10C 20140419
+// TASK_SIZE: 0xBF000000
+*/
 #define TASK_SIZE		(UL(CONFIG_PAGE_OFFSET) - UL(SZ_16M))
 #define TASK_UNMAPPED_BASE	ALIGN(TASK_SIZE / 3, SZ_16M)
 
@@ -51,7 +63,12 @@
  * The module space lives between the addresses given by TASK_SIZE
  * and PAGE_OFFSET - it must be within 32MB of the kernel text.
  */
-#ifndef CONFIG_THUMB2_KERNEL
+#ifndef CONFIG_THUMB2_KERNEL // CONFIG_THUMB2_KERNEL=n
+/*
+// ARM10C 20131102
+// ARM10C 20140419
+// MODULES_VADDR: 0xBF000000: 0xC0000000 - 0x01000000
+*/
 #define MODULES_VADDR		(PAGE_OFFSET - SZ_16M)
 #else
 /* smaller range for Thumb-2 symbols relocation (2^24)*/
@@ -65,7 +82,12 @@
 /*
  * The highmem pkmap virtual space shares the end of the module area.
  */
-#ifdef CONFIG_HIGHMEM
+#ifdef CONFIG_HIGHMEM // CONFIG_HIGHMEM=y
+/*
+// ARM10C 20140419
+// PAGE_OFFSET: 0xC0000000, PMD_SIZE: 0x200000
+// MODULES_END: 0xBFE00000
+*/
 #define MODULES_END		(PAGE_OFFSET - PMD_SIZE)
 #else
 #define MODULES_END		(PAGE_OFFSET)
@@ -127,7 +149,16 @@
 /*
  * Convert a physical address to a Page Frame Number and back
  */
+/*
+// ARM10C 20131019
+// ARM10C 20131102
+*/
 #define	__phys_to_pfn(paddr)	((unsigned long)((paddr) >> PAGE_SHIFT))
+/*
+// ARM10C 20131109
+// ARM10C 20131123
+// ARM10C 20131207
+*/
 #define	__pfn_to_phys(pfn)	((phys_addr_t)(pfn) << PAGE_SHIFT)
 
 /*
@@ -168,7 +199,7 @@
  * files.  Use virt_to_phys/phys_to_virt/__pa/__va instead.
  */
 #ifndef __virt_to_phys
-#ifdef CONFIG_ARM_PATCH_PHYS_VIRT
+#ifdef CONFIG_ARM_PATCH_PHYS_VIRT // CONFIG_ARM_PATCH_PHYS_VIRT=y
 
 /*
  * Constants used to force the right instruction encodings and shifts
@@ -183,6 +214,16 @@ extern void fixup_pv_table(const void *, unsigned long);
 extern const void *__pv_table_begin, *__pv_table_end;
 
 #define PHYS_OFFSET __pv_phys_offset
+
+/*
+// FIXME: pushsection 의 사용 방법? 
+// #define __pv_stub(x,t,"sub",__PV_BITS_31_24)			\
+//	   __asm__("@ __pv_stub\n"				\
+//	   "1:	"sub"	t, x, __PV_BITS_31_24\n"		\
+//	   "	.pushsection .pv_table,\"a\"\n"		\
+//	   "	.long	1b\n"				\
+//	   "	.popsection\n"				\
+*/
 
 #define __pv_stub(from,to,instr,type)			\
 	__asm__("@ __pv_stub\n"				\
@@ -226,6 +267,7 @@ static inline phys_addr_t __virt_to_phys(unsigned long x)
 	return t;
 }
 
+// ARM10C 20130928
 static inline unsigned long __phys_to_virt(phys_addr_t x)
 {
 	unsigned long t;
@@ -242,13 +284,25 @@ static inline unsigned long __phys_to_virt(phys_addr_t x)
 
 #else
 
+// ARM10C 20140222
+// PLAT_PHYS_OFFSET: 0x20000000
+// PHYS_OFFSET: 0x20000000
 #define PHYS_OFFSET	PLAT_PHYS_OFFSET
 
+// ARM10C 20140222
+// our config do not use this macro.
+// this comments are just to understand address conversion calculation.
+//
+// PAGE_OFFSET: 0xC0000000, PHYS_OFFSET: 0x20000000
+// (x) - PAGE_OFFSET + PHYS_OFFSET: (x) + 0x60000000
 static inline phys_addr_t __virt_to_phys(unsigned long x)
 {
 	return (phys_addr_t)x - PAGE_OFFSET + PHYS_OFFSET;
 }
 
+// ARM10C 20140222
+// PAGE_OFFSET: 0xC0000000, PHYS_OFFSET: 0x20000000
+// (x) - PHYS_OFFSET + PAGE_OFFSET: (x) + 0xA0000000
 static inline unsigned long __phys_to_virt(phys_addr_t x)
 {
 	return x - PHYS_OFFSET + PAGE_OFFSET;
@@ -265,6 +319,12 @@ static inline unsigned long __phys_to_virt(phys_addr_t x)
  * direct-mapped view.  We assume this is the first page
  * of RAM in the mem_map as well.
  */
+/*
+// ARM10C 20140329
+// ARM10C 20140419
+// PHYS_OFFSET: 0x20000000, PAGE_SHIFT: 12
+// PHYS_PFN_OFFSET: 0x20000
+*/
 #define PHYS_PFN_OFFSET	((unsigned long)(PHYS_OFFSET >> PAGE_SHIFT))
 
 /*
@@ -278,6 +338,7 @@ static inline phys_addr_t virt_to_phys(const volatile void *x)
 	return __virt_to_phys((unsigned long)(x));
 }
 
+// ARM10C 20130928
 static inline void *phys_to_virt(phys_addr_t x)
 {
 	return (void *)__phys_to_virt(x);
@@ -286,7 +347,13 @@ static inline void *phys_to_virt(phys_addr_t x)
 /*
  * Drivers should NOT use these either.
  */
+/*
+// ARM10C 20131019
+*/
 #define __pa(x)			__virt_to_phys((unsigned long)(x))
+/*
+// ARM10C 20131109
+*/
 #define __va(x)			((void *)__phys_to_virt((phys_addr_t)(x)))
 #define pfn_to_kaddr(pfn)	__va((pfn) << PAGE_SHIFT)
 
@@ -343,6 +410,10 @@ static inline __deprecated void *bus_to_virt(unsigned long x)
  */
 #define ARCH_PFN_OFFSET		PHYS_PFN_OFFSET
 
+/*
+// ARM10C 20140125
+// PAGE_SHIFT: 12
+*/
 #define virt_to_page(kaddr)	pfn_to_page(__pa(kaddr) >> PAGE_SHIFT)
 #define virt_addr_valid(kaddr)	(((unsigned long)(kaddr) >= PAGE_OFFSET && (unsigned long)(kaddr) < (unsigned long)high_memory) \
 					&& pfn_valid(__pa(kaddr) >> PAGE_SHIFT) )

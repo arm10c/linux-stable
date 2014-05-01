@@ -1,4 +1,4 @@
-/*
+﻿/*
  *  arch/arm/include/asm/processor.h
  *
  *  Copyright (C) 1995-1999 Russell King
@@ -102,18 +102,29 @@ unsigned long get_wchan(struct task_struct *p);
 /*
  * Prefetching support - only ARMv5.
  */
-#if __LINUX_ARM_ARCH__ >= 5
+#if __LINUX_ARM_ARCH__ >= 5 // __LINUX_ARM_ARCH__: 7
 
 #define ARCH_HAS_PREFETCH
+// ARM10C 20140329
+// "pld\t%a0"의 %a0의 의미는?
+// Arm Procedure Call Standard (APCS) Conventions
+// Argument registers: %a0 - %a4 (aliased to %r0 - %r4)
+// pld의 사용 이유?
+// http://stackoverflow.com/questions/6414555/proper-use-of-the-arm-pld-instruction-arm11
+//
+// page: 0x20000의 해당하는 struct page의 주소
 static inline void prefetch(const void *ptr)
 {
 	__asm__ __volatile__(
 		"pld\t%a0"
 		:: "p" (ptr));
+	// cache table에 page 주소를 넣음
 }
 
 #if __LINUX_ARM_ARCH__ >= 7 && defined(CONFIG_SMP)
 #define ARCH_HAS_PREFETCHW
+// ARM10C 20140329
+// page: 0x20000의 해당하는 struct page의 주소
 static inline void prefetchw(const void *ptr)
 {
 	__asm__ __volatile__(

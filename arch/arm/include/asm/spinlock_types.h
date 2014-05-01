@@ -7,21 +7,26 @@
 
 #define TICKET_SHIFT	16
 
+// ARM10C 20140125
+// ARM10C 20140315
+// ARM10C 20140419
+// sizeof(arch_spinlock_t) : 4 byte
 typedef struct {
 	union {
 		u32 slock;
 		struct __raw_tickets {
-#ifdef __ARMEB__
+#ifdef __ARMEB__    // ARM10C N 
 			u16 next;
 			u16 owner;
 #else
-			u16 owner;
+			u16 owner;  // ARM10C this 
 			u16 next;
 #endif
 		} tickets;
 	};
 } arch_spinlock_t;
 
+// ARM10C 20140315
 #define __ARCH_SPIN_LOCK_UNLOCKED	{ { 0 } }
 
 typedef struct {

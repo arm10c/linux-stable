@@ -60,6 +60,7 @@ EXPORT_SYMBOL(strnicmp);
 #endif
 
 #ifndef __HAVE_ARCH_STRCASECMP
+// ARM10C 20131005
 int strcasecmp(const char *s1, const char *s2)
 {
 	int c1, c2;
@@ -342,6 +343,7 @@ EXPORT_SYMBOL(strnchr);
  *
  * Returns a pointer to the first non-whitespace character in @str.
  */
+// ARM10C 20131019
 char *skip_spaces(const char *str)
 {
 	while (isspace(*str))
@@ -617,6 +619,7 @@ EXPORT_SYMBOL(memcpy);
  *
  * Unlike memcpy(), memmove() copes with overlapping areas.
  */
+// ARM10C 20131019
 void *memmove(void *dest, const void *src, size_t count)
 {
 	char *tmp;

@@ -10,6 +10,7 @@
 struct vm_area_struct;		/* vma defining user mapping in mm_types.h */
 
 /* bits in flags of vmalloc's vm_struct below */
+// ARM10C 20131130
 #define VM_IOREMAP		0x00000001	/* ioremap() and friends */
 #define VM_ALLOC		0x00000002	/* vmalloc() */
 #define VM_MAP			0x00000004	/* vmap()ed pages */
@@ -26,6 +27,7 @@ struct vm_area_struct;		/* vma defining user mapping in mm_types.h */
 #define IOREMAP_MAX_ORDER	(7 + PAGE_SHIFT)	/* 128 pages */
 #endif
 
+// ARM10C 20131116
 struct vm_struct {
 	struct vm_struct	*next;
 	void			*addr;

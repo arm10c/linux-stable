@@ -42,8 +42,10 @@ DEFINE_PER_CPU(int, __kmap_atomic_idx);
  *    since the last TLB flush - so we can't use it.
  *  n means that there are (n-1) current users of it.
  */
-#ifdef CONFIG_HIGHMEM
+// ARM10C 20140419
+#ifdef CONFIG_HIGHMEM // CONFIG_HIGHMEM=y
 
+// ARM10C 20140419
 unsigned long totalhigh_pages __read_mostly;
 EXPORT_SYMBOL(totalhigh_pages);
 
@@ -71,6 +73,7 @@ static int pkmap_count[LAST_PKMAP];
 static unsigned int last_pkmap_nr;
 static  __cacheline_aligned_in_smp DEFINE_SPINLOCK(kmap_lock);
 
+// ARM10C 20131130
 pte_t * pkmap_page_table;
 
 static DECLARE_WAIT_QUEUE_HEAD(pkmap_map_wait);
@@ -329,6 +332,11 @@ static struct page_address_map page_address_maps[LAST_PKMAP];
 /*
  * Hash table bucket
  */
+// ARM10C 20130914
+// 64 byte align되어있음.
+// - ____cacheline_aligned_in_smp는 64byte align 시키는 attribute.
+// - 배열 사이즈: 1<<PA_HASH_ORDER = 1<<7 = 128
+// ARM10C 20140125
 static struct page_address_slot {
 	struct list_head lh;			/* List of page_address_maps */
 	spinlock_t lock;			/* Protect this bucket's list */
@@ -345,14 +353,17 @@ static struct page_address_slot *page_slot(const struct page *page)
  *
  * Returns the page's virtual address.
  */
+// ARM10C 20140125
 void *page_address(const struct page *page)
 {
 	unsigned long flags;
 	void *ret;
 	struct page_address_slot *pas;
 
+	// PageHighMem(page): 0
 	if (!PageHighMem(page))
 		return lowmem_page_address(page);
+		// page의 virtual address 값을 리턴
 
 	pas = page_slot(page);
 	ret = NULL;
@@ -411,10 +422,12 @@ done:
 	return;
 }
 
+// ARM10C 20130914
 void __init page_address_init(void)
 {
 	int i;
 
+	// 128개의 page_address_htable 배열을 초기화
 	for (i = 0; i < ARRAY_SIZE(page_address_htable); i++) {
 		INIT_LIST_HEAD(&page_address_htable[i].lh);
 		spin_lock_init(&page_address_htable[i].lock);

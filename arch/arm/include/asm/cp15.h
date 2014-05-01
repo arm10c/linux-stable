@@ -19,6 +19,7 @@
 #define CR_F	(1 << 10)	/* Implementation defined		*/
 #define CR_Z	(1 << 11)	/* Implementation defined		*/
 #define CR_I	(1 << 12)	/* Icache enable			*/
+// ARM10C 20131102
 #define CR_V	(1 << 13)	/* Vectors relocated to 0xffff0000	*/
 #define CR_RR	(1 << 14)	/* Round Robin cache replacement	*/
 #define CR_L4	(1 << 15)	/* LDR pc can set T bit			*/
@@ -32,9 +33,11 @@
 #define CR_ST	(1 << 19)
 #define CR_FI	(1 << 21)	/* Fast interrupt (lower latency mode)	*/
 #define CR_U	(1 << 22)	/* Unaligned access operation		*/
+// ARM10C 20131026
 #define CR_XP	(1 << 23)	/* Extended page tables			*/
 #define CR_VE	(1 << 24)	/* Vectored interrupts			*/
 #define CR_EE	(1 << 25)	/* Exception (Big) Endian		*/
+// ARM10C 20131026
 #define CR_TRE	(1 << 28)	/* TEX remap enable			*/
 #define CR_AFE	(1 << 29)	/* Access flag enable			*/
 #define CR_TE	(1 << 30)	/* Thumb exception enable		*/
@@ -42,16 +45,21 @@
 #ifndef __ASSEMBLY__
 
 #if __LINUX_ARM_ARCH__ >= 4
+// ARM10C 20131102
+// cr_alignment: 0x10c5387d, CR_V: (1 << 13)
+// vectors_high(): (1 << 13)
 #define vectors_high()	(cr_alignment & CR_V)
 #else
 #define vectors_high()	(0)
 #endif
 
-#ifdef CONFIG_CPU_CP15
+// ARM10C 20130914
+#ifdef CONFIG_CPU_CP15 // CONFIG_CPU_CP15 = y
 
 extern unsigned long cr_no_alignment;	/* defined in entry-armv.S */
 extern unsigned long cr_alignment;	/* defined in entry-armv.S */
 
+// ARM10C 20131026
 static inline unsigned int get_cr(void)
 {
 	unsigned int val;

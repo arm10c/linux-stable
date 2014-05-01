@@ -548,7 +548,15 @@ static inline void rcu_preempt_sleep_check(void)
 		smp_read_barrier_depends(); \
 		(_________p1); \
 	})
-#define __rcu_assign_pointer(p, v, space) \
+
+// ARM10C 20140322
+// p: (&cpu_chain)->head: NULL, v: &page_alloc_cpu_nitify_nb, __rcu: ""
+// #define __rcu_assign_pointer((&cpu_chain)->head, page_alloc_cpu_nitify_nb, ""):
+// do {
+//	  smp_wmb(); // dmb();
+//	  ((&cpu_chain)->head) = (typeof(*&page_alloc_cpu_nitify_nb) __force *)(&page_alloc_cpu_nitify_nb);
+// } while (0)
+#define __rcu_assign_pointer(p, v, space)	\
 	do { \
 		smp_wmb(); \
 		(p) = (typeof(*v) __force space *)(v); \
@@ -912,7 +920,20 @@ static inline notrace void rcu_read_unlock_sched_notrace(void)
  * impossible-to-diagnose memory corruption.  So please be careful.
  * See the RCU_INIT_POINTER() comment header for details.
  */
-#define rcu_assign_pointer(p, v) \
+// ARM10C 20140322
+// __rcu_assign_pointer((&cpu_chain)->head, page_alloc_cpu_nitify_nb, ""):
+// do {
+//	  smp_wmb(); // dmb();
+//	  ((&cpu_chain)->head) = (typeof(*&page_alloc_cpu_nitify_nb) __force *)(&page_alloc_cpu_nitify_nb);
+// } while (0)
+//
+// p: (&cpu_chain)->head: NULL, v: &page_alloc_cpu_nitify_nb
+// #define rcu_assign_pointer((&cpu_chain)->head, &page_alloc_cpu_nitify_nb):
+// do {
+//	  smp_wmb(); // dmb();
+//	  ((&cpu_chain)->head) = (typeof(*&page_alloc_cpu_nitify_nb) __force *)(&page_alloc_cpu_nitify_nb);
+// } while (0)
+#define rcu_assign_pointer(p, v)		\
 	__rcu_assign_pointer((p), (v), __rcu)
 
 /**

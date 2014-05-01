@@ -22,24 +22,47 @@
 
 #include "smpboot.h"
 
-#ifdef CONFIG_SMP
+#ifdef CONFIG_SMP // CONFIG_SMP=y
 /* Serializes the updates to cpu_online_mask, cpu_present_mask */
+// ARM10C 20140315
+// DEFINE_MUTEX(cpu_add_remove_lock):
+// struct mutex cpu_add_remove_lock =
+// { .count = { (1) }
+//    , .wait_lock =
+//    (spinlock_t )
+//    { { .rlock =
+//	  {
+//	  .raw_lock = { { 0 } },
+//	  .magic = 0xdead4ead,
+//	  .owner_cpu = -1,
+//	  .owner = 0xffffffff,
+//	  }
+//    } }
+//    , .wait_list =
+//    { &(cpu_add_remove_lock.wait_list), &(cpu_add_remove_lock.wait_list) }
+//    , .magic = &cpu_add_remove_lock
+// }
 static DEFINE_MUTEX(cpu_add_remove_lock);
 
 /*
  * The following two API's must be used when attempting
  * to serialize the updates to cpu_online_mask, cpu_present_mask.
  */
+// ARM10C 20140315
 void cpu_maps_update_begin(void)
 {
 	mutex_lock(&cpu_add_remove_lock);
 }
 
+// ARM10C 20140322
 void cpu_maps_update_done(void)
 {
 	mutex_unlock(&cpu_add_remove_lock);
 }
 
+// ARM10C 20140322
+// RAW_NOTIFIER_HEAD(cpu_chain):
+// struct raw_notifier_head cpu_chain = { .head = NULL }
 static RAW_NOTIFIER_HEAD(cpu_chain);
 
 /* If set, cpu_up and cpu_down will return -EBUSY and do nothing.
@@ -157,12 +180,22 @@ void cpu_hotplug_enable(void)
 #endif	/* CONFIG_HOTPLUG_CPU */
 
 /* Need to know about CPUs going up/down? */
+// ARM10C 20140315
+// nb: &page_alloc_cpu_nitify_nb
 int __ref register_cpu_notifier(struct notifier_block *nb)
 {
 	int ret;
 	cpu_maps_update_begin();
+	// waiter를 만들어 mutex를 lock을 시도하며 기다리다 가능할 때 mutex lock한다.
+
+	// &cpu_chain, nb: &page_alloc_cpu_nitify_nb
 	ret = raw_notifier_chain_register(&cpu_chain, nb);
+	// (&cpu_chain)->head: page_alloc_cpu_notify_nb 포인터 대입
+	// (&page_alloc_cpu_notify_nb)->next은 NULL로 대입
+
 	cpu_maps_update_done();
+	// mutex를 기다리는(waiter)가 있으면 깨우고 아니면 mutex unlock한다.
+
 	return ret;
 }
 
@@ -639,7 +672,17 @@ void notify_cpu_starting(unsigned int cpu)
 #define MASK_DECLARE_4(x)	MASK_DECLARE_2(x), MASK_DECLARE_2(x+2)
 #define MASK_DECLARE_8(x)	MASK_DECLARE_4(x), MASK_DECLARE_4(x+4)
 
+// ARM10C 20130831
+// cpu_bit_bitmap[33][1]
 const unsigned long cpu_bit_bitmap[BITS_PER_LONG+1][BITS_TO_LONGS(NR_CPUS)] = {
+//      MASK_DECLARE_8(0) 이 아래와 같이 확장됨
+//	[1][0] = (1UL << 0),
+//	[2][0] = (1UL << 1),
+//	[3][0] = (1UL << 2),
+//	[4][0] = (1UL << 3),
+//	[5][0] = (1UL << 4),
+//	[6][0] = (1UL << 5),
+//	[7][0] = (1UL << 6),
 
 	MASK_DECLARE_8(0),	MASK_DECLARE_8(8),
 	MASK_DECLARE_8(16),	MASK_DECLARE_8(24),
@@ -653,12 +696,18 @@ EXPORT_SYMBOL_GPL(cpu_bit_bitmap);
 const DECLARE_BITMAP(cpu_all_bits, NR_CPUS) = CPU_BITS_ALL;
 EXPORT_SYMBOL(cpu_all_bits);
 
-#ifdef CONFIG_INIT_ALL_POSSIBLE
+#ifdef CONFIG_INIT_ALL_POSSIBLE // CONFIG_INIT_ALL_POSSIBLE=n
 static DECLARE_BITMAP(cpu_possible_bits, CONFIG_NR_CPUS) __read_mostly
 	= CPU_BITS_ALL;
 #else
+// ARM10C 20140215
+// CONFIG_NR_CPUS: 4
+// cpu_possible_bits, 4
 static DECLARE_BITMAP(cpu_possible_bits, CONFIG_NR_CPUS) __read_mostly;
 #endif
+// ARM10C 20140215
+// ARM10C 20140301
+// cpu_possible_mask: cpu_possible_bits
 const struct cpumask *const cpu_possible_mask = to_cpumask(cpu_possible_bits);
 EXPORT_SYMBOL(cpu_possible_mask);
 
@@ -674,6 +723,10 @@ static DECLARE_BITMAP(cpu_active_bits, CONFIG_NR_CPUS) __read_mostly;
 const struct cpumask *const cpu_active_mask = to_cpumask(cpu_active_bits);
 EXPORT_SYMBOL(cpu_active_mask);
 
+// ARM10C 20130907 cpu = 0, passible = 1
+// cpu_possible_bits[ 0 ] = 1 이됨  
+// ARM10C 20140215
+// i: 0, true
 void set_cpu_possible(unsigned int cpu, bool possible)
 {
 	if (possible)
@@ -682,6 +735,8 @@ void set_cpu_possible(unsigned int cpu, bool possible)
 		cpumask_clear_cpu(cpu, to_cpumask(cpu_possible_bits));
 }
 
+// ARM10C 20130907 cpu = 0, present = 1
+// cpu_present_bits[ 0 ] = 1 이됨  
 void set_cpu_present(unsigned int cpu, bool present)
 {
 	if (present)
@@ -690,6 +745,8 @@ void set_cpu_present(unsigned int cpu, bool present)
 		cpumask_clear_cpu(cpu, to_cpumask(cpu_present_bits));
 }
 
+// ARM10C 20130907 cpu = 0, online = 1
+// cpu_online_bits[ 0 ] = 1 이됨  
 void set_cpu_online(unsigned int cpu, bool online)
 {
 	if (online)
@@ -698,6 +755,8 @@ void set_cpu_online(unsigned int cpu, bool online)
 		cpumask_clear_cpu(cpu, to_cpumask(cpu_online_bits));
 }
 
+// ARM10C 20130907 cpu = 0, active = 1
+// cpu_active_bits[ 0 ] = 1 이됨  
 void set_cpu_active(unsigned int cpu, bool active)
 {
 	if (active)

@@ -9,6 +9,9 @@
  * Mutexes - debugging helpers:
  */
 
+// ARM10C 20140315
+// __DEBUG_MUTEX_INITIALIZER(cpu_add_remove_lock):
+// , .magic = &cpu_add_remove_lock
 #define __DEBUG_MUTEX_INITIALIZER(lockname)				\
 	, .magic = &lockname
 

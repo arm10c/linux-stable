@@ -26,9 +26,11 @@ ENTRY(_find_first_zero_bit_le)
 		beq	3f
 		mov	r2, #0
 1:
+		// r3: 0x7
  ARM(		ldrb	r3, [r0, r2, lsr #3]	)
  THUMB(		lsr	r3, r2, #3		)
  THUMB(		ldrb	r3, [r0, r3]		)
+		// r3: 0x7 -> 0xF8
 		eors	r3, r3, #0xff		@ invert bits
 		bne	.L_found		@ any now set - found zero bit
 		add	r2, r2, #8		@ next bit pointer
@@ -42,6 +44,10 @@ ENDPROC(_find_first_zero_bit_le)
  * Purpose  : Find next 'zero' bit
  * Prototype: int find_next_zero_bit(void *addr, unsigned int maxbit, int offset)
  */
+// ARM10C 20131207
+// bdata->node_bootmem_map: ?, midx: 0x2f800, sidx: 0x0
+// node_bootmem_map을 아래의 값으로 가정
+// node_bootmem_map[0]: 0x7
 ENTRY(_find_next_zero_bit_le)
 		teq	r1, #0
 		beq	3b
@@ -83,6 +89,8 @@ ENDPROC(_find_first_bit_le)
  * Purpose  : Find next 'one' bit
  * Prototype: int find_next_zero_bit(void *addr, unsigned int maxbit, int offset)
  */
+ // ARM10C 20140215
+// p: cpu_possible_mask->bits: 0xF , sz: 4, off: 0
 ENTRY(_find_next_bit_le)
 		teq	r1, #0
 		beq	3b
@@ -172,12 +180,18 @@ ENDPROC(_find_next_bit_be)
 /*
  * One or more bits in the LSB of r3 are assumed to be set.
  */
+// ARM10C 20131207
 .L_found:
 #if __LINUX_ARM_ARCH__ >= 5
+		// r3: 0xF8, r0 = 0 - 0xF8: 0xFFFFFF08
 		rsb	r0, r3, #0
+		// r3: 0xF8 & 0xFFFFFF08: 0x8
 		and	r3, r3, r0
+		// r3: 0x00000008, r3: 28
 		clz	r3, r3
+		// r3: 31 - 28: 3
 		rsb	r3, r3, #31
+		// r0: r2 + 3
 		add	r0, r2, r3
 #else
 		tst	r3, #0x0f

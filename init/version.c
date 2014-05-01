@@ -22,6 +22,8 @@ extern int version_string(LINUX_VERSION_CODE);
 int version_string(LINUX_VERSION_CODE);
 #endif
 
+// ARM10C 20130914
+// compile 후 생성되는 include/generated/complie.h 참조
 struct uts_namespace init_uts_ns = {
 	.kref = {
 		.refcount	= ATOMIC_INIT(2),

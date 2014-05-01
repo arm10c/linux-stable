@@ -11,6 +11,13 @@
  * linkage errors occur due the compiler generating the wrong code to access
  * that section.
  */
+
+// ARM10C 20140111
+// sec = ""
+// #define PER_CPU_BASE_SECTION ".data..percpu"
+// PER_CPU_ATTRIBUTES = undefined
+// ARM10C 20140308
+// __PCPU_ATTRS(""): __attribute__((section(".data..percpu" "")))
 #define __PCPU_ATTRS(sec)						\
 	__percpu __attribute__((section(PER_CPU_BASE_SECTION sec)))	\
 	PER_CPU_ATTRIBUTES
@@ -26,6 +33,14 @@
  * + 0 is required in order to convert the pointer type from a
  * potential array type to a pointer to a single item of the array.
  */
+// ARM10C 20140308
+// __verify_pcpu_ptr((&boot_pageset));
+// ARM10C 20140405
+// #define __verify_pcpu_ptr(&(vm_event_states.event[PGFREE])):
+// do {
+// 	const void __percpu *__vpp_verify = (typeof(&(vm_event_states.event[PGFREE]))NULL;
+// 	(void)__vpp_verify;
+// } while (0)
 #define __verify_pcpu_ptr(ptr)	do {					\
 	const void __percpu *__vpp_verify = (typeof((ptr) + 0))NULL;	\
 	(void)__vpp_verify;						\
@@ -50,7 +65,7 @@
  * restrictions, if CONFIG_DEBUG_FORCE_WEAK_PER_CPU is set weak
  * definition is used for all cases.
  */
-#if defined(ARCH_NEEDS_WEAK_PER_CPU) || defined(CONFIG_DEBUG_FORCE_WEAK_PER_CPU)
+#if defined(ARCH_NEEDS_WEAK_PER_CPU) || defined(CONFIG_DEBUG_FORCE_WEAK_PER_CPU)	// ARCH_NEEDS_WEAK_PER_CPU = undefined, CONFIG_DEBUG_FORCE_WEAK_PER_CPU = n 
 /*
  * __pcpu_scope_* dummy variable is used to enforce scope.  It
  * receives the static modifier when it's used in front of
@@ -79,6 +94,21 @@
 #define DECLARE_PER_CPU_SECTION(type, name, sec)			\
 	extern __PCPU_ATTRS(sec) __typeof__(type) name
 
+// ARM10C 20140111
+// type = struct per_cpu_pageset, name = boot_pageset
+// __attribute__((section(.data..percpu))) struct per_cpu_pageset boot_pageset
+//
+// ARM10C 20140308
+// __PCPU_ATTRS(""): __attribute__((section(".data..percpu" "")))
+// DEFINE_PER_CPU_SECTION(struct per_cpu_pageset, boot_pageset, "")
+//	__attribute__((section(".data..percpu" "")))
+//	__typeof__(struct per_cpu_pageset) boot_pageset
+//
+// ARM10C 20140405
+// __PCPU_ATTRS(""): __attribute__((section(".data..percpu" "")))
+// DEFINE_PER_CPU_SECTION(struct vm_event_state, vm_event_states, ""):
+//	__attribute__((section(".data..percpu" "")))
+//	__typeof__(struct vm_event_state) vm_event_states
 #define DEFINE_PER_CPU_SECTION(type, name, sec)				\
 	__PCPU_ATTRS(sec) PER_CPU_DEF_ATTRIBUTES			\
 	__typeof__(type) name
@@ -91,6 +121,20 @@
 #define DECLARE_PER_CPU(type, name)					\
 	DECLARE_PER_CPU_SECTION(type, name, "")
 
+// ARM10C 20140111
+// type = struct per_cpu_pageset, name = boot_pageset
+// ARM10C 20140308
+// static DEFINE_PER_CPU(struct per_cpu_pageset, boot_pageset)
+// DEFINE_PER_CPU_SECTION(struct per_cpu_pageset, boot_pageset, "")
+//
+// ARM10C 20140405
+// DEFINE_PER_CPU_SECTION(struct vm_event_state, vm_event_states, ""):
+//	__attribute__((section(".data..percpu" "")))
+//	__typeof__(struct vm_event_state) vm_event_states
+//
+// DEFINE_PER_CPU(struct vm_event_state, vm_event_states):
+//	__attribute__((section(".data..percpu" "")))
+//	__typeof__(struct vm_event_state) vm_event_states
 #define DEFINE_PER_CPU(type, name)					\
 	DEFINE_PER_CPU_SECTION(type, name, "")
 
@@ -157,6 +201,26 @@
  * noop if __CHECKER__.
  */
 #ifndef __CHECKER__
+// ARM10C 20140405
+// EXPORT_SYMBOL(vm_event_states):
+// extern typeof(vm_event_states) vm_event_states;
+// static const char __kstrtab_vm_event_states[]
+// __attribute__((section("__ksymtab_strings"), aligned(1)))
+// = "vm_event_states";
+// static const struct kernel_symbol __ksymtab_vm_event_states
+// __attribute__((__used__))
+// __attribute__((section("___ksymtab" "" "+" "vm_event_states"), unused))
+// = { (unsigned long)&vm_event_states, __kstrtab_vm_event_states }
+//
+// EXPORT_PER_CPU_SYMBOL(vm_event_states):
+// extern typeof(vm_event_states) vm_event_states;
+// static const char __kstrtab_vm_event_states[]
+// __attribute__((section("__ksymtab_strings"), aligned(1)))
+// = "vm_event_states";
+// static const struct kernel_symbol __ksymtab_vm_event_states
+// __attribute__((__used__))
+// __attribute__((section("___ksymtab" "" "+" "vm_event_states"), unused))
+// = { (unsigned long)&vm_event_states, __kstrtab_vm_event_states }
 #define EXPORT_PER_CPU_SYMBOL(var) EXPORT_SYMBOL(var)
 #define EXPORT_PER_CPU_SYMBOL_GPL(var) EXPORT_SYMBOL_GPL(var)
 #else

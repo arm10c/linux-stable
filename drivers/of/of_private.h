@@ -23,6 +23,8 @@
  * The structure represents one alias property of 'aliases' node as
  * an entry in aliases_lookup list.
  */
+// ARM10C 20140208
+// size : 21 byte
 struct alias_prop {
 	struct list_head link;
 	const char *alias;

@@ -357,6 +357,7 @@ EXPORT_SYMBOL(bitmap_find_next_zero_area);
  * second version by Paul Jackson, third by Joe Korty.
  */
 
+// ARM10C 20140301
 #define CHUNKSZ				32
 #define nbits_to_hold_value(val)	fls(val)
 #define BASEDEC 10		/* fancier cpuset lists input in decimal */
@@ -372,6 +373,8 @@ EXPORT_SYMBOL(bitmap_find_next_zero_area);
  * comma-separated sets of eight digits per set.  Returns the number of
  * characters which were written to *buf, excluding the trailing \0.
  */
+// ARM10C 20140301
+// len: 4096, cpumask_bits(cpu_possible_bits): 0xF, nr_cpumask_bits: 4
 int bitmap_scnprintf(char *buf, unsigned int buflen,
 	const unsigned long *maskp, int nmaskbits)
 {
@@ -381,22 +384,48 @@ int bitmap_scnprintf(char *buf, unsigned int buflen,
 	int chunksz;
 	u32 chunkmask;
 
+	// nmaskbits: 4, CHUNKSZ: 32
 	chunksz = nmaskbits & (CHUNKSZ - 1);
+	// chunksz: 4
+
 	if (chunksz == 0)
 		chunksz = CHUNKSZ;
 
+	// nmaskbits: 4, CHUNKSZ: 32
 	i = ALIGN(nmaskbits, CHUNKSZ) - CHUNKSZ;
+	// i = 0
+
 	for (; i >= 0; i -= CHUNKSZ) {
+		// chunksz: 4
 		chunkmask = ((1ULL << chunksz) - 1);
+		// chunkmask: 0xF
+
+		// BITS_PER_LONG: 32
 		word = i / BITS_PER_LONG;
+		// word: 0
+
 		bit = i % BITS_PER_LONG;
+		// bit: 0
+
+		// maskp[0]: 0xF, chunkmask: 0xF
 		val = (maskp[word] >> bit) & chunkmask;
+		// val: 0xF
+
+		// len: 0, buflen-len: 4095, sep: "", chunksz: 4, (chunksz+3)/4: 1, val: 0xF
 		len += scnprintf(buf+len, buflen-len, "%s%0*lx", sep,
 			(chunksz+3)/4, val);
+		// buf: "f", len: 1
+
 		chunksz = CHUNKSZ;
+		// chunksz: 32
+
 		sep = ",";
 	}
+
+	// len: 1
 	return len;
+	// buf: "f", len: 1
+	// return 1
 }
 EXPORT_SYMBOL(bitmap_scnprintf);
 

@@ -363,6 +363,7 @@
 	}								\
 									\
 	/* Built-in module parameters. */				\
+	/* ARM10C 20140322 */						\
 	__param : AT(ADDR(__param) - LOAD_OFFSET) {			\
 		VMLINUX_SYMBOL(__start___param) = .;			\
 		*(__param)						\
@@ -610,6 +611,7 @@
 		VMLINUX_SYMBOL(__stop_notes) = .;			\
 	}
 
+/* ARM10C 20131019 */
 #define INIT_SETUP(initsetup_align)					\
 		. = ALIGN(initsetup_align);				\
 		VMLINUX_SYMBOL(__setup_start) = .;			\
@@ -684,6 +686,9 @@
  * @cacheline is used to align subsections to avoid false cacheline
  * sharing between subsections for different purposes.
  */
+/*
+// ARM10C 20140308
+*/
 #define PERCPU_INPUT(cacheline)						\
 	VMLINUX_SYMBOL(__per_cpu_start) = .;				\
 	*(.data..percpu..first)						\
@@ -740,6 +745,9 @@
  * except that __per_cpu_load is defined as a relative symbol against
  * .data..percpu which is required for relocatable x86_32 configuration.
  */
+/*
+// ARM10C 20140308
+*/
 #define PERCPU_SECTION(cacheline)					\
 	. = ALIGN(PAGE_SIZE);						\
 	.data..percpu	: AT(ADDR(.data..percpu) - LOAD_OFFSET) {	\

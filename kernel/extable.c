@@ -1,4 +1,4 @@
-/* Rewritten by Rusty Russell, on the backs of many others...
+﻿/* Rewritten by Rusty Russell, on the backs of many others...
    Copyright (C) 2001 Rusty Russell, 2002 Rusty Russell IBM.
 
     This program is free software; you can redistribute it and/or modify
@@ -39,11 +39,14 @@ extern struct exception_table_entry __stop___ex_table[];
 u32 __initdata main_extable_sort_needed = 1;
 
 /* Sort the kernel's built-in exception table */
+// ARM10C 20140329
 void __init sort_main_extable(void)
 {
+	// main_extable_sort_needed: 1
 	if (main_extable_sort_needed && __stop___ex_table > __start___ex_table) {
 		pr_notice("Sorting __ex_table...\n");
 		sort_extable(__start___ex_table, __stop___ex_table);
+		// extable 을 cmp_ex를 이용하여 sort수행
 	}
 }
 

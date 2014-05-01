@@ -9,19 +9,31 @@
 /*
  * Runtime evaluation of get_order()
  */
+// ARM10C 20140419
+// size: 64
 static inline __attribute_const__
 int __get_order(unsigned long size)
 {
 	int order;
 
+	// size: 64
 	size--;
+	// size: 63
+
+	// size: 63, PAGE_SHIFT: 12
 	size >>= PAGE_SHIFT;
-#if BITS_PER_LONG == 32
+	// size : 0
+
+#if BITS_PER_LONG == 32 // BITS_PER_LONG: 32
+	// size : 0
 	order = fls(size);
+	// order: 0
 #else
 	order = fls64(size);
 #endif
+	// order: 0
 	return order;
+	// return 0
 }
 
 /**
@@ -46,6 +58,7 @@ int __get_order(unsigned long size)
  * This function may be used to initialise variables with compile time
  * evaluations of constants.
  */
+// ARM10C 20140419
 #define get_order(n)						\
 (								\
 	__builtin_constant_p(n) ? (				\

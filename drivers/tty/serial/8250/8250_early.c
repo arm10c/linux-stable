@@ -240,6 +240,7 @@ static int __init early_serial8250_setup(char *options)
 	return 0;
 }
 
+// ARM10C 20131019
 int __init setup_early_serial8250_console(char *cmdline)
 {
 	char *options;
@@ -285,4 +286,5 @@ int serial8250_find_port_for_earlycon(void)
 	return ret;
 }
 
+// ARM10C 20131019
 early_param("earlycon", setup_early_serial8250_console);

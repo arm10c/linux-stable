@@ -16,10 +16,12 @@
 #ifdef __KERNEL__
 
 #ifdef __STDC__
+// ARM10C 20130928
 #define ____glue(name,fn)	name##fn
 #else
 #define ____glue(name,fn)	name/**/fn
 #endif
+// ARM10C 20130928
 #define __glue(name,fn)		____glue(name,fn)
 
 #endif

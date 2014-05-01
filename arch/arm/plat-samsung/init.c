@@ -35,8 +35,10 @@
 
 #include <plat/regs-serial.h>
 
+// ARM10C 20131130
 static struct cpu_table *cpu;
 
+// ARM10C 20131130
 static struct cpu_table * __init s3c_lookup_cpu(unsigned long idcode,
 						struct cpu_table *tab,
 						unsigned int count)
@@ -49,6 +51,7 @@ static struct cpu_table * __init s3c_lookup_cpu(unsigned long idcode,
 	return NULL;
 }
 
+// ARM10C 20131130
 void __init s3c_init_cpu(unsigned long idcode,
 			 struct cpu_table *cputab, unsigned int cputab_size)
 {
@@ -59,6 +62,7 @@ void __init s3c_init_cpu(unsigned long idcode,
 		panic("Unknown S3C24XX CPU");
 	}
 
+	// CPU EXYNOS5420 (id 0xE5420000)
 	printk("CPU %s (id 0x%08lx)\n", cpu->name, idcode);
 
 	if (cpu->init == NULL) {
@@ -67,6 +71,7 @@ void __init s3c_init_cpu(unsigned long idcode,
 	}
 
 	if (cpu->map_io)
+		// cpu->map_io: exynos5_map_io
 		cpu->map_io();
 }
 

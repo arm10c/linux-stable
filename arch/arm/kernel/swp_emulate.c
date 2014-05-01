@@ -33,6 +33,7 @@
 /*
  * Error-checking SWP macros implemented using ldrex{b}/strex{b}
  */
+// ARM10C 20140329
 #define __user_swpX_asm(data, addr, res, temp, B)		\
 	__asm__ __volatile__(					\
 	"	mov		%2, %1\n"			\

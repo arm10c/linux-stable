@@ -220,6 +220,7 @@ static int _fdt_resize_property(void *fdt, int nodeoffset, const char *name,
 	return 0;
 }
 
+// ARM10C 20131012
 static int _fdt_add_property(void *fdt, int nodeoffset, const char *name,
 			     int len, struct fdt_property **prop)
 {
@@ -271,6 +272,7 @@ int fdt_set_name(void *fdt, int nodeoffset, const char *name)
 	return 0;
 }
 
+// ARM10C 20131012
 int fdt_setprop(void *fdt, int nodeoffset, const char *name,
 		const void *val, int len)
 {
@@ -413,6 +415,9 @@ static void _fdt_packblocks(const char *old, char *new,
 	fdt_set_size_dt_strings(new, fdt_size_dt_strings(old));
 }
 
+//void *fdt = r0 = atags/device tree pointer
+//void *buf = r0 = atags/device tree pointer
+//int bufsize = r2 = (sp - _edata)
 int fdt_open_into(const void *fdt, void *buf, int bufsize)
 {
 	int err;

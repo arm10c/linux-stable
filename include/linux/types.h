@@ -6,6 +6,8 @@
 
 #ifndef __ASSEMBLY__
 
+// ARM10C 20140215
+// cpu_possible_bits[1]
 #define DECLARE_BITMAP(name,bits) \
 	unsigned long name[BITS_TO_LONGS(bits)]
 
@@ -154,6 +156,7 @@ typedef u32 dma_addr_t;
 #ifdef __CHECK_ENDIAN__
 #else
 #endif
+// ARM10C 20140426
 typedef unsigned __bitwise__ gfp_t;
 typedef unsigned __bitwise__ fmode_t;
 typedef unsigned __bitwise__ oom_flags_t;
@@ -164,6 +167,7 @@ typedef u64 phys_addr_t;
 typedef u32 phys_addr_t;
 #endif
 
+// ARM10C 20140125
 typedef phys_addr_t resource_size_t;
 
 /*
@@ -172,6 +176,8 @@ typedef phys_addr_t resource_size_t;
  */
 typedef unsigned long irq_hw_number_t;
 
+// ARM10C 20140329
+// ARM10C 20140419
 typedef struct {
 	int counter;
 } atomic_t;
@@ -182,14 +188,23 @@ typedef struct {
 } atomic64_t;
 #endif
 
+// ARM10C 20131123
+// ARM10C 20131207
+// sizeof(struct list_head) : 8 bytes
 struct list_head {
 	struct list_head *next, *prev;
 };
 
+// ARM10C 20140322
+// sizeof(struct hlist_head): 4 bytes
+// ARM10C 20140322
+// sizeof(struct hlist_head): 4 bytes
 struct hlist_head {
 	struct hlist_node *first;
 };
 
+// ARM10C 20140322
+// sizeof : 8
 struct hlist_node {
 	struct hlist_node *next, **pprev;
 };
@@ -206,10 +221,13 @@ struct ustat {
  * @next: next update requests in a list
  * @func: actual update function to call after the grace period.
  */
+// ARM10C 20140419
+// sizeof(callback_head) : 8 bytes
 struct callback_head {
 	struct callback_head *next;
 	void (*func)(struct callback_head *head);
 };
+// ARM10C 20140419
 #define rcu_head callback_head
 
 #endif /*  __ASSEMBLY__ */

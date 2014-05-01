@@ -97,9 +97,11 @@ static struct kmem_cache *dentry_cache __read_mostly;
  * information, yet avoid using a prime hash-size or similar.
  */
 
+// ARM10C 20140322
 static unsigned int d_hash_mask __read_mostly;
+// ARM10C 20140322
 static unsigned int d_hash_shift __read_mostly;
-
+// ARM10C 20140322
 static struct hlist_bl_head *dentry_hashtable __read_mostly;
 
 static inline struct hlist_bl_head *d_hash(const struct dentry *parent,
@@ -3349,6 +3351,7 @@ static int __init set_dhash_entries(char *str)
 }
 __setup("dhash_entries=", set_dhash_entries);
 
+// ARM10C 20140322
 static void __init dcache_init_early(void)
 {
 	unsigned int loop;
@@ -3356,9 +3359,10 @@ static void __init dcache_init_early(void)
 	/* If hashes are distributed across NUMA nodes, defer
 	 * hash allocation until vmalloc space is available.
 	 */
+	// hashdist: 0
 	if (hashdist)
 		return;
-
+	
 	dentry_hashtable =
 		alloc_large_system_hash("Dentry cache",
 					sizeof(struct hlist_bl_head),
@@ -3369,9 +3373,13 @@ static void __init dcache_init_early(void)
 					&d_hash_mask,
 					0,
 					0);
+	// Dentry cache용 dentry hash를 위한 메모리 공간을 512kB만큼 할당 받고,
+	// d_hash_shift: 17, d_hash_mask: 0x1FFFF로 변경됨
 
+	// d_hash_shift: 17
 	for (loop = 0; loop < (1U << d_hash_shift); loop++)
 		INIT_HLIST_BL_HEAD(dentry_hashtable + loop);
+	// 131072개 만큼 hash를 만들었다. 총 hash크기는 512kB이다.
 }
 
 static void __init dcache_init(void)
@@ -3411,10 +3419,14 @@ EXPORT_SYMBOL(names_cachep);
 
 EXPORT_SYMBOL(d_genocide);
 
+// ARM10C 20140322
 void __init vfs_caches_init_early(void)
 {
 	dcache_init_early();
+	// 131072개 만큼 hash를 만들었다. 총 hash크기는 512kB이다.
+
 	inode_init_early();
+	// 65536개 만큼 hash를 만들었다. 총 hash크기는 256kB이다.
 }
 
 void __init vfs_caches_init(unsigned long mempages)

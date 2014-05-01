@@ -33,6 +33,7 @@ struct resource ioport_resource = {
 };
 EXPORT_SYMBOL(ioport_resource);
 
+// ARM10C 20140125
 struct resource iomem_resource = {
 	.name	= "PCI mem",
 	.start	= 0,
@@ -49,6 +50,7 @@ struct resource_constraint {
 	void *alignf_data;
 };
 
+// ARM10C 20140125
 static DEFINE_RWLOCK(resource_lock);
 
 /*
@@ -195,6 +197,10 @@ static struct resource *alloc_resource(gfp_t flags)
 }
 
 /* Return the conflict entry if you can't request it */
+// ARM10C 20140125
+// iomem_resource, res->name  = "System RAM", res->flags: 0x80000200
+// request_resource(res, &kernel_code);
+// request_resource(res, &kernel_data);
 static struct resource * __request_resource(struct resource *root, struct resource *new)
 {
 	resource_size_t start = new->start;
@@ -207,8 +213,11 @@ static struct resource * __request_resource(struct resource *root, struct resour
 		return root;
 	if (end > root->end)
 		return root;
+
+	// root->child: NULL
 	p = &root->child;
 	for (;;) {
+		// tmp: NULL
 		tmp = *p;
 		if (!tmp || tmp->start > end) {
 			new->sibling = tmp;
@@ -279,6 +288,8 @@ void release_child_resources(struct resource *r)
  *
  * Returns 0 for success, conflict resource on error.
  */
+// ARM10C 20140125
+// iomem_resource, res->name  = "System RAM", res->flags: 0x80000200
 struct resource *request_resource_conflict(struct resource *root, struct resource *new)
 {
 	struct resource *conflict;
@@ -296,12 +307,17 @@ struct resource *request_resource_conflict(struct resource *root, struct resourc
  *
  * Returns 0 for success, negative error code on error.
  */
+// ARM10C 20140125
+// iomem_resource, res->name  = "System RAM", res->flags: 0x80000200
 int request_resource(struct resource *root, struct resource *new)
 {
 	struct resource *conflict;
 
 	conflict = request_resource_conflict(root, new);
+	// conflict: NULL
+
 	return conflict ? -EBUSY : 0;
+	// return 0
 }
 
 EXPORT_SYMBOL(request_resource);

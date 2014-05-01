@@ -1,4 +1,4 @@
-#ifndef _LINUX_MMZONE_H
+﻿#ifndef _LINUX_MMZONE_H
 #define _LINUX_MMZONE_H
 
 #ifndef __ASSEMBLY__
@@ -20,11 +20,17 @@
 #include <asm/page.h>
 
 /* Free memory management - zoned buddy allocator.  */
-#ifndef CONFIG_FORCE_MAX_ZONEORDER
+#ifndef CONFIG_FORCE_MAX_ZONEORDER // CONFIG_FORCE_MAX_ZONEORDER=y
 #define MAX_ORDER 11
 #else
+// ARM10C 20140329
+// CONFIG_FORCE_MAX_ZONEORDER: 11
+// MAX_ORDER: 11
 #define MAX_ORDER CONFIG_FORCE_MAX_ZONEORDER
 #endif
+// ARM10C 20140329
+// MAX_ORDER: 11
+// MAX_ORDER_NR_PAGES: 0x400
 #define MAX_ORDER_NR_PAGES (1 << (MAX_ORDER - 1))
 
 /*
@@ -33,8 +39,11 @@
  * coalesce naturally under reasonable reclaim pressure and those which
  * will not.
  */
+// ARM10C 20140419
 #define PAGE_ALLOC_COSTLY_ORDER 3
 
+// ARM10C 20140111
+// ARM10C 20140412
 enum {
 	MIGRATE_UNMOVABLE,
 	MIGRATE_RECLAIMABLE,
@@ -60,26 +69,37 @@ enum {
 #ifdef CONFIG_MEMORY_ISOLATION
 	MIGRATE_ISOLATE,	/* can't allocate from here */
 #endif
-	MIGRATE_TYPES
+	MIGRATE_TYPES	// 4
 };
 
-#ifdef CONFIG_CMA
+#ifdef CONFIG_CMA // CONFIG_CMA=n
 #  define is_migrate_cma(migratetype) unlikely((migratetype) == MIGRATE_CMA)
 #else
+// ARM10C 20140412
 #  define is_migrate_cma(migratetype) false
 #endif
 
+// ARM10C 20140111
+// MAX_ORDER: 11
+// MIGRATE_TYPES: 4
 #define for_each_migratetype_order(order, type) \
 	for (order = 0; order < MAX_ORDER; order++) \
 		for (type = 0; type < MIGRATE_TYPES; type++)
 
 extern int page_group_by_mobility_disabled;
 
+// ARM10C 20140405
+// page : 0x20000 (pfn)
+// ARM10C 20140412
 static inline int get_pageblock_migratetype(struct page *page)
 {
+	// page : 0x20000 (pfn), PB_migrate: 0, PB_migrate_end: 2 
 	return get_pageblock_flags_group(page, PB_migrate, PB_migrate_end);
+	// return 0x2
 }
 
+// ARM10C 20140125
+// MIGRATE_TYPES: 4
 struct free_area {
 	struct list_head	free_list[MIGRATE_TYPES];
 	unsigned long		nr_free;
@@ -93,15 +113,20 @@ struct pglist_data;
  * cachelines.  There are very few zone structures in the machine, so space
  * consumption is not a concern here.
  */
-#if defined(CONFIG_SMP)
+#if defined(CONFIG_SMP) // CONFIG_SMP=7
 struct zone_padding {
 	char x[0];
 } ____cacheline_internodealigned_in_smp;
+// ARM10C 20140125
 #define ZONE_PADDING(name)	struct zone_padding name;
 #else
 #define ZONE_PADDING(name)
 #endif
 
+// ARM10C 20140125
+// ARM10C 20140308
+// ARM10C 20140412
+// ARM10C 20140419
 enum zone_stat_item {
 	/* First 128 byte cacheline (assuming 64 bit words) */
 	NR_FREE_PAGES,
@@ -134,7 +159,7 @@ enum zone_stat_item {
 	NR_SHMEM,		/* shmem pages (included tmpfs/GEM pages) */
 	NR_DIRTIED,		/* page dirtyings since bootup */
 	NR_WRITTEN,		/* page writings since bootup */
-#ifdef CONFIG_NUMA
+#ifdef CONFIG_NUMA // CONFIG_NUMA=n
 	NUMA_HIT,		/* allocated in intended node */
 	NUMA_MISS,		/* allocated in non intended node */
 	NUMA_FOREIGN,		/* was intended here, hit elsewhere */
@@ -144,6 +169,7 @@ enum zone_stat_item {
 #endif
 	NR_ANON_TRANSPARENT_HUGEPAGES,
 	NR_FREE_CMA_PAGES,
+	// NR_VM_ZONE_STAT_ITEMS: 29
 	NR_VM_ZONE_STAT_ITEMS };
 
 /*
@@ -159,6 +185,7 @@ enum zone_stat_item {
 #define LRU_ACTIVE 1
 #define LRU_FILE 2
 
+// ARM10C 20140125
 enum lru_list {
 	LRU_INACTIVE_ANON = LRU_BASE,
 	LRU_ACTIVE_ANON = LRU_BASE + LRU_ACTIVE,
@@ -187,6 +214,7 @@ static inline int is_unevictable_lru(enum lru_list lru)
 	return (lru == LRU_UNEVICTABLE);
 }
 
+// ARM10C 20140125
 struct zone_reclaim_stat {
 	/*
 	 * The pageout code in vmscan.c keeps track of how many of the
@@ -200,10 +228,13 @@ struct zone_reclaim_stat {
 	unsigned long		recent_scanned[2];
 };
 
+// ARM10C 20140111 
+// ARM10C 20140125
+// NR_LRU_LISTS: 5
 struct lruvec {
 	struct list_head lists[NR_LRU_LISTS];
 	struct zone_reclaim_stat reclaim_stat;
-#ifdef CONFIG_MEMCG
+#ifdef CONFIG_MEMCG	// CONFIG_MEMCG = n 
 	struct zone *zone;
 #endif
 };
@@ -225,6 +256,8 @@ struct lruvec {
 /* LRU Isolation modes. */
 typedef unsigned __bitwise__ isolate_mode_t;
 
+// ARM10C 20140125
+// ARM10C 20140426
 enum zone_watermarks {
 	WMARK_MIN,
 	WMARK_LOW,
@@ -234,32 +267,45 @@ enum zone_watermarks {
 
 #define min_wmark_pages(z) (z->watermark[WMARK_MIN])
 #define low_wmark_pages(z) (z->watermark[WMARK_LOW])
+// ARM10C 20140308
+// zone: contig_page_data->node_zones[0]
+// WMARK_HIGH: 2
+// high_wmark_pages(contig_page_data->node_zones[0]): contig_page_data->node_zones[0]->watermark[2]: 0
 #define high_wmark_pages(z) (z->watermark[WMARK_HIGH])
 
+// ARM10C 20140308
+// sizeof(struct per_cpu_pages): 36 bytes
 struct per_cpu_pages {
 	int count;		/* number of pages in the list */
 	int high;		/* high watermark, emptying needed */
 	int batch;		/* chunk size for buddy add/remove */
 
 	/* Lists of pages, one per migrate type stored on the pcp-lists */
+	// MIGRATE_PCPTYPES: 3
 	struct list_head lists[MIGRATE_PCPTYPES];
 };
 
+// ARM10C 20140111
+// ARM10C 20140308
+// ARM10C 20140412
+// sizeof(struct per_cpu_pageset): 66 bytes
 struct per_cpu_pageset {
 	struct per_cpu_pages pcp;
-#ifdef CONFIG_NUMA
+#ifdef CONFIG_NUMA // CONFIG_NUMA=n
 	s8 expire;
 #endif
-#ifdef CONFIG_SMP
+#ifdef CONFIG_SMP // CONFIG_SMP=y
 	s8 stat_threshold;
+	// NR_VM_ZONE_STAT_ITEMS: 29
 	s8 vm_stat_diff[NR_VM_ZONE_STAT_ITEMS];
 #endif
 };
 
 #endif /* !__GENERATING_BOUNDS.H */
 
+// ARM10C 20140308
 enum zone_type {
-#ifdef CONFIG_ZONE_DMA
+#ifdef CONFIG_ZONE_DMA	// ARM10C CONFIG_ZONE_DMA = n 
 	/*
 	 * ZONE_DMA is used when there are devices that are not able
 	 * to do DMA to all of addressable memory (ZONE_NORMAL). Then we
@@ -280,7 +326,7 @@ enum zone_type {
 	 */
 	ZONE_DMA,
 #endif
-#ifdef CONFIG_ZONE_DMA32
+#ifdef CONFIG_ZONE_DMA32	// ARM10C CONFIG_ZONE_DMA32 = n
 	/*
 	 * x86_64 needs two ZONE_DMAs because it supports devices that are
 	 * only able to do DMA to the lower 16M but also 32 bit devices that
@@ -293,8 +339,8 @@ enum zone_type {
 	 * performed on pages in ZONE_NORMAL if the DMA devices support
 	 * transfers to all addressable memory.
 	 */
-	ZONE_NORMAL,
-#ifdef CONFIG_HIGHMEM
+	ZONE_NORMAL,	// ARM10C ZONE_NORMAL = 0 
+#ifdef CONFIG_HIGHMEM	// ARM10C CONFIG_HIGHMEM = y 
 	/*
 	 * A memory area that is only addressable by the kernel through
 	 * mapping portions into its own address space. This is for example
@@ -303,18 +349,23 @@ enum zone_type {
 	 * table entries on i386) for each page that the kernel needs to
 	 * access.
 	 */
-	ZONE_HIGHMEM,
+	ZONE_HIGHMEM,	// ARM10C ZONE_HIGHMEM = 1 
 #endif
-	ZONE_MOVABLE,
-	__MAX_NR_ZONES
+	ZONE_MOVABLE,	// ARM10C ZONE_MOVABLE = 2 
+	__MAX_NR_ZONES	// ARM10C __MAX_NR_ZONES = 3 
 };
 
 #ifndef __GENERATING_BOUNDS_H
 
+// ARM10C 20140125
+// sizeof(struct zone): 804 bytes
+// ARM10C 20140308
 struct zone {
 	/* Fields commonly accessed by the page allocator */
 
 	/* zone watermarks, access with *_wmark_pages(zone) macros */
+	// ARM10C 20140125
+	// NR_WMARK: 3
 	unsigned long watermark[NR_WMARK];
 
 	/*
@@ -332,6 +383,8 @@ struct zone {
 	 * on the higher zones). This array is recalculated at runtime if the
 	 * sysctl_lowmem_reserve_ratio sysctl changes.
 	 */
+	// ARM10C 20140125
+	// MAX_NR_ZONES: 3
 	unsigned long		lowmem_reserve[MAX_NR_ZONES];
 
 	/*
@@ -340,7 +393,7 @@ struct zone {
 	 */
 	unsigned long		dirty_balance_reserve;
 
-#ifdef CONFIG_NUMA
+#ifdef CONFIG_NUMA // CONFIG_NUMA=n
 	int node;
 	/*
 	 * zone reclaim becomes active if more unmapped pages exist.
@@ -352,8 +405,10 @@ struct zone {
 	/*
 	 * free areas of different sizes
 	 */
+	// ARM10C 20140125
+	// sizeof(spinlock_t): 16 bytes
 	spinlock_t		lock;
-#if defined CONFIG_COMPACTION || defined CONFIG_CMA
+#if defined CONFIG_COMPACTION || defined CONFIG_CMA // CONFIG_COMPACTION=y, CONFIG_CMA=n
 	/* Set to true when the PG_migrate_skip bits should be cleared */
 	bool			compact_blockskip_flush;
 
@@ -361,13 +416,17 @@ struct zone {
 	unsigned long		compact_cached_free_pfn;
 	unsigned long		compact_cached_migrate_pfn;
 #endif
-#ifdef CONFIG_MEMORY_HOTPLUG
+#ifdef CONFIG_MEMORY_HOTPLUG // CONFIG_MEMORY_HOTPLUG=n
 	/* see spanned/present_pages for more description */
 	seqlock_t		span_seqlock;
 #endif
+	// ARM10C 20140125
+	// MAX_ORDER: 11
+	// sizeof(struct free_area): 36
+	// sizeof(free_area[MAX_ORDER]): 396
 	struct free_area	free_area[MAX_ORDER];
 
-#ifndef CONFIG_SPARSEMEM
+#ifndef CONFIG_SPARSEMEM // CONFIG_SPARSEMEM=y
 	/*
 	 * Flags for a pageblock_nr_pages block. See pageblock-flags.h.
 	 * In SPARSEMEM, this map is stored in struct mem_section
@@ -375,7 +434,7 @@ struct zone {
 	unsigned long		*pageblock_flags;
 #endif /* CONFIG_SPARSEMEM */
 
-#ifdef CONFIG_COMPACTION
+#ifdef CONFIG_COMPACTION // CONFIG_COMPACTION=y
 	/*
 	 * On compaction failure, 1<<compact_defer_shift compactions
 	 * are skipped before trying again. The number attempted since
@@ -386,16 +445,29 @@ struct zone {
 	int			compact_order_failed;
 #endif
 
+	// ARM10C 20140125
+	// #define ZONE_PADDING(_pad1_)	struct zone_padding _pad1_;
+	// sizeof(struct zone_padding): 64 bytes
 	ZONE_PADDING(_pad1_)
 
 	/* Fields commonly accessed by the page reclaim scanner */
+	// ARM10C 20140125
+	// sizeof(spinlock_t): 16 bytes
 	spinlock_t		lru_lock;
+
+	// ARM10C 20140125
+	// sizeof(struct lruvec): 56 bytes
 	struct lruvec		lruvec;
 
+	// ARM10C 20140405
 	unsigned long		pages_scanned;	   /* since last reclaim */
 	unsigned long		flags;		   /* zone flags, see below */
 
 	/* Zone statistics */
+	// ARM10C 20140125
+	// sizeof(atomic_long_t): 4bytes
+	// NR_VM_ZONE_STAT_ITEMS: 28
+	// sizeof(vm_stat[NR_VM_ZONE_STAT_ITEMS]): 112 bytes
 	atomic_long_t		vm_stat[NR_VM_ZONE_STAT_ITEMS];
 
 	/*
@@ -405,6 +477,9 @@ struct zone {
 	unsigned int inactive_ratio;
 
 
+	// ARM10C 20140125
+	// #define ZONE_PADDING(_pad2_)	struct zone_padding _pad2_;
+	// sizeof(struct zone_padding): 64 bytes
 	ZONE_PADDING(_pad2_)
 	/* Rarely used or read-mostly fields */
 
@@ -555,11 +630,13 @@ static inline unsigned long zone_end_pfn(const struct zone *zone)
 	return zone->zone_start_pfn + zone->spanned_pages;
 }
 
+// ARM10C 20140118
 static inline bool zone_spans_pfn(const struct zone *zone, unsigned long pfn)
 {
 	return zone->zone_start_pfn <= pfn && pfn < zone_end_pfn(zone);
 }
 
+// ARM10C 20140405
 static inline bool zone_is_initialized(struct zone *zone)
 {
 	return !!zone->wait_table;
@@ -578,9 +655,12 @@ static inline bool zone_is_empty(struct zone *zone)
 #define DEF_PRIORITY 12
 
 /* Maximum number of zones on a zonelist */
+// ARM10C 20140426
+// MAX_NUMNODES: 1, MAX_NR_ZONES 3
+// MAX_ZONES_PER_ZONELIST: 3
 #define MAX_ZONES_PER_ZONELIST (MAX_NUMNODES * MAX_NR_ZONES)
 
-#ifdef CONFIG_NUMA
+#ifdef CONFIG_NUMA // CONFIG_NUMA=n
 
 /*
  * The NUMA zonelists are doubled because we need zonelists that restrict the
@@ -657,6 +737,7 @@ struct zonelist_cache {
 	unsigned long last_full_zap;		/* when last zap'd (jiffies) */
 };
 #else
+// ARM10C 20140308
 #define MAX_ZONELISTS 1
 struct zonelist_cache;
 #endif
@@ -665,6 +746,7 @@ struct zonelist_cache;
  * This struct contains information about a zone in a zonelist. It is stored
  * here to avoid dereferences into large structures and lookups of tables
  */
+// ARM10C 20140308
 struct zoneref {
 	struct zone *zone;	/* Pointer to actual zone */
 	int zone_idx;		/* zone_idx(zoneref->zone) */
@@ -687,8 +769,10 @@ struct zoneref {
  * zonelist_zone_idx()	- Return the index of the zone for an entry
  * zonelist_node_idx()	- Return the index of the node for an entry
  */
+// ARM10C 20140426
 struct zonelist {
 	struct zonelist_cache *zlcache_ptr;		     // NULL or &zlcache
+	// MAX_ZONES_PER_ZONELIST: 3
 	struct zoneref _zonerefs[MAX_ZONES_PER_ZONELIST + 1];
 #ifdef CONFIG_NUMA
 	struct zonelist_cache zlcache;			     // optional ...
@@ -720,8 +804,13 @@ extern struct page *mem_map;
  * per-zone basis.
  */
 struct bootmem_data;
+
+// ARM10C 20131207
+// ARM10C 20140308
 typedef struct pglist_data {
+	// MAX_NR_ZONES: 3
 	struct zone node_zones[MAX_NR_ZONES];
+	// MAX_ZONELISTS: 1
 	struct zonelist node_zonelists[MAX_ZONELISTS];
 	int nr_zones;
 #ifdef CONFIG_FLAT_NODE_MEM_MAP	/* means !SPARSEMEM */
@@ -730,7 +819,8 @@ typedef struct pglist_data {
 	struct page_cgroup *node_page_cgroup;
 #endif
 #endif
-#ifndef CONFIG_NO_BOOTMEM
+#ifndef CONFIG_NO_BOOTMEM // CONFIG_NO_BOOTMEM=n
+	// ARM10C 20131207
 	struct bootmem_data *bdata;
 #endif
 #ifdef CONFIG_MEMORY_HOTPLUG
@@ -772,6 +862,9 @@ typedef struct pglist_data {
 #endif
 } pg_data_t;
 
+// ARM10C 20140419
+// node_present_pages(nid):
+// (&contig_page_data)->node_present_pages
 #define node_present_pages(nid)	(NODE_DATA(nid)->node_present_pages)
 #define node_spanned_pages(nid)	(NODE_DATA(nid)->node_spanned_pages)
 #ifdef CONFIG_FLAT_NODE_MEM_MAP
@@ -803,6 +896,8 @@ bool zone_watermark_ok(struct zone *z, int order, unsigned long mark,
 		int classzone_idx, int alloc_flags);
 bool zone_watermark_ok_safe(struct zone *z, int order, unsigned long mark,
 		int classzone_idx, int alloc_flags);
+
+// ARM10C 20140111 
 enum memmap_context {
 	MEMMAP_EARLY,
 	MEMMAP_HOTPLUG,
@@ -822,7 +917,8 @@ static inline struct zone *lruvec_zone(struct lruvec *lruvec)
 #endif
 }
 
-#ifdef CONFIG_HAVE_MEMORY_PRESENT
+#ifdef CONFIG_HAVE_MEMORY_PRESENT // CONFIG_HAVE_MEMORY_PRESENT=y
+// ARM10C 20131207
 void memory_present(int nid, unsigned long start, unsigned long end);
 #else
 static inline void memory_present(int nid, unsigned long start, unsigned long end) {}
@@ -841,27 +937,44 @@ unsigned long __init node_memmap_size_bytes(int, unsigned long, unsigned long);
 /*
  * zone_idx() returns 0 for the ZONE_DMA zone, 1 for the ZONE_NORMAL zone, etc.
  */
+// ARM10C 20140111
+// ARM10C 20140308
+// zone: contig_page_data->node_zones[1]
 #define zone_idx(zone)		((zone) - (zone)->zone_pgdat->node_zones)
 
+// ARM10C 20140308
+// zone: contig_page_data->node_zones[2]
+// zone: contig_page_data->node_zones[1]
+// zone: contig_page_data->node_zones[0]
 static inline int populated_zone(struct zone *zone)
 {
+	// zone->present_pages: contig_page_data->node_zones[2].present_pages: 0
+	// zone->present_pages: contig_page_data->node_zones[1].present_pages: 0x50800
+	// zone->present_pages: contig_page_data->node_zones[0].present_pages: 0x2f800
 	return (!!zone->present_pages);
+	// return 0
+	// return 1
+	// return 1
 }
 
 extern int movable_zone;
 
+// ARM10C 20140111
 static inline int zone_movable_is_highmem(void)
 {
-#if defined(CONFIG_HIGHMEM) && defined(CONFIG_HAVE_MEMBLOCK_NODE_MAP)
+#if defined(CONFIG_HIGHMEM) && defined(CONFIG_HAVE_MEMBLOCK_NODE_MAP)	// CONFIG_HIGHMEM = y, CONFIG_HAVE_MEMBLOCK_NODE_MAP = n 
 	return movable_zone == ZONE_HIGHMEM;
 #else
-	return 0;
+	return 0; // this
 #endif
 }
 
+// ARM10C 20140111 
+// idx = 0
 static inline int is_highmem_idx(enum zone_type idx)
 {
-#ifdef CONFIG_HIGHMEM
+#ifdef CONFIG_HIGHMEM	// CONFIG_HIGHMEM = y 
+	// idx = 0 -> return 0;
 	return (idx == ZONE_HIGHMEM ||
 		(idx == ZONE_MOVABLE && zone_movable_is_highmem()));
 #else
@@ -875,13 +988,19 @@ static inline int is_highmem_idx(enum zone_type idx)
  *              to ZONE_{DMA/NORMAL/HIGHMEM/etc} in general code to a minimum.
  * @zone - pointer to struct zone variable
  */
+// ARM10C 20140125
+// ARM10C 20140405
 static inline int is_highmem(struct zone *zone)
 {
-#ifdef CONFIG_HIGHMEM
+#ifdef CONFIG_HIGHMEM // CONFIG_HIGHMEM=y
+	// zone_off: zone의 offset을 구함, zone_off: 0
 	int zone_off = (char *)zone - (char *)zone->zone_pgdat->node_zones;
+
+	// sizeof(*zone): 804, ZONE_HIGHMEM: 1, ZONE_MOVABLE: 2
 	return zone_off == ZONE_HIGHMEM * sizeof(*zone) ||
 	       (zone_off == ZONE_MOVABLE * sizeof(*zone) &&
 		zone_movable_is_highmem());
+	// return 0
 #else
 	return 0;
 #endif
@@ -908,8 +1027,13 @@ extern char numa_zonelist_order[];
 
 #ifndef CONFIG_NEED_MULTIPLE_NODES
 
-extern struct pglist_data contig_page_data;
+extern struct pglist_data contig_page_data;	// bitmap 정보가 들어가있음 
+// ARM10C 20131207
+// ARM10C 20140308
+// ARM10C 20140329
+// ARM10C 20140419
 #define NODE_DATA(nid)		(&contig_page_data)
+// ARM10C 20140329
 #define NODE_MEM_MAP(nid)	mem_map
 
 #else /* CONFIG_NEED_MULTIPLE_NODES */
@@ -926,6 +1050,7 @@ extern struct zone *next_zone(struct zone *zone);
  * for_each_online_pgdat - helper macro to iterate over all online nodes
  * @pgdat - pointer to a pg_data_t variable
  */
+// ARM10C 20140329
 #define for_each_online_pgdat(pgdat)			\
 	for (pgdat = first_online_pgdat();		\
 	     pgdat;					\
@@ -950,14 +1075,25 @@ extern struct zone *next_zone(struct zone *zone);
 			; /* do nothing */		\
 		else
 
+// ARM10C 20140308
+// ARM10C 20140426
+// z: contig_page_data->node_zonelists->_zonerefs[1]
 static inline struct zone *zonelist_zone(struct zoneref *zoneref)
 {
+	// zoneref->zone: contig_page_data->node_zonelists->_zonerefs[1]->zone: contig_page_data->node_zones[0]
 	return zoneref->zone;
+	// zoneref->zone: contig_page_data->node_zones[0]
 }
 
+// ARM10C 20140308
+// z: contig_page_data->node_zonelists->_zonerefs
+// ARM10C 20140426
+// z: contig_page_data->node_zonelists->_zonerefs
 static inline int zonelist_zone_idx(struct zoneref *zoneref)
 {
+	// zoneref->zone_idx: contig_page_data->node_zonelists[0]->_zonerefs[0]->zone_idx
 	return zoneref->zone_idx;
+	// zoneref->zone_idx: contig_page_data->node_zonelists[0]->_zonerefs[0]->zone_idx: 1
 }
 
 static inline int zonelist_node_idx(struct zoneref *zoneref)
@@ -1000,13 +1136,24 @@ struct zoneref *next_zones_zonelist(struct zoneref *z,
  * used to iterate the zonelist with next_zones_zonelist by advancing it by
  * one before calling.
  */
+// ARM10C 20140308
+// first_zones_zonelist(contig_page_data->node_zonelists, 0, 0, &zone);
+// ARM10C 20140426
+// zonelist: contig_page_data->node_zonelists, high_zoneidx: ZONE_NORMAL: 0
+// cpuset_current_mems_allowed: node_states[N_HIGH_MEMORY], &preferred_zone
 static inline struct zoneref *first_zones_zonelist(struct zonelist *zonelist,
 					enum zone_type highest_zoneidx,
 					nodemask_t *nodes,
 					struct zone **zone)
 {
+	// zonelist->_zonerefs: contig_page_data->node_zonelists->_zonerefs
+	// highest_zoneidx: 0, nodes: 0, &zone
+	// ARM10C 20140426
+	// zonelist->_zonerefs: contig_page_data->node_zonelists->_zonerefs
+	// highest_zoneidx: 0, nodes: &node_states[N_HIGH_MEMORY], zone: &preferred_zone
 	return next_zones_zonelist(zonelist->_zonerefs, highest_zoneidx, nodes,
 								zone);
+	// return contig_page_data->node_zonelists->_zonerefs[1]
 }
 
 /**
@@ -1020,6 +1167,13 @@ static inline struct zoneref *first_zones_zonelist(struct zonelist *zonelist,
  * This iterator iterates though all zones at or below a given zone index and
  * within a given nodemask
  */
+// ARM10C 20140308
+// for_each_zone_zonelist_nodemask(zone, z, contig_page_data->node_zonelists, 0, NULL)
+//
+// #define for_each_zone_zonelist_0(zone, z, contig_page_data->node_zonelists, 0, 0)
+//	for (z = first_zones_zonelist(contig_page_data->node_zonelists, 0, 0, &zone);
+//		zone;
+//		z = next_zones_zonelist(++z, 0, 0, &zone))
 #define for_each_zone_zonelist_nodemask(zone, z, zlist, highidx, nodemask) \
 	for (z = first_zones_zonelist(zlist, highidx, nodemask, &zone);	\
 		zone;							\
@@ -1034,6 +1188,11 @@ static inline struct zoneref *first_zones_zonelist(struct zonelist *zonelist,
  *
  * This iterator iterates though all zones at or below a given zone index.
  */
+// ARM10C 20140308
+// zonelist: contig_page_data->node_zonelists, offset: 0
+//
+// #define for_each_zone_zonelist(zone, z, contig_page_data->node_zonelists, 0)
+// 	for_each_zone_zonelist_nodemask(zone, z, contig_page_data->node_zonelists, 0, NULL)
 #define for_each_zone_zonelist(zone, z, zlist, highidx) \
 	for_each_zone_zonelist_nodemask(zone, z, zlist, highidx, NULL)
 
@@ -1053,7 +1212,7 @@ static inline unsigned long early_pfn_to_nid(unsigned long pfn)
 #define pfn_to_nid(pfn)		(0)
 #endif
 
-#ifdef CONFIG_SPARSEMEM
+#ifdef CONFIG_SPARSEMEM // CONFIG_SPARSEMEM=y
 
 /*
  * SECTION_SHIFT    		#bits space required to store a section #
@@ -1062,13 +1221,31 @@ static inline unsigned long early_pfn_to_nid(unsigned long pfn)
  * PFN_SECTION_SHIFT		pfn to/from section number
  */
 #define PA_SECTION_SHIFT	(SECTION_SIZE_BITS)
+// ARM10C 20131207
+// SECTION_SIZE_BITS: 28
+// PFN_SECTION_SHIFT: 16
 #define PFN_SECTION_SHIFT	(SECTION_SIZE_BITS - PAGE_SHIFT)
 
+// ARM10C 20131207
+// SECTIONS_SHIFT: 4
+// NR_MEM_SECTIONS: 0x10
 #define NR_MEM_SECTIONS		(1UL << SECTIONS_SHIFT)
 
+// ARM10C 20131207
+// ARM10C 20140329
+// PFN_SECTION_SHIFT: 16
+// PAGES_PER_SECTION: 0x10000
 #define PAGES_PER_SECTION       (1UL << PFN_SECTION_SHIFT)
+// ARM10C 20131207
+// PAGE_SECTION_MASK
+// PAGES_PER_SECTION: 0x10000
+// PAGE_SECTION_MASK: 0xFFFF0000
 #define PAGE_SECTION_MASK	(~(PAGES_PER_SECTION-1))
 
+// ARM10C 20131214
+// PFN_SECTION_SHIFT: 16, pageblock_order: 9, NR_PAGEBLOCK_BITS: 4
+// PFN_SECTION_SHIFT - pageblock_order: 7
+// SECTION_BLOCKFLAGS_BITS: (1UL << 7) * 4: 0x80 * 4: 0x200
 #define SECTION_BLOCKFLAGS_BITS \
 	((1UL << (PFN_SECTION_SHIFT - pageblock_order)) * NR_PAGEBLOCK_BITS)
 
@@ -1076,7 +1253,14 @@ static inline unsigned long early_pfn_to_nid(unsigned long pfn)
 #error Allocator MAX_ORDER exceeds SECTION_SIZE
 #endif
 
+// ARM10C 20131207
+// PFN_SECTION_SHIFT: 16
+// ARM10C 20140118
+// ARM10C 20140329
+// 0xA0000
 #define pfn_to_section_nr(pfn) ((pfn) >> PFN_SECTION_SHIFT)
+// ARM10C 20131221
+// PFN_SECTION_SHIFT: 16
 #define section_nr_to_pfn(sec) ((sec) << PFN_SECTION_SHIFT)
 
 #define SECTION_ALIGN_UP(pfn)	(((pfn) + PAGES_PER_SECTION - 1) & PAGE_SECTION_MASK)
@@ -1084,6 +1268,7 @@ static inline unsigned long early_pfn_to_nid(unsigned long pfn)
 
 struct page;
 struct page_cgroup;
+// ARM10C 20131207
 struct mem_section {
 	/*
 	 * This is, logically, a pointer to an array of struct
@@ -1101,7 +1286,7 @@ struct mem_section {
 
 	/* See declaration of similar field in struct zone */
 	unsigned long *pageblock_flags;
-#ifdef CONFIG_MEMCG
+#ifdef CONFIG_MEMCG // CONFIG_MEMCG=n
 	/*
 	 * If !SPARSEMEM, pgdat doesn't have page_cgroup pointer. We use
 	 * section. (see memcontrol.h/page_cgroup.h about this.)
@@ -1115,26 +1300,45 @@ struct mem_section {
 	 */
 };
 
-#ifdef CONFIG_SPARSEMEM_EXTREME
+#ifdef CONFIG_SPARSEMEM_EXTREME // CONFIG_SPARSEMEM_EXTREME=y
+// ARM10C 20131207
+// PAGE_SIZE: 0x1000, sizeof (struct mem_section): 8
+// SECTIONS_PER_ROOT: 0x200
 #define SECTIONS_PER_ROOT       (PAGE_SIZE / sizeof (struct mem_section))
 #else
 #define SECTIONS_PER_ROOT	1
 #endif
 
+// ARM10C 20131207
+// SECTIONS_PER_ROOT: 0x200
 #define SECTION_NR_TO_ROOT(sec)	((sec) / SECTIONS_PER_ROOT)
+// ARM10C 20131207
+// NR_MEM_SECTIONS: 0x10, SECTIONS_PER_ROOT: 0x200
+// DIV_ROUND_UP(0x10,0x200): 1 
+// NR_SECTION_ROOTS: 1
 #define NR_SECTION_ROOTS	DIV_ROUND_UP(NR_MEM_SECTIONS, SECTIONS_PER_ROOT)
+// ARM10C 20131214
+// SECTION_ROOT_MASK: 0x1FF
 #define SECTION_ROOT_MASK	(SECTIONS_PER_ROOT - 1)
 
-#ifdef CONFIG_SPARSEMEM_EXTREME
+#ifdef CONFIG_SPARSEMEM_EXTREME // CONFIG_SPARSEMEM_EXTREME=y
+// ARM10C 20131214
 extern struct mem_section *mem_section[NR_SECTION_ROOTS];
 #else
 extern struct mem_section mem_section[NR_SECTION_ROOTS][SECTIONS_PER_ROOT];
 #endif
 
+// ARM10C 20131214
+// section: 0x2
 static inline struct mem_section *__nr_to_section(unsigned long nr)
 {
+	// SECTION_NR_TO_ROOT(0x2): 0x0
+	// mem_section[0]: NULL 아닌 값
 	if (!mem_section[SECTION_NR_TO_ROOT(nr)])
 		return NULL;
+
+	// SECTION_ROOT_MASK: 0x1FF
+	// &mem_section[0][2] 
 	return &mem_section[SECTION_NR_TO_ROOT(nr)][nr & SECTION_ROOT_MASK];
 }
 extern int __section_nr(struct mem_section* ms);
@@ -1145,24 +1349,39 @@ extern unsigned long usemap_size(void);
  * a little bit of information.  There should be at least
  * 3 bits here due to 32-bit alignment.
  */
+// ARM10C 20131214
+// SECTION_MARKED_PRESENT: 1
 #define	SECTION_MARKED_PRESENT	(1UL<<0)
+// ARM10C 20131221
+// SECTION_HAS_MEM_MAP : 2
 #define SECTION_HAS_MEM_MAP	(1UL<<1)
 #define SECTION_MAP_LAST_BIT	(1UL<<2)
+// ARM10C 20131221
+// SECTION_MAP_MASK : 0xFFFFFFFC
 #define SECTION_MAP_MASK	(~(SECTION_MAP_LAST_BIT-1))
+// ARM10C 20131214
 #define SECTION_NID_SHIFT	2
 
+// ARM10C 20140118
+// __sec : &mem_section[0][2]
+// ARM10C 20140329
+// &mem_section[0][0xA]
 static inline struct page *__section_mem_map_addr(struct mem_section *section)
 {
 	unsigned long map = section->section_mem_map;
+	// 이전에 할당받은 섹션에 대한 struct page용 공간의 시작 주소 정보
 	map &= SECTION_MAP_MASK;
 	return (struct page *)map;
 }
 
+// ARM10C 20131214
 static inline int present_section(struct mem_section *section)
 {
+	// SECTION_MARKED_PRESENT: 1
 	return (section && (section->section_mem_map & SECTION_MARKED_PRESENT));
 }
 
+// ARM10C 20131214
 static inline int present_section_nr(unsigned long nr)
 {
 	return present_section(__nr_to_section(nr));
@@ -1178,9 +1397,17 @@ static inline int valid_section_nr(unsigned long nr)
 	return valid_section(__nr_to_section(nr));
 }
 
+// ARM10C 20140118
+// pfn : 0x20000
+// ARM10C 20140329
+// __pfn_to_section(0xA0000)
 static inline struct mem_section *__pfn_to_section(unsigned long pfn)
 {
+	// pfn_to_section_nr(pfn) : 2
+	// pfn_to_section_nr(pfn) : 0xA
 	return __nr_to_section(pfn_to_section_nr(pfn));
+	// return : &mem_section[0][2]
+	// return : &mem_section[0][0xA]
 }
 
 #ifndef CONFIG_HAVE_ARCH_PFN_VALID
@@ -1214,6 +1441,7 @@ static inline int pfn_present(unsigned long pfn)
 #define pfn_to_nid(pfn)		(0)
 #endif
 
+// ARM10C 20140118
 #define early_pfn_valid(pfn)	pfn_valid(pfn)
 void sparse_init(void);
 #else
@@ -1221,9 +1449,10 @@ void sparse_init(void);
 #define sparse_index_init(_sec, _nid)  do {} while (0)
 #endif /* CONFIG_SPARSEMEM */
 
-#ifdef CONFIG_NODES_SPAN_OTHER_NODES
+#ifdef CONFIG_NODES_SPAN_OTHER_NODES	// N
 bool early_pfn_in_nid(unsigned long pfn, int nid);
 #else
+// ARM10C 20140118
 #define early_pfn_in_nid(pfn, nid)	(1)
 #endif
 
@@ -1240,9 +1469,10 @@ unsigned long __init node_memmap_size_bytes(int, unsigned long, unsigned long);
  * pfn_valid_within() should be used in this case; we optimise this away
  * when we have no holes within a MAX_ORDER_NR_PAGES block.
  */
-#ifdef CONFIG_HOLES_IN_ZONE
+#ifdef CONFIG_HOLES_IN_ZONE // CONFIG_HOLES_IN_ZONE=n
 #define pfn_valid_within(pfn) pfn_valid(pfn)
 #else
+// ARM10C 20140405
 #define pfn_valid_within(pfn) (1)
 #endif
 

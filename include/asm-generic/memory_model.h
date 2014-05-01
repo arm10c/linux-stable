@@ -56,12 +56,40 @@
  * Note: section's mem_map is encoded to reflect its start_pfn.
  * section[i].section_mem_map == mem_map's address - start_pfn;
  */
+// ARM10C 20140118
+// pg : &page
+//#define __page_to_pfn(pg)
+//({	const struct page *__pg = (pg);
+//	int __sec = page_to_section(__pg);
+//	__sec : &mem_section[0][2]
+//	(unsigned long)(__pg - __section_mem_map_addr(__nr_to_section(__sec)));
+//	pfn offset이 계산됨
+//})
 #define __page_to_pfn(pg)					\
 ({	const struct page *__pg = (pg);				\
 	int __sec = page_to_section(__pg);			\
 	(unsigned long)(__pg - __section_mem_map_addr(__nr_to_section(__sec)));	\
 })
 
+// ARM10C 20140118
+// pfn : 0x20000
+//#define __pfn_to_page(pfn)
+//({	unsigned long __pfn = (pfn);
+//	struct mem_section *__sec = __pfn_to_section(__pfn);
+//	__sec : &mem_section[0][2]
+//	__section_mem_map_addr(__sec) + __pfn;
+//	시작주소 + offset
+//})
+//
+// ARM10C 20140329
+// pfn_to_page(0xA0000)
+//#define __pfn_to_page(0xA0000)
+//({	unsigned long __pfn = (0xA0000);
+//	struct mem_section *__sec = __pfn_to_section(__pfn);
+//	__sec : &mem_section[0][0xA]
+//	__section_mem_map_addr(__sec) + __pfn;
+//	시작주소 + offset
+//})
 #define __pfn_to_page(pfn)				\
 ({	unsigned long __pfn = (pfn);			\
 	struct mem_section *__sec = __pfn_to_section(__pfn);	\
@@ -69,7 +97,11 @@
 })
 #endif /* CONFIG_FLATMEM/DISCONTIGMEM/SPARSEMEM */
 
+// ARM10C 20140118
 #define page_to_pfn __page_to_pfn
+// ARM10C 20140118
+// ARM10C 20140329
+// pfn_to_page(0xA00000)
 #define pfn_to_page __pfn_to_page
 
 #endif /* __ASSEMBLY__ */

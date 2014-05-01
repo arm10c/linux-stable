@@ -106,7 +106,8 @@ static inline __printf(1, 2) __cold
 void early_printk(const char *s, ...) { }
 #endif
 
-#ifdef CONFIG_PRINTK
+// ARM10C 20140322
+#ifdef CONFIG_PRINTK // CONFIG_PRINGK=y
 asmlinkage __printf(5, 0)
 int vprintk_emit(int facility, int level,
 		 const char *dict, size_t dictlen,
@@ -145,6 +146,7 @@ extern int kptr_restrict;
 extern void wake_up_klogd(void);
 
 void log_buf_kexec_setup(void);
+// ARM10C 20140322
 void __init setup_log_buf(int early);
 void dump_stack_set_arch_desc(const char *fmt, ...);
 void dump_stack_print_info(const char *log_lvl);

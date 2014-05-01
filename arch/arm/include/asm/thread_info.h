@@ -1,4 +1,4 @@
-/*
+﻿/*
  *  arch/arm/include/asm/thread_info.h
  *
  *  Copyright (C) 2002 Russell King.
@@ -17,6 +17,9 @@
 
 #define THREAD_SIZE_ORDER	1
 #define THREAD_SIZE		8192
+/*
+// ARM10C 20130817
+*/
 #define THREAD_START_SP		(THREAD_SIZE - 8)
 
 #ifndef __ASSEMBLY__
@@ -81,6 +84,23 @@ struct thread_info {
 	struct arm_restart_block	arm_restart_block;
 };
 
+// ARM10C 20130824
+// ARM10C 20140315
+// INIT_PREEMPT_COUNT: 0x40000001
+// INIT_THREAD_INFO(init_task):
+// {
+// 	.task		= &init_task,
+// 	.exec_domain	= &default_exec_domain,
+// 	.flags		= 0,
+// 	.preempt_count	= 0x40000001,
+// 	.addr_limit	= KERNEL_DS,
+// 	.cpu_domain	= domain_val(DOMAIN_USER, DOMAIN_MANAGER) |
+// 			  domain_val(DOMAIN_KERNEL, DOMAIN_MANAGER) |
+// 			  domain_val(DOMAIN_IO, DOMAIN_CLIENT),
+// 	.restart_block	= {
+// 		.fn	= do_no_restart_syscall,
+// 	},
+// }
 #define INIT_THREAD_INFO(tsk)						\
 {									\
 	.task		= &tsk,						\
@@ -96,6 +116,8 @@ struct thread_info {
 	},								\
 }
 
+// ARM10C 20130824
+// ARM10C 20140315
 #define init_thread_info	(init_thread_union.thread_info)
 #define init_stack		(init_thread_union.stack)
 
@@ -104,9 +126,16 @@ struct thread_info {
  */
 static inline struct thread_info *current_thread_info(void) __attribute_const__;
 
+// ARM10C 20130824
+// 모기향책: 133p
+// ARM10C 20140308
+// ARM10C 20140315
 static inline struct thread_info *current_thread_info(void)
 {
+	// stack이 8K로 정렬되어 있기 때문에 13비트를 clear시키면 stack의 맨 앞을 가리키게 된다.
 	register unsigned long sp asm ("sp");
+
+	// THREAD_SIZE: 8192, ~(THREAD_SIZE - 1): 0xffffe000
 	return (struct thread_info *)(sp & ~(THREAD_SIZE - 1));
 }
 
@@ -151,6 +180,9 @@ extern int vfp_restore_user_hwstate(struct user_vfp __user *,
  *  TIF_POLLING_NRFLAG	- true if poll_idle() is polling TIF_NEED_RESCHED
  */
 #define TIF_SIGPENDING		0
+/*
+// ARM10C 20140322
+*/
 #define TIF_NEED_RESCHED	1
 #define TIF_NOTIFY_RESUME	2	/* callback before returning to user */
 #define TIF_SYSCALL_TRACE	8

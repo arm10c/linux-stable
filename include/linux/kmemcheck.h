@@ -4,7 +4,7 @@
 #include <linux/mm_types.h>
 #include <linux/types.h>
 
-#ifdef CONFIG_KMEMCHECK
+#ifdef CONFIG_KMEMCHECK // CONFIG_KMEMCHECK=n
 extern int kmemcheck_enabled;
 
 /* The slab-related functions. */
@@ -94,6 +94,7 @@ kmemcheck_alloc_shadow(struct page *page, int order, gfp_t flags, int node)
 {
 }
 
+// ARM10C 20140329
 static inline void
 kmemcheck_free_shadow(struct page *page, int order)
 {

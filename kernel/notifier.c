@@ -18,16 +18,26 @@ BLOCKING_NOTIFIER_HEAD(reboot_notifier_list);
  *	are layered on top of these, with appropriate locking added.
  */
 
+// ARM10C 20140322
+// *nl: (&cpu_chain)->head: NULL, n: &page_alloc_cpu_nitify_nb
 static int notifier_chain_register(struct notifier_block **nl,
 		struct notifier_block *n)
 {
+	// *nl: (&cpu_chain)->head: NULL
 	while ((*nl) != NULL) {
 		if (n->priority > (*nl)->priority)
 			break;
 		nl = &((*nl)->next);
 	}
+
+	// n->next: (&page_alloc_cpu_nitify_nb)->next, *nl: (&cpu_chain)->head: NULL
 	n->next = *nl;
+	// n->next: (&page_alloc_cpu_nitify_nb)->next: NULL
+
+	// *nl: (&cpu_chain)->head: NULL, n: &page_alloc_cpu_nitify_nb
 	rcu_assign_pointer(*nl, n);
+	// (&cpu_chain)->head: page_alloc_cpu_notifier 포인터 대입
+
 	return 0;
 }
 
@@ -341,10 +351,15 @@ EXPORT_SYMBOL_GPL(blocking_notifier_call_chain);
  *
  *	Currently always returns zero.
  */
+// ARM10C 20140322
+// nh: &cpu_chain, n: &page_alloc_cpu_nitify_nb
 int raw_notifier_chain_register(struct raw_notifier_head *nh,
 		struct notifier_block *n)
 {
+	// nh->head: (&cpu_chain)->head: NULL, n: &page_alloc_cpu_nitify_nb
 	return notifier_chain_register(&nh->head, n);
+	// (&cpu_chain)->head: &page_alloc_cpu_nitify_nb
+	// &nh->head에 n의 포인터를 대입함
 }
 EXPORT_SYMBOL_GPL(raw_notifier_chain_register);
 

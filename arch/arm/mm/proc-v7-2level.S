@@ -72,36 +72,54 @@ ENDPROC(cpu_v7_switch_mm)
  *	- pte   - PTE value to store
  *	- ext	- value for extended PTE bits
  */
+// ARM10C 20131123
+// ptep: 0xEF7FD1F0, pte: 0x4F7FEXXX, ext:0
 ENTRY(cpu_v7_set_pte_ext)
-#ifdef CONFIG_MMU
+#ifdef CONFIG_MMU // CONFIG_MMU=y
 	str	r1, [r0]			@ linux version
 
 	bic	r3, r1, #0x000003f0
+	// PTE_TYPE_MASK: 0x3
 	bic	r3, r3, #PTE_TYPE_MASK
 	orr	r3, r3, r2
+	// PTE_EXT_AP0 | 2: 0x12
 	orr	r3, r3, #PTE_EXT_AP0 | 2
 
+	// AP[0] 확인
 	tst	r1, #1 << 4
+	// PTE_EXT_TEX(1): 0x40
 	orrne	r3, r3, #PTE_EXT_TEX(1)
 
+	// L_PTE_DIRTY: 0x40
+	// r1: 0x4F7FEXXX ^ 0x40
 	eor	r1, r1, #L_PTE_DIRTY
+	// L_PTE_RDONLY: 0x80
+	// r1: 0x4F7FEXXX tst 0xC0
 	tst	r1, #L_PTE_RDONLY | L_PTE_DIRTY
+	// PTE_EXT_APX: 0x200
 	orrne	r3, r3, #PTE_EXT_APX
 
+	// L_PTE_USER: 0x100
 	tst	r1, #L_PTE_USER
+	// PTE_EXT_AP1: 0x20
 	orrne	r3, r3, #PTE_EXT_AP1
-#ifdef CONFIG_CPU_USE_DOMAINS
+#ifdef CONFIG_CPU_USE_DOMAINS // CONFIG_CPU_USE_DOMAINS=n
 	@ allow kernel read/write access to read-only user pages
 	tstne	r3, #PTE_EXT_APX
 	bicne	r3, r3, #PTE_EXT_APX | PTE_EXT_AP0
 #endif
 
+	// L_PTE_XN: 0x200
 	tst	r1, #L_PTE_XN
+	// PTE_EXT_XN: 0x1
 	orrne	r3, r3, #PTE_EXT_XN
 
+	// L_PTE_YOUNG: 0x2
 	tst	r1, #L_PTE_YOUNG
+	// L_PTE_VALID: 0x1
 	tstne	r1, #L_PTE_VALID
-#ifndef CONFIG_CPU_USE_DOMAINS
+#ifndef CONFIG_CPU_USE_DOMAINS // CONFIG_CPU_USE_DOMAINS=n
+	// L_PTE_NONE: 0x800 
 	eorne	r1, r1, #L_PTE_NONE
 	tstne	r1, #L_PTE_NONE
 #endif

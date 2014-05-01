@@ -116,6 +116,7 @@ ENDPROC(v7_flush_dcache_louis)
  *
  *	- mm    - mm_struct describing address space
  */
+// ARM10C 20131130
 ENTRY(v7_flush_dcache_all)
 	dmb					@ ensure ordering with previous memory accesses
 	mrc	p15, 1, r0, c0, c0, 1		@ read clidr
@@ -123,7 +124,9 @@ ENTRY(v7_flush_dcache_all)
 	mov	r3, r3, lsr #23			@ left align loc bit field
 	beq	finished			@ if loc is 0, then no need to clean
 	mov	r10, #0				@ start clean at cache level 0
+
 flush_levels:
+	// compressed/head.S 의 loop1 심볼과 동일한 코드 참조
 	add	r2, r10, r10, lsr #1		@ work out 3x current cache level
 	mov	r1, r0, lsr r2			@ extract cache type bits from clidr
 	and	r1, r1, #7			@ mask of the bits for current cache only
@@ -182,6 +185,7 @@ ENDPROC(v7_flush_dcache_all)
  *  unification in a single instruction.
  *
  */
+// ARM10C 20131130
 ENTRY(v7_flush_kern_cache_all)
  ARM(	stmfd	sp!, {r4-r5, r7, r9-r11, lr}	)
  THUMB(	stmfd	sp!, {r4-r7, r9-r11, lr}	)
@@ -252,6 +256,8 @@ ENDPROC(v7_flush_user_cache_range)
  *	It is assumed that:
  *	- the Icache does not read data from the write buffer
  */
+// ARM10C 20131116
+// vectors: 0xEF7FE000, vectors + PAGE_SIZE * 2: 0xEF800000
 ENTRY(v7_coherent_kern_range)
 	/* FALLTHROUGH */
 
@@ -269,17 +275,23 @@ ENTRY(v7_coherent_kern_range)
  *	- the Icache does not read data from the write buffer
  */
 ENTRY(v7_coherent_user_range)
+ // unwind 기능을 사용하는 코드 시작 
  UNWIND(.fnstart		)
+	// r2: 0x40 - data cache 최소크기
 	dcache_line_size r2, r3
+	// r3: 0x3F
 	sub	r3, r2, #1
+	// r0: 0xEF7FE000, r12: 0xEF7FE000
 	bic	r12, r0, r3
-#ifdef CONFIG_ARM_ERRATA_764369
+#ifdef CONFIG_ARM_ERRATA_764369 // CONFIG_ARM_ERRATA_764369=n
 	ALT_SMP(W(dsb))
 	ALT_UP(W(nop))
 #endif
 1:
+	// r12: 0xEF7FE000
  USER(	mcr	p15, 0, r12, c7, c11, 1	)	@ clean D line to the point of unification
 	add	r12, r12, r2
+	// r1: 0xEF800000
 	cmp	r12, r1
 	blo	1b
 	dsb	ishst
@@ -302,6 +314,8 @@ ENTRY(v7_coherent_user_range)
  * Fault handling for the cache operation above. If the virtual address in r0
  * isn't mapped, fail with -EFAULT.
  */
+// ARM10C 20131116
+// USER() 매크로에 정의 되어 있는 심볼
 9001:
 #ifdef CONFIG_ARM_ERRATA_775420
 	dsb
@@ -321,15 +335,29 @@ ENDPROC(v7_coherent_user_range)
  *	- addr	- kernel address
  *	- size	- region size
  */
+// ARM10C 20140125
+// page_address(page): page의 virtual address, page_size: 4096(4K)
 ENTRY(v7_flush_kern_dcache_area)
 	dcache_line_size r2, r3
+	// r2: 0x40, r3: 0x4
+
+	// r1: 4096, r0: ??
 	add	r1, r0, r1
+	// r1: page의 virtual address 에 page size(4K)를 더함
+
+	// r3: 0x4, r2: 0x40
 	sub	r3, r2, #1
+	// r3: 0x3F
+
+	// r0: page의 virtual address, r3: 0x3F
 	bic	r0, r0, r3
-#ifdef CONFIG_ARM_ERRATA_764369
+	// page의 virtual address를 cache 사이즈 align 을 맞춤
+
+#ifdef CONFIG_ARM_ERRATA_764369 // CONFIG_ARM_ERRATA_764369=n
 	ALT_SMP(W(dsb))
 	ALT_UP(W(nop))
 #endif
+	// 4K 영역만큼 루프 돌며 flush
 1:
 	mcr	p15, 0, r0, c7, c14, 1		@ clean & invalidate D line / unified line
 	add	r0, r0, r2

@@ -6,7 +6,6 @@
 #include <linux/ftrace_irq.h>
 #include <linux/vtime.h>
 
-
 extern void synchronize_irq(unsigned int irq);
 
 #if defined(CONFIG_TINY_RCU)

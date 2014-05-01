@@ -1,4 +1,4 @@
-/*
+﻿/*
  *  arch/arm/include/asm/smp.h
  *
  *  Copyright (C) 2004-2005 ARM Ltd.
@@ -86,8 +86,10 @@ extern void arch_send_wakeup_ipi_mask(const struct cpumask *mask);
 
 extern int register_ipi_completion(struct completion *completion, int cpu);
 
+// ARM10C 20130928
+// ARM10C 20140215
 struct smp_operations {
-#ifdef CONFIG_SMP
+#ifdef CONFIG_SMP // CONFIG_SMP=y
 	/*
 	 * Setup the set of possible CPUs (via set_cpu_possible)
 	 */
@@ -106,7 +108,7 @@ struct smp_operations {
 	 * This also gives us the initial stack to use for this CPU.
 	 */
 	int  (*smp_boot_secondary)(unsigned int cpu, struct task_struct *idle);
-#ifdef CONFIG_HOTPLUG_CPU
+#ifdef CONFIG_HOTPLUG_CPU // CONFIG_HOTPLUG_CPU=y
 	int  (*cpu_kill)(unsigned int cpu);
 	void (*cpu_die)(unsigned int cpu);
 	int  (*cpu_disable)(unsigned int cpu);

@@ -55,6 +55,7 @@ extern char * strstr(const char * s1, const char *s2);
 #include "../../../../lib/decompress_unlz4.c"
 #endif
 
+// ARM10C 20130727
 int do_decompress(u8 *input, int len, u8 *output, void (*error)(char *x))
 {
 	return decompress(input, len, NULL, NULL, output, NULL, error);

@@ -12,4 +12,5 @@
 #include "bitops.h"
                 .text
 
+// ARM10C 20131207
 testop	_test_and_set_bit, orreq, streq

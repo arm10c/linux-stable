@@ -158,7 +158,10 @@ extern struct task_group root_task_group;
  *  INIT_TASK is used to set up the first task table, touch at
  * your own risk!. Base=0, limit=0x1fffff (=2MB)
  */
-#define INIT_TASK(tsk)	\
+// ARM10C 20130831
+// .cpus_allowed : 3
+// ARM10C 20140315
+#define INIT_TASK(tsk)							\
 {									\
 	.state		= 0,						\
 	.stack		= &init_thread_info,				\
@@ -233,6 +236,7 @@ extern struct task_group root_task_group;
 }
 
 /* Attach to the init_task data structure for proper alignment */
+// ARM10C 20140315
 #define __init_task_data __attribute__((__section__(".data..init_task")))
 
 
