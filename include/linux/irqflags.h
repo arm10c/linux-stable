@@ -98,6 +98,7 @@
 // ARM10C 20140315
 // flags에 CPSR값을 저장함
 // ARM10C 20140405
+// ARM10C 20140510
 #define local_irq_save(flags)	/*ARM10C this*/		\
 	do {						\
 		raw_local_irq_save(flags);		\
@@ -108,6 +109,7 @@
 // ARM10C 20130907
 // ARM10C 20130322
 // ARM10C 20140412
+// ARM10C 20140510
 #define local_irq_restore(flags)			\
 	do {						\
 		if (raw_irqs_disabled_flags(flags)) {/*irq가 disabled 인가?*/	\

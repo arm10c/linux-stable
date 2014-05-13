@@ -1691,7 +1691,9 @@ extern void thread_group_cputime_adjusted(struct task_struct *p, cputime_t *ut, 
 #define PF_FSTRANS	0x00020000	/* inside a filesystem transaction */
 #define PF_KSWAPD	0x00040000	/* I am kswapd */
 #define PF_MEMALLOC_NOIO 0x00080000	/* Allocating memory without IO involved */
+// ARM10C 20140510
 #define PF_LESS_THROTTLE 0x00100000	/* Throttle me less: I clean memory */
+// ARM10C 20140510
 #define PF_KTHREAD	0x00200000	/* I am a kernel thread */
 #define PF_RANDOMIZE	0x00400000	/* randomize virtual address space */
 #define PF_SWAPWRITE	0x00800000	/* Allowed to write to swap */

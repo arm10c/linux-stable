@@ -231,6 +231,10 @@ void set_pgdat_percpu_threshold(pg_data_t *pgdat,
 // ARM10C 20140412
 // zone: &(&contig_page_data)->node_zones[ZONE_NORMAL], NR_FREE_PAGES: 0, nr_pages: 32
 // zone: &(&contig_page_data)->node_zones[ZONE_NORMAL], NR_FREE_PAGES: 0, nr_pages: 1
+// ARM10C 20140510
+// zone: &pgdat->node_zones[ZONE_NORMAL], item: NR_ALLOC_BATCH: 1, delta: 0x2efd6
+// zone: &pgdat->node_zones[ZONE_HIGHMEM], item: NR_ALLOC_BATCH: 1, delta:  0x50800
+// zone: &pgdat->node_zones[ZONE_MOVABLE], item: NR_ALLOC_BATCH: 1, delta: 0x0
 void __mod_zone_page_state(struct zone *zone, enum zone_stat_item item,
 				int delta)
 {
@@ -238,8 +242,12 @@ void __mod_zone_page_state(struct zone *zone, enum zone_stat_item item,
 	struct per_cpu_pageset __percpu *pcp = zone->pageset;
 	// pcp: &boot_pageset
 	// item: 0
+	// ARM10C 20140510
+	// item: 1
 	s8 __percpu *p = pcp->vm_stat_diff + item;
 	// p: &(&boot_pageset)->vm_stat_diff[0]
+	// ARM10C 20140510
+	// p: &(&boot_pageset)->vm_stat_diff[1]
 	long x;
 	long t;
 
@@ -276,6 +284,13 @@ void __mod_zone_page_state(struct zone *zone, enum zone_stat_item item,
 
 	// __this_cpu_read((&boot_pageset)->vm_stat_diff[0]): 0
 	// x: 32
+	// ARM10C 20140510
+	// __this_cpu_read((&boot_pageset)->vm_stat_diff[0]): 0
+	// x: 0x2efd6
+	// __this_cpu_read((&boot_pageset)->vm_stat_diff[0]): 0x2efd6
+	// x: 0x7f7d6
+	// __this_cpu_read((&boot_pageset)->vm_stat_diff[0]): 0x7f7d6
+	// x: 0x7f7d6
 
 	// pcp->stat_threshold: (&boot_pageset)->stat_threshold
 	// __this_cpu_read((&boot_pageset)->stat_threshold): 0
@@ -283,16 +298,30 @@ void __mod_zone_page_state(struct zone *zone, enum zone_stat_item item,
 	// t: 0
 
 	// x: 32, t: 0
+	// ARM10C 20140510
+	// x: 0x2efd6, t: 0
+	// x: 0x7f7d6, t: 0
+	// x: 0x7f7d6, t: 0
 	if (unlikely(x > t || x < -t)) {
 		// x: 32, zone: &(&contig_page_data)->node_zones[ZONE_NORMAL], item: 0
 		zone_page_state_add(x, zone, item);
 		// zone->vm_stat[0]: (&contig_page_data)->node_zones[ZONE_NORMAL].vm_stat[0]: 32
 		// NR_FREE_PAGES: 0, vm_stat[0]: 32
-
+		// ARM10C 20140510
+		// zone->vm_stat[1]: (&contig_page_data)->node_zones[ZONE_NORMAL].vm_stat[1]: 0x2efd6
+		// NR_ALLOC_BATCH: 1, vm_stat[1]: 0x2efd6
+		// zone->vm_stat[1]: (&contig_page_data)->node_zones[ZONE_HIGHMEM].vm_stat[1]: 0x7f7d6
+		// NR_ALLOC_BATCH: 1, vm_stat[1]: 0x7f7d6
+		// zone->vm_stat[1]: (&contig_page_data)->node_zones[ZONE_MOVABLE].vm_stat[1]: 0x7f7d6
+		// NR_ALLOC_BATCH: 1, vm_stat[1]: 0x7f7d6
 		x = 0;
 	}
 
 	// p: &(&boot_pageset)->vm_stat_diff[0], x: 0
+	// ARM10C 20140510
+	// p: &(&boot_pageset)->vm_stat_diff[1], x: 0x2efd6
+	// p: &(&boot_pageset)->vm_stat_diff[1], x: 0x7f7d6
+	// p: &(&boot_pageset)->vm_stat_diff[1], x: 0x7f7d6
 	__this_cpu_write(*p, x);
 
 	// __this_cpu_write(pcp, val):
@@ -396,7 +425,7 @@ void __dec_zone_page_state(struct page *page, enum zone_stat_item item)
 }
 EXPORT_SYMBOL(__dec_zone_page_state);
 
-#ifdef CONFIG_HAVE_CMPXCHG_LOCAL
+#ifdef CONFIG_HAVE_CMPXCHG_LOCAL // CONFIG_HAVE_CMPXCHG_LOCAL=n
 /*
  * If we have cmpxchg_local support then we do not need to incur the overhead
  * that comes with local_irq_save/restore if we use this_cpu_cmpxchg.
@@ -474,12 +503,19 @@ EXPORT_SYMBOL(dec_zone_page_state);
 /*
  * Use interrupt disable to serialize counter updates
  */
+// ARM10C 20140510
+// zone = &pgdat->node_zones[ZONE_NORMAL], NR_ALLOC_BATCH, zone->managed_pages = 0x2efd6
+// zone = &pgdat->node_zones[ZONE_HIGHMEM], NR_ALLOC_BATCH, zone->managed_pages = 0x50800
+// zone = &pgdat->node_zones[ZONE_MOVABLE], NR_ALLOC_BATCH, zone->managed_pages = 0x0
 void mod_zone_page_state(struct zone *zone, enum zone_stat_item item,
 					int delta)
 {
 	unsigned long flags;
 
 	local_irq_save(flags);
+	// zone: &pgdat->node_zones[ZONE_NORMAL], item: 1, delta: 0x2efd6
+	// zone: &pgdat->node_zones[ZONE_HIGHMEM], item: 1, delta:  0x50800
+	// zone: &pgdat->node_zones[ZONE_MOVABLE], item: 1, delta: 0x0
 	__mod_zone_page_state(zone, item, delta);
 	local_irq_restore(flags);
 }

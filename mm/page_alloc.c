@@ -1546,7 +1546,7 @@ static int rmqueue_bulk(struct zone *zone, unsigned int order,
 	return i;
 }
 
-#ifdef CONFIG_NUMA
+#ifdef CONFIG_NUMA // CONFIG_NUMA=n
 /*
  * Called from the vmstat counter updater to drain pagesets of this
  * currently executing processor on remote nodes after they have
@@ -1578,6 +1578,8 @@ static bool gfp_thisnode_allocation(gfp_t gfp_mask)
 	return (gfp_mask & GFP_THISNODE) == GFP_THISNODE;
 }
 #else
+// ARM10C 20140510
+// gfp_mask: 0x221200
 static bool gfp_thisnode_allocation(gfp_t gfp_mask)
 {
 	return false;
@@ -1904,6 +1906,10 @@ int split_free_page(struct page *page)
  * we cheat by calling it from here, in the order > 0 path.  Saves a branch
  * or two.
  */
+// ARM10C 20140510
+// preferred_zone: (&contig_page_data)->node_zones[0]
+// zone: contig_page_data->node_zones[0], order: 0, gfp_mask: 0x221200
+// migratetype: MIGRATE_UNMOVABLE: 0
 static inline
 struct page *buffered_rmqueue(struct zone *preferred_zone,
 			struct zone *zone, int order, gfp_t gfp_flags,
@@ -1911,16 +1917,29 @@ struct page *buffered_rmqueue(struct zone *preferred_zone,
 {
 	unsigned long flags;
 	struct page *page;
+	// gfp_flags: 0x221200, __GFP_COLD: 0x100u
 	int cold = !!(gfp_flags & __GFP_COLD);
+	// cold: 0
 
 again:
+	// order: 0
 	if (likely(order == 0)) {
 		struct per_cpu_pages *pcp;
 		struct list_head *list;
 
 		local_irq_save(flags);
+		// zone->pageset: contig_page_data->node_zones[0].pageset: &boot_pageset
+		// this_cpu_ptr(&boot_pageset): &boot_pageset + (__per_cpu_offset[0])
+		// this_cpu_ptr(&boot_pageset)->pcp: (&boot_pageset + (__per_cpu_offset[0]))->pcp
 		pcp = &this_cpu_ptr(zone->pageset)->pcp;
+		// pcp: (&boot_pageset + (__per_cpu_offset[0]))->pcp
+
+		// migratetype: 0, pcp->lists[0]: (&boot_pageset + (__per_cpu_offset[0]))->pcp.lists[0]
 		list = &pcp->lists[migratetype];
+		// list: (&boot_pageset + (__per_cpu_offset[0]))->pcp.lists[0]
+
+// 2014/05/10 종료
+
 		if (list_empty(list)) {
 			pcp->count += rmqueue_bulk(zone, 0,
 					pcp->batch, list,
@@ -2062,28 +2081,45 @@ static inline bool should_fail_alloc_page(gfp_t gfp_mask, unsigned int order)
  * Return true if free pages are above 'mark'. This takes into account the order
  * of the allocation.
  */
+// ARM10C 20140510
+// z: contig_page_data->node_zones[0], order: 0, mark: 0
+// classzone_idx: 0 alloc_flags: 0x41, ????
 static bool __zone_watermark_ok(struct zone *z, int order, unsigned long mark,
 		      int classzone_idx, int alloc_flags, long free_pages)
 {
 	/* free_pages my go negative - that's OK */
+	// mark: 0
 	long min = mark;
+	// min: 0
+	// classzone_idx: 0, z->lowmem_reserve[0]: contig_page_data->node_zones[0].lowmem_reserve[0]: 0
 	long lowmem_reserve = z->lowmem_reserve[classzone_idx];
+	// lowmem_reserve: 0
 	int o;
 	long free_cma = 0;
 
+	// free_pages: ????
 	free_pages -= (1 << order) - 1;
+	// free_pages: ????
+
+	// alloc_flags: 0x41, ALLOC_HIGH: 0x20
 	if (alloc_flags & ALLOC_HIGH)
 		min -= min / 2;
+
+	// alloc_flags: 0x41, ALLOC_HIGH: 0x10
 	if (alloc_flags & ALLOC_HARDER)
 		min -= min / 4;
-#ifdef CONFIG_CMA
+
+#ifdef CONFIG_CMA // CONFIG_CMA=n
 	/* If allocation can't use CMA areas don't use free CMA pages */
 	if (!(alloc_flags & ALLOC_CMA))
 		free_cma = zone_page_state(z, NR_FREE_CMA_PAGES);
 #endif
 
+	// free_pages: ????, free_cma: 0, min: 0, lowmem_reserve: 0
 	if (free_pages - free_cma <= min + lowmem_reserve)
 		return false;
+
+	// order: 0
 	for (o = 0; o < order; o++) {
 		/* At the next order, this order's pages become unavailable */
 		free_pages -= z->free_area[o].nr_free << o;
@@ -2095,13 +2131,21 @@ static bool __zone_watermark_ok(struct zone *z, int order, unsigned long mark,
 			return false;
 	}
 	return true;
+	// return true
 }
 
+// ARM10C 20140510
+// zone: contig_page_data->node_zones[0], order: 0, mark: 0
+// classzone_idx: 0 alloc_flags: 0x41
 bool zone_watermark_ok(struct zone *z, int order, unsigned long mark,
 		      int classzone_idx, int alloc_flags)
 {
+	// z: contig_page_data->node_zones[0], order: 0, mark: 0
+	// classzone_idx: 0 alloc_flags: 0x41
+	// zone_page_state(contig_page_data->node_zones[0], NR_FREE_PAGES): ????
 	return __zone_watermark_ok(z, order, mark, classzone_idx, alloc_flags,
 					zone_page_state(z, NR_FREE_PAGES));
+	// return 1
 }
 
 bool zone_watermark_ok_safe(struct zone *z, int order, unsigned long mark,
@@ -2261,6 +2305,8 @@ static nodemask_t *zlc_setup(struct zonelist *zonelist, int alloc_flags)
 	return NULL;
 }
 
+// ARM10C 20140510
+// zonelist: contig_page_data->node_zonelists, allowednodes: NULL
 static int zlc_zone_worth_trying(struct zonelist *zonelist, struct zoneref *z,
 				nodemask_t *allowednodes)
 {
@@ -2275,6 +2321,9 @@ static void zlc_clear_zones_full(struct zonelist *zonelist)
 {
 }
 
+// ARM10C 20140510
+// preferred_zone: (&contig_page_data)->node_zones[0]
+// zone: contig_page_data->node_zones[0]
 static bool zone_local(struct zone *local_zone, struct zone *zone)
 {
 	return true;
@@ -2296,6 +2345,7 @@ static inline void init_zone_allows_reclaim(int nid)
  * a page.
  */
 // ARM10C 20140426
+// ARM10C 20140510
 // 0x221200, nodemask: NULL, order: 0
 // zonelist: contig_page_data->node_zonelists, high_zoneidx: ZONE_NORMAL: 0
 // alloc_flags: 0x41, preferred_zone: (&contig_page_data)->node_zones[0]
@@ -2313,23 +2363,43 @@ get_page_from_freelist(gfp_t gfp_mask, nodemask_t *nodemask, unsigned int order,
 	int zlc_active = 0;		/* set if using zonelist_cache */
 	int did_zlc_setup = 0;		/* just call zlc_setup() one time */
 
+	// preferred_zone: (&contig_page_data)->node_zones[0]
+	// zone_idx((&contig_page_data)->node_zones[0]): 0
 	classzone_idx = zone_idx(preferred_zone);
+	// classzone_idx: 0
+
 zonelist_scan:
 	/*
 	 * Scan zonelist, looking for a zone with enough free.
 	 * See also __cpuset_node_allowed_softwall() comment in kernel/cpuset.c.
 	 */
+	// zonelist: contig_page_data->node_zonelists, high_zoneidx: ZONE_NORMAL: 0
+	// nodemask: NULL
 	for_each_zone_zonelist_nodemask(zone, z, zonelist,
 						high_zoneidx, nodemask) {
+	// for (z = first_zones_zonelist(contig_page_data->node_zonelists, ZONE_NORMAL, NULL, &zone);
+	//	zone; z = next_zones_zonelist(++z, ZONE_NORMAL, NULL, &zone))
+
 		unsigned long mark;
 
+		// IS_ENABLED(CONFIG_NUMA): 0, zlc_active: 0
+		// zonelist: contig_page_data->node_zonelists, allowednodes: NULL
+		// zlc_zone_worth_trying(contig_page_data->node_zonelists, z, NULL): 1
 		if (IS_ENABLED(CONFIG_NUMA) && zlc_active &&
 			!zlc_zone_worth_trying(zonelist, z, allowednodes))
 				continue;
+
+		// alloc_flags: 0x41, ALLOC_CPUSET: 0x40
+		// zone: contig_page_data->node_zones[0], gfp_mask: 0x221200
+		// cpuset_zone_allowed_softwall(contig_page_data->node_zones[0], 0x221200): 1
 		if ((alloc_flags & ALLOC_CPUSET) &&
 			!cpuset_zone_allowed_softwall(zone, gfp_mask))
 				continue;
+
+		// ALLOC_NO_WATERMARKS: 0x04, NR_WMARK: 3
 		BUILD_BUG_ON(ALLOC_NO_WATERMARKS < NR_WMARK);
+
+		// alloc_flags: 0x41, ALLOC_NO_WATERMARKS: 0x04
 		if (unlikely(alloc_flags & ALLOC_NO_WATERMARKS))
 			goto try_this_zone;
 		/*
@@ -2348,10 +2418,18 @@ zonelist_scan:
 		 * NOTE: GFP_THISNODE allocations do not partake in
 		 * the kswapd aging protocol, so they can't be fair.
 		 */
+		// alloc_flags: 0x41, ALLOC_WMARK_LOW: 1, gfp_mask: 0x221200
+		// gfp_thisnode_allocation(0x221200): false
 		if ((alloc_flags & ALLOC_WMARK_LOW) &&
 		    !gfp_thisnode_allocation(gfp_mask)) {
+			// zone: contig_page_data->node_zones[0], NR_ALLOC_BATCH: 1
+			// zone_page_state(contig_page_data->node_zones[0], NR_ALLOC_BATCH): 0x2efd6
 			if (zone_page_state(zone, NR_ALLOC_BATCH) <= 0)
 				continue;
+
+			// preferred_zone: (&contig_page_data)->node_zones[0]
+			// zone: contig_page_data->node_zones[0]
+			// zone_local((&contig_page_data)->node_zones[0], contig_page_data->node_zones[0]): true
 			if (!zone_local(preferred_zone, zone))
 				continue;
 		}
@@ -2381,11 +2459,21 @@ zonelist_scan:
 		 * will require awareness of zones in the
 		 * dirty-throttling and the flusher threads.
 		 */
+		// alloc_flags: 0x41, ALLOC_WMARK_LOW: 1, gfp_mask: 0x221200
+		// __GFP_WRITE: 0x1000000u, zone: contig_page_data->node_zones[0]
+		// zone_dirty_ok(contig_page_data->node_zones[0]): 1
 		if ((alloc_flags & ALLOC_WMARK_LOW) &&
 		    (gfp_mask & __GFP_WRITE) && !zone_dirty_ok(zone))
 			goto this_zone_full;
 
+		// alloc_flags: 0x41, ALLOC_WMARK_MASK: 0x03
+		// zone->watermark[0x1]: contig_page_data->node_zones[0].watermark[1]: 0
 		mark = zone->watermark[alloc_flags & ALLOC_WMARK_MASK];
+		// mark: 0
+
+		// zone: contig_page_data->node_zones[0], order: 0, mark: 0
+		// classzone_idx: 0 alloc_flags: 0x41
+		// zone_watermark_ok(contig_page_data->node_zones[0], 0, 0, 0, 0x41): 1
 		if (!zone_watermark_ok(zone, order, mark,
 				       classzone_idx, alloc_flags)) {
 			int ret;
@@ -2446,6 +2534,9 @@ zonelist_scan:
 		}
 
 try_this_zone:
+		// preferred_zone: (&contig_page_data)->node_zones[0]
+		// zone: contig_page_data->node_zones[0], order: 0, gfp_mask: 0x221200
+		// migratetype: MIGRATE_UNMOVABLE: 0
 		page = buffered_rmqueue(preferred_zone, zone, order,
 						gfp_mask, migratetype);
 		if (page)
@@ -3163,6 +3254,7 @@ retry_cpuset:
 #endif
 
 // 2014/04/26 종료
+// 2014/05/10 시작
 
 	/* First allocation attempt */
 	// gfp_mask: 0x201200, __GFP_HARDWALL: 0x20000, nodemask: NULL, order: 0
@@ -5622,6 +5714,10 @@ static void __paginginit free_area_init_core(struct pglist_data *pgdat,
 		zone_pcp_init(zone);
 
 		/* For bootup, initialized properly in watermark setup */
+		// ARM10C 20140510
+		//j = 0, zone = &pgdat->node_zones[ZONE_NORMAL], zone->managed_pages = 0x2efd6
+		//j = 1, zone = &pgdat->node_zones[ZONE_HIGHMEM], zone->managed_pages = 0x50800
+		//j = 2, zone = &pgdat->node_zones[ZONE_MOVABLE], zone->managed_pages = 0x0
 		mod_zone_page_state(zone, NR_ALLOC_BATCH, zone->managed_pages);
 
 		// least recently used vector init

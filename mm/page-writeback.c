@@ -87,12 +87,14 @@ int vm_highmem_is_dirtyable;
 /*
  * The generator of dirty data starts writeback at this percentage
  */
+// ARM10C 20140510
 int vm_dirty_ratio = 20;
 
 /*
  * vm_dirty_bytes starts at 0 (disabled) so that it is a function of
  * vm_dirty_ratio * the amount of dirtyable memory
  */
+// ARM10C 20140510
 unsigned long vm_dirty_bytes;
 
 /*
@@ -198,17 +200,34 @@ static unsigned long writeout_period_time = 0;
  * Returns the zone's number of pages potentially available for dirty
  * page cache.  This is the base value for the per-zone dirty limits.
  */
+// ARM10C 20140510
+// zone: contig_page_data->node_zones[0]
 static unsigned long zone_dirtyable_memory(struct zone *zone)
 {
 	unsigned long nr_pages;
 
+	// zone: contig_page_data->node_zones[0], NR_FREE_PAGES: 0
 	nr_pages = zone_page_state(zone, NR_FREE_PAGES);
+	// nr_pagee: ???? (32)
+
+	// zone->dirty_balance_reserve: contig_page_data->node_zones[0].dirty_balance_reserve: 0
+	// min(???? (32), contig_page_data->node_zones[0].dirty_balance_reserve): 0
 	nr_pages -= min(nr_pages, zone->dirty_balance_reserve);
+	// nr_pagee: ???? (32)
 
+	// zone: contig_page_data->node_zones[0], NR_INACTIVE_FILE: 4
+	// zone_page_state(contig_page_data->node_zones[0], NR_INACTIVE_FILE): 0
 	nr_pages += zone_page_state(zone, NR_INACTIVE_FILE);
-	nr_pages += zone_page_state(zone, NR_ACTIVE_FILE);
+	// nr_pagee: ???? (32)
 
+	// zone: contig_page_data->node_zones[0], NR_ACTIVE_FILE: 5
+	// zone_page_state(contig_page_data->node_zones[0], NR_INACTIVE_FILE): 0
+	nr_pages += zone_page_state(zone, NR_ACTIVE_FILE);
+	// nr_pagee: ???? (32)
+
+	// nr_pagee: ???? (32)
 	return nr_pages;
+	// return ???? (32)
 }
 
 static unsigned long highmem_dirtyable_memory(unsigned long total)
@@ -316,22 +335,35 @@ void global_dirty_limits(unsigned long *pbackground, unsigned long *pdirty)
  * Returns the maximum number of dirty pages allowed in a zone, based
  * on the zone's dirtyable memory.
  */
+// ARM10C 20140510
+// zone: contig_page_data->node_zones[0]
 static unsigned long zone_dirty_limit(struct zone *zone)
 {
+	// zone: contig_page_data->node_zones[0]
 	unsigned long zone_memory = zone_dirtyable_memory(zone);
+	// zone_memory: ???? 사용가능한 페이지 수
+	// current: init_task
 	struct task_struct *tsk = current;
+	// tsk: init_task
 	unsigned long dirty;
 
+	// vm_dirty_bytes: 0
 	if (vm_dirty_bytes)
 		dirty = DIV_ROUND_UP(vm_dirty_bytes, PAGE_SIZE) *
 			zone_memory / global_dirtyable_memory();
 	else
+		// vm_dirty_ratio: 20, zone_memory: ???? 사용가능한 페이지 수
 		dirty = vm_dirty_ratio * zone_memory / 100;
+		// dirty: ????
 
+	// tsk->flags: init_task->flags: PF_KTHREAD: 0x00200000, PF_LESS_THROTTLE: 0x00100000
+	// tsk: init_task, rt_task(init_task): 0
 	if (tsk->flags & PF_LESS_THROTTLE || rt_task(tsk))
 		dirty += dirty / 4;
 
+	// dirty: ????
 	return dirty;
+	// return ????
 }
 
 /**
@@ -341,13 +373,21 @@ static unsigned long zone_dirty_limit(struct zone *zone)
  * Returns %true when the dirty pages in @zone are within the zone's
  * dirty limit, %false if the limit is exceeded.
  */
+// ARM10C 20140510
+// zone: contig_page_data->node_zones[0]
 bool zone_dirty_ok(struct zone *zone)
 {
+	// zone: contig_page_data->node_zones[0]
+	// zone_dirty_limit(contig_page_data->node_zones[0]): ????
 	unsigned long limit = zone_dirty_limit(zone);
+	// limit: ????
 
+	// zone: contig_page_data->node_zones[0], NR_FILE_DIRTY: 11
+	// NR_UNSTABLE_NFS: 17, NR_WRITEBACK: 12
 	return zone_page_state(zone, NR_FILE_DIRTY) +
 	       zone_page_state(zone, NR_UNSTABLE_NFS) +
 	       zone_page_state(zone, NR_WRITEBACK) <= limit;
+	// return 1
 }
 
 int dirty_background_ratio_handler(struct ctl_table *table, int write,

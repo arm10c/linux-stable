@@ -374,18 +374,27 @@ unsigned long reclaim_clean_pages_from_list(struct zone *zone,
 /* The ALLOC_WMARK bits are used as an index to zone->watermark */
 #define ALLOC_WMARK_MIN		WMARK_MIN
 // ARM10C 20140426
+// ARM10C 20140510
 // WMARK_LOW: 1
 // ALLOC_WMARK_LOW: 1
 #define ALLOC_WMARK_LOW		WMARK_LOW
 #define ALLOC_WMARK_HIGH	WMARK_HIGH
+// ARM10C 20140510
+// ARM10C 20140510
 #define ALLOC_NO_WATERMARKS	0x04 /* don't check watermarks at all */
 
 /* Mask to get the watermark bits */
+// ARM10C 20140510
+// ALLOC_NO_WATERMARKS: 0x04
+// ALLOC_WMARK_MASK: 0x03
 #define ALLOC_WMARK_MASK	(ALLOC_NO_WATERMARKS-1)
 
+// ARM10C 20140510
 #define ALLOC_HARDER		0x10 /* try to alloc harder */
+// ARM10C 20140510
 #define ALLOC_HIGH		0x20 /* __GFP_HIGH set */
 // ARM10C 20140426
+// ARM10C 20140510
 #define ALLOC_CPUSET		0x40 /* check for correct cpuset */
 #define ALLOC_CMA		0x80 /* allow allocations from CMA areas */
 

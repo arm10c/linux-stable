@@ -161,6 +161,9 @@ extern struct task_group root_task_group;
 // ARM10C 20130831
 // .cpus_allowed : 3
 // ARM10C 20140315
+// ARM10C 20140510
+// PF_KTHREAD: 0x00200000
+// MAX_PRIO: 140
 #define INIT_TASK(tsk)							\
 {									\
 	.state		= 0,						\

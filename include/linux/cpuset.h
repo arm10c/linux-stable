@@ -169,6 +169,8 @@ static inline int cpuset_node_allowed_hardwall(int node, gfp_t gfp_mask)
 	return 1;
 }
 
+// ARM10C 20140510
+// zone: contig_page_data->node_zones[0], gfp_mask: 0x221200
 static inline int cpuset_zone_allowed_softwall(struct zone *z, gfp_t gfp_mask)
 {
 	return 1;

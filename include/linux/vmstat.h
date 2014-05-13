@@ -148,15 +148,49 @@ static inline unsigned long global_page_state(enum zone_stat_item item)
 	return x;
 }
 
+// ARM10C 20140510
+// zone: contig_page_data->node_zones[0], NR_ALLOC_BATCH: 1
+// ARM10C 20140510
+// zone: contig_page_data->node_zones[0], NR_FREE_PAGES: 0
+// zone: contig_page_data->node_zones[0], NR_INACTIVE_FILE: 4
+// zone: contig_page_data->node_zones[0], NR_ACTIVE_FILE: 5
+// zone: contig_page_data->node_zones[0], NR_FILE_DIRTY: 11
+// zone: contig_page_data->node_zones[0], NR_UNSTABLE_NFS: 17
+// zone: contig_page_data->node_zones[0], NR_WRITEBACK: 12
 static inline unsigned long zone_page_state(struct zone *zone,
 					enum zone_stat_item item)
 {
+	// item: 1, zone->vm_stat[1]: contig_page_data->node_zones[0].vm_stat[1]
+	// atomic_long_read(&contig_page_data->node_zones[0].vm_stat[1]): 0x2efd6
+	// item: 0, zone->vm_stat[0]: contig_page_data->node_zones[0].vm_stat[0]
+	// atomic_long_read(&contig_page_data->node_zones[0].vm_stat[0]): ???? (32)
+	// item: 4, zone->vm_stat[4]: contig_page_data->node_zones[0].vm_stat[4]
+	// atomic_long_read(&contig_page_data->node_zones[0].vm_stat[4]): 0
+	// item: 5, zone->vm_stat[5]: contig_page_data->node_zones[0].vm_stat[5]
+	// atomic_long_read(&contig_page_data->node_zones[0].vm_stat[5]): 0
 	long x = atomic_long_read(&zone->vm_stat[item]);
-#ifdef CONFIG_SMP
+	// x: 0x2efd6
+	// x: ???? (32)
+	// x: 0
+	// x: 0
+
+	// vm_stat[NR_FREE_PAGES] 사용가능한 page 수를 의미함
+	// vm_stat[NR_ALLOC_BATCH] buddy에서 할당 가능한 총 page 수
+	// batch 의 의미: chunk size for buddy add/remove
+
+#ifdef CONFIG_SMP // CONFIG_SMP=y
 	if (x < 0)
 		x = 0;
 #endif
+	// x: 0x2efd6
+	// x: ???? (32)
+	// x: 0
+	// x: 0
 	return x;
+	// return 0x2efd6
+	// return ???? (32)
+	// return 0
+	// return 0
 }
 
 /*
@@ -222,10 +256,12 @@ extern void inc_zone_state(struct zone *, enum zone_stat_item);
 
 #ifdef CONFIG_SMP // CONFIG_SMP=y
 // ARM10C 20140412
+// ARM10C 20140510
 void __mod_zone_page_state(struct zone *, enum zone_stat_item item, int);
 void __inc_zone_page_state(struct page *, enum zone_stat_item);
 void __dec_zone_page_state(struct page *, enum zone_stat_item);
 
+// ARM10C 20140510
 void mod_zone_page_state(struct zone *, enum zone_stat_item, int);
 void inc_zone_page_state(struct page *, enum zone_stat_item);
 void dec_zone_page_state(struct page *, enum zone_stat_item);

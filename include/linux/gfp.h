@@ -26,6 +26,7 @@ struct vm_area_struct;
 #define ___GFP_IO		0x40u
 // ARM10C 20140426
 #define ___GFP_FS		0x80u
+// ARM10C 20140510
 #define ___GFP_COLD		0x100u
 // ARM10C 20140426
 #define ___GFP_NOWARN		0x200u
@@ -52,6 +53,7 @@ struct vm_area_struct;
 #define ___GFP_NOTRACK		0x200000u
 #define ___GFP_NO_KSWAPD	0x400000u
 #define ___GFP_OTHER_NODE	0x800000u
+// ARM10C 20140510
 #define ___GFP_WRITE		0x1000000u
 /* If the above are modified, __GFP_BITS_SHIFT may need updating */
 
@@ -121,6 +123,9 @@ struct vm_area_struct;
 // ___GFP_FS: 0x80u
 // __GFP_FS: 0x80u
 #define __GFP_FS	((__force gfp_t)___GFP_FS)	/* Can call down to low-level FS? */
+// ARM10C 20140510
+// ___GFP_COLD: 0x100u
+// __GFP_COLD: 0x100u
 #define __GFP_COLD	((__force gfp_t)___GFP_COLD)	/* Cache-cold page required */
 // ARM10C 20140426
 // ___GFP_NOWARN: 0x200u
@@ -172,6 +177,9 @@ struct vm_area_struct;
 #define __GFP_NO_KSWAPD	((__force gfp_t)___GFP_NO_KSWAPD)
 #define __GFP_OTHER_NODE ((__force gfp_t)___GFP_OTHER_NODE) /* On behalf of other node */
 #define __GFP_KMEMCG	((__force gfp_t)___GFP_KMEMCG) /* Allocation comes from a memcg-accounted resource */
+// ARM10C 20140510
+// ___GFP_WRITE: 0x1000000u
+// __GFP_WRITE: 0x1000000u
 #define __GFP_WRITE	((__force gfp_t)___GFP_WRITE)	/* Allocator intends to dirty page */
 
 /*

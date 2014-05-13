@@ -14,22 +14,37 @@
  * MAX_RT_PRIO must not be smaller than MAX_USER_RT_PRIO.
  */
 
+// ARM10C 20140510
 #define MAX_USER_RT_PRIO	100
+// ARM10C 20140510
+// MAX_USER_RT_PRIO: 100
+// MAX_RT_PRIO: 100
 #define MAX_RT_PRIO		MAX_USER_RT_PRIO
 
+// ARM10C 20140510
+// MAX_RT_PRIO: 100
+// MAX_PRIO: 140
 #define MAX_PRIO		(MAX_RT_PRIO + 40)
 #define DEFAULT_PRIO		(MAX_RT_PRIO + 20)
 
+// ARM10C 20140510
+// p->prio: init_task->prio: 120
 static inline int rt_prio(int prio)
 {
+	// prio: 120, MAX_RT_PRIO: 100
 	if (unlikely(prio < MAX_RT_PRIO))
 		return 1;
 	return 0;
 }
 
+// ARM10C 20140510
+// tsk: init_task
 static inline int rt_task(struct task_struct *p)
 {
+	// p->prio: init_task->prio: 120
+	// rt_prio(120): 0
 	return rt_prio(p->prio);
+	// return 0
 }
 
 #ifdef CONFIG_RT_MUTEXES
