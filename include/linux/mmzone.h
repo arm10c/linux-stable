@@ -24,6 +24,7 @@
 #define MAX_ORDER 11
 #else
 // ARM10C 20140329
+// ARM10C 20140517
 // CONFIG_FORCE_MAX_ZONEORDER: 11
 // MAX_ORDER: 11
 #define MAX_ORDER CONFIG_FORCE_MAX_ZONEORDER
@@ -76,6 +77,7 @@ enum {
 #  define is_migrate_cma(migratetype) unlikely((migratetype) == MIGRATE_CMA)
 #else
 // ARM10C 20140412
+// ARM10C 20140517
 #  define is_migrate_cma(migratetype) false
 #endif
 
@@ -99,6 +101,7 @@ static inline int get_pageblock_migratetype(struct page *page)
 }
 
 // ARM10C 20140125
+// ARM10C 20140517
 // MIGRATE_TYPES: 4
 struct free_area {
 	struct list_head	free_list[MIGRATE_TYPES];
@@ -636,6 +639,8 @@ static inline unsigned long zone_end_pfn(const struct zone *zone)
 }
 
 // ARM10C 20140118
+// ARM10C 20140517
+// zone: contig_page_data->node_zones[0], start_pfn: 0x20000
 static inline bool zone_spans_pfn(const struct zone *zone, unsigned long pfn)
 {
 	return zone->zone_start_pfn <= pfn && pfn < zone_end_pfn(zone);
@@ -1489,6 +1494,7 @@ unsigned long __init node_memmap_size_bytes(int, unsigned long, unsigned long);
 #define pfn_valid_within(pfn) pfn_valid(pfn)
 #else
 // ARM10C 20140405
+// ARM10C 20140517
 #define pfn_valid_within(pfn) (1)
 #endif
 

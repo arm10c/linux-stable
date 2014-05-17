@@ -258,6 +258,7 @@ struct mmu_gather;
 struct inode;
 
 // ARM10C 20140405
+// ARM10C 20140517
 #define page_private(page)		((page)->private)
 // ARM10C 20140405
 // ARM10C 20140412
@@ -267,6 +268,8 @@ struct inode;
 // ARM10C 20140405
 // page: 0x20000 (pfn), migratetype: 0x2
 // ARM10C 20140412
+// ARM10C 20140517
+// page: migratetype이 MIGRATE_UNMOVABLE인 page, mt: 0
 static inline void set_freepage_migratetype(struct page *page, int migratetype)
 {
 	page->index = migratetype;
@@ -502,6 +505,7 @@ static inline void init_page_count(struct page *page)
 #define PAGE_BUDDY_MAPCOUNT_VALUE (-128)
 
 // ARM10C 20140405
+// ARM10C 20140517
 static inline int PageBuddy(struct page *page)
 {
 	// page->_mapcount: -1 (memmap_init 함수에서 설정)
@@ -673,6 +677,9 @@ static inline pte_t maybe_mkwrite(pte_t pte, struct vm_area_struct *vma)
 // SECTIONS_PGOFF : 28
 // SECTIONS_SHIFT: 4
 #define SECTIONS_PGSHIFT	(SECTIONS_PGOFF * (SECTIONS_WIDTH != 0))
+// ARM10C 20140517
+// NODES_PGOFF: 28, NODES_WIDTH: 0
+// NODES_PGSHIFT: 0
 #define NODES_PGSHIFT		(NODES_PGOFF * (NODES_WIDTH != 0))
 // ARM10C 20140118
 // ZONES_PGSHIFT : 26
@@ -713,7 +720,8 @@ static inline pte_t maybe_mkwrite(pte_t pte, struct vm_area_struct *vma)
 // ZONES_MASK : 3
 #define ZONES_MASK		((1UL << ZONES_WIDTH) - 1)
 // ARM10C 20140118
-// NODES_MASK : 0
+// ARM10C 20140517
+// NODES_MASK: 0
 #define NODES_MASK		((1UL << NODES_WIDTH) - 1)
 // ARM10C 20140118
 // SECTIONS_MASK : 15
@@ -751,9 +759,10 @@ static inline int page_zone_id(struct page *page)
 	// return 0
 }
 
+// ARM10C 20140517
 static inline int zone_to_nid(struct zone *zone)
 {
-#ifdef CONFIG_NUMA
+#ifdef CONFIG_NUMA // CONFIG_NUMA=n
 	return zone->node;
 #else
 	return 0;
@@ -764,8 +773,10 @@ static inline int zone_to_nid(struct zone *zone)
 extern int page_to_nid(const struct page *page);
 #else
 // ARM10C 20140118
+// ARM10C 20140517
 static inline int page_to_nid(const struct page *page)
 {
+	// NODES_PGSHIFT: 0, NODES_MASK: 3
 	return (page->flags >> NODES_PGSHIFT) & NODES_MASK;
 }
 #endif
@@ -889,6 +900,7 @@ static inline bool cpupid_match_pid(struct task_struct *task, int cpupid)
 // ARM10C 20140125
 // ARM10C 20140329
 // ARM10C 20140419
+// ARM10C 20140517
 static inline struct zone *page_zone(const struct page *page)
 {
 	// NODE_DATA(page_to_nid(page)): &contig_page_data

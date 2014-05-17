@@ -188,6 +188,8 @@ static inline void do_raw_spin_unlock(raw_spinlock_t *lock) __releases(lock)
 #define raw_spin_trylock(lock)	__cond_lock(lock, _raw_spin_trylock(lock))
 
 // ARM10C 20140405
+// ARM10C 20140517
+// &lock->rlock: &(&contig_page_data->node_zones[0].lock)->rlock
 #define raw_spin_lock(lock)	_raw_spin_lock(lock)
 
 #ifdef CONFIG_DEBUG_LOCK_ALLOC
@@ -307,8 +309,11 @@ do {							\
 } while (0)
 
 // ARM10C 20140405
+// ARM10C 20140517
+// &zone->lock: &contig_page_data->node_zones[0].lock
 static inline void spin_lock(spinlock_t *lock)
 {
+	// lock->rlock: (&contig_page_data->node_zones[0].lock)->rlock
 	raw_spin_lock(&lock->rlock);
 }
 

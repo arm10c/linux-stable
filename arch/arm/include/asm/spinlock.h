@@ -107,6 +107,8 @@ static inline void arch_spin_lock(arch_spinlock_t *lock)
 // ARM10C 20130831
 // lock->slock : 0
 // ARM10C 20140405
+// ARM10C 20140517
+// &lock->raw_lock: (&(&contig_page_data->node_zones[0].lock)->rlock)->raw_lock
 static inline int arch_spin_trylock(arch_spinlock_t *lock)
 {
 	unsigned long contended, res;

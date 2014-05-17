@@ -269,6 +269,7 @@ DECLARE_EVENT_CLASS(mm_page,
 		__entry->order == 0)
 );
 
+// ARM10C 20140517
 DEFINE_EVENT(mm_page, mm_page_alloc_zone_locked,
 
 	TP_PROTO(struct page *page, unsigned int order, int migratetype),
@@ -288,6 +289,7 @@ DEFINE_EVENT_PRINT(mm_page, mm_page_pcpu_drain,
 		__entry->order, __entry->migratetype)
 );
 
+// ARM10C 20140517
 TRACE_EVENT(mm_page_alloc_extfrag,
 
 	TP_PROTO(struct page *page,

@@ -101,6 +101,7 @@
 #define page_to_pfn __page_to_pfn
 // ARM10C 20140118
 // ARM10C 20140329
+// ARM10C 20140517
 // pfn_to_page(0xA00000)
 #define pfn_to_page __pfn_to_page
 

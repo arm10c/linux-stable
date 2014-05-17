@@ -139,6 +139,7 @@ static inline void __list_del_entry(struct list_head *entry)
 }
 
 // ARM10C 20140412
+// ARM10C 20140517
 static inline void list_del(struct list_head *entry)
 {
 	__list_del(entry->prev, entry->next);
@@ -243,6 +244,8 @@ static inline int list_is_last(const struct list_head *list,
 // &waiter->list
 // ARM10C 20130322
 // ARM10C 20140322
+// ARM10C 20140517
+// list: (&boot_pageset + (__per_cpu_offset[0]))->pcp.lists[0]
 static inline int list_empty(const struct list_head *head)
 {
 	// head->next: waiter->list->next, head: waiter->list

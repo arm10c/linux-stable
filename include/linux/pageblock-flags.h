@@ -56,6 +56,7 @@ extern int pageblock_order;
 /* If huge pages are not used, group by MAX_ORDER_NR_PAGES */
 // ARM10C 20131214
 // ARM10C 20140118
+// ARM10C 20140517
 // MAX_ORDER: 11
 // pageblock_order: 10
 #define pageblock_order		(MAX_ORDER-1)
@@ -63,9 +64,10 @@ extern int pageblock_order;
 #endif /* CONFIG_HUGETLB_PAGE */
 
 // ARM10C 20140118
+// ARM10C 20140308
+// ARM10C 20140517
 // pageblock_order: 10
 // pageblock_nr_pages : 0x400
-// ARM10C 20140308
 #define pageblock_nr_pages	(1UL << pageblock_order)
 
 /* Forward declaration */
