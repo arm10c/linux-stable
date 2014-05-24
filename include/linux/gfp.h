@@ -38,7 +38,9 @@ struct vm_area_struct;
 #define ___GFP_NORETRY		0x1000u
 // ARM10C 20140426
 #define ___GFP_MEMALLOC		0x2000u
+// ARM10C 20140524
 #define ___GFP_COMP		0x4000u
+// ARM10C 20140524
 #define ___GFP_ZERO		0x8000u
 // ARM10C 20140426
 #define ___GFP_NOMEMALLOC	0x10000u
@@ -108,6 +110,7 @@ struct vm_area_struct;
 // http://lwn.net/Articles/274971/
 // These are used to set parameters to allocating virtual memory
 // ARM10C 20140426
+// ARM10C 20140524
 // ___GFP_WAIT: 0x10u
 // __GFP_WAIT: 0x10u
 #define __GFP_WAIT	((__force gfp_t)___GFP_WAIT)	/* Can wait and reschedule? */
@@ -147,7 +150,13 @@ struct vm_area_struct;
 // ___GFP_MEMALLOC: 0x2000u
 // __GFP_MEMALLOC: 0x2000u
 #define __GFP_MEMALLOC	((__force gfp_t)___GFP_MEMALLOC)/* Allow access to emergency reserves */
+// ARM10C 20140524
+// ___GFP_COMP: 0x4000u
+// __GFP_COMP: 0x4000u
 #define __GFP_COMP	((__force gfp_t)___GFP_COMP)	/* Add compound page metadata */
+// ARM10C 20140524
+// ___GFP_ZERO: 0x8000u
+// __GFP_ZERO: 0x8000u
 #define __GFP_ZERO	((__force gfp_t)___GFP_ZERO)	/* Return zeroed page on success */
 // ARM10C 20140426
 // ___GFP_NOMEMALLOC: 0x10000u
@@ -518,6 +527,7 @@ static inline struct zonelist *node_zonelist(int nid, gfp_t flags)
 
 #ifndef HAVE_ARCH_FREE_PAGE
 // ARM10C 20140405
+// ARM10C 20140524
 static inline void arch_free_page(struct page *page, int order) { }
 #endif
 #ifndef HAVE_ARCH_ALLOC_PAGE
@@ -538,6 +548,7 @@ __alloc_pages(gfp_t gfp_mask, unsigned int order,
 	// gfp_mask: 0x201200, order: 0
 	// zonelist: contig_page_data->node_zonelists, NULL
 	return __alloc_pages_nodemask(gfp_mask, order, zonelist, NULL);
+	// page: migratetype이 MIGRATE_UNMOVABLE인 page
 }
 
 static inline struct page *alloc_pages_node(int nid, gfp_t gfp_mask,
@@ -561,6 +572,7 @@ static inline struct page *alloc_pages_exact_node(int nid, gfp_t gfp_mask,
 	// gfp_mask: 0x201200, order: 0, nid: 0,
 	// node_zonelist(0, 0x201200): contig_page_data->node_zonelists
 	return __alloc_pages(gfp_mask, order, node_zonelist(nid, gfp_mask));
+	// page: migratetype이 MIGRATE_UNMOVABLE인 page
 }
 
 #ifdef CONFIG_NUMA

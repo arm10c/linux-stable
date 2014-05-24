@@ -308,6 +308,7 @@ static int bad_range(struct zone *zone, struct page *page)
 #else
 // ARM10C 20140405
 // ARM10C 20140517
+// ARM10C 20140524
 static inline int bad_range(struct zone *zone, struct page *page)
 {
 	return 0;
@@ -930,8 +931,8 @@ static void free_pcppages_bulk(struct zone *zone, int count,
 			if (likely(!is_migrate_isolate_page(page))) {
 				// zone: &(&contig_page_data)->node_zones[ZONE_NORMAL], NR_FREE_PAGES: 0
 				__mod_zone_page_state(zone, NR_FREE_PAGES, 1);
-				// (&contig_page_data)->node_zones[ZONE_NORMAL].vm_stat[NR_FREE_PAGES]: 1 로 설정
-				// vmstat.c의 vm_stat[NR_FREE_PAGES] 전역 변수에도 1로 설정
+				// (&contig_page_data)->node_zones[ZONE_NORMAL].vm_stat[NR_FREE_PAGES]: 1 을 더함
+				// vmstat.c의 vm_stat[NR_FREE_PAGES] 전역 변수에도 1을 더함
 
 				// mt: 0x2, is_migrate_cma(0x2): 0
 				if (is_migrate_cma(mt))
@@ -1241,9 +1242,16 @@ static inline void expand(struct zone *zone, struct page *page,
 
 /*
  * This page is about to be returned from the page allocator
- */
+*/
+// ARM10C 20140524
+// p: migratetype이 MIGRATE_UNMOVABLE인 page
 static inline int check_new_page(struct page *page)
 {
+	// page: migratetype이 MIGRATE_UNMOVABLE인 page
+	// PAGE_FLAGS_CHECK_AT_PREP: 0x1FFFFF
+	// mem_cgroup_bad_page_check(page): false
+	// page_mapcount(page): 0
+	// page->mapping: null, page->_count: 0
 	if (unlikely(page_mapcount(page) |
 		(page->mapping != NULL)  |
 		(atomic_read(&page->_count) != 0)  |
@@ -1252,28 +1260,52 @@ static inline int check_new_page(struct page *page)
 		bad_page(page);
 		return 1;
 	}
+
+	// page->_mapcount: -1: 사용하기위해 할당 받았지만 쓰지는 않음
+	// page->mapping: 할당 받았으면 null 로 됨, 사용중인 page는 vma, inode 등의
+	//                address space로 맵핑된다
+	// page->_count: 현재 page 를 참조한 숫자값
+
 	return 0;
 }
 
+// ARM10C 20140524
+// page: migratetype이 MIGRATE_UNMOVABLE인 page, order: 0, gfp_flags: 0x221200
 static int prep_new_page(struct page *page, int order, gfp_t gfp_flags)
 {
 	int i;
 
+	// order: 0
 	for (i = 0; i < (1 << order); i++) {
+		// page: migratetype이 MIGRATE_UNMOVABLE인 page
 		struct page *p = page + i;
+		// p: migratetype이 MIGRATE_UNMOVABLE인 page
+
+		// check_new_page(migratetype이 MIGRATE_UNMOVABLE인 page): 0
 		if (unlikely(check_new_page(p)))
 			return 1;
 	}
 
+	// page: migratetype이 MIGRATE_UNMOVABLE인 page
 	set_page_private(page, 0);
+	// page->private: 0
+	// FIXME: 왜 pamam order값을 보지 않고 0으로 초기화 하는지?
+
+	// page: migratetype이 MIGRATE_UNMOVABLE인 page
 	set_page_refcounted(page);
+	// page->_count를 1로 set
 
-	arch_alloc_page(page, order);
-	kernel_map_pages(page, 1 << order, 1);
+	// page: migratetype이 MIGRATE_UNMOVABLE인 page, order: 0
+	arch_alloc_page(page, order); // null function
 
+	// page: migratetype이 MIGRATE_UNMOVABLE인 page, order: 0
+	kernel_map_pages(page, 1 << order, 1); // null function
+
+	// gfp_flags: 0x221200, __GFP_ZERO: 0x8000u
 	if (gfp_flags & __GFP_ZERO)
 		prep_zero_page(page, order, gfp_flags);
 
+	// order: 0, gfp_flags: 0x221200, __GFP_COMP: 0x4000u
 	if (order && (gfp_flags & __GFP_COMP))
 		prep_compound_page(page, order);
 
@@ -2242,6 +2274,7 @@ again:
 	}
 
 // 2014/05/17 종료
+// 2014/05/24 시작
 
 	/*
 	 * NOTE: GFP_THISNODE allocations do not partake in the kswapd
@@ -2252,15 +2285,30 @@ again:
 	if (!gfp_thisnode_allocation(gfp_flags))
 		// zone: contig_page_data->node_zones[0], NR_ALLOC_BATCH: 1, order: 0
 		__mod_zone_page_state(zone, NR_ALLOC_BATCH, -(1 << order));
+		// (&contig_page_data)->node_zones[ZONE_NORMAL].vm_stat[1]: 0x2efd5, vm_stat[1]: 0x2efd5
 		// (&contig_page_data)->node_zones[ZONE_NORMAL].vm_stat[1], vm_stat[1] 값을 업데이트
 
+	// zone: contig_page_data->node_zones[0], order: 0
 	__count_zone_vm_events(PGALLOC, zone, 1 << order);
-	zone_statistics(preferred_zone, zone, gfp_flags);
+	// vm_event_states.event[PGALLOC_NORMAL]: 1 업데이트
+
+	// preferred_zone: (&contig_page_data)->node_zones[0],
+	// zone: contig_page_data->node_zones[0], gfp_flags: 0x221200
+	zone_statistics(preferred_zone, zone, gfp_flags); // null function
 	local_irq_restore(flags);
 
+	// zone: contig_page_data->node_zones[0],
+	// page: migratetype이 MIGRATE_UNMOVABLE인 page
+	// bad_range(contig_page_data->node_zones[0],
+	//	    migratetype이 MIGRATE_UNMOVABLE인 page): 0
 	VM_BUG_ON(bad_range(zone, page));
+
+	// page: migratetype이 MIGRATE_UNMOVABLE인 page, order: 0, gfp_flags: 0x221200
+	// prep_new_page (migratetype이 MIGRATE_UNMOVABLE인 page, 0, 0x221200): 0
 	if (prep_new_page(page, order, gfp_flags))
 		goto again;
+
+	// page: migratetype이 MIGRATE_UNMOVABLE인 page
 	return page;
 
 failed:
@@ -2808,19 +2856,23 @@ try_this_zone:
 		// migratetype: MIGRATE_UNMOVABLE: 0
 		page = buffered_rmqueue(preferred_zone, zone, order,
 						gfp_mask, migratetype);
+		// page: migratetype이 MIGRATE_UNMOVABLE인 page
+
 		if (page)
 			break;
+			// break 로 loop 탈출
 this_zone_full:
 		if (IS_ENABLED(CONFIG_NUMA))
 			zlc_mark_zone_full(zonelist, z);
 	}
-
+	// IS_ENABLED(CONFIG_NUMA): 0, page: migratetype이 MIGRATE_UNMOVABLE인 page, zlc_active: 0
 	if (unlikely(IS_ENABLED(CONFIG_NUMA) && page == NULL && zlc_active)) {
 		/* Disable zlc cache for second zonelist scan */
 		zlc_active = 0;
 		goto zonelist_scan;
 	}
 
+	// page: migratetype이 MIGRATE_UNMOVABLE인 page
 	if (page)
 		/*
 		 * page->pfmemalloc is set when ALLOC_NO_WATERMARKS was
@@ -2829,8 +2881,11 @@ this_zone_full:
 		 * memory. The caller should avoid the page being used
 		 * for !PFMEMALLOC purposes.
 		 */
+		// alloc_flags: 0x41, ALLOC_NO_WATERMARKS: 0x04
 		page->pfmemalloc = !!(alloc_flags & ALLOC_NO_WATERMARKS);
+		// page->pfmemalloc: 0
 
+	// page: migratetype이 MIGRATE_UNMOVABLE인 page
 	return page;
 }
 
@@ -3533,6 +3588,8 @@ retry_cpuset:
 	page = get_page_from_freelist(gfp_mask|__GFP_HARDWALL, nodemask, order,
 			zonelist, high_zoneidx, alloc_flags,
 			preferred_zone, migratetype);
+	// page: migratetype이 MIGRATE_UNMOVABLE인 page
+
 	if (unlikely(!page)) {
 		/*
 		 * Runtime PM, block IO and its error handling path
@@ -3554,11 +3611,15 @@ out:
 	 * the mask is being updated. If a page allocation is about to fail,
 	 * check if the cpuset changed during allocation and if so, retry.
 	 */
+	// page: migratetype이 MIGRATE_UNMOVABLE인 page, cpuset_mems_cookie: 0
+	// put_mems_allowed(0): true
 	if (unlikely(!put_mems_allowed(cpuset_mems_cookie) && !page))
 		goto retry_cpuset;
 
-	memcg_kmem_commit_charge(page, memcg, order);
+	// page: migratetype이 MIGRATE_UNMOVABLE인 page, memcg: NULL, order: 0
+	memcg_kmem_commit_charge(page, memcg, order); // null function
 
+	// page: migratetype이 MIGRATE_UNMOVABLE인 page
 	return page;
 }
 EXPORT_SYMBOL(__alloc_pages_nodemask);

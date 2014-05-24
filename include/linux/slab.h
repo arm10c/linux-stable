@@ -21,15 +21,19 @@
  * The ones marked DEBUG are only valid if CONFIG_SLAB_DEBUG is set.
  */
 // ARM10C 20140419
+// ARM10C 20140524
 #define SLAB_DEBUG_FREE		0x00000100UL	/* DEBUG: Perform (expensive) checks on free */
 // ARM10C 20140419
+// ARM10C 20140524
 #define SLAB_RED_ZONE		0x00000400UL	/* DEBUG: Red zone objs in a cache */
 // ARM10C 20140419
+// ARM10C 20140524
 #define SLAB_POISON		0x00000800UL	/* DEBUG: Poison objects */
 // ARM10C 20140419
 #define SLAB_HWCACHE_ALIGN	0x00002000UL	/* Align objs on cache lines */
 #define SLAB_CACHE_DMA		0x00004000UL	/* Use GFP_DMA memory */
 // ARM10C 20140419
+// ARM10C 20140524
 #define SLAB_STORE_USER		0x00010000UL	/* DEBUG: Store the last owner for bug hunting */
 #define SLAB_PANIC		0x00040000UL	/* Panic if kmem_cache_create() fails */
 /*
@@ -83,9 +87,10 @@
 #define SLAB_NOLEAKTRACE	0x00800000UL	/* Avoid kmemleak tracing */
 
 /* Don't track use of uninitialized memory */
-#ifdef CONFIG_KMEMCHECK
+#ifdef CONFIG_KMEMCHECK // CONFIG_KMEMCHECK=n
 # define SLAB_NOTRACK		0x01000000UL
 #else
+// ARM10C 20140524
 # define SLAB_NOTRACK		0x00000000UL
 #endif
 #ifdef CONFIG_FAILSLAB
@@ -95,6 +100,7 @@
 #endif
 
 /* The following flags affect the page allocator grouping pages by mobility */
+// ARM10C 20140524
 #define SLAB_RECLAIM_ACCOUNT	0x00020000UL		/* Objects are reclaimable */
 #define SLAB_TEMPORARY		SLAB_RECLAIM_ACCOUNT	/* Objects are short-lived */
 /*

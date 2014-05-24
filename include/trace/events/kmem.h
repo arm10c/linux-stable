@@ -214,6 +214,7 @@ TRACE_EVENT(mm_page_free_batched,
 			__entry->cold)
 );
 
+// ARM10C 20140524
 TRACE_EVENT(mm_page_alloc,
 
 	TP_PROTO(struct page *page, unsigned int order,

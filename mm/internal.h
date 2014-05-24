@@ -29,6 +29,8 @@ static inline void set_page_count(struct page *page, int v)
  */
 // ARM10C 20140329
 // page: 0x20000의 해당하는 struct page의 주소
+// ARM10C 20140524
+// page: migratetype이 MIGRATE_UNMOVABLE인 page
 static inline void set_page_refcounted(struct page *page)
 {
 	// page: 0x20000의 해당하는 struct page의 주소
@@ -382,6 +384,7 @@ unsigned long reclaim_clean_pages_from_list(struct zone *zone,
 #define ALLOC_WMARK_HIGH	WMARK_HIGH
 // ARM10C 20140510
 // ARM10C 20140510
+// ARM10C 20140524
 #define ALLOC_NO_WATERMARKS	0x04 /* don't check watermarks at all */
 
 /* Mask to get the watermark bits */

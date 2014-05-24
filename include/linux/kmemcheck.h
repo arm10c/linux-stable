@@ -87,6 +87,7 @@ bool kmemcheck_is_obj_initialized(unsigned long addr, size_t size);
 	} while (0)							\
 
 #else
+// ARM10C 20140524
 #define kmemcheck_enabled 0
 
 static inline void

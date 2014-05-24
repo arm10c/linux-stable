@@ -169,6 +169,10 @@ static inline bool kmem_cache_has_cpu_partial(struct kmem_cache *s)
  */
 #define MAX_PARTIAL 10
 
+// ARM10C 20140524
+// SLAB_DEBUG_FREE: 0x00000100UL, SLAB_RED_ZONE: 0x00000400UL
+// SLAB_POISON: 0x00000800UL, SLAB_STORE_USER: 0x00010000UL
+// DEBUG_DEFAULT_FLAGS: 0x10d00
 #define DEBUG_DEFAULT_FLAGS (SLAB_DEBUG_FREE | SLAB_RED_ZONE | \
 				SLAB_POISON | SLAB_STORE_USER)
 
@@ -363,6 +367,7 @@ static inline struct kmem_cache_order_objects oo_make(int order,
 
 // ARM10C 20140426
 // oo: boot_kmem_cache_node.oo
+// ARM10C 20140524
 static inline int oo_order(struct kmem_cache_order_objects x)
 {
 	// x.x: boot_kmem_cache_node.oo.x: 64, OO_SHIFT: 16
@@ -375,7 +380,7 @@ static inline int oo_order(struct kmem_cache_order_objects x)
 static inline int oo_objects(struct kmem_cache_order_objects x)
 {
 
-	// boot_kmem_cache_node.oo.x : 64, OO_MASK : 0xFFFF
+	// boot_kmem_cache_node.oo.x: 64, OO_MASK: 0xFFFF
 	return x.x & OO_MASK;
 	// return 64
 }
@@ -1367,6 +1372,7 @@ static inline struct page *alloc_slab_page(gfp_t flags, int node,
 	else
 		// node: 0, flags: 0x201200, order: 0
 		return alloc_pages_exact_node(node, flags, order);
+		// page: migratetype이 MIGRATE_UNMOVABLE인 page
 }
 
 // ARM10C 20140426
@@ -1402,6 +1408,8 @@ static struct page *allocate_slab(struct kmem_cache *s, gfp_t flags, int node)
 
 	// alloc_gfp: 0x1200, node: 0, oo: boot_kmem_cache_node.oo
 	page = alloc_slab_page(alloc_gfp, node, oo);
+	// page: migratetype이 MIGRATE_UNMOVABLE인 page
+
 	if (unlikely(!page)) {
 		oo = s->min;
 		/*
@@ -1413,7 +1421,9 @@ static struct page *allocate_slab(struct kmem_cache *s, gfp_t flags, int node)
 		if (page)
 			stat(s, ORDER_FALLBACK);
 	}
-
+	// kmemcheck_enabled: 0, page: migratetype이 MIGRATE_UNMOVABLE인 page
+	// s->flags: (&boot_kmem_cache_node)->flags: SLAB_HWCACHE_ALIGN: 0x00002000UL
+	// SLAB_NOTRACK: 0x00000000UL, DEBUG_DEFAULT_FLAGS: 0x10d00
 	if (kmemcheck_enabled && page
 		&& !(s->flags & (SLAB_NOTRACK | DEBUG_DEFAULT_FLAGS))) {
 		int pages = 1 << oo_order(oo);
@@ -1430,17 +1440,34 @@ static struct page *allocate_slab(struct kmem_cache *s, gfp_t flags, int node)
 			kmemcheck_mark_unallocated_pages(page, pages);
 	}
 
+	// flags: GFP_NOWAIT: 0, __GFP_WAIT: 0x10u
 	if (flags & __GFP_WAIT)
 		local_irq_disable();
+
+	// page: migratetype이 MIGRATE_UNMOVABLE인 page
 	if (!page)
 		return NULL;
 
+	// oo: boot_kmem_cache_node.oo
 	page->objects = oo_objects(oo);
+	// page->objects: 64, page->_mapcount: 0x00400000
+
+	// page: migratetype이 MIGRATE_UNMOVABLE인 page
+	// page_zone(migratetype이 MIGRATE_UNMOVABLE인 page):
+	// &(&contig_page_data)->node_zones[ZONE_NORMAL]
+	// s->flags: (&boot_kmem_cache_node)->flags: SLAB_HWCACHE_ALIGN: 0x00002000UL
+	// SLAB_RECLAIM_ACCOUNT: 0x00020000UL, NR_SLAB_RECLAIMABLE: 13, NR_SLAB_UNRECLAIMABLE: 14
+	// oo: boot_kmem_cache_node.oo, oo_order(boot_kmem_cache_node.oo): 0
+	//
+	// &(&contig_page_data)->node_zones[ZONE_NORMAL], NR_SLAB_UNRECLAIMABLE: 14, 1
 	mod_zone_page_state(page_zone(page),
 		(s->flags & SLAB_RECLAIM_ACCOUNT) ?
 		NR_SLAB_RECLAIMABLE : NR_SLAB_UNRECLAIMABLE,
 		1 << oo_order(oo));
+	// zone->vm_stat[14]: (&contig_page_data)->node_zones[ZONE_NORMAL].vm_stat[14]: 1
+	// NR_SLAB_UNRECLAIMABLE: 14, vm_stat[14]: 1
 
+	// page: migratetype이 MIGRATE_UNMOVABLE인 page
 	return page;
 }
 
@@ -1469,10 +1496,19 @@ static struct page *new_slab(struct kmem_cache *s, gfp_t flags, int node)
 	// GFP_RECLAIM_MASK: 0x13ef0, GFP_CONSTRAINT_MASK: 0x60000
 	page = allocate_slab(s,
 		flags & (GFP_RECLAIM_MASK | GFP_CONSTRAINT_MASK), node);
+	// page: migratetype이 MIGRATE_UNMOVABLE인 page
+
 	if (!page)
 		goto out;
 
+	// page: migratetype이 MIGRATE_UNMOVABLE인 page
+	// compound_order(page): 0
 	order = compound_order(page);
+	// free_pages_check에서 page->flags의 NR_PAGEFLAGS 만큼의 하위 비트를 전부 지워줌
+	// order: 0
+
+// 2014/05/24 종료
+
 	inc_slabs_node(s, page_to_nid(page), page->objects);
 	memcg_bind_pages(s, order);
 	page->slab_cache = s;

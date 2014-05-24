@@ -262,6 +262,7 @@ struct inode;
 #define page_private(page)		((page)->private)
 // ARM10C 20140405
 // ARM10C 20140412
+// ARM10C 20140524
 #define set_page_private(page, v)	((page)->private = (v))
 
 /* It's valid only if the page is free path or free_list */
@@ -562,6 +563,7 @@ static inline compound_page_dtor *get_compound_page_dtor(struct page *page)
 }
 
 // ARM10C 20140125
+// ARM10C 20140524
 static inline int compound_order(struct page *page)
 {
 	// PageHead(page): 0
@@ -2064,6 +2066,7 @@ extern bool kernel_page_present(struct page *page);
 #endif /* CONFIG_HIBERNATION */
 #else
 // ARM10C 20140405
+// ARM10C 20140524
 static inline void
 kernel_map_pages(struct page *page, int numpages, int enable) {}
 #ifdef CONFIG_HIBERNATION

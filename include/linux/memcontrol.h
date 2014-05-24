@@ -431,6 +431,7 @@ static inline void mem_cgroup_replace_page_cache(struct page *oldpage,
 
 #if !defined(CONFIG_MEMCG) || !defined(CONFIG_DEBUG_VM) // CONFIG_MEMCG=n, CONFIG_DEBUG_VM=n
 // ARM10C 20140405
+// ARM10C 20140524
 static inline bool
 mem_cgroup_bad_page_check(struct page *page)
 {
@@ -632,6 +633,7 @@ static inline void memcg_kmem_uncharge_pages(struct page *page, int order)
 {
 }
 
+// ARM10C 20140524
 static inline void
 memcg_kmem_commit_charge(struct page *page, struct mem_cgroup *memcg, int order)
 {

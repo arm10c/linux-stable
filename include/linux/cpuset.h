@@ -238,6 +238,7 @@ static inline unsigned int get_mems_allowed(void)
 	return 0;
 }
 
+// ARM10C 20140524
 static inline bool put_mems_allowed(unsigned int seq)
 {
 	return true;

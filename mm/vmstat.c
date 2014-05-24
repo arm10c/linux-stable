@@ -237,7 +237,9 @@ void set_pgdat_percpu_threshold(pg_data_t *pgdat,
 // zone: &pgdat->node_zones[ZONE_MOVABLE], item: NR_ALLOC_BATCH: 1, delta: 0x0
 // ARM10C 20140517
 // zone: contig_page_data->node_zones[0], NR_FREE_PAGES: 0, -1
+// ARM10C 20140524
 // zone: contig_page_data->node_zones[0], NR_ALLOC_BATCH: 1, -1
+// zone: contig_page_data->node_zones[0], NR_SLAB_UNRECLAIMABLE: 14, 1
 void __mod_zone_page_state(struct zone *zone, enum zone_stat_item item,
 				int delta)
 {
@@ -251,10 +253,19 @@ void __mod_zone_page_state(struct zone *zone, enum zone_stat_item item,
 	// p: &(&boot_pageset)->vm_stat_diff[0]
 	// ARM10C 20140510
 	// p: &(&boot_pageset)->vm_stat_diff[1]
+	// ARM10C 20140524
+	// p: &(&boot_pageset)->vm_stat_diff[1]
 	long x;
 	long t;
 
 	// delta:32, p: &(&boot_pageset)->vm_stat_diff[0]
+	// ARM10C 20140510
+	// delta: 0x2efd6, p: &(&boot_pageset)->vm_stat_diff[1]
+	// delta: 0x50800, p: &(&boot_pageset)->vm_stat_diff[1]
+	// delta: 0x0, p: &(&boot_pageset)->vm_stat_diff[1]
+	// ARM10C 20140524
+	// delta: -1, p: &(&boot_pageset)->vm_stat_diff[1]
+	// delta: 1, p: &(&boot_pageset)->vm_stat_diff[14]
 	x = delta + __this_cpu_read(*p);
 
 	// # define __this_cpu_read((&boot_pageset)->vm_stat_diff[0]):
@@ -290,10 +301,15 @@ void __mod_zone_page_state(struct zone *zone, enum zone_stat_item item,
 	// ARM10C 20140510
 	// __this_cpu_read((&boot_pageset)->vm_stat_diff[1]): 0
 	// x: 0x2efd6
-	// __this_cpu_read((&boot_pageset)->vm_stat_diff[1]): 0x2efd6
-	// x: 0x7f7d6
-	// __this_cpu_read((&boot_pageset)->vm_stat_diff[1]): 0x7f7d6
-	// x: 0x7f7d6
+	// __this_cpu_read((&boot_pageset)->vm_stat_diff[1]): 0
+	// x: 0x50800
+	// __this_cpu_read((&boot_pageset)->vm_stat_diff[1]): 0
+	// x: 0x0
+	// ARM10C 20140524
+	// __this_cpu_read((&boot_pageset)->vm_stat_diff[1]): 0
+	// x: -1
+	// __this_cpu_read((&boot_pageset)->vm_stat_diff[14]): 0
+	// x: 1
 
 	// pcp->stat_threshold: (&boot_pageset)->stat_threshold
 	// __this_cpu_read((&boot_pageset)->stat_threshold): 0
@@ -303,8 +319,11 @@ void __mod_zone_page_state(struct zone *zone, enum zone_stat_item item,
 	// x: 32, t: 0
 	// ARM10C 20140510
 	// x: 0x2efd6, t: 0
-	// x: 0x7f7d6, t: 0
-	// x: 0x7f7d6, t: 0
+	// x: 0x50800, t: 0
+	// x: 0x0, t: 0
+	// ARM10C 20140524
+	// x: -1, t: 0
+	// x: 1, t: 0
 	if (unlikely(x > t || x < -t)) {
 		// x: 32, zone: &(&contig_page_data)->node_zones[ZONE_NORMAL], item: 0
 		zone_page_state_add(x, zone, item);
@@ -313,20 +332,31 @@ void __mod_zone_page_state(struct zone *zone, enum zone_stat_item item,
 		// ARM10C 20140510
 		// zone->vm_stat[1]: (&contig_page_data)->node_zones[ZONE_NORMAL].vm_stat[1]: 0x2efd6
 		// NR_ALLOC_BATCH: 1, vm_stat[1]: 0x2efd6
-		// zone->vm_stat[1]: (&contig_page_data)->node_zones[ZONE_HIGHMEM].vm_stat[1]: 0x7f7d6
-		// NR_ALLOC_BATCH: 1, vm_stat[1]: 0x7f7d6
-		// zone->vm_stat[1]: (&contig_page_data)->node_zones[ZONE_MOVABLE].vm_stat[1]: 0x7f7d6
-		// NR_ALLOC_BATCH: 1, vm_stat[1]: 0x7f7d6
-		// NR_ALLOC_BATCH: 1, vm_stat[1]: 0x7f7d5
+		// zone->vm_stat[1]: (&contig_page_data)->node_zones[ZONE_HIGHMEM].vm_stat[1]: 0x50800
+		// NR_ALLOC_BATCH: 1, vm_stat[1]: 0x50800
+		// ARM10C 20140524
+		// zone->vm_stat[1]: (&contig_page_data)->node_zones[ZONE_NORMAL].vm_stat[1]: 0x2efd5
+		// NR_ALLOC_BATCH: 1, vm_stat[1]: 0x2efd5
+		// zone->vm_stat[14]: (&contig_page_data)->node_zones[ZONE_NORMAL].vm_stat[14]: 1
+		// NR_SLAB_UNRECLAIMABLE: 14, vm_stat[14]: 1
 		x = 0;
 	}
 
 	// p: &(&boot_pageset)->vm_stat_diff[0], x: 0
 	// ARM10C 20140510
-	// p: &(&boot_pageset)->vm_stat_diff[1], x: 0x2efd6
-	// p: &(&boot_pageset)->vm_stat_diff[1], x: 0x7f7d6
-	// p: &(&boot_pageset)->vm_stat_diff[1], x: 0x7f7d6
+	// p: &(&boot_pageset)->vm_stat_diff[1], x: 0x0
+	// p: &(&boot_pageset)->vm_stat_diff[1], x: 0x0
+	// p: &(&boot_pageset)->vm_stat_diff[1], x: 0x0
+	// ARM10C 20140524
+	// p: &(&boot_pageset)->vm_stat_diff[1], x: 0x0
 	__this_cpu_write(*p, x);
+	// p: &(&boot_pageset)->vm_stat_diff[0]: 0
+	// ARM10C 20140510
+	// p: &(&boot_pageset)->vm_stat_diff[1]: 0x0
+	// p: &(&boot_pageset)->vm_stat_diff[1]: 0x0
+	// p: &(&boot_pageset)->vm_stat_diff[1]: 0x0
+	// ARM10C 20140524
+	// p: &(&boot_pageset)->vm_stat_diff[1]: 0x0
 
 	// __this_cpu_write(pcp, val):
 	// __pcpu_size_call(__this_cpu_write_, (&boot_pageset)->vm_stat_diff[0], (x))
@@ -511,6 +541,8 @@ EXPORT_SYMBOL(dec_zone_page_state);
 // zone = &pgdat->node_zones[ZONE_NORMAL], NR_ALLOC_BATCH, zone->managed_pages = 0x2efd6
 // zone = &pgdat->node_zones[ZONE_HIGHMEM], NR_ALLOC_BATCH, zone->managed_pages = 0x50800
 // zone = &pgdat->node_zones[ZONE_MOVABLE], NR_ALLOC_BATCH, zone->managed_pages = 0x0
+// ARM10C 20140524
+// &(&contig_page_data)->node_zones[ZONE_NORMAL], NR_SLAB_UNRECLAIMABLE: 14, 1
 void mod_zone_page_state(struct zone *zone, enum zone_stat_item item,
 					int delta)
 {
@@ -518,8 +550,10 @@ void mod_zone_page_state(struct zone *zone, enum zone_stat_item item,
 
 	local_irq_save(flags);
 	// zone: &pgdat->node_zones[ZONE_NORMAL], item: 1, delta: 0x2efd6
-	// zone: &pgdat->node_zones[ZONE_HIGHMEM], item: 1, delta:  0x50800
+	// zone: &pgdat->node_zones[ZONE_HIGHMEM], item: 1, delta: 0x50800
 	// zone: &pgdat->node_zones[ZONE_MOVABLE], item: 1, delta: 0x0
+	// ARM10C 20140524
+	// zone: &pgdat->node_zones[ZONE_NORMAL], item: 14, delta: 0x1
 	__mod_zone_page_state(zone, item, delta);
 	local_irq_restore(flags);
 }
