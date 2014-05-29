@@ -315,7 +315,7 @@ struct per_cpu_pageset {
 
 // ARM10C 20140308
 enum zone_type {
-#ifdef CONFIG_ZONE_DMA	// ARM10C CONFIG_ZONE_DMA = n 
+#ifdef CONFIG_ZONE_DMA	// ARM10C CONFIG_ZONE_DMA = n
 	/*
 	 * ZONE_DMA is used when there are devices that are not able
 	 * to do DMA to all of addressable memory (ZONE_NORMAL). Then we
@@ -349,8 +349,8 @@ enum zone_type {
 	 * performed on pages in ZONE_NORMAL if the DMA devices support
 	 * transfers to all addressable memory.
 	 */
-	ZONE_NORMAL,	// ARM10C ZONE_NORMAL = 0 
-#ifdef CONFIG_HIGHMEM	// ARM10C CONFIG_HIGHMEM = y 
+	ZONE_NORMAL,	// ARM10C ZONE_NORMAL = 0
+#ifdef CONFIG_HIGHMEM	// ARM10C CONFIG_HIGHMEM = y
 	/*
 	 * A memory area that is only addressable by the kernel through
 	 * mapping portions into its own address space. This is for example
@@ -359,10 +359,10 @@ enum zone_type {
 	 * table entries on i386) for each page that the kernel needs to
 	 * access.
 	 */
-	ZONE_HIGHMEM,	// ARM10C ZONE_HIGHMEM = 1 
+	ZONE_HIGHMEM,	// ARM10C ZONE_HIGHMEM = 1
 #endif
-	ZONE_MOVABLE,	// ARM10C ZONE_MOVABLE = 2 
-	__MAX_NR_ZONES	// ARM10C __MAX_NR_ZONES = 3 
+	ZONE_MOVABLE,	// ARM10C ZONE_MOVABLE = 2
+	__MAX_NR_ZONES	// ARM10C __MAX_NR_ZONES = 3
 };
 
 #ifndef __GENERATING_BOUNDS_H

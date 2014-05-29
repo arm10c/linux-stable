@@ -1421,6 +1421,7 @@ static struct page *allocate_slab(struct kmem_cache *s, gfp_t flags, int node)
 		if (page)
 			stat(s, ORDER_FALLBACK);
 	}
+
 	// kmemcheck_enabled: 0, page: migratetype이 MIGRATE_UNMOVABLE인 page
 	// s->flags: (&boot_kmem_cache_node)->flags: SLAB_HWCACHE_ALIGN: 0x00002000UL
 	// SLAB_NOTRACK: 0x00000000UL, DEBUG_DEFAULT_FLAGS: 0x10d00
@@ -1448,7 +1449,7 @@ static struct page *allocate_slab(struct kmem_cache *s, gfp_t flags, int node)
 	if (!page)
 		return NULL;
 
-	// oo: boot_kmem_cache_node.oo
+	// oo: boot_kmem_cache_node.oo, oo_objects(boot_kmem_cache_node.oo): 64
 	page->objects = oo_objects(oo);
 	// page->objects: 64, page->_mapcount: 0x00400000
 

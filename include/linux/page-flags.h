@@ -400,6 +400,7 @@ __SETPAGEFLAG(Head, compound)  __CLEARPAGEFLAG(Head, compound)
 #define PG_head_tail_mask ((1L << PG_compound) | (1L << PG_reclaim))
 
 // ARM10C 20140125
+// ARM10C 20140524
 static inline int PageHead(struct page *page)
 {
 	// PG_head_tail_mask: 0x24000, PG_head_mask: 0x4000

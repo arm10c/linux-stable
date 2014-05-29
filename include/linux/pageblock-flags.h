@@ -67,7 +67,7 @@ extern int pageblock_order;
 // ARM10C 20140308
 // ARM10C 20140517
 // pageblock_order: 10
-// pageblock_nr_pages : 0x400
+// pageblock_nr_pages: 0x400
 #define pageblock_nr_pages	(1UL << pageblock_order)
 
 /* Forward declaration */
