@@ -159,6 +159,7 @@ static inline void atomic_long_set(atomic_long_t *l, long i)
 	atomic_set(v, i);
 }
 
+// ARM10C 20140531
 static inline void atomic_long_inc(atomic_long_t *l)
 {
 	atomic_t *v = (atomic_t *)l;

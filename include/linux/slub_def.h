@@ -8,6 +8,7 @@
  */
 #include <linux/kobject.h>
 
+// ARM10C 20140531
 enum stat_item {
 	ALLOC_FASTPATH,		/* Allocation from cpu slab */
 	ALLOC_SLOWPATH,		/* Allocation by getting a new cpu slab */
@@ -24,7 +25,9 @@ enum stat_item {
 	CPUSLAB_FLUSH,		/* Abandoning of the cpu slab */
 	DEACTIVATE_FULL,	/* Cpu slab was full when deactivated */
 	DEACTIVATE_EMPTY,	/* Cpu slab was empty when deactivated */
+	// DEACTIVATE_TO_HEAD: 15
 	DEACTIVATE_TO_HEAD,	/* Cpu slab was moved to the head of partials */
+	// DEACTIVATE_TO_TAIL: 16
 	DEACTIVATE_TO_TAIL,	/* Cpu slab was moved to the tail of partials */
 	DEACTIVATE_REMOTE_FREES,/* Slab contained remotely freed objects */
 	DEACTIVATE_BYPASS,	/* Implicit deactivation */
@@ -37,12 +40,14 @@ enum stat_item {
 	CPU_PARTIAL_DRAIN,	/* Drain cpu partial to node partial */
 	NR_SLUB_STAT_ITEMS };
 
+// ARM10C 20140531
+// sizeof(struct kmem_cache_cpu): 16 bytes
 struct kmem_cache_cpu {
 	void **freelist;	/* Pointer to next available object */
 	unsigned long tid;	/* Globally unique transaction id */
 	struct page *page;	/* The slab from which we are allocating */
 	struct page *partial;	/* Partially allocated frozen slabs */
-#ifdef CONFIG_SLUB_STATS
+#ifdef CONFIG_SLUB_STATS // CONFIG_SLUB_STATS=n
 	unsigned stat[NR_SLUB_STAT_ITEMS];
 #endif
 };

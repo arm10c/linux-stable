@@ -49,6 +49,7 @@
 #define	RED_ACTIVE	0xD84156C5635688C0ULL	/* when obj is active */
 
 #define SLUB_RED_INACTIVE	0xbb
+// ARM10C 20140531
 #define SLUB_RED_ACTIVE		0xcc
 
 /* ...and for poisoning */

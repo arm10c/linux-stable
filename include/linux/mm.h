@@ -998,6 +998,7 @@ static inline void set_page_address(struct page *page, void *address)
 
 #if defined(HASHED_PAGE_VIRTUAL)    // ARM10C Y 
 // ARM10C 20140125
+// ARM10C 20140531
 void *page_address(const struct page *page);
 void set_page_address(struct page *page, void *virtual);
 void page_address_init(void);	// ARM10C this 

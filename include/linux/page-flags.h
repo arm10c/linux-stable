@@ -157,6 +157,13 @@ static inline void SetPage##uname(struct page *page)			\
 static inline void ClearPage##uname(struct page *page)			\
 			{ clear_bit(PG_##lname, &page->flags); }
 
+// ARM10C 20140531
+//__SetPageSlab:
+//
+// PG_slab: 7
+// #define __SETPAGEFLAG(Slab, slab):
+// static inline void __SetPageSlab(struct page *page)
+// 			{ __set_bit(PG_slab, &page->flags); }
 #define __SETPAGEFLAG(uname, lname)					\
 static inline void __SetPage##uname(struct page *page)			\
 			{ __set_bit(PG_##lname, &page->flags); }
@@ -182,6 +189,7 @@ static inline int __TestClearPage##uname(struct page *page)		\
 #define PAGEFLAG(uname, lname) TESTPAGEFLAG(uname, lname)		\
 	SETPAGEFLAG(uname, lname) CLEARPAGEFLAG(uname, lname)
 
+// ARM10C 20140531
 #define __PAGEFLAG(uname, lname) TESTPAGEFLAG(uname, lname)		\
 	__SETPAGEFLAG(uname, lname)  __CLEARPAGEFLAG(uname, lname)
 
@@ -216,6 +224,8 @@ PAGEFLAG(Dirty, dirty) TESTSCFLAG(Dirty, dirty) __CLEARPAGEFLAG(Dirty, dirty)
 PAGEFLAG(LRU, lru) __CLEARPAGEFLAG(LRU, lru)
 PAGEFLAG(Active, active) __CLEARPAGEFLAG(Active, active)
 	TESTCLEARFLAG(Active, active)
+// ARM10C 20140531
+// page: migratetype이 MIGRATE_UNMOVABLE인 page
 __PAGEFLAG(Slab, slab)
 PAGEFLAG(Checked, checked)		/* Used by some filesystems */
 PAGEFLAG(Pinned, pinned) TESTSCFLAG(Pinned, pinned)	/* Xen */

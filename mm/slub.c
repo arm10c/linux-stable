@@ -205,6 +205,7 @@ static inline bool kmem_cache_has_cpu_partial(struct kmem_cache *s)
 
 /* Internal SLUB flags */
 // ARM10C 20140419
+// ARM10C 20140531
 #define __OBJECT_POISON		0x80000000UL /* Poison object */
 #define __CMPXCHG_DOUBLE	0x40000000UL /* Use cmpxchg_double */
 
@@ -253,9 +254,13 @@ static inline void stat(const struct kmem_cache *s, enum stat_item si)
  * 			Core slab cache functions
  *******************************************************************/
 
+// ARM10C 20140531
+// s: &boot_kmem_cache_node, node: 0
 static inline struct kmem_cache_node *get_node(struct kmem_cache *s, int node)
 {
+	// node: 0, s->node: (&boot_kmem_cache_node)->node[0]
 	return s->node[node];
+	// return (&boot_kmem_cache_node)->node[0]
 }
 
 /* Verify that a pointer has an address that is valid within a slab page */
@@ -276,9 +281,15 @@ static inline int check_valid_pointer(struct kmem_cache *s,
 	return 1;
 }
 
+// ARM10C 20140531
+// kmem_cache_node: &boot_kmem_cache_node,
+// n: UNMOVABLE인 page 의 object의 시작 virtual address
 static inline void *get_freepointer(struct kmem_cache *s, void *object)
 {
+	// object: UNMOVABLE인 page 의 object의 시작 virtual address
+	// s->offset: (&boot_kmem_cache_node)->offset: 0
 	return *(void **)(object + s->offset);
+	// object: UNMOVABLE인 page 의 object의 시작 virtual address
 }
 
 static void prefetch_freepointer(const struct kmem_cache *s, void *object)
@@ -298,12 +309,28 @@ static inline void *get_freepointer_safe(struct kmem_cache *s, void *object)
 	return p;
 }
 
+// ARM10C 20140531
+// s: &boot_kmem_cache_node, last: UNMOVABLE인 page 의 virtual address
+// p: UNMOVABLE인 page 의 virtual address
 static inline void set_freepointer(struct kmem_cache *s, void *object, void *fp)
 {
+	// object: UNMOVABLE인 page 의 virtual address
+	// s->offset: (&boot_kmem_cache_node)->offset: 0
+	// fp: UNMOVABLE인 page 의 virtual address
 	*(void **)(object + s->offset) = fp;
+	// object: UNMOVABLE인 page 의 virtual address
 }
 
 /* Loop over all objects in a slab */
+// ARM10C 20140531
+// s: &boot_kmem_cache_node,
+// start: UNMOVABLE인 page 의 virtual address
+// page->objects: 64
+//
+// for_each_object(p, &boot_kmem_cache_node, UNMOVABLE인 page 의 virtual address, 64):
+// for (p = (UNMOVABLE인 page 의 virtual address);
+//      p < (UNMOVABLE인 page 의 virtual address) + (64) * (&boot_kmem_cache_node)->size;
+//	p += (&boot_kmem_cache_node)->size)
 #define for_each_object(__p, __s, __addr, __objects) \
 	for (__p = (__addr); __p < (__addr) + (__objects) * (__s)->size;\
 			__p += (__s)->size)
@@ -562,10 +589,16 @@ static void set_track(struct kmem_cache *s, void *object,
 		memset(p, 0, sizeof(struct track));
 }
 
+// ARM10C 20140531
+// kmem_cache_node: &boot_kmem_cache_node,
+// n: UNMOVABLE인 page 의 object의 시작 virtual address
 static void init_tracking(struct kmem_cache *s, void *object)
 {
+	// s->flags: (&boot_kmem_cache_node)->flags: SLAB_HWCACHE_ALIGN: 0x00002000UL
+	// SLAB_STORE_USER: 0x00010000UL
 	if (!(s->flags & SLAB_STORE_USER))
 		return;
+		// return 수행
 
 	set_track(s, object, TRACK_FREE, 0UL);
 	set_track(s, object, TRACK_ALLOC, 0UL);
@@ -692,15 +725,25 @@ static void slab_err(struct kmem_cache *s, struct page *page,
 	dump_stack();
 }
 
+// ARM10C 20140531
+// kmem_cache_node: &boot_kmem_cache_node,
+// n: UNMOVABLE인 page 의 object의 시작 virtual address,
+// SLUB_RED_ACTIVE: 0xcc
 static void init_object(struct kmem_cache *s, void *object, u8 val)
 {
+	// object: UNMOVABLE인 page 의 object의 시작 virtual address
 	u8 *p = object;
+	// p: UNMOVABLE인 page 의 object의 시작 virtual address
 
+	// s->flags: (&boot_kmem_cache_node)->flags: SLAB_HWCACHE_ALIGN: 0x00002000UL
+	// __OBJECT_POISON: 0x80000000UL
 	if (s->flags & __OBJECT_POISON) {
 		memset(p, POISON_FREE, s->object_size - 1);
 		p[s->object_size - 1] = POISON_END;
 	}
 
+	// s->flags: (&boot_kmem_cache_node)->flags: SLAB_HWCACHE_ALIGN: 0x00002000UL
+	// SLAB_RED_ZONE: 0x00000400UL
 	if (s->flags & SLAB_RED_ZONE)
 		memset(p + s->object_size, val, s->inuse - s->object_size);
 }
@@ -1067,9 +1110,20 @@ static inline unsigned long node_nr_slabs(struct kmem_cache_node *n)
 	return atomic_long_read(&n->nr_slabs);
 }
 
+// ARM10C 20140531
+// s: &boot_kmem_cache_node, page: migratetype이 MIGRATE_UNMOVABLE인 page
+// page_to_nid(migratetype이 MIGRATE_UNMOVABLE인 page): 0, page->objects: 64
+// kmem_cache_node: &boot_kmem_cache_node, node: 0, page->objects: 64
 static inline void inc_slabs_node(struct kmem_cache *s, int node, int objects)
 {
+	// s: &boot_kmem_cache_node, node: 0
+	// get_node(&boot_kmem_cache_node, 0): (&boot_kmem_cache_node)->node[0]: NULL
+	// s: &boot_kmem_cache_node, node: 0
+	// get_node(&boot_kmem_cache_node, 0): (&boot_kmem_cache_node)->node[0]:
+	// UNMOVABLE인 page 의 object의 시작 virtual address
 	struct kmem_cache_node *n = get_node(s, node);
+	// n: &(&boot_kmem_cache_node)->node[0]: NULL
+	// n: &(&boot_kmem_cache_node)->node[0]: UNMOVABLE인 page 의 object의 시작 virtual address
 
 	/*
 	 * May be called early in order to allocate a slab for the
@@ -1077,10 +1131,19 @@ static inline void inc_slabs_node(struct kmem_cache *s, int node, int objects)
 	 * dilemma by deferring the increment of the count during
 	 * bootstrap (see early_kmem_cache_node_alloc).
 	 */
+	// n: &(&boot_kmem_cache_node)->node[0]: NULL
+	// n: &(&boot_kmem_cache_node)->node[0]: UNMOVABLE인 page 의 object의 시작 virtual address
 	if (likely(n)) {
+		// n->slabs: 0
 		atomic_long_inc(&n->nr_slabs);
+		// n->slabs: 1
+
+		// objects: 64, n->total_objects: 0
 		atomic_long_add(objects, &n->total_objects);
+		// n->total_objects: 64
 	}
+	// kmem_cache_node 가 완성된 이후에 nr_slabs, total_objects 가 증가될 것으로 예상됨
+	// kmem_cache_node 가 완성된 이후에 nr_slabs, total_objects 가 증가시킴
 }
 static inline void dec_slabs_node(struct kmem_cache *s, int node, int objects)
 {
@@ -1091,11 +1154,18 @@ static inline void dec_slabs_node(struct kmem_cache *s, int node, int objects)
 }
 
 /* Object debug checks for alloc/free paths */
+// ARM10C 20140531
+// s: &boot_kmem_cache_node, page: UNMOVABLE인 page
+// object: UNMOVABLE인 page 의 virtual address
 static void setup_object_debug(struct kmem_cache *s, struct page *page,
 								void *object)
 {
+	// s->flags: boot_kmem_cache_node.flags: SLAB_HWCACHE_ALIGN: 0x00002000UL
+	// SLAB_STORE_USER: 0x00010000UL, SLAB_RED_ZONE: 0x00000400UL, __OBJECT_POISON: 0x80000000UL
+	// 0x00010000 |  0x00000400 | 0x80000000: 0x80010400
 	if (!(s->flags & (SLAB_STORE_USER|SLAB_RED_ZONE|__OBJECT_POISON)))
 		return;
+		// return 수행
 
 	init_object(s, object, SLUB_RED_INACTIVE);
 	init_tracking(s, object);
@@ -1472,10 +1542,17 @@ static struct page *allocate_slab(struct kmem_cache *s, gfp_t flags, int node)
 	return page;
 }
 
+// ARM10C 20140531
+// s: &boot_kmem_cache_node, page: UNMOVABLE인 page
+// last: UNMOVABLE인 page 의 virtual address
 static void setup_object(struct kmem_cache *s, struct page *page,
 				void *object)
 {
+	// s: &boot_kmem_cache_node, page: UNMOVABLE인 page
+	// object: UNMOVABLE인 page 의 virtual address
 	setup_object_debug(s, page, object);
+
+	// s->ctor: boot_kmem_cache_node.ctor: NULL
 	if (unlikely(s->ctor))
 		s->ctor(object);
 }
@@ -1509,32 +1586,97 @@ static struct page *new_slab(struct kmem_cache *s, gfp_t flags, int node)
 	// order: 0
 
 // 2014/05/24 종료
+// 2014/05/31 시작
 
+	// s: &boot_kmem_cache_node, page: migratetype이 MIGRATE_UNMOVABLE인 page
+	// page_to_nid(migratetype이 MIGRATE_UNMOVABLE인 page): 0, page->objects: 64
 	inc_slabs_node(s, page_to_nid(page), page->objects);
-	memcg_bind_pages(s, order);
+
+	// s: &boot_kmem_cache_node, order: 0
+	memcg_bind_pages(s, order); // null function
+
+	// page: migratetype이 MIGRATE_UNMOVABLE인 page, s: &boot_kmem_cache_node
 	page->slab_cache = s;
+	// page->slab_cache: &boot_kmem_cache_node
+
+	// page: migratetype이 MIGRATE_UNMOVABLE인 page
 	__SetPageSlab(page);
+	// page->flags에 7 (PG_slab) bit를 set
+
+	// page->pfmemalloc: 0
 	if (page->pfmemalloc)
 		SetPageSlabPfmemalloc(page);
 
+	// page: migratetype이 MIGRATE_UNMOVABLE인 page
+	//       이 코드 이후 부터는 UNMOVABLE인 page
 	start = page_address(page);
+	// start: UNMOVABLE인 page 의 virtual address
 
+	// s->flags: boot_kmem_cache_node.flags: SLAB_HWCACHE_ALIGN: 0x00002000UL
+	// SLAB_POISON: 0x00000800UL
 	if (unlikely(s->flags & SLAB_POISON))
 		memset(start, POISON_INUSE, PAGE_SIZE << order);
 
+	// start: UNMOVABLE인 page 의 virtual address
 	last = start;
+	// last: UNMOVABLE인 page 의 virtual address
+
+	// s: &boot_kmem_cache_node,
+	// start: UNMOVABLE인 page 의 virtual address
+	// page->objects: 64
 	for_each_object(p, s, start, page->objects) {
+	// for (p = (UNMOVABLE인 page 의 virtual address);
+	//      p < (UNMOVABLE인 page 의 virtual address) + (64) * (&boot_kmem_cache_node)->size;
+	//	p += (&boot_kmem_cache_node)->size)
+
+		// p: UNMOVABLE인 page 의 virtual address
+		// (&boot_kmem_cache_node)->size: 64
+
+		// s: &boot_kmem_cache_node, page: UNMOVABLE인 page
+		// last: UNMOVABLE인 page 의 virtual address
 		setup_object(s, page, last);
+
+		// s: &boot_kmem_cache_node, last: UNMOVABLE인 page 의 virtual address
+		// p: UNMOVABLE인 page 의 virtual address
 		set_freepointer(s, last, p);
+		// last에 p 주소를 mapping 함
+
 		last = p;
 	}
+
+	// for_each_object가 하는일:
+	// 다음 object의 시작주소를 이전 object의 내부(freepointer) 에 저장을 하는데
+	// 그 위치는 s->offset에 의해 결정되어 저장됨
+	// 예시:
+	// |0x10001000|data 60Byte |0x10001040|data 60Byte |0x10000080|data 0x60Byte |...|null|data|
+
+	// s: &boot_kmem_cache_node, page: UNMOVABLE인 page
+	// last: UNMOVABLE인 page 의 virtual address + 0x1000 - 64
 	setup_object(s, page, last);
+
+	// s: &boot_kmem_cache_node
+	// last: UNMOVABLE인 page 의 virtual address + 0x1000 - 64
 	set_freepointer(s, last, NULL);
 
+	// 마지막 object의 내부 freepointer는 null 초기화함
+
+	// start: UNMOVABLE인 page 의 virtual address
 	page->freelist = start;
+	// page->freelist: UNMOVABLE인 page 의 virtual address
+
+	// page의 freelist 맴버는 slab의 object의 시작주소를 가리킴
+
+	// page->objects: 64
 	page->inuse = page->objects;
+	// page->inuse: 64
+
+	// page의 objects 맴버는 slab의 object의 총 갯수
+	// page의 inuse 맴버는 slab의 free상태인 object의 총 갯수
+
 	page->frozen = 1;
+	// page->frozen: 1
 out:
+	// page: UNMOVABLE인 page
 	return page;
 }
 
@@ -1621,14 +1763,25 @@ static void discard_slab(struct kmem_cache *s, struct page *page)
  *
  * list_lock must be held.
  */
+// ARM10C 20140531
+// n: UNMOVABLE인 page 의 object의 시작 virtual address,
+// page: UNMOVABLE인 page, DEACTIVATE_TO_HEAD: 15
 static inline void add_partial(struct kmem_cache_node *n,
 				struct page *page, int tail)
 {
+	// n: UNMOVABLE인 page 의 object의 시작 virtual address,
+
+	// n->nr_partial: 0
 	n->nr_partial++;
+	// n->nr_partial: 1
+
+	// tail: DEACTIVATE_TO_HEAD: 15, DEACTIVATE_TO_TAIL: 16
 	if (tail == DEACTIVATE_TO_TAIL)
 		list_add_tail(&page->lru, &n->partial);
 	else
+		// page->lru: (UNMOVABLE인 page)->lru, n->partial: NULL
 		list_add(&page->lru, &n->partial);
+		// n->partial에 (UNMOVABLE인 page)->lru 가 추가됨
 }
 
 /*
@@ -2976,21 +3129,40 @@ static inline int calculate_order(int size, int reserved)
 	return -ENOSYS;
 }
 
+// ARM10C 20140531
+// n: UNMOVABLE인 page 의 object의 시작 virtual address
 static void
 init_kmem_cache_node(struct kmem_cache_node *n)
 {
+	// n: UNMOVABLE인 page 의 object의 시작 virtual address
+
 	n->nr_partial = 0;
+	// n->nr_partial: 0
+
 	spin_lock_init(&n->list_lock);
+	// n->list_lock: spinlock 초기화 수행
+
 	INIT_LIST_HEAD(&n->partial);
-#ifdef CONFIG_SLUB_DEBUG
+	// n->partial: 리스트 초기화
+
+#ifdef CONFIG_SLUB_DEBUG // CONFIG_SLUB_DEBUG=y
 	atomic_long_set(&n->nr_slabs, 0);
+	// n->nr_slabs: 0
+
 	atomic_long_set(&n->total_objects, 0);
+	// n->total_objects: 0
+
 	INIT_LIST_HEAD(&n->full);
+	// n->full: 리스트 초기화
 #endif
 }
 
+// ARM10C 20140531
+// s: &boot_kmem_cache_node
 static inline int alloc_kmem_cache_cpus(struct kmem_cache *s)
 {
+	// PERCPU_DYNAMIC_EARLY_SIZE: 0x3000, KMALLOC_SHIFT_HIGH: 13
+	// sizeof(struct kmem_cache_cpu): 16 bytes
 	BUILD_BUG_ON(PERCPU_DYNAMIC_EARLY_SIZE <
 			KMALLOC_SHIFT_HIGH * sizeof(struct kmem_cache_cpu));
 
@@ -2998,6 +3170,9 @@ static inline int alloc_kmem_cache_cpus(struct kmem_cache *s)
 	 * Must align to double word boundary for the double cmpxchg
 	 * instructions to work; see __pcpu_double_call_return_bool().
 	 */
+	// s->cpu_slab: (&boot_kmem_cache_node)->cpu_slab
+	// sizeof(struct kmem_cache_cpu): 16 bytes
+	// __alloc_percpu(16, 8)
 	s->cpu_slab = __alloc_percpu(sizeof(struct kmem_cache_cpu),
 				     2 * sizeof(void *));
 
@@ -3034,8 +3209,18 @@ static void early_kmem_cache_node_alloc(int node)
 
 	// kmem_cache_node: &boot_kmem_cache_node, GFP_NOWAIT: 0, node: 0
 	page = new_slab(kmem_cache_node, GFP_NOWAIT, node);
+	// new_slab이 한일:
+	// migratetype이 MIGRATE_UNMOVABLE인 page 할당 받음
+	// page->flags에 7 (PG_slab) bit를 set
+	// slab 의 objects 들의 freepointer를 맵핑함
+	// kmem_cache_node 가 완성된 이후에 nr_slabs, total_objects 가 증가될 것으로 예상됨
+	// page->freelist: UNMOVABLE인 page 의 virtual address, page->inuse: 64
+	// page->frozen: 1 page 맴버를 셋팅함
 
+	// page: UNMOVABLE인 page
 	BUG_ON(!page);
+
+	// page: UNMOVABLE인 page, page_to_nid(UNMOVABLE인 page): 0, node: 0
 	if (page_to_nid(page) != node) {
 		printk(KERN_ERR "SLUB: Unable to allocate memory from "
 				"node %d\n", node);
@@ -3043,20 +3228,66 @@ static void early_kmem_cache_node_alloc(int node)
 				"in order to be able to continue\n");
 	}
 
+	// page->freelist: UNMOVABLE인 page 의 object의 시작 virtual address
 	n = page->freelist;
+	// n: UNMOVABLE인 page 의 object의 시작 virtual address
+
 	BUG_ON(!n);
+
+	// kmem_cache_node: &boot_kmem_cache_node,
+	// n: UNMOVABLE인 page 의 object의 시작 virtual address
 	page->freelist = get_freepointer(kmem_cache_node, n);
+	// page->freelist: UNMOVABLE인 page 의 object의 시작 virtual address + 64
+
+	// get_freepointer 하는일:
+	// 다음 object의 주소를 가져옴
+
+	// page->inuse: 64
 	page->inuse = 1;
+	// page->inuse: 1
+
+	// page의 inuse 맴버는 현재 사용하고 있는 object의 수를 의미함
+
+	// page->frozen: 1
 	page->frozen = 0;
+	// page->frozen: 0
+
+	// node: 0, kmem_cache_node->node: (&boot_kmem_cache_node)->node[0]: NULL
+	// n: UNMOVABLE인 page 의 object의 시작 virtual address
 	kmem_cache_node->node[node] = n;
-#ifdef CONFIG_SLUB_DEBUG
+	// kmem_cache_node->node: (&boot_kmem_cache_node)->node[0]: UNMOVABLE인 page 의 object의 시작 virtual address
+
+#ifdef CONFIG_SLUB_DEBUG // CONFIG_SLUB_DEBUG=y
+	// kmem_cache_node: &boot_kmem_cache_node,
+	// n: UNMOVABLE인 page 의 object의 시작 virtual address,
+	// SLUB_RED_ACTIVE: 0xcc
 	init_object(kmem_cache_node, n, SLUB_RED_ACTIVE);
+
+	// kmem_cache_node: &boot_kmem_cache_node,
+	// n: UNMOVABLE인 page 의 object의 시작 virtual address
 	init_tracking(kmem_cache_node, n);
 #endif
-	init_kmem_cache_node(n);
-	inc_slabs_node(kmem_cache_node, node, page->objects);
 
+	// n: UNMOVABLE인 page 의 object의 시작 virtual address
+	init_kmem_cache_node(n);
+	// n->nr_partial: 0
+	// n->list_lock: spinlock 초기화 수행
+	// n->partial: 리스트 초기화
+	// n->nr_slabs: 0
+	// n->total_objects: 0
+	// n->full: 리스트 초기화
+	// 할당받은 slab object를 kmem_cache_node 로 사용하고
+	// kmem_cache_node의 멤버 필드를 초기화함
+
+	// page: UNMOVABLE인 page
+	// kmem_cache_node: &boot_kmem_cache_node, node: 0, page->objects: 64
+	inc_slabs_node(kmem_cache_node, node, page->objects);
+	// n->slabs: 1, n->total_objects: 64 로 세팀함
+
+	// n: UNMOVABLE인 page 의 object의 시작 virtual address,
+	// page: UNMOVABLE인 page, DEACTIVATE_TO_HEAD: 15
 	add_partial(n, page, DEACTIVATE_TO_HEAD);
+	// kmem_cache_node의 partial 맴버에 현재 page의 lru 리스트를 추가함
 }
 
 static void free_kmem_cache_nodes(struct kmem_cache *s)
@@ -3089,6 +3320,18 @@ static int init_kmem_cache_nodes(struct kmem_cache *s)
 		if (slab_state == DOWN) {
 			// node: 0
 			early_kmem_cache_node_alloc(node);
+			// early_kmem_cache_node_alloc에서 한일:
+			// migratetype이 MIGRATE_UNMOVABLE인 page 할당 받음
+			// page->flags에 7 (PG_slab) bit를 set
+			// slab 의 objects 들의 freepointer를 맵핑함
+			// page->freelist: UNMOVABLE인 page 의 object의 시작 virtual address + 64
+			// page->inuse: 1, page->frozen: 0 page 맴버를 셋팅함
+			// 할당받은 slab object를 kmem_cache_node 로 사용하고 kmem_cache_node의 멤버 필드를 초기화함
+			// kmem_cache_node->nr_partial: 1
+			// kmem_cache_node->list_lock: spinlock 초기화 수행
+			// kmem_cache_node->slabs: 1, kmem_cache_node->total_objects: 64 로 세팀함
+			// kmem_cache_node->full: 리스트 초기화
+			// kmem_cache_node의 partial 맴버에 현재 page의 lru 리스트를 추가함
 			continue;
 		}
 		n = kmem_cache_alloc_node(kmem_cache_node,
@@ -3103,6 +3346,7 @@ static int init_kmem_cache_nodes(struct kmem_cache *s)
 		init_kmem_cache_node(n);
 	}
 	return 1;
+	// return 수행
 }
 
 // ARM10C 20140419
@@ -3378,10 +3622,11 @@ static int kmem_cache_open(struct kmem_cache *s, unsigned long flags)
 #ifdef CONFIG_NUMA // CONFIG_NUMA=n
 	s->remote_node_defrag_ratio = 1000;
 #endif
-	// s: &boot_kmem_cache_node
+	// s: &boot_kmem_cache_node, init_kmem_cache_nodes(&boot_kmem_cache_node): 1
 	if (!init_kmem_cache_nodes(s))
 		goto error;
 
+	// s: &boot_kmem_cache_node
 	if (alloc_kmem_cache_cpus(s))
 		return 0;
 

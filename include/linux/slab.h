@@ -25,15 +25,18 @@
 #define SLAB_DEBUG_FREE		0x00000100UL	/* DEBUG: Perform (expensive) checks on free */
 // ARM10C 20140419
 // ARM10C 20140524
+// ARM10C 20140531
 #define SLAB_RED_ZONE		0x00000400UL	/* DEBUG: Red zone objs in a cache */
 // ARM10C 20140419
 // ARM10C 20140524
+// ARM10C 20140531
 #define SLAB_POISON		0x00000800UL	/* DEBUG: Poison objects */
 // ARM10C 20140419
 #define SLAB_HWCACHE_ALIGN	0x00002000UL	/* Align objs on cache lines */
 #define SLAB_CACHE_DMA		0x00004000UL	/* Use GFP_DMA memory */
 // ARM10C 20140419
 // ARM10C 20140524
+// ARM10C 20140531
 #define SLAB_STORE_USER		0x00010000UL	/* DEBUG: Store the last owner for bug hunting */
 #define SLAB_PANIC		0x00040000UL	/* Panic if kmem_cache_create() fails */
 /*
@@ -203,7 +206,7 @@ struct kmem_cache {
  * Kmalloc array related definitions
  */
 
-#ifdef CONFIG_SLAB
+#ifdef CONFIG_SLAB // CONFIG_SLAB=n
 /*
  * The largest kmalloc size supported by the SLAB allocators is
  * 32 megabyte (2^25) or the maximum allocatable page order if that is
@@ -221,11 +224,14 @@ struct kmem_cache {
 #endif
 #endif
 
-#ifdef CONFIG_SLUB
+#ifdef CONFIG_SLUB // CONFIG_SLUB=y
 /*
  * SLUB allocates up to order 2 pages directly and otherwise
  * passes the request to the page allocator.
  */
+// ARM10C 20140531
+// PAGE_SHIFT: 12
+// KMALLOC_SHIFT_HIGH: 13
 #define KMALLOC_SHIFT_HIGH	(PAGE_SHIFT + 1)
 #define KMALLOC_SHIFT_MAX	(MAX_ORDER + PAGE_SHIFT)
 #ifndef KMALLOC_SHIFT_LOW

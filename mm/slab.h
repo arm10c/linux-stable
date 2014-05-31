@@ -119,7 +119,7 @@ void slabinfo_show_stats(struct seq_file *m, struct kmem_cache *s);
 ssize_t slabinfo_write(struct file *file, const char __user *buffer,
 		       size_t count, loff_t *ppos);
 
-#ifdef CONFIG_MEMCG_KMEM
+#ifdef CONFIG_MEMCG_KMEM // CONFIG_MEMCG_KMEM=n
 static inline bool is_root_cache(struct kmem_cache *s)
 {
 	return !s->memcg_params || s->memcg_params->is_root_cache;
@@ -192,6 +192,8 @@ static inline bool cache_match_memcg(struct kmem_cache *cachep,
 	return true;
 }
 
+// ARM10C 20140531
+// s: &boot_kmem_cache_node, order: 0
 static inline void memcg_bind_pages(struct kmem_cache *s, int order)
 {
 }

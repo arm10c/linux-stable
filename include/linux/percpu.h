@@ -52,6 +52,7 @@
 
 /* minimum unit size, also is the maximum supported allocation size */
 // ARM10C 20140222
+// ARM10C 20140531
 // PCPU_MIN_UNIT_SIZE: 0x8000
 #define PCPU_MIN_UNIT_SIZE		PFN_ALIGN(32 << 10)
 
@@ -65,6 +66,7 @@
 // ARM10C 20140301
 #define PERCPU_DYNAMIC_EARLY_SLOTS	128
 // ARM10C 20140222
+// ARM10C 20140531
 // PERCPU_DYNAMIC_EARLY_SIZE: 0x3000
 #define PERCPU_DYNAMIC_EARLY_SIZE	(12 << 10)
 

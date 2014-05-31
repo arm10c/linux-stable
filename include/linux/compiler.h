@@ -45,6 +45,7 @@ extern void __chk_io_ptr(const volatile void __iomem *);
 # define __release(x) (void)0
 # define __cond_lock(x,c) (c) //ARM10C this
 // ARM10C 20140308
+// ARM10C 20140531
 # define __percpu
 // ARM10C 20140315
 // ARM10C 20140322
