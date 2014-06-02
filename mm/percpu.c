@@ -231,11 +231,41 @@ static int pcpu_reserved_chunk_limit;
  * pcpu_alloc_mutex locked.
  */
 // ARM10C 20140531
+// #define DEFINE_MUTEX(pcpu_alloc_mutex):
+// struct mutex pcpu_alloc_mutex =
+// { .count = { (1) }
+//    , .wait_lock =
+//    (spinlock_t )
+//    { { .rlock =
+//	  {
+//	  .raw_lock = { { 0 } },
+//	  .magic = 0xdead4ead,
+//	  .owner_cpu = -1,
+//	  .owner = 0xffffffff,
+//	  }
+//    } }
+//    , .wait_list =
+//    { &(pcpu_alloc_mutex.wait_list), &(pcpu_alloc_mutex.wait_list) }
+//    , .magic = &pcpu_alloc_mutex
+// }
 static DEFINE_MUTEX(pcpu_alloc_mutex);	/* protects whole alloc and reclaim */
+
 // ARM10C 20140531
+// #define DEFINE_SPINLOCK(pcpu_lock):
+// spinlock_t pcpu_lock =
+// (spinlock_t )
+// { { .rlock =
+//     {
+//       .raw_lock = { { 0 } },
+//       .magic = 0xdead4ead,
+//       .owner_cpu = -1,
+//       .owner = 0xffffffff,
+//     }
+// } }
 static DEFINE_SPINLOCK(pcpu_lock);	/* protects index data structures */
 
 // ARM10C 20140301
+// ARM10C 20140531
 static struct list_head *pcpu_slot __read_mostly; /* chunk list slots */
 
 /* reclaim work to release fully free chunks, scheduled from free path */
@@ -601,8 +631,8 @@ static int pcpu_alloc_area(struct pcpu_chunk *chunk, int size, int align)
 	// chunk->map_used: dchunk->map_used: 2,
 	// chunk->map[0]: dchunk->map[0]: -(__per_cpu 실제 할당한 size + 0x2000)
 	for (i = 0, off = 0; i < chunk->map_used; off += abs(chunk->map[i++])) {
-		// [loop 1] i: 0, chunk->map_used: dchunk->map_used: 2,
-		// [loop 2] i: 1, chunk->map_used: dchunk->map_used: 2,
+		// [loop 1] i: 0, chunk->map_used: dchunk->map_used: 2
+		// [loop 2] i: 1, chunk->map_used: dchunk->map_used: 2
 		bool is_last = i + 1 == chunk->map_used;
 		// [loop 1] is_last: 0
 		// [loop 2] is_last: 1
@@ -619,12 +649,13 @@ static int pcpu_alloc_area(struct pcpu_chunk *chunk, int size, int align)
 		// [loop 2] i: 0, head: 0
 		BUG_ON(i == 0 && head != 0);
 
-		// [loop 1] i: 0, chunk->map[0]: -(__per_cpu 실제 할당한 size + 0x2000)
-		// [loop 2] i: 1, chunk->map[1]: 0x3000
+		// [loop 1] i: 0, chunk->map[0]: dhunk->map[0]: -(__per_cpu 실제 할당한 size + 0x2000)
+		// [loop 2] i: 1, chunk->map[1]: dhunk->map[1]: 0x3000
 		if (chunk->map[i] < 0)
 			continue;
+			// [loop 1] continue 수행
 
-		// [loop 2] i: 1, chunk->map[1]: 0x3000, head: 0, size: 16
+		// [loop 2] i: 1, chunk->map[1]: dhunk->map[1]: 0x3000, head: 0, size: 16
 		if (chunk->map[i] < head + size) {
 			max_contig = max(chunk->map[i], max_contig);
 			continue;
@@ -651,7 +682,7 @@ static int pcpu_alloc_area(struct pcpu_chunk *chunk, int size, int align)
 		}
 
 		/* if tail is small, just keep it around */
-		// [loop 2] i: 1, chunk->map[1]: 0x3000, head: 0, size: 16
+		// [loop 2] i: 1, chunk->map[1]: dhunk->map[1]: 0x3000, head: 0, size: 16
 		tail = chunk->map[i] - head - size;
 		// [loop 2] tail: 0x2ff0
 
@@ -867,7 +898,7 @@ static void __percpu *pcpu_alloc(size_t size, size_t align, bool reserved)
 	// pcpu_alloc_mutex의 mutex lock을 수행
 
 	spin_lock_irqsave(&pcpu_lock, flags);
-	// pcpu_lock의 spiclock 을 수행하고 cpsr을 flags에 저장
+	// pcpu_lock의 spin lock 을 수행하고 cpsr을 flags에 저장
 
 	/* serve reserved allocations from the reserved chunk if available */
 	// reserved: false, pcpu_reserved_chunk: pcpu_setup_first_chunk()함수에서 할당한 schunk

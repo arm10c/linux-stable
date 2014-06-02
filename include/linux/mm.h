@@ -771,11 +771,12 @@ static inline int zone_to_nid(struct zone *zone)
 #endif
 }
 
-#ifdef NODE_NOT_IN_PAGE_FLAGS
+#ifdef NODE_NOT_IN_PAGE_FLAGS // undefined
 extern int page_to_nid(const struct page *page);
 #else
 // ARM10C 20140118
 // ARM10C 20140517
+// ARM10C 20140531
 static inline int page_to_nid(const struct page *page)
 {
 	// NODES_PGSHIFT: 0, NODES_MASK: 3
@@ -903,6 +904,7 @@ static inline bool cpupid_match_pid(struct task_struct *task, int cpupid)
 // ARM10C 20140329
 // ARM10C 20140419
 // ARM10C 20140517
+// ARM10C 20140531
 static inline struct zone *page_zone(const struct page *page)
 {
 	// NODE_DATA(page_to_nid(page)): &contig_page_data
@@ -975,11 +977,13 @@ static inline void set_page_links(struct page *page, enum zone_type zone,
 #include <linux/vmstat.h>
 
 // ARM10C 20140125
+// ARM10C 20140531
 static __always_inline void *lowmem_page_address(const struct page *page)
 {
 	return __va(PFN_PHYS(page_to_pfn(page)));
 }
 
+// CONFIG_HIGHMEM=y, WANT_PAGE_VIRTUAL: undefined
 #if defined(CONFIG_HIGHMEM) && !defined(WANT_PAGE_VIRTUAL)  // ARM10C Y 
 #define HASHED_PAGE_VIRTUAL // ARM10C this 
 #endif
@@ -996,6 +1000,7 @@ static inline void set_page_address(struct page *page, void *address)
 #define page_address_init()  do { } while(0)
 #endif
 
+// HASHED_PAGE_VIRTUAL: defined
 #if defined(HASHED_PAGE_VIRTUAL)    // ARM10C Y 
 // ARM10C 20140125
 // ARM10C 20140531
@@ -1004,7 +1009,8 @@ void set_page_address(struct page *page, void *virtual);
 void page_address_init(void);	// ARM10C this 
 #endif
 
-#if !defined(HASHED_PAGE_VIRTUAL) && !defined(WANT_PAGE_VIRTUAL) 
+// HASHED_PAGE_VIRTUAL: defined, WANT_PAGE_VIRTUAL: undefined
+#if !defined(HASHED_PAGE_VIRTUAL) && !defined(WANT_PAGE_VIRTUAL)
 #define page_address(page) lowmem_page_address(page)
 #define set_page_address(page, address)  do { } while(0)
 #define page_address_init()  do { } while(0)

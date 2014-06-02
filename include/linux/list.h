@@ -79,8 +79,9 @@ extern void __list_add(struct list_head *new,
  * Insert a new entry after the specified head.
  * This is good for implementing stacks.
  */
-// ARM10C 20140301 
-// ARM10C 20140301 //new = &dchunk->list, head = &pcpu_slot[11]
+// ARM10C 20140301
+// ARM10C 20140301
+/// new: &dchunk->list, head: &pcpu_slot[11]
 static inline void list_add(struct list_head *new, struct list_head *head)
 {
 	__list_add(new, head, head->next);

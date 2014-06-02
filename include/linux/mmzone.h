@@ -976,18 +976,18 @@ extern int movable_zone;
 // ARM10C 20140111
 static inline int zone_movable_is_highmem(void)
 {
-#if defined(CONFIG_HIGHMEM) && defined(CONFIG_HAVE_MEMBLOCK_NODE_MAP)	// CONFIG_HIGHMEM = y, CONFIG_HAVE_MEMBLOCK_NODE_MAP = n 
+#if defined(CONFIG_HIGHMEM) && defined(CONFIG_HAVE_MEMBLOCK_NODE_MAP) // CONFIG_HIGHMEM=y, CONFIG_HAVE_MEMBLOCK_NODE_MAP=n
 	return movable_zone == ZONE_HIGHMEM;
 #else
 	return 0; // this
 #endif
 }
 
-// ARM10C 20140111 
+// ARM10C 20140111
 // idx = 0
 static inline int is_highmem_idx(enum zone_type idx)
 {
-#ifdef CONFIG_HIGHMEM	// CONFIG_HIGHMEM = y 
+#ifdef CONFIG_HIGHMEM // CONFIG_HIGHMEM=y
 	// idx = 0 -> return 0;
 	return (idx == ZONE_HIGHMEM ||
 		(idx == ZONE_MOVABLE && zone_movable_is_highmem()));
@@ -1004,6 +1004,7 @@ static inline int is_highmem_idx(enum zone_type idx)
  */
 // ARM10C 20140125
 // ARM10C 20140405
+// ARM10C 20140531
 static inline int is_highmem(struct zone *zone)
 {
 #ifdef CONFIG_HIGHMEM // CONFIG_HIGHMEM=y

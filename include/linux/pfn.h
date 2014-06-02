@@ -20,6 +20,7 @@
 // PAGE_SHIFT: 12
 #define PFN_DOWN(x)	((x) >> PAGE_SHIFT)
 // ARM10C 20131207
+// ARM10C 20140531
 // PAGE_SHIFT: 12
 #define PFN_PHYS(x)	((phys_addr_t)(x) << PAGE_SHIFT)
 

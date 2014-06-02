@@ -266,6 +266,7 @@ PAGEFLAG(Readahead, reclaim)		/* Reminder to do async read-ahead */
  */
 // ARM10C 20140125
 // ARM10C 20140405
+// ARM10C 20140531
 // page_zone(__p): node_zones의 주소 리턴
 #define PageHighMem(__p) is_highmem(page_zone(__p))
 #else
