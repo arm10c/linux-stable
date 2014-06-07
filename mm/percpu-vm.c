@@ -298,9 +298,14 @@ static void pcpu_post_map_flush(struct pcpu_chunk *chunk,
  * CONTEXT:
  * pcpu_alloc_mutex, does GFP_KERNEL allocation.
  */
+// ARM10C 20140607
+// chuck: &pcpu_slot[11]: dchunk: 4K만큼 할당 받은 주소,
+// off: __per_cpu 실제 할당한 size + 0x2000, size: 16
 static int pcpu_populate_chunk(struct pcpu_chunk *chunk, int off, int size)
 {
+	// off: __per_cpu 실제 할당한 size + 0x2000
 	int page_start = PFN_DOWN(off);
+	// page_start: PFN_DOWN(off): 0x3
 	int page_end = PFN_UP(off + size);
 	int free_end = page_start, unmap_end = page_start;
 	struct page **pages;

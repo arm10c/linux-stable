@@ -620,6 +620,7 @@ EXPORT_SYMBOL(memcpy);
  * Unlike memcpy(), memmove() copes with overlapping areas.
  */
 // ARM10C 20131019
+// ARM10C 20140607
 void *memmove(void *dest, const void *src, size_t count)
 {
 	char *tmp;
