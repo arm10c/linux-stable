@@ -66,6 +66,8 @@ struct kmem_cache_order_objects {
  * Slab cache management.
  */
 // ARM10C 20140419
+// ARM10C 20140607
+// sizeof(struct kmem_cache): 132 bytes
 struct kmem_cache {
 	struct kmem_cache_cpu __percpu *cpu_slab;
 	/* Used for retriving partial slabs etc */
@@ -88,20 +90,22 @@ struct kmem_cache {
 	int reserved;		/* Reserved bytes at the end of slabs */
 	const char *name;	/* Name (only for display!) */
 	struct list_head list;	/* List of slab caches */
-#ifdef CONFIG_SYSFS
+#ifdef CONFIG_SYSFS // CONFIG_SYSFS=y
+	// sizeof(struct kobject): 52 bytes
 	struct kobject kobj;	/* For sysfs */
 #endif
-#ifdef CONFIG_MEMCG_KMEM
+#ifdef CONFIG_MEMCG_KMEM // CONFIG_MEMCG_KMEM=n
 	struct memcg_cache_params *memcg_params;
 	int max_attr_size; /* for propagation, maximum size of a stored attr */
 #endif
 
-#ifdef CONFIG_NUMA
+#ifdef CONFIG_NUMA // CONFIG_NUMA=n
 	/*
 	 * Defragmentation by allocating from a remote node.
 	 */
 	int remote_node_defrag_ratio;
 #endif
+	// MAX_NUMNODES: 1
 	struct kmem_cache_node *node[MAX_NUMNODES];
 };
 

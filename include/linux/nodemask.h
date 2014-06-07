@@ -489,6 +489,7 @@ static inline int num_node_state(enum node_states state)
 // ARM10C 20140329
 // MAX_NUMNODES: 1
 #define next_online_node(nid)	(MAX_NUMNODES)
+// ARM10C 20140607
 #define nr_node_ids		1
 // ARM10C 20140308
 #define nr_online_nodes		1

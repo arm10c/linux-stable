@@ -32,6 +32,7 @@
 // ARM10C 20140531
 #define SLAB_POISON		0x00000800UL	/* DEBUG: Poison objects */
 // ARM10C 20140419
+// ARM10C 20140607
 #define SLAB_HWCACHE_ALIGN	0x00002000UL	/* Align objs on cache lines */
 #define SLAB_CACHE_DMA		0x00004000UL	/* Use GFP_DMA memory */
 // ARM10C 20140419

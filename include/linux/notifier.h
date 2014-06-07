@@ -48,11 +48,13 @@
  */
 
 // ARM10C 20140315
+// ARM10C 20140607
 typedef	int (*notifier_fn_t)(struct notifier_block *nb,
 			unsigned long action, void *data);
 
 // ARM10C 20140315
 // ARM10C 20140322
+// ARM10C 20140607
 struct notifier_block {
 	notifier_fn_t notifier_call;
 	struct notifier_block __rcu *next;

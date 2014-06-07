@@ -205,11 +205,15 @@ extern int _find_next_bit_be(const unsigned long *p, int size, int offset);
  */
 #define find_first_zero_bit(p,sz)	_find_first_zero_bit_le(p,sz)
 // ARM10C 20131207
+// ARM10C 20140607
+// chunk->populated: dchunk->populated, end: 0x4, *rs: 0x5
 #define find_next_zero_bit(p,sz,off)	_find_next_zero_bit_le(p,sz,off)
 #define find_first_bit(p,sz)		_find_first_bit_le(p,sz)
 // ARM10C 20140215
 // cpumask_bits(cpu_possible_mask): cpu_possible_mask->bits: 0xF , nr_cpumask_bits: 4, n: -1+1
 // p: cpu_possible_mask->bits: 0xF , sz: 4, off: 0
+// ARM10C 20140607
+// chunk->populated: dchunk->populated, end: 0x4, *rs: 0x3
 #define find_next_bit(p,sz,off)		_find_next_bit_le(p,sz,off)
 
 #else

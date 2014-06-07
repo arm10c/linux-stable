@@ -12,6 +12,7 @@
 
 #ifndef __kernel_long_t
 typedef long		__kernel_long_t;
+// ARM10C 20140607
 typedef unsigned long	__kernel_ulong_t;
 #endif
 
@@ -68,6 +69,7 @@ typedef unsigned int	__kernel_size_t;
 typedef int		__kernel_ssize_t;
 typedef int		__kernel_ptrdiff_t;
 #else
+// ARM10C 20140607
 typedef __kernel_ulong_t __kernel_size_t;
 typedef __kernel_long_t	__kernel_ssize_t;
 typedef __kernel_long_t	__kernel_ptrdiff_t;

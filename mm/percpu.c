@@ -77,9 +77,14 @@
 #define PCPU_SLOT_BASE_SHIFT		5	/* 1-31 shares the same slot */
 #define PCPU_DFL_MAP_ALLOC		16	/* start a map with 16 ents */
 
-#ifdef CONFIG_SMP
+#ifdef CONFIG_SMP // CONFIG_SMP=y
 /* default addr <-> pcpu_ptr mapping, override in asm/percpu.h if necessary */
 #ifndef __addr_to_pcpu_ptr
+// ARM10C 20140607
+// chunk->base_addr: dchunk->base_addr: 128K 만큼 물리주소 0x5FFFFFFF 근처에 할당받은 주소 + 0x3d00
+//
+// pcpu_base_addr: 128K 만큼 물리주소 0x5FFFFFFF 근처에 할당받은 주소
+// __per_cpu_start: 0xc04ff000
 #define __addr_to_pcpu_ptr(addr)					\
 	(void __percpu *)((unsigned long)(addr) -			\
 			  (unsigned long)pcpu_base_addr	+		\
@@ -360,11 +365,16 @@ static int __maybe_unused pcpu_page_idx(unsigned int cpu, int page_idx)
 	return pcpu_unit_map[cpu] * pcpu_unit_pages + page_idx;
 }
 
+// ARM10C 20140607
+// chuck: &pcpu_slot[11]: dchunk: 4K만큼 할당 받은 주소, cpu: 0, 0
 static unsigned long pcpu_chunk_addr(struct pcpu_chunk *chunk,
 				     unsigned int cpu, int page_idx)
 {
+	// chunk->base_addr: dchunk->base_addr: 128K 만큼 물리주소 0x5FFFFFFF 근처에 할당받은 주소
+	// cpu: 0, pcpu_unit_offsets[0]: 0, page_idx: 0, PAGE_SHIFT: 12
 	return (unsigned long)chunk->base_addr + pcpu_unit_offsets[cpu] +
 		(page_idx << PAGE_SHIFT);
+	// return 128K 만큼 물리주소 0x5FFFFFFF 근처에 할당받은 주소
 }
 
 static void __maybe_unused pcpu_next_unpop(struct pcpu_chunk *chunk,
@@ -374,11 +384,18 @@ static void __maybe_unused pcpu_next_unpop(struct pcpu_chunk *chunk,
 	*re = find_next_bit(chunk->populated, end, *rs + 1);
 }
 
+// ARM10C 20140607
+// chuck: &pcpu_slot[11]: dchunk: 4K만큼 할당 받은 주소, rs: 0x3, re, page_end: 0x4
 static void __maybe_unused pcpu_next_pop(struct pcpu_chunk *chunk,
 					 int *rs, int *re, int end)
 {
+	// chunk->populated: dchunk->populated, end: 0x4, *rs: 0x3
 	*rs = find_next_bit(chunk->populated, end, *rs);
+	// *rs: 0x3
+	
+	// chunk->populated: dchunk->populated, end: 0x4, *rs: 0x4
 	*re = find_next_zero_bit(chunk->populated, end, *rs + 1);
+	// *re: 0x4
 }
 
 /*
@@ -411,10 +428,14 @@ static void __maybe_unused pcpu_next_pop(struct pcpu_chunk *chunk,
  * RETURNS:
  * Pointer to the allocated area on success, NULL on failure.
  */
+// ARM10C 20140607
+// pages_size: 128
 static void *pcpu_mem_zalloc(size_t size)
 {
+	// slab_is_available(): 0
 	if (WARN_ON_ONCE(!slab_is_available()))
 		return NULL;
+		// return NULL
 
 	if (size <= PAGE_SIZE)
 		return kzalloc(size, GFP_KERNEL);
@@ -1056,6 +1077,7 @@ area_found:
 	/* populate, map and clear the area */
 	// chuck: &pcpu_slot[11]: dchunk: 4K만큼 할당 받은 주소,
 	// off: 0x1d00 + 0x2000, size: 16
+	// pcpu_populate_chunk(&pcpu_slot[11], 0x3d00, 16): 0
 	if (pcpu_populate_chunk(chunk, off, size)) {
 		spin_lock_irqsave(&pcpu_lock, flags);
 		pcpu_free_area(chunk, off);
@@ -1064,11 +1086,21 @@ area_found:
 	}
 
 	mutex_unlock(&pcpu_alloc_mutex);
+	// pcpu_alloc_mutex의 mutex unlock을 수행
 
 	/* return address relative to base address */
+	// chunk->base_addr: dchunk->base_addr: 128K 만큼 물리주소 0x5FFFFFFF 근처에 할당받은 주소
+	// off: 0x3d00
+	// __addr_to_pcpu_ptr(128K 만큼 물리주소 0x5FFFFFFF 근처에 할당받은 주소+0x3d00): 0xc0502d00
 	ptr = __addr_to_pcpu_ptr(chunk->base_addr + off);
-	kmemleak_alloc_percpu(ptr, size);
+	// ptr: 0xc0502d00
+
+	// ptr: 0xc0502d00, size: 16
+	kmemleak_alloc_percpu(ptr, size); // null function
+
+	// ptr: 0xc0502d00
 	return ptr;
+	// return 0xc0502d00
 
 fail_unlock:
 	spin_unlock_irqrestore(&pcpu_lock, flags);
@@ -1104,6 +1136,7 @@ void __percpu *__alloc_percpu(size_t size, size_t align)
 {
 	// size: 16, align: 8
 	return pcpu_alloc(size, align, false);
+	// return 0xc0502d00
 }
 EXPORT_SYMBOL_GPL(__alloc_percpu);
 

@@ -160,7 +160,20 @@ extern int __init pcpu_page_first_chunk(size_t reserved_size,
  * dynamically allocated. Non-atomic access to the current CPU's
  * version should probably be combined with get_cpu()/put_cpu().
  */
-#ifdef CONFIG_SMP
+#ifdef CONFIG_SMP // CONFIG_SMP=y
+// ARM10C 20140607
+// s->cpu_slab: (&boot_kmem_cache_node)->cpu_slab: 0xc0502d00, cpu: 0
+//
+// per_cpu_offset((0)): __per_cpu_offset[0]: pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋
+//
+// #define SHIFT_PERCPU_PTR((&boot_kmem_cache_node)->cpu_slab, (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))
+// ({
+//  	do {
+// 	 	const void __percpu *__vpp_verify = (typeof((&boot_kmem_cache_node)->cpu_slab))NULL;
+// 	 	(void)__vpp_verify;
+//  	} while (0)
+//  	(&boot_kmem_cache_node)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋);
+// })
 #define per_cpu_ptr(ptr, cpu)	SHIFT_PERCPU_PTR((ptr), per_cpu_offset((cpu)))
 #else
 #define per_cpu_ptr(ptr, cpu)	({ (void)(cpu); VERIFY_PERCPU_PTR((ptr)); })

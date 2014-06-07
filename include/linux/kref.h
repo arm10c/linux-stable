@@ -21,6 +21,7 @@
 #include <linux/mutex.h>
 #include <linux/spinlock.h>
 
+// ARM10C 20140607
 struct kref {
 	atomic_t refcount;
 };

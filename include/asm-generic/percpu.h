@@ -20,6 +20,7 @@ extern unsigned long __per_cpu_offset[NR_CPUS];
 // ARM10C 20130928
 // ARM10C 20140308
 // ARM10C 20140412
+// ARM10C 20140607
 // per_cpu_offset(0): (__per_cpu_offset[0])
 #define per_cpu_offset(x) (__per_cpu_offset[x])
 #endif
@@ -97,6 +98,19 @@ extern unsigned long __per_cpu_offset[NR_CPUS];
 // 	 	(void)__vpp_verify;
 //  	} while (0)
 //  	&boot_pageset + (__per_cpu_offset[0]);
+// })
+//
+// ARM10C 20140607
+// s->cpu_slab: (&boot_kmem_cache_node)->cpu_slab: 0xc0502d00,
+// per_cpu_offset((0)): __per_cpu_offset[0]: pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋
+//
+// #define SHIFT_PERCPU_PTR((&boot_kmem_cache_node)->cpu_slab, (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))
+// ({
+//  	do {
+// 	 	const void __percpu *__vpp_verify = (typeof((&boot_kmem_cache_node)->cpu_slab))NULL;
+// 	 	(void)__vpp_verify;
+//  	} while (0)
+//  	(&boot_kmem_cache_node)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋);
 // })
 #define SHIFT_PERCPU_PTR(__p, __offset)	({				\
 	__verify_pcpu_ptr((__p));					\

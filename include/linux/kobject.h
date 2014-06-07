@@ -58,6 +58,8 @@ enum kobject_action {
 	KOBJ_MAX
 };
 
+// ARM10C 20140607
+// sizeof(struct kobject): 52 bytes
 struct kobject {
 	const char		*name;
 	struct list_head	entry;
@@ -66,7 +68,7 @@ struct kobject {
 	struct kobj_type	*ktype;
 	struct sysfs_dirent	*sd;
 	struct kref		kref;
-#ifdef CONFIG_DEBUG_KOBJECT_RELEASE
+#ifdef CONFIG_DEBUG_KOBJECT_RELEASE // CONFIG_DEBUG_KOBJECT_RELEASE=n
 	struct delayed_work	release;
 #endif
 	unsigned int state_initialized:1;

@@ -127,7 +127,7 @@ static inline unsigned int cpumask_check(unsigned int cpu)
 	return cpu;
 }
 
-#if NR_CPUS == 1
+#if NR_CPUS == 1 // NR_CPUS: 4
 /* Uniprocessor.  Assume all masks are "1". */
 static inline unsigned int cpumask_first(const struct cpumask *srcp)
 {
@@ -185,6 +185,7 @@ static inline unsigned int cpumask_first(const struct cpumask *srcp)
  * Returns >= nr_cpu_ids if no further cpus set.
  */
 // ARM10C 20140215
+// ARM10C 20140607
 // n: -1, srcp: cpu_possible_mask
 static inline unsigned int cpumask_next(int n, const struct cpumask *srcp)
 {
@@ -757,6 +758,7 @@ extern const DECLARE_BITMAP(cpu_all_bits, NR_CPUS);
 #define cpu_none_mask to_cpumask(cpu_bit_bitmap[0])
 
 // ARM10C 20140215
+// ARM10C 20140607
 // #define for_each_cpu(i, cpu_possible_mask)
 //	for ((i) = -1; (i) = cpumask_next((i), (cpu_possible_mask)), (i) < nr_cpu_ids; )
 #define for_each_possible_cpu(cpu) for_each_cpu((cpu), cpu_possible_mask)

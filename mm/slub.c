@@ -2058,12 +2058,24 @@ static inline void note_cmpxchg_failure(const char *n,
 	stat(s, CMPXCHG_DOUBLE_CPU_FAIL);
 }
 
+// ARM10C 20140607
+// s: &boot_kmem_cache_node
 static void init_kmem_cache_cpus(struct kmem_cache *s)
 {
 	int cpu;
 
+	// nr_cpu_ids: 4, cpu_possible_mask: cpu_possible_bits[1]
+	// cpumask_next((-1), cpu_possible_bits[1]): 0
 	for_each_possible_cpu(cpu)
+	// for ((cpu) = -1; (cpu) = cpumask_next((cpu), (cpu_possible_mask)), (cpu) < nr_cpu_ids; )
+		// s->cpu_slab: (&boot_kmem_cache_node)->cpu_slab: 0xc0502d00, cpu: 0
+		// per_cpu_ptr((&boot_kmem_cache_node)->cpu_slab, 0):
+		// (&boot_kmem_cache_node)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋);
+		// init_tid(0): 0
 		per_cpu_ptr(s->cpu_slab, cpu)->tid = init_tid(cpu);
+		// ((&boot_kmem_cache_node)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->tid: 0
+
+		// 할당받은 pcpu 들의 16 byte 공간에 각 cpu에 사용하는 kmem_cache_cpu의 tid 맵버를 설정
 }
 
 /*
@@ -3197,14 +3209,18 @@ static inline int alloc_kmem_cache_cpus(struct kmem_cache *s)
 	 */
 	// s->cpu_slab: (&boot_kmem_cache_node)->cpu_slab
 	// sizeof(struct kmem_cache_cpu): 16 bytes, sizeof(void *): 8 bytes
-	// __alloc_percpu(16, 8)
+	// __alloc_percpu(16, 8): 0xc0502d00
 	s->cpu_slab = __alloc_percpu(sizeof(struct kmem_cache_cpu),
 				     2 * sizeof(void *));
+	// s->cpu_slab: (&boot_kmem_cache_node)->cpu_slab: 0xc0502d00
 
+	// s->cpu_slab: (&boot_kmem_cache_node)->cpu_slab: 0xc0502d00
 	if (!s->cpu_slab)
 		return 0;
 
+	// s: &boot_kmem_cache_node
 	init_kmem_cache_cpus(s);
+	// 할당받은 pcpu 들의 16 byte 공간에 각 cpu에 사용하는 kmem_cache_cpu의 tid 맵버를 설정
 
 	return 1;
 }
@@ -3657,9 +3673,28 @@ static int kmem_cache_open(struct kmem_cache *s, unsigned long flags)
 	if (!init_kmem_cache_nodes(s))
 		goto error;
 
-	// s: &boot_kmem_cache_node
+	// init_kmem_cache_nodes 가 한일:
+	// migratetype이 MIGRATE_UNMOVABLE인 page 할당 받음
+	// page 맴버를 셋팅함
+	// page->slab_cache: &boot_kmem_cache_node 주소를 set
+	// page->flags에 7 (PG_slab) bit를 set
+	// page->freelist: UNMOVABLE인 page 의 object의 시작 virtual address + 64
+	// page->inuse: 1, page->frozen: 0 page 맴버를 셋팅함
+	// slab 의 objects 들의 freepointer를 맵핑함
+	// 할당받은 slab object를 kmem_cache_node 로 사용하고 kmem_cache_node의 멤버 필드를 초기화함
+	// kmem_cache_node->nr_partial: 1
+	// kmem_cache_node->list_lock: spinlock 초기화 수행
+	// kmem_cache_node->slabs: 1, kmem_cache_node->total_objects: 64 로 세팀함
+	// kmem_cache_node->full: 리스트 초기화
+	// kmem_cache_node의 partial 맴버에 현재 page의 lru 리스트를 추가함
+	
+	// s: &boot_kmem_cache_node, alloc_kmem_cache_cpus(&boot_kmem_cache_node): 1
 	if (alloc_kmem_cache_cpus(s))
+		// alloc_kmem_cache_cpus 한일:
+		// 할당받은 pcpu 들의 16 byte 공간 (&boot_kmem_cache_node)->cpu_slab 에
+		// 각 cpu에 사용하는 kmem_cache_cpu의 tid 맵버를 설정
 		return 0;
+		// return 0
 
 	free_kmem_cache_nodes(s);
 error:
@@ -4086,8 +4121,10 @@ static int slab_memory_callback(struct notifier_block *self,
 	return ret;
 }
 
+// ARM10C 20140607
 static struct notifier_block slab_memory_callback_nb = {
 	.notifier_call = slab_memory_callback,
+	// SLAB_CALLBACK_PRI: 1
 	.priority = SLAB_CALLBACK_PRI,
 };
 
@@ -4152,14 +4189,52 @@ void __init kmem_cache_init(void)
 
 	// &boot_kmem_cache_node, "kmem_cache_node", sizeof(struct kmem_cache_node): 44 byte,
 	// SLAB_HWCACHE_ALIGN: 0x00002000UL
+	// create_boot_cache(&boot_kmem_cache_node, "kmem_cache_node", 44, 0x00002000UL)
 	create_boot_cache(kmem_cache_node, "kmem_cache_node",
 		sizeof(struct kmem_cache_node), SLAB_HWCACHE_ALIGN);
 
-	register_hotmemory_notifier(&slab_memory_callback_nb);
+	// create_boot_cache의 kmem_cache_node가 한일:
+	// boot_kmem_cache_node.flags: SLAB_HWCACHE_ALIGN: 0x00002000UL
+	// boot_kmem_cache_node.reserved: 0
+	// boot_kmem_cache_node.min_partial: 5
+	// boot_kmem_cache_node.cpu_partial: 30
+	// boot_kmem_cache_node.refcount: -1
+	//
+	// migratetype이 MIGRATE_UNMOVABLE인 page 할당 받음
+	// page 맴버를 셋팅함
+	// page->slab_cache: &boot_kmem_cache_node 주소를 set
+	// page->flags에 7 (PG_slab) bit를 set
+	// page->freelist: UNMOVABLE인 page 의 object의 시작 virtual address + 64
+	// page->inuse: 1, page->frozen: 0 page 맴버를 셋팅함
+	// slab 의 objects 들의 freepointer를 맵핑함
+	// 할당받은 slab object를 kmem_cache_node 로 사용하고 kmem_cache_node의 멤버 필드를 초기화함
+	// kmem_cache_node->nr_partial: 1
+	// kmem_cache_node->list_lock: spinlock 초기화 수행
+	// kmem_cache_node->slabs: 1, kmem_cache_node->total_objects: 64 로 세팀함
+	// kmem_cache_node->full: 리스트 초기화
+	// kmem_cache_node의 partial 맴버에 현재 page의 lru 리스트를 추가함
+	//
+	// kmem_cache_node: &boot_kmem_cache_node 임
+	//
+	// 할당받은 pcpu 들의 16 byte 공간 (&boot_kmem_cache_node)->cpu_slab 에
+	// 각 cpu에 사용하는 kmem_cache_cpu의 tid 맵버를 설정
+
+	register_hotmemory_notifier(&slab_memory_callback_nb); // null function
 
 	/* Able to allocate the per node structures */
+	// slab_state: DOWN
 	slab_state = PARTIAL;
+	// slab_state: PARTIAL
 
+	// slab_state 의미:
+	// slab을 초기화한 단계를 나타냄, PARTIAL은 kmem_cache_node 만 사용이 가능함
+
+// 2014/06/07 종료
+
+	// kmem_cache: &boot_kmem_cache,
+	// offsetof(struct kmem_cache, node): 128, nr_node_ids: 1
+	// sizeof(struct kmem_cache_node *): 4 SLAB_HWCACHE_ALIGN: 0x00002000UL
+	// create_boot_cache(&boot_kmem_cache, "kmem_cache", 132, 0x00002000UL)
 	create_boot_cache(kmem_cache, "kmem_cache",
 			offsetof(struct kmem_cache, node) +
 				nr_node_ids * sizeof(struct kmem_cache_node *),
@@ -4289,13 +4364,44 @@ int __kmem_cache_create(struct kmem_cache *s, unsigned long flags)
 	int err;
 
 	// s: &boot_kmem_cache_node, flags: SLAB_HWCACHE_ALIGN: 0x00002000UL
+	// kmem_cache_open(&boot_kmem_cache_node, 0x00002000UL): 0
 	err = kmem_cache_open(s, flags);
+	// err: 0
+
+	// kmem_cache_open 가 한일:
+	// boot_kmem_cache_node.flags: SLAB_HWCACHE_ALIGN: 0x00002000UL
+	// boot_kmem_cache_node.reserved: 0
+	// boot_kmem_cache_node.min_partial: 5
+	// boot_kmem_cache_node.cpu_partial: 30
+	//
+	// migratetype이 MIGRATE_UNMOVABLE인 page 할당 받음
+	// page 맴버를 셋팅함
+	// page->slab_cache: &boot_kmem_cache_node 주소를 set
+	// page->flags에 7 (PG_slab) bit를 set
+	// page->freelist: UNMOVABLE인 page 의 object의 시작 virtual address + 64
+	// page->inuse: 1, page->frozen: 0 page 맴버를 셋팅함
+	// slab 의 objects 들의 freepointer를 맵핑함
+	// 할당받은 slab object를 kmem_cache_node 로 사용하고 kmem_cache_node의 멤버 필드를 초기화함
+	// kmem_cache_node->nr_partial: 1
+	// kmem_cache_node->list_lock: spinlock 초기화 수행
+	// kmem_cache_node->slabs: 1, kmem_cache_node->total_objects: 64 로 세팀함
+	// kmem_cache_node->full: 리스트 초기화
+	// kmem_cache_node의 partial 맴버에 현재 page의 lru 리스트를 추가함
+	//
+	// kmem_cache_node 가 boot_kmem_cache_node.node[0]에 할당됨
+	//
+	// 할당받은 pcpu 들의 16 byte 공간 (&boot_kmem_cache_node)->cpu_slab 에
+	// 각 cpu에 사용하는 kmem_cache_cpu의 tid 맵버를 설정
+
+	// err: 0
 	if (err)
 		return err;
 
 	/* Mutex is not taken during early boot */
+	// slab_state: DOWN: 0, UP: 4
 	if (slab_state <= UP)
 		return 0;
+		// return 0
 
 	memcg_propagate_slab_attrs(s);
 	mutex_unlock(&slab_mutex);

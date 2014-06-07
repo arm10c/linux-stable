@@ -701,12 +701,14 @@ static DECLARE_BITMAP(cpu_possible_bits, CONFIG_NR_CPUS) __read_mostly
 	= CPU_BITS_ALL;
 #else
 // ARM10C 20140215
+// ARM10C 20140607
 // CONFIG_NR_CPUS: 4
 // cpu_possible_bits, 4
 static DECLARE_BITMAP(cpu_possible_bits, CONFIG_NR_CPUS) __read_mostly;
 #endif
 // ARM10C 20140215
 // ARM10C 20140301
+// ARM10C 20140607
 // cpu_possible_mask: cpu_possible_bits
 const struct cpumask *const cpu_possible_mask = to_cpumask(cpu_possible_bits);
 EXPORT_SYMBOL(cpu_possible_mask);

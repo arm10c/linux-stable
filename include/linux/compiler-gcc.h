@@ -121,6 +121,7 @@
 // 절대로 inline으로 사용하지 말라는 의미
 #define  noinline			__attribute__((noinline))
 #define __attribute_const__		__attribute__((__const__))
+// ARM10C 20140607
 #define __maybe_unused			__attribute__((unused))
 #define __always_unused			__attribute__((unused))
 
