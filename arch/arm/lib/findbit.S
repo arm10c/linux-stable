@@ -49,7 +49,7 @@ ENDPROC(_find_first_zero_bit_le)
 // node_bootmem_map을 아래의 값으로 가정
 // node_bootmem_map[0]: 0x7
 // ARM10C 20140607
-// chunk->populated: dchunk->populated, end: 0x4, *rs: 0x5
+// chunk->populated: dchunk->populated[0]: 0xff, end: 0x4, *rs: 0x4
 ENTRY(_find_next_zero_bit_le)
 		teq	r1, #0
 		beq	3b
@@ -94,7 +94,7 @@ ENDPROC(_find_first_bit_le)
  // ARM10C 20140215
 // p: cpu_possible_mask->bits: 0xF , sz: 4, off: 0
 // ARM10C 20140607
-// chunk->populated: dchunk->populated, end: 0x4, *rs: 0x3
+// chunk->populated: dchunk->populated[0]: 0xff, end: 0x4, *rs: 0x3
 ENTRY(_find_next_bit_le)
 		teq	r1, #0
 		beq	3b

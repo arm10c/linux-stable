@@ -172,6 +172,7 @@ static const int *pcpu_unit_map __read_mostly;		/* cpu -> unit */
 // unit_off[2]: 0x8000 * 2: 0x10000
 // unit_off[3]: 0x8000 * 3: 0x18000
 // ARM10C 20140308
+// ARM10C 20140607
 const unsigned long *pcpu_unit_offsets __read_mostly;	/* cpu -> unit offset */
 
 /* group information, used for vm allocation */
@@ -389,11 +390,11 @@ static void __maybe_unused pcpu_next_unpop(struct pcpu_chunk *chunk,
 static void __maybe_unused pcpu_next_pop(struct pcpu_chunk *chunk,
 					 int *rs, int *re, int end)
 {
-	// chunk->populated: dchunk->populated, end: 0x4, *rs: 0x3
+	// chunk->populated: dchunk->populated[0]: 0xff, end: 0x4, *rs: 0x3
 	*rs = find_next_bit(chunk->populated, end, *rs);
 	// *rs: 0x3
 	
-	// chunk->populated: dchunk->populated, end: 0x4, *rs: 0x4
+	// chunk->populated: dchunk->populated[0]: 0xff, end: 0x4, *rs: 0x3
 	*re = find_next_zero_bit(chunk->populated, end, *rs + 1);
 	// *re: 0x4
 }
@@ -489,13 +490,11 @@ static void pcpu_chunk_relocate(struct pcpu_chunk *chunk, int oslot)
 	// oslot: 11, nslot: 11
 	if (chunk != pcpu_reserved_chunk && oslot != nslot) {
 		// oslot: -1, nslot: 11
-		// oslot: 11, nslot: 11
 		if (oslot < nslot)
 			// &chunk->list: &dchunk->list, nslot: 11, &pcpu_slot[11]
 			list_move(&chunk->list, &pcpu_slot[nslot]);
 			// &pcpu_slot[11](list)에 &dchunk->list 추가
 		else
-			// &chunk->list: &dchunk->list, nslot: 11, &pcpu_slot[11]
 			list_move_tail(&chunk->list, &pcpu_slot[nslot]);
 	}
 }
@@ -780,7 +779,7 @@ static int pcpu_alloc_area(struct pcpu_chunk *chunk, int size, int align)
 			chunk->contig_hint = max(chunk->contig_hint,
 						 max_contig);
 
-		// [loop 2] chunk->free_size: dchunk->free_size 0x3000
+		// [loop 2] chunk->free_size: dchunk->free_size: 0x3000
 		// [loop 2] i: 1, chunk->map[1]: dchunk->map[1]: 16
 		chunk->free_size -= chunk->map[i];
 		// [loop 2] chunk->free_size: dchunk->free_size 0x2ff0

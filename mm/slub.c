@@ -2070,7 +2070,7 @@ static void init_kmem_cache_cpus(struct kmem_cache *s)
 	// for ((cpu) = -1; (cpu) = cpumask_next((cpu), (cpu_possible_mask)), (cpu) < nr_cpu_ids; )
 		// s->cpu_slab: (&boot_kmem_cache_node)->cpu_slab: 0xc0502d00, cpu: 0
 		// per_cpu_ptr((&boot_kmem_cache_node)->cpu_slab, 0):
-		// (&boot_kmem_cache_node)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋);
+		// (&boot_kmem_cache_node)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의 pcpu_base_addr의 옵셋)
 		// init_tid(0): 0
 		per_cpu_ptr(s->cpu_slab, cpu)->tid = init_tid(cpu);
 		// ((&boot_kmem_cache_node)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->tid: 0

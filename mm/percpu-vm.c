@@ -365,9 +365,10 @@ clear:
 		// pcpu_chunk_addr(&pcpu_slot[11], 0, 0): 128K 만큼 물리주소 0x5FFFFFFF 근처에 할당받은 주소
 		// off: 0x3d00, size: 16
 		memset((void *)pcpu_chunk_addr(chunk, cpu, 0) + off, 0, size);
-		// pcpu 0~3의 128K 물리주소에서 offset: 0x3d00 만큼 떨어진 16 bytes 를 0을로 set
+		// pcpu 0~3의 128K 물리주소에서 offset: 0x3d00 만큼 떨어진 16 bytes 를 0으로 set
 
 	return 0;
+	// return 0
 
 err_unmap:
 	pcpu_pre_unmap_flush(chunk, page_start, unmap_end);

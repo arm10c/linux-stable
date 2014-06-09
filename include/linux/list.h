@@ -52,8 +52,6 @@ static inline void INIT_LIST_HEAD(struct list_head *list)
 // new: &dchunk->list, prev: &pcpu_slot[11], next: &pcpu_slot[11]->next(&pcpu_slot[11])
 // ARM10C 20140315
 // __list_add(&waiter.list, (&(&cpu_add_remove_lock)->wait_list)->prev, &(&cpu_add_remove_lock)->wait_list)
-// ARM10C 20140607
-// new: &dchunk->list, head->prev: (&pcpu_slot[11])->prev, head: &pcpu_slot[11]
 static inline void __list_add(struct list_head *new,
 			      struct list_head *prev,
 			      struct list_head *next)
@@ -101,15 +99,10 @@ static inline void list_add(struct list_head *new, struct list_head *head)
 // list_add_tail(&svm->list, &curr_svm->list);
 // ARM10C 20140315
 // list_add_tail(&waiter.list, &(&cpu_add_remove_lock)->wait_list);
-// ARM10C 20140607
-// list: &dchunk->list, head: &pcpu_slot[11]
 static inline void list_add_tail(struct list_head *new, struct list_head *head)
 {
 	// new: &waiter.list, head->prev: (&(&cpu_add_remove_lock)->wait_list)->prev
 	// head: &(&cpu_add_remove_lock)->wait_list
-	// ARM10C 20140607
-	// new: &dchunk->list, head->prev: (&pcpu_slot[11])->prev
-	// head: &pcpu_slot[11]
 	__list_add(new, head->prev, head);
 }
 
@@ -225,17 +218,11 @@ static inline void list_move(struct list_head *list, struct list_head *head)
  * @list: the entry to move
  * @head: the head that will follow our entry
  */
-// ARM10C 20140607
-// &chunk->list: &dchunk->list, &pcpu_slot[11]
 static inline void list_move_tail(struct list_head *list,
 				  struct list_head *head)
 {
-	// list: &dchunk->list
 	__list_del_entry(list);
-	// &dchunk->list->next: &dchunk->list
-	// &dchunk->list->prev: &dchunk->list
 
-	// list: &dchunk->list, head: &pcpu_slot[11]
 	list_add_tail(list, head);
 }
 

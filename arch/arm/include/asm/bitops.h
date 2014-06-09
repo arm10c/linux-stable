@@ -162,8 +162,10 @@ extern int _test_and_change_bit(int nr, volatile unsigned long * p);
  * Little endian assembly bitops.  nr = 0 -> byte 0 bit 0.
  */
 extern int _find_first_zero_bit_le(const void * p, unsigned size);
+// ARM10C 20140607
 extern int _find_next_zero_bit_le(const void * p, int size, int offset);
 extern int _find_first_bit_le(const unsigned long *p, unsigned size);
+// ARM10C 20140607
 extern int _find_next_bit_le(const unsigned long *p, int size, int offset);
 
 /*
@@ -206,14 +208,14 @@ extern int _find_next_bit_be(const unsigned long *p, int size, int offset);
 #define find_first_zero_bit(p,sz)	_find_first_zero_bit_le(p,sz)
 // ARM10C 20131207
 // ARM10C 20140607
-// chunk->populated: dchunk->populated, end: 0x4, *rs: 0x5
+// chunk->populated: dchunk->populated[0]: 0xff, end: 0x4, *rs: 0x4
 #define find_next_zero_bit(p,sz,off)	_find_next_zero_bit_le(p,sz,off)
 #define find_first_bit(p,sz)		_find_first_bit_le(p,sz)
 // ARM10C 20140215
 // cpumask_bits(cpu_possible_mask): cpu_possible_mask->bits: 0xF , nr_cpumask_bits: 4, n: -1+1
 // p: cpu_possible_mask->bits: 0xF , sz: 4, off: 0
 // ARM10C 20140607
-// chunk->populated: dchunk->populated, end: 0x4, *rs: 0x3
+// chunk->populated: dchunk->populated[0]: 0xff, end: 0x4, *rs: 0x3
 #define find_next_bit(p,sz,off)		_find_next_bit_le(p,sz,off)
 
 #else
