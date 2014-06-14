@@ -41,6 +41,7 @@ enum stat_item {
 	NR_SLUB_STAT_ITEMS };
 
 // ARM10C 20140531
+// ARM10C 20140614
 // sizeof(struct kmem_cache_cpu): 16 bytes
 struct kmem_cache_cpu {
 	void **freelist;	/* Pointer to next available object */

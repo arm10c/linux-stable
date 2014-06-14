@@ -2670,6 +2670,7 @@ static void *__slab_alloc(struct kmem_cache *s, gfp_t gfpflags, int node,
 	// page: 0
 	if (!page)
 		goto new_slab;
+		// new_slab 심볼로 이동
 redo:
 
 	if (unlikely(!node_match(page, node))) {
@@ -3201,7 +3202,7 @@ static inline int slab_order(int size, int min_objects,
 		return get_order(size * MAX_OBJS_PER_PAGE) - 1;
 
 	// order_objects 하는 일:
-	// 현재 order 에서 reserved를 제외한 요청한 size를 가지는 사용할 수있는 object의 수를 구함
+	// 현재 order 에서 reserved를 제외한 공간에서 요청된 size를 가진 사용할 수있는 object의 수를 구함
 
 	// min_order: 0, min_objects: 16, size: 64, fls(0x3ff): 10, PAGE_SHIFT: 12
 	// order: 0, max_order: 3
@@ -3819,7 +3820,7 @@ static int calculate_sizes(struct kmem_cache *s, int forced_order)
 		// s->max: boot_kmem_cache.max.x: 21
 
 	// s->oo: boot_kmem_cache_node.oo, oo_objects(boot_kmem_cache_node.oo): 64
-	// s->oo: boot_kmem_cache.oo, oo_objects(boot_kmem_cache_node.oo): 21
+	// s->oo: boot_kmem_cache.oo, oo_objects(boot_kmem_cache.oo): 21
 	return !!oo_objects(s->oo);
 	// return 1
 	// return 1
@@ -3851,7 +3852,7 @@ static int kmem_cache_open(struct kmem_cache *s, unsigned long flags)
 		s->reserved = sizeof(struct rcu_head);
 
 	// s: &boot_kmem_cache_node, -1, calculate_sizes(&boot_kmem_cache_node, -1): 1
-	// s: &boot_kmem_cache, -1, calculate_sizes(&boot_kmem_cache_node, -1): 1
+	// s: &boot_kmem_cache, -1, calculate_sizes(&boot_kmem_cache, -1): 1
 	if (!calculate_sizes(s, -1))
 		goto error;
 
@@ -3887,7 +3888,7 @@ static int kmem_cache_open(struct kmem_cache *s, unsigned long flags)
 	 */
 	// s->size: boot_kmem_cache_node.size: 64, ilog2(64): 6
 	// s: &boot_kmem_cache_node, 3
-	// s->size: boot_kmem_cache_node.size: 192, ilog2(192): 7
+	// s->size: boot_kmem_cache.size: 192, ilog2(192): 7
 	// s: &boot_kmem_cache, 3
 	set_min_partial(s, ilog2(s->size) / 2);
 	// boot_kmem_cache_node.min_partial: 5
@@ -3914,7 +3915,7 @@ static int kmem_cache_open(struct kmem_cache *s, unsigned long flags)
 	// s: &boot_kmem_cache_node, kmem_cache_has_cpu_partial(&boot_kmem_cache_node): 1
 	// s->size: boot_kmem_cache_node.size: 64, PAGE_SIZE: 0x1000
 	// s: &boot_kmem_cache, kmem_cache_has_cpu_partial(&boot_kmem_cache): 1
-	// s->size: boot_kmem_cache_node.size: 192, PAGE_SIZE: 0x1000
+	// s->size: boot_kmem_cache.size: 192, PAGE_SIZE: 0x1000
 	if (!kmem_cache_has_cpu_partial(s))
 		s->cpu_partial = 0;
 	else if (s->size >= PAGE_SIZE)

@@ -141,4 +141,5 @@
 // ARM10C 20140405
 #define uninitialized_var(x) x = x
 
+// ARM10C 20140614
 #define __always_inline		inline __attribute__((always_inline))
