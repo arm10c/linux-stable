@@ -464,6 +464,7 @@ static inline void list_splice_tail_init(struct list_head *list,
  * @pos:	the type * to cursor
  * @member:	the name of the list_struct within the struct.
  */
+// ARM10C 20140614
 #define list_next_entry(pos, member) \
 	list_entry((pos)->member.next, typeof(*(pos)), member)
 
@@ -598,6 +599,12 @@ static inline void list_splice_tail_init(struct list_head *list,
  * @head:	the head for your list.
  * @member:	the name of the list_struct within the struct.
  */
+// ARM10C 20140614
+// #define list_for_each_entry_safe(page, page2, &n->partial, lru)
+// 	for (page = list_first_entry(&n->partial, typeof(*page), lru),
+// 		page2 = list_next_entry(page, lru);
+// 	     &page->lru != (&n->partial);
+// 	     page = page2, page2 = list_next_entry(page2, lru))
 #define list_for_each_entry_safe(pos, n, head, member)			\
 	for (pos = list_first_entry(head, typeof(*pos), member),	\
 		n = list_next_entry(pos, member);			\

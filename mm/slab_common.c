@@ -122,6 +122,8 @@ out:
  */
 // ARM10C 20140419
 // flags: SLAB_HWCACHE_ALIGN: 0x00002000UL, ARCH_KMALLOC_MINALIGN: 64, size: 44
+// ARM10C 20140614
+// flags: SLAB_HWCACHE_ALIGN: 0x00002000UL, ARCH_KMALLOC_MINALIGN: 64, size: 132
 unsigned long calculate_alignment(unsigned long flags,
 		unsigned long align, unsigned long size)
 {
@@ -139,6 +141,7 @@ unsigned long calculate_alignment(unsigned long flags,
 		// ralign: 64
 
 		// size : 44, ralign: 64
+		// size : 132, ralign: 64
 		while (size <= ralign / 2)
 			ralign /= 2;
 
@@ -313,28 +316,41 @@ int slab_is_available(void)
 // ARM10C 20140419
 // &boot_kmem_cache_node, "kmem_cache_node", sizeof(struct kmem_cache_node): 44 byte,
 // SLAB_HWCACHE_ALIGN: 0x00002000UL
+// ARM10C 20140614
+// &boot_kmem_cache, "kmem_cache", 132, SLAB_HWCACHE_ALIGN: 0x00002000UL
 void __init create_boot_cache(struct kmem_cache *s, const char *name, size_t size,
 		unsigned long flags)
 {
 	int err;
 
 	// s->name: boot_kmem_cache_node.name: NULL
+	// s->name: boot_kmem_cache.name: NULL
 	s->name = name;
 	// s->name: boot_kmem_cache_node.name: "kmem_cache_node"
+	// s->name: boot_kmem_cache.name: "kmem_cache"
 
 	// s->size: boot_kmem_cache_node.size: 0
 	// s->object_size: boot_kmem_cache_node.object_size: 0
+	// s->size: boot_kmem_cache.size: 0
+	// s->object_size: boot_kmem_cache.object_size: 0
 	s->size = s->object_size = size;
 	// s->size: boot_kmem_cache_node.size: 44
 	// s->object_size: boot_kmem_cache_node.object_size: 44
+	// s->size: boot_kmem_cache.size: 132
+	// s->object_size: boot_kmem_cache.object_size: 132
 	
 	// flags: SLAB_HWCACHE_ALIGN: 0x00002000UL, ARCH_KMALLOC_MINALIGN: 64, size: 44
 	// s->align: boot_kmem_cache_node.align: 0
+	// flags: SLAB_HWCACHE_ALIGN: 0x00002000UL, ARCH_KMALLOC_MINALIGN: 64, size: 132
+	// s->align: boot_kmem_cache.align: 0
 	s->align = calculate_alignment(flags, ARCH_KMALLOC_MINALIGN, size);
 	// s->align: boot_kmem_cache_node.align: 64
+	// s->align: boot_kmem_cache.align: 64
 	
 	// s: &boot_kmem_cache_node, flags: SLAB_HWCACHE_ALIGN: 0x00002000UL
 	// __kmem_cache_create(&boot_kmem_cache_node, 0x00002000UL): 0
+	// s: &boot_kmem_cache, flags: SLAB_HWCACHE_ALIGN: 0x00002000UL
+	// __kmem_cache_create(&boot_kmem_cache, 0x00002000UL): 0
 	err = __kmem_cache_create(s, flags);
 	// err: 0
 

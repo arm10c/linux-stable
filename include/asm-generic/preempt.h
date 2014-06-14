@@ -81,7 +81,8 @@ static __always_inline bool should_resched(void)
 	return unlikely(!preempt_count() && tif_need_resched());
 }
 
-#ifdef CONFIG_PREEMPT
+#ifdef CONFIG_PREEMPT // CONFIG_PREEMPT=y
+// ARM10C 20140614
 extern asmlinkage void preempt_schedule(void);
 #define __preempt_schedule() preempt_schedule()
 

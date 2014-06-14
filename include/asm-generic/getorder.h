@@ -11,28 +11,38 @@
  */
 // ARM10C 20140419
 // size: 64
+// ARM10C 20140614
+// size: 192
 static inline __attribute_const__
 int __get_order(unsigned long size)
 {
 	int order;
 
 	// size: 64
+	// size: 192
 	size--;
 	// size: 63
+	// size: 191
 
 	// size: 63, PAGE_SHIFT: 12
+	// size: 191, PAGE_SHIFT: 12
 	size >>= PAGE_SHIFT;
+	// size : 0
 	// size : 0
 
 #if BITS_PER_LONG == 32 // BITS_PER_LONG: 32
 	// size : 0
+	// size : 0
 	order = fls(size);
+	// order: 0
 	// order: 0
 #else
 	order = fls64(size);
 #endif
 	// order: 0
+	// order: 0
 	return order;
+	// return 0
 	// return 0
 }
 
@@ -59,6 +69,7 @@ int __get_order(unsigned long size)
  * evaluations of constants.
  */
 // ARM10C 20140419
+// ARM10C 20140614
 #define get_order(n)						\
 (								\
 	__builtin_constant_p(n) ? (				\

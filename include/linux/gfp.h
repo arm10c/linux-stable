@@ -111,6 +111,7 @@ struct vm_area_struct;
 // These are used to set parameters to allocating virtual memory
 // ARM10C 20140426
 // ARM10C 20140524
+// ARM10C 20140614
 // ___GFP_WAIT: 0x10u
 // __GFP_WAIT: 0x10u
 #define __GFP_WAIT	((__force gfp_t)___GFP_WAIT)	/* Can wait and reschedule? */
@@ -218,6 +219,7 @@ struct vm_area_struct;
 #define GFP_NOIO	(__GFP_WAIT)
 #define GFP_NOFS	(__GFP_WAIT | __GFP_IO)
 // ARM10C 20140308
+// ARM10C 20140614
 // __GFP_WAIT: 0x10
 // __GFP_IO: 0x40
 // __GFP_FS: 0x80

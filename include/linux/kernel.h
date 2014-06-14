@@ -126,6 +126,7 @@
 // ARM10C 20131026
 // ARM10C 20140125
 // ARM10C 20140315
+// ARM10C 20140614
 #define _RET_IP_		(unsigned long)__builtin_return_address(0)
 #define _THIS_IP_  ({ __label__ __here; __here: (unsigned long)&&__here; })
 
@@ -194,6 +195,7 @@ extern int _cond_resched(void);
 #endif
 
 // ARM10C 20140426
+// ARM10C 20140614
 #define might_sleep_if(cond) do { if (cond) might_sleep(); } while (0)
 
 /*

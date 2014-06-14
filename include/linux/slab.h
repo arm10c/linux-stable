@@ -327,7 +327,7 @@ static __always_inline int kmalloc_index(size_t size)
 void *__kmalloc(size_t size, gfp_t flags);
 void *kmem_cache_alloc(struct kmem_cache *, gfp_t flags);
 
-#ifdef CONFIG_NUMA
+#ifdef CONFIG_NUMA // CONFIG_NUMA=n
 void *__kmalloc_node(size_t size, gfp_t flags, int node);
 void *kmem_cache_alloc_node(struct kmem_cache *, gfp_t flags, int node);
 #else
@@ -336,8 +336,11 @@ static __always_inline void *__kmalloc_node(size_t size, gfp_t flags, int node)
 	return __kmalloc(size, flags);
 }
 
+// ARM10C 20140614
+// kmem_cache_node: &boot_kmem_cache_node, GFP_KERNEL: 0xD0, node: 0
 static __always_inline void *kmem_cache_alloc_node(struct kmem_cache *s, gfp_t flags, int node)
 {
+	// s: &boot_kmem_cache_node, flags: GFP_KERNEL: 0xD0
 	return kmem_cache_alloc(s, flags);
 }
 #endif

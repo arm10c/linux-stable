@@ -660,10 +660,14 @@ static inline void memcg_cache_list_add(struct mem_cgroup *memcg,
 {
 }
 
+// ARM10C 20140614
+// s: &boot_kmem_cache_node, gfpflags: GFP_KERNEL: 0xD0
 static inline struct kmem_cache *
 memcg_kmem_get_cache(struct kmem_cache *cachep, gfp_t gfp)
 {
+	// cachep: &boot_kmem_cache_node
 	return cachep;
+	// return &boot_kmem_cache_node
 }
 
 static inline void kmem_cache_destroy_memcg_children(struct kmem_cache *s)
