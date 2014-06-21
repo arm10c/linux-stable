@@ -301,16 +301,25 @@ static void pcpu_post_map_flush(struct pcpu_chunk *chunk,
 // ARM10C 20140607
 // chuck: &pcpu_slot[11]: dchunk: 4K만큼 할당 받은 주소,
 // off: 0x1d00 + 0x2000, size: 16
+// ARM10C 20140621
+// chuck: &pcpu_slot[11]: dchunk: 4K만큼 할당 받은 주소,
+// off: 0x1d00 + 0x2000 + 16, size: 16
 static int pcpu_populate_chunk(struct pcpu_chunk *chunk, int off, int size)
 {
 	// off: 0x1d00 + 0x2000, PFN_DOWN(0x1d00 + 0x2000): 0x3
+	// off: 0x1d00 + 0x2000 + 16, PFN_DOWN(0x1d00 + 0x2000 + 16): 0x3
 	int page_start = PFN_DOWN(off);
 	// page_start: 0x3
+	// page_start: 0x3
 	// off: 0x1d00 + 0x2000, size: 16, PFN_UP(0x1d00 + 0x2000 + 16): 0x4
+	// off: 0x1d00 + 0x2000 + 16, size: 16, PFN_UP(0x1d00 + 0x2000 + 16 + 16): 0x4
 	int page_end = PFN_UP(off + size);
 	// page_end: 0x4
+	// page_end: 0x4
+	// page_start: 0x3
 	// page_start: 0x3
 	int free_end = page_start, unmap_end = page_start;
+	// free_end: 0x3, unmap_end: 0x3
 	// free_end: 0x3, unmap_end: 0x3
 	struct page **pages;
 	unsigned long *populated;
@@ -319,16 +328,22 @@ static int pcpu_populate_chunk(struct pcpu_chunk *chunk, int off, int size)
 
 	/* quick path, check whether all pages are already there */
 	// page_start: 0x3
+	// page_start: 0x3
 	rs = page_start;
+	// rs: 0x3
 	// rs: 0x3
 
 	// chuck: &pcpu_slot[11]: dchunk: 4K만큼 할당 받은 주소, rs: 0x3, page_end: 0x4
+	// chuck: &pcpu_slot[11]: dchunk: 4K만큼 할당 받은 주소, rs: 0x3, page_end: 0x4
 	pcpu_next_pop(chunk, &rs, &re, page_end);
+	// rs: 3, re: 4
 	// rs: 3, re: 4
 	
 	// rs: 3, page_start: 0x3, re: 4, page_end: 0x4
+	// rs: 3, page_start: 0x3, re: 4, page_end: 0x4
 	if (rs == page_start && re == page_end)
 		goto clear;
+		// clear 심볼로 점프
 		// clear 심볼로 점프
 
 	/* need to allocate and map pages, this chunk can't be immutable */
@@ -359,15 +374,22 @@ static int pcpu_populate_chunk(struct pcpu_chunk *chunk, int off, int size)
 clear:
 	// nr_cpu_ids: 4, cpu_possible_mask: cpu_possible_bits[1]
 	// cpumask_next((-1), cpu_possible_bits[1]): 0
+	// nr_cpu_ids: 4, cpu_possible_mask: cpu_possible_bits[1]
+	// cpumask_next((-1), cpu_possible_bits[1]): 0
 	for_each_possible_cpu(cpu)
 	// for ((cpu) = -1; (cpu) = cpumask_next((cpu), (cpu_possible_mask)), (cpu) < nr_cpu_ids; )
 		// chuck: &pcpu_slot[11]: dchunk: 4K만큼 할당 받은 주소, cpu: 0
 		// pcpu_chunk_addr(&pcpu_slot[11], 0, 0): 128K 만큼 물리주소 0x5FFFFFFF 근처에 할당받은 주소
 		// off: 0x3d00, size: 16
+		// chuck: &pcpu_slot[11]: dchunk: 4K만큼 할당 받은 주소, cpu: 0
+		// pcpu_chunk_addr(&pcpu_slot[11], 0, 0): 128K 만큼 물리주소 0x5FFFFFFF 근처에 할당받은 주소
+		// off: 0x3d00, size: 16
 		memset((void *)pcpu_chunk_addr(chunk, cpu, 0) + off, 0, size);
+		// pcpu 0~3의 128K 물리주소에서 offset: 0x3d00 만큼 떨어진 16 bytes 를 0으로 set
 		// pcpu 0~3의 128K 물리주소에서 offset: 0x3d00 만큼 떨어진 16 bytes 를 0으로 set
 
 	return 0;
+	// return 0
 	// return 0
 
 err_unmap:

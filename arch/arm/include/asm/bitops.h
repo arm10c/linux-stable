@@ -182,20 +182,23 @@ extern int _find_next_bit_be(const unsigned long *p, int size, int offset);
  */
 #define ATOMIC_BITOP(name,nr,p)			\
 	(__builtin_constant_p(nr) ? ____atomic_##name(nr, p) : _##name(nr,p))
-#else	// ARM10C Y 
+#else	// ARM10C Y
 // ARM10C 20131207
 // _test_and_clear_bit
 // _test_and_set_bit
-#define ATOMIC_BITOP(name,nr,p)		_##name(nr,p)	// ARM10C this 
+// ARM10C 20140621
+#define ATOMIC_BITOP(name,nr,p)		_##name(nr,p)	// ARM10C this
 #endif
 
 /*
  * Native endian atomic definitions.
  */
-#define set_bit(nr,p)			ATOMIC_BITOP(set_bit,nr,p)  // _set_bit(nr,p)로 치환 
+#define set_bit(nr,p)			ATOMIC_BITOP(set_bit,nr,p)  // _set_bit(nr,p)로 치환
 #define clear_bit(nr,p)			ATOMIC_BITOP(clear_bit,nr,p)
 #define change_bit(nr,p)		ATOMIC_BITOP(change_bit,nr,p)
 // ARM10C 20131207
+// ARM10C 20140621
+// bitnum: 0, addr: &(MIGRATE_UNMOVABLE인 page)->flags
 #define test_and_set_bit(nr,p)		ATOMIC_BITOP(test_and_set_bit,nr,p)
 // ARM10C 20131207
 #define test_and_clear_bit(nr,p)	ATOMIC_BITOP(test_and_clear_bit,nr,p)

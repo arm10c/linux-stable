@@ -25,6 +25,7 @@ static inline void __set_bit(int nr, volatile unsigned long *addr)
 
 // ARM10C 20140118
 // bitidx + start_bitidx : 0, bitmap : &mem_section[0][2]->pageblock_flags
+// ARM10C 20140621
 static inline void __clear_bit(int nr, volatile unsigned long *addr)
 {
 	// mask : 0x1

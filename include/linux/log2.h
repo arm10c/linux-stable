@@ -191,6 +191,8 @@ unsigned long __rounddown_pow_of_two(unsigned long n)
 // ARM10C 20140322
 // [iCA] numentries : 0xBC00: 48128
 // return : 65536
+// ARM10C 20140621
+// CONFIG_NR_CPUS: 4
 #define roundup_pow_of_two(n)			\
 (						\
 	__builtin_constant_p(n) ? (		\

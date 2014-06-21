@@ -18,6 +18,11 @@
 // ARM10C 20131109
 #define dsb(option) __asm__ __volatile__ ("dsb " #option : : : "memory")
 // ARM10C 20131109
+// ARM10C 20140621
+// A.R.M: A8.8.43 DMB
+// ISH option:
+// ISH Inner Shareable is the required shareability domain, reads and writes are the required
+// access types. Encoded as option = 0b1011.
 #define dmb(option) __asm__ __volatile__ ("dmb " #option : : : "memory")
 #elif defined(CONFIG_CPU_XSC3) || __LINUX_ARM_ARCH__ == 6
 #define isb(x) __asm__ __volatile__ ("mcr p15, 0, %0, c7, c5, 4" \
@@ -51,12 +56,18 @@
 #define wmb()		barrier()
 #endif
 
-#ifndef CONFIG_SMP
+#ifndef CONFIG_SMP // CONFIG_SMP=y
 #define smp_mb()	barrier()
 #define smp_rmb()	barrier()
 #define smp_wmb()	barrier()
 #else
 // ARM10C 20140125
+// ARM10C 20140621
+// A.R.M: A8.8.43 DMB
+// ISH option:
+// ISH Inner Shareable is the required shareability domain, reads and writes are the required
+// access types. Encoded as option = 0b1011.
+// 공유자원을 다른 cpu core가 사용할수 있게 해주는 옵션
 #define smp_mb()	dmb(ish)
 #define smp_rmb()	smp_mb()
 // ARM10C 20140308

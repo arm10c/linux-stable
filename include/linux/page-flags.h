@@ -142,6 +142,16 @@ enum pageflags {
 // PG_compound: 14
 // PageCompound(const struct page *page)
 // { return test_bit(PG_compound, &page->flags); }
+// ARM10C 20140621
+// PG_slab: 7
+// TESTPAGEFLAG(Slab, slab):
+// static inline int PageSlab(const struct page *page)
+// { return test_bit(PG_slab, &page->flags); }
+// ARM10C 20140621
+// PG_active: 6
+// TESTPAGEFLAG(Active, active):
+// static inline int PageActive(const struct page *page)
+// { return test_bit(PG_active, &page->flags); }
 #define TESTPAGEFLAG(uname, lname)					\
 static inline int Page##uname(const struct page *page)			\
 			{ return test_bit(PG_##lname, &page->flags); }
@@ -149,15 +159,24 @@ static inline int Page##uname(const struct page *page)			\
 // ARM10C 20140118
 // SetPageReserved()
 // set_bit(PG_reserved, &page->flags)
+// ARM10C 20140621
+// SETPAGEFLAG(Active, active):
+// static inline void SetPageActive(struct page *page)
+// { set_bit(PG_active, &page->flags); }
 #define SETPAGEFLAG(uname, lname)					\
 static inline void SetPage##uname(struct page *page)			\
 			{ set_bit(PG_##lname, &page->flags); }
 
+// ARM10C 20140621
+// CLEARPAGEFLAG(Active, active):
+// static inline void ClearPageActive(struct page *page)
+// { clear_bit(PG_active, &page->flags); }
 #define CLEARPAGEFLAG(uname, lname)					\
 static inline void ClearPage##uname(struct page *page)			\
 			{ clear_bit(PG_##lname, &page->flags); }
 
 // ARM10C 20140531
+// ARM10C 20140621
 //__SetPageSlab:
 //
 // PG_slab: 7
@@ -170,6 +189,14 @@ static inline void __SetPage##uname(struct page *page)			\
 
 // ARM10C 20140118
 // ARM10C 20140329
+// ARM10C 20140621
+// __CLEARPAGEFLAG(Slab, slab):
+// static inline void __ClearPageSlab(struct page *page)
+// { __clear_bit(PG_slab, &page->flags); }
+// ARM10C 20140621
+// __CLEARPAGEFLAG(Active, active)
+// static inline void __ClearPageActive(struct page *page)
+// { __clear_bit(PG_active, &page->flags); }
 #define __CLEARPAGEFLAG(uname, lname)					\
 static inline void __ClearPage##uname(struct page *page)		\
 			{ __clear_bit(PG_##lname, &page->flags); }
@@ -178,6 +205,10 @@ static inline void __ClearPage##uname(struct page *page)		\
 static inline int TestSetPage##uname(struct page *page)			\
 		{ return test_and_set_bit(PG_##lname, &page->flags); }
 
+// ARM10C 20140621
+// TESTCLEARFLAG(Active, active):
+// static inline int TestClearPageActive(struct page *page)
+// { return test_and_clear_bit(PG_active, &page->flags); }
 #define TESTCLEARFLAG(uname, lname)					\
 static inline int TestClearPage##uname(struct page *page)		\
 		{ return test_and_clear_bit(PG_##lname, &page->flags); }
@@ -186,10 +217,20 @@ static inline int TestClearPage##uname(struct page *page)		\
 static inline int __TestClearPage##uname(struct page *page)		\
 		{ return __test_and_clear_bit(PG_##lname, &page->flags); }
 
+// ARM10C 20140621
+// PAGEFLAG(Active, active):
+// TESTPAGEFLAG(Active, active)
+// SETPAGEFLAG(Active, active)
+// CLEARPAGEFLAG(Active, active)
 #define PAGEFLAG(uname, lname) TESTPAGEFLAG(uname, lname)		\
 	SETPAGEFLAG(uname, lname) CLEARPAGEFLAG(uname, lname)
 
 // ARM10C 20140531
+// ARM10C 20140621
+// __PAGEFLAG(Slab, slab):
+// TESTPAGEFLAG(Slab, slab)
+// __SETPAGEFLAG(Slab, slab)
+// __CLEARPAGEFLAG(Slab, slab)
 #define __PAGEFLAG(uname, lname) TESTPAGEFLAG(uname, lname)		\
 	__SETPAGEFLAG(uname, lname)  __CLEARPAGEFLAG(uname, lname)
 
@@ -222,9 +263,11 @@ PAGEFLAG(Error, error) TESTCLEARFLAG(Error, error)
 PAGEFLAG(Referenced, referenced) TESTCLEARFLAG(Referenced, referenced)
 PAGEFLAG(Dirty, dirty) TESTSCFLAG(Dirty, dirty) __CLEARPAGEFLAG(Dirty, dirty)
 PAGEFLAG(LRU, lru) __CLEARPAGEFLAG(LRU, lru)
+// ARM10C 20140621
 PAGEFLAG(Active, active) __CLEARPAGEFLAG(Active, active)
 	TESTCLEARFLAG(Active, active)
 // ARM10C 20140531
+// ARM10C 20140621
 // page: migratetype이 MIGRATE_UNMOVABLE인 page
 __PAGEFLAG(Slab, slab)
 PAGEFLAG(Checked, checked)		/* Used by some filesystems */
@@ -504,8 +547,12 @@ static inline int PageTransTail(struct page *page)
  * If network-based swap is enabled, sl*b must keep track of whether pages
  * were allocated from pfmemalloc reserves.
  */
+// ARM10C 20140621
+// page: MIGRATE_UNMOVABLE인 page
 static inline int PageSlabPfmemalloc(struct page *page)
 {
+	// page: MIGRATE_UNMOVABLE인 page
+	// PageSlab(MIGRATE_UNMOVABLE인 page): 1
 	VM_BUG_ON(!PageSlab(page));
 	return PageActive(page);
 }

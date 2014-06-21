@@ -26,10 +26,12 @@
 // ARM10C 20140419
 // ARM10C 20140524
 // ARM10C 20140531
+// ARM10C 20140621
 #define SLAB_RED_ZONE		0x00000400UL	/* DEBUG: Red zone objs in a cache */
 // ARM10C 20140419
 // ARM10C 20140524
 // ARM10C 20140531
+// ARM10C 20140621
 #define SLAB_POISON		0x00000800UL	/* DEBUG: Poison objects */
 // ARM10C 20140419
 // ARM10C 20140607
@@ -38,6 +40,7 @@
 // ARM10C 20140419
 // ARM10C 20140524
 // ARM10C 20140531
+// ARM10C 20140621
 #define SLAB_STORE_USER		0x00010000UL	/* DEBUG: Store the last owner for bug hunting */
 #define SLAB_PANIC		0x00040000UL	/* Panic if kmem_cache_create() fails */
 /*
@@ -76,6 +79,7 @@
  * taking the spinlock within the structure expected at that address.
  */
 // ARM10C 20140419
+// ARM10C 20140621
 #define SLAB_DESTROY_BY_RCU	0x00080000UL	/* Defer freeing slabs to RCU */
 #define SLAB_MEM_SPREAD		0x00100000UL	/* Spread some memory over cpuset */
 // ARM10C 20140419
@@ -342,6 +346,7 @@ static __always_inline void *kmem_cache_alloc_node(struct kmem_cache *s, gfp_t f
 {
 	// s: &boot_kmem_cache_node, flags: GFP_KERNEL: 0xD0
 	return kmem_cache_alloc(s, flags);
+	// return UNMOVABLE인 page 의 object의 시작 virtual address + 64
 }
 #endif
 

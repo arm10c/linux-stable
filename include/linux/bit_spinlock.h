@@ -12,6 +12,8 @@
  * Don't use this unless you really need to: spin_lock() and spin_unlock()
  * are significantly faster.
  */
+// ARM10C 20140621
+// PG_locked: 0, page->flags: (MIGRATE_UNMOVABLE인 page)->flags
 static inline void bit_spin_lock(int bitnum, unsigned long *addr)
 {
 	/*
@@ -22,7 +24,11 @@ static inline void bit_spin_lock(int bitnum, unsigned long *addr)
 	 * attempt to acquire the lock bit.
 	 */
 	preempt_disable();
-#if defined(CONFIG_SMP) || defined(CONFIG_DEBUG_SPINLOCK)
+	// preempt count 증가 후 memory barrier 적용
+
+#if defined(CONFIG_SMP) || defined(CONFIG_DEBUG_SPINLOCK) // CONFIG_SMP=y, CONFIG_DEBUG_SPINLOCK=y
+	// bitnum: 0, addr: &(MIGRATE_UNMOVABLE인 page)->flags
+	// test_and_set_bit_lock(0, &(MIGRATE_UNMOVABLE인 page)->flags): 0
 	while (unlikely(test_and_set_bit_lock(bitnum, addr))) {
 		preempt_enable();
 		do {
@@ -31,6 +37,7 @@ static inline void bit_spin_lock(int bitnum, unsigned long *addr)
 		preempt_disable();
 	}
 #endif
+	// __acquire(bitlock): 0
 	__acquire(bitlock);
 }
 
@@ -70,15 +77,25 @@ static inline void bit_spin_unlock(int bitnum, unsigned long *addr)
  *  non-atomic version, which can be used eg. if the bit lock itself is
  *  protecting the rest of the flags in the word.
  */
+// ARM10C 20140621
+// PG_locked: 0, page->flags: &(MIGRATE_UNMOVABLE인 page)->flags
 static inline void __bit_spin_unlock(int bitnum, unsigned long *addr)
 {
-#ifdef CONFIG_DEBUG_SPINLOCK
+#ifdef CONFIG_DEBUG_SPINLOCK // CONFIG_DEBUG_SPINLOCK=y
+	// bitnum: 0, addr: &(MIGRATE_UNMOVABLE인 page)->flags
+	// test_bit(0, &(MIGRATE_UNMOVABLE인 page)->flags): 1
 	BUG_ON(!test_bit(bitnum, addr));
 #endif
-#if defined(CONFIG_SMP) || defined(CONFIG_DEBUG_SPINLOCK)
+#if defined(CONFIG_SMP) || defined(CONFIG_DEBUG_SPINLOCK) // CONFIG_SMP=y, CONFIG_DEBUG_SPINLOCK=y
+	// bitnum: 0, addr: &(MIGRATE_UNMOVABLE인 page)->flags
 	__clear_bit_unlock(bitnum, addr);
+	// (MIGRATE_UNMOVABLE인 page)->flags 의 bit 0을 클리어함
+	// dmb(ish)를 사용하여 공유 자원 (MIGRATE_UNMOVABLE인 page)->flags 값을 갱신
 #endif
 	preempt_enable();
+	// memory barrier 적용 후 preempt count 감소 시킴
+
+	// __release(bitlock): 0
 	__release(bitlock);
 }
 

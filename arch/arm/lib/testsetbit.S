@@ -13,4 +13,5 @@
                 .text
 
 // ARM10C 20131207
+// ARM10C 20140621
 testop	_test_and_set_bit, orreq, streq

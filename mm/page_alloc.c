@@ -124,6 +124,7 @@ unsigned long dirty_balance_reserve __read_mostly;
 int percpu_pagelist_fraction;
 // ARM10C 20140426
 // ARM10C 20140614
+// ARM10C 20140621
 // GFP_BOOT_MASK: 0x1ffff2f
 // gfp_allowed_mask: 0x1ffff2f
 gfp_t gfp_allowed_mask __read_mostly = GFP_BOOT_MASK;

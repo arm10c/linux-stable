@@ -43,7 +43,8 @@ struct address_space;
  */
 // ARM10C 20140111
 // ARM10C 20140329
-// sizeof( struct page ) : 44byte
+// ARM10C 20140621
+// sizeof(struct page): 32 bytes
 struct page {
 	/* First double word block */
 	unsigned long flags;		/* Atomic flags, some possibly
@@ -60,6 +61,8 @@ struct page {
 	};
 
 	/* Second double word */
+	// FIXME: double word가 맞나? 주석이 잘못된 것으로 보임
+	// 계산해보고, compile하여 돌려 보면 12 bytes 계산됨
 	struct {
 		union {
 			pgoff_t index;		/* Our offset within mapping. */
@@ -77,6 +80,7 @@ struct page {
 		};				// index : migratetype이 저장됨
 
 		union {
+// CONFIG_HAVE_CMPXCHG_DOUBLE=n, CONFIG_HAVE_ALIGNED_STRUCT_PAGE=n
 #if defined(CONFIG_HAVE_CMPXCHG_DOUBLE) && \
 	defined(CONFIG_HAVE_ALIGNED_STRUCT_PAGE)
 			/* Used for cmpxchg_double in slub */
@@ -180,15 +184,15 @@ struct page {
 	 * Architectures with slow multiplication can define
 	 * WANT_PAGE_VIRTUAL in asm/page.h
 	 */
-#if defined(WANT_PAGE_VIRTUAL)
+#if defined(WANT_PAGE_VIRTUAL) /// undefined
 	void *virtual;			/* Kernel virtual address (NULL if
 					   not kmapped, ie. highmem) */
 #endif /* WANT_PAGE_VIRTUAL */
-#ifdef CONFIG_WANT_PAGE_DEBUG_FLAGS
+#ifdef CONFIG_WANT_PAGE_DEBUG_FLAGS // CONFIG_WANT_PAGE_DEBUG_FLAGS=n
 	unsigned long debug_flags;	/* Use atomic bitops on this */
 #endif
 
-#ifdef CONFIG_KMEMCHECK
+#ifdef CONFIG_KMEMCHECK // CONFIG_KMEMCHECK=n
 	/*
 	 * kmemcheck wants to track the status of each byte in a page; this
 	 * is a pointer to such a status block. NULL if not tracked.
@@ -196,7 +200,7 @@ struct page {
 	void *shadow;
 #endif
 
-#ifdef LAST_CPUPID_NOT_IN_PAGE_FLAGS
+#ifdef LAST_CPUPID_NOT_IN_PAGE_FLAGS // undefined
 	int _last_cpupid;
 #endif
 }

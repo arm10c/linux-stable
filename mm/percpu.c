@@ -337,6 +337,8 @@ static int pcpu_size_to_slot(int size)
 // chunk: pcpu_first_chunk: dchunk
 // ARM10C 20140531
 // chuck: &pcpu_slot[11]: dchunk: 4K만큼 할당 받은 주소
+// ARM10C 20140621
+// chuck: &pcpu_slot[11]: dchunk: 4K만큼 할당 받은 주소
 static int pcpu_chunk_slot(const struct pcpu_chunk *chunk)
 {
 	// chunk->free_size: dchunk->free_size: 0x3000
@@ -476,16 +478,22 @@ static void pcpu_mem_free(void *ptr, size_t size)
 // chunk: pcpu_first_chunk: dchunk, oslot: -1
 // ARM10C 20140607
 // chuck: &pcpu_slot[11]: dchunk: 4K만큼 할당 받은 주소, oslot: 11
+// ARM10C 20140621
+// chuck: &pcpu_slot[11]: dchunk: 4K만큼 할당 받은 주소, oslot: 11
 static void pcpu_chunk_relocate(struct pcpu_chunk *chunk, int oslot)
 {
+	// chunk: dchunk
 	// chunk: dchunk
 	// chunk: dchunk
 	int nslot = pcpu_chunk_slot(chunk);
 	// nslot: 11
 	// nslot: 11
+	// nslot: 11
 
 	// chunk: dchunk, pcpu_reserved_chunk: pcpu_setup_first_chunk()함수에서 할당한 schunk
 	// oslot: -1, nslot: 11
+	// chunk: dchunk, pcpu_reserved_chunk: pcpu_setup_first_chunk()함수에서 할당한 schunk
+	// oslot: 11, nslot: 11
 	// chunk: dchunk, pcpu_reserved_chunk: pcpu_setup_first_chunk()함수에서 할당한 schunk
 	// oslot: 11, nslot: 11
 	if (chunk != pcpu_reserved_chunk && oslot != nslot) {
@@ -515,14 +523,19 @@ static void pcpu_chunk_relocate(struct pcpu_chunk *chunk, int oslot)
  */
 // ARM10C 20140531
 // chuck: &pcpu_slot[11]: dchunk: 4K만큼 할당 받은 주소
+// ARM10C 20140621
+// chuck: &pcpu_slot[11]: dchunk: 4K만큼 할당 받은 주소
 static int pcpu_need_to_extend(struct pcpu_chunk *chunk)
 {
 	int new_alloc;
 
 	// chunk->map_alloc: dchunk->map_alloc: 128,
 	// chunk->map_used: dchunk->map_used: 2
+	// chunk->map_alloc: dchunk->map_alloc: 128,
+	// chunk->map_used: dchunk->map_used: 3
 	if (chunk->map_alloc >= chunk->map_used + 2)
 		return 0;
+		// return 0 수행
 		// return 0 수행
 
 	new_alloc = PCPU_DFL_MAP_ALLOC;
@@ -604,17 +617,24 @@ out_unlock:
  * pcpu_lock.
  */
 // ARM10C 20140607
-// [loop 2] chuck: &pcpu_slot[11]: dchunk: 4K만큼 할당 받은 주소,
-// [loop 2] i: 1, head: 0, tail: 0x2ff0
+// [1] [loop 2] chuck: &pcpu_slot[11]: dchunk: 4K만큼 할당 받은 주소,
+// [1] [loop 2] i: 1, head: 0, tail: 0x2ff0
+// ARM10C 20140621
+// [2] [loop 3] chuck: &pcpu_slot[11]: dchunk: 4K만큼 할당 받은 주소,
+// [2] [loop 3] i: 2, head: 0, tail: 0x2fe0
 static void pcpu_split_block(struct pcpu_chunk *chunk, int i,
 			     int head, int tail)
 {
 	// head: 0, tail: 0x2ff0
+	// head: 0, tail: 0x2fe0
 	int nr_extra = !!head + !!tail;
+	// nr_extra: 1
 	// nr_extra: 1
 
 	// chunk->map_alloc: dchunk->map_alloc: 128,
 	// chunk->map_used: dchunk->map_used: 2, nr_extra: 1
+	// chunk->map_alloc: dchunk->map_alloc: 128,
+	// chunk->map_used: dchunk->map_used: 3, nr_extra: 1
 	BUG_ON(chunk->map_alloc < chunk->map_used + nr_extra);
 
 	/* insert new subblocks */
@@ -622,14 +642,22 @@ static void pcpu_split_block(struct pcpu_chunk *chunk, int i,
 	// chunk->map[1]: dchunk->map[1]: 0x3000,
 	// sizeof(chunk->map[0]): 4, chunk->map_used: dchunk->map_used: 2
 	// memmove(&dchunk->map[2], &dchunk->map[1], 4)
+	// i: 2, nr_extra: 1, chunk->map[3]: dchunk->map[3]: 0,
+	// chunk->map[2]: dchunk->map[2]: 0x2ff0,
+	// sizeof(chunk->map[0]): 4, chunk->map_used: dchunk->map_used: 3
+	// memmove(&dchunk->map[3], &dchunk->map[2], 4)
 	memmove(&chunk->map[i + nr_extra], &chunk->map[i],
 		sizeof(chunk->map[0]) * (chunk->map_used - i));
 	// dchunk->map[2]: 0x3000
+	// dchunk->map[3]: 0x2ff0
 
 	// chunk->map_used: dchunk->map_used: 2, nr_extra: 1
+	// chunk->map_used: dchunk->map_used: 3, nr_extra: 1
 	chunk->map_used += nr_extra;
 	// chunk->map_used: dchunk->map_used: 3
+	// chunk->map_used: dchunk->map_used: 4
 
+	// head: 0
 	// head: 0
 	if (head) {
 		chunk->map[i + 1] = chunk->map[i] - head;
@@ -637,14 +665,19 @@ static void pcpu_split_block(struct pcpu_chunk *chunk, int i,
 	}
 
 	// tail: 0x2ff0
+	// tail: 0x2fe0
 	if (tail) {
 		// i: 1, chunk->map[1]: dchunk->map[1]: 0x3000, tail: 0x2ff0
+		// i: 2, chunk->map[2]: dchunk->map[2]: 0x2ff0, tail: 0x2fe0
 		chunk->map[i++] -= tail;
 		// chunk->map[1]: dchunk->map[1]: 16
+		// chunk->map[2]: dchunk->map[2]: 16
 
 		// i: 2, chunk->map[2]: dchunk->map[2]: 0x3000, tail: 0x2ff0
+		// i: 3, chunk->map[3]: dchunk->map[3]: 0x2ff0, tail: 0x2fe0
 		chunk->map[i] = tail;
 		// chunk->map[2]: dchunk->map[2]: 0x2ff0
+		// chunk->map[3]: dchunk->map[3]: 0x2fe0
 	}
 }
 
@@ -669,44 +702,73 @@ static void pcpu_split_block(struct pcpu_chunk *chunk, int i,
  */
 // ARM10C 20140531
 // chuck: &pcpu_slot[11]: dchunk: 4K만큼 할당 받은 주소, size: 16, align: 8
+// ARM10C 20140621
+// chuck: &pcpu_slot[11]: dchunk: 4K만큼 할당 받은 주소, size: 16, align: 8
 static int pcpu_alloc_area(struct pcpu_chunk *chunk, int size, int align)
 {
 	// chuck: &pcpu_slot[11]: dchunk: 4K만큼 할당 받은 주소
 	// pcpu_chunk_slot(&pcpu_slot[11]): 11
+	// chuck: &pcpu_slot[11]: dchunk: 4K만큼 할당 받은 주소
+	// pcpu_chunk_slot(&pcpu_slot[11]): 11
 	int oslot = pcpu_chunk_slot(chunk);
 	// oslot: 11
+	// oslot: 11
 	int max_contig = 0;
+	// max_contig: 0
 	// max_contig: 0
 	int i, off;
 
 	// chunk->map_used: dchunk->map_used: 2,
 	// chunk->map[0]: dchunk->map[0]: -(0x1d00 + 0x2000)
+	// chunk->map_used: dchunk->map_used: 3,
+	// chunk->map[0]: dchunk->map[0]: -(0x1d00 + 0x2000)
 	for (i = 0, off = 0; i < chunk->map_used; off += abs(chunk->map[i++])) {
-		// [loop 1] i: 0, chunk->map_used: dchunk->map_used: 2
-		// [loop 2] i: 1, chunk->map_used: dchunk->map_used: 2
+		// [1] [loop 1] i: 0, chunk->map_used: dchunk->map_used: 2
+		// [1] [loop 2] i: 1, chunk->map_used: dchunk->map_used: 2
+		// [2] [loop 1] i: 0, chunk->map_used: dchunk->map_used: 3
+		// [2] [loop 2] i: 1, chunk->map_used: dchunk->map_used: 3
+		// [2] [loop 3] i: 2, chunk->map_used: dchunk->map_used: 3
 		bool is_last = i + 1 == chunk->map_used;
-		// [loop 1] is_last: 0
-		// [loop 2] is_last: 1
+		// [1] [loop 1] is_last: 0
+		// [1] [loop 2] is_last: 1
+		// [2] [loop 1] is_last: 0
+		// [2] [loop 2] is_last: 0
+		// [2] [loop 3] is_last: 1
 		int head, tail;
 
 		/* extra for alignment requirement */
-		// [loop 1] off: 0, align: 8
-		// [loop 2] off: 0x1d00 + 0x2000, align: 8
+		// [1] [loop 1] off: 0, align: 8
+		// [1] [loop 2] off: 0x1d00 + 0x2000, align: 8
+		// [2] [loop 1] off: 0, align: 8
+		// [2] [loop 2] off: 0, align: 8
+		// [2] [loop 3] off: 0, align: 8
 		head = ALIGN(off, align) - off;
-		// [loop 1] head: 0
-		// [loop 2] head: 0
+		// [1] [loop 1] head: 0
+		// [1] [loop 2] head: 0
+		// [2] [loop 1] head: 0
+		// [2] [loop 2] head: 0
+		// [2] [loop 3] head: 0
 
-		// [loop 1] i: 0, head: 0
-		// [loop 2] i: 0, head: 0
+		// [1] [loop 1] i: 0, head: 0
+		// [1] [loop 2] i: 1, head: 0
+		// [2] [loop 1] i: 0, head: 0
+		// [2] [loop 2] i: 1, head: 0
+		// [2] [loop 3] i: 2, head: 0
 		BUG_ON(i == 0 && head != 0);
 
-		// [loop 1] i: 0, chunk->map[0]: dhunk->map[0]: -(0x1d00 + 0x2000)
-		// [loop 2] i: 1, chunk->map[1]: dhunk->map[1]: 0x3000
+		// [1] [loop 1] i: 0, chunk->map[0]: dhunk->map[0]: -(0x1d00 + 0x2000)
+		// [1] [loop 2] i: 1, chunk->map[1]: dhunk->map[1]: 0x3000
+		// [2] [loop 1] i: 0, chunk->map[0]: dhunk->map[0]: -(0x1d00 + 0x2000)
+		// [2] [loop 2] i: 1, chunk->map[1]: dhunk->map[1]: -16
+		// [2] [loop 2] i: 2, chunk->map[2]: dhunk->map[2]: 0x2ff0
 		if (chunk->map[i] < 0)
 			continue;
-			// [loop 1] continue 수행
+			// [1] [loop 1] continue 수행
+			// [2] [loop 1] continue 수행
+			// [2] [loop 2] continue 수행
 
-		// [loop 2] i: 1, chunk->map[1]: dhunk->map[1]: 0x3000, head: 0, size: 16
+		// [1] [loop 2] i: 1, chunk->map[1]: dhunk->map[1]: 0x3000, head: 0, size: 16
+		// [2] [loop 3] i: 2, chunk->map[2]: dhunk->map[2]: 0x2ff0, head: 0, size: 16
 		if (chunk->map[i] < head + size) {
 			max_contig = max(chunk->map[i], max_contig);
 			continue;
@@ -718,8 +780,10 @@ static int pcpu_alloc_area(struct pcpu_chunk *chunk, int size, int align)
 		 * than sizeof(int), which is very small but isn't too
 		 * uncommon for percpu allocations.
 		 */
-		// [loop 2] i: 1, chunk->map[0]: -(0x1d00 + 0x2000),
-		// [loop 2] head: 0, size: 16
+		// [1] [loop 2] i: 1, chunk->map[0]: -(0x1d00 + 0x2000),
+		// [1] [loop 2] head: 0, size: 16
+		// [2] [loop 3] i: 2, chunk->map[1]: -16
+		// [2] [loop 3] head: 0, size: 16
 		if (head && (head < sizeof(int) || chunk->map[i - 1] > 0)) {
 			if (chunk->map[i - 1] > 0)
 				chunk->map[i - 1] += head;
@@ -733,11 +797,14 @@ static int pcpu_alloc_area(struct pcpu_chunk *chunk, int size, int align)
 		}
 
 		/* if tail is small, just keep it around */
-		// [loop 2] i: 1, chunk->map[1]: dhunk->map[1]: 0x3000, head: 0, size: 16
+		// [1] [loop 2] i: 1, chunk->map[1]: dhunk->map[1]: 0x3000, head: 0, size: 16
+		// [2] [loop 3] i: 2, chunk->map[2]: dhunk->map[2]: 0x2ff0, head: 0, size: 16
 		tail = chunk->map[i] - head - size;
-		// [loop 2] tail: 0x2ff0
+		// [1] [loop 2] tail: 0x2ff0
+		// [2] [loop 3] tail: 0x2fe0
 
-		// [loop 2] tail: 0x2ff0, sizeof(int): 4
+		// [1] [loop 2] tail: 0x2ff0, sizeof(int): 4
+		// [2] [loop 3] tail: 0x2fe0, sizeof(int): 4
 		if (tail < sizeof(int))
 			tail = 0;
 
@@ -745,56 +812,80 @@ static int pcpu_alloc_area(struct pcpu_chunk *chunk, int size, int align)
 // 2014/06/07 시작
 
 		/* split if warranted */
-		// [loop 2] head: 0, tail: 0x2ff0
+		// [1] [loop 2] head: 0, tail: 0x2ff0
+		// [2] [loop 3] head: 0, tail: 0x2fe0
 		if (head || tail) {
-			// [loop 2] chuck: &pcpu_slot[11]: dchunk: 4K만큼 할당 받은 주소,
-			// [loop 2] i: 1, head: 0, tail: 0x2ff0
+			// [1] [loop 2] chuck: &pcpu_slot[11]: dchunk: 4K만큼 할당 받은 주소,
+			// [1] [loop 2] i: 1, head: 0, tail: 0x2ff0
+			// [2] [loop 3] chuck: &pcpu_slot[11]: dchunk: 4K만큼 할당 받은 주소,
+			// [2] [loop 3] i: 2, head: 0, tail: 0x2fe0
 			pcpu_split_block(chunk, i, head, tail);
-			// [loop 2] chunk->map_used: dchunk->map_used: 3
-			// [loop 2] chunk->map[1]: dchunk->map[1]: 16
-			// [loop 2] chunk->map[2]: dchunk->map[2]: 0x2ff0
+			// [1] [loop 2] chunk->map_used: dchunk->map_used: 3
+			// [1] [loop 2] chunk->map[1]: dchunk->map[1]: 16
+			// [1] [loop 2] chunk->map[2]: dchunk->map[2]: 0x2ff0
+			// [2] [loop 3] chunk->map_used: dchunk->map_used: 4
+			// [2] [loop 3] chunk->map[1]: dchunk->map[1]: -16
+			// [2] [loop 3] chunk->map[2]: dchunk->map[2]: 16
+			// [2] [loop 3] chunk->map[3]: dchunk->map[3]: 0x2fe0
 
-			// [loop 2] head: 0
+			// [1] [loop 2] head: 0
+			// [2] [loop 3] head: 0
 			if (head) {
 				i++;
 				off += head;
 				max_contig = max(chunk->map[i - 1], max_contig);
 			}
 
-			// [loop 2] tail: 0x2ff0
+			// [1] [loop 2] tail: 0x2ff0
+			// [2] [loop 3] tail: 0x2fe0
 			if (tail)
-				// [loop 2] i: 1, chunk->map[2]: dchunk->map[2]: 0x2ff0,
-				// [loop 2] max_contig: 0
+				// [1] [loop 2] i: 1, chunk->map[2]: dchunk->map[2]: 0x2ff0,
+				// [1] [loop 2] max_contig: 0
+				// [2] [loop 3] i: 2, chunk->map[3]: dchunk->map[3]: 0x2fe0,
+				// [2] [loop 3] max_contig: 0
 				max_contig = max(chunk->map[i + 1], max_contig);
-				// [loop 2] max_contig: 0x2ff0
+				// [1] [loop 2] max_contig: 0x2ff0
+				// [2] [loop 3] max_contig: 0x2fe0
 		}
 
 		/* update hint and mark allocated */
-		// [loop 2] is_last: 1
+		// [1] [loop 2] is_last: 1
+		// [2] [loop 3] is_last: 1
 		if (is_last)
-			// [loop 2] chunk->contig_hint: dchunk->contig_hit, max_contig: 0x2ff0
+			// [1] [loop 2] chunk->contig_hint: dchunk->contig_hit, max_contig: 0x2ff0
+			// [2] [loop 3] chunk->contig_hint: dchunk->contig_hit, max_contig: 0x2fe0
 			chunk->contig_hint = max_contig; /* fully scanned */
-			// [loop 2] chunk->contig_hint: dchunk->contig_hit: 0x2ff0
+			// [1] [loop 2] chunk->contig_hint: dchunk->contig_hit: 0x2ff0
+			// [2] [loop 3] chunk->contig_hint: dchunk->contig_hit: 0x2fe0
 		else
 			chunk->contig_hint = max(chunk->contig_hint,
 						 max_contig);
 
-		// [loop 2] chunk->free_size: dchunk->free_size: 0x3000
-		// [loop 2] i: 1, chunk->map[1]: dchunk->map[1]: 16
+		// [1] [loop 2] chunk->free_size: dchunk->free_size: 0x3000
+		// [1] [loop 2] i: 1, chunk->map[1]: dchunk->map[1]: 16
+		// [2] [loop 3] chunk->free_size: dchunk->free_size: 0x2ff0
+		// [2] [loop 3] i: 2, chunk->map[2]: dchunk->map[2]: 16
 		chunk->free_size -= chunk->map[i];
-		// [loop 2] chunk->free_size: dchunk->free_size 0x2ff0
+		// [1] [loop 2] chunk->free_size: dchunk->free_size 0x2ff0
+		// [2] [loop 3] chunk->free_size: dchunk->free_size 0x2fe0
 
-		// [loop 2] i: 1, chunk->map[1]: dchunk->map[1]: 16
+		// [1] [loop 2] i: 1, chunk->map[1]: dchunk->map[1]: 16
+		// [2] [loop 3] i: 2, chunk->map[2]: dchunk->map[2]: 16
 		chunk->map[i] = -chunk->map[i];
-		// [loop 2] i: 1, chunk->map[1]: dchunk->map[1]: -16
+		// [1] [loop 2] i: 1, chunk->map[1]: dchunk->map[1]: -16
+		// [2] [loop 3] i: 2, chunk->map[2]: dchunk->map[2]: -16
 
+		// chuck: &pcpu_slot[11]: dchunk: 4K만큼 할당 받은 주소, oslot: 11
 		// chuck: &pcpu_slot[11]: dchunk: 4K만큼 할당 받은 주소, oslot: 11
 		pcpu_chunk_relocate(chunk, oslot);
 		// pcpu_slot[11] 에 연결된 dchunk list의 위치를 변경하여 재배열함
+		// pcpu_slot[11] 에 연결된 dchunk list의 위치를 변경하여 재배열함
 
-		// [loop 2] off: 0x1d00 + 0x2000
+		// [1] [loop 2] off: 0x1d00 + 0x2000 + 16
+		// [2] [loop 3] off: 0x1d00 + 0x2000 + 16 + 16
 		return off;
-		// [loop 2] return off: 0x1d00 + 0x2000
+		// [1] [loop 2] return off: 0x1d00 + 0x2000 + 16
+		// [2] [loop 3] return off: 0x1d00 + 0x2000 + 16 + 16
 	}
 
 	chunk->contig_hint = max_contig;	/* fully scanned */
@@ -956,6 +1047,8 @@ static struct pcpu_chunk *pcpu_chunk_addr_search(void *addr)
  */
 // ARM10C 20140531
 // size: 16, align: 8, false
+// ARM10C 20140621
+// size: 16, align: 8, false
 static void __percpu *pcpu_alloc(size_t size, size_t align, bool reserved)
 {
 	static int warn_limit = 10;
@@ -967,6 +1060,7 @@ static void __percpu *pcpu_alloc(size_t size, size_t align, bool reserved)
 	void __percpu *ptr;
 
 	// size: 16, align: 8, PCPU_MIN_UNIT_SIZE: 0x8000, PAGE_SIZE: 0x1000
+	// size: 16, align: 8, PCPU_MIN_UNIT_SIZE: 0x8000, PAGE_SIZE: 0x1000
 	if (unlikely(!size || size > PCPU_MIN_UNIT_SIZE || align > PAGE_SIZE)) {
 		WARN(true, "illegal size (%zu) or align (%zu) for "
 		     "percpu allocation\n", size, align);
@@ -975,11 +1069,14 @@ static void __percpu *pcpu_alloc(size_t size, size_t align, bool reserved)
 
 	mutex_lock(&pcpu_alloc_mutex);
 	// pcpu_alloc_mutex의 mutex lock을 수행
+	// pcpu_alloc_mutex의 mutex lock을 수행
 
 	spin_lock_irqsave(&pcpu_lock, flags);
 	// pcpu_lock의 spin lock 을 수행하고 cpsr을 flags에 저장
+	// pcpu_lock의 spin lock 을 수행하고 cpsr을 flags에 저장
 
 	/* serve reserved allocations from the reserved chunk if available */
+	// reserved: false, pcpu_reserved_chunk: pcpu_setup_first_chunk()함수에서 할당한 schunk
 	// reserved: false, pcpu_reserved_chunk: pcpu_setup_first_chunk()함수에서 할당한 schunk
 	if (reserved && pcpu_reserved_chunk) {
 		chunk = pcpu_reserved_chunk;
@@ -1009,6 +1106,7 @@ static void __percpu *pcpu_alloc(size_t size, size_t align, bool reserved)
 restart:
 	/* search through normal chunks */
 	// size: 16, pcpu_size_to_slot(16): 1, pcpu_nr_slots: 15
+	// size: 16, pcpu_size_to_slot(16): 1, pcpu_nr_slots: 15
 	for (slot = pcpu_size_to_slot(size); slot < pcpu_nr_slots; slot++) {
 
 		// slot: 1~10
@@ -1022,11 +1120,14 @@ restart:
 			// chuck: &pcpu_slot[11]
 
 			// size: 16, chunk->contig_hint: (&pcpu_slot[11])->contig_hint: 0x3000
+			// size: 16, chunk->contig_hint: (&pcpu_slot[11])->contig_hint: 0x3000
 			if (size > chunk->contig_hint)
 				continue;
 
 			// chuck: &pcpu_slot[11]: dchunk: 4K만큼 할당 받은 주소
+			// chuck: &pcpu_slot[11]: dchunk: 4K만큼 할당 받은 주소
 			new_alloc = pcpu_need_to_extend(chunk);
+			// new_alloc: 0
 			// new_alloc: 0
 
 			if (new_alloc) {
@@ -1046,12 +1147,17 @@ restart:
 
 			// chuck: &pcpu_slot[11]: dchunk: 4K만큼 할당 받은 주소, size: 16, align: 8
 			// pcpu_alloc_area(&pcpu_slot[11], 16, 8): 0x1d00 + 0x2000
+			// chuck: &pcpu_slot[11]: dchunk: 4K만큼 할당 받은 주소, size: 16, align: 8
+			// pcpu_alloc_area(&pcpu_slot[11], 16, 8): 0x1d00 + 0x2000
 			off = pcpu_alloc_area(chunk, size, align);
 			// off: 0x1d00 + 0x2000
+			// off: 0x1d00 + 0x2000 + 16
 
 			// off: 0x1d00 + 0x2000
+			// off: 0x1d00 + 0x2000 + 16
 			if (off >= 0)
 				goto area_found;
+				// area_found 위치로 이동
 				// area_found 위치로 이동
 		}
 	}
@@ -1072,11 +1178,14 @@ restart:
 area_found:
 	spin_unlock_irqrestore(&pcpu_lock, flags);
 	// pcpu_lock의 spin unlock 을 수행하고 flags에 저장되어있던 cpsr 복원
+	// pcpu_lock의 spin unlock 을 수행하고 flags에 저장되어있던 cpsr 복원
 
 	/* populate, map and clear the area */
 	// chuck: &pcpu_slot[11]: dchunk: 4K만큼 할당 받은 주소,
 	// off: 0x1d00 + 0x2000, size: 16
 	// pcpu_populate_chunk(&pcpu_slot[11], 0x3d00, 16): 0
+	// chuck: &pcpu_slot[11]: dchunk: 4K만큼 할당 받은 주소,
+	// off: 0x1d00 + 0x2000 + 16, size: 16
 	if (pcpu_populate_chunk(chunk, off, size)) {
 		spin_lock_irqsave(&pcpu_lock, flags);
 		pcpu_free_area(chunk, off);
@@ -1086,20 +1195,28 @@ area_found:
 
 	mutex_unlock(&pcpu_alloc_mutex);
 	// pcpu_alloc_mutex의 mutex unlock을 수행
+	// pcpu_alloc_mutex의 mutex unlock을 수행
 
 	/* return address relative to base address */
 	// chunk->base_addr: dchunk->base_addr: 128K 만큼 물리주소 0x5FFFFFFF 근처에 할당받은 주소
 	// off: 0x3d00
 	// __addr_to_pcpu_ptr(128K 만큼 물리주소 0x5FFFFFFF 근처에 할당받은 주소+0x3d00): 0xc0502d00
+	// chunk->base_addr: dchunk->base_addr: 128K 만큼 물리주소 0x5FFFFFFF 근처에 할당받은 주소
+	// off: 0x3d10
+	// __addr_to_pcpu_ptr(128K 만큼 물리주소 0x5FFFFFFF 근처에 할당받은 주소+0x3d00): 0xc0502d00
 	ptr = __addr_to_pcpu_ptr(chunk->base_addr + off);
 	// ptr: 0xc0502d00
+	// ptr: 0xc0502d10
 
 	// ptr: 0xc0502d00, size: 16
+	// ptr: 0xc0502d10, size: 16
 	kmemleak_alloc_percpu(ptr, size); // null function
 
 	// ptr: 0xc0502d00
+	// ptr: 0xc0502d10
 	return ptr;
 	// return 0xc0502d00
+	// return 0xc0502d10
 
 fail_unlock:
 	spin_unlock_irqrestore(&pcpu_lock, flags);
@@ -1131,11 +1248,15 @@ fail_unlock_mutex:
  */
 // ARM10C 20140531
 // __alloc_percpu(16, 8)
+// ARM10C 20140621
+// __alloc_percpu(16, 8)
 void __percpu *__alloc_percpu(size_t size, size_t align)
 {
 	// size: 16, align: 8
+	// size: 16, align: 8
 	return pcpu_alloc(size, align, false);
 	// return 0xc0502d00
+	// return 0xc0502d10
 }
 EXPORT_SYMBOL_GPL(__alloc_percpu);
 

@@ -132,6 +132,7 @@
 
 // ARM10C 20130831
 // ARM10C 20131019
+// ARM10C 20140621
 #define irqs_disabled()					\
 	({						\
 		unsigned long _flags;			\

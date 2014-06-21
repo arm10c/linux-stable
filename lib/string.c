@@ -621,6 +621,7 @@ EXPORT_SYMBOL(memcpy);
  */
 // ARM10C 20131019
 // ARM10C 20140607
+// ARM10C 20140621
 void *memmove(void *dest, const void *src, size_t count)
 {
 	char *tmp;

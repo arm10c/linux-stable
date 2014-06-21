@@ -31,6 +31,7 @@ ENDPROC(\name		)
 // example idx: 0x1f807 (r0)
 // testop	_test_and_clear_bit, bicne, strne
 // testop	_test_and_set_bit, orreq, streq
+// ARM10C 20140621
 	.macro	testop, name, instr, store
 ENTRY(	\name		)
 UNWIND(	.fnstart	)
