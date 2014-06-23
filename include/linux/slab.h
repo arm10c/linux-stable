@@ -345,6 +345,8 @@ static __always_inline void *__kmalloc_node(size_t size, gfp_t flags, int node)
 static __always_inline void *kmem_cache_alloc_node(struct kmem_cache *s, gfp_t flags, int node)
 {
 	// s: &boot_kmem_cache_node, flags: GFP_KERNEL: 0xD0
+	// kmem_cache_alloc(&boot_kmem_cache_node, GFP_KERNEL: 0xD0):
+	// UNMOVABLE인 page 의 object의 시작 virtual address + 64
 	return kmem_cache_alloc(s, flags);
 	// return UNMOVABLE인 page 의 object의 시작 virtual address + 64
 }

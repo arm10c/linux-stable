@@ -551,10 +551,14 @@ static inline int PageTransTail(struct page *page)
 // page: MIGRATE_UNMOVABLE인 page
 static inline int PageSlabPfmemalloc(struct page *page)
 {
-	// page: MIGRATE_UNMOVABLE인 page
+	// page: MIGRATE_UNMOVABLE인 page,
 	// PageSlab(MIGRATE_UNMOVABLE인 page): 1
 	VM_BUG_ON(!PageSlab(page));
+
+	// page: MIGRATE_UNMOVABLE인 page,
+	// PageActive(MIGRATE_UNMOVABLE인 page): 0
 	return PageActive(page);
+	// return 0
 }
 
 static inline void SetPageSlabPfmemalloc(struct page *page)

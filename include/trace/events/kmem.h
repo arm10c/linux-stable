@@ -51,11 +51,10 @@ DEFINE_EVENT(kmem_alloc, kmalloc,
 );
 
 // ARM10C 20140621
-// _RET_IP_a,
+// _RET_IP_,
 // ret: UNMOVABLE인 page 의 object의 시작 virtual address + 64
 // s->object_size: boot_kmem_cache_node.object_size: 64,
 // s->size: boot_kmem_cache_node.size: 64,
-// flags: 0x0, s->flags: boot_kmem_cache_node.flags: SLAB_HWCACHE_ALIGN: 0x00002000UL,
 // gfpflags: GFP_KERNEL: 0xD0
 DEFINE_EVENT(kmem_alloc, kmem_cache_alloc,
 
