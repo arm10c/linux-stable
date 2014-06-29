@@ -656,9 +656,13 @@ extern void *__kmalloc_node_track_caller(size_t, gfp_t, int, unsigned long);
 /*
  * Shortcuts
  */
+// ARM10C 20140628
+// kmem_cache: &boot_kmem_cache, GFP_NOWAIT: 0
 static inline void *kmem_cache_zalloc(struct kmem_cache *k, gfp_t flags)
 {
+	// k: &boot_kmem_cache, flags: GFP_NOWAIT, __GFP_ZERO: 0x8000u
 	return kmem_cache_alloc(k, flags | __GFP_ZERO);
+	// return UNMOVABLE인 page (boot_kmem_cache)의 object의 시작 virtual address
 }
 
 /**

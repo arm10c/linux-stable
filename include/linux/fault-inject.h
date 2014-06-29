@@ -60,6 +60,7 @@ static inline struct dentry *fault_create_debugfs_attr(const char *name,
 extern bool should_failslab(size_t size, gfp_t gfpflags, unsigned long flags);
 #else
 // ARM10C 20140614
+// ARM10C 20140628
 static inline bool should_failslab(size_t size, gfp_t gfpflags,
 				unsigned long flags)
 {

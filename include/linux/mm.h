@@ -564,6 +564,7 @@ static inline compound_page_dtor *get_compound_page_dtor(struct page *page)
 
 // ARM10C 20140125
 // ARM10C 20140524
+// ARM10C 20140628
 static inline int compound_order(struct page *page)
 {
 	// PageHead(page): 0
@@ -777,6 +778,7 @@ extern int page_to_nid(const struct page *page);
 // ARM10C 20140118
 // ARM10C 20140517
 // ARM10C 20140531
+// ARM10C 20140628
 static inline int page_to_nid(const struct page *page)
 {
 	// NODES_PGSHIFT: 0, NODES_MASK: 3
@@ -905,6 +907,7 @@ static inline bool cpupid_match_pid(struct task_struct *task, int cpupid)
 // ARM10C 20140419
 // ARM10C 20140517
 // ARM10C 20140531
+// ARM10C 20140628
 static inline struct zone *page_zone(const struct page *page)
 {
 	// NODE_DATA(page_to_nid(page)): &contig_page_data

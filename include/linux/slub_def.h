@@ -20,6 +20,7 @@ enum stat_item {
 	FREE_REMOVE_PARTIAL,	/* Freeing removes last object */
 	// ALLOC_FROM_PARTIAL: 7
 	ALLOC_FROM_PARTIAL,	/* Cpu slab acquired from node partial list */
+	// ALLOC_SLAB: 8
 	ALLOC_SLAB,		/* Cpu slab acquired from page allocator */
 	ALLOC_REFILL,		/* Refill cpu slab from slab freelist */
 	ALLOC_NODE_MISMATCH,	/* Switching cpu slab */
@@ -70,7 +71,7 @@ struct kmem_cache_order_objects {
  */
 // ARM10C 20140419
 // ARM10C 20140607
-// sizeof(struct kmem_cache): 132 bytes
+// sizeof(struct kmem_cache): 116 bytes
 struct kmem_cache {
 	struct kmem_cache_cpu __percpu *cpu_slab;
 	/* Used for retriving partial slabs etc */
@@ -94,7 +95,7 @@ struct kmem_cache {
 	const char *name;	/* Name (only for display!) */
 	struct list_head list;	/* List of slab caches */
 #ifdef CONFIG_SYSFS // CONFIG_SYSFS=y
-	// sizeof(struct kobject): 52 bytes
+	// sizeof(struct kobject): 36 bytes
 	struct kobject kobj;	/* For sysfs */
 #endif
 #ifdef CONFIG_MEMCG_KMEM // CONFIG_MEMCG_KMEM=n

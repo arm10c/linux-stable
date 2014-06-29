@@ -269,6 +269,8 @@ PAGEFLAG(Active, active) __CLEARPAGEFLAG(Active, active)
 // ARM10C 20140531
 // ARM10C 20140621
 // page: migratetype이 MIGRATE_UNMOVABLE인 page
+// ARM10C 20140628
+// page: migratetype이 MIGRATE_UNMOVABLE인 page (boot_kmem_cache)
 __PAGEFLAG(Slab, slab)
 PAGEFLAG(Checked, checked)		/* Used by some filesystems */
 PAGEFLAG(Pinned, pinned) TESTSCFLAG(Pinned, pinned)	/* Xen */

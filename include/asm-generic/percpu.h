@@ -173,6 +173,8 @@ extern unsigned long __per_cpu_offset[NR_CPUS];
 // })
 // ARM10C 20140614
 // s->cpu_slab: (&boot_kmem_cache_node)->cpu_slab: 0xc0502d00
+// ARM10C 20140628
+// s->cpu_slab: (&boot_kmem_cache)->cpu_slab: 0xc0502d10
 #define __this_cpu_ptr(ptr) SHIFT_PERCPU_PTR(ptr, __my_cpu_offset)
 #endif
 #ifdef CONFIG_DEBUG_PREEMPT // CONFIG_DEBUG_PREEMPT=y

@@ -157,6 +157,7 @@ struct vm_area_struct;
 #define __GFP_COMP	((__force gfp_t)___GFP_COMP)	/* Add compound page metadata */
 // ARM10C 20140524
 // ARM10C 20140621
+// ARM10C 20140628
 // ___GFP_ZERO: 0x8000u
 // __GFP_ZERO: 0x8000u
 #define __GFP_ZERO	((__force gfp_t)___GFP_ZERO)	/* Return zeroed page on success */
@@ -208,6 +209,7 @@ struct vm_area_struct;
 
 /* This equals 0, but use constants in case they ever change */
 // ARM10C 20140426
+// ARM10C 20140628
 // GFP_ATOMIC: 0x20u
 // __GFP_HIGH: 0x20u
 // GFP_NOWAIT: 0
@@ -515,6 +517,8 @@ static inline int gfp_zonelist(gfp_t flags)
 // numa_node_id(): 0, GFP_KERNEL: 0xD0
 // ARM10C 20140426
 // nid: 0, gfp_mask: 0x201200
+// ARM10C 20140628
+// node_zonelist(0, 0x201200)
 static inline struct zonelist *node_zonelist(int nid, gfp_t flags)
 {
 	// nid: 0, flags: 0xD0
@@ -544,6 +548,9 @@ __alloc_pages_nodemask(gfp_t gfp_mask, unsigned int order,
 // ARM10C 20140426
 // gfp_mask: 0x201200, order: 0, nid: 0,
 // node_zonelist(0, 0x201200): contig_page_data->node_zonelists
+// ARM10C 20140628
+// gfp_mask: 0x201200, order: 0, nid: 0,
+// node_zonelist(0, 0x201200): contig_page_data->node_zonelists
 static inline struct page *
 __alloc_pages(gfp_t gfp_mask, unsigned int order,
 		struct zonelist *zonelist)
@@ -554,13 +561,17 @@ __alloc_pages(gfp_t gfp_mask, unsigned int order,
 	// page: migratetype이 MIGRATE_UNMOVABLE인 page
 }
 
+// ARM10C 20140628
+// numa_node_id(): 0, flags: 0x201200, order: 0
 static inline struct page *alloc_pages_node(int nid, gfp_t gfp_mask,
 						unsigned int order)
 {
 	/* Unknown node is current node */
+	// nid: 0
 	if (nid < 0)
 		nid = numa_node_id();
 
+	// gfp_mask: 0x201200, order: 0, nid: 0, node_zonelist(0, 0x201200): contig_page_data->node_zonelists
 	return __alloc_pages(gfp_mask, order, node_zonelist(nid, gfp_mask));
 }
 
@@ -578,7 +589,7 @@ static inline struct page *alloc_pages_exact_node(int nid, gfp_t gfp_mask,
 	// page: migratetype이 MIGRATE_UNMOVABLE인 page
 }
 
-#ifdef CONFIG_NUMA
+#ifdef CONFIG_NUMA // CONFIG_NUMA=n
 extern struct page *alloc_pages_current(gfp_t gfp_mask, unsigned order);
 
 static inline struct page *
@@ -590,6 +601,9 @@ extern struct page *alloc_pages_vma(gfp_t gfp_mask, int order,
 			struct vm_area_struct *vma, unsigned long addr,
 			int node);
 #else
+// ARM10C 20140628
+// numa_node_id(): 0
+// flags: 0x201200, order: 0
 #define alloc_pages(gfp_mask, order) \
 		alloc_pages_node(numa_node_id(), gfp_mask, order)
 #define alloc_pages_vma(gfp_mask, order, vma, addr, node)	\

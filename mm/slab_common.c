@@ -30,6 +30,7 @@ enum slab_state slab_state;
 LIST_HEAD(slab_caches);
 DEFINE_MUTEX(slab_mutex);
 // ARM10C 20140419
+// ARM10C 20140628
 struct kmem_cache *kmem_cache;
 
 #ifdef CONFIG_DEBUG_VM
@@ -123,7 +124,7 @@ out:
 // ARM10C 20140419
 // flags: SLAB_HWCACHE_ALIGN: 0x00002000UL, ARCH_KMALLOC_MINALIGN: 64, size: 44
 // ARM10C 20140614
-// flags: SLAB_HWCACHE_ALIGN: 0x00002000UL, ARCH_KMALLOC_MINALIGN: 64, size: 132
+// flags: SLAB_HWCACHE_ALIGN: 0x00002000UL, ARCH_KMALLOC_MINALIGN: 64, size: 116
 unsigned long calculate_alignment(unsigned long flags,
 		unsigned long align, unsigned long size)
 {
@@ -141,7 +142,7 @@ unsigned long calculate_alignment(unsigned long flags,
 		// ralign: 64
 
 		// size : 44, ralign: 64
-		// size : 132, ralign: 64
+		// size : 116, ralign: 64
 		while (size <= ralign / 2)
 			ralign /= 2;
 
@@ -317,7 +318,7 @@ int slab_is_available(void)
 // &boot_kmem_cache_node, "kmem_cache_node", sizeof(struct kmem_cache_node): 44 byte,
 // SLAB_HWCACHE_ALIGN: 0x00002000UL
 // ARM10C 20140614
-// &boot_kmem_cache, "kmem_cache", 132, SLAB_HWCACHE_ALIGN: 0x00002000UL
+// &boot_kmem_cache, "kmem_cache", 116, SLAB_HWCACHE_ALIGN: 0x00002000UL
 void __init create_boot_cache(struct kmem_cache *s, const char *name, size_t size,
 		unsigned long flags)
 {
@@ -336,12 +337,12 @@ void __init create_boot_cache(struct kmem_cache *s, const char *name, size_t siz
 	s->size = s->object_size = size;
 	// s->size: boot_kmem_cache_node.size: 44
 	// s->object_size: boot_kmem_cache_node.object_size: 44
-	// s->size: boot_kmem_cache.size: 132
-	// s->object_size: boot_kmem_cache.object_size: 132
+	// s->size: boot_kmem_cache.size: 116
+	// s->object_size: boot_kmem_cache.object_size: 116
 	
 	// flags: SLAB_HWCACHE_ALIGN: 0x00002000UL, ARCH_KMALLOC_MINALIGN: 64, size: 44
 	// s->align: boot_kmem_cache_node.align: 0
-	// flags: SLAB_HWCACHE_ALIGN: 0x00002000UL, ARCH_KMALLOC_MINALIGN: 64, size: 132
+	// flags: SLAB_HWCACHE_ALIGN: 0x00002000UL, ARCH_KMALLOC_MINALIGN: 64, size: 116
 	// s->align: boot_kmem_cache.align: 0
 	s->align = calculate_alignment(flags, ARCH_KMALLOC_MINALIGN, size);
 	// s->align: boot_kmem_cache_node.align: 64
@@ -353,8 +354,9 @@ void __init create_boot_cache(struct kmem_cache *s, const char *name, size_t siz
 	// __kmem_cache_create(&boot_kmem_cache, 0x00002000UL): 0
 	err = __kmem_cache_create(s, flags);
 	// err: 0
+	// err: 0
 
-	// __kmem_cache_create 가 한일:
+	// __kmem_cache_create(&boot_kmem_cache_node) 가 한일:
 	// boot_kmem_cache_node.flags: SLAB_HWCACHE_ALIGN: 0x00002000UL
 	// boot_kmem_cache_node.reserved: 0
 	// boot_kmem_cache_node.min_partial: 5
@@ -377,14 +379,45 @@ void __init create_boot_cache(struct kmem_cache *s, const char *name, size_t siz
 	// 할당받은 pcpu 들의 16 byte 공간 (&boot_kmem_cache_node)->cpu_slab 에
 	// 각 cpu에 사용하는 kmem_cache_cpu의 tid 맵버를 설정
 
+	// __kmem_cache_create(&boot_kmem_cache) 가 한일:
+	// boot_kmem_cache.flags: SLAB_HWCACHE_ALIGN: 0x00002000UL
+	// boot_kmem_cache.reserved: 0
+	// boot_kmem_cache.min_partial: 5
+	// boot_kmem_cache.cpu_partial: 30
+	//
+	// 할당 받아 놓은 migratetype이 MIGRATE_UNMOVABLE인 page 를 사용
+	// page 맴버를 셋팅함
+	// page->counters: 0x80400040
+	// page->inuse: 64
+	// page->objects: 64
+	// page->frozen: 1
+	// page->freelist: NULL
+	// 할당받은 slab object를 kmem_cache_node 로 사용하고 kmem_cache_node의 멤버 필드를 초기화함
+	// 첫번째 object:
+	// kmem_cache_node->partial에 연결된 (MIGRATE_UNMOVABLE인 page)->lru 를 삭제
+	// kmem_cache_node->nr_partial: 0
+	// 두번째 object:
+	// kmem_cache_node->nr_partial: 0
+	// kmem_cache_node->list_lock: spinlock 초기화 수행
+	// kmem_cache_node->slabs: 0, kmem_cache_node->total_objects: 0 로 세팀함
+	// kmem_cache_node->full: 리스트 초기화
+	//
+	// kmem_cache_node 가 boot_kmem_cache.node[0]에 할당됨
+	//
+	// 할당받은 pcpu 들의 16 byte 공간 (&boot_kmem_cache)->cpu_slab 에
+	// 각 cpu에 사용하는 kmem_cache_cpu의 tid 맵버를 설정
+
+	// err: 0
 	// err: 0
 	if (err)
 		panic("Creation of kmalloc slab %s size=%zu failed. Reason %d\n",
 					name, size, err);
 
 	// s->refcount: boot_kmem_cache_node.refcount
+	// s->refcount: boot_kmem_cache.refcount
 	s->refcount = -1;	/* Exempt from merging for now */
 	// s->refcount: boot_kmem_cache_node.refcount: -1
+	// s->refcount: boot_kmem_cache.refcount: -1
 }
 
 struct kmem_cache *__init create_kmalloc_cache(const char *name, size_t size,

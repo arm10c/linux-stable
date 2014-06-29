@@ -59,7 +59,7 @@ enum kobject_action {
 };
 
 // ARM10C 20140607
-// sizeof(struct kobject): 52 bytes
+// sizeof(struct kobject): 36 bytes
 struct kobject {
 	const char		*name;
 	struct list_head	entry;

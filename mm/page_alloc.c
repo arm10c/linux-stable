@@ -3509,6 +3509,9 @@ got_pg:
 // ARM10C 20140426
 // gfp_mask: 0x201200, order: 0,
 // zonelist: contig_page_data->node_zonelists, NULL
+// ARM10C 20140628
+// gfp_mask: 0x201200, order: 0
+// zonelist: contig_page_data->node_zonelists, NULL
 struct page *
 __alloc_pages_nodemask(gfp_t gfp_mask, unsigned int order,
 			struct zonelist *zonelist, nodemask_t *nodemask)
