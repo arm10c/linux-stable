@@ -257,7 +257,9 @@ void __mod_zone_page_state(struct zone *zone, enum zone_stat_item item,
 	// p: &(&boot_pageset)->vm_stat_diff[1]
 	// ARM10C 20140524
 	// p: &(&boot_pageset)->vm_stat_diff[1]
+	// p: &(&boot_pageset)->vm_stat_diff[14]
 	// ARM10C 20140628
+	// p: &(&boot_pageset)->vm_stat_diff[14]
 	long x;
 	long t;
 
@@ -362,6 +364,7 @@ void __mod_zone_page_state(struct zone *zone, enum zone_stat_item item,
 	// p: &(&boot_pageset)->vm_stat_diff[1], x: 0x0
 	// ARM10C 20140524
 	// p: &(&boot_pageset)->vm_stat_diff[1], x: 0x0
+	// p: &(&boot_pageset)->vm_stat_diff[14], x: 0x0
 	__this_cpu_write(*p, x);
 	// p: &(&boot_pageset)->vm_stat_diff[0]: 0
 	// ARM10C 20140510
@@ -370,6 +373,7 @@ void __mod_zone_page_state(struct zone *zone, enum zone_stat_item item,
 	// p: &(&boot_pageset)->vm_stat_diff[1]: 0x0
 	// ARM10C 20140524
 	// p: &(&boot_pageset)->vm_stat_diff[1]: 0x0
+	// p: &(&boot_pageset)->vm_stat_diff[14]: 0x0
 	// ARM10C 20140628
 	// p: &(&boot_pageset)->vm_stat_diff[14]: 0x0
 

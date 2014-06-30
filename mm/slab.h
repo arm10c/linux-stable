@@ -194,6 +194,8 @@ static inline bool cache_match_memcg(struct kmem_cache *cachep,
 
 // ARM10C 20140531
 // s: &boot_kmem_cache_node, order: 0
+// ARM10C 20140628
+// s: &boot_kmem_cache, order: 0
 static inline void memcg_bind_pages(struct kmem_cache *s, int order)
 {
 }

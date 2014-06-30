@@ -573,6 +573,7 @@ static inline struct page *alloc_pages_node(int nid, gfp_t gfp_mask,
 
 	// gfp_mask: 0x201200, order: 0, nid: 0, node_zonelist(0, 0x201200): contig_page_data->node_zonelists
 	return __alloc_pages(gfp_mask, order, node_zonelist(nid, gfp_mask));
+	// return migratetype이 MIGRATE_UNMOVABLE인 page
 }
 
 // ARM10C 20140426

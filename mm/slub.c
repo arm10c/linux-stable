@@ -475,10 +475,10 @@ static inline int oo_order(struct kmem_cache_order_objects x)
 }
 
 // ARM10C 20140419
-// boot_kmem_cache_node.oo.x : 64
+// boot_kmem_cache_node.oo.x: 64
 // ARM10C 20140614
 // ARM10C 20140628
-// boot_kmem_cache.oo.x : 32
+// boot_kmem_cache.oo.x: 32
 static inline int oo_objects(struct kmem_cache_order_objects x)
 {
 
@@ -1164,7 +1164,7 @@ static inline int slab_pre_alloc_hook(struct kmem_cache *s, gfp_t flags)
 	// flags: 0x0, s->flags: boot_kmem_cache_node.flags: SLAB_HWCACHE_ALIGN: 0x00002000UL
 	// should_failslab(44, 0, 0x00002000UL): 0
 	// s->object_size: boot_kmem_cache.object_size: 116,
-	// flags: 0x8000, s->flags: boot_kmem_cache_node.flags: SLAB_HWCACHE_ALIGN: 0x00002000UL
+	// flags: 0x8000, s->flags: boot_kmem_cache.flags: SLAB_HWCACHE_ALIGN: 0x00002000UL
 	// should_failslab(116, 0, 0x00002000UL): 0
 	return should_failslab(s->object_size, flags, s->flags);
 	// return 0
@@ -1323,7 +1323,7 @@ static inline void dec_slabs_node(struct kmem_cache *s, int node, int objects)
 // s: &boot_kmem_cache_node, page: UNMOVABLE인 page
 // object: UNMOVABLE인 page 의 virtual address
 // ARM10C 20140628
-// s: &boot_kmem_cach, page: UNMOVABLE인 page(boot_kmem_cache)
+// s: &boot_kmem_cache, page: UNMOVABLE인 page(boot_kmem_cache)
 // object: UNMOVABLE인 page 의 virtual address(boot_kmem_cache)
 static void setup_object_debug(struct kmem_cache *s, struct page *page,
 								void *object)
@@ -1331,8 +1331,12 @@ static void setup_object_debug(struct kmem_cache *s, struct page *page,
 	// s->flags: boot_kmem_cache_node.flags: SLAB_HWCACHE_ALIGN: 0x00002000UL
 	// SLAB_STORE_USER: 0x00010000UL, SLAB_RED_ZONE: 0x00000400UL, __OBJECT_POISON: 0x80000000UL
 	// 0x00010000 |  0x00000400 | 0x80000000: 0x80010400
+	// s->flags: boot_kmem_cache.flags: SLAB_HWCACHE_ALIGN: 0x00002000UL
+	// SLAB_STORE_USER: 0x00010000UL, SLAB_RED_ZONE: 0x00000400UL, __OBJECT_POISON: 0x80000000UL
+	// 0x00010000 |  0x00000400 | 0x80000000: 0x80010400
 	if (!(s->flags & (SLAB_STORE_USER|SLAB_RED_ZONE|__OBJECT_POISON)))
 		return;
+		// return 수행
 		// return 수행
 
 	init_object(s, object, SLUB_RED_INACTIVE);
@@ -1618,6 +1622,7 @@ static inline struct page *alloc_slab_page(gfp_t flags, int node,
 	if (node == NUMA_NO_NODE)
 		// flags: 0x201200, order: 0
 		return alloc_pages(flags, order);
+		// return migratetype이 MIGRATE_UNMOVABLE인 page
 	else
 		// node: 0, flags: 0x201200, order: 0
 		return alloc_pages_exact_node(node, flags, order);
@@ -1765,11 +1770,12 @@ static void setup_object(struct kmem_cache *s, struct page *page,
 {
 	// s: &boot_kmem_cache_node, page: UNMOVABLE인 page
 	// object: UNMOVABLE인 page 의 virtual address
-	// s: &boot_kmem_cach, page: UNMOVABLE인 page(boot_kmem_cache)
+	// s: &boot_kmem_cache, page: UNMOVABLE인 page(boot_kmem_cache)
 	// object: UNMOVABLE인 page 의 virtual address(boot_kmem_cache)
 	setup_object_debug(s, page, object);
 
 	// s->ctor: boot_kmem_cache_node.ctor: NULL
+	// s->ctor: boot_kmem_cache.ctor: NULL
 	if (unlikely(s->ctor))
 		s->ctor(object);
 }
@@ -1890,9 +1896,9 @@ static struct page *new_slab(struct kmem_cache *s, gfp_t flags, int node)
 		// [1] [loop 2] (&boot_kmem_cache_node)->size: 64
 
 		// [2] [loop 1] p: UNMOVABLE인 page (boot_kmem_cache)의 virtual address
-		// [2] [loop 1] (&boot_kmem_cache)->size: 32
-		// [2] [loop 2] p: UNMOVABLE인 page (boot_kmem_cache)의 virtual address + 32
-		// [2] [loop 2] (&boot_kmem_cache)->size: 32
+		// [2] [loop 1] (&boot_kmem_cache)->size: 128
+		// [2] [loop 2] p: UNMOVABLE인 page (boot_kmem_cache)의 virtual address + 128
+		// [2] [loop 2] (&boot_kmem_cache)->size: 128
 
 		// [1] [loop 1] s: &boot_kmem_cache_node, page: UNMOVABLE인 page,
 		// [1] [loop 1] last: UNMOVABLE인 page 의 virtual address
@@ -1911,7 +1917,7 @@ static struct page *new_slab(struct kmem_cache *s, gfp_t flags, int node)
 		// [2] [loop 1] s: &boot_kmem_cache, last: UNMOVABLE인 page (boot_kmem_cache)의 virtual address,
 		// [2] [loop 1] p: UNMOVABLE인 page 의 virtual address(boot_kmem_cache)
 		// [2] [loop 2] s: &boot_kmem_cache, last: UNMOVABLE인 page (boot_kmem_cache)의 virtual address,
-		// [2] [loop 2] p: UNMOVABLE인 page (boot_kmem_cache)의 virtual address + 32
+		// [2] [loop 2] p: UNMOVABLE인 page (boot_kmem_cache)의 virtual address + 128
 		set_freepointer(s, last, p);
 		// [1] [loop 1] last에 p 주소를 mapping 함
 		// [1] [loop 2] last에 p 주소를 mapping 함
@@ -1921,12 +1927,12 @@ static struct page *new_slab(struct kmem_cache *s, gfp_t flags, int node)
 		// [1] [loop 1] p: UNMOVABLE인 page 의 virtual address
 		// [1] [loop 2] p: UNMOVABLE인 page 의 virtual address + 64
 		// [2] [loop 1] p: UNMOVABLE인 page (boot_kmem_cache)의 virtual address
-		// [2] [loop 2] p: UNMOVABLE인 page (boot_kmem_cache)의 virtual address + 32
+		// [2] [loop 2] p: UNMOVABLE인 page (boot_kmem_cache)의 virtual address + 128
 		last = p;
 		// [1] [loop 1] last: UNMOVABLE인 page 의 virtual addres
 		// [1] [loop 2] last: UNMOVABLE인 page 의 virtual addres + 64
 		// [2] [loop 1] last: UNMOVABLE인 page (boot_kmem_cache)의 virtual addres
-		// [2] [loop 2] last: UNMOVABLE인 page (boot_kmem_cache)의 virtual addres + 32
+		// [2] [loop 2] last: UNMOVABLE인 page (boot_kmem_cache)의 virtual addres + 128
 
 		// [1] [loop 3..64] 수행
 		// [2] [loop 3..32] 수행
@@ -1952,13 +1958,13 @@ static struct page *new_slab(struct kmem_cache *s, gfp_t flags, int node)
 	// s: &boot_kmem_cache_node, page: UNMOVABLE인 page
 	// last: UNMOVABLE인 page 의 virtual address + 0x1000 - 64
 	// s: &boot_kmem_cache, page: UNMOVABLE인 page (boot_kmem_cache)
-	// last: UNMOVABLE인 page (boot_kmem_cache)의 virtual address + 0x1000 - 32
+	// last: UNMOVABLE인 page (boot_kmem_cache)의 virtual address + 0x1000 - 128
 	setup_object(s, page, last);
 
 	// s: &boot_kmem_cache_node
 	// last: UNMOVABLE인 page 의 virtual address + 0x1000 - 64
 	// s: &boot_kmem_cache
-	// last: UNMOVABLE인 page (boot_kmem_cache)의 virtual address + 0x1000 - 32
+	// last: UNMOVABLE인 page (boot_kmem_cache)의 virtual address + 0x1000 - 128
 	set_freepointer(s, last, NULL);
 
 	// 마지막 object의 내부 freepointer는 null 초기화함
@@ -3237,10 +3243,10 @@ load_freelist:
 	// flags에 저장된 cpsr 을 복원
 
 	// freelist: UNMOVABLE인 page 의 object의 시작 virtual address + 64
-	// freelist: UNMOVABLE인 page (boot_kmem_cache)의 virtual address
+	// freelist: UNMOVABLE인 page (boot_kmem_cache)의 object의 시작 virtual address
 	return freelist;
 	// return UNMOVABLE인 page 의 object의 시작 virtual address + 64
-	// return UNMOVABLE인 page (boot_kmem_cache)의 virtual address
+	// return UNMOVABLE인 page (boot_kmem_cache)의 object의 시작 virtual address
 
 new_slab:
 
@@ -3263,7 +3269,7 @@ new_slab:
 	// c: (&boot_kmem_cache)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋)
 	// new_slab_objects(&boot_kmem_cache, __GFP_ZERO: 0x8000, -1,
 	// (&boot_kmem_cache)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋)):
-	// UNMOVABLE인 page 의 object의 시작 virtual address + 64
+	// UNMOVABLE인 page (boot_kmem_cache)의 virtual address
 	freelist = new_slab_objects(s, gfpflags, node, &c);
 	// freelist: UNMOVABLE인 page 의 object의 시작 virtual address + 64
 	// freelist: UNMOVABLE인 page (boot_kmem_cache)의 virtual address
@@ -3284,14 +3290,15 @@ new_slab:
 	// 이전에 할당 받은 MIGRATE_UNMOVABLE인 page의 두번째 object의 맴버 필드값을 변경
 	// n->nr_slabs: 1
 	// n->total_objects: 32
-	// page->slab_cache: &boot_kmem_cache주소를 set
-	// slab 의 objects 들의 freepointer를 맵핑함
 	// 새로 받은 page의 맴버 필드 값 세팅
-	// page->freelist: UNMOVABLE인 page (boot_kmem_cache)의 virtual address
+	// slab 의 objects 들의 freepointer를 맵핑함
+	// page->slab_cache: &boot_kmem_cache주소를 set
+	// page->freelist: NULL
 	// page->inuse: 32
 	// page->frozen: 1
 	// page->flags에 7 (PG_slab) bit를 set
 
+	// freelist: UNMOVABLE인 page 의 object의 시작 virtual address + 64
 	// freelist: UNMOVABLE인 page (boot_kmem_cache)의 virtual address
 	if (unlikely(!freelist)) {
 		if (!(gfpflags & __GFP_NOWARN) && printk_ratelimit())
@@ -3436,8 +3443,8 @@ redo:
 		// s: &boot_kmem_cache, gfpflags: __GFP_ZERO: 0x8000, node: -1, addr: _RET_IP_,
 		// c: (&boot_kmem_cache)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋)
 		// __slab_alloc(&boot_kmem_cache, __GFP_ZERO: 0x8000, -1, _RET_IP_,
-		// (&boot_kmem_cache_node)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋)):
-		// UNMOVABLE인 page 의 object의 시작 virtual address + 64
+		// (&boot_kmem_cache)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋)):
+		// UNMOVABLE인 page (boot_kmem_cache)의 object의 시작 virtual address
 		object = __slab_alloc(s, gfpflags, node, addr, c);
 		// object: UNMOVABLE인 page 의 object의 시작 virtual address + 64
 		// object: UNMOVABLE인 page (boot_kmem_cache)의 object의 시작 virtual address
@@ -3461,15 +3468,15 @@ redo:
 		// 이전에 할당 받은 MIGRATE_UNMOVABLE인 page의 두번째 object의 맴버 필드값을 변경
 		// n->nr_slabs: 1
 		// n->total_objects: 32
-		// page->slab_cache: &boot_kmem_cache주소를 set
 		// slab 의 objects 들의 freepointer를 맵핑함
 		// 새로 받은 page의 맴버 필드 값 세팅
-		// page->freelist: UNMOVABLE인 page (boot_kmem_cache)의 virtual address
+		// page->slab_cache: &boot_kmem_cache주소를 set
+		// page->freelist: NULL
 		// page->inuse: 32
 		// page->frozen: 1
 		// page->flags에 7 (PG_slab) bit를 set
 		// c->freelist: ((&boot_kmem_cache)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->freelist:
-		// UNMOVABLE인 page (boot_kmem_cache)의 object의 시작 virtual address
+		// UNMOVABLE인 page (boot_kmem_cache)의 시작 object의 virtual address + 128
 		// c->tid: ((&boot_kmem_cache)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->tid: 4
 	else {
 		void *next_object = get_freepointer_safe(s, object);
@@ -3532,7 +3539,7 @@ static __always_inline void *slab_alloc(struct kmem_cache *s,
 	// UNMOVABLE인 page 의 object의 시작 virtual address + 64
 	// s: &boot_kmem_cache, gfpflags: __GFP_ZERO: 0x8000, NUMA_NO_NODE: -1, _RET_IP_
 	// slab_alloc_node(&boot_kmem_cache, __GFP_ZERO: 0x8000, -1, _RET_IP_):
-	// UNMOVABLE인 page 의 object의 시작 virtual address + 64
+	// UNMOVABLE인 page (boot_kmem_cache)의 object의 시작 virtual address
 	return slab_alloc_node(s, gfpflags, NUMA_NO_NODE, addr);
 	// return UNMOVABLE인 page 의 object의 시작 virtual address + 64
 	// return UNMOVABLE인 page (boot_kmem_cache)의 object의 시작 virtual address
@@ -3547,20 +3554,27 @@ void *kmem_cache_alloc(struct kmem_cache *s, gfp_t gfpflags)
 	// s: &boot_kmem_cache_node, gfpflags: GFP_KERNEL: 0xD0
 	// slab_alloc(&boot_kmem_cache_node, GFP_KERNEL: 0xD0): UNMOVABLE인 page 의 object의 시작 virtual address + 64
 	// s: &boot_kmem_cache, gfpflags: __GFP_ZERO: 0x8000
-	// slab_alloc(&boot_kmem_cache, __GFP_ZERO: 0x8000): UNMOVABLE인 page 의 object의 시작 virtual address + 64
+	// slab_alloc(&boot_kmem_cache, __GFP_ZERO: 0x8000): UNMOVABLE인 page (boot_kmem_cache)의 object의 시작 virtual address
 	void *ret = slab_alloc(s, gfpflags, _RET_IP_);
 	// ret: UNMOVABLE인 page 의 object의 시작 virtual address + 64
+	// ret: UNMOVABLE인 page (boot_kmem_cache)의 object의 시작 virtual address
 
 	// ret: UNMOVABLE인 page 의 object의 시작 virtual address + 64
-	// s->object_size: boot_kmem_cache_node.object_size: 64,
+	// s->object_size: boot_kmem_cache_node.object_size: 44,
 	// s->size: boot_kmem_cache_node.size: 64,
 	// gfpflags: GFP_KERNEL: 0xD0
+	// ret: UNMOVABLE인 page (boot_kmem_cache)의 object의 시작 virtual address
+	// s->object_size: boot_kmem_cache.object_size: 116,
+	// s->size: boot_kmem_cache.size: 128,
+	// gfpflags: __GFP_ZERO: 0x8000
 	trace_kmem_cache_alloc(_RET_IP_, ret, s->object_size,
 				s->size, gfpflags);
 
 	// ret: UNMOVABLE인 page 의 object의 시작 virtual address + 64
+	// ret: UNMOVABLE인 page (boot_kmem_cache)의 object의 시작 virtual address
 	return ret;
 	// return UNMOVABLE인 page 의 object의 시작 virtual address + 64
+	// return UNMOVABLE인 page (boot_kmem_cache)의 object의 시작 virtual address
 }
 EXPORT_SYMBOL(kmem_cache_alloc);
 
@@ -5261,6 +5275,7 @@ void __init kmem_cache_init(void)
 	// boot_kmem_cache.reserved: 0
 	// boot_kmem_cache.min_partial: 5
 	// boot_kmem_cache.cpu_partial: 30
+	// boot_kmem_cache.refcount: -1
 	//
 	// 할당 받아 놓은 migratetype이 MIGRATE_UNMOVABLE인 page 를 사용
 	// page 맴버를 셋팅함
