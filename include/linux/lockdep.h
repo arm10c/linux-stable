@@ -386,6 +386,7 @@ static inline void lockdep_on(void)
 // ARM10C 20140426
 // ARM10C 20140614
 // ARM10C 20140628
+// ARM10C 20140705
 # define lockdep_trace_alloc(g)			do { } while (0)
 # define lockdep_init()				do { } while (0)
 # define lockdep_info()				do { } while (0)

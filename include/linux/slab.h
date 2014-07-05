@@ -658,11 +658,16 @@ extern void *__kmalloc_node_track_caller(size_t, gfp_t, int, unsigned long);
  */
 // ARM10C 20140628
 // kmem_cache: &boot_kmem_cache, GFP_NOWAIT: 0
+// ARM10C 20140705
+// kmem_cache: &boot_kmem_cache_node, GFP_NOWAIT: 0
 static inline void *kmem_cache_zalloc(struct kmem_cache *k, gfp_t flags)
 {
 	// k: &boot_kmem_cache, flags: GFP_NOWAIT: 0, __GFP_ZERO: 0x8000u
 	// kmem_cache_alloc(&boot_kmem_cache, __GFP_ZERO: 0x8000u):
 	// UNMOVABLE인 page (boot_kmem_cache)의 object의 시작 virtual address
+	// k: &boot_kmem_cache_node, flags: GFP_NOWAIT: 0, __GFP_ZERO: 0x8000u
+	// kmem_cache_alloc(&boot_kmem_cache_node, __GFP_ZERO: 0x8000u):
+	// UNMOVABLE인 page (boot_kmem_cache_node)의 object의 시작 virtual address
 	return kmem_cache_alloc(k, flags | __GFP_ZERO);
 	// return UNMOVABLE인 page (boot_kmem_cache)의 object의 시작 virtual address
 }

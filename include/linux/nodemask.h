@@ -481,6 +481,7 @@ static inline int num_node_state(enum node_states state)
 // ARM10C 20140308
 // ARM10C 20140419
 // ARM10C 20140426
+// ARM10C 20140705
 #define for_each_node_state(node, __state) \
 	for ( (node) = 0; (node) == 0; (node) = 1)
 

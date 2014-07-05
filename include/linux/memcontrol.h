@@ -664,14 +664,18 @@ static inline void memcg_cache_list_add(struct mem_cgroup *memcg,
 // s: &boot_kmem_cache_node, gfpflags: GFP_KERNEL: 0xD0
 // ARM10C 20140628
 // s: &boot_kmem_cache, gfpflags: __GFP_ZERO: 0x8000
+// ARM10C 20140705
+// s: &boot_kmem_cache_node, gfpflags: __GFP_ZERO: 0x8000
 static inline struct kmem_cache *
 memcg_kmem_get_cache(struct kmem_cache *cachep, gfp_t gfp)
 {
 	// cachep: &boot_kmem_cache_node
 	// cachep: &boot_kmem_cache
+	// cachep: &boot_kmem_cache_node
 	return cachep;
 	// return &boot_kmem_cache_node
 	// return &boot_kmem_cache
+	// return &boot_kmem_cache_node
 }
 
 static inline void kmem_cache_destroy_memcg_children(struct kmem_cache *s)

@@ -174,6 +174,19 @@ extern int __init pcpu_page_first_chunk(size_t reserved_size,
 //  	} while (0)
 //  	(&boot_kmem_cache_node)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋);
 // })
+// ARM10C 20140705
+// s->cpu_slab: (&boot_kmem_cache)->cpu_slab: 0xc0502d10, cpu: 0
+//
+// per_cpu_offset((0)): __per_cpu_offset[0]: pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋
+//
+// #define SHIFT_PERCPU_PTR((&boot_kmem_cache)->cpu_slab, (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))
+// ({
+//  	do {
+// 	 	const void __percpu *__vpp_verify = (typeof((&boot_kmem_cache)->cpu_slab))NULL;
+// 	 	(void)__vpp_verify;
+//  	} while (0)
+//  	(&boot_kmem_cache)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋);
+// })
 #define per_cpu_ptr(ptr, cpu)	SHIFT_PERCPU_PTR((ptr), per_cpu_offset((cpu)))
 #else
 #define per_cpu_ptr(ptr, cpu)	({ (void)(cpu); VERIFY_PERCPU_PTR((ptr)); })
@@ -263,6 +276,53 @@ extern void __bad_size_call_parameter(void);
  * a double cmpxchg instruction, since it's a cheap requirement, and it
  * avoids breaking the requirement for architectures with the instruction.
  */
+// ARM10C 20140705
+// this_cpu_cmpxchg_double_,
+// s->cpu_slab->freelist: (boot_kmem_cache_node.cpu_slab)->freelist:
+// UNMOVABLE인 page 의 object의 시작 virtual address + 128,
+// s->cpu_slab->tid: (boot_kmem_cache_node.cpu_slab)->tid: 4,
+// object: UNMOVABLE인 page 의 object의 시작 virtual address + 128
+// tid: 4, next_object: UNMOVABLE인 page 의 object의 시작 virtual address + 192,
+// next_tid(4): 8
+//
+// #define __pcpu_double_call_return_bool(this_cpu_cmpxchg_double_,
+//         UNMOVABLE인 page 의 object의 시작 virtual address + 128, 4, ...)
+// ({
+// 	bool pdcrb_ret__;
+// 	__verify_pcpu_ptr(&UNMOVABLE인 page 의 object의 시작 virtual address + 128);
+//
+// 	BUILD_BUG_ON(sizeof(UNMOVABLE인 page 의 object의 시작 virtual address + 128) != sizeof(4));
+//
+// 	VM_BUG_ON((unsigned long)(&UNMOVABLE인 page 의 object의 시작 virtual address + 128)
+// 	% (2 * sizeof(UNMOVABLE인 page 의 object의 시작 virtual address + 128)));
+//
+// 	VM_BUG_ON((unsigned long)(&4) !=
+// 		  (unsigned long)(&UNMOVABLE인 page 의 object의 시작 virtual address + 128)
+// 		  + sizeof(UNMOVABLE인 page 의 object의 시작 virtual address + 128));
+//
+// 	switch(sizeof(UNMOVABLE인 page 의 object의 시작 virtual address + 128)) {
+// 	case 1:
+// 	pdcrb_ret__ = this_cpu_cmpxchg_double_1(UNMOVABLE인 page 의 object의 시작 virtual address + 128, 4, __VA_ARGS__);
+// 	break;
+//
+// 	case 2:
+// 	pdcrb_ret__ = this_cpu_cmpxchg_double_2(UNMOVABLE인 page 의 object의 시작 virtual address + 128, 4, __VA_ARGS__);
+// 	break;
+//
+// 	case 4:
+// 	pdcrb_ret__ = this_cpu_cmpxchg_double_4(UNMOVABLE인 page 의 object의 시작 virtual address + 128, 4, __VA_ARGS__);
+// 	break;
+//
+// 	case 8:
+// 	pdcrb_ret__ = this_cpu_cmpxchg_double_8(UNMOVABLE인 page 의 object의 시작 virtual address + 128, 4, __VA_ARGS__);
+// 	break;
+//
+// 	default:
+// 		__bad_size_call_parameter(); break;
+// 	}
+// 	pdcrb_ret__;
+// })
+//
 #define __pcpu_double_call_return_bool(stem, pcp1, pcp2, ...)		\
 ({									\
 	bool pdcrb_ret__;						\
@@ -574,6 +634,25 @@ do {									\
  * very limited hardware support for these operations, so only certain
  * sizes may work.
  */
+// ARM10C 20140705
+// UNMOVABLE인 page 의 object의 시작 virtual address + 128, 4,
+// object: UNMOVABLE인 page 의 object의 시작 virtual address + 128,
+// tid: 4, next_object: UNMOVABLE인 page 의 object의 시작 virtual address + 192,
+// next_tid(4): 8
+//
+// #define _this_cpu_generic_cmpxchg_double(UNMOVABLE인 page 의 object의 시작 virtual address + 128, 4,
+//          UNMOVABLE인 page 의 object의 시작 virtual address + 128, 4,
+//          UNMOVABLE인 page 의 object의 시작 virtual address + 192, 8)
+// ({
+// 	int ret__;
+// 	unsigned long flags;
+// 	raw_local_irq_save(flags);
+// 	ret__ = __this_cpu_generic_cmpxchg_double(UNMOVABLE인 page 의 object의 시작 virtual address + 128, 4,
+// 			UNMOVABLE인 page 의 object의 시작 virtual address + 128, 4,
+// 			UNMOVABLE인 page 의 object의 시작 virtual address + 192, 8);
+// 	raw_local_irq_restore(flags);
+// 	ret__;
+// })
 #define _this_cpu_generic_cmpxchg_double(pcp1, pcp2, oval1, oval2, nval1, nval2)	\
 ({									\
 	int ret__;							\
@@ -595,6 +674,11 @@ do {									\
 	_this_cpu_generic_cmpxchg_double(pcp1, pcp2, oval1, oval2, nval1, nval2)
 # endif
 # ifndef this_cpu_cmpxchg_double_4
+// ARM10C 20140705
+// UNMOVABLE인 page 의 object의 시작 virtual address + 128, 4,
+// object: UNMOVABLE인 page 의 object의 시작 virtual address + 128,
+// tid: 4, next_object: UNMOVABLE인 page 의 object의 시작 virtual address + 192,
+// next_tid(4): 8
 #  define this_cpu_cmpxchg_double_4(pcp1, pcp2, oval1, oval2, nval1, nval2)	\
 	_this_cpu_generic_cmpxchg_double(pcp1, pcp2, oval1, oval2, nval1, nval2)
 # endif
@@ -602,6 +686,13 @@ do {									\
 #  define this_cpu_cmpxchg_double_8(pcp1, pcp2, oval1, oval2, nval1, nval2)	\
 	_this_cpu_generic_cmpxchg_double(pcp1, pcp2, oval1, oval2, nval1, nval2)
 # endif
+// ARM10C 20140705
+// s->cpu_slab->freelist: (boot_kmem_cache_node.cpu_slab)->freelist:
+// UNMOVABLE인 page 의 object의 시작 virtual address + 128,
+// s->cpu_slab->tid: (boot_kmem_cache_node.cpu_slab)->tid: 4,
+// object: UNMOVABLE인 page 의 object의 시작 virtual address + 128
+// tid: 4, next_object: UNMOVABLE인 page 의 object의 시작 virtual address + 192,
+// next_tid(4): 8
 # define this_cpu_cmpxchg_double(pcp1, pcp2, oval1, oval2, nval1, nval2)	\
 	__pcpu_double_call_return_bool(this_cpu_cmpxchg_double_, (pcp1), (pcp2), (oval1), (oval2), (nval1), (nval2))
 #endif

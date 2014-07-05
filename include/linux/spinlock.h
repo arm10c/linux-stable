@@ -311,6 +311,7 @@ do {							\
 // ARM10C 20140405
 // ARM10C 20140517
 // &zone->lock: &contig_page_data->node_zones[0].lock
+// ARM10C 20140705
 static inline void spin_lock(spinlock_t *lock)
 {
 	// lock->rlock: (&contig_page_data->node_zones[0].lock)->rlock

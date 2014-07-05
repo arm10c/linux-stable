@@ -420,6 +420,7 @@ static inline void list_splice_tail_init(struct list_head *list,
 // ARM10C 20140531
 // #define list_entry((&pcpu_slot[1])->next, typeof(*chunk), list):
 // container_of((&pcpu_slot[1])->next, typeof(*chunk), list)
+// ARM10C 20140705
 #define list_entry(ptr, type, member)		\
 	container_of(ptr, type, member)
 
@@ -435,6 +436,7 @@ static inline void list_splice_tail_init(struct list_head *list,
 // #define list_first_entry(&pcpu_slot[1], typeof(*chunk), list):
 // list_entry((&pcpu_slot[1])->next, typeof(*chunk), list)
 // ARM10C 20140614
+// ARM10C 20140705
 #define list_first_entry(ptr, type, member) \
 	list_entry((ptr)->next, type, member)
 
@@ -526,6 +528,10 @@ static inline void list_splice_tail_init(struct list_head *list,
 // #define list_for_each_entry(chunk, &pcpu_slot[slot], list):
 // for (chunk = list_first_entry(&pcpu_slot[1], typeof(*chunk), list);
 //      &chunk->list != (&pcpu_slot[1]); chunk = list_next_entry(chunk, list))
+// ARM10C 20140705
+// #define list_for_each_entry(p, &n->partial, lru):
+// for (p = list_first_entry(&n->partial, typeof(*p), lru);
+//      &p->lru != (&n->partial); p = list_next_entry(p, lru))
 #define list_for_each_entry(pos, head, member)				\
 	for (pos = list_first_entry(head, typeof(*pos), member);	\
 	     &pos->member != (head);					\

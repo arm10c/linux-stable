@@ -27,6 +27,7 @@
 // ARM10C 20140426
 // ARM10C 20140607
 enum slab_state slab_state;
+// ARM10C 20140705
 LIST_HEAD(slab_caches);
 DEFINE_MUTEX(slab_mutex);
 // ARM10C 20140419
@@ -387,9 +388,9 @@ void __init create_boot_cache(struct kmem_cache *s, const char *name, size_t siz
 	//
 	// 할당 받아 놓은 migratetype이 MIGRATE_UNMOVABLE인 page 를 사용
 	// page 맴버를 셋팅함
-	// page->counters: 0x80400040
-	// page->inuse: 64
-	// page->objects: 64
+	// page->counters: 0x80200020
+	// page->inuse: 32
+	// page->objects: 32
 	// page->frozen: 1
 	// page->freelist: NULL
 	// 할당받은 slab object를 kmem_cache_node 로 사용하고 kmem_cache_node의 멤버 필드를 초기화함

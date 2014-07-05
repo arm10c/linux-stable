@@ -29,6 +29,7 @@ extern enum slab_state slab_state;
 extern struct mutex slab_mutex;
 
 /* The list of all slab caches on the system */
+// ARM10C 20140705
 extern struct list_head slab_caches;
 
 /* The slab cache that manages slab cache information */
