@@ -10,6 +10,7 @@
    - mm/slub.c               | 69 ++++++++++++++++++++++++++++++-------------------
    - mm/vmstat.c             |  4 +++
 
+  - 58th week study : [58th](https://github.com/arm10c/linux-stable/blob/master/Reference/postscript/a10c_58.md)
   ...
   - 2012-07-06
     - arch/arm/boot/compressed/head.S
