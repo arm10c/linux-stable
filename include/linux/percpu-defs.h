@@ -65,7 +65,8 @@
  * restrictions, if CONFIG_DEBUG_FORCE_WEAK_PER_CPU is set weak
  * definition is used for all cases.
  */
-#if defined(ARCH_NEEDS_WEAK_PER_CPU) || defined(CONFIG_DEBUG_FORCE_WEAK_PER_CPU)	// ARCH_NEEDS_WEAK_PER_CPU = undefined, CONFIG_DEBUG_FORCE_WEAK_PER_CPU = n 
+// ARCH_NEEDS_WEAK_PER_CPU = undefined, CONFIG_DEBUG_FORCE_WEAK_PER_CPU = n
+#if defined(ARCH_NEEDS_WEAK_PER_CPU) || defined(CONFIG_DEBUG_FORCE_WEAK_PER_CPU)
 /*
  * __pcpu_scope_* dummy variable is used to enforce scope.  It
  * receives the static modifier when it's used in front of
