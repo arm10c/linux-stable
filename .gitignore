@@ -38,7 +38,7 @@ modules.builtin
 # Top-level generic files
 #
 /tags*
-/TAGS
+/TAGS*
 /linux
 /vmlinux
 /vmlinuz
