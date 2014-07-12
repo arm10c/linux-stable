@@ -585,22 +585,32 @@ static __always_inline void slab_unlock(struct page *page)
 // s: UNMOVABLE인 page (boot_kmem_cache)의 object의 시작 virtual address,
 // page: UNMOVABLE인 page (boot_kmem_cache),
 // old.freelist: UNMOVABLE인 page (boot_kmem_cache)의 시작 virtual address + 3968,
-// old.counters: 0x80200001,
+// old.counters: 0x80200002,
 // new.freelist: UNMOVABLE인 page (boot_kmem_cache)의 시작 virtual address + 3968,
-// new.counters: 0x00200000,
+// new.counters: 0x00200001,
 // "unfreezing slab"
 // ARM10C 20140712
 // s: UNMOVABLE인 page 의 object의 시작 virtual address + 128,
 // page: UNMOVABLE인 page,
 // prior: NULL, counters: 0x80400040,
-// freelist: UNMOVABLE인 page 의 시작 virtual address + 128,
-// new.counters: 0x8420003f,
+// freelist: UNMOVABLE인 page 의 시작 virtual address + 192,
+// new.counters: 0x8040003f,
 // "drain percpu freelist"
+// ARM10C 20140712
+// s: UNMOVABLE인 page 의 object의 시작 virtual address + 128,
+// page: UNMOVABLE인 page,
+// old.freelist: UNMOVABLE인 page 의 시작 virtual address + 3968
+// old.counters: 0x80400004
+// new.freelist: UNMOVABLE인 page 의 시작 virtual address + 4032
+// new.counters: 0x00400003
+// "unfreezing slab"
 static inline bool __cmpxchg_double_slab(struct kmem_cache *s, struct page *page,
 		void *freelist_old, unsigned long counters_old,
 		void *freelist_new, unsigned long counters_new,
 		const char *n)
 {
+	// irqs_disabled(): 1
+	// irqs_disabled(): 1
 	// irqs_disabled(): 1
 	// irqs_disabled(): 1
 	// irqs_disabled(): 1
@@ -620,7 +630,11 @@ static inline bool __cmpxchg_double_slab(struct kmem_cache *s, struct page *page
 		// page: MIGRATE_UNMOVABLE인 page
 		// page: UNMOVABLE인 page (boot_kmem_cache)
 		// page: UNMOVABLE인 page (boot_kmem_cache)
+		// page: MIGRATE_UNMOVABLE인 page
+		// page: MIGRATE_UNMOVABLE인 page
 		slab_lock(page);
+		// preempt count 증가 후 memory barrier 적용
+		// preempt count 증가 후 memory barrier 적용
 		// preempt count 증가 후 memory barrier 적용
 		// preempt count 증가 후 memory barrier 적용
 		// preempt count 증가 후 memory barrier 적용
@@ -636,39 +650,65 @@ static inline bool __cmpxchg_double_slab(struct kmem_cache *s, struct page *page
 		// page->freelist: UNMOVABLE인 page (boot_kmem_cache)의 시작 virtual address + 3968,
 		// freelist_old: UNMOVABLE인 page (boot_kmem_cache)의 시작 virtual address + 3968,
 		// page->counters: 0x80200001, counters_old: 0x80200001
+		//
+		// page: UNMOVABLE인 page
+		// page->freelist: (UNMOVABLE인 page)->freelist: NULL, freelist_old: NULL
+		// page->counters: 0x80400040, counters_old: 0x80400040
+		// page: UNMOVABLE인 page
+		// page->freelist: UNMOVABLE인 page 의 시작 virtual address + 3968,
+		// freelist_old: UNMOVABLE인 page 의 시작 virtual address + 3968
+		// page->counters: 0x80400004, counters_old: 0x80400004
 		if (page->freelist == freelist_old &&
 					page->counters == counters_old) {
 			// freelist_new: NULL
 			// freelist_new: UNMOVABLE인 page (boot_kmem_cache)의 시작 virtual address + 128
 			// freelist_new: UNMOVABLE인 page (boot_kmem_cache)의 시작 virtual address + 3968
+			// freelist_new: UNMOVABLE인 page 의 시작 virtual address + 192
+			// freelist_new: UNMOVABLE인 page 의 시작 virtual address + 4032
 			page->freelist = freelist_new;
 			// page->freelist: NULL
 			// page->freelist: UNMOVABLE인 page (boot_kmem_cache)의 시작 virtual address + 128
 			// page->freelist: UNMOVABLE인 page (boot_kmem_cache)의 시작 virtual address + 3968
+			// page->freelist: UNMOVABLE인 page 의 시작 virtual address + 192
+			// page->freelist: UNMOVABLE인 page 의 시작 virtual address + 4032
 
 			// page->counters: 0x400001, counters_new: 0x80400040
 			// page->counters: 0x80200020, counters_new: 0x8020001f
 			// page->counters: 0x80200001, counters_new: 0x00200000
+			// page->counters: 0x80400040, counters_new: 0x8040003f
+			// page->counters: 0x80400004, counters_new: 0x00400003
 			page->counters = counters_new;
 			// page->counters: 0x80400040
 			// page->counters: 0x8020001f
 			// page->counters: 0x00200000
+			// page->counters: 0x8040003f
+			// page->counters: 0x00400003
 
 			// page: MIGRATE_UNMOVABLE인 page
 			// page: UNMOVABLE인 page (boot_kmem_cache)
 			// page: UNMOVABLE인 page (boot_kmem_cache)
+			// page: MIGRATE_UNMOVABLE인 page
+			// page: MIGRATE_UNMOVABLE인 page
 			slab_unlock(page);
 			// (MIGRATE_UNMOVABLE인 page)->flags 의 bit 0을 클리어함
 			// dmb(ish)를 사용하여 공유 자원 (MIGRATE_UNMOVABLE인 page)->flags 값을 갱신
 			// memory barrier 적용 후 preempt count 감소 시킴
 			// (MIGRATE_UNMOVABLE인 page(boot_kmem_cache))->flags 의 bit 0을 클리어함
-			// dmb(ish)를 사용하여 공유 자원 (MIGRATE_UNMOVABLE인 page)->flags 값을 갱신
+			// dmb(ish)를 사용하여 공유 자원 (MIGRATE_UNMOVABLE인 page(boot_kmem_cache))->flags 값을 갱신
 			// memory barrier 적용 후 preempt count 감소 시킴
 			// (MIGRATE_UNMOVABLE인 page(boot_kmem_cache))->flags 의 bit 0을 클리어함
+			// dmb(ish)를 사용하여 공유 자원 (MIGRATE_UNMOVABLE인 page(boot_kmem_cache))->flags 값을 갱신
+			// memory barrier 적용 후 preempt count 감소 시킴
+			// (MIGRATE_UNMOVABLE인 page)->flags 의 bit 0을 클리어함
+			// dmb(ish)를 사용하여 공유 자원 (MIGRATE_UNMOVABLE인 page)->flags 값을 갱신
+			// memory barrier 적용 후 preempt count 감소 시킴
+			// (MIGRATE_UNMOVABLE인 page)->flags 의 bit 0을 클리어함
 			// dmb(ish)를 사용하여 공유 자원 (MIGRATE_UNMOVABLE인 page)->flags 값을 갱신
 			// memory barrier 적용 후 preempt count 감소 시킴
 
 			return 1;
+			// return 1
+			// return 1
 			// return 1
 			// return 1
 			// return 1
@@ -2722,7 +2762,7 @@ static void init_kmem_cache_cpus(struct kmem_cache *s)
 // c->page: ((&boot_kmem_cache_node 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->page:
 // UNMOVABLE인 page,
 // c->freelist: ((&boot_kmem_cache_node 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->freelist:
-// UNMOVABLE인 page 의 object의 시작 virtual address + 128
+// UNMOVABLE인 page 의 object의 시작 virtual address + 192
 static void deactivate_slab(struct kmem_cache *s, struct page *page,
 				void *freelist)
 {
@@ -2778,11 +2818,11 @@ static void deactivate_slab(struct kmem_cache *s, struct page *page,
 	//
 	// [boot_kmem_cache_node 로 호출]
 	// s: UNMOVABLE인 page 의 object의 시작 virtual address + 128,
-	// freelist: UNMOVABLE인 page 의 object의 시작 virtual address + 128,
+	// freelist: UNMOVABLE인 page 의 object의 시작 virtual address + 192,
 	// get_freepointer(UNMOVABLE인 page 의 object의 시작 virtual address + 128,
-	// UNMOVABLE인 page 의 object의 시작 virtual address + 128):
-	// UNMOVABLE인 page (boot_kmem_cache)의 시작 virtual address + 192
-	// nextfree: UNMOVABLE인 page (boot_kmem_cache)의 시작 virtual address + 192
+	// UNMOVABLE인 page 의 object의 시작 virtual address + 192):
+	// UNMOVABLE인 page (boot_kmem_cache)의 시작 virtual address + 256
+	// nextfree: UNMOVABLE인 page (boot_kmem_cache)의 시작 virtual address + 256
 	while (freelist && (nextfree = get_freepointer(s, freelist))) {
 		void *prior;
 		unsigned long counters;
@@ -2792,23 +2832,23 @@ static void deactivate_slab(struct kmem_cache *s, struct page *page,
 		// [loop 2] freelist: UNMOVABLE인 page (boot_kmem_cache)의 시작 virtual address + 256
 		// [loop 2] nextfree: UNMOVABLE인 page (boot_kmem_cache)의 시작 virtual address + 384
 		//
-		// [loop 1] freelist: UNMOVABLE인 page의 시작 virtual address + 128
-		// [loop 1] nextfree: UNMOVABLE인 page의 시작 virtual address + 192
-		// [loop 2] freelist: UNMOVABLE인 page의 시작 virtual address + 192
-		// [loop 2] nextfree: UNMOVABLE인 page의 시작 virtual address + 256
+		// [loop 1] freelist: UNMOVABLE인 page의 시작 virtual address + 192
+		// [loop 1] nextfree: UNMOVABLE인 page의 시작 virtual address + 256
+		// [loop 2] freelist: UNMOVABLE인 page의 시작 virtual address + 256
+		// [loop 2] nextfree: UNMOVABLE인 page의 시작 virtual address + 320
 
 		do {
 			// [loop 1] page->freelist: NULL
 			// [loop 2] page->freelist: UNMOVABLE인 page (boot_kmem_cache)의 시작 virtual address + 128
 			//
 			// [loop 1] page->freelist: NULL
-			// [loop 2] page->freelist: UNMOVABLE인 page 의 시작 virtual address + 128
+			// [loop 2] page->freelist: UNMOVABLE인 page 의 시작 virtual address + 192
 			prior = page->freelist;
 			// [loop 1] prior: NULL
 			// [loop 2] prior: UNMOVABLE인 page (boot_kmem_cache)의 시작 virtual address + 128
 			//
 			// [loop 1] prior: NULL
-			// [loop 2] prior: UNMOVABLE인 page 의 시작 virtual address + 128
+			// [loop 2] prior: UNMOVABLE인 page 의 시작 virtual address + 192
 
 			// [loop 1] page->counters: (UNMOVABLE인 page (boot_kmem_cache))->counters: 0x80200020
 			// [loop 2] page->counters: (UNMOVABLE인 page (boot_kmem_cache))->counters: 0x8020001f
@@ -2830,11 +2870,11 @@ static void deactivate_slab(struct kmem_cache *s, struct page *page,
 			// [loop 2] prior: UNMOVABLE인 page (boot_kmem_cache)의 시작 virtual address + 128
 			//
 			// [loop 1] s: UNMOVABLE인 page 의 object의 시작 virtual address + 128,
-			// [loop 1] freelist: UNMOVABLE인 page 의 object의 시작 virtual address + 128,
+			// [loop 1] freelist: UNMOVABLE인 page 의 object의 시작 virtual address + 192,
 			// [loop 1] prior: NULL
 			// [loop 2] s: UNMOVABLE인 page 의 object의 시작 virtual address + 128,
-			// [loop 2] freelist: UNMOVABLE인 page 의 시작 virtual address + 192,
-			// [loop 2] prior: UNMOVABLE인 page 의 시작 virtual address + 128
+			// [loop 2] freelist: UNMOVABLE인 page 의 시작 virtual address + 256,
+			// [loop 2] prior: UNMOVABLE인 page 의 시작 virtual address + 192
 			set_freepointer(s, freelist, prior);
 			// [loop 1] freelist: UNMOVABLE인 page (boot_kmem_cache)의 시작 virtual address + 128: NULL
 			// [loop 1] UNMOVABLE인 page (boot_kmem_cache)의 시작 virtual address + 128 의 다음 object를 가리키는 주소의 값을
@@ -2844,12 +2884,12 @@ static void deactivate_slab(struct kmem_cache *s, struct page *page,
 			// [loop 2] UNMOVABLE인 page (boot_kmem_cache)의 시작 virtual address + 256 의 다음 object를 가리키는 주소의 값을
 			// [loop 2] 이전 object 주소로 세팅
 			//
-			// [loop 1] freelist: UNMOVABLE인 page 의 시작 virtual address + 128: NULL
-			// [loop 1] UNMOVABLE인 page 의 시작 virtual address + 128 의 다음 object를 가리키는 주소의 값을
+			// [loop 1] freelist: UNMOVABLE인 page 의 시작 virtual address + 192: NULL
+			// [loop 1] UNMOVABLE인 page 의 시작 virtual address + 192 의 다음 object를 가리키는 주소의 값을
 			// [loop 1] NULL로 세팅
-			// [loop 2] freelist: UNMOVABLE인 page 의 시작 virtual address + 192:
-			// [loop 2] UNMOVABLE인 page 의 시작 virtual address + 128,
-			// [loop 2] UNMOVABLE인 page 의 시작 virtual address + 192 의 다음 object를 가리키는 주소의 값을
+			// [loop 2] freelist: UNMOVABLE인 page 의 시작 virtual address + 256:
+			// [loop 2] UNMOVABLE인 page 의 시작 virtual address + 192,
+			// [loop 2] UNMOVABLE인 page 의 시작 virtual address + 256 의 다음 object를 가리키는 주소의 값을
 			// [loop 2] 이전 object 주소로 세팅
 
 			// [loop 1] counters: 0x80200020
@@ -2912,27 +2952,27 @@ static void deactivate_slab(struct kmem_cache *s, struct page *page,
 			// [loop 1] s: UNMOVABLE인 page 의 object의 시작 virtual address + 128,
 			// [loop 1] page: UNMOVABLE인 page,
 			// [loop 1] prior: NULL, counters: 0x80400040,
-			// [loop 1] freelist: UNMOVABLE인 page 의 시작 virtual address + 128,
-			// [loop 1] new.counters: 0x8420003f,
+			// [loop 1] freelist: UNMOVABLE인 page 의 시작 virtual address + 192,
+			// [loop 1] new.counters: 0x8040003f,
 			// [loop 1] "drain percpu freelist"
 			// [loop 1] __cmpxchg_double_slab(UNMOVABLE인 page 의 object의 시작 virtual address + 128,
-			// [loop 1] UNMOVABLE인 page, NULL, 0x80400040, UNMOVABLE인 page 의 시작 virtual address + 128,
+			// [loop 1] UNMOVABLE인 page, NULL, 0x80400040, UNMOVABLE인 page 의 시작 virtual address + 192,
 			// [loop 1] 0x8040003f, "drain percpu freelist"): 1
 			// [loop 1] UNMOVABLE인 page 의 필드 맴버 값 변경
-			// [loop 1] (UNMOVABLE인 page)->freelist: UNMOVABLE인 page (boot_kmem_cache)의 시작 virtual address + 128
+			// [loop 1] (UNMOVABLE인 page)->freelist: UNMOVABLE인 page 의 시작 virtual address + 192
 			// [loop 1] (UNMOVABLE인 page)->counters: 0x8040003f
 			//
 			// [loop 2] s: UNMOVABLE인 page 의 object의 시작 virtual address + 128,
 			// [loop 2] page: UNMOVABLE인 page,
-			// [loop 2] prior: UNMOVABLE인 page 의 시작 virtual address + 128, counters: 0x8040003f,
-			// [loop 2] freelist: UNMOVABLE인 page 의 시작 virtual address + 192,
+			// [loop 2] prior: UNMOVABLE인 page 의 시작 virtual address + 192, counters: 0x8040003f,
+			// [loop 2] freelist: UNMOVABLE인 page 의 시작 virtual address + 256,
 			// [loop 2] new.counters: 0x8040003e,
 			// [loop 2] "drain percpu freelist"
 			// [loop 2] __cmpxchg_double_slab(UNMOVABLE인 page 의 object의 시작 virtual address + 128,
-			// [loop 2] UNMOVABLE인 page, UNMOVABLE인 page 의 시작 virtual address + 128,
-			// [loop 2] 0x8040003f, UNMOVABLE인 page 의 시작 virtual address + 192, 0x8040003e, "drain percpu freelist"): 1
+			// [loop 2] UNMOVABLE인 page, UNMOVABLE인 page 의 시작 virtual address + 192,
+			// [loop 2] 0x8040003f, UNMOVABLE인 page 의 시작 virtual address + 256, 0x8040003e, "drain percpu freelist"): 1
 			// [loop 2] UNMOVABLE인 page 의 필드 맴버 값 변경
-			// [loop 2] (UNMOVABLE인 page)->freelist: UNMOVABLE인 page 의 시작 virtual address + 192
+			// [loop 2] (UNMOVABLE인 page)->freelist: UNMOVABLE인 page 의 시작 virtual address + 256
 			// [loop 2] (UNMOVABLE인 page))->counters: 0x8040003e
 		} while (!__cmpxchg_double_slab(s, page,
 			prior, counters,
@@ -2942,18 +2982,18 @@ static void deactivate_slab(struct kmem_cache *s, struct page *page,
 		// [loop 1] nextfree: UNMOVABLE인 page (boot_kmem_cache)의 시작 virtual address + 256
 		// [loop 2] nextfree: UNMOVABLE인 page (boot_kmem_cache)의 시작 virtual address + 384
 		//
-		// [loop 1] nextfree: UNMOVABLE인 page 의 시작 virtual address + 192
-		// [loop 2] nextfree: UNMOVABLE인 page 의 시작 virtual address + 256
+		// [loop 1] nextfree: UNMOVABLE인 page 의 시작 virtual address + 256
+		// [loop 2] nextfree: UNMOVABLE인 page 의 시작 virtual address + 320
 		freelist = nextfree;
 		// [loop 1] freelist: UNMOVABLE인 page (boot_kmem_cache)의 시작 virtual address + 256
 		// [loop 2] freelist: UNMOVABLE인 page (boot_kmem_cache)의 시작 virtual address + 384
 		//
-		// [loop 1] freelist: UNMOVABLE인 page 의 시작 virtual address + 192
-		// [loop 2] freelist: UNMOVABLE인 page 의 시작 virtual address + 256
+		// [loop 1] freelist: UNMOVABLE인 page 의 시작 virtual address + 256
+		// [loop 2] freelist: UNMOVABLE인 page 의 시작 virtual address + 320
 
 		// [loop 3 .. 30] 번 수행
 		//
-		// [loop 3 .. 61] 번 수행
+		// [loop 3 .. 60] 번 수행
 	}
 
 	// [boot_kmem_cache 로 호출]
@@ -2970,7 +3010,7 @@ static void deactivate_slab(struct kmem_cache *s, struct page *page,
 	// 나머지 object들의 freepointer 값을 이전 object들의 주소로 변경
 	// UNMOVABLE인 page 의 맴버필드 변경
 	// (UNMOVABLE인 page )->freelist: UNMOVABLE인 page 의 시작 virtual address + 3968
-	// (UNMOVABLE인 page )->counters: 0x80400003
+	// (UNMOVABLE인 page )->counters: 0x80400004
 
 	/*
 	 * Stage two: Ensure that the page is unfrozen while the
@@ -2995,10 +3035,10 @@ redo:
 	// old.freelist: UNMOVABLE인 page 의 시작 virtual address + 3968
 
 	// page->counters: (UNMOVABLE인 page (boot_kmem_cache))->counters: 0x80200002
-	// page->counters: (UNMOVABLE인 page)->counters: 0x80400003
+	// page->counters: (UNMOVABLE인 page)->counters: 0x80400004
 	old.counters = page->counters;
 	// old.counters: 0x80200002
-	// old.counters: 0x80400003
+	// old.counters: 0x80400004
 
 	// old.frozen: 1
 	// old.frozen: 1
@@ -3006,19 +3046,19 @@ redo:
 
 	/* Determine target state of the slab */
 	// old.counters: 0x80200002
-	// old.counters: 0x80400003
+	// old.counters: 0x80400004
 	new.counters = old.counters;
 	// new.counters: 0x80200002
-	// new.counters: 0x80400003
+	// new.counters: 0x80400004
 
 	// freelist: UNMOVABLE인 page (boot_kmem_cache)의 시작 virtual address + 3968
 	// freelist: UNMOVABLE인 page 의 시작 virtual address + 4032
 	if (freelist) {
 		// new.inuse: 2
-		// new.inuse: 3
+		// new.inuse: 4
 		new.inuse--;
 		// new.inuse: 1, new.counters: 0x80200001
-		// new.inuse: 2, new.counters: 0x80400002
+		// new.inuse: 3, new.counters: 0x80400003
 
 		// s: UNMOVABLE인 page (boot_kmem_cache)의 object의 시작 virtual address,
 		// freelist: UNMOVABLE인 page (boot_kmem_cache)의 시작 virtual address + 3968
@@ -3056,23 +3096,24 @@ redo:
 	// | 0x10001080  | 124 Bytes | null        | 124 Bytes | 0x10001080  | 124 Bytes | 0x10001100  | 124 Bytes | .... | 0x10001f00  | 124 Bytes |
 	// ------------------------------------------------------------------------------------------------------------------------------------------
 	//
+	// 에제:
 	// s->offset이 0이고 slab object 시작 주소가 0x10001000 일 경우
-	// ------------------------------------------------------------------------------------------------------------------------------------------
-	// | Slab object 0  (사용중) | Slab object 1  (사용중) | Slab object 2           | Slab object 3           | .... | Slab object 63          |
-	// ------------------------------------------------------------------------------------------------------------------------------------------
-	// | object start address:   | object start address:   | object start address:   | object start address:   |      | object start address:   |
-	// | 0x10001000              | 0x10001040              | 0x10001080              | 0x100010c0              | .... | 0x10001fc0              |
-	// ------------------------------------------------------------------------------------------------------------------------------------------
-	// | freepointer | data      | freepointer | data      | freepointer | data      | freepointer | data      | .... | freepointer | data      |
-	// ------------------------------------------------------------------------------------------------------------------------------------------
-	// | 0x10001040  | 64 Bytes  | 0x10001080  | 64 Bytes  | null        | 64 Bytes  | 0x10001080  | 64 Bytes  | .... | 0x10001f80  | 64 Bytes  |
-	// ------------------------------------------------------------------------------------------------------------------------------------------
+	// --------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	// | Slab object 0  (사용중) | Slab object 1  (사용중) | Slab object 2  (사용중) | Slab object 3           | Slab object 4           | .... | Slab object 63          |
+	// --------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	// | object start address:   | object start address:   | object start address:   | object start address:   | object start address:   |      | object start address:   |
+	// | 0x10001000              | 0x10001040              | 0x10001080              | 0x100010c0              | 0x10001100              | .... | 0x10001fc0              |
+	// --------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	// | freepointer | data      | freepointer | data      | freepointer | data      | freepointer | data      | freepointer | data      | .... | freepointer | data      |
+	// --------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	// | 0x10001040  | 64 Bytes  | 0x10001080  | 64 Bytes  | 0x100010c0  | 64 Bytes  | null        | 64 Bytes  | 0x100010c0  | 64 Bytes  | .... | 0x10001f80  | 64 Bytes  |
+	// --------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 	// new.frozen: 1
 	// new.frozen: 1
 	new.frozen = 0;
 	// new.frozen: 0, new.counters: 0x00200001
-	// new.frozen: 0, new.counters: 0x00400002
+	// new.frozen: 0, new.counters: 0x00400003
 
 	// n: (&boot_kmem_cache 용 object 주소)->node[0]:
 	// boot_kmem_cache_node 로 할당 받은 2 번째 object의 주소
@@ -3082,7 +3123,7 @@ redo:
 
 	// new.inuse: 1, n->nr_partial: 0, s->min_partial: (&boot_kmem_cache 용 object 주소)->min_partial: 5
 	// new.freelist: UNMOVABLE인 page (boot_kmem_cache)의 시작 virtual address + 3968
-	// new.inuse: 2, n->nr_partial: 1, s->min_partial: (&boot_kmem_cache_node 용 object 주소)->min_partial: 5
+	// new.inuse: 3, n->nr_partial: 1, s->min_partial: (&boot_kmem_cache_node 용 object 주소)->min_partial: 5
 	// new.freelist: UNMOVABLE인 page 의 시작 virtual address + 4032
 	if (!new.inuse && n->nr_partial > s->min_partial)
 		m = M_FREE;
@@ -3193,17 +3234,17 @@ redo:
 	// s: UNMOVABLE인 page 의 object의 시작 virtual address + 128,
 	// page: UNMOVABLE인 page,
 	// old.freelist: UNMOVABLE인 page 의 시작 virtual address + 3968
-	// old.counters: 0x80400003
+	// old.counters: 0x80400004
 	// new.freelist: UNMOVABLE인 page 의 시작 virtual address + 4032
-	// new.counters: 0x00400002
+	// new.counters: 0x00400003
 	// "unfreezing slab"
 	// __cmpxchg_double_slab(UNMOVABLE인 page 의 object의 시작 virtual address + 128,
 	// UNMOVABLE인 page, UNMOVABLE인 page 의 시작 virtual address + 3968,
-	// 0x80400003, UNMOVABLE인 page 의 시작 virtual address + 4032,
-	// 0x00400002, "unfreezing slab"): 1
+	// 0x80400004, UNMOVABLE인 page 의 시작 virtual address + 4032,
+	// 0x00400003, "unfreezing slab"): 1
 	// UNMOVABLE인 page)의 필드 맴버 값 변경
 	// (UNMOVABLE인 page)->freelist: UNMOVABLE인 page 의 시작 virtual address + 4032
-	// (UNMOVABLE인 page)->counters: 0x00400002
+	// (UNMOVABLE인 page)->counters: 0x00400003
 	if (!__cmpxchg_double_slab(s, page,
 				old.freelist, old.counters,
 				new.freelist, new.counters,
@@ -3236,6 +3277,9 @@ redo:
 // ARM10C 20140705
 // s: UNMOVABLE인 page (boot_kmem_cache)의 object의 시작 virtual address,
 // c: (&boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋)
+// ARM10C 20140712
+// s: UNMOVABLE인 page 의 object의 시작 virtual address + 128,
+// c: (&boot_kmem_cache_node 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋)
 static void unfreeze_partials(struct kmem_cache *s,
 		struct kmem_cache_cpu *c)
 {
@@ -3244,6 +3288,8 @@ static void unfreeze_partials(struct kmem_cache *s,
 	struct page *page, *discard_page = NULL;
 
 	// c->partial: ((&boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->partial: NULL
+	// page: NULL
+	// c->partial: ((&boot_kmem_cache_node 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->partial: NULL
 	// page: NULL
 	while ((page = c->partial)) {
 		struct page new;
@@ -3286,9 +3332,11 @@ static void unfreeze_partials(struct kmem_cache *s,
 	}
 
 	// n: NULL
+	// n: NULL
 	if (n)
 		spin_unlock(&n->list_lock);
 
+	// discard_page: NULL
 	// discard_page: NULL
 	while (discard_page) {
 		page = discard_page;
@@ -3376,7 +3424,7 @@ static inline void flush_slab(struct kmem_cache *s, struct kmem_cache_cpu *c)
 	// c->page: ((&boot_kmem_cache_node 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->page:
 	// UNMOVABLE인 page,
 	// c->freelist: ((&boot_kmem_cache_node 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->freelist:
-	// UNMOVABLE인 page 의 object의 시작 virtual address + 128
+	// UNMOVABLE인 page 의 object의 시작 virtual address + 192
 	deactivate_slab(s, c->page, c->freelist);
 
 	// [boot_kmem_cache 로 호출]
@@ -3408,23 +3456,23 @@ static inline void flush_slab(struct kmem_cache *s, struct kmem_cache_cpu *c)
 	// [boot_kmem_cache_node 로 호출]
 	// deactivate_slab에서 한일:
 	// UNMOVABLE인 page 의 필드 맴버 값 변경
-	// (UNMOVABLE인 page)->counters: 0x00400002
+	// (UNMOVABLE인 page)->counters: 0x00400003
 	// (UNMOVABLE인 page)->freelist: UNMOVABLE인 page 의 시작 virtual address + 4032
 	//
 	// (UNMOVABLE인 page) 의 object들의 freepointer 값 변경
 	// (사용하지 않는 첫 번째 object의 freepointer 값을 NULL 로 변경, 나머지 object들의 freepointer 값을 이전 object들의 주소로 변경)
 	//
 	// 에) s->offset이 0이고 slab object 시작 주소가 0x10001000 일 경우
-	// ------------------------------------------------------------------------------------------------------------------------------------------
-	// | Slab object 0  (사용중) | Slab object 1  (사용중) | Slab object 2           | Slab object 3           | .... | Slab object 63          |
-	// ------------------------------------------------------------------------------------------------------------------------------------------
-	// | object start address:   | object start address:   | object start address:   | object start address:   |      | object start address:   |
-	// | 0x10001000              | 0x10001040              | 0x10001080              | 0x100010c0              | .... | 0x10001fc0              |
-	// ------------------------------------------------------------------------------------------------------------------------------------------
-	// | freepointer | data      | freepointer | data      | freepointer | data      | freepointer | data      | .... | freepointer | data      |
-	// ------------------------------------------------------------------------------------------------------------------------------------------
-	// | 0x10001040  | 64 Bytes  | 0x10001080  | 64 Bytes  | null        | 64 Bytes  | 0x10001080  | 64 Bytes  | .... | 0x10001f80  | 64 Bytes  |
-	// ------------------------------------------------------------------------------------------------------------------------------------------
+	// --------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	// | Slab object 0  (사용중) | Slab object 1  (사용중) | Slab object 2  (사용중) | Slab object 3           | Slab object 4           | .... | Slab object 63          |
+	// --------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	// | object start address:   | object start address:   | object start address:   | object start address:   | object start address:   |      | object start address:   |
+	// | 0x10001000              | 0x10001040              | 0x10001080              | 0x100010c0              | 0x10001100              | .... | 0x10001fc0              |
+	// --------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	// | freepointer | data      | freepointer | data      | freepointer | data      | freepointer | data      | freepointer | data      | .... | freepointer | data      |
+	// --------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	// | 0x10001040  | 64 Bytes  | 0x10001080  | 64 Bytes  | 0x100010c0  | 64 Bytes  | null        | 64 Bytes  | 0x100010c0  | 64 Bytes  | .... | 0x10001f80  | 64 Bytes  |
+	// --------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	//
 	// n: (&boot_kmem_cache_node 용 object 주소)->node[0]:
 	// UNMOVABLE인 page 의 object의 시작 virtual address
@@ -3488,6 +3536,7 @@ static inline void __flush_cpu_slab(struct kmem_cache *s, int cpu)
 			// c: (&boot_kmem_cache_node 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋)
 			flush_slab(s, c);
 
+			// [boot_kmem_cache 로 호출]
 			// flush_slab 이 한일:
 			// UNMOVABLE인 page (boot_kmem_cache)의 필드 맴버 값 변경
 			// (UNMOVABLE인 page (boot_kmem_cache))->counters: 0x00200001
@@ -3517,9 +3566,42 @@ static inline void __flush_cpu_slab(struct kmem_cache *s, int cpu)
 			// c->tid: ((&boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->tid: 8
 			// c->page: ((&boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->page: NULL
 			// c->freelist: ((&boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->freelist: NULL
+			//
+			// [boot_kmem_cache_node 로 호출]
+			// flush_slab 이 한일:
+			// UNMOVABLE인 page 의 필드 맴버 값 변경
+			// (UNMOVABLE인 page)->counters: 0x00400003
+			// (UNMOVABLE인 page)->freelist: UNMOVABLE인 page 의 시작 virtual address + 4032
+			//
+			// (UNMOVABLE인 page (boot_kmem_cache)) 의 object들의 freepointer 값 변경
+			// (사용하지 않는 첫 번째 object의 freepointer 값을 NULL 로 변경, 나머지 object들의 freepointer 값을 이전 object들의 주소로 변경)
+			//
+			// 에) s->offset이 0이고 slab object 시작 주소가 0x10001000 일 경우
+			// --------------------------------------------------------------------------------------------------------------------------------------------------------------------
+			// | Slab object 0  (사용중) | Slab object 1  (사용중) | Slab object 2  (사용중) | Slab object 3           | Slab object 4           | .... | Slab object 63          |
+			// --------------------------------------------------------------------------------------------------------------------------------------------------------------------
+			// | object start address:   | object start address:   | object start address:   | object start address:   | object start address:   |      | object start address:   |
+			// | 0x10001000              | 0x10001040              | 0x10001080              | 0x100010c0              | 0x10001100              | .... | 0x10001fc0              |
+			// --------------------------------------------------------------------------------------------------------------------------------------------------------------------
+			// | freepointer | data      | freepointer | data      | freepointer | data      | freepointer | data      | freepointer | data      | .... | freepointer | data      |
+			// --------------------------------------------------------------------------------------------------------------------------------------------------------------------
+			// | 0x10001040  | 64 Bytes  | 0x10001080  | 64 Bytes  | 0x100010c0  | 64 Bytes  | null        | 64 Bytes  | 0x100010c0  | 64 Bytes  | .... | 0x10001f80  | 64 Bytes  |
+			// --------------------------------------------------------------------------------------------------------------------------------------------------------------------
+			//
+			// n: (&boot_kmem_cache_node 용 object 주소)->node[0]:
+			// UNMOVABLE인 page 의 object의 시작 virtual address
+			// n->nr_partial: 2
+			// n->partial에 (UNMOVABLE인 page)->lru 가 추가됨
+			//
+			// c: (&boot_kmem_cache_node 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋)
+			// c->tid: ((&boot_kmem_cache_node 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->tid: 12
+			// c->page: ((&boot_kmem_cache_node 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->page: NULL
+			// c->freelist: ((&boot_kmem_cache_node 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->freelist: NULL
 
 		// s: UNMOVABLE인 page (boot_kmem_cache)의 object의 시작 virtual address,
 		// c: (&boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋)
+		// s: UNMOVABLE인 page 의 object의 시작 virtual address + 128,
+		// c: (&boot_kmem_cache_node 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋)
 		unfreeze_partials(s, c);
 	}
 }
@@ -4231,7 +4313,7 @@ redo:
 			note_cmpxchg_failure("slab_alloc", s, tid);
 			goto redo;
 		}
-		// (boot_kmem_cache_node.cpu_slab) 의 맴버 값을 변경
+		// (boot_kmem_cache_node.cpu_slab) 의 맴버 값을 변경 (pcp에서 할당받은 kmem_cache_cpu 공간 16 bytes)
 		// (boot_kmem_cache_node.cpu_slab)->freelist: UNMOVABLE인 page 의 object의 시작 virtual address + 192,
 		// (boot_kmem_cache_node.cpu_slab)->tid: 8
 
@@ -5995,23 +6077,23 @@ static struct kmem_cache * __init bootstrap(struct kmem_cache *static_cache)
 	// [boot_kmem_cache_node 로 호출]
 	// __flush_cpu_slab 한일:
 	// UNMOVABLE인 page 의 필드 맴버 값 변경
-	// (UNMOVABLE인 page)->counters: 0x00400002
+	// (UNMOVABLE인 page)->counters: 0x00400003
 	// (UNMOVABLE인 page)->freelist: UNMOVABLE인 page 의 시작 virtual address + 4032
 	//
 	// (UNMOVABLE인 page) 의 object들의 freepointer 값 변경
 	// (사용하지 않는 첫 번째 object의 freepointer 값을 NULL 로 변경, 나머지 object들의 freepointer 값을 이전 object들의 주소로 변경)
 	//
 	// 에) s->offset이 0이고 slab object 시작 주소가 0x10001000 일 경우
-	// ------------------------------------------------------------------------------------------------------------------------------------------
-	// | Slab object 0  (사용중) | Slab object 1  (사용중) | Slab object 2           | Slab object 3           | .... | Slab object 63          |
-	// ------------------------------------------------------------------------------------------------------------------------------------------
-	// | object start address:   | object start address:   | object start address:   | object start address:   |      | object start address:   |
-	// | 0x10001000              | 0x10001040              | 0x10001080              | 0x100010c0              | .... | 0x10001fc0              |
-	// ------------------------------------------------------------------------------------------------------------------------------------------
-	// | freepointer | data      | freepointer | data      | freepointer | data      | freepointer | data      | .... | freepointer | data      |
-	// ------------------------------------------------------------------------------------------------------------------------------------------
-	// | 0x10001040  | 64 Bytes  | 0x10001080  | 64 Bytes  | null        | 64 Bytes  | 0x10001080  | 64 Bytes  | .... | 0x10001f80  | 64 Bytes  |
-	// ------------------------------------------------------------------------------------------------------------------------------------------
+	// --------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	// | Slab object 0  (사용중) | Slab object 1  (사용중) | Slab object 2  (사용중) | Slab object 3           | Slab object 4           | .... | Slab object 63          |
+	// --------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	// | object start address:   | object start address:   | object start address:   | object start address:   | object start address:   |      | object start address:   |
+	// | 0x10001000              | 0x10001040              | 0x10001080              | 0x100010c0              | 0x10001100              | .... | 0x10001fc0              |
+	// --------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	// | freepointer | data      | freepointer | data      | freepointer | data      | freepointer | data      | freepointer | data      | .... | freepointer | data      |
+	// --------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	// | 0x10001040  | 64 Bytes  | 0x10001080  | 64 Bytes  | 0x100010c0  | 64 Bytes  | null        | 64 Bytes  | 0x100010c0  | 64 Bytes  | .... | 0x10001f80  | 64 Bytes  |
+	// --------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	//
 	// n: (&boot_kmem_cache_node 용 object 주소)->node[0]:
 	// UNMOVABLE인 page 의 object의 시작 virtual address
@@ -6237,23 +6319,23 @@ void __init kmem_cache_init(void)
 	// boot_kmem_cache_node에 세팅된 멤버 필드 값을 전부 할당 받은 object로 복사함
 	//
 	// UNMOVABLE인 page 의 필드 맴버 값 변경
-	// (UNMOVABLE인 page)->counters: 0x00400002
+	// (UNMOVABLE인 page)->counters: 0x00400003
 	// (UNMOVABLE인 page)->freelist: UNMOVABLE인 page 의 시작 virtual address + 4032
 	//
 	// (UNMOVABLE인 page) 의 object들의 freepointer 값 변경
 	// (사용하지 않는 첫 번째 object의 freepointer 값을 NULL 로 변경, 나머지 object들의 freepointer 값을 이전 object들의 주소로 변경)
 	//
 	// 에) s->offset이 0이고 slab object 시작 주소가 0x10001000 일 경우
-	// ------------------------------------------------------------------------------------------------------------------------------------------
-	// | Slab object 0  (사용중) | Slab object 1  (사용중) | Slab object 2           | Slab object 3           | .... | Slab object 63          |
-	// ------------------------------------------------------------------------------------------------------------------------------------------
-	// | object start address:   | object start address:   | object start address:   | object start address:   |      | object start address:   |
-	// | 0x10001000              | 0x10001040              | 0x10001080              | 0x100010c0              | .... | 0x10001fc0              |
-	// ------------------------------------------------------------------------------------------------------------------------------------------
-	// | freepointer | data      | freepointer | data      | freepointer | data      | freepointer | data      | .... | freepointer | data      |
-	// ------------------------------------------------------------------------------------------------------------------------------------------
-	// | 0x10001040  | 64 Bytes  | 0x10001080  | 64 Bytes  | null        | 64 Bytes  | 0x10001080  | 64 Bytes  | .... | 0x10001f80  | 64 Bytes  |
-	// ------------------------------------------------------------------------------------------------------------------------------------------
+	// --------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	// | Slab object 0  (사용중) | Slab object 1  (사용중) | Slab object 2  (사용중) | Slab object 3           | Slab object 4           | .... | Slab object 63          |
+	// --------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	// | object start address:   | object start address:   | object start address:   | object start address:   | object start address:   |      | object start address:   |
+	// | 0x10001000              | 0x10001040              | 0x10001080              | 0x100010c0              | 0x10001100              | .... | 0x10001fc0              |
+	// --------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	// | freepointer | data      | freepointer | data      | freepointer | data      | freepointer | data      | freepointer | data      | .... | freepointer | data      |
+	// --------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	// | 0x10001040  | 64 Bytes  | 0x10001080  | 64 Bytes  | 0x100010c0  | 64 Bytes  | null        | 64 Bytes  | 0x100010c0  | 64 Bytes  | .... | 0x10001f80  | 64 Bytes  |
+	// --------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	//
 	// n: (&boot_kmem_cache_node 용 object 주소)->node[0]:
 	// UNMOVABLE인 page 의 object의 시작 virtual address
