@@ -56,6 +56,7 @@ DEFINE_EVENT(kmem_alloc, kmalloc,
 // s->object_size: boot_kmem_cache_node.object_size: 64,
 // s->size: boot_kmem_cache_node.size: 64,
 // gfpflags: GFP_KERNEL: 0xD0
+// ARM10C 20140712
 DEFINE_EVENT(kmem_alloc, kmem_cache_alloc,
 
 	TP_PROTO(unsigned long call_site, const void *ptr,

@@ -104,6 +104,7 @@ kmemcheck_free_shadow(struct page *page, int order)
 // ARM10C 20140621
 // s: &boot_kmem_cache_node, flags: 0, object: UNMOVABLE인 page 의 object의 시작 virtual address + 64
 // slab_ksize(&boot_kmem_cache_node): 64
+// ARM10C 20140712
 static inline void
 kmemcheck_slab_alloc(struct kmem_cache *s, gfp_t gfpflags, void *object,
 		     size_t size)

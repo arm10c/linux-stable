@@ -187,6 +187,19 @@ extern int __init pcpu_page_first_chunk(size_t reserved_size,
 //  	} while (0)
 //  	(&boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋);
 // })
+// ARM10C 20140712
+// s->cpu_slab: (&boot_kmem_cache_node 용 object 주소)->cpu_slab: 0xc0502d00, cpu: 0
+//
+// per_cpu_offset((0)): __per_cpu_offset[0]: pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋
+//
+// #define SHIFT_PERCPU_PTR((&boot_kmem_cache_node)->cpu_slab, (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))
+// ({
+//  	do {
+// 	 	const void __percpu *__vpp_verify = (typeof((&boot_kmem_cache_node)->cpu_slab))NULL;
+// 	 	(void)__vpp_verify;
+//  	} while (0)
+//  	(&boot_kmem_cache_node 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋);
+// })
 #define per_cpu_ptr(ptr, cpu)	SHIFT_PERCPU_PTR((ptr), per_cpu_offset((cpu)))
 #else
 #define per_cpu_ptr(ptr, cpu)	({ (void)(cpu); VERIFY_PERCPU_PTR((ptr)); })
@@ -286,35 +299,35 @@ extern void __bad_size_call_parameter(void);
 // next_tid(4): 8
 //
 // #define __pcpu_double_call_return_bool(this_cpu_cmpxchg_double_,
-//         UNMOVABLE인 page 의 object의 시작 virtual address + 128, 4, ...)
+//         (boot_kmem_cache_node.cpu_slab)->freelist, (boot_kmem_cache_node.cpu_slab)->tid, ...)
 // ({
 // 	bool pdcrb_ret__;
-// 	__verify_pcpu_ptr(&UNMOVABLE인 page 의 object의 시작 virtual address + 128);
+// 	__verify_pcpu_ptr(&(boot_kmem_cache_node.cpu_slab)->freelist);
 //
-// 	BUILD_BUG_ON(sizeof(UNMOVABLE인 page 의 object의 시작 virtual address + 128) != sizeof(4));
+// 	BUILD_BUG_ON(sizeof((boot_kmem_cache_node.cpu_slab)->freelist) != sizeof((boot_kmem_cache_node.cpu_slab)->tid));
 //
-// 	VM_BUG_ON((unsigned long)(&UNMOVABLE인 page 의 object의 시작 virtual address + 128)
-// 	% (2 * sizeof(UNMOVABLE인 page 의 object의 시작 virtual address + 128)));
+// 	VM_BUG_ON((unsigned long)(&(boot_kmem_cache_node.cpu_slab)->freelist)
+// 	% (2 * sizeof((boot_kmem_cache_node.cpu_slab)->freelist)));
 //
-// 	VM_BUG_ON((unsigned long)(&4) !=
-// 		  (unsigned long)(&UNMOVABLE인 page 의 object의 시작 virtual address + 128)
-// 		  + sizeof(UNMOVABLE인 page 의 object의 시작 virtual address + 128));
+// 	VM_BUG_ON((unsigned long)(&(boot_kmem_cache_node.cpu_slab)->tid) !=
+// 		  (unsigned long)(&(boot_kmem_cache_node.cpu_slab)->freelist)
+// 		  + sizeof((boot_kmem_cache_node.cpu_slab)->freelist));
 //
-// 	switch(sizeof(UNMOVABLE인 page 의 object의 시작 virtual address + 128)) {
+// 	switch(sizeof((boot_kmem_cache_node.cpu_slab)->freelist)) {
 // 	case 1:
-// 	pdcrb_ret__ = this_cpu_cmpxchg_double_1(UNMOVABLE인 page 의 object의 시작 virtual address + 128, 4, __VA_ARGS__);
+// 	pdcrb_ret__ = this_cpu_cmpxchg_double_1((boot_kmem_cache_node.cpu_slab)->freelist, (boot_kmem_cache_node.cpu_slab)->tid, __VA_ARGS__);
 // 	break;
 //
 // 	case 2:
-// 	pdcrb_ret__ = this_cpu_cmpxchg_double_2(UNMOVABLE인 page 의 object의 시작 virtual address + 128, 4, __VA_ARGS__);
+// 	pdcrb_ret__ = this_cpu_cmpxchg_double_2((boot_kmem_cache_node.cpu_slab)->freelist, (boot_kmem_cache_node.cpu_slab)->tid, __VA_ARGS__);
 // 	break;
 //
 // 	case 4:
-// 	pdcrb_ret__ = this_cpu_cmpxchg_double_4(UNMOVABLE인 page 의 object의 시작 virtual address + 128, 4, __VA_ARGS__);
+// 	pdcrb_ret__ = this_cpu_cmpxchg_double_4((boot_kmem_cache_node.cpu_slab)->freelist, (boot_kmem_cache_node.cpu_slab)->tid, __VA_ARGS__);
 // 	break;
 //
 // 	case 8:
-// 	pdcrb_ret__ = this_cpu_cmpxchg_double_8(UNMOVABLE인 page 의 object의 시작 virtual address + 128, 4, __VA_ARGS__);
+// 	pdcrb_ret__ = this_cpu_cmpxchg_double_8((boot_kmem_cache_node.cpu_slab)->freelist, (boot_kmem_cache_node.cpu_slab)->tid, __VA_ARGS__);
 // 	break;
 //
 // 	default:
@@ -635,20 +648,20 @@ do {									\
  * sizes may work.
  */
 // ARM10C 20140705
-// UNMOVABLE인 page 의 object의 시작 virtual address + 128, 4,
+// (boot_kmem_cache_node.cpu_slab)->freelist, (boot_kmem_cache_node.cpu_slab)->tid,
 // object: UNMOVABLE인 page 의 object의 시작 virtual address + 128,
 // tid: 4, next_object: UNMOVABLE인 page 의 object의 시작 virtual address + 192,
 // next_tid(4): 8
 //
-// #define _this_cpu_generic_cmpxchg_double(UNMOVABLE인 page 의 object의 시작 virtual address + 128, 4,
-//          UNMOVABLE인 page 의 object의 시작 virtual address + 128, 4,
+// #define _this_cpu_generic_cmpxchg_double((boot_kmem_cache_node.cpu_slab)->freelist, (boot_kmem_cache_node.cpu_slab)->tid,
+//          (boot_kmem_cache_node.cpu_slab)->freelist, 4,
 //          UNMOVABLE인 page 의 object의 시작 virtual address + 192, 8)
 // ({
 // 	int ret__;
 // 	unsigned long flags;
 // 	raw_local_irq_save(flags);
-// 	ret__ = __this_cpu_generic_cmpxchg_double(UNMOVABLE인 page 의 object의 시작 virtual address + 128, 4,
-// 			UNMOVABLE인 page 의 object의 시작 virtual address + 128, 4,
+// 	ret__ = __this_cpu_generic_cmpxchg_double((boot_kmem_cache_node.cpu_slab)->freelist, (boot_kmem_cache_node.cpu_slab)->tid,
+// 			(boot_kmem_cache_node.cpu_slab)->freelist, 4,
 // 			UNMOVABLE인 page 의 object의 시작 virtual address + 192, 8);
 // 	raw_local_irq_restore(flags);
 // 	ret__;
@@ -675,7 +688,7 @@ do {									\
 # endif
 # ifndef this_cpu_cmpxchg_double_4
 // ARM10C 20140705
-// UNMOVABLE인 page 의 object의 시작 virtual address + 128, 4,
+// (boot_kmem_cache_node.cpu_slab)->freelist, (boot_kmem_cache_node.cpu_slab)->tid,
 // object: UNMOVABLE인 page 의 object의 시작 virtual address + 128,
 // tid: 4, next_object: UNMOVABLE인 page 의 object의 시작 virtual address + 192,
 // next_tid(4): 8
@@ -990,21 +1003,21 @@ do {									\
 #endif
 
 // ARM10C 20140705
-// UNMOVABLE인 page 의 object의 시작 virtual address + 128, 4,
+// (boot_kmem_cache_node.cpu_slab)->freelist, (boot_kmem_cache_node.cpu_slab)->tid
 // UNMOVABLE인 page 의 object의 시작 virtual address + 128, 4,
 // UNMOVABLE인 page 의 object의 시작 virtual address + 192, 8
 //
-// #define __this_cpu_generic_cmpxchg_double(UNMOVABLE인 page 의 object의 시작 virtual address + 128, 4,
+// #define __this_cpu_generic_cmpxchg_double((boot_kmem_cache_node.cpu_slab)->freelist, (boot_kmem_cache_node.cpu_slab)->tid,
 //                                           UNMOVABLE인 page 의 object의 시작 virtual address + 128, 4,
 //                                           UNMOVABLE인 page 의 object의 시작 virtual address + 192, 8):
 // ({
 // 	int __ret = 0;
-// 	if (__this_cpu_read(UNMOVABLE인 page 의 object의 시작 virtual address + 128) ==
-// 	    (UNMOVABLE인 page 의 object의 시작 virtual address + 128) && __this_cpu_read(4)  == (4))
+// 	if (__this_cpu_read((boot_kmem_cache_node.cpu_slab)->freelist) ==
+// 	    (UNMOVABLE인 page 의 object의 시작 virtual address + 128) && __this_cpu_read((boot_kmem_cache_node.cpu_slab)->tid)  == (4))
 // 	{
-// 		__this_cpu_write(UNMOVABLE인 page 의 object의 시작 virtual address + 128,
+// 		__this_cpu_write((boot_kmem_cache_node.cpu_slab)->freelist,
 // 		                 (UNMOVABLE인 page 의 object의 시작 virtual address + 192));
-// 		__this_cpu_write(4, (8));
+// 		__this_cpu_write((boot_kmem_cache_node.cpu_slab)->tid, (8));
 // 		__ret = 1;
 // 	}
 // 	(__ret);

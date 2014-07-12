@@ -10,7 +10,9 @@
 
 // ARM10C 20140531
 // ARM10C 20140621
+// ARM10C 20140712
 enum stat_item {
+	// ALLOC_FASTPATH: 0
 	ALLOC_FASTPATH,		/* Allocation from cpu slab */
 	ALLOC_SLOWPATH,		/* Allocation by getting a new cpu slab */
 	FREE_FASTPATH,		/* Free to cpu slab */
