@@ -1,13 +1,17 @@
 #IAMROOT.ORG Kernel스터디10차(ARM)
 
 #HISTORY
+  - 62th (2014/07/12) week study : [62차 스터디](https://github.com/arm10c/linux-stable/blob/master/Reference/88_Review/a10c_62.md)
+    - mm_init()->kmem_cache_init()->bootstrab(&boot_kmem_cache_node) 
   - 61th (2014/07/05) week study : [61차 스터디](https://github.com/arm10c/linux-stable/blob/master/Reference/88_Review/a10c_61.md)
   - 60th (2014/06/28) week study : [60차 스터디](https://github.com/arm10c/linux-stable/blob/master/Reference/88_Review/a10c_60.md)
   - 59th (2014/06/21) week study : [59차 스터디](https://github.com/arm10c/linux-stable/blob/master/Reference/88_Review/a10c_59.md)
   - 58th (2014/06/14) week study : [58차 스터디](https://github.com/arm10c/linux-stable/blob/master/Reference/88_Review/a10c_58.md)
 
 ...
-
+  - 12th (2012-07-13) week study : [12차 스터디](http://www.iamroot.org/xe/index.php?_filter=search&mid=Kernel_10_ARM&search_keyword=13&search_target=title&page=3&document_srl=176125) 15명
+    - arch/arm/boot/compressed/head.S
+	- restart 진입 후 LC0값 로드
   - 11th (2012-07-06) week study : [11차 스터디](http://www.iamroot.org/xe/index.php?mid=Kernel_10_ARM&category=172676&page=6&document_srl=174738) 18+2명
     - arch/arm/boot/compressed/head.S 분석
     - _setup_mmu 종료
