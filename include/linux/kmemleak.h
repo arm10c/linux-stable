@@ -70,6 +70,7 @@ static inline void kmemleak_alloc(const void *ptr, size_t size, int min_count,
 // object: UNMOVABLE인 page 의 object의 시작 virtual address + 64,
 // s->object_size: boot_kmem_cache_node.object_size: 64,
 // s->flags: boot_kmem_cache_node.flags: SLAB_HWCACHE_ALIGN: 0x00002000UL, flags: 0
+// ARM10C 20140712
 static inline void kmemleak_alloc_recursive(const void *ptr, size_t size,
 					    int min_count, unsigned long flags,
 					    gfp_t gfp)

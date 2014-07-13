@@ -28,6 +28,7 @@
 // ARM10C 20140607
 enum slab_state slab_state;
 // ARM10C 20140705
+// ARM10C 20140712
 LIST_HEAD(slab_caches);
 DEFINE_MUTEX(slab_mutex);
 // ARM10C 20140419

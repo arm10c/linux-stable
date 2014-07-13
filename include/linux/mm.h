@@ -780,6 +780,7 @@ extern int page_to_nid(const struct page *page);
 // ARM10C 20140531
 // ARM10C 20140628
 // ARM10C 20140705
+// ARM10C 20140712
 static inline int page_to_nid(const struct page *page)
 {
 	// NODES_PGSHIFT: 0, NODES_MASK: 3

@@ -667,9 +667,10 @@ static inline void *kmem_cache_zalloc(struct kmem_cache *k, gfp_t flags)
 	// UNMOVABLE인 page (boot_kmem_cache)의 object의 시작 virtual address
 	// k: &boot_kmem_cache_node, flags: GFP_NOWAIT: 0, __GFP_ZERO: 0x8000u
 	// kmem_cache_alloc(&boot_kmem_cache_node, __GFP_ZERO: 0x8000u):
-	// UNMOVABLE인 page (boot_kmem_cache_node)의 object의 시작 virtual address
+	// UNMOVABLE인 page 의 object의 시작 virtual address + 128
 	return kmem_cache_alloc(k, flags | __GFP_ZERO);
 	// return UNMOVABLE인 page (boot_kmem_cache)의 object의 시작 virtual address
+	// return UNMOVABLE인 page 의 object의 시작 virtual address + 128
 }
 
 /**

@@ -113,6 +113,8 @@ unsigned long get_wchan(struct task_struct *p);
 // http://stackoverflow.com/questions/6414555/proper-use-of-the-arm-pld-instruction-arm11
 //
 // page: 0x20000의 해당하는 struct page의 주소
+// ARM10C 20140712
+// object: UNMOVABLE인 page 의 object의 시작 virtual address + 192
 static inline void prefetch(const void *ptr)
 {
 	__asm__ __volatile__(
