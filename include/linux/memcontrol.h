@@ -666,15 +666,19 @@ static inline void memcg_cache_list_add(struct mem_cgroup *memcg,
 // s: &boot_kmem_cache, gfpflags: __GFP_ZERO: 0x8000
 // ARM10C 20140705
 // s: UNMOVABLE인 page (boot_kmem_cache)의 object의 시작 virtual address, gfpflags: __GFP_ZERO: 0x8000
+// ARM10C 20140719
+// s: UNMOVABLE인 page (boot_kmem_cache)의 object의 시작 virtual address, gfpflags: __GFP_ZERO: 0x8000
 static inline struct kmem_cache *
 memcg_kmem_get_cache(struct kmem_cache *cachep, gfp_t gfp)
 {
 	// cachep: &boot_kmem_cache_node
 	// cachep: &boot_kmem_cache
 	// cachep: UNMOVABLE인 page (boot_kmem_cache)의 object의 시작 virtual address
+	// cachep: UNMOVABLE인 page (boot_kmem_cache)의 object의 시작 virtual address
 	return cachep;
 	// return &boot_kmem_cache_node
 	// return &boot_kmem_cache
+	// return UNMOVABLE인 page (boot_kmem_cache)의 object의 시작 virtual address
 	// return UNMOVABLE인 page (boot_kmem_cache)의 object의 시작 virtual address
 }
 

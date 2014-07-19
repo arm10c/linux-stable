@@ -62,6 +62,7 @@ extern bool should_failslab(size_t size, gfp_t gfpflags, unsigned long flags);
 // ARM10C 20140614
 // ARM10C 20140628
 // ARM10C 20140705
+// ARM10C 20140719
 static inline bool should_failslab(size_t size, gfp_t gfpflags,
 				unsigned long flags)
 {
