@@ -35,6 +35,7 @@ enum stat_item {
 	DEACTIVATE_TO_HEAD,	/* Cpu slab was moved to the head of partials */
 	// DEACTIVATE_TO_TAIL: 16
 	DEACTIVATE_TO_TAIL,	/* Cpu slab was moved to the tail of partials */
+	// DEACTIVATE_REMOTE_FREES: 17
 	DEACTIVATE_REMOTE_FREES,/* Slab contained remotely freed objects */
 	DEACTIVATE_BYPASS,	/* Implicit deactivation */
 	ORDER_FALLBACK,		/* Number of times fallback was necessary */

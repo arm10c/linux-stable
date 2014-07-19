@@ -422,10 +422,23 @@ void __init create_boot_cache(struct kmem_cache *s, const char *name, size_t siz
 	// s->refcount: boot_kmem_cache.refcount: -1
 }
 
+// ARM10C 20140719
+// NULL, 64, 0
 struct kmem_cache *__init create_kmalloc_cache(const char *name, size_t size,
 				unsigned long flags)
 {
+	// kmem_cache: UNMOVABLE인 page (boot_kmem_cache)의 object의 시작 virtual address,
+	// GFP_NOWAIT: 0
+	// kmem_cache_zalloc(UNMOVABLE인 page (boot_kmem_cache)의 object의 시작 virtual address, 0):
+	// UNMOVABLE인 page (boot_kmem_cache)의 시작 virtual address + 128
 	struct kmem_cache *s = kmem_cache_zalloc(kmem_cache, GFP_NOWAIT);
+	// s: UNMOVABLE인 page (boot_kmem_cache)의 시작 virtual address + 128
+
+	// UNMOVABLE인 page (boot_kmem_cache)의 시작 virtual address + 128 를
+	// kmem_cache 용 2번째 object 인데 주석 추가의 용의성을 위해
+	// kmem_cache#2 부르기로 함
+
+// 2014/07/19 종료
 
 	if (!s)
 		panic("Out of memory when creating slab %s\n", name);
@@ -436,6 +449,8 @@ struct kmem_cache *__init create_kmalloc_cache(const char *name, size_t size,
 	return s;
 }
 
+// ARM10C 20140719
+// KMALLOC_SHIFT_HIGH: 13
 struct kmem_cache *kmalloc_caches[KMALLOC_SHIFT_HIGH + 1];
 EXPORT_SYMBOL(kmalloc_caches);
 
@@ -450,6 +465,7 @@ EXPORT_SYMBOL(kmalloc_dma_caches);
  * of two cache sizes there. The size of larger slabs can be determined using
  * fls.
  */
+// ARM10C 20140719
 static s8 size_index[24] = {
 	3,	/* 8 */
 	4,	/* 16 */
@@ -477,9 +493,13 @@ static s8 size_index[24] = {
 	2	/* 192 */
 };
 
+// ARM10C 20140719
+// i: 8
 static inline int size_index_elem(size_t bytes)
 {
+	// bytes: 8
 	return (bytes - 1) / 8;
+	// return 0
 }
 
 /*
@@ -516,6 +536,8 @@ struct kmem_cache *kmalloc_slab(size_t size, gfp_t flags)
  * may already have been created because they were needed to
  * enable allocations for slab creation.
  */
+// ARM10C 20140719
+// flags: 0
 void __init create_kmalloc_caches(unsigned long flags)
 {
 	int i;
@@ -531,27 +553,43 @@ void __init create_kmalloc_caches(unsigned long flags)
 	 * Make sure that nothing crazy happens if someone starts tinkering
 	 * around with ARCH_KMALLOC_MINALIGN
 	 */
+	// KMALLOC_MIN_SIZE: 64
 	BUILD_BUG_ON(KMALLOC_MIN_SIZE > 256 ||
 		(KMALLOC_MIN_SIZE & (KMALLOC_MIN_SIZE - 1)));
 
+	// KMALLOC_MIN_SIZE: 64
 	for (i = 8; i < KMALLOC_MIN_SIZE; i += 8) {
+		// i: 8, size_index_elem(8): 0
 		int elem = size_index_elem(i);
+		// elem: 0
 
+		// elem: 0, ARRAY_SIZE(size_index): 24
 		if (elem >= ARRAY_SIZE(size_index))
 			break;
-		size_index[elem] = KMALLOC_SHIFT_LOW;
-	}
 
+		// elem: 0, KMALLOC_SHIFT_LOW: 6
+		size_index[elem] = KMALLOC_SHIFT_LOW;
+		// size_index[0]: 6
+	}
+	// 루프 수행 결과
+	// size_index[0 .. 6]: 6
+
+	// KMALLOC_MIN_SIZE: 64
 	if (KMALLOC_MIN_SIZE >= 64) {
 		/*
 		 * The 96 byte size cache is not used if the alignment
 		 * is 64 byte.
 		 */
 		for (i = 64 + 8; i <= 96; i += 8)
+			// i: 72, size_index_elem(72): 8
 			size_index[size_index_elem(i)] = 7;
+			// size_index[8]: 7
 
+		// 루프 수행 결과
+		// size_index[8 .. 11]: 7
 	}
 
+	// KMALLOC_MIN_SIZE: 64
 	if (KMALLOC_MIN_SIZE >= 128) {
 		/*
 		 * The 192 byte sized cache is not used if the alignment
@@ -561,8 +599,13 @@ void __init create_kmalloc_caches(unsigned long flags)
 		for (i = 128 + 8; i <= 192; i += 8)
 			size_index[size_index_elem(i)] = 8;
 	}
+
+	// KMALLOC_SHIFT_LOW: 6, KMALLOC_SHIFT_HIGH: 13
 	for (i = KMALLOC_SHIFT_LOW; i <= KMALLOC_SHIFT_HIGH; i++) {
+		// i: 6, kmalloc_caches[6]: NULL
 		if (!kmalloc_caches[i]) {
+
+			// i: 6, flags: 0, create_kmalloc_cache(NULL, 64, 0)
 			kmalloc_caches[i] = create_kmalloc_cache(NULL,
 							1 << i, flags);
 		}

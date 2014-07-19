@@ -210,6 +210,7 @@ struct vm_area_struct;
 /* This equals 0, but use constants in case they ever change */
 // ARM10C 20140426
 // ARM10C 20140628
+// ARM10C 20140719
 // GFP_ATOMIC: 0x20u
 // __GFP_HIGH: 0x20u
 // GFP_NOWAIT: 0
