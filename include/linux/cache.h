@@ -83,6 +83,7 @@
 
 #ifndef CONFIG_ARCH_HAS_CACHE_LINE_SIZE // CONFIG_ARCH_HAS_CACHE_LINE_SIZE=n
 // ARM10C 20140419
+// ARM10C 20140726
 // L1_CACHE_BYTES: 64
 // cache_line_size(): 64
 #define cache_line_size()	L1_CACHE_BYTES

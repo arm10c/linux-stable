@@ -119,8 +119,12 @@
  * ZERO_SIZE_PTR can be passed to kfree though in the same way that NULL can.
  * Both make kfree a no-op.
  */
+// ARM10C 20140726
 #define ZERO_SIZE_PTR ((void *)16)
 
+// ARM10C 20140726
+// ZERO_SIZE_PTR: 16
+// s: kmem_cache#2
 #define ZERO_OR_NULL_PTR(x) ((unsigned long)(x) <= \
 				(unsigned long)ZERO_SIZE_PTR)
 
@@ -177,6 +181,7 @@ size_t ksize(const void *);
 // ARCH_KMALLOC_MINALIGN: 64
 #define ARCH_KMALLOC_MINALIGN ARCH_DMA_MINALIGN
 // ARM10C 20140719
+// ARM10C 20140726
 // ARCH_DMA_MINALIGN: 64
 // KMALLOC_MIN_SIZE: 64
 #define KMALLOC_MIN_SIZE ARCH_DMA_MINALIGN
@@ -242,6 +247,7 @@ struct kmem_cache {
  */
 // ARM10C 20140531
 // ARM10C 20140719
+// ARM10C 20140726
 // PAGE_SHIFT: 12
 // KMALLOC_SHIFT_HIGH: 13
 #define KMALLOC_SHIFT_HIGH	(PAGE_SHIFT + 1)
@@ -265,8 +271,14 @@ struct kmem_cache {
 #endif
 
 /* Maximum allocatable size */
+// ARM10C 20140726
+// KMALLOC_SHIFT_MAX: 30
+// KMALLOC_MAX_SIZE: 0x40000000
 #define KMALLOC_MAX_SIZE	(1UL << KMALLOC_SHIFT_MAX)
 /* Maximum size for which we actually use a slab cache */
+// ARM10C 20140726
+// KMALLOC_SHIFT_HIGH: 13
+// KMALLOC_MAX_CACHE_SIZE: 0x2000
 #define KMALLOC_MAX_CACHE_SIZE	(1UL << KMALLOC_SHIFT_HIGH)
 /* Maximum order allocatable via the slab allocagtor */
 #define KMALLOC_MAX_ORDER	(KMALLOC_SHIFT_MAX - PAGE_SHIFT)
@@ -292,25 +304,36 @@ extern struct kmem_cache *kmalloc_dma_caches[KMALLOC_SHIFT_HIGH + 1];
  * 2 = 120 .. 192 bytes
  * n = 2^(n-1) .. 2^n -1
  */
+// ARM10C 20140726
+// size: 512
 static __always_inline int kmalloc_index(size_t size)
 {
+	// size: 512
 	if (!size)
 		return 0;
 
+	// size: 512, KMALLOC_MIN_SIZE: 64
 	if (size <= KMALLOC_MIN_SIZE)
 		return KMALLOC_SHIFT_LOW;
 
+	// size: 512, KMALLOC_MIN_SIZE: 64
 	if (KMALLOC_MIN_SIZE <= 32 && size > 64 && size <= 96)
 		return 1;
+
+	// size: 512, KMALLOC_MIN_SIZE: 64
 	if (KMALLOC_MIN_SIZE <= 64 && size > 128 && size <= 192)
 		return 2;
+
+	// size: 512
 	if (size <=          8) return 3;
 	if (size <=         16) return 4;
 	if (size <=         32) return 5;
 	if (size <=         64) return 6;
 	if (size <=        128) return 7;
 	if (size <=        256) return 8;
+	// size: 512
 	if (size <=        512) return 9;
+	// return 9
 	if (size <=       1024) return 10;
 	if (size <=   2 * 1024) return 11;
 	if (size <=   4 * 1024) return 12;
@@ -349,17 +372,23 @@ static __always_inline void *__kmalloc_node(size_t size, gfp_t flags, int node)
 
 // ARM10C 20140614
 // kmem_cache_node: &boot_kmem_cache_node, GFP_KERNEL: 0xD0, node: 0
+// ARM10C 20140726
+// kmem_cache_node: kmem_cache#32, GFP_KERNEL: 0xD0, node: 0
 static __always_inline void *kmem_cache_alloc_node(struct kmem_cache *s, gfp_t flags, int node)
 {
 	// s: &boot_kmem_cache_node, flags: GFP_KERNEL: 0xD0
 	// kmem_cache_alloc(&boot_kmem_cache_node, GFP_KERNEL: 0xD0):
 	// UNMOVABLE인 page 의 object의 시작 virtual address + 64
+	// s: &kmem_cache#2, flags: GFP_KERNEL: 0xD0
+	// kmem_cache_alloc(&kmem_cache#2, GFP_KERNEL: 0xD0):
+	// UNMOVABLE인 page 의 object의 시작 virtual address + 128
 	return kmem_cache_alloc(s, flags);
 	// return UNMOVABLE인 page 의 object의 시작 virtual address + 64
+	// return UNMOVABLE인 page 의 object의 시작 virtual address + 128
 }
 #endif
 
-#ifdef CONFIG_TRACING
+#ifdef CONFIG_TRACING // CONFIG_TRACING=n
 extern void *kmem_cache_alloc_trace(struct kmem_cache *, gfp_t, size_t);
 
 #ifdef CONFIG_NUMA
@@ -377,10 +406,14 @@ kmem_cache_alloc_node_trace(struct kmem_cache *s,
 #endif /* CONFIG_NUMA */
 
 #else /* CONFIG_TRACING */
+// ARM10C 20140726
+// kmalloc_caches[9]: kmem_cache#6, flags: 0x80D0, size: 512
 static __always_inline void *kmem_cache_alloc_trace(struct kmem_cache *s,
 		gfp_t flags, size_t size)
 {
+	// s: kmem_cache#6, flags: 0x80D0
 	return kmem_cache_alloc(s, flags);
+	// return kmem_cache#6-o1
 }
 
 static __always_inline void *
@@ -481,20 +514,30 @@ static __always_inline void *kmalloc_large(size_t size, gfp_t flags)
  * for general use, and so are not documented here. For a full list of
  * potential flags, always refer to linux/gfp.h.
  */
+// ARM10C 20140726
+// size: 512, GFP_KERNEL | __GFP_ZERO: 0x80D0
 static __always_inline void *kmalloc(size_t size, gfp_t flags)
 {
+	// size: 512
 	if (__builtin_constant_p(size)) {
+		// size: 512, KMALLOC_MAX_CACHE_SIZE: 0x2000
 		if (size > KMALLOC_MAX_CACHE_SIZE)
 			return kmalloc_large(size, flags);
-#ifndef CONFIG_SLOB
+#ifndef CONFIG_SLOB // CONFIG_SLOB=n
+		// flags: 0x80D0, GFP_DMA: 0x01u
 		if (!(flags & GFP_DMA)) {
+			// size: 512, kmalloc_index(512): 9
 			int index = kmalloc_index(size);
+			// index: 9
 
+			// index: 9
 			if (!index)
 				return ZERO_SIZE_PTR;
 
+			// index: 9, kmalloc_caches[9]: kmem_cache#6, flags: 0x80D0, size: 512
 			return kmem_cache_alloc_trace(kmalloc_caches[index],
 					flags, size);
+			// return kmem_cache#6-o1
 		}
 #endif
 	}
@@ -506,17 +549,23 @@ static __always_inline void *kmalloc(size_t size, gfp_t flags)
  * return size or 0 if a kmalloc cache for that
  * size does not exist
  */
+// ARM10C 20140726
+// i: 2
 static __always_inline int kmalloc_size(int n)
 {
-#ifndef CONFIG_SLOB
+#ifndef CONFIG_SLOB // CONFIG_SLOB=n
+	// n: 2
 	if (n > 2)
 		return 1 << n;
 
+	// n: 2
 	if (n == 1 && KMALLOC_MIN_SIZE <= 32)
 		return 96;
 
+	// n: 2, KMALLOC_MIN_SIZE: 64
 	if (n == 2 && KMALLOC_MIN_SIZE <= 64)
 		return 192;
+		// return 192
 #endif
 	return 0;
 }
@@ -621,10 +670,13 @@ static inline void *kcalloc(size_t n, size_t size, gfp_t flags)
  * allocator where we care about the real place the memory allocation
  * request comes from.
  */
+// CONFIG_DEBUG_SLAB=n, CONFIG_SLUB=y, CONFIG_SLAB=n, CONFIG_TRACING=n CONFIG_SLOB=n
 #if defined(CONFIG_DEBUG_SLAB) || defined(CONFIG_SLUB) || \
 	(defined(CONFIG_SLAB) && defined(CONFIG_TRACING)) || \
 	(defined(CONFIG_SLOB) && defined(CONFIG_TRACING))
 extern void *__kmalloc_track_caller(size_t, gfp_t, unsigned long);
+// ARM10C 20140726
+// len: 12, gfp: GFP_NOWAIT: 0
 #define kmalloc_track_caller(size, flags) \
 	__kmalloc_track_caller(size, flags, _RET_IP_)
 #else
@@ -691,9 +743,13 @@ static inline void *kmem_cache_zalloc(struct kmem_cache *k, gfp_t flags)
  * @size: how many bytes of memory are required.
  * @flags: the type of memory to allocate (see kmalloc).
  */
+// ARM10C 20140726
+// size: 512, GFP_KERNEL: 0xD0
 static inline void *kzalloc(size_t size, gfp_t flags)
 {
+	// size: 512, GFP_KERNEL: 0xD0, __GFP_ZERO: 0x8000u
 	return kmalloc(size, flags | __GFP_ZERO);
+	// return kmem_cache#6-o1
 }
 
 /**

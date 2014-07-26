@@ -525,9 +525,15 @@ static void __init mm_init(void)
 	
 	// mm/Makefile 에서 CONFIG_SLUB 설정으로 slub.c 로 jump
 	kmem_cache_init();
+	// slub 을 활성화 시킴
 	
 	percpu_init_late();
-	pgtable_cache_init();
+	// dchunk로 할당 받은 pcpu 메모리 값들을 slab으로 카피하여 이관
+
+	pgtable_cache_init(); // null function
+
+// 2014/07/26 종료
+
 	vmalloc_init();
 }
 

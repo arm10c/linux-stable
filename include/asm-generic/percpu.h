@@ -130,6 +130,12 @@ extern unsigned long __per_cpu_offset[NR_CPUS];
 // SHIFT_PERCPU_PTR(&boot_pageset, __per_cpu_offset[0]): &boot_pageset + __per_cpu_offset[0]
 //
 // per_cpu(boot_pageset, __per_cpu_offset[0]): *(&boot_pageset + __per_cpu_offset[0])
+// ARM10C 20140726
+// vmap_block_queue, i:0
+// per_cpu_offset(0): __per_cpu_offset[0]
+// SHIFT_PERCPU_PTR(&vmap_block_queue, __per_cpu_offset[0]): &vmap_block_queue + __per_cpu_offset[0]
+//
+// per_cpu(vmap_block_queue, __per_cpu_offset[0]): *(&vmap_block_queue + __per_cpu_offset[0])
 #define per_cpu(var, cpu) \
 	(*SHIFT_PERCPU_PTR(&(var), per_cpu_offset(cpu)))
 

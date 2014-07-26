@@ -12,6 +12,9 @@
 #define KERN_ERR	KERN_SOH "3"	/* error conditions */
 #define KERN_WARNING	KERN_SOH "4"	/* warning conditions */
 #define KERN_NOTICE	KERN_SOH "5"	/* normal but significant condition */
+// ARM10C 20140726
+// KERN_SOH: "\001"
+// KERN_INFO: "\001" "6"
 #define KERN_INFO	KERN_SOH "6"	/* informational */
 // ARM10C 20140301
 // KERN_SOH: "\001"

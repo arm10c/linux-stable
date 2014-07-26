@@ -352,6 +352,7 @@ static inline pte_t pte_modify(pte_t pte, pgprot_t newprot)
 #define HAVE_ARCH_UNMAPPED_AREA
 #define HAVE_ARCH_UNMAPPED_AREA_TOPDOWN
 
+// ARM10C 20140726
 #define pgtable_cache_init() do { } while (0)
 
 #endif /* !__ASSEMBLY__ */

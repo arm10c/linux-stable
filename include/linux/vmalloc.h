@@ -28,6 +28,7 @@ struct vm_area_struct;		/* vma defining user mapping in mm_types.h */
 #endif
 
 // ARM10C 20131116
+// ARM10C 20140726
 struct vm_struct {
 	struct vm_struct	*next;
 	void			*addr;
@@ -39,6 +40,7 @@ struct vm_struct {
 	const void		*caller;
 };
 
+// ARM10C 20140726
 struct vmap_area {
 	unsigned long va_start;
 	unsigned long va_end;
@@ -58,7 +60,8 @@ extern void *vm_map_ram(struct page **pages, unsigned int count,
 				int node, pgprot_t prot);
 extern void vm_unmap_aliases(void);
 
-#ifdef CONFIG_MMU
+#ifdef CONFIG_MMU // CONFIG_MMU=y
+// ARM10C 20140726
 extern void __init vmalloc_init(void);
 #else
 static inline void vmalloc_init(void)

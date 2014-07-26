@@ -69,6 +69,7 @@ struct vm_area_struct;
  * be used in bit comparisons.
  */
 // ARM10C 20140426
+// ARM10C 20140726
 // ___GFP_DMA: 0x01u
 #define __GFP_DMA	((__force gfp_t)___GFP_DMA)
 // ARM10C 20140426
@@ -152,12 +153,14 @@ struct vm_area_struct;
 // __GFP_MEMALLOC: 0x2000u
 #define __GFP_MEMALLOC	((__force gfp_t)___GFP_MEMALLOC)/* Allow access to emergency reserves */
 // ARM10C 20140524
+// ARM10C 20140726
 // ___GFP_COMP: 0x4000u
 // __GFP_COMP: 0x4000u
 #define __GFP_COMP	((__force gfp_t)___GFP_COMP)	/* Add compound page metadata */
 // ARM10C 20140524
 // ARM10C 20140621
 // ARM10C 20140628
+// ARM10C 20140726
 // ___GFP_ZERO: 0x8000u
 // __GFP_ZERO: 0x8000u
 #define __GFP_ZERO	((__force gfp_t)___GFP_ZERO)	/* Return zeroed page on success */
@@ -211,6 +214,7 @@ struct vm_area_struct;
 // ARM10C 20140426
 // ARM10C 20140628
 // ARM10C 20140719
+// ARM10C 20140726
 // GFP_ATOMIC: 0x20u
 // __GFP_HIGH: 0x20u
 // GFP_NOWAIT: 0
@@ -224,6 +228,7 @@ struct vm_area_struct;
 #define GFP_NOFS	(__GFP_WAIT | __GFP_IO)
 // ARM10C 20140308
 // ARM10C 20140614
+// ARM10C 20140726
 // __GFP_WAIT: 0x10
 // __GFP_IO: 0x40
 // __GFP_FS: 0x80
@@ -301,6 +306,9 @@ struct vm_area_struct;
 /* Flag - indicates that the buffer will be suitable for DMA.  Ignored on some
    platforms, used as appropriate on others */
 
+// ARM10C 20140726
+// ___GFP_DMA: 0x01u
+// GFP_DMA: 0x01u
 #define GFP_DMA		__GFP_DMA
 
 /* 4GB DMA on some platforms */

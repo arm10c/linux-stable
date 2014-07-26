@@ -42,6 +42,7 @@ DECLARE_EVENT_CLASS(kmem_alloc,
 		show_gfp_flags(__entry->gfp_flags))
 );
 
+// ARM10C 20140726
 DEFINE_EVENT(kmem_alloc, kmalloc,
 
 	TP_PROTO(unsigned long call_site, const void *ptr,

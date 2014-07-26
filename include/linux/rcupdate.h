@@ -556,6 +556,13 @@ static inline void rcu_preempt_sleep_check(void)
 //	  smp_wmb(); // dmb();
 //	  ((&cpu_chain)->head) = (typeof(*&page_alloc_cpu_nitify_nb) __force *)(&page_alloc_cpu_nitify_nb);
 // } while (0)
+// ARM10C 20140726
+// p: (&cpu_chain)->head: &page_alloc_cpu_nitify_nb, v: &slab_notifier, __rcu: ""
+// __rcu_assign_pointer((&cpu_chain)->head, &slab_notifier, ""):
+// do {
+//	  smp_wmb(); // dmb();
+//	  ((&cpu_chain)->head) = (typeof(*&slab_notifier) __force *)(&slab_notifier);
+// } while (0)
 #define __rcu_assign_pointer(p, v, space)	\
 	do { \
 		smp_wmb(); \
@@ -932,6 +939,20 @@ static inline notrace void rcu_read_unlock_sched_notrace(void)
 // do {
 //	  smp_wmb(); // dmb();
 //	  ((&cpu_chain)->head) = (typeof(*&page_alloc_cpu_nitify_nb) __force *)(&page_alloc_cpu_nitify_nb);
+// } while (0)
+//
+// ARM10C 20140726
+// __rcu_assign_pointer((&cpu_chain)->head, &slab_notifier, ""):
+// do {
+//	  smp_wmb(); // dmb();
+//	  ((&cpu_chain)->head) = (typeof(*&slab_notifier) __force *)(&slab_notifier);
+// } while (0)
+//
+// *nl: (&cpu_chain)->head: &page_alloc_cpu_notify_nb, n: &slab_notifier
+// #define rcu_assign_pointer((&cpu_chain)->head, &slab_notifier):
+// do {
+//	  smp_wmb(); // dmb();
+//	  ((&cpu_chain)->head) = (typeof(*&slab_notifier) __force *)(&slab_notifier);
 // } while (0)
 #define rcu_assign_pointer(p, v)		\
 	__rcu_assign_pointer((p), (v), __rcu)

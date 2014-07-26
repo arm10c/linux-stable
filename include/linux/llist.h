@@ -73,9 +73,13 @@ struct llist_node {
  * init_llist_head - initialize lock-less list head
  * @head:	the head for your lock-less list
  */
+// ARM10C 20140726
+// p->list: (&vfree_deferred + __per_cpu_offset[0])->list
 static inline void init_llist_head(struct llist_head *list)
 {
+	// list->first: ((&vfree_deferred + __per_cpu_offset[0])->list)->first
 	list->first = NULL;
+	// ((&vfree_deferred + __per_cpu_offset[0])->list)->first: NULL
 }
 
 /**

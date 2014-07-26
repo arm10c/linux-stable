@@ -19,24 +19,36 @@ BLOCKING_NOTIFIER_HEAD(reboot_notifier_list);
  */
 
 // ARM10C 20140322
-// *nl: (&cpu_chain)->head: NULL, n: &page_alloc_cpu_nitify_nb
+// *nl: (&cpu_chain)->head: NULL, n: &page_alloc_cpu_notify_nb
+// ARM10C 20140726
+// nh->head: (&cpu_chain)->head: &page_alloc_cpu_notify_nb, n: &slab_notifier
 static int notifier_chain_register(struct notifier_block **nl,
 		struct notifier_block *n)
 {
 	// *nl: (&cpu_chain)->head: NULL
+	// *nl: (&cpu_chain)->head: &page_alloc_cpu_notify_nb
 	while ((*nl) != NULL) {
+		// (*nl)->priority: (&page_alloc_cpu_notify_nb)->priority: 0,
+		// (*n)->priority: (&slab_notifier)->priority: 0
 		if (n->priority > (*nl)->priority)
 			break;
+
+		// &((*nl)->next): &((&page_alloc_cpu_notify_nb)->next)
 		nl = &((*nl)->next);
+		// nl: &((&page_alloc_cpu_notify_nb)->next)
 	}
 
 	// n->next: (&page_alloc_cpu_nitify_nb)->next, *nl: (&cpu_chain)->head: NULL
+	// n->next: (&slab_notifier)->next, *nl: (&page_alloc_cpu_notify_nb)->next
 	n->next = *nl;
 	// n->next: (&page_alloc_cpu_nitify_nb)->next: NULL
+	// n->next: (&slab_notifier)->next: (&page_alloc_cpu_notify_nb)->next
 
-	// *nl: (&cpu_chain)->head: NULL, n: &page_alloc_cpu_nitify_nb
+	// *nl: (&cpu_chain)->head: NULL, n: &page_alloc_cpu_notify_nb
+	// *nl: (&cpu_chain)->head: &page_alloc_cpu_notify_nb, n: &slab_notifier
 	rcu_assign_pointer(*nl, n);
 	// (&cpu_chain)->head: page_alloc_cpu_notifier 포인터 대입
+	// (&cpu_chain)->head: slab_notifier 포인터 대입
 
 	return 0;
 }
@@ -352,13 +364,18 @@ EXPORT_SYMBOL_GPL(blocking_notifier_call_chain);
  *	Currently always returns zero.
  */
 // ARM10C 20140322
-// nh: &cpu_chain, n: &page_alloc_cpu_nitify_nb
+// nh: &cpu_chain, n: &page_alloc_cpu_notify_nb
+// ARM10C 20140726
+// &cpu_chain, nb: &slab_notifier
 int raw_notifier_chain_register(struct raw_notifier_head *nh,
 		struct notifier_block *n)
 {
 	// nh->head: (&cpu_chain)->head: NULL, n: &page_alloc_cpu_nitify_nb
+	// nh->head: (&cpu_chain)->head: &page_alloc_cpu_nitify_nb, n: &slab_notifier
 	return notifier_chain_register(&nh->head, n);
 	// (&cpu_chain)->head: &page_alloc_cpu_nitify_nb
+	// &nh->head에 n의 포인터를 대입함
+	// (&cpu_chain)->head: &slab_notifier
 	// &nh->head에 n의 포인터를 대입함
 }
 EXPORT_SYMBOL_GPL(raw_notifier_chain_register);

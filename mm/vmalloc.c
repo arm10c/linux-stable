@@ -32,6 +32,7 @@
 #include <asm/tlbflush.h>
 #include <asm/shmparam.h>
 
+// ARM10C 20140726
 struct vfree_deferred {
 	struct llist_head list;
 	struct work_struct wq;
@@ -751,6 +752,7 @@ static void free_unmap_vmap_area_addr(unsigned long addr)
 // ARM10C 20131116
 static bool vmap_initialized __read_mostly = false;
 
+// ARM10C 20140726
 struct vmap_block_queue {
 	spinlock_t lock;
 	struct list_head free;
@@ -767,6 +769,7 @@ struct vmap_block {
 };
 
 /* Queue of free and dirty vmap blocks, for allocation and flushing purposes */
+// ARM10C 20140726
 static DEFINE_PER_CPU(struct vmap_block_queue, vmap_block_queue);
 
 /*
@@ -1183,6 +1186,7 @@ void __init vm_area_register_early(struct vm_struct *vm, size_t align)
 	vm_area_add_early(vm);
 }
 
+// ARM10C 20140726
 void __init vmalloc_init(void)
 {
 	struct vmap_area *va;
@@ -1190,14 +1194,31 @@ void __init vmalloc_init(void)
 	int i;
 
 	for_each_possible_cpu(i) {
+	// for ((i) = -1; (i) = cpumask_next((i), (cpu_possible_mask)), (i) < nr_cpu_ids; )
+
 		struct vmap_block_queue *vbq;
 		struct vfree_deferred *p;
 
+		// i: 0, per_cpu(vmap_block_queue, 0): *(&vmap_block_queue + __per_cpu_offset[0])
 		vbq = &per_cpu(vmap_block_queue, i);
+		// vbq: &vmap_block_queue + __per_cpu_offset[0]
+
+		// &vbq->lock: &(&vmap_block_queue + __per_cpu_offset[0])->lock
 		spin_lock_init(&vbq->lock);
+		// &(&vmap_block_queue + __per_cpu_offset[0])->lock 을 이용한 spinlock 획득
+
+		// &vbq->free: &(&vmap_block_queue + __per_cpu_offset[0])->free
 		INIT_LIST_HEAD(&vbq->free);
+		// &vbq->free: &(&vmap_block_queue + __per_cpu_offset[0])->free 리스트 초기화
+
+		// i: 0, per_cpu(vfree_deferred, 0): *(&vfree_deferred + __per_cpu_offset[0])
 		p = &per_cpu(vfree_deferred, i);
+		// p: &vfree_deferred + __per_cpu_offset[0]
+
+		// p->list: (&vfree_deferred + __per_cpu_offset[0])->list
 		init_llist_head(&p->list);
+		// llist의 first를 NULL로 초기화
+
 		INIT_WORK(&p->wq, free_work);
 	}
 

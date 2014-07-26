@@ -439,15 +439,21 @@ static void __maybe_unused pcpu_next_pop(struct pcpu_chunk *chunk,
  */
 // ARM10C 20140607
 // pages_size: 128
+// ARM10C 20140726
+// size: 512
 static void *pcpu_mem_zalloc(size_t size)
 {
 	// slab_is_available(): 0
+	// slab_is_available(): 1
 	if (WARN_ON_ONCE(!slab_is_available()))
 		return NULL;
 		// return NULL
 
+	// size: 512, PAGE_SIZE: 4096
 	if (size <= PAGE_SIZE)
+		// size: 512, GFP_KERNEL: 0xD0
 		return kzalloc(size, GFP_KERNEL);
+		// return kmem_cache#6-o1
 	else
 		return vzalloc(size);
 }
@@ -2783,8 +2789,11 @@ void __init setup_per_cpu_areas(void)
  * This function is called after slab is brought up and replaces those
  * with properly allocated maps.
  */
+// ARM10C 20140726
 void __init percpu_init_late(void)
 {
+	// pcpu_first_chunk: pcpu_setup_first_chunk()함수에서 할당한 dchunk,
+	// pcpu_reserved_chunk: pcpu_setup_first_chunk()함수에서 할당한 schunk
 	struct pcpu_chunk *target_chunks[] =
 		{ pcpu_first_chunk, pcpu_reserved_chunk, NULL };
 	struct pcpu_chunk *chunk;
@@ -2793,16 +2802,32 @@ void __init percpu_init_late(void)
 
 	for (i = 0; (chunk = target_chunks[i]); i++) {
 		int *map;
+		// PERCPU_DYNAMIC_EARLY_SLOTS: 128, sizeof(map[0]): 4
 		const size_t size = PERCPU_DYNAMIC_EARLY_SLOTS * sizeof(map[0]);
+		// size: 512
 
+		// size: 512, PAGE_SIZE: 4096
 		BUILD_BUG_ON(size > PAGE_SIZE);
 
+		// size: 512
 		map = pcpu_mem_zalloc(size);
+		// map: kmem_cache#6-o1
+
+		// map: kmem_cache#6-o1
 		BUG_ON(!map);
 
 		spin_lock_irqsave(&pcpu_lock, flags);
+		// flags에 cpsr 저장 후 pcpu_lock 를 사용한 spinlock 획득
+
+		// map: kmem_cache#6-o1, chunk->map: dchunk->map, size: 512
 		memcpy(map, chunk->map, size);
+		// dchunk로 할당 받은 pcpu 메모리 값들을 slab으로 카피하여 이관
+
+		// map: kmem_cache#6-o1
 		chunk->map = map;
+		// chunk->map: dchunk->map: kmem_cache#6-o1
+
 		spin_unlock_irqrestore(&pcpu_lock, flags);
+		// flags에 저장된 cpsr을 원복하고 pcpu_lock 를 사용한 spinlock 해제
 	}
 }
