@@ -7272,9 +7272,9 @@ void __init kmem_cache_init(void)
 	// # order: 0, object size: 192
 	// kmem_cache#4
 	// - kmem_cache#4->allocflags: 0
-	// - kmem_cache#4->oo.x: 0x10
-	// - kmem_cache#4->min.x: 0x10
-	// - kmem_cache#4->max.x: 0x10
+	// - kmem_cache#4->oo.x: 0x15
+	// - kmem_cache#4->min.x: 0x15
+	// - kmem_cache#4->max.x: 0x15
 	// - kmem_cache#4->min_partial: 5
 	// - kmem_cache#4->cpu_partial: 30
 	// - kmem_cache#4->name:  "kmalloc-192"
@@ -7284,9 +7284,9 @@ void __init kmem_cache_init(void)
 	// # order: 0, object size: 256
 	// kmem_cache#5
 	// - kmem_cache#5->allocflags: 0
-	// - kmem_cache#5->oo.x: 0x15
-	// - kmem_cache#5->min.x: 0x15
-	// - kmem_cache#5->max.x: 0x15
+	// - kmem_cache#5->oo.x: 0x10
+	// - kmem_cache#5->min.x: 0x10
+	// - kmem_cache#5->max.x: 0x10
 	// - kmem_cache#5->min_partial: 5
 	// - kmem_cache#5->cpu_partial: 13
 	// - kmem_cache#5->name:  "kmalloc-256"

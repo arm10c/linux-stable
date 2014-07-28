@@ -691,7 +691,7 @@ void __init create_kmalloc_caches(unsigned long flags)
 
 			// i: 6, flags: 0, create_kmalloc_cache(NULL, 64, 0): kmem_cache#2
 			// i: 7, flags: 0, create_kmalloc_cache(NULL, 128, 0): kmem_cache#3
-			// i: 12, flags: 0, create_kmalloc_cache(NULL, 4096, 0):
+			// i: 12, flags: 0, create_kmalloc_cache(NULL, 4096, 0): kmem_cache#9
 			kmalloc_caches[i] = create_kmalloc_cache(NULL,
 							1 << i, flags);
 			// kmalloc_caches[6]: kmem_cache#2
@@ -753,9 +753,9 @@ void __init create_kmalloc_caches(unsigned long flags)
 	// # order: 0, object size: 192
 	// kmem_cache#4
 	// - kmem_cache#4->allocflags: 0
-	// - kmem_cache#4->oo.x: 0x10
-	// - kmem_cache#4->min.x: 0x10
-	// - kmem_cache#4->max.x: 0x10
+	// - kmem_cache#4->oo.x: 0x15
+	// - kmem_cache#4->min.x: 0x15
+	// - kmem_cache#4->max.x: 0x15
 	// - kmem_cache#4->min_partial: 5
 	// - kmem_cache#4->cpu_partial: 30
 	// kmem_cache_node#5
@@ -764,9 +764,9 @@ void __init create_kmalloc_caches(unsigned long flags)
 	// # order: 0, object size: 256
 	// kmem_cache#5
 	// - kmem_cache#5->allocflags: 0
-	// - kmem_cache#5->oo.x: 0x15
-	// - kmem_cache#5->min.x: 0x15
-	// - kmem_cache#5->max.x: 0x15
+	// - kmem_cache#5->oo.x: 0x10
+	// - kmem_cache#5->min.x: 0x10
+	// - kmem_cache#5->max.x: 0x10
 	// - kmem_cache#5->min_partial: 5
 	// - kmem_cache#5->cpu_partial: 13
 	// kmem_cache_node#6
