@@ -7234,7 +7234,7 @@ void __init kmem_cache_init(void)
 	create_kmalloc_caches(0);
 
 	// create_kmalloc_caches 가 한일:
-	// 배열 size_index 값을 변경, kmalloc_caches 값을 채워줌
+	// 배열 size_index[] 값을 변경, kmalloc_caches[] 값을 채워줌
 	//
 	// size_index[0 .. 6]: 6
 	// size_index[8 .. 11]: 7
@@ -7244,64 +7244,111 @@ void __init kmem_cache_init(void)
 	// kmem_cache 의 refcount 가 1로 set
 	// slab_caches에 kmem_cache의 list 추가
 	//
-	// s->allocflags: kmem_cache#9.allocflags: 0x4000
-	// s->oo: kmem_cache#9.oo.x: 0x30008
-	// s->min: kmem_cache#9.min.x: 0x10002
-	// s->max: kmem_cache#9.max.x: 0x30008
-	// kmem_cache#9.min_partial: 6
-	// kmem_cache#9.cpu_partial: 2
-	//
 	// kmalloc_caches[6]:
+	// # order: 0, object size: 64
 	// kmem_cache#2
-	// - order: 0, object size: 64
+	// - kmem_cache#2->allocflags: 0
+	// - kmem_cache#2->oo.x: 0x40
+	// - kmem_cache#2->min.x: 0x40
+	// - kmem_cache#2->max.x: 0x40
+	// - kmem_cache#2->min_partial: 5
+	// - kmem_cache#2->cpu_partial: 30
 	// - kmem_cache#2->name:  "kmalloc-64"
 	// kmem_cache_node#3
 	//
 	// kmalloc_caches[7]:
+	// # order: 0, object size: 128
 	// kmem_cache#3
-	// - order: 0, object size: 128
+	// - kmem_cache#3->allocflags: 0
+	// - kmem_cache#3->oo.x: 0x20
+	// - kmem_cache#3->min.x: 0x20
+	// - kmem_cache#3->max.x: 0x20
+	// - kmem_cache#3->min_partial: 5
+	// - kmem_cache#3->cpu_partial: 30
 	// - kmem_cache#3->name:  "kmalloc-128"
 	// kmem_cache_node#4
 	//
 	// kmalloc_caches[2]:
+	// # order: 0, object size: 192
 	// kmem_cache#4
-	// - order: 0, object size: 192
+	// - kmem_cache#4->allocflags: 0
+	// - kmem_cache#4->oo.x: 0x10
+	// - kmem_cache#4->min.x: 0x10
+	// - kmem_cache#4->max.x: 0x10
+	// - kmem_cache#4->min_partial: 5
+	// - kmem_cache#4->cpu_partial: 30
 	// - kmem_cache#4->name:  "kmalloc-192"
 	// kmem_cache_node#5
 	//
 	// kmalloc_caches[8]:
+	// # order: 0, object size: 256
 	// kmem_cache#5
-	// - order: 0, object size: 256
+	// - kmem_cache#5->allocflags: 0
+	// - kmem_cache#5->oo.x: 0x15
+	// - kmem_cache#5->min.x: 0x15
+	// - kmem_cache#5->max.x: 0x15
+	// - kmem_cache#5->min_partial: 5
+	// - kmem_cache#5->cpu_partial: 13
 	// - kmem_cache#5->name:  "kmalloc-256"
 	// kmem_cache_node#6
 	//
 	// kmalloc_caches[9]:
+	// # order: 1, object size: 512
 	// kmem_cache#6
-	// - order: 1, object size: 512
+	// - kmem_cache#6->allocflags: __GFP_COMP (0x4000)
+	// - kmem_cache#6->oo.x: 0x10010
+	// - kmem_cache#6->min.x: 0x8
+	// - kmem_cache#6->max.x: 0x10010
+	// - kmem_cache#6->min_partial: 5
+	// - kmem_cache#6->cpu_partial: 13
 	// - kmem_cache#6->name:  "kmalloc-512"
 	// kmem_cache_node#7
 	//
 	// kmalloc_caches[10]:
+	// # order: 2, object size: 1024
 	// kmem_cache#7
-	// - order: 2, object size: 1024
+	// - kmem_cache#7->allocflags: __GFP_COMP (0x4000)
+	// - kmem_cache#7->oo.x: 0x20020
+	// - kmem_cache#7->min.x: 0x4
+	// - kmem_cache#7->max.x: 0x20020
+	// - kmem_cache#7->min_partial: 5
+	// - kmem_cache#7->cpu_partial: 6
 	// - kmem_cache#7->name:  "kmalloc-1024"
 	// kmem_cache_node#8
 	//
 	// kmalloc_caches[11]:
+	// # order: 3, object size: 2048
 	// kmem_cache#8
-	// - order: 3, object size: 2048
+	// - kmem_cache#8->allocflags: __GFP_COMP (0x4000)
+	// - kmem_cache#8->oo.x: 0x30010
+	// - kmem_cache#8->min.x: 0x2
+	// - kmem_cache#8->max.x: 0x30010
+	// - kmem_cache#8->min_partial: 5
+	// - kmem_cache#8->cpu_partial: 6
 	// - kmem_cache#8->name:  "kmalloc-2048"
 	// kmem_cache_node#9
 	//
 	// kmalloc_caches[12]:
+	// # order: 3, object size: 4096
 	// kmem_cache#9
-	// - order: 3, object size: 4096
+	// - kmem_cache#9->allocflags: __GFP_COMP (0x4000)
+	// - kmem_cache#9->oo.x: 0x30008
+	// - kmem_cache#9->min.x: 0x10002
+	// - kmem_cache#9->max.x: 0x30008
+	// - kmem_cache#9->min_partial: 6
+	// - kmem_cache#9->cpu_partial: 2
 	// - kmem_cache#9->name:  "kmalloc-4096"
 	// kmem_cache_node#10
 	//
 	// kmalloc_caches[13]:
+	// # order: 3, object size: 8192
 	// kmem_cache#10
-	// - order: 3, object size: 8192
+	// - kmem_cache#10->allocflags: __GFP_COMP (0x4000)
+	// - kmem_cache#10->oo.x: 0x30004
+	// - kmem_cache#10->min.x: 0x10001
+	// - kmem_cache#10->max.x: 0x30004
+	// - kmem_cache#10->min_partial: 6
+	// - kmem_cache#10->cpu_partial: 2
 	// - kmem_cache#10->name:  "kmalloc-8192"
 	// kmem_cache_node#11
 	//
@@ -7310,7 +7357,7 @@ void __init kmem_cache_init(void)
 #ifdef CONFIG_SMP // CONFIG_SMP=y
 	register_cpu_notifier(&slab_notifier);
 	// (&cpu_chain)->head: slab_notifier 포인터 대입
-	// (&slab_notifier)->next은 NULL로 대입
+	// (&slab_notifier)->next은 (&page_alloc_cpu_notify_nb)->next로 대입
 #endif
 
 	// KERN_INFO: "\001" "6", cache_line_size(): 64

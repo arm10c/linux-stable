@@ -182,7 +182,7 @@ void cpu_hotplug_enable(void)
 
 /* Need to know about CPUs going up/down? */
 // ARM10C 20140315
-// nb: &page_alloc_cpu_nitify_nb
+// nb: &page_alloc_cpu_notify_nb
 // ARM10C 20140726
 // &slab_notifier
 int __ref register_cpu_notifier(struct notifier_block *nb)
@@ -192,13 +192,13 @@ int __ref register_cpu_notifier(struct notifier_block *nb)
 	// waiter를 만들어 mutex를 lock을 시도하며 기다리다 가능할 때 mutex lock한다.
 	// waiter를 만들어 mutex를 lock을 시도하며 기다리다 가능할 때 mutex lock한다.
 
-	// &cpu_chain, nb: &page_alloc_cpu_nitify_nb
+	// &cpu_chain, nb: &page_alloc_cpu_notify_nb
 	// &cpu_chain, nb: &slab_notifier
 	ret = raw_notifier_chain_register(&cpu_chain, nb);
 	// (&cpu_chain)->head: page_alloc_cpu_notify_nb 포인터 대입
 	// (&page_alloc_cpu_notify_nb)->next은 NULL로 대입
 	// (&cpu_chain)->head: slab_notifier 포인터 대입
-	// (&slab_notifier)->next은 NULL로 대입
+	// (&slab_notifier)->next은 (&page_alloc_cpu_notify_nb)->next로 대입
 
 	cpu_maps_update_done();
 	// mutex를 기다리는(waiter)가 있으면 깨우고 아니면 mutex unlock한다.

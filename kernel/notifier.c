@@ -38,10 +38,10 @@ static int notifier_chain_register(struct notifier_block **nl,
 		// nl: &((&page_alloc_cpu_notify_nb)->next)
 	}
 
-	// n->next: (&page_alloc_cpu_nitify_nb)->next, *nl: (&cpu_chain)->head: NULL
+	// n->next: (&page_alloc_cpu_notify_nb)->next, *nl: (&cpu_chain)->head: NULL
 	// n->next: (&slab_notifier)->next, *nl: (&page_alloc_cpu_notify_nb)->next
 	n->next = *nl;
-	// n->next: (&page_alloc_cpu_nitify_nb)->next: NULL
+	// n->next: (&page_alloc_cpu_notify_nb)->next: NULL
 	// n->next: (&slab_notifier)->next: (&page_alloc_cpu_notify_nb)->next
 
 	// *nl: (&cpu_chain)->head: NULL, n: &page_alloc_cpu_notify_nb
@@ -370,10 +370,10 @@ EXPORT_SYMBOL_GPL(blocking_notifier_call_chain);
 int raw_notifier_chain_register(struct raw_notifier_head *nh,
 		struct notifier_block *n)
 {
-	// nh->head: (&cpu_chain)->head: NULL, n: &page_alloc_cpu_nitify_nb
-	// nh->head: (&cpu_chain)->head: &page_alloc_cpu_nitify_nb, n: &slab_notifier
+	// nh->head: (&cpu_chain)->head: NULL, n: &page_alloc_cpu_notify_nb
+	// nh->head: (&cpu_chain)->head: &page_alloc_cpu_notify_nb, n: &slab_notifier
 	return notifier_chain_register(&nh->head, n);
-	// (&cpu_chain)->head: &page_alloc_cpu_nitify_nb
+	// (&cpu_chain)->head: &page_alloc_cpu_notify_nb
 	// &nh->head에 n의 포인터를 대입함
 	// (&cpu_chain)->head: &slab_notifier
 	// &nh->head에 n의 포인터를 대입함
