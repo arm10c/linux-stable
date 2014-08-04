@@ -1,8 +1,14 @@
 #IAMROOT.ORG Kernel스터디10차(ARM)
 
 #HISTORY
-  - 62th (2014/07/12) week study : [62차 스터디](https://github.com/arm10c/linux-stable/blob/master/Reference/88_Review/a10c_62.md)
+  - 64th (2014/07/26) week study : [64차 스터디](https://github.com/arm10c/linux-stable/blob/master/Reference/88_Review/a10c_64.md)
+    - start_kernel()-> mm_init()-> kmem_cache_init()
+    - start_kernel()-> mm_init()-> percpu_init_late()
+    - start_kernel()-> mm_init()-> pgtable_cache_init()
+  - 63th (2014/07/19) week study : [63차 스터디](https://github.com/arm10c/linux-stable/blob/master/Reference/88_Review/a10c_63.md)
     - mm_init()->kmem_cache_init()->bootstrab(&boot_kmem_cache_node) 
+  - 62th (2014/07/12) week study : [62차 스터디](https://github.com/arm10c/linux-stable/blob/master/Reference/88_Review/a10c_62.md)
+    - mm_init()->kmem_cache_init()->bootstrab(&boot_kmem_cache) 
   - 61th (2014/07/05) week study : [61차 스터디](https://github.com/arm10c/linux-stable/blob/master/Reference/88_Review/a10c_61.md)
   - 60th (2014/06/28) week study : [60차 스터디](https://github.com/arm10c/linux-stable/blob/master/Reference/88_Review/a10c_60.md)
   - 59th (2014/06/21) week study : [59차 스터디](https://github.com/arm10c/linux-stable/blob/master/Reference/88_Review/a10c_59.md)

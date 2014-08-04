@@ -7353,7 +7353,7 @@ void __init kmem_cache_init(void)
 	// kmem_cache_node#11
 	//
 	// slab_state: UP
-
+ 
 #ifdef CONFIG_SMP // CONFIG_SMP=y
 	register_cpu_notifier(&slab_notifier);
 	// (&cpu_chain)->head: slab_notifier 포인터 대입
