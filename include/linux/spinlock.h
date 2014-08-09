@@ -302,6 +302,7 @@ static inline raw_spinlock_t *spinlock_check(spinlock_t *lock)
 }
 
 // ARM10C 20130914
+// ARM10C 20140809
 #define spin_lock_init(_lock)				\
 do {							\
 	spinlock_check(_lock);				\

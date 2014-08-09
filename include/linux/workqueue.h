@@ -30,7 +30,7 @@ enum {
 	WORK_STRUCT_DELAYED_BIT	= 1,	/* work item is delayed */
 	WORK_STRUCT_PWQ_BIT	= 2,	/* data points to pwq */
 	WORK_STRUCT_LINKED_BIT	= 3,	/* next work is linked to this one */
-#ifdef CONFIG_DEBUG_OBJECTS_WORK
+#ifdef CONFIG_DEBUG_OBJECTS_WORK // CONFIG_DEBUG_OBJECTS_WORK=n
 	WORK_STRUCT_STATIC_BIT	= 4,	/* static initializer (debugobjects) */
 	WORK_STRUCT_COLOR_SHIFT	= 5,	/* color for workqueue flushing */
 #else
@@ -69,6 +69,8 @@ enum {
 				  WORK_STRUCT_COLOR_BITS,
 
 	/* data contains off-queue information when !WORK_STRUCT_PWQ */
+	// WORK_STRUCT_COLOR_SHIFT: 4
+	// WORK_OFFQ_FLAG_BASE: 4
 	WORK_OFFQ_FLAG_BASE	= WORK_STRUCT_COLOR_SHIFT,
 
 	WORK_OFFQ_CANCELING	= (1 << WORK_OFFQ_FLAG_BASE),
@@ -79,14 +81,24 @@ enum {
 	 * indicate that no pool is associated.
 	 */
 	WORK_OFFQ_FLAG_BITS	= 1,
+	// WORK_OFFQ_FLAG_BASE: 4, WORK_OFFQ_FLAG_BITS: 1
+	// WORK_OFFQ_POOL_SHIFT: 5
 	WORK_OFFQ_POOL_SHIFT	= WORK_OFFQ_FLAG_BASE + WORK_OFFQ_FLAG_BITS,
+	// BITS_PER_LONG: 32, WORK_OFFQ_POOL_SHIFT: 5
+	// WORK_OFFQ_LEFT: 27
 	WORK_OFFQ_LEFT		= BITS_PER_LONG - WORK_OFFQ_POOL_SHIFT,
+	// WORK_OFFQ_LEFT: 27
+	// WORK_OFFQ_POOL_BITS: 27
 	WORK_OFFQ_POOL_BITS	= WORK_OFFQ_LEFT <= 31 ? WORK_OFFQ_LEFT : 31,
+	// WORK_OFFQ_POOL_BITS: 27
+	// WORK_OFFQ_POOL_NONE: 0x7FFFFFF
 	WORK_OFFQ_POOL_NONE	= (1LU << WORK_OFFQ_POOL_BITS) - 1,
 
 	/* convenience constants */
 	WORK_STRUCT_FLAG_MASK	= (1UL << WORK_STRUCT_FLAG_BITS) - 1,
 	WORK_STRUCT_WQ_DATA_MASK = ~WORK_STRUCT_FLAG_MASK,
+	// WORK_OFFQ_POOL_NONE: 0x7FFFFFF, WORK_OFFQ_POOL_SHIFT: 5
+	// WORK_STRUCT_NO_POOL: 0xFFFFFFE0
 	WORK_STRUCT_NO_POOL	= (unsigned long)WORK_OFFQ_POOL_NONE << WORK_OFFQ_POOL_SHIFT,
 
 	/* bit mask for work_busy() return values */
@@ -97,6 +109,7 @@ enum {
 	WORKER_DESC_LEN		= 24,
 };
 
+// ARM10C 20140809
 struct work_struct {
 	atomic_long_t data;
 	struct list_head entry;
@@ -106,6 +119,10 @@ struct work_struct {
 #endif
 };
 
+// ARM10C 20140809
+// WORK_STRUCT_NO_POOL: 0xFFFFFFE0
+// ATOMIC_LONG_INIT(0xFFFFFFE0): { 0xFFFFFFE0 }
+// WORK_DATA_INIT(): { 0xFFFFFFE0 }
 #define WORK_DATA_INIT()	ATOMIC_LONG_INIT(WORK_STRUCT_NO_POOL)
 #define WORK_DATA_STATIC_INIT()	\
 	ATOMIC_LONG_INIT(WORK_STRUCT_NO_POOL | WORK_STRUCT_STATIC)
@@ -180,6 +197,8 @@ struct execute_work {
 /*
  * initialize a work item's function pointer
  */
+// ARM10C 20140809
+// p->wq: (&vfree_deferred + __per_cpu_offset[0])->wq, free_work, 0
 #define PREPARE_WORK(_work, _func)					\
 	do {								\
 		(_work)->func = (_func);				\
@@ -188,7 +207,7 @@ struct execute_work {
 #define PREPARE_DELAYED_WORK(_work, _func)				\
 	PREPARE_WORK(&(_work)->work, (_func))
 
-#ifdef CONFIG_DEBUG_OBJECTS_WORK
+#ifdef CONFIG_DEBUG_OBJECTS_WORK // CONFIG_DEBUG_OBJECTS_WORK=n
 extern void __init_work(struct work_struct *work, int onstack);
 extern void destroy_work_on_stack(struct work_struct *work);
 static inline unsigned int work_static(struct work_struct *work)
@@ -196,6 +215,7 @@ static inline unsigned int work_static(struct work_struct *work)
 	return *work_data_bits(work) & WORK_STRUCT_STATIC;
 }
 #else
+// ARM10C 20140809
 static inline void __init_work(struct work_struct *work, int onstack) { }
 static inline void destroy_work_on_stack(struct work_struct *work) { }
 static inline unsigned int work_static(struct work_struct *work) { return 0; }
@@ -208,7 +228,7 @@ static inline unsigned int work_static(struct work_struct *work) { return 0; }
  * assignment of the work data initializer allows the compiler
  * to generate better code.
  */
-#ifdef CONFIG_LOCKDEP
+#ifdef CONFIG_LOCKDEP // CONFIG_LOCKDEP=n
 #define __INIT_WORK(_work, _func, _onstack)				\
 	do {								\
 		static struct lock_class_key __key;			\
@@ -220,6 +240,8 @@ static inline unsigned int work_static(struct work_struct *work) { return 0; }
 		PREPARE_WORK((_work), (_func));				\
 	} while (0)
 #else
+// ARM10C 20140809
+// p->wq: (&vfree_deferred + __per_cpu_offset[0])->wq, free_work, 0
 #define __INIT_WORK(_work, _func, _onstack)				\
 	do {								\
 		__init_work((_work), _onstack);				\
@@ -229,6 +251,8 @@ static inline unsigned int work_static(struct work_struct *work) { return 0; }
 	} while (0)
 #endif
 
+// ARM10C 20140809
+// p->wq: (&vfree_deferred + __per_cpu_offset[0])->wq, free_work
 #define INIT_WORK(_work, _func)						\
 	do {								\
 		__INIT_WORK((_work), (_func), 0);			\

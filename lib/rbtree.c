@@ -69,6 +69,8 @@ __rb_rotate_set_parents(struct rb_node *old, struct rb_node *new,
 	__rb_change_child(old, new, parent, root);
 }
 
+// ARM10C 20140809
+// node: &(kmem_cache#2-o10)->rb_node, root: &vmap_area_root, dummy_rotate
 static __always_inline void
 __rb_insert(struct rb_node *node, struct rb_root *root,
 	    void (*augment_rotate)(struct rb_node *old, struct rb_node *new))
@@ -377,14 +379,18 @@ EXPORT_SYMBOL(__rb_erase_color);
 
 static inline void dummy_propagate(struct rb_node *node, struct rb_node *stop) {}
 static inline void dummy_copy(struct rb_node *old, struct rb_node *new) {}
+// ARM10C 20140809
 static inline void dummy_rotate(struct rb_node *old, struct rb_node *new) {}
 
 static const struct rb_augment_callbacks dummy_callbacks = {
 	dummy_propagate, dummy_copy, dummy_rotate
 };
 
+// ARM10C 20140809
+// &va->rb_node: &(kmem_cache#2-o10)->rb_node, &vmap_area_root
 void rb_insert_color(struct rb_node *node, struct rb_root *root)
 {
+	// node: &(kmem_cache#2-o10)->rb_node, root: &vmap_area_root
 	__rb_insert(node, root, dummy_rotate);
 }
 EXPORT_SYMBOL(rb_insert_color);

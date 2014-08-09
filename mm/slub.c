@@ -4997,6 +4997,8 @@ static __always_inline void *slab_alloc(struct kmem_cache *s,
 // k: UNMOVABLE인 page (boot_kmem_cache)의 object의 시작 virtual address, flags: __GFP_ZERO: 0x8000u
 // ARM10C 20140726
 // s: kmem_cache#6, flags: 0x80D0
+// ARM10C 20140809
+// s: kmem_cache#2, flags: 0x8000
 void *kmem_cache_alloc(struct kmem_cache *s, gfp_t gfpflags)
 {
 	// s: &boot_kmem_cache_node, gfpflags: GFP_KERNEL: 0xD0
@@ -5012,12 +5014,16 @@ void *kmem_cache_alloc(struct kmem_cache *s, gfp_t gfpflags)
 	// s: kmem_cache#6, gfpflags: GFP_KERNEL | __GFP_ZERO: 0x80D0
 	// slab_alloc(kmem_cache#6, GFP_KERNEL | __GFP_ZERO: 0x80D0):
 	// UNMOVABLE인 page 1(kmem_cache#6)의 시작 virtual address
+	// s: kmem_cache#2, gfpflags: __GFP_ZERO: 0x8000
+	// slab_alloc(kmem_cache#6, __GFP_ZERO: 0x8000):
+	// UNMOVABLE인 page (kmem_cache#2)의 시작 virtual address
 	void *ret = slab_alloc(s, gfpflags, _RET_IP_);
 	// ret: UNMOVABLE인 page 의 object의 시작 virtual address + 64
 	// ret: UNMOVABLE인 page (boot_kmem_cache)의 object의 시작 virtual address
 	// ret: UNMOVABLE인 page (boot_kmem_cache)의 시작 virtual address + 3968
 	// ret: UNMOVABLE인 page (boot_kmem_cache)의 시작 virtual address + 128
 	// ret: UNMOVABLE인 page 1(kmem_cache#6)의 시작 virtual address (kmem_cache#6-o1)
+	// ret: UNMOVABLE인 page (kmem_cache#2)의 시작 virtual address (kmem_cache#2-o10)
 
 	// ret: UNMOVABLE인 page 의 object의 시작 virtual address + 64
 	// s->object_size: boot_kmem_cache_node.object_size: 44,
@@ -5039,6 +5045,10 @@ void *kmem_cache_alloc(struct kmem_cache *s, gfp_t gfpflags)
 	// s->object_size: (kmem_cache#6)->object_size: 512,
 	// s->size: (kmem_cache#6)->size: 512,
 	// gfpflags: GFP_KERNEL | __GFP_ZERO: 0x80D0
+	// ret: kmem_cache#2-o10
+	// s->object_size: (kmem_cache#6)->object_size: 52,
+	// s->size: (kmem_cache#6)->size: 64,
+	// gfpflags: __GFP_ZERO: 0x8000
 	trace_kmem_cache_alloc(_RET_IP_, ret, s->object_size,
 				s->size, gfpflags);
 
@@ -5047,12 +5057,14 @@ void *kmem_cache_alloc(struct kmem_cache *s, gfp_t gfpflags)
 	// ret: UNMOVABLE인 page (boot_kmem_cache)의 시작 virtual address + 3968
 	// ret: UNMOVABLE인 page (boot_kmem_cache)의 시작 virtual address + 128
 	// ret: kmem_cache#6-o1
+	// ret: kmem_cache#2-o10
 	return ret;
 	// return UNMOVABLE인 page 의 object의 시작 virtual address + 64
 	// return UNMOVABLE인 page (boot_kmem_cache)의 object의 시작 virtual address
 	// return UNMOVABLE인 page (boot_kmem_cache)의 시작 virtual address + 3968
 	// return UNMOVABLE인 page (boot_kmem_cache)의 시작 virtual address + 128
 	// return kmem_cache#6-o1
+	// return kmem_cache#2-o10
 }
 EXPORT_SYMBOL(kmem_cache_alloc);
 

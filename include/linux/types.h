@@ -223,12 +223,14 @@ struct ustat {
  * @func: actual update function to call after the grace period.
  */
 // ARM10C 20140419
-// sizeof(callback_head) : 8 bytes
+// ARM10C 20140809
+// sizeof(struct callback_head): 8 bytes
 struct callback_head {
 	struct callback_head *next;
 	void (*func)(struct callback_head *head);
 };
 // ARM10C 20140419
+// ARM10C 20140809
 #define rcu_head callback_head
 
 #endif /*  __ASSEMBLY__ */

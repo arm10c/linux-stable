@@ -141,6 +141,8 @@ static inline long atomic_long_add_unless(atomic_long_t *l, long a, long u)
 // ARM10C 20140419
 typedef atomic_t atomic_long_t;
 
+// ARM10C 20140809
+// WORK_STRUCT_NO_POOL: 0xFFFFFFE0
 #define ATOMIC_LONG_INIT(i)	ATOMIC_INIT(i)
 
 // ARM10C 20140419

@@ -75,6 +75,7 @@ struct llist_node {
  */
 // ARM10C 20140726
 // p->list: (&vfree_deferred + __per_cpu_offset[0])->list
+// ARM10C 20140809
 static inline void init_llist_head(struct llist_head *list)
 {
 	// list->first: ((&vfree_deferred + __per_cpu_offset[0])->list)->first

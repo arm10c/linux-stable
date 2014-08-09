@@ -20,6 +20,7 @@
 
 // ARM10C 20131012
 // ARM10C 20140315
+// ARM10C 20140809
 #define ATOMIC_INIT(i)	{ (i) }
 
 #ifdef __KERNEL__

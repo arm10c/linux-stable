@@ -32,6 +32,8 @@
 #include <linux/kernel.h>
 #include <linux/stddef.h>
 
+// ARM10C 20140809
+// sizeof(struct rb_node): 12 bytes
 struct rb_node {
 	unsigned long  __rb_parent_color;
 	struct rb_node *rb_right;
@@ -39,6 +41,7 @@ struct rb_node {
 } __attribute__((aligned(sizeof(long))));
     /* The alignment might seem pointless, but allegedly CRIS needs it */
 
+// ARM10C 20140809
 struct rb_root {
 	struct rb_node *rb_node;
 };
@@ -46,6 +49,7 @@ struct rb_root {
 
 #define rb_parent(r)   ((struct rb_node *)((r)->__rb_parent_color & ~3))
 
+// ARM10C 20140809
 #define RB_ROOT	(struct rb_root) { NULL, }
 #define	rb_entry(ptr, type, member) container_of(ptr, type, member)
 
@@ -76,13 +80,22 @@ extern struct rb_node *rb_next_postorder(const struct rb_node *);
 extern void rb_replace_node(struct rb_node *victim, struct rb_node *new, 
 			    struct rb_root *root);
 
+// ARM10C 20140809
+// &va->rb_node: &(kmem_cache#2-o10)->rb_node, parent: NULL, p: &vmap_area_root.rb_node
 static inline void rb_link_node(struct rb_node * node, struct rb_node * parent,
 				struct rb_node ** rb_link)
 {
+	// node->__rb_parent_color: (kmem_cache#2-o10)->rb_node.__rb_parent_color, parent: NULL
 	node->__rb_parent_color = (unsigned long)parent;
-	node->rb_left = node->rb_right = NULL;
+	// node->__rb_parent_color: (kmem_cache#2-o10)->rb_node.__rb_parent_color: NULL
 
+	node->rb_left = node->rb_right = NULL;
+	// node->rb_left: (kmem_cache#2-o10)->rb_node.rb_left: NULL
+	// node->rb_right: (kmem_cache#2-o10)->rb_node.rb_right: NULL
+
+	// *rb_link: vmap_area_root.rb_node, node: &(kmem_cache#2-o10)->rb_node
 	*rb_link = node;
+	// vmap_area_root.rb_node: &(kmem_cache#2-o10)->rb_node
 }
 
 #define rb_entry_safe(ptr, type, member) \

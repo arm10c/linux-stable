@@ -41,6 +41,8 @@ struct vm_struct {
 };
 
 // ARM10C 20140726
+// ARM10C 20140809
+// sizeof(struct vmap_area): 52 bytes
 struct vmap_area {
 	unsigned long va_start;
 	unsigned long va_end;

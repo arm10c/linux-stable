@@ -33,14 +33,18 @@
 #include <asm/shmparam.h>
 
 // ARM10C 20140726
+// ARM10C 20140809
 struct vfree_deferred {
 	struct llist_head list;
 	struct work_struct wq;
 };
+
+// ARM10C 20140809
 static DEFINE_PER_CPU(struct vfree_deferred, vfree_deferred);
 
 static void __vunmap(const void *, int);
 
+// ARM10C 20140809
 static void free_work(struct work_struct *w)
 {
 	struct vfree_deferred *p = container_of(w, struct vfree_deferred, wq);
@@ -268,11 +272,14 @@ EXPORT_SYMBOL(vmalloc_to_pfn);
 
 #define VM_LAZY_FREE	0x01
 #define VM_LAZY_FREEING	0x02
+// ARM10C 20140809
 #define VM_VM_AREA	0x04
 
 static DEFINE_SPINLOCK(vmap_area_lock);
 /* Export for kexec only */
 LIST_HEAD(vmap_area_list);
+// ARM10C 20140809
+// RB_ROOT: (struct rb_root) { NULL, }
 static struct rb_root vmap_area_root = RB_ROOT;
 
 /* The vmap cache globals are protected by vmap_area_lock */
@@ -281,6 +288,7 @@ static unsigned long cached_hole_size;
 static unsigned long cached_vstart;
 static unsigned long cached_align;
 
+// ARM10C 20140809
 static unsigned long vmap_area_pcpu_hole;
 
 static struct vmap_area *__find_vmap_area(unsigned long addr)
@@ -302,12 +310,16 @@ static struct vmap_area *__find_vmap_area(unsigned long addr)
 	return NULL;
 }
 
+// ARM10C 20140809
+// va: kmem_cache#2-o10
 static void __insert_vmap_area(struct vmap_area *va)
 {
 	struct rb_node **p = &vmap_area_root.rb_node;
+	// p: &vmap_area_root.rb_node
 	struct rb_node *parent = NULL;
 	struct rb_node *tmp;
 
+	// *p: vmap_area_root.rb_node: NULL
 	while (*p) {
 		struct vmap_area *tmp_va;
 
@@ -321,7 +333,11 @@ static void __insert_vmap_area(struct vmap_area *va)
 			BUG();
 	}
 
+	// va->rb_node: (kmem_cache#2-o10)->rb_node, parent: NULL, p: &vmap_area_root.rb_node
 	rb_link_node(&va->rb_node, parent, p);
+	// vmap_area_root.rb_node: &(kmem_cache#2-o10)->rb_node
+
+	// va->rb_node: (kmem_cache#2-o10)->rb_node
 	rb_insert_color(&va->rb_node, &vmap_area_root);
 
 	/* address-sort this list */
@@ -750,6 +766,7 @@ static void free_unmap_vmap_area_addr(unsigned long addr)
 #define VMAP_BLOCK_SIZE		(VMAP_BBMAP_BITS * PAGE_SIZE)
 
 // ARM10C 20131116
+// ARM10C 20140809
 static bool vmap_initialized __read_mostly = false;
 
 // ARM10C 20140726
@@ -1120,6 +1137,7 @@ EXPORT_SYMBOL(vm_map_ram);
 
 // ARM10C 20131116
 // ARM10C 20131130
+// ARM10C 20140809
 static struct vm_struct *vmlist __initdata;
 /**
  * vm_area_add_early - add vmap area early during boot
@@ -1205,7 +1223,7 @@ void __init vmalloc_init(void)
 
 		// &vbq->lock: &(&vmap_block_queue + __per_cpu_offset[0])->lock
 		spin_lock_init(&vbq->lock);
-		// &(&vmap_block_queue + __per_cpu_offset[0])->lock 을 이용한 spinlock 획득
+		// &(&vmap_block_queue + __per_cpu_offset[0])->lock 을 이용한 spinlock 초기화
 
 		// &vbq->free: &(&vmap_block_queue + __per_cpu_offset[0])->free
 		INIT_LIST_HEAD(&vbq->free);
@@ -1219,22 +1237,64 @@ void __init vmalloc_init(void)
 		init_llist_head(&p->list);
 		// llist의 first를 NULL로 초기화
 
+		// p->wq: (&vfree_deferred + __per_cpu_offset[0])->wq
 		INIT_WORK(&p->wq, free_work);
+		// wq의 member를 초기화
+
+		// [loop 2 .. 3] 수행은 skip
 	}
 
 	/* Import existing vmlist entries. */
+
+	// ioremap.c 에서 static_vmlist 로 이전에 추가해 놓은 vm 정보들
+	// SYSC: 0xf6100000 +  64kB   PA:0x10050000
+	// TMR : 0xf6300000 +  16kB   PA:0x12DD0000
+	// WDT : 0xf6400000 +   4kB   PA:0x101D0000
+	// CHID: 0xf8000000 +   4kB   PA:0x10000000
+	// CMU : 0xf8100000 + 144kB   PA:0x10010000
+	// PMU : 0xf8180000 +  64kB   PA:0x10040000
+	// SRAM: 0xf8400000 +   4kB   PA:0x02020000
+	// ROMC: 0xf84c0000 +   4kB   PA:0x12250000
 	for (tmp = vmlist; tmp; tmp = tmp->next) {
+		// tmp: SYSC
+
+		// sizeof(struct vmap_area): 52 bytes, GFP_NOWAIT: 0
+		// kzalloc(52, 0): kmem_cache#2-o10
 		va = kzalloc(sizeof(struct vmap_area), GFP_NOWAIT);
+		// va: kmem_cache#2-o10
+
+		// va->flags: (kmem_cache#2-o10)->flags, VM_VM_AREA: 0x04
 		va->flags = VM_VM_AREA;
+		// va->flags: (kmem_cache#2-o10)->flags: 0x04
+
+		// va->va_start: (kmem_cache#2-o10)->va_start, tmp->addr: 0xf6100000
 		va->va_start = (unsigned long)tmp->addr;
+		// va->va_start: (kmem_cache#2-o10)->va_start: 0xf6100000
+
+		// va->va_end: (kmem_cache#2-o10)->va_end
+		// va->va_start: (kmem_cache#2-o10)->va_start: 0xf6100000, tmp->size: 0x10000
 		va->va_end = va->va_start + tmp->size;
+		// va->va_end: kmem_cache#2-o10)->va_end: 0xf6110000
+
+		// va->vm: (kmem_cache#2-o10)->vm, tmp: SYSC
 		va->vm = tmp;
+		// va->vm: (kmem_cache#2-o10)->vm: SYSC
+
+		// va: kmem_cache#2-o10
 		__insert_vmap_area(va);
+		// vm SYSC 정보를 RB Tree 구조로 삽입
+
+		// tmp가 TMR WDT CHID CMU PMU SRAM ROMC
+		// 순서로 루프 수행
 	}
 
+	// VMALLOC_END: 0xff000000UL
 	vmap_area_pcpu_hole = VMALLOC_END;
+	// vmap_area_pcpu_hole: 0xff000000UL
 
+	// vmap_initialized: false
 	vmap_initialized = true;
+	// vmap_initialized: true
 }
 
 /**

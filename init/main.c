@@ -533,8 +533,10 @@ static void __init mm_init(void)
 	pgtable_cache_init(); // null function
 
 // 2014/07/26 종료
+// 2014/08/09 시작
 
 	vmalloc_init();
+	// vmlist에 등록된 vm struct 들을 slab으로 이관하고 RB Tree로 구성
 }
 
 // ARM10C 20130824
@@ -652,7 +654,12 @@ asmlinkage void __init start_kernel(void)
 	// extable 을 cmp_ex를 이용하여 sort수행
 
 	trap_init(); // null function
+
 	mm_init();
+	// buddy와 slab 을 활성화 하고 기존 할당 받은 bootmem 은 buddy,
+	// pcpu 메모리, vmlist 는 slab으로 이관
+
+// 2014/08/09 종료
 
 	/*
 	 * Set up the scheduler prior starting any interrupts (such as the

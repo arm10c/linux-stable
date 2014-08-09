@@ -33,6 +33,7 @@
 // ARM10C 20140301
 // ARM10C 20140315
 // &waiter->list->next: list, &waiter->list->prev: list
+// ARM10C 20140809
 static inline void INIT_LIST_HEAD(struct list_head *list)
 {
 	list->next = list;
