@@ -1,6 +1,9 @@
 #IAMROOT.ORG Kernel스터디10차(ARM)
 
 #HISTORY
+  - 65th (2014/08/09) week study : [65차 스터디](https://github.com/arm10c/linux-stable/blob/master/Reference/88_Review/a10c_65.md)
+    - start_kernel()-> mm_init()-> vmalloc_init();
+	- vmlist에 등록된 vm struct 들을 slab으로 이관하고 RB Tree로 구성
   - 64th (2014/07/26) week study : [64차 스터디](https://github.com/arm10c/linux-stable/blob/master/Reference/88_Review/a10c_64.md)
     - start_kernel()-> mm_init()-> kmem_cache_init()
     - start_kernel()-> mm_init()-> percpu_init_late()
