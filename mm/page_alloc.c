@@ -1091,11 +1091,11 @@ void __init __free_pages_bootmem(struct page *page, unsigned int order)
 	// nr_pages: 32
 	// [order: 0] nr_pages: 1
 	for (loop = 0; loop < (nr_pages - 1); loop++, p++) {
-			// p: 0x20000 (pfn)
-			// p: 0x20001 (pfn)
-			prefetchw(p + 1);
-			// 0x20001 (pfn) 을 cache에 추가
-			// 0x20002 (pfn) 을 cache에 추가
+		// p: 0x20000 (pfn)
+		// p: 0x20001 (pfn)
+		prefetchw(p + 1);
+		// 0x20001 (pfn) 을 cache에 추가
+		// 0x20002 (pfn) 을 cache에 추가
 
 		// p: 0x20000 (pfn)
 		// p: 0x20001 (pfn)
@@ -2033,7 +2033,7 @@ void free_hot_cold_page(struct page *page, int cold)
 	pcp = &this_cpu_ptr(zone->pageset)->pcp;
 	// pcp: &((&boot_pageset) + (__per_cpu_offset[0]))->pcp
 
-	// cold 와 hot의 의미? 
+	// cold 와 hot의 의미?
 	// cold 변수가 1 이면 (cold)  리스트의 마지막에 붙여 천천히 리스트에서 검색되도록 하며
 	// 0 이면 (hot) 리스트의 처음에 붙여 빨리 검색되어 사용되도록 한다.
 	// cold: 0

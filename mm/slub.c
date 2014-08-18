@@ -539,9 +539,9 @@ static inline struct kmem_cache_order_objects oo_make(int order,
 		// order_objects(1, 4096, 0): 0x2
 		(order << OO_SHIFT) + order_objects(order, size, reserved)
 	};
-	// x.x: 64
-	// x.x: 32
-	// x.x: 64
+	// x.x: 0x00040
+	// x.x: 0x00020
+	// x.x: 0x00040
 	// x.x: 0x30008
 	// x.x: 0x10002
 
@@ -6196,9 +6196,9 @@ static int calculate_sizes(struct kmem_cache *s, int forced_order)
 	// order: 0, size: 64, s->reserved: kmem_cache#2.reserved: 0
 	// order: 3, size: 4096, s->reserved: kmem_cache#9.reserved: 0
 	s->oo = oo_make(order, size, s->reserved);
-	// s->oo: boot_kmem_cache_node.oo.x: 64
-	// s->oo: boot_kmem_cache.oo.x: 32
-	// s->oo: kmem_cache#2.oo.x: 64
+	// s->oo: boot_kmem_cache_node.oo.x: 0x00040
+	// s->oo: boot_kmem_cache.oo.x: 0x00020
+	// s->oo: kmem_cache#2.oo.x: 0x00040
 	// s->oo: kmem_cache#9.oo.x: 0x30008
 	
 	// size: 64, get_order(64): 0, s->reserved: boot_kmem_cache_node.reserved: 0
@@ -6206,9 +6206,9 @@ static int calculate_sizes(struct kmem_cache *s, int forced_order)
 	// size: 64, get_order(64): 0, s->reserved: kmem_cache#2.reserved: 0
 	// size: 4096, get_order(4096): 1, s->reserved: kmem_cache#9.reserved: 0
 	s->min = oo_make(get_order(size), size, s->reserved);
-	// s->min: boot_kmem_cache_node.min.x: 64
-	// s->min: boot_kmem_cache.min.x: 32
-	// s->min: kmem_cache#2.min.x: 64
+	// s->min: boot_kmem_cache_node.min.x: 0x00040
+	// s->min: boot_kmem_cache.min.x: 0x00020
+	// s->min: kmem_cache#2.min.x: 0x00040
 	// s->min: kmem_cache#9.min.x: 0x10002
 	
 	// s->oo: boot_kmem_cache_node.oo, s->max: boot_kmem_cache_node.max
@@ -6220,14 +6220,14 @@ static int calculate_sizes(struct kmem_cache *s, int forced_order)
 	// s->oo: kmem_cache#9.oo, s->max: kmem_cache#9.max
 	// oo_objects(kmem_cache#9.oo): 8, oo_objects(kmem_cache#9.max): 0
 	if (oo_objects(s->oo) > oo_objects(s->max))
-		// s->oo: boot_kmem_cache_node.oo.x: 64
-		// s->oo: boot_kmem_cache.oo.x: 32
-		// s->oo: kmem_cache#2.oo.x: 64
+		// s->oo: boot_kmem_cache_node.oo.x: 0x00040
+		// s->oo: boot_kmem_cache.oo.x: 0x00020
+		// s->oo: kmem_cache#2.oo.x: 0x00040
 		// s->oo: kmem_cache#9.oo.x: 0x30008
 		s->max = s->oo;
-		// s->max: boot_kmem_cache_node.max.x: 64
-		// s->max: boot_kmem_cache.max.x: 32
-		// s->max: kmem_cache#2.max.x: 64
+		// s->max: boot_kmem_cache_node.max.x: 0x00040
+		// s->max: boot_kmem_cache.max.x: 0x00020
+		// s->max: kmem_cache#2.max.x: 0x00040
 		// s->max: kmem_cache#9.max.x: 0x30008
 
 	// s->oo: boot_kmem_cache_node.oo, oo_objects(boot_kmem_cache_node.oo): 64
