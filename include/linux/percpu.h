@@ -290,6 +290,121 @@ extern void __bad_size_call_parameter(void);
  * a double cmpxchg instruction, since it's a cheap requirement, and it
  * avoids breaking the requirement for architectures with the instruction.
  */
+// ARM10C 20140719
+// this_cpu_cmpxchg_double_4(((boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->freelist,
+// ((pcp2boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->tid,
+// UNMOVABLE인 page (boot_kmem_cache)의 시작 object의 virtual address + 3840, 12,
+// UNMOVABLE인 page (boot_kmem_cache)의 시작 object의 virtual address + 3712, 16):
+// ({
+// 	int ret__;
+// 	unsigned long flags;
+// 	raw_local_irq_save(flags);
+// 	ret__ =
+//	({
+//		int __ret = 0;
+//		if (__this_cpu_read((boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->freelist) ==
+//		(UNMOVABLE인 page (boot_kmem_cache)의 시작 object의 virtual address + 3840) &&
+//		__this_cpu_read(((boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->tid)  == (12))
+//		{
+//			__this_cpu_write(((boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->freelist,
+//			(UNMOVABLE인 page (boot_kmem_cache)의 시작 object의 virtual address + 3712));
+//	
+//			__this_cpu_write(((boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->tid, (16));
+//			__ret = 1;
+//		}
+//		(__ret);
+//	})
+// 	raw_local_irq_restore(flags);
+// 	ret__;
+// })
+//
+// #define __pcpu_double_call_return_bool(this_cpu_cmpxchg_double_,
+// ((pcp1boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->freelist,
+// ((pcp2boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->tid, ...)
+// ({
+// 	bool pdcrb_ret__;
+// 	__verify_pcpu_ptr(&((pcp1boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->freelist);
+//
+// 	BUILD_BUG_ON(sizeof(((pcp1boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->freelist) !=
+// 	sizeof(((pcp2boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->tid));
+//
+// 	VM_BUG_ON((unsigned long)(&((pcp1boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->freelist) %
+// 	(2 * sizeof(((pcp1boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->freelist)));
+//
+// 	VM_BUG_ON((unsigned long)(&((pcp2boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->tid) !=
+// 		  (unsigned long)(&((pcp1boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->freelist) +
+// 		  sizeof(((pcp1boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->freelist));
+//
+// 	switch(sizeof(((pcp1boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->freelist)) {
+//
+// 	case 1: pdcrb_ret__ = this_cpu_cmpxchg_double_1(((pcp1boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->freelist,
+// 	((pcp2boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->tid, __VA_ARGS__); break;
+//
+// 	case 2: pdcrb_ret__ = this_cpu_cmpxchg_double_2(((pcp1boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->freelist,
+// 	((pcp2boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->tid, __VA_ARGS__); break;
+//
+// 	case 4: pdcrb_ret__ = this_cpu_cmpxchg_double_4(((pcp1boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->freelist,
+// 	((pcp2boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->tid, __VA_ARGS__); break;
+//
+// 	case 8: pdcrb_ret__ = this_cpu_cmpxchg_double_8(((pcp1boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->freelist,
+// 	((pcp2boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->tid, __VA_ARGS__); break;
+//
+// 	default:
+// 		__bad_size_call_parameter(); break;
+// 	}
+// 	pdcrb_ret__;
+// })
+//
+// __pcpu_double_call_return_bool(this_cpu_cmpxchg_double_, ((&boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->freelist,
+// ((&boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->tid,
+// UNMOVABLE인 page (boot_kmem_cache)의 시작 object의 virtual address + 3840, 12,
+// UNMOVABLE인 page (boot_kmem_cache)의 시작 object의 virtual address + 3712, 16):
+// ({
+// 	bool pdcrb_ret__;
+// 	__verify_pcpu_ptr(&((pcp1boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->freelist);
+//
+// 	BUILD_BUG_ON(sizeof(((pcp1boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->freelist) !=
+// 	sizeof(((pcp2boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->tid));
+//
+// 	VM_BUG_ON((unsigned long)(&((pcp1boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->freelist) %
+// 	(2 * sizeof(((pcp1boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->freelist)));
+//
+// 	VM_BUG_ON((unsigned long)(&((pcp2boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->tid) !=
+// 		  (unsigned long)(&((pcp1boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->freelist) +
+// 		  sizeof(((pcp1boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->freelist));
+//
+// 	switch(sizeof(((pcp1boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->freelist)) {
+//
+// 	case 4: pdcrb_ret__ =
+//	({
+//		int ret__;
+//		unsigned long flags;
+//		raw_local_irq_save(flags);
+//		ret__ =
+//		({
+//			int __ret = 0;
+//			if (__this_cpu_read((boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->freelist) ==
+//			(UNMOVABLE인 page (boot_kmem_cache)의 시작 object의 virtual address + 3840) &&
+//			__this_cpu_read(((boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->tid)  == (12))
+//			{
+//				__this_cpu_write(((boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->freelist,
+//				(UNMOVABLE인 page (boot_kmem_cache)의 시작 object의 virtual address + 3712));
+//		
+//				__this_cpu_write(((boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->tid, (16));
+//				__ret = 1;
+//			}
+//			(__ret);
+//		})
+//		raw_local_irq_restore(flags);
+//		ret__;
+//	})
+//	break;
+//
+// 	default:
+// 		__bad_size_call_parameter(); break;
+// 	}
+// 	pdcrb_ret__;
+// })
 #define __pcpu_double_call_return_bool(stem, pcp1, pcp2, ...)		\
 ({									\
 	bool pdcrb_ret__;						\
@@ -601,6 +716,51 @@ do {									\
  * very limited hardware support for these operations, so only certain
  * sizes may work.
  */
+// ARM10C 20140719
+// __this_cpu_generic_cmpxchg_double((boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->freelist,
+// ((boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->tid,
+// UNMOVABLE인 page (boot_kmem_cache)의 시작 object의 virtual address + 3840, 12, UNMOVABLE인 page (boot_kmem_cache)의 시작 object의 virtual address + 3712, 16):
+// ({
+// 	int __ret = 0;
+// 	if (__this_cpu_read((boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->freelist) ==
+// 	(UNMOVABLE인 page (boot_kmem_cache)의 시작 object의 virtual address + 3840) &&
+// 	__this_cpu_read(((boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->tid)  == (12))
+// 	{
+// 		__this_cpu_write(((boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->freelist,
+// 		(UNMOVABLE인 page (boot_kmem_cache)의 시작 object의 virtual address + 3712));
+//
+// 		__this_cpu_write(((boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->tid, (16));
+// 		__ret = 1;
+// 	}
+// 	(__ret);
+// })
+//
+// #define _this_cpu_generic_cmpxchg_double((boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->freelist,
+// ((boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->tid,
+// UNMOVABLE인 page (boot_kmem_cache)의 시작 object의 virtual address + 3840, 12,
+// UNMOVABLE인 page (boot_kmem_cache)의 시작 object의 virtual address + 3712, 16)
+// ({
+// 	int ret__;
+// 	unsigned long flags;
+// 	raw_local_irq_save(flags);
+// 	ret__ =
+//	({
+//		int __ret = 0;
+//		if (__this_cpu_read((boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->freelist) ==
+//		(UNMOVABLE인 page (boot_kmem_cache)의 시작 object의 virtual address + 3840) &&
+//		__this_cpu_read(((boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->tid)  == (12))
+//		{
+//			__this_cpu_write(((boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->freelist,
+//			(UNMOVABLE인 page (boot_kmem_cache)의 시작 object의 virtual address + 3712));
+//	
+//			__this_cpu_write(((boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->tid, (16));
+//			__ret = 1;
+//		}
+//		(__ret);
+//	})
+// 	raw_local_irq_restore(flags);
+// 	ret__;
+// })
 #define _this_cpu_generic_cmpxchg_double(pcp1, pcp2, oval1, oval2, nval1, nval2)	\
 ({									\
 	int ret__;							\
@@ -622,6 +782,60 @@ do {									\
 	_this_cpu_generic_cmpxchg_double(pcp1, pcp2, oval1, oval2, nval1, nval2)
 # endif
 # ifndef this_cpu_cmpxchg_double_4
+// ARM10C 20140719
+// _this_cpu_generic_cmpxchg_double((boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->freelist,
+// ((pcp2boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->tid,
+// UNMOVABLE인 page (boot_kmem_cache)의 시작 object의 virtual address + 3840, 12,
+// UNMOVABLE인 page (boot_kmem_cache)의 시작 object의 virtual address + 3712, 16):
+// ({
+// 	int ret__;
+// 	unsigned long flags;
+// 	raw_local_irq_save(flags);
+// 	ret__ =
+//	({
+//		int __ret = 0;
+//		if (__this_cpu_read((boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->freelist) ==
+//		(UNMOVABLE인 page (boot_kmem_cache)의 시작 object의 virtual address + 3840) &&
+//		__this_cpu_read(((boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->tid)  == (12))
+//		{
+//			__this_cpu_write(((boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->freelist,
+//			(UNMOVABLE인 page (boot_kmem_cache)의 시작 object의 virtual address + 3712));
+//	
+//			__this_cpu_write(((boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->tid, (16));
+//			__ret = 1;
+//		}
+//		(__ret);
+//	})
+// 	raw_local_irq_restore(flags);
+// 	ret__;
+// })
+//
+// this_cpu_cmpxchg_double_4(((boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->freelist,
+// ((pcp2boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->tid,
+// UNMOVABLE인 page (boot_kmem_cache)의 시작 object의 virtual address + 3840, 12,
+// UNMOVABLE인 page (boot_kmem_cache)의 시작 object의 virtual address + 3712, 16):
+// ({
+// 	int ret__;
+// 	unsigned long flags;
+// 	raw_local_irq_save(flags);
+// 	ret__ =
+//	({
+//		int __ret = 0;
+//		if (__this_cpu_read((boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->freelist) ==
+//		(UNMOVABLE인 page (boot_kmem_cache)의 시작 object의 virtual address + 3840) &&
+//		__this_cpu_read(((boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->tid)  == (12))
+//		{
+//			__this_cpu_write(((boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->freelist,
+//			(UNMOVABLE인 page (boot_kmem_cache)의 시작 object의 virtual address + 3712));
+//	
+//			__this_cpu_write(((boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->tid, (16));
+//			__ret = 1;
+//		}
+//		(__ret);
+//	})
+// 	raw_local_irq_restore(flags);
+// 	ret__;
+// })
 #  define this_cpu_cmpxchg_double_4(pcp1, pcp2, oval1, oval2, nval1, nval2)	\
 	_this_cpu_generic_cmpxchg_double(pcp1, pcp2, oval1, oval2, nval1, nval2)
 # endif
@@ -629,6 +843,116 @@ do {									\
 #  define this_cpu_cmpxchg_double_8(pcp1, pcp2, oval1, oval2, nval1, nval2)	\
 	_this_cpu_generic_cmpxchg_double(pcp1, pcp2, oval1, oval2, nval1, nval2)
 # endif
+// ARM10C 20140719
+// s->cpu_slab->freelist: ((&boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->freelist:
+// UNMOVABLE인 page (boot_kmem_cache)의 시작 object의 virtual address + 3840,
+// s->cpu_slab->tid: ((&boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->tid: 12,
+// object: UNMOVABLE인 page (boot_kmem_cache)의 시작 object의 virtual address + 3840,
+// tid: 12,
+// next_object: UNMOVABLE인 page (boot_kmem_cache)의 시작 object의 virtual address + 3712,
+// next_tid(12): 16
+//
+// __pcpu_double_call_return_bool(this_cpu_cmpxchg_double_, ((&boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->freelist,
+// ((&boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->tid,
+// UNMOVABLE인 page (boot_kmem_cache)의 시작 object의 virtual address + 3840, 12,
+// UNMOVABLE인 page (boot_kmem_cache)의 시작 object의 virtual address + 3712, 16):
+// ({
+// 	bool pdcrb_ret__;
+// 	__verify_pcpu_ptr(&((pcp1boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->freelist);
+//
+// 	BUILD_BUG_ON(sizeof(((pcp1boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->freelist) !=
+// 	sizeof(((pcp2boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->tid));
+//
+// 	VM_BUG_ON((unsigned long)(&((pcp1boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->freelist) %
+// 	(2 * sizeof(((pcp1boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->freelist)));
+//
+// 	VM_BUG_ON((unsigned long)(&((pcp2boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->tid) !=
+// 		  (unsigned long)(&((pcp1boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->freelist) +
+// 		  sizeof(((pcp1boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->freelist));
+//
+// 	switch(sizeof(((pcp1boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->freelist)) {
+//
+// 	case 4: pdcrb_ret__ =
+//	({
+//		int ret__;
+//		unsigned long flags;
+//		raw_local_irq_save(flags);
+//		ret__ =
+//		({
+//			int __ret = 0;
+//			if (__this_cpu_read((boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->freelist) ==
+//			(UNMOVABLE인 page (boot_kmem_cache)의 시작 object의 virtual address + 3840) &&
+//			__this_cpu_read(((boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->tid)  == (12))
+//			{
+//				__this_cpu_write(((boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->freelist,
+//				(UNMOVABLE인 page (boot_kmem_cache)의 시작 object의 virtual address + 3712));
+//		
+//				__this_cpu_write(((boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->tid, (16));
+//				__ret = 1;
+//			}
+//			(__ret);
+//		})
+//		raw_local_irq_restore(flags);
+//		ret__;
+//	})
+//	break;
+//
+// 	default:
+// 		__bad_size_call_parameter(); break;
+// 	}
+// 	pdcrb_ret__;
+// })
+//
+// this_cpu_cmpxchg_double(((&boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->freelist,
+// ((&boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->tid,
+// UNMOVABLE인 page (boot_kmem_cache)의 시작 object의 virtual address + 3840, 12,
+// UNMOVABLE인 page (boot_kmem_cache)의 시작 object의 virtual address + 3712, 16):
+// ({
+// 	bool pdcrb_ret__;
+// 	__verify_pcpu_ptr(&((pcp1boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->freelist);
+//
+// 	BUILD_BUG_ON(sizeof(((pcp1boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->freelist) !=
+// 	sizeof(((pcp2boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->tid));
+//
+// 	VM_BUG_ON((unsigned long)(&((pcp1boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->freelist) %
+// 	(2 * sizeof(((pcp1boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->freelist)));
+//
+// 	VM_BUG_ON((unsigned long)(&((pcp2boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->tid) !=
+// 		  (unsigned long)(&((pcp1boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->freelist) +
+// 		  sizeof(((pcp1boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->freelist));
+//
+// 	switch(sizeof(((pcp1boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->freelist)) {
+//
+// 	case 4: pdcrb_ret__ =
+//	({
+//		int ret__;
+//		unsigned long flags;
+//		raw_local_irq_save(flags);
+//		ret__ =
+//		({
+//			int __ret = 0;
+//			if (__this_cpu_read((boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->freelist) ==
+//			(UNMOVABLE인 page (boot_kmem_cache)의 시작 object의 virtual address + 3840) &&
+//			__this_cpu_read(((boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->tid)  == (12))
+//			{
+//				__this_cpu_write(((boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->freelist,
+//				(UNMOVABLE인 page (boot_kmem_cache)의 시작 object의 virtual address + 3712));
+//		
+//				__this_cpu_write(((boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->tid, (16));
+//				__ret = 1;
+//			}
+//			(__ret);
+//		})
+//		raw_local_irq_restore(flags);
+//		ret__;
+//	})
+//	break;
+//
+// 	default:
+// 		__bad_size_call_parameter(); break;
+// 	}
+// 	pdcrb_ret__;
+// })
 # define this_cpu_cmpxchg_double(pcp1, pcp2, oval1, oval2, nval1, nval2)	\
 	__pcpu_double_call_return_bool(this_cpu_cmpxchg_double_, (pcp1), (pcp2), (oval1), (oval2), (nval1), (nval2))
 #endif
@@ -925,6 +1249,24 @@ do {									\
 	__pcpu_size_call_return2(__this_cpu_cmpxchg_, pcp, oval, nval)
 #endif
 
+// ARM10C 20140719
+// #define __this_cpu_generic_cmpxchg_double((boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->freelist,
+// ((boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->tid,
+// UNMOVABLE인 page (boot_kmem_cache)의 시작 object의 virtual address + 3840, 12, UNMOVABLE인 page (boot_kmem_cache)의 시작 object의 virtual address + 3712, 16)
+// ({
+// 	int __ret = 0;
+// 	if (__this_cpu_read((boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->freelist) ==
+// 	(UNMOVABLE인 page (boot_kmem_cache)의 시작 object의 virtual address + 3840) &&
+// 	__this_cpu_read(((boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->tid)  == (12))
+// 	{
+// 		__this_cpu_write(((boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->freelist,
+// 		(UNMOVABLE인 page (boot_kmem_cache)의 시작 object의 virtual address + 3712));
+//
+// 		__this_cpu_write(((boot_kmem_cache 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->tid, (16));
+// 		__ret = 1;
+// 	}
+// 	(__ret);
+// })
 #define __this_cpu_generic_cmpxchg_double(pcp1, pcp2, oval1, oval2, nval1, nval2)	\
 ({									\
 	int __ret = 0;							\

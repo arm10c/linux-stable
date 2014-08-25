@@ -330,9 +330,9 @@ int slab_is_available(void)
 // ARM10C 20140614
 // &boot_kmem_cache, "kmem_cache", 116, SLAB_HWCACHE_ALIGN: 0x00002000UL
 // ARM10C 20140726
-// s: kmem_cache#2, name: NULL, size: 64, flags: 0
+// s: kmem_cache#30, name: NULL, size: 64, flags: 0
 // ARM10C 20140726
-// s: kmem_cache#9, name: NULL, size: 4096, flags: 0
+// s: kmem_cache#23, name: NULL, size: 4096, flags: 0
 void __init create_boot_cache(struct kmem_cache *s, const char *name, size_t size,
 		unsigned long flags)
 {
@@ -340,54 +340,54 @@ void __init create_boot_cache(struct kmem_cache *s, const char *name, size_t siz
 
 	// s->name: boot_kmem_cache_node.name: NULL
 	// s->name: boot_kmem_cache.name: NULL
-	// s->name: kmem_cache#2.name: NULL
-	// s->name: kmem_cache#9.name: NULL
+	// s->name: kmem_cache#30.name: NULL
+	// s->name: kmem_cache#23.name: NULL
 	s->name = name;
 	// s->name: boot_kmem_cache_node.name: "kmem_cache_node"
 	// s->name: boot_kmem_cache.name: "kmem_cache"
-	// s->name: kmem_cache#2.name: NULL
-	// s->name: kmem_cache#9.name: NULL
+	// s->name: kmem_cache#30.name: NULL
+	// s->name: kmem_cache#23.name: NULL
 
 	// s->size: boot_kmem_cache_node.size: 0
 	// s->object_size: boot_kmem_cache_node.object_size: 0
 	// s->size: boot_kmem_cache.size: 0
 	// s->object_size: boot_kmem_cache.object_size: 0
-	// s->size: kmem_cache#2.size: 0
-	// s->object_size: kmem_cache#2.object_size: 0
-	// s->size: kmem_cache#9.size: 0
-	// s->object_size: kmem_cache#9.object_size: 0
+	// s->size: kmem_cache#30.size: 0
+	// s->object_size: kmem_cache#30.object_size: 0
+	// s->size: kmem_cache#23.size: 0
+	// s->object_size: kmem_cache#23.object_size: 0
 	s->size = s->object_size = size;
 	// s->size: boot_kmem_cache_node.size: 44
 	// s->object_size: boot_kmem_cache_node.object_size: 44
 	// s->size: boot_kmem_cache.size: 116
 	// s->object_size: boot_kmem_cache.object_size: 116
-	// s->size: kmem_cache#2.size: 64
-	// s->object_size: kmem_cache#2.object_size: 64
-	// s->size: kmem_cache#9.size: 4096
-	// s->object_size: kmem_cache#9.object_size: 4096
+	// s->size: kmem_cache#30.size: 64
+	// s->object_size: kmem_cache#30.object_size: 64
+	// s->size: kmem_cache#23.size: 4096
+	// s->object_size: kmem_cache#23.object_size: 4096
 	
 	// flags: SLAB_HWCACHE_ALIGN: 0x00002000UL, ARCH_KMALLOC_MINALIGN: 64, size: 44
 	// s->align: boot_kmem_cache_node.align: 0
 	// flags: SLAB_HWCACHE_ALIGN: 0x00002000UL, ARCH_KMALLOC_MINALIGN: 64, size: 116
 	// s->align: boot_kmem_cache.align: 0
 	// flags: 0, ARCH_KMALLOC_MINALIGN: 64, size: 64
-	// s->align: kmem_cache#2.align: 0
+	// s->align: kmem_cache#30.align: 0
 	// flags: 0, ARCH_KMALLOC_MINALIGN: 64, size: 4096
-	// s->align: kmem_cache#9.align: 0
+	// s->align: kmem_cache#23.align: 0
 	s->align = calculate_alignment(flags, ARCH_KMALLOC_MINALIGN, size);
 	// s->align: boot_kmem_cache_node.align: 64
 	// s->align: boot_kmem_cache.align: 64
-	// s->align: kmem_cache#2.align: 64
-	// s->align: kmem_cache#9.align: 64
+	// s->align: kmem_cache#30.align: 64
+	// s->align: kmem_cache#23.align: 64
 	
 	// s: &boot_kmem_cache_node, flags: SLAB_HWCACHE_ALIGN: 0x00002000UL
 	// __kmem_cache_create(&boot_kmem_cache_node, 0x00002000UL): 0
 	// s: &boot_kmem_cache, flags: SLAB_HWCACHE_ALIGN: 0x00002000UL
 	// __kmem_cache_create(&boot_kmem_cache, 0x00002000UL): 0
-	// s: &kmem_cache#2, flags: 0
-	// __kmem_cache_create(&kmem_cache#2, 0): 0
-	// s: &kmem_cache#9, flags: 0
-	// __kmem_cache_create(&kmem_cache#9, 0): 0
+	// s: &kmem_cache#30, flags: 0
+	// __kmem_cache_create(&kmem_cache#30, 0): 0
+	// s: &kmem_cache#23, flags: 0
+	// __kmem_cache_create(&kmem_cache#23, 0): 0
 	err = __kmem_cache_create(s, flags);
 	// err: 0
 	// err: 0
@@ -408,11 +408,14 @@ void __init create_boot_cache(struct kmem_cache *s, const char *name, size_t siz
 	// page->inuse: 1, page->frozen: 0 page 맴버를 셋팅함
 	// slab 의 objects 들의 freepointer를 맵핑함
 	// 할당받은 slab object를 kmem_cache_node 로 사용하고 kmem_cache_node의 멤버 필드를 초기화함
-	// kmem_cache_node->nr_partial: 1
-	// kmem_cache_node->list_lock: spinlock 초기화 수행
-	// kmem_cache_node->slabs: 1, kmem_cache_node->total_objects: 64 로 세팀함
-	// kmem_cache_node->full: 리스트 초기화
-	// kmem_cache_node의 partial 맴버에 현재 page의 lru 리스트를 추가함
+	// (UNMOVABLE인 page 의 object의 시작 virtual address (kmem_cache_node#0))
+	// (kmem_cache_node#0)->nr_partial: 1
+	// (kmem_cache_node#0)->list_lock: spinlock 초기화 수행
+	// (kmem_cache_node#0)->slabs: 1, kmem_cache_node->total_objects: 64 로 세팀함
+	// (kmem_cache_node#0)->full: 리스트 초기화
+	// kmem_cache_node#0의 partial 맴버에 현재 page의 lru 리스트를 추가함
+	//
+	// kmem_cache_node#0 가 boot_kmem_cache_node.node[0]에 할당됨
 	//
 	// 할당받은 pcpu 들의 16 byte 공간 (&boot_kmem_cache_node)->cpu_slab 에
 	// 각 cpu에 사용하는 kmem_cache_cpu의 tid 맵버를 설정
@@ -424,25 +427,86 @@ void __init create_boot_cache(struct kmem_cache *s, const char *name, size_t siz
 	// boot_kmem_cache.cpu_partial: 30
 	//
 	// 할당 받아 놓은 migratetype이 MIGRATE_UNMOVABLE인 page 를 사용
+	// (UNMOVABLE인 page 의 object의 시작 virtual address + 64 (kmem_cache_node#1))
 	// page 맴버를 셋팅함
-	// page->counters: 0x80200020
-	// page->inuse: 32
-	// page->objects: 32
+	// page->counters: 0x80400040
+	// page->inuse: 64
+	// page->objects: 64
 	// page->frozen: 1
 	// page->freelist: NULL
+	// c->freelist: ((&boot_kmem_cache_node)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->freelist:
+	// UNMOVABLE인 page 의 object의 시작 virtual address + 128
+	// c->tid: ((&boot_kmem_cache_node)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))->tid: 4
 	// 할당받은 slab object를 kmem_cache_node 로 사용하고 kmem_cache_node의 멤버 필드를 초기화함
-	// 첫번째 object:
-	// kmem_cache_node->partial에 연결된 (MIGRATE_UNMOVABLE인 page)->lru 를 삭제
-	// kmem_cache_node->nr_partial: 0
-	// 두번째 object:
-	// kmem_cache_node->nr_partial: 0
-	// kmem_cache_node->list_lock: spinlock 초기화 수행
-	// kmem_cache_node->slabs: 0, kmem_cache_node->total_objects: 0 로 세팀함
-	// kmem_cache_node->full: 리스트 초기화
+	// 1번째 object:
+	// (kmem_cache_node#0)->partial에 연결된 (MIGRATE_UNMOVABLE인 page)->lru 를 삭제
+	// (kmem_cache_node#0)->nr_partial: 0
+	// 2번째 object:
+	// (kmem_cache_node#1)->nr_partial: 0
+	// (kmem_cache_node#1)->list_lock: spinlock 초기화 수행
+	// (kmem_cache_node#1)->slabs: 0, kmem_cache_node->total_objects: 0 로 세팀함
+	// (kmem_cache_node#1)->full: 리스트 초기화
 	//
-	// kmem_cache_node 가 boot_kmem_cache.node[0]에 할당됨
+	// kmem_cache_node#1 가 boot_kmem_cache.node[0]에 할당됨
 	//
 	// 할당받은 pcpu 들의 16 byte 공간 (&boot_kmem_cache)->cpu_slab 에
+	// 각 cpu에 사용하는 kmem_cache_cpu의 tid 맵버를 설정
+
+	// __kmem_cache_create(&kmem_cache#30) 가 한일:
+	// kmem_cache#30.flags: 0
+	// kmem_cache#30.reserved: 0
+	// kmem_cache#30.min_partial: 5
+	// kmem_cache#30.cpu_partial: 30
+	//
+	// 할당 받아 놓은 migratetype이 MIGRATE_UNMOVABLE인 page 를 사용
+	// page 맴버를 셋팅함
+	// page->counters: 0x80400040
+	// page->inuse: 64
+	// page->objects: 64
+	// page->frozen: 1
+	// page->freelist: NULL
+	// MIGRATE_UNMOVABLE인 page 할당 받아 쪼개놓은 object들에서 object를 1개 할당받음
+	// (UNMOVABLE인 page 의 object의 시작 virtual address + 4032 (kmem_cache_node#63))
+	// 2번째 object:
+	// (kmem_cache_node#1)->partial에 연결된 (MIGRATE_UNMOVABLE인 page)->lru 를 삭제
+	// (kmem_cache_node#1)->nr_partial: 0
+	// 64번째 object:
+	// (kmem_cache_node#63)->nr_partial: 0
+	// (kmem_cache_node#63)->list_lock: spinlock 초기화 수행
+	// (kmem_cache_node#63)->slabs: 0,
+	// (kmem_cache_node#63)->total_objects: 0 로 세팀함
+	// (kmem_cache_node#63)->full: 리스트 초기화
+	//
+	// kmem_cache_node#63 가 kmem_cache#30.node[0]에 할당됨
+	//
+	// 할당받은 pcpu 들의 16 byte 공간 (&kmem_cache#30)->cpu_slab 에
+	// 각 cpu에 사용하는 kmem_cache_cpu의 tid 맵버를 설정
+
+	// __kmem_cache_create(&kmem_cache#23) 가 한일:
+	// kmem_cache#23.flags: 0
+	// kmem_cache#23.reserved: 0
+	// kmem_cache#23.min_partial: 6
+	// kmem_cache#23.cpu_partial: 2
+	//
+	// 할당 받아 놓은 migratetype이 MIGRATE_UNMOVABLE인 page 를 사용
+	// page 맴버를 셋팅함
+	// page->counters: 0x80400040
+	// page->inuse: 64
+	// page->objects: 64
+	// page->frozen: 1
+	// page->freelist: NULL
+	// MIGRATE_UNMOVABLE인 page 할당 받아 쪼개놓은 object들에서 object를 1개 할당받음
+	// (UNMOVABLE인 page 의 object의 시작 virtual address + 3968 (kmem_cache_node#62))
+	// 63번째 object:
+	// (kmem_cache_node#62)->nr_partial: 0
+	// (kmem_cache_node#62)->list_lock: spinlock 초기화 수행
+	// (kmem_cache_node#62)->slabs: 0,
+	// (kmem_cache_node#62)->total_objects: 0 로 세팀함
+	// (kmem_cache_node#62)->full: 리스트 초기화
+	//
+	// kmem_cache_node#62 가 kmem_cache#23.node[0]에 할당됨
+	//
+	// 할당받은 pcpu 들의 16 byte 공간 (&kmem_cache#23)->cpu_slab 에
 	// 각 cpu에 사용하는 kmem_cache_cpu의 tid 맵버를 설정
 
 	// err: 0
@@ -455,13 +519,13 @@ void __init create_boot_cache(struct kmem_cache *s, const char *name, size_t siz
 
 	// s->refcount: boot_kmem_cache_node.refcount
 	// s->refcount: boot_kmem_cache.refcount
-	// s->refcount: kmem_cache#2.refcount
-	// s->refcount: kmem_cache#9.refcount
+	// s->refcount: kmem_cache#30.refcount
+	// s->refcount: kmem_cache#23.refcount
 	s->refcount = -1;	/* Exempt from merging for now */
 	// s->refcount: boot_kmem_cache_node.refcount: -1
 	// s->refcount: boot_kmem_cache.refcount: -1
-	// s->refcount: kmem_cache#2.refcount: -1
-	// s->refcount: kmem_cache#9.refcount: -1
+	// s->refcount: kmem_cache#30.refcount: -1
+	// s->refcount: kmem_cache#23.refcount: -1
 }
 
 // ARM10C 20140719
@@ -474,48 +538,48 @@ struct kmem_cache *__init create_kmalloc_cache(const char *name, size_t size,
 	// kmem_cache: UNMOVABLE인 page (boot_kmem_cache)의 object의 시작 virtual address,
 	// GFP_NOWAIT: 0
 	// kmem_cache_zalloc(UNMOVABLE인 page (boot_kmem_cache)의 object의 시작 virtual address, 0):
-	// UNMOVABLE인 page (boot_kmem_cache)의 시작 virtual address + 128
+	// UNMOVABLE인 page (boot_kmem_cache)의 시작 object의 virtual address + 3840
 	// kmem_cache: UNMOVABLE인 page (boot_kmem_cache)의 object의 시작 virtual address,
 	// GFP_NOWAIT: 0
 	// kmem_cache_zalloc(UNMOVABLE인 page (boot_kmem_cache)의 object의 시작 virtual address, 0):
-	// UNMOVABLE인 page (boot_kmem_cache)의 시작 virtual address + 1024
+	// UNMOVABLE인 page (boot_kmem_cache)의 시작 virtual address + 2944
 	struct kmem_cache *s = kmem_cache_zalloc(kmem_cache, GFP_NOWAIT);
-	// s: UNMOVABLE인 page (boot_kmem_cache)의 시작 virtual address + 128 (kmem_cache#2)
-	// s: UNMOVABLE인 page (boot_kmem_cache)의 시작 virtual address + 1024 (kmem_cache#9)
+	// s: UNMOVABLE인 page (boot_kmem_cache)의 시작 object의 virtual address + 3840 (kmem_cache#30)
+	// s: UNMOVABLE인 page (boot_kmem_cache)의 시작 virtual address + 2944 (kmem_cache#23)
 
-	// UNMOVABLE인 page (boot_kmem_cache)의 시작 virtual address + 128 를
-	// kmem_cache 용 2번째 object 인데 주석 추가의 용의성을 위해
-	// kmem_cache#2 부르기로 함
+	// UNMOVABLE인 page (boot_kmem_cache)의 시작 object의 virtual address + 3840 를
+	// kmem_cache 용 30번째 object 인데 주석 추가의 용의성을 위해
+	// kmem_cache#30 부르기로 함
 
 // 2014/07/19 종료
 // 2014/07/26 시작
 
-	// s: kmem_cache#2
-	// s: kmem_cache#9
+	// s: kmem_cache#30
+	// s: kmem_cache#23
 	if (!s)
 		panic("Out of memory when creating slab %s\n", name);
 
-	// s: kmem_cache#2, name: NULL, size: 64, flags: 0
-	// s: kmem_cache#9, name: NULL, size: 4096, flags: 0
+	// s: kmem_cache#30, name: NULL, size: 64, flags: 0
+	// s: kmem_cache#23, name: NULL, size: 4096, flags: 0
 	create_boot_cache(s, name, size, flags);
 
-	// &s->list: &kmem_cache#2->list
-	// &s->list: &kmem_cache#9->list
+	// &s->list: &kmem_cache#30->list
+	// &s->list: &kmem_cache#23->list
 	list_add(&s->list, &slab_caches);
-	// slab_caches에 &kmem_cache#2->list 추가
-	// slab_caches에 &kmem_cache#9->list 추가
+	// slab_caches에 &kmem_cache#30->list 추가
+	// slab_caches에 &kmem_cache#23->list 추가
 
-	// &s->refcount: &kmem_cache#2->refcount: -1
-	// &s->refcount: &kmem_cache#9->refcount: -1
+	// &s->refcount: &kmem_cache#30->refcount: -1
+	// &s->refcount: &kmem_cache#23->refcount: -1
 	s->refcount = 1;
-	// &s->refcount: &kmem_cache#2->refcount: 1
-	// &s->refcount: &kmem_cache#9->refcount: 1
+	// &s->refcount: &kmem_cache#30->refcount: 1
+	// &s->refcount: &kmem_cache#23->refcount: 1
 
-	// s: kmem_cache#2
-	// s: kmem_cache#9
+	// s: kmem_cache#30
+	// s: kmem_cache#23
 	return s;
-	// return kmem_cache#2
-	// return kmem_cache#9
+	// return kmem_cache#30
+	// return kmem_cache#23
 }
 
 // ARM10C 20140719
@@ -608,9 +672,9 @@ struct kmem_cache *kmalloc_slab(size_t size, gfp_t flags)
 		return kmalloc_dma_caches[index];
 
 #endif
-	// index: 6, kmalloc_caches[6]: kmem_cache#2
+	// index: 6, kmalloc_caches[6]: kmem_cache#30
 	return kmalloc_caches[index];
-	// return kmem_cache#2
+	// return kmem_cache#30
 }
 
 /*
@@ -689,14 +753,14 @@ void __init create_kmalloc_caches(unsigned long flags)
 		// i: 12, kmalloc_caches[12]: NULL
 		if (!kmalloc_caches[i]) {
 
-			// i: 6, flags: 0, create_kmalloc_cache(NULL, 64, 0): kmem_cache#2
-			// i: 7, flags: 0, create_kmalloc_cache(NULL, 128, 0): kmem_cache#3
-			// i: 12, flags: 0, create_kmalloc_cache(NULL, 4096, 0): kmem_cache#9
+			// i: 6, flags: 0, create_kmalloc_cache(NULL, 64, 0): kmem_cache#30
+			// i: 7, flags: 0, create_kmalloc_cache(NULL, 128, 0): kmem_cache#29
+			// i: 12, flags: 0, create_kmalloc_cache(NULL, 4096, 0): kmem_cache#23
 			kmalloc_caches[i] = create_kmalloc_cache(NULL,
 							1 << i, flags);
-			// kmalloc_caches[6]: kmem_cache#2
-			// kmalloc_caches[7]: kmem_cache#3
-			// kmalloc_caches[12]: kmem_cache#9
+			// kmalloc_caches[6]: kmem_cache#30
+			// kmalloc_caches[7]: kmem_cache#29
+			// kmalloc_caches[12]: kmem_cache#23
 		}
 
 		/*
@@ -714,9 +778,9 @@ void __init create_kmalloc_caches(unsigned long flags)
 		// KMALLOC_MIN_SIZE: 64, i: 7, kmalloc_caches[2]: NULL
 		// KMALLOC_MIN_SIZE: 64, i: 12, kmalloc_caches[2]: NULL
 		if (KMALLOC_MIN_SIZE <= 64 && !kmalloc_caches[2] && i == 7)
-			// i: 7, flags: 0, create_kmalloc_cache(NULL, 192, 0): kmem_cache#4
+			// i: 7, flags: 0, create_kmalloc_cache(NULL, 192, 0): kmem_cache#28
 			kmalloc_caches[2] = create_kmalloc_cache(NULL, 192, flags);
-			// kmalloc_caches[2]: kmem_cache#4
+			// kmalloc_caches[2]: kmem_cache#28
 		
 		// loop i = 8 9 10 11 13 수행 (skip)
 	}
@@ -729,102 +793,102 @@ void __init create_kmalloc_caches(unsigned long flags)
 	//
 	// kmalloc_caches[6]:
 	// # order: 0, object size: 64
-	// kmem_cache#2
-	// - kmem_cache#2->allocflags: 0
-	// - kmem_cache#2->oo.x: 0x40
-	// - kmem_cache#2->min.x: 0x40
-	// - kmem_cache#2->max.x: 0x40
-	// - kmem_cache#2->min_partial: 5
-	// - kmem_cache#2->cpu_partial: 30
-	// kmem_cache_node#3
+	// kmem_cache#30
+	// - kmem_cache#30->allocflags: 0
+	// - kmem_cache#30->oo.x: 0x40
+	// - kmem_cache#30->min.x: 0x40
+	// - kmem_cache#30->max.x: 0x40
+	// - kmem_cache#30->min_partial: 5
+	// - kmem_cache#30->cpu_partial: 30
+	// kmem_cache_node#63
 	//
 	// kmalloc_caches[7]:
 	// # order: 0, object size: 128
-	// kmem_cache#3
-	// - kmem_cache#3->allocflags: 0
-	// - kmem_cache#3->oo.x: 0x20
-	// - kmem_cache#3->min.x: 0x20
-	// - kmem_cache#3->max.x: 0x20
-	// - kmem_cache#3->min_partial: 5
-	// - kmem_cache#3->cpu_partial: 30
-	// kmem_cache_node#4
+	// kmem_cache#29
+	// - kmem_cache#29->allocflags: 0
+	// - kmem_cache#29->oo.x: 0x20
+	// - kmem_cache#29->min.x: 0x20
+	// - kmem_cache#29->max.x: 0x20
+	// - kmem_cache#29->min_partial: 5
+	// - kmem_cache#29->cpu_partial: 30
+	// kmem_cache_node#62
 	//
 	// kmalloc_caches[2]:
 	// # order: 0, object size: 192
-	// kmem_cache#4
-	// - kmem_cache#4->allocflags: 0
-	// - kmem_cache#4->oo.x: 0x15
-	// - kmem_cache#4->min.x: 0x15
-	// - kmem_cache#4->max.x: 0x15
-	// - kmem_cache#4->min_partial: 5
-	// - kmem_cache#4->cpu_partial: 30
-	// kmem_cache_node#5
+	// kmem_cache#28
+	// - kmem_cache#28->allocflags: 0
+	// - kmem_cache#28->oo.x: 0x15
+	// - kmem_cache#28->min.x: 0x15
+	// - kmem_cache#28->max.x: 0x15
+	// - kmem_cache#28->min_partial: 5
+	// - kmem_cache#28->cpu_partial: 30
+	// kmem_cache_node#61
 	//
 	// kmalloc_caches[8]:
 	// # order: 0, object size: 256
-	// kmem_cache#5
-	// - kmem_cache#5->allocflags: 0
-	// - kmem_cache#5->oo.x: 0x10
-	// - kmem_cache#5->min.x: 0x10
-	// - kmem_cache#5->max.x: 0x10
-	// - kmem_cache#5->min_partial: 5
-	// - kmem_cache#5->cpu_partial: 13
-	// kmem_cache_node#6
+	// kmem_cache#27
+	// - kmem_cache#27->allocflags: 0
+	// - kmem_cache#27->oo.x: 0x10
+	// - kmem_cache#27->min.x: 0x10
+	// - kmem_cache#27->max.x: 0x10
+	// - kmem_cache#27->min_partial: 5
+	// - kmem_cache#27->cpu_partial: 13
+	// kmem_cache_node#60
 	//
 	// kmalloc_caches[9]:
 	// # order: 1, object size: 512
-	// kmem_cache#6
-	// - kmem_cache#6->allocflags: __GFP_COMP (0x4000)
-	// - kmem_cache#6->oo.x: 0x10010
-	// - kmem_cache#6->min.x: 0x8
-	// - kmem_cache#6->max.x: 0x10010
-	// - kmem_cache#6->min_partial: 5
-	// - kmem_cache#6->cpu_partial: 13
-	// kmem_cache_node#7
+	// kmem_cache#26
+	// - kmem_cache#26->allocflags: __GFP_COMP (0x4000)
+	// - kmem_cache#26->oo.x: 0x10010
+	// - kmem_cache#26->min.x: 0x8
+	// - kmem_cache#26->max.x: 0x10010
+	// - kmem_cache#26->min_partial: 5
+	// - kmem_cache#26->cpu_partial: 13
+	// kmem_cache_node#59
 	//
 	// kmalloc_caches[10]:
 	// # order: 2, object size: 1024
-	// kmem_cache#7
-	// - kmem_cache#7->allocflags: __GFP_COMP (0x4000)
-	// - kmem_cache#7->oo.x: 0x20020
-	// - kmem_cache#7->min.x: 0x4
-	// - kmem_cache#7->max.x: 0x20020
-	// - kmem_cache#7->min_partial: 5
-	// - kmem_cache#7->cpu_partial: 6
-	// kmem_cache_node#8
+	// kmem_cache#25
+	// - kmem_cache#25->allocflags: __GFP_COMP (0x4000)
+	// - kmem_cache#25->oo.x: 0x20020
+	// - kmem_cache#25->min.x: 0x4
+	// - kmem_cache#25->max.x: 0x20020
+	// - kmem_cache#25->min_partial: 5
+	// - kmem_cache#25->cpu_partial: 6
+	// kmem_cache_node#58
 	//
 	// kmalloc_caches[11]:
 	// # order: 3, object size: 2048
-	// kmem_cache#8
-	// - kmem_cache#8->allocflags: __GFP_COMP (0x4000)
-	// - kmem_cache#8->oo.x: 0x30010
-	// - kmem_cache#8->min.x: 0x2
-	// - kmem_cache#8->max.x: 0x30010
-	// - kmem_cache#8->min_partial: 5
-	// - kmem_cache#8->cpu_partial: 6
-	// kmem_cache_node#9
+	// kmem_cache#24
+	// - kmem_cache#24->allocflags: __GFP_COMP (0x4000)
+	// - kmem_cache#24->oo.x: 0x30010
+	// - kmem_cache#24->min.x: 0x2
+	// - kmem_cache#24->max.x: 0x30010
+	// - kmem_cache#24->min_partial: 5
+	// - kmem_cache#24->cpu_partial: 6
+	// kmem_cache_node#57
 	//
 	// kmalloc_caches[12]:
 	// # order: 3, object size: 4096
-	// kmem_cache#9
-	// - kmem_cache#9->allocflags: __GFP_COMP (0x4000)
-	// - kmem_cache#9->oo.x: 0x30008
-	// - kmem_cache#9->min.x: 0x10002
-	// - kmem_cache#9->max.x: 0x30008
-	// - kmem_cache#9->min_partial: 6
-	// - kmem_cache#9->cpu_partial: 2
-	// kmem_cache_node#10
+	// kmem_cache#23
+	// - kmem_cache#23->allocflags: __GFP_COMP (0x4000)
+	// - kmem_cache#23->oo.x: 0x30008
+	// - kmem_cache#23->min.x: 0x10002
+	// - kmem_cache#23->max.x: 0x30008
+	// - kmem_cache#23->min_partial: 6
+	// - kmem_cache#23->cpu_partial: 2
+	// kmem_cache_node#56
 	//
 	// kmalloc_caches[13]:
 	// # order: 3, object size: 8192
-	// kmem_cache#10
-	// - kmem_cache#10->allocflags: __GFP_COMP (0x4000)
-	// - kmem_cache#10->oo.x: 0x30004
-	// - kmem_cache#10->min.x: 0x10001
-	// - kmem_cache#10->max.x: 0x30004
-	// - kmem_cache#10->min_partial: 6
-	// - kmem_cache#10->cpu_partial: 2
-	// kmem_cache_node#11
+	// kmem_cache#22
+	// - kmem_cache#22->allocflags: __GFP_COMP (0x4000)
+	// - kmem_cache#22->oo.x: 0x30004
+	// - kmem_cache#22->min.x: 0x10001
+	// - kmem_cache#22->max.x: 0x30004
+	// - kmem_cache#22->min_partial: 6
+	// - kmem_cache#22->cpu_partial: 2
+	// kmem_cache_node#55
 
 	/* Kmalloc array is now usable */
 	// slab_state: PARTIAL
@@ -834,25 +898,26 @@ void __init create_kmalloc_caches(unsigned long flags)
 	// KMALLOC_SHIFT_HIGH: 13
 	for (i = 0; i <= KMALLOC_SHIFT_HIGH; i++) {
 		// i: 0, kmalloc_caches[0]: NULL
-		// i: 2, kmalloc_caches[2]: kmem_cache#4
+		// i: 2, kmalloc_caches[2]: kmem_cache#28
 		struct kmem_cache *s = kmalloc_caches[i];
 		// i: 0, s: NULL
-		// i: 2, s: kmem_cache#4
+		// i: 2, s: kmem_cache#28
 		char *n;
 
 		// i: 0, s: NULL
-		// i: 2, s: kmem_cache#4
+		// i: 2, s: kmem_cache#28
 		if (s) {
 			// GFP_NOWAIT: 0, i: 2, kmalloc_size(2): 192
+			// kasprintf(GFP_NOWAIT: 0, "kmalloc-%d", 192): kmem_cache#30-o0
 			n = kasprintf(GFP_NOWAIT, "kmalloc-%d", kmalloc_size(i));
-			// n: kmem_cache#2-o1
+			// n: kmem_cache#30-o0
 
-			// n: kmem_cache#2-o1
+			// n: kmem_cache#30-o0
 			BUG_ON(!n);
 
-			// s->name: kmem_cache#2->name: NULL, n: kmem_cache#2-o1
+			// s->name: kmem_cache#28->name: NULL, n: kmem_cache#2-o1
 			s->name = n;
-			// s->name: kmem_cache#2->name: kmem_cache#2-o1: "kmalloc-192"
+			// s->name: kmem_cache#28->name: kmem_cache#30-o0: "kmalloc-192"
 		}
 
 		// loop i = 1 3 .. 13 수행 (skip)
@@ -860,15 +925,15 @@ void __init create_kmalloc_caches(unsigned long flags)
 
 	// kmalloc_caches[0] kmalloc_caches[1], kmalloc_caches[3], kmalloc_caches[4], kmalloc_caches[5]
 	// 는 값이 null 이므로 skip
-	// kmalloc_caches[6]:  kmem_cache#2->name:  "kmalloc-64"
-	// kmalloc_caches[7]:  kmem_cache#3->name:  "kmalloc-128"
-	// kmalloc_caches[2]:  kmem_cache#4->name:  "kmalloc-192"
-	// kmalloc_caches[8]:  kmem_cache#5->name:  "kmalloc-256"
-	// kmalloc_caches[9]:  kmem_cache#6->name:  "kmalloc-512"
-	// kmalloc_caches[10]: kmem_cache#7->name:  "kmalloc-1024"
-	// kmalloc_caches[11]: kmem_cache#8->name:  "kmalloc-2048"
-	// kmalloc_caches[12]: kmem_cache#9->name:  "kmalloc-4096"
-	// kmalloc_caches[13]: kmem_cache#10->name: "kmalloc-8192"
+	// kmalloc_caches[6]:  kmem_cache#30->name: "kmalloc-64"
+	// kmalloc_caches[7]:  kmem_cache#29->name: "kmalloc-128"
+	// kmalloc_caches[2]:  kmem_cache#28->name: "kmalloc-192"
+	// kmalloc_caches[8]:  kmem_cache#27->name: "kmalloc-256"
+	// kmalloc_caches[9]:  kmem_cache#26->name: "kmalloc-512"
+	// kmalloc_caches[10]: kmem_cache#25->name: "kmalloc-1024"
+	// kmalloc_caches[11]: kmem_cache#24->name: "kmalloc-2048"
+	// kmalloc_caches[12]: kmem_cache#23->name: "kmalloc-4096"
+	// kmalloc_caches[13]: kmem_cache#22->name: "kmalloc-8192"
 
 #ifdef CONFIG_ZONE_DMA // CONFIG_ZONE_DMA=n
 	for (i = 0; i <= KMALLOC_SHIFT_HIGH; i++) {

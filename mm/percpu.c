@@ -453,7 +453,7 @@ static void *pcpu_mem_zalloc(size_t size)
 	if (size <= PAGE_SIZE)
 		// size: 512, GFP_KERNEL: 0xD0
 		return kzalloc(size, GFP_KERNEL);
-		// return kmem_cache#6-o1
+		// return kmem_cache#26-o0
 	else
 		return vzalloc(size);
 }
@@ -2811,21 +2811,21 @@ void __init percpu_init_late(void)
 
 		// size: 512
 		map = pcpu_mem_zalloc(size);
-		// map: kmem_cache#6-o1
+		// map: kmem_cache#26-o0
 
-		// map: kmem_cache#6-o1
+		// map: kmem_cache#26-o0
 		BUG_ON(!map);
 
 		spin_lock_irqsave(&pcpu_lock, flags);
 		// flags에 cpsr 저장 후 pcpu_lock 를 사용한 spinlock 획득
 
-		// map: kmem_cache#6-o1, chunk->map: dchunk->map, size: 512
+		// map: kmem_cache#26-o0, chunk->map: dchunk->map, size: 512
 		memcpy(map, chunk->map, size);
 		// dchunk로 할당 받은 pcpu 메모리 값들을 slab으로 카피하여 이관
 
-		// map: kmem_cache#6-o1
+		// map: kmem_cache#26-o0
 		chunk->map = map;
-		// chunk->map: dchunk->map: kmem_cache#6-o1
+		// chunk->map: dchunk->map: kmem_cache#26-o0
 
 		spin_unlock_irqrestore(&pcpu_lock, flags);
 		// flags에 저장된 cpsr을 원복하고 pcpu_lock 를 사용한 spinlock 해제

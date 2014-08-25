@@ -25,17 +25,18 @@ char *kvasprintf(gfp_t gfp, const char *fmt, va_list ap)
 	va_end(aq);
 
 	// len: 11, gfp: GFP_NOWAIT: 0
+	// kmalloc_track_caller(12, GFP_NOWAIT: 0): kmem_cache#30-o0
 	p = kmalloc_track_caller(len+1, gfp);
-	// p: kmem_cache#2-o1
+	// p: kmem_cache#30-o0
 
 	if (!p)
 		return NULL;
 
 	vsnprintf(p, len+1, fmt, ap);
 
-	// p: kmem_cache#2-o1
+	// p: kmem_cache#30-o0
 	return p;
-	// return kmem_cache#2-o1
+	// return kmem_cache#30-o0
 }
 EXPORT_SYMBOL(kvasprintf);
 
@@ -49,13 +50,14 @@ char *kasprintf(gfp_t gfp, const char *fmt, ...)
 	va_start(ap, fmt);
 
 	// gfp: GFP_NOWAIT: 0, fmt: "kmalloc-%d", ap: 192
+	// kvasprintf(GFP_NOWAIT: 0, "kmalloc-%d", 192): kmem_cache#30-o0
 	p = kvasprintf(gfp, fmt, ap);
-	// p: kmem_cache#2-o1
+	// p: kmem_cache#30-o0
 
 	va_end(ap);
 
-	// p: kmem_cache#2-o1
+	// p: kmem_cache#30-o0
 	return p;
-	// return kmem_cache#2-o1
+	// return kmem_cache#30-o0
 }
 EXPORT_SYMBOL(kasprintf);

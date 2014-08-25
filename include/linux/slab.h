@@ -124,7 +124,7 @@
 
 // ARM10C 20140726
 // ZERO_SIZE_PTR: 16
-// s: kmem_cache#2
+// s: kmem_cache#30
 #define ZERO_OR_NULL_PTR(x) ((unsigned long)(x) <= \
 				(unsigned long)ZERO_SIZE_PTR)
 
@@ -379,18 +379,18 @@ static __always_inline void *__kmalloc_node(size_t size, gfp_t flags, int node)
 // ARM10C 20140614
 // kmem_cache_node: &boot_kmem_cache_node, GFP_KERNEL: 0xD0, node: 0
 // ARM10C 20140726
-// kmem_cache_node: kmem_cache#32, GFP_KERNEL: 0xD0, node: 0
+// kmem_cache_node: kmem_cache#31, GFP_KERNEL: 0xD0, node: 0
 static __always_inline void *kmem_cache_alloc_node(struct kmem_cache *s, gfp_t flags, int node)
 {
 	// s: &boot_kmem_cache_node, flags: GFP_KERNEL: 0xD0
 	// kmem_cache_alloc(&boot_kmem_cache_node, GFP_KERNEL: 0xD0):
 	// UNMOVABLE인 page 의 object의 시작 virtual address + 64
-	// s: &kmem_cache#2, flags: GFP_KERNEL: 0xD0
-	// kmem_cache_alloc(&kmem_cache#2, GFP_KERNEL: 0xD0):
-	// UNMOVABLE인 page 의 object의 시작 virtual address + 128
+	// s: &kmem_cache#31, flags: GFP_KERNEL: 0xD0
+	// kmem_cache_alloc(&kmem_cache#31, GFP_KERNEL: 0xD0):
+	// UNMOVABLE인 page 의 시작 virtual address + 4032
 	return kmem_cache_alloc(s, flags);
 	// return UNMOVABLE인 page 의 object의 시작 virtual address + 64
-	// return UNMOVABLE인 page 의 object의 시작 virtual address + 128
+	// return UNMOVABLE인 page 의 시작 virtual address + 4032
 }
 #endif
 
@@ -413,17 +413,17 @@ kmem_cache_alloc_node_trace(struct kmem_cache *s,
 
 #else /* CONFIG_TRACING */
 // ARM10C 20140726
-// kmalloc_caches[9]: kmem_cache#6, flags: 0x80D0, size: 512
+// kmalloc_caches[9]: kmem_cache#26, flags: 0x80D0, size: 512
 // ARM10C 20140809
-// kmalloc_caches[6]: kmem_cache#2, flags: 0x8000, size: 52
+// kmalloc_caches[6]: kmem_cache#30, flags: 0x8000, size: 52
 static __always_inline void *kmem_cache_alloc_trace(struct kmem_cache *s,
 		gfp_t flags, size_t size)
 {
-	// s: kmem_cache#6, flags: 0x80D0
-	// s: kmem_cache#2, flags: 0x8000
+	// s: kmem_cache#26, flags: 0x80D0
+	// s: kmem_cache#30, flags: 0x8000
 	return kmem_cache_alloc(s, flags);
-	// return kmem_cache#6-o1
-	// return kmem_cache#2-o10
+	// return kmem_cache#26-o0
+	// return kmem_cache#30-o9
 }
 
 static __always_inline void *
@@ -552,12 +552,12 @@ static __always_inline void *kmalloc(size_t size, gfp_t flags)
 			if (!index)
 				return ZERO_SIZE_PTR;
 
-			// index: 9, kmalloc_caches[9]: kmem_cache#6, flags: 0x80D0, size: 512
-			// index: 6, kmalloc_caches[6]: kmem_cache#2, flags: 0x8000, size: 52
+			// index: 9, kmalloc_caches[9]: kmem_cache#26, flags: 0x80D0, size: 512
+			// index: 6, kmalloc_caches[6]: kmem_cache#30, flags: 0x8000, size: 52
 			return kmem_cache_alloc_trace(kmalloc_caches[index],
 					flags, size);
-			// return kmem_cache#6-o1
-			// return kmem_cache#2-o10
+			// return kmem_cache#26-o0
+			// return kmem_cache#30-o9
 		}
 #endif
 	}
@@ -751,11 +751,11 @@ static inline void *kmem_cache_zalloc(struct kmem_cache *k, gfp_t flags)
 	// UNMOVABLE인 page (boot_kmem_cache)의 시작 virtual address + 3968
 	// k: UNMOVABLE인 page (boot_kmem_cache)의 object의 시작 virtual address, flags: GFP_NOWAIT: 0, __GFP_ZERO: 0x8000u
 	// kmem_cache_alloc(UNMOVABLE인 page (boot_kmem_cache)의 object의 시작 virtual address, __GFP_ZERO: 0x8000u):
-	// UNMOVABLE인 page (boot_kmem_cache)의 시작 virtual address + 128
+	// UNMOVABLE인 page (boot_kmem_cache)의 시작 object의 virtual address + 3840
 	return kmem_cache_alloc(k, flags | __GFP_ZERO);
 	// return UNMOVABLE인 page (boot_kmem_cache)의 object의 시작 virtual address
 	// return UNMOVABLE인 page (boot_kmem_cache)의 시작 virtual address + 3968
-	// return UNMOVABLE인 page (boot_kmem_cache)의 시작 virtual address + 128
+	// return UNMOVABLE인 page (boot_kmem_cache)의 시작 object의 virtual address + 3840
 }
 
 /**
@@ -772,8 +772,8 @@ static inline void *kzalloc(size_t size, gfp_t flags)
 	// size: 512, GFP_KERNEL: 0xD0, __GFP_ZERO: 0x8000u
 	// size: 52, GFP_NOWAIT: 0x0, __GFP_ZERO: 0x8000u
 	return kmalloc(size, flags | __GFP_ZERO);
-	// return kmem_cache#6-o1
-	// return kmem_cache#2-o10
+	// return kmem_cache#26-o0
+	// return kmem_cache#30-o9
 }
 
 /**

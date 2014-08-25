@@ -1259,28 +1259,28 @@ void __init vmalloc_init(void)
 		// tmp: SYSC
 
 		// sizeof(struct vmap_area): 52 bytes, GFP_NOWAIT: 0
-		// kzalloc(52, 0): kmem_cache#2-o10
+		// kzalloc(52, 0): kmem_cache#30-o9
 		va = kzalloc(sizeof(struct vmap_area), GFP_NOWAIT);
-		// va: kmem_cache#2-o10
+		// va: kmem_cache#30-o9
 
-		// va->flags: (kmem_cache#2-o10)->flags, VM_VM_AREA: 0x04
+		// va->flags: (kmem_cache#30-o9)->flags, VM_VM_AREA: 0x04
 		va->flags = VM_VM_AREA;
-		// va->flags: (kmem_cache#2-o10)->flags: 0x04
+		// va->flags: (kmem_cache#30-o9)->flags: 0x04
 
-		// va->va_start: (kmem_cache#2-o10)->va_start, tmp->addr: 0xf6100000
+		// va->va_start: (kmem_cache#30-o9)->va_start, tmp->addr: 0xf6100000
 		va->va_start = (unsigned long)tmp->addr;
-		// va->va_start: (kmem_cache#2-o10)->va_start: 0xf6100000
+		// va->va_start: (kmem_cache#30-o9)->va_start: 0xf6100000
 
-		// va->va_end: (kmem_cache#2-o10)->va_end
-		// va->va_start: (kmem_cache#2-o10)->va_start: 0xf6100000, tmp->size: 0x10000
+		// va->va_end: (kmem_cache#30-o9)->va_end
+		// va->va_start: (kmem_cache#30-o9)->va_start: 0xf6100000, tmp->size: 0x10000
 		va->va_end = va->va_start + tmp->size;
-		// va->va_end: kmem_cache#2-o10)->va_end: 0xf6110000
+		// va->va_end: (kmem_cache#30-o9)->va_end: 0xf6110000
 
-		// va->vm: (kmem_cache#2-o10)->vm, tmp: SYSC
+		// va->vm: (kmem_cache#30-o9)->vm, tmp: SYSC
 		va->vm = tmp;
-		// va->vm: (kmem_cache#2-o10)->vm: SYSC
+		// va->vm: (kmem_cache#30-o9)->vm: SYSC
 
-		// va: kmem_cache#2-o10
+		// va: kmem_cache#30-o9
 		__insert_vmap_area(va);
 		// vm SYSC 정보를 RB Tree 구조로 삽입
 
