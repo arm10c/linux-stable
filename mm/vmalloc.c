@@ -311,7 +311,7 @@ static struct vmap_area *__find_vmap_area(unsigned long addr)
 }
 
 // ARM10C 20140809
-// va: kmem_cache#2-o10
+// va: kmem_cache#30-o9
 static void __insert_vmap_area(struct vmap_area *va)
 {
 	struct rb_node **p = &vmap_area_root.rb_node;
@@ -333,11 +333,11 @@ static void __insert_vmap_area(struct vmap_area *va)
 			BUG();
 	}
 
-	// va->rb_node: (kmem_cache#2-o10)->rb_node, parent: NULL, p: &vmap_area_root.rb_node
+	// va->rb_node: (kmem_cache#30-o9)->rb_node, parent: NULL, p: &vmap_area_root.rb_node
 	rb_link_node(&va->rb_node, parent, p);
-	// vmap_area_root.rb_node: &(kmem_cache#2-o10)->rb_node
+	// vmap_area_root.rb_node: &(kmem_cache#30-o9)->rb_node
 
-	// va->rb_node: (kmem_cache#2-o10)->rb_node
+	// va->rb_node: (kmem_cache#30-o9)->rb_node
 	rb_insert_color(&va->rb_node, &vmap_area_root);
 
 	/* address-sort this list */
