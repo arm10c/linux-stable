@@ -70,7 +70,7 @@ __rb_rotate_set_parents(struct rb_node *old, struct rb_node *new,
 }
 
 // ARM10C 20140809
-// node: &(kmem_cache#2-o10)->rb_node, root: &vmap_area_root, dummy_rotate
+// node: &(kmem_cache#30-o9)->rb_node, root: &vmap_area_root, dummy_rotate
 static __always_inline void
 __rb_insert(struct rb_node *node, struct rb_root *root,
 	    void (*augment_rotate)(struct rb_node *old, struct rb_node *new))
@@ -387,10 +387,10 @@ static const struct rb_augment_callbacks dummy_callbacks = {
 };
 
 // ARM10C 20140809
-// &va->rb_node: &(kmem_cache#2-o10)->rb_node, &vmap_area_root
+// &va->rb_node: &(kmem_cache#30-o9)->rb_node, &vmap_area_root
 void rb_insert_color(struct rb_node *node, struct rb_root *root)
 {
-	// node: &(kmem_cache#2-o10)->rb_node, root: &vmap_area_root
+	// node: &(kmem_cache#30-o9)->rb_node, root: &vmap_area_root
 	__rb_insert(node, root, dummy_rotate);
 }
 EXPORT_SYMBOL(rb_insert_color);
