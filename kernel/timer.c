@@ -52,6 +52,11 @@
 #define CREATE_TRACE_POINTS
 #include <trace/events/timer.h>
 
+// ARM10C 20140830
+// __cacheline_aligned_in_smp:
+// __attribute__((__aligned__(64), __section__(".data..cacheline_aligned")))
+// INITIAL_JIFFIES: -30000 (0xFFFFFFFFFFFF8AD0)
+// jiffies_64: -30000 (0xFFFFFFFFFFFF8AD0)
 u64 jiffies_64 __cacheline_aligned_in_smp = INITIAL_JIFFIES;
 
 EXPORT_SYMBOL(jiffies_64);

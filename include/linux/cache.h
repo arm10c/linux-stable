@@ -11,8 +11,9 @@
 // ARM10C 20130914 this
 // SMP_CACHE_BYTES not defined
 #ifndef SMP_CACHE_BYTES
-// L1_CACHE_BYTES = 64
-// SMP_CACHE_BYTES = 64
+// ARM10C 20140830
+// L1_CACHE_BYTES: 64
+// SMP_CACHE_BYTES: 64
 #define SMP_CACHE_BYTES L1_CACHE_BYTES
 #endif
 
@@ -21,14 +22,19 @@
 #endif
 
 // ARM10C 20130914
-// ____cacheline_aligned 
+// ARM10C 20140830
+// SMP_CACHE_BYTES: 64
 // 64 byte align (Coretex-A15)
+// ____cacheline_aligned: __attribute__((__aligned__(64)))
 #ifndef ____cacheline_aligned
 #define ____cacheline_aligned __attribute__((__aligned__(SMP_CACHE_BYTES)))
 #endif
 
 #ifndef ____cacheline_aligned_in_smp
-#ifdef CONFIG_SMP
+#ifdef CONFIG_SMP // CONFIG_SMP=y
+// ARM10C 20140830
+// ____cacheline_aligned: __attribute__((__aligned__(64)))
+// ____cacheline_aligned_in_smp: __attribute__((__aligned__(64)))
 #define ____cacheline_aligned_in_smp ____cacheline_aligned
 #else
 #define ____cacheline_aligned_in_smp
@@ -46,6 +52,7 @@
 #ifndef __cacheline_aligned_in_smp
 #ifdef CONFIG_SMP // CONFIG_SMP=y
 // ARM10C 20140412
+// ARM10C 20140830
 // __cacheline_aligned:
 // __attribute__((__aligned__(64), __section__(".data..cacheline_aligned")))
 //

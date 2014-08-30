@@ -46,6 +46,11 @@ OUTPUT_ARCH(arm)
 ENTRY(stext)
 
 #ifndef __ARMEB__
+/*
+// ARM10C 20140830
+// jiffies_64: -30000 (0xFFFFFFFFFFFF8AD0)
+// jiffies: -30000 (0xFFFFFFFFFFFF8AD0)
+*/
 jiffies = jiffies_64;
 #else
 jiffies = jiffies_64 + 4;

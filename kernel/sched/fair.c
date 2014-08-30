@@ -7079,16 +7079,33 @@ static void set_curr_task_fair(struct rq *rq)
 	}
 }
 
+// ARM10C 20140830
+// &rq->cfs: &(runqueues)->cfs
 void init_cfs_rq(struct cfs_rq *cfs_rq)
 {
+	// cfs_rq->tasks_timeline: (&(runqueues)->cfs)->tasks_timeline
+	// RB_ROOT: (struct rb_root) { NULL, }
 	cfs_rq->tasks_timeline = RB_ROOT;
+	// cfs_rq->tasks_timeline: (&(runqueues)->cfs)->tasks_timeline: (struct rb_root) { NULL, }
+
+	// cfs_rq->min_vruntime: (&(runqueues)->cfs)->min_vruntime
 	cfs_rq->min_vruntime = (u64)(-(1LL << 20));
-#ifndef CONFIG_64BIT
+	// cfs_rq->min_vruntime: (&(runqueues)->cfs)->min_vruntime: 0xFFFFFFFFFFF00000
+
+#ifndef CONFIG_64BIT // CONFIG_64BIT=n
+	// cfs_rq->min_vruntime_copy: (&(runqueues)->cfs)->min_vruntime_copy,
+	// cfs_rq->min_vruntime: (&(runqueues)->cfs)->min_vruntime: 0xFFFFFFFFFFF00000
 	cfs_rq->min_vruntime_copy = cfs_rq->min_vruntime;
+	// cfs_rq->min_vruntime_copy: (&(runqueues)->cfs)->min_vruntime_copy: 0xFFFFFFFFFFF00000
 #endif
-#ifdef CONFIG_SMP
+#ifdef CONFIG_SMP // CONFIG_SMP=y
+	// cfs_rq->decay_counter: (&(runqueues)->cfs)->decay_counter
 	atomic64_set(&cfs_rq->decay_counter, 1);
+	// cfs_rq->decay_counter: (&(runqueues)->cfs)->decay_counter: 1
+
+	// cfs_rq->removed_load: (&(runqueues)->cfs)->removed_load
 	atomic_long_set(&cfs_rq->removed_load, 0);
+	// cfs_rq->removed_load: (&(runqueues)->cfs)->removed_load: 0
 #endif
 }
 

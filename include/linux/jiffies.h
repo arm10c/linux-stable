@@ -163,6 +163,9 @@ static inline u64 get_jiffies_64(void)
  * Have the 32 bit jiffies value wrap 5 minutes after boot
  * so jiffies wrap bugs show up earlier.
  */
+// ARM10C 20140830
+// HZ: 100
+// INITIAL_JIFFIES: -30000 (0xFFFF8AD0)
 #define INITIAL_JIFFIES ((unsigned long)(unsigned int) (-300*HZ))
 
 /*

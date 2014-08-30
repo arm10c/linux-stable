@@ -12,6 +12,7 @@
 #include <linux/bug.h>
 
 // ARM10C 20130831
+// ARM10C 20140830
 // struct cpumask { bits[1]; }
 typedef struct cpumask { DECLARE_BITMAP(bits, NR_CPUS); } cpumask_t;
 
@@ -41,6 +42,7 @@ extern int nr_cpu_ids;
 #define nr_cpumask_bits	nr_cpu_ids
 #else
 // ARM10C 20140215
+// ARM10C 20140830
 // NR_CPUS: 4
 // nr_cpumask_bits: 4
 #define nr_cpumask_bits	NR_CPUS
@@ -352,9 +354,13 @@ static inline void cpumask_setall(struct cpumask *dstp)
  * cpumask_clear - clear all cpus (< nr_cpu_ids) in a cpumask
  * @dstp: the cpumask pointer
  */
+// ARM10C 20140830
+// *mask: (&def_root_domain->cpupri)->pri_to_cpu[0].mask
 static inline void cpumask_clear(struct cpumask *dstp)
 {
+	// dstp: &(&def_root_domain->cpupri)->pri_to_cpu[0].mask, nr_cpumask_bits: 4
 	bitmap_zero(cpumask_bits(dstp), nr_cpumask_bits);
+	// &(&def_root_domain->cpupri)->pri_to_cpu[0].mask.bit[0]: 0
 }
 
 /**
@@ -699,7 +705,7 @@ static inline size_t cpumask_size(void)
  * This code makes NR_CPUS length memcopy and brings to a memory corruption.
  * cpumask_copy() provide safe copy functionality.
  */
-#ifdef CONFIG_CPUMASK_OFFSTACK
+#ifdef CONFIG_CPUMASK_OFFSTACK // CONFIG_CPUMASK_OFFSTACK=n
 typedef struct cpumask *cpumask_var_t;
 
 bool alloc_cpumask_var_node(cpumask_var_t *mask, gfp_t flags, int node);
@@ -711,8 +717,15 @@ void free_cpumask_var(cpumask_var_t mask);
 void free_bootmem_cpumask_var(cpumask_var_t mask);
 
 #else
+// ARM10C 20140830
 typedef struct cpumask cpumask_var_t[1];
 
+// ARM10C 20140830
+// &rd->span: &def_root_domain->span, GFP_KERNEL: 0xD0
+// ARM10C 20140830
+// &rd->online: &def_root_domain->online, GFP_KERNEL: 0xD0
+// ARM10C 20140830
+// &rd->rto_mask: &def_root_domain->rto_mask, GFP_KERNEL: 0xD0
 static inline bool alloc_cpumask_var(cpumask_var_t *mask, gfp_t flags)
 {
 	return true;
@@ -724,9 +737,14 @@ static inline bool alloc_cpumask_var_node(cpumask_var_t *mask, gfp_t flags,
 	return true;
 }
 
+// ARM10C 20140830
+// &vec->mask: (&def_root_domain->cpupri)->pri_to_cpu[0].mask, GFP_KERNEL: 0xD0
 static inline bool zalloc_cpumask_var(cpumask_var_t *mask, gfp_t flags)
 {
+	// *mask: (&def_root_domain->cpupri)->pri_to_cpu[0].mask
 	cpumask_clear(*mask);
+	// &(&def_root_domain->cpupri)->pri_to_cpu[0].mask.bit[0]: 0
+
 	return true;
 }
 
@@ -761,6 +779,7 @@ extern const DECLARE_BITMAP(cpu_all_bits, NR_CPUS);
 // ARM10C 20140215
 // ARM10C 20140607
 // ARM10C 20140726
+// ARM10C 20140830
 // #define for_each_cpu(i, cpu_possible_mask)
 //	for ((i) = -1; (i) = cpumask_next((i), (cpu_possible_mask)), (i) < nr_cpu_ids; )
 #define for_each_possible_cpu(cpu) for_each_cpu((cpu), cpu_possible_mask)

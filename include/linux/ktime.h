@@ -43,6 +43,7 @@
  * plain scalar nanosecond based representation can be selected by the
  * config switch CONFIG_KTIME_SCALAR.
  */
+// ARM10C 20140830
 union ktime {
 	s64	tv64;
 #if BITS_PER_LONG != 64 && !defined(CONFIG_KTIME_SCALAR)
@@ -56,6 +57,7 @@ union ktime {
 #endif
 };
 
+// ARM10C 20140830
 typedef union ktime ktime_t;		/* Kill this */
 
 /*
@@ -92,6 +94,11 @@ static inline ktime_t ktime_set(const long secs, const unsigned long nsecs)
  * Add a ktime_t variable and a scalar nanosecond value.
  * res = kt + nsval:
  */
+// ARM10C 20140830
+// ktime_zero, ns: 1000000000
+//
+// #define ktime_add_ns(ktime_zero, 1000000000)
+// 		({ (ktime_t){ .tv64 = (ktime_zero).tv64 + (1000000000) }; })
 #define ktime_add_ns(kt, nsval) \
 		({ (ktime_t){ .tv64 = (kt).tv64 + (nsval) }; })
 
@@ -372,10 +379,16 @@ extern void ktime_get_ts(struct timespec *ts);
 /* Get the real (wall-) time in timespec format: */
 #define ktime_get_real_ts(ts)	getnstimeofday(ts)
 
+// ARM10C 20140830
+// period: 1000000000
 static inline ktime_t ns_to_ktime(u64 ns)
 {
 	static const ktime_t ktime_zero = { .tv64 = 0 };
+	// ktime_zero.tv64: 0
 
+	// ns: 1000000000
+	// ktime_add_ns(ktime_zero, 1000000000):
+	// ({ (ktime_t){ .tv64 = (ktime_zero).tv64 + (1000000000) }; })
 	return ktime_add_ns(ktime_zero, ns);
 }
 

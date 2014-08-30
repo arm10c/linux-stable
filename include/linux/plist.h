@@ -113,10 +113,14 @@ struct plist_node {
  * plist_head_init - dynamic struct plist_head initializer
  * @head:	&struct plist_head pointer
  */
+// ARM10C 20140830
+// &rt_rq->pushable_tasks: &(&(runqueues)->rt)->pushable_tasks
 static inline void
 plist_head_init(struct plist_head *head)
 {
+	// &head->node_list: (&(&(runqueues)->rt)->pushable_tasks)->node_list
 	INIT_LIST_HEAD(&head->node_list);
+	// (&(&(runqueues)->rt)->pushable_tasks)->node_list 리스트 초기화
 }
 
 /**

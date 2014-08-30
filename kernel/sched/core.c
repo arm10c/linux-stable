@@ -110,6 +110,11 @@ void start_bandwidth_timer(struct hrtimer *period_timer, ktime_t period)
 }
 
 DEFINE_MUTEX(sched_domains_mutex);
+// ARM10C 20140830
+// DEFINE_PER_CPU_SHARED_ALIGNED(struct rq, runqueues):
+// __attribute__((section(".data..percpu" "..shared_aligned"))
+// __typeof__(struct rq) runqueues
+// __attribute__((__aligned__(64)))
 DEFINE_PER_CPU_SHARED_ALIGNED(struct rq, runqueues);
 
 static void update_rq_clock_task(struct rq *rq, s64 delta);
@@ -286,6 +291,8 @@ const_debug unsigned int sysctl_sched_time_avg = MSEC_PER_SEC;
  * period over which we measure -rt task cpu usage in us.
  * default: 1s
  */
+// ARM10C 20140830
+// sysctl_sched_rt_period: 1000000
 unsigned int sysctl_sched_rt_period = 1000000;
 
 __read_mostly int scheduler_running;
@@ -294,6 +301,8 @@ __read_mostly int scheduler_running;
  * part of the period that we allow rt tasks to run in us.
  * default: 0.95s
  */
+// ARM10C 20140830
+// sysctl_sched_rt_runtime: 950000
 int sysctl_sched_rt_runtime = 950000;
 
 
@@ -4814,19 +4823,34 @@ static void rq_attach_root(struct rq *rq, struct root_domain *rd)
 		call_rcu_sched(&old_rd->rcu, free_rootdomain);
 }
 
+// ARM10C 20140830
+// &def_root_domain
 static int init_rootdomain(struct root_domain *rd)
 {
+	// rd: &def_root_domain, sizeof(struct root_domain): 860 bytes
 	memset(rd, 0, sizeof(*rd));
+	// *rd 값을 0으로 초기화
 
+	// &rd->span: &def_root_domain->span, GFP_KERNEL: 0xD0
+	// alloc_cpumask_var(&def_root_domain->span, GFP_KERNEL: 0xD0): 1
 	if (!alloc_cpumask_var(&rd->span, GFP_KERNEL))
 		goto out;
+
+	// &rd->online: &def_root_domain->online, GFP_KERNEL: 0xD0
+	// alloc_cpumask_var(&def_root_domain->online, GFP_KERNEL: 0xD0): 1
 	if (!alloc_cpumask_var(&rd->online, GFP_KERNEL))
 		goto free_span;
+
+	// &rd->rto_mask: &def_root_domain->rto_mask, GFP_KERNEL: 0xD0
+	// alloc_cpumask_var(&def_root_domain->rto_mask, GFP_KERNEL: 0xD0): 1
 	if (!alloc_cpumask_var(&rd->rto_mask, GFP_KERNEL))
 		goto free_online;
 
+	// &rd->cpupri: &def_root_domain->cpupri
+	// cpupri_init(&def_root_domain->cpupri): 0
 	if (cpupri_init(&rd->cpupri) != 0)
 		goto free_rto_mask;
+
 	return 0;
 
 free_rto_mask:
@@ -4843,13 +4867,20 @@ out:
  * By default the system creates a single root-domain with all cpus as
  * members (mimicking the global state we have today).
  */
+// ARM10C 20140830
 struct root_domain def_root_domain;
 
+// ARM10C 20140830
 static void init_defrootdomain(void)
 {
 	init_rootdomain(&def_root_domain);
+	// def_root_domain의 맴버 값을 초기화 수행
+	// (&def_root_domain->cpupri)->pri_to_cpu[0 ... 101].count: 0
+	// &(&def_root_domain->cpupri)->pri_to_cpu[0 ... 101].mask.bit[0]: 0
+	// (&def_root_domain->cpupri)->cpu_to_pri[0 ... 3]: -1
 
 	atomic_set(&def_root_domain.refcount, 1);
+	// &def_root_domain.refcount: 1
 }
 
 static struct root_domain *alloc_rootdomain(void)
@@ -6210,24 +6241,27 @@ LIST_HEAD(task_groups);
 
 DECLARE_PER_CPU(cpumask_var_t, load_balance_mask);
 
+// ARM10C 20140830
 void __init sched_init(void)
 {
 	int i, j;
 	unsigned long alloc_size = 0, ptr;
+	// alloc_size: 0
 
-#ifdef CONFIG_FAIR_GROUP_SCHED
+#ifdef CONFIG_FAIR_GROUP_SCHED // CONFIG_FAIR_GROUP_SCHED=n
 	alloc_size += 2 * nr_cpu_ids * sizeof(void **);
 #endif
-#ifdef CONFIG_RT_GROUP_SCHED
+#ifdef CONFIG_RT_GROUP_SCHED // CONFIG_RT_GROUP_SCHED=n
 	alloc_size += 2 * nr_cpu_ids * sizeof(void **);
 #endif
-#ifdef CONFIG_CPUMASK_OFFSTACK
+#ifdef CONFIG_CPUMASK_OFFSTACK // CONFIG_CPUMASK_OFFSTACK=n
 	alloc_size += num_possible_cpus() * cpumask_size();
 #endif
+	// alloc_size: 0
 	if (alloc_size) {
 		ptr = (unsigned long)kzalloc(alloc_size, GFP_NOWAIT);
 
-#ifdef CONFIG_FAIR_GROUP_SCHED
+#ifdef CONFIG_FAIR_GROUP_SCHED // CONFIG_FAIR_GROUP_SCHED=n
 		root_task_group.se = (struct sched_entity **)ptr;
 		ptr += nr_cpu_ids * sizeof(void **);
 
@@ -6235,7 +6269,7 @@ void __init sched_init(void)
 		ptr += nr_cpu_ids * sizeof(void **);
 
 #endif /* CONFIG_FAIR_GROUP_SCHED */
-#ifdef CONFIG_RT_GROUP_SCHED
+#ifdef CONFIG_RT_GROUP_SCHED // CONFIG_RT_GROUP_SCHED=n
 		root_task_group.rt_se = (struct sched_rt_entity **)ptr;
 		ptr += nr_cpu_ids * sizeof(void **);
 
@@ -6243,7 +6277,7 @@ void __init sched_init(void)
 		ptr += nr_cpu_ids * sizeof(void **);
 
 #endif /* CONFIG_RT_GROUP_SCHED */
-#ifdef CONFIG_CPUMASK_OFFSTACK
+#ifdef CONFIG_CPUMASK_OFFSTACK // CONFIG_CPUMASK_OFFSTACK=n
 		for_each_possible_cpu(i) {
 			per_cpu(load_balance_mask, i) = (void *)ptr;
 			ptr += cpumask_size();
@@ -6251,19 +6285,33 @@ void __init sched_init(void)
 #endif /* CONFIG_CPUMASK_OFFSTACK */
 	}
 
-#ifdef CONFIG_SMP
+#ifdef CONFIG_SMP // CONFIG_SMP=y
 	init_defrootdomain();
+	// def_root_domain의 맴버 값을 초기화 수행
+	// (&def_root_domain->cpupri)->pri_to_cpu[0 ... 101].count: 0
+	// &(&def_root_domain->cpupri)->pri_to_cpu[0 ... 101].mask.bit[0]: 0
+	// (&def_root_domain->cpupri)->cpu_to_pri[0 ... 3]: -1
+	// &def_root_domain.refcount: 1
 #endif
 
+	// global_rt_period(): 1000000000, global_rt_runtime(): 950000000
 	init_rt_bandwidth(&def_rt_bandwidth,
 			global_rt_period(), global_rt_runtime());
+	// init_rt_bandwidth에서 한일:
+	// (&def_rt_bandwidth)->rt_period: 1000000000
+	// (&def_rt_bandwidth)->rt_runtime: 950000000
+	// &(&def_rt_bandwidth)->rt_runtime_lock을 사용한 spinlock 초기화
+	// (&def_rt_bandwidth)->rt_period_timer의 값을 0으로 초기화
+	// &(&def_rt_bandwidth)->rt_period_timer)->base: &hrtimer_bases->clock_base[0]
+	// (&(&(&def_rt_bandwidth)->rt_period_timer)->node)->node의 RB Tree의 초기화
+	// &(&def_rt_bandwidth)->rt_period_timer.function: sched_rt_period_timer
 
-#ifdef CONFIG_RT_GROUP_SCHED
+#ifdef CONFIG_RT_GROUP_SCHED // CONFIG_RT_GROUP_SCHED=n
 	init_rt_bandwidth(&root_task_group.rt_bandwidth,
 			global_rt_period(), global_rt_runtime());
 #endif /* CONFIG_RT_GROUP_SCHED */
 
-#ifdef CONFIG_CGROUP_SCHED
+#ifdef CONFIG_CGROUP_SCHED // CONFIG_CGROUP_SCHED=n
 	list_add(&root_task_group.list, &task_groups);
 	INIT_LIST_HEAD(&root_task_group.children);
 	INIT_LIST_HEAD(&root_task_group.siblings);
@@ -6272,15 +6320,65 @@ void __init sched_init(void)
 #endif /* CONFIG_CGROUP_SCHED */
 
 	for_each_possible_cpu(i) {
+	// for ((i) = -1; (i) = cpumask_next((i), (cpu_possible_mask)), (i) < nr_cpu_ids; )
 		struct rq *rq;
 
+		// i: 0
+		// cpu_rq(0):
+		// &({
+		//  	do {
+		// 	 	const void __percpu *__vpp_verify = (typeof(&(runqueues)))NULL;
+		// 	 	(void)__vpp_verify;
+		//  	} while (0)
+		//  	(&(runqueues) + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋);
+		// })
 		rq = cpu_rq(i);
+		// rq: (&(runqueues) + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋)
+
+		// [pcp0] &rq->lock: &(runqueues)->lock
 		raw_spin_lock_init(&rq->lock);
+		// [pcp0] &rq->lock: &(runqueues)->lock 을 사용한 spinlock 초기화 수행
+
+		// [pcp0] &rq->nr_running: &(runqueues)->nr_running
 		rq->nr_running = 0;
+		// [pcp0] &rq->nr_running: &(runqueues)->nr_running: 0
+
+		// [pcp0] &rq->calc_load_active: &(runqueues)->calc_load_active
 		rq->calc_load_active = 0;
+		// [pcp0] &rq->calc_load_active: &(runqueues)->calc_load_active: 0
+
+		// [pcp0] &rq->calc_load_update: &(runqueues)->calc_load_update,
+		// jiffies: -30000 (0xFFFFFFFFFFFF8AD0): vmlinux.lds.S 에 있음, LOAD_FREQ: 501
 		rq->calc_load_update = jiffies + LOAD_FREQ;
+		// [pcp0] &rq->calc_load_update: &(runqueues)->calc_load_update: -29499 (0xFFFFFFFFFFFF8CC5)
+
+		// [pcp0] &rq->cfs: &(runqueues)->cfs
 		init_cfs_rq(&rq->cfs);
+		// init_cfs_rq 에서 한일:
+		// (&(runqueues)->cfs)->tasks_timeline: (struct rb_root) { NULL, }
+		// (&(runqueues)->cfs)->min_vruntime: 0xFFFFFFFFFFF00000
+		// (&(runqueues)->cfs)->min_vruntime_copy: 0xFFFFFFFFFFF00000
+		// (&(runqueues)->cfs)->decay_counter: 1
+		// (&(runqueues)->cfs)->removed_load: 0
+
+		// [pcp0] &rq->rt: &(runqueues)->rt, rq: &(runqueues)
 		init_rt_rq(&rq->rt, rq);
+		// init_rt_rq 에서 한일:
+		// (&(&(runqueues)->rt)->active)->bitmap의 0 ... 99 bit를 클리어
+		// (&(&(runqueues)->rt)->active)->queue[0 ... 99] 의 리스트 초기화
+		// (&(&(runqueues)->rt)->active)->bitmap의 100 bit를 1로 세팅
+		// (&(runqueues)->rt)->rt_runtime_lock 을 사용한 spinlock 초기화
+		// (&(runqueues)->rt)->rt_runtime: 0
+		// (&(runqueues)->rt)->rt_throttled: 0
+		// (&(runqueues)->rt)->rt_time: 0
+		// (&(&(runqueues)->rt)->pushable_tasks)->node_list 리스트 초기화
+		// (&(runqueues)->rt)->overloaded: 0
+		// (&(runqueues)->rt)->rt_nr_migratory: 0
+		// (&(runqueues)->rt)->highest_prio.next: 100
+		// (&(runqueues)->rt)->highest_prio.curr: 100
+
+// 2014/08/30 종료
+
 #ifdef CONFIG_FAIR_GROUP_SCHED
 		root_task_group.shares = ROOT_TASK_GROUP_LOAD;
 		INIT_LIST_HEAD(&rq->leaf_cfs_rq_list);

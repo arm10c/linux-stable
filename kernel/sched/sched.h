@@ -96,11 +96,14 @@ static inline int task_has_rt_policy(struct task_struct *p)
 /*
  * This is the priority-queue data structure of the RT scheduling class:
  */
+// ARM10C 20140830
+// MAX_RT_PRIO: 100
 struct rt_prio_array {
 	DECLARE_BITMAP(bitmap, MAX_RT_PRIO+1); /* include 1 bit for delimiter */
 	struct list_head queue[MAX_RT_PRIO];
 };
 
+// ARM10C 20140830
 struct rt_bandwidth {
 	/* nests inside the rq lock: */
 	raw_spinlock_t		rt_runtime_lock;
@@ -247,13 +250,14 @@ struct cfs_bandwidth { };
 #endif	/* CONFIG_CGROUP_SCHED */
 
 /* CFS-related fields in a runqueue */
+// ARM10C 20140830
 struct cfs_rq {
 	struct load_weight load;
 	unsigned int nr_running, h_nr_running;
 
 	u64 exec_clock;
 	u64 min_vruntime;
-#ifndef CONFIG_64BIT
+#ifndef CONFIG_64BIT // CONFIG_64BIT=n
 	u64 min_vruntime_copy;
 #endif
 
@@ -266,11 +270,11 @@ struct cfs_rq {
 	 */
 	struct sched_entity *curr, *next, *last, *skip;
 
-#ifdef	CONFIG_SCHED_DEBUG
+#ifdef	CONFIG_SCHED_DEBUG // CONFIG_SCHED_DEBUG=y
 	unsigned int nr_spread_over;
 #endif
 
-#ifdef CONFIG_SMP
+#ifdef CONFIG_SMP // CONFIG_SMP=y
 	/*
 	 * CFS Load tracking
 	 * Under CFS, load is tracked on a per-entity basis and aggregated up.
@@ -282,7 +286,7 @@ struct cfs_rq {
 	u64 last_decay;
 	atomic_long_t removed_load;
 
-#ifdef CONFIG_FAIR_GROUP_SCHED
+#ifdef CONFIG_FAIR_GROUP_SCHED // CONFIG_FAIR_GROUP_SCHED=n
 	/* Required to track per-cpu representation of a task_group */
 	u32 tg_runnable_contrib;
 	unsigned long tg_load_contrib;
@@ -299,7 +303,7 @@ struct cfs_rq {
 #endif /* CONFIG_FAIR_GROUP_SCHED */
 #endif /* CONFIG_SMP */
 
-#ifdef CONFIG_FAIR_GROUP_SCHED
+#ifdef CONFIG_FAIR_GROUP_SCHED // CONFIG_FAIR_GROUP_SCHED=n
 	struct rq *rq;	/* cpu runqueue to which this cfs_rq is attached */
 
 	/*
@@ -314,7 +318,7 @@ struct cfs_rq {
 	struct list_head leaf_cfs_rq_list;
 	struct task_group *tg;	/* group that "owns" this runqueue */
 
-#ifdef CONFIG_CFS_BANDWIDTH
+#ifdef CONFIG_CFS_BANDWIDTH // CONFIG_CFS_BANDWIDTH=n
 	int runtime_enabled;
 	u64 runtime_expires;
 	s64 runtime_remaining;
@@ -333,18 +337,19 @@ static inline int rt_bandwidth_enabled(void)
 }
 
 /* Real-Time classes' related field in a runqueue: */
+// ARM10C 20140830
 struct rt_rq {
 	struct rt_prio_array active;
 	unsigned int rt_nr_running;
-#if defined CONFIG_SMP || defined CONFIG_RT_GROUP_SCHED
+#if defined CONFIG_SMP || defined CONFIG_RT_GROUP_SCHED // CONFIG_SMP=y, CONFIG_RT_GROUP_SCHED=n
 	struct {
 		int curr; /* highest queued rt task prio */
-#ifdef CONFIG_SMP
+#ifdef CONFIG_SMP // CONFIG_SMP=y
 		int next; /* next highest */
 #endif
 	} highest_prio;
 #endif
-#ifdef CONFIG_SMP
+#ifdef CONFIG_SMP // CONFIG_SMP=y
 	unsigned long rt_nr_migratory;
 	unsigned long rt_nr_total;
 	int overloaded;
@@ -356,7 +361,7 @@ struct rt_rq {
 	/* Nests inside the rq lock: */
 	raw_spinlock_t rt_runtime_lock;
 
-#ifdef CONFIG_RT_GROUP_SCHED
+#ifdef CONFIG_RT_GROUP_SCHED // CONFIG_RT_GROUP_SCHED=n
 	unsigned long rt_nr_boosted;
 
 	struct rq *rq;
@@ -374,6 +379,8 @@ struct rt_rq {
  * object.
  *
  */
+// ARM10C 20140830
+// sizeof(struct root_domain): 860 bytes
 struct root_domain {
 	atomic_t refcount;
 	atomic_t rto_count;
@@ -400,6 +407,7 @@ extern struct root_domain def_root_domain;
  * (such as the load balancing or the thread migration code), lock
  * acquire operations must be ordered by ascending &runqueue.
  */
+// ARM10C 20140830
 struct rq {
 	/* runqueue lock: */
 	raw_spinlock_t lock;
@@ -409,18 +417,18 @@ struct rq {
 	 * remote CPUs use both these fields when doing load calculation.
 	 */
 	unsigned int nr_running;
-#ifdef CONFIG_NUMA_BALANCING
+#ifdef CONFIG_NUMA_BALANCING // CONFIG_NUMA_BALANCING=n
 	unsigned int nr_numa_running;
 	unsigned int nr_preferred_running;
 #endif
 	#define CPU_LOAD_IDX_MAX 5
 	unsigned long cpu_load[CPU_LOAD_IDX_MAX];
 	unsigned long last_load_update_tick;
-#ifdef CONFIG_NO_HZ_COMMON
+#ifdef CONFIG_NO_HZ_COMMON // CONFIG_NO_HZ_COMMON=y
 	u64 nohz_stamp;
 	unsigned long nohz_flags;
 #endif
-#ifdef CONFIG_NO_HZ_FULL
+#ifdef CONFIG_NO_HZ_FULL // CONFIG_NO_HZ_FULL=n
 	unsigned long last_sched_tick;
 #endif
 	int skip_clock_update;
@@ -433,12 +441,12 @@ struct rq {
 	struct cfs_rq cfs;
 	struct rt_rq rt;
 
-#ifdef CONFIG_FAIR_GROUP_SCHED
+#ifdef CONFIG_FAIR_GROUP_SCHED // CONFIG_FAIR_GROUP_SCHED=n
 	/* list of leaf cfs_rq on this cpu: */
 	struct list_head leaf_cfs_rq_list;
 #endif /* CONFIG_FAIR_GROUP_SCHED */
 
-#ifdef CONFIG_RT_GROUP_SCHED
+#ifdef CONFIG_RT_GROUP_SCHED // CONFIG_RT_GROUP_SCHED=n
 	struct list_head leaf_rt_rq_list;
 #endif
 
@@ -459,7 +467,7 @@ struct rq {
 
 	atomic_t nr_iowait;
 
-#ifdef CONFIG_SMP
+#ifdef CONFIG_SMP // CONFIG_SMP=y
 	struct root_domain *rd;
 	struct sched_domain *sd;
 
@@ -486,13 +494,13 @@ struct rq {
 	u64 max_idle_balance_cost;
 #endif
 
-#ifdef CONFIG_IRQ_TIME_ACCOUNTING
+#ifdef CONFIG_IRQ_TIME_ACCOUNTING // CONFIG_IRQ_TIME_ACCOUNTING=n
 	u64 prev_irq_time;
 #endif
-#ifdef CONFIG_PARAVIRT
+#ifdef CONFIG_PARAVIRT // CONFIG_PARAVIRT=n
 	u64 prev_steal_time;
 #endif
-#ifdef CONFIG_PARAVIRT_TIME_ACCOUNTING
+#ifdef CONFIG_PARAVIRT_TIME_ACCOUNTING // CONFIG_PARAVIRT_TIME_ACCOUNTING=n
 	u64 prev_steal_time_rq;
 #endif
 
@@ -500,15 +508,15 @@ struct rq {
 	unsigned long calc_load_update;
 	long calc_load_active;
 
-#ifdef CONFIG_SCHED_HRTICK
-#ifdef CONFIG_SMP
+#ifdef CONFIG_SCHED_HRTICK // CONFIG_SCHED_HRTICK=y
+#ifdef CONFIG_SMP // CONFIG_SMP=y
 	int hrtick_csd_pending;
 	struct call_single_data hrtick_csd;
 #endif
 	struct hrtimer hrtick_timer;
 #endif
 
-#ifdef CONFIG_SCHEDSTATS
+#ifdef CONFIG_SCHEDSTATS // CONFIG_SCHEDSTATS=n
 	/* latency stats */
 	struct sched_info rq_sched_info;
 	unsigned long long rq_cpu_time;
@@ -526,7 +534,7 @@ struct rq {
 	unsigned int ttwu_local;
 #endif
 
-#ifdef CONFIG_SMP
+#ifdef CONFIG_SMP // CONFIG_SMP=y
 	struct llist_head wake_list;
 #endif
 
@@ -542,8 +550,30 @@ static inline int cpu_of(struct rq *rq)
 #endif
 }
 
+// ARM10C 20140830
+// DECLARE_PER_CPU(struct rq, runqueues):
+// extern __attribute__((section(".data..percpu" ""))) __typeof__(struct rq) runqueues
 DECLARE_PER_CPU(struct rq, runqueues);
 
+// ARM10C 20140830
+// i: 0
+// per_cpu(runqueues, (0)):
+// ({
+//  	do {
+// 	 	const void __percpu *__vpp_verify = (typeof(&(runqueues)))NULL;
+// 	 	(void)__vpp_verify;
+//  	} while (0)
+//  	(&(runqueues) + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋);
+// })
+//
+// cpu_rq(0):
+// &({
+//  	do {
+// 	 	const void __percpu *__vpp_verify = (typeof(&(runqueues)))NULL;
+// 	 	(void)__vpp_verify;
+//  	} while (0)
+//  	(&(runqueues) + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋);
+// })
 #define cpu_rq(cpu)		(&per_cpu(runqueues, (cpu)))
 #define this_rq()		(&__get_cpu_var(runqueues))
 #define task_rq(p)		cpu_rq(task_cpu(p))
@@ -814,17 +844,24 @@ extern bool numabalancing_enabled;
 #define numabalancing_enabled (0)
 #endif /* CONFIG_NUMA_BALANCING */
 
+// ARM10C 20140830
 static inline u64 global_rt_period(void)
 {
+	// sysctl_sched_rt_period: 1000000, NSEC_PER_USEC: 1000L
 	return (u64)sysctl_sched_rt_period * NSEC_PER_USEC;
+	// return 1000000000
 }
 
+// ARM10C 20140830
 static inline u64 global_rt_runtime(void)
 {
+	// sysctl_sched_rt_runtime: 950000
 	if (sysctl_sched_rt_runtime < 0)
 		return RUNTIME_INF;
 
+	// sysctl_sched_rt_runtime: 950000, NSEC_PER_USEC: 1000L
 	return (u64)sysctl_sched_rt_runtime * NSEC_PER_USEC;
+	// return 950000000
 }
 
 

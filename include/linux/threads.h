@@ -18,6 +18,7 @@
 
 /* Places which use this should consider cpumask_var_t. */
 // ARM10C 20140215
+// ARM10C 20140830
 // CONFIG_NR_CPUS: 4
 // NR_CPUS: 4
 #define NR_CPUS		CONFIG_NR_CPUS

@@ -50,6 +50,8 @@ struct rb_root {
 #define rb_parent(r)   ((struct rb_node *)((r)->__rb_parent_color & ~3))
 
 // ARM10C 20140809
+// ARM10C 20140830
+// RB_ROOT: (struct rb_root) { NULL, }
 #define RB_ROOT	(struct rb_root) { NULL, }
 #define	rb_entry(ptr, type, member) container_of(ptr, type, member)
 
@@ -58,6 +60,12 @@ struct rb_root {
 /* 'empty' nodes are nodes that are known not to be inserted in an rbree */
 #define RB_EMPTY_NODE(node)  \
 	((node)->__rb_parent_color == (unsigned long)(node))
+// ARM10C 20140830
+// &node->node: (&(&(&def_rt_bandwidth)->rt_period_timer)->node)->node
+//
+// #define RB_CLEAR_NODE((&(&(&def_rt_bandwidth)->rt_period_timer)->node)->node)
+// 	(((&(&(&def_rt_bandwidth)->rt_period_timer)->node)->node)->__rb_parent_color =
+// 	(unsigned long)((&(&(&def_rt_bandwidth)->rt_period_timer)->node)->node))
 #define RB_CLEAR_NODE(node)  \
 	((node)->__rb_parent_color = (unsigned long)(node))
 

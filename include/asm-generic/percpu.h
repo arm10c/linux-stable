@@ -5,7 +5,7 @@
 #include <linux/threads.h>
 #include <linux/percpu-defs.h>
 
-#ifdef CONFIG_SMP
+#ifdef CONFIG_SMP // CONFIG_SMP=y
 
 /*
  * per_cpu_offset() is the offset that has to be added to a
@@ -113,6 +113,17 @@ extern unsigned long __per_cpu_offset[NR_CPUS];
 //  	} while (0)
 //  	(&boot_kmem_cache_node)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋);
 // })
+// ARM10C 20140830
+// per_cpu_offset((0)): __per_cpu_offset[0]: pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋
+//
+// #define SHIFT_PERCPU_PTR(&(runqueues), (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))
+// ({
+//  	do {
+// 	 	const void __percpu *__vpp_verify = (typeof(&(runqueues)))NULL;
+// 	 	(void)__vpp_verify;
+//  	} while (0)
+//  	(&(runqueues) + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋);
+// })
 #define SHIFT_PERCPU_PTR(__p, __offset)	({				\
 	__verify_pcpu_ptr((__p));					\
 	RELOC_HIDE((typeof(*(__p)) __kernel __force *)(__p), (__offset)); \
@@ -136,6 +147,26 @@ extern unsigned long __per_cpu_offset[NR_CPUS];
 // SHIFT_PERCPU_PTR(&vmap_block_queue, __per_cpu_offset[0]): &vmap_block_queue + __per_cpu_offset[0]
 //
 // per_cpu(vmap_block_queue, __per_cpu_offset[0]): *(&vmap_block_queue + __per_cpu_offset[0])
+//
+// ARM10C 20140830
+// per_cpu_offset(0): __per_cpu_offset[0]
+// SHIFT_PERCPU_PTR(&(runqueues), per_cpu_offset(0)):
+// ({
+//  	do {
+// 	 	const void __percpu *__vpp_verify = (typeof(&(runqueues)))NULL;
+// 	 	(void)__vpp_verify;
+//  	} while (0)
+//  	(&(runqueues) + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋);
+// })
+//
+// per_cpu(runqueues, (0)):
+// ({
+//  	do {
+// 	 	const void __percpu *__vpp_verify = (typeof(&(runqueues)))NULL;
+// 	 	(void)__vpp_verify;
+//  	} while (0)
+//  	(&(runqueues) + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋);
+// })
 #define per_cpu(var, cpu) \
 	(*SHIFT_PERCPU_PTR(&(var), per_cpu_offset(cpu)))
 
@@ -181,6 +212,24 @@ extern unsigned long __per_cpu_offset[NR_CPUS];
 // s->cpu_slab: (&boot_kmem_cache_node)->cpu_slab: 0xc0502d00
 // ARM10C 20140628
 // s->cpu_slab: (&boot_kmem_cache)->cpu_slab: 0xc0502d10
+// ARM10C 20140830
+// SHIFT_PERCPU_PTR(&(hrtimer_bases), __my_cpu_offset):
+// ({
+//  	do {
+// 	 	const void __percpu *__vpp_verify = (typeof((&(hrtimer_bases))))NULL;
+// 	 	(void)__vpp_verify;
+//  	} while (0)
+//  	&(hrtimer_bases) + __my_cpu_offset;
+// })
+//
+// *__this_cpu_ptr(&(hrtimer_bases)):
+// *({
+//  	do {
+// 	 	const void __percpu *__vpp_verify = (typeof((&(hrtimer_bases))))NULL;
+// 	 	(void)__vpp_verify;
+//  	} while (0)
+//  	&(hrtimer_bases) + __my_cpu_offset;
+// })
 #define __this_cpu_ptr(ptr) SHIFT_PERCPU_PTR(ptr, __my_cpu_offset)
 #endif
 #ifdef CONFIG_DEBUG_PREEMPT // CONFIG_DEBUG_PREEMPT=y
@@ -211,6 +260,8 @@ extern unsigned long __per_cpu_offset[NR_CPUS];
 #endif
 
 #define __get_cpu_var(var) (*this_cpu_ptr(&(var)))
+// ARM10C 20140830
+// __raw_get_cpu_var(hrtimer_bases): *__this_cpu_ptr(&(hrtimer_bases))
 #define __raw_get_cpu_var(var) (*__this_cpu_ptr(&(var)))
 
 #ifdef CONFIG_HAVE_SETUP_PER_CPU_AREA
@@ -240,12 +291,14 @@ extern void setup_per_cpu_areas(void);
 #endif
 #endif
 
-#ifdef CONFIG_SMP
+#ifdef CONFIG_SMP // CONFIG_SMP=n
 
-#ifdef MODULE
+#ifdef MODULE // undefined
 #define PER_CPU_SHARED_ALIGNED_SECTION ""
 #define PER_CPU_ALIGNED_SECTION ""
 #else
+// ARM10C 20140830
+// PER_CPU_SHARED_ALIGNED_SECTION: "..shared_aligned"
 #define PER_CPU_SHARED_ALIGNED_SECTION "..shared_aligned"
 #define PER_CPU_ALIGNED_SECTION "..shared_aligned"
 #endif
@@ -266,6 +319,7 @@ extern void setup_per_cpu_areas(void);
 #ifndef PER_CPU_DEF_ATTRIBUTES
 // ARM10C 20140308
 // ARM10C 20140405
+// ARM10C 20140830
 #define PER_CPU_DEF_ATTRIBUTES
 #endif
 

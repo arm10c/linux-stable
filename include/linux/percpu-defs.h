@@ -17,7 +17,10 @@
 // #define PER_CPU_BASE_SECTION ".data..percpu"
 // PER_CPU_ATTRIBUTES = undefined
 // ARM10C 20140308
+// ARM10C 20140830
 // __PCPU_ATTRS(""): __attribute__((section(".data..percpu" "")))
+// ARM10C 20140830
+// __PCPU_ATTRS("..shared_aligned"): __attribute__((section(".data..percpu" "..shared_aligned"))
 #define __PCPU_ATTRS(sec)						\
 	__percpu __attribute__((section(PER_CPU_BASE_SECTION sec)))	\
 	PER_CPU_ATTRIBUTES
@@ -92,6 +95,11 @@
 /*
  * Normal declaration and definition macros.
  */
+// ARM10C 20140830
+// __PCPU_ATTRS(""): __attribute__((section(".data..percpu" "")))
+//
+// DECLARE_PER_CPU_SECTION(struct rq, runqueues, ""):
+// extern __attribute__((section(".data..percpu" ""))) __typeof__(struct rq) runqueues
 #define DECLARE_PER_CPU_SECTION(type, name, sec)			\
 	extern __PCPU_ATTRS(sec) __typeof__(type) name
 
@@ -110,6 +118,12 @@
 // DEFINE_PER_CPU_SECTION(struct vm_event_state, vm_event_states, ""):
 //	__attribute__((section(".data..percpu" "")))
 //	__typeof__(struct vm_event_state) vm_event_states
+// ARM10C 20140830
+// __PCPU_ATTRS("..shared_aligned"): __attribute__((section(".data..percpu" "..shared_aligned"))
+//
+// DEFINE_PER_CPU_SECTION(struct rq, runqueues, "..shared_aligned"):
+// __attribute__((section(".data..percpu" "..shared_aligned"))
+// __typeof__(struct rq) runqueues
 #define DEFINE_PER_CPU_SECTION(type, name, sec)				\
 	__PCPU_ATTRS(sec) PER_CPU_DEF_ATTRIBUTES			\
 	__typeof__(type) name
@@ -119,6 +133,12 @@
  * Variant on the per-CPU variable declaration/definition theme used for
  * ordinary per-CPU variables.
  */
+// ARM10C 20140830
+// DECLARE_PER_CPU_SECTION(struct rq, runqueues, ""):
+// extern __attribute__((section(".data..percpu" ""))) __typeof__(struct rq) runqueues
+//
+// DECLARE_PER_CPU(struct rq, runqueues):
+// extern __attribute__((section(".data..percpu" ""))) __typeof__(struct rq) runqueues
 #define DECLARE_PER_CPU(type, name)					\
 	DECLARE_PER_CPU_SECTION(type, name, "")
 
@@ -164,6 +184,19 @@
 	DECLARE_PER_CPU_SECTION(type, name, PER_CPU_SHARED_ALIGNED_SECTION) \
 	____cacheline_aligned_in_smp
 
+// ARM10C 20140830
+// PER_CPU_SHARED_ALIGNED_SECTION: "..shared_aligned"
+// ____cacheline_aligned_in_smp: __attribute__((__aligned__(64)))
+//
+// DEFINE_PER_CPU_SECTION(struct rq, runqueues, "..shared_aligned"):
+// __attribute__((section(".data..percpu" "..shared_aligned"))
+// __typeof__(struct rq) runqueues
+// __attribute__((__aligned__(64)))
+//
+// DEFINE_PER_CPU_SHARED_ALIGNED(struct rq, runqueues):
+// __attribute__((section(".data..percpu" "..shared_aligned"))
+// __typeof__(struct rq) runqueues
+// __attribute__((__aligned__(64)))
 #define DEFINE_PER_CPU_SHARED_ALIGNED(type, name)			\
 	DEFINE_PER_CPU_SECTION(type, name, PER_CPU_SHARED_ALIGNED_SECTION) \
 	____cacheline_aligned_in_smp

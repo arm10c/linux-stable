@@ -205,22 +205,42 @@ void cpupri_set(struct cpupri *cp, int cpu, int newpri)
  *
  * Return: -ENOMEM on memory allocation failure.
  */
+// ARM10C 20140830
+// &rd->cpupri: &def_root_domain->cpupri
 int cpupri_init(struct cpupri *cp)
 {
 	int i;
 
+	// cp: &def_root_domain->cpupri, sizeof(struct cpupri): 832 bytes
 	memset(cp, 0, sizeof(*cp));
+	// *cp 값을 0으로 초기화
 
+	// CPUPRI_NR_PRIORITIES: 102
 	for (i = 0; i < CPUPRI_NR_PRIORITIES; i++) {
+		// &cp->pri_to_cpu: (&def_root_domain->cpupri)->pri_to_cpu, i: 0
 		struct cpupri_vec *vec = &cp->pri_to_cpu[i];
+		// vec: (&def_root_domain->cpupri)->pri_to_cpu[0]
 
+		// &vec->count: (&def_root_domain->cpupri)->pri_to_cpu[0].count
 		atomic_set(&vec->count, 0);
+		// &vec->count: (&def_root_domain->cpupri)->pri_to_cpu[0].count: 0
+
+		// &vec->mask: (&def_root_domain->cpupri)->pri_to_cpu[0].mask, GFP_KERNEL: 0xD0
+		// zalloc_cpumask_var((&def_root_domain->cpupri)->pri_to_cpu[0].mask, GFP_KERNEL: 0xD0): 1
 		if (!zalloc_cpumask_var(&vec->mask, GFP_KERNEL))
 			goto cleanup;
+
+		// i: 1 .. 101 까지 수행됨
 	}
 
 	for_each_possible_cpu(i)
+	// for ((i) = -1; (i) = cpumask_next((i), (cpu_possible_mask)), (i) < nr_cpu_ids; )
+		// &cp->cpu_to_pri: (&def_root_domain->cpupri)->cpu_to_pri, i: 0, CPUPRI_INVALID: -1
 		cp->cpu_to_pri[i] = CPUPRI_INVALID;
+		// &cp->cpu_to_pri: (&def_root_domain->cpupri)->cpu_to_pri[0]: -1
+		
+		// i: 1 .. 3 까지 수행됨
+
 	return 0;
 
 cleanup:

@@ -167,6 +167,8 @@ extern int bitmap_ord_to_pos(const unsigned long *bitmap, int n, int bits);
 #define small_const_nbits(nbits) \
 	(__builtin_constant_p(nbits) && (nbits) <= BITS_PER_LONG)
 
+// ARM10C 20140830
+// dstp: &(&def_root_domain->cpupri)->pri_to_cpu[0].mask, nr_cpumask_bits: 4
 static inline void bitmap_zero(unsigned long *dst, int nbits)
 {
 	if (small_const_nbits(nbits))

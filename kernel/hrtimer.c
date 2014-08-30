@@ -61,6 +61,10 @@
  * to reach a base using a clockid, hrtimer_clockid_to_base()
  * is used to convert from clockid to the proper hrtimer_base_type.
  */
+// ARM10C 20140830
+// DEFINE_PER_CPU(struct hrtimer_cpu_base, hrtimer_bases):
+//	__attribute__((section(".data..percpu" "")))
+//	__typeof__(struct hrtimer_cpu_base) hrtimer_bases
 DEFINE_PER_CPU(struct hrtimer_cpu_base, hrtimer_bases) =
 {
 
@@ -94,6 +98,12 @@ DEFINE_PER_CPU(struct hrtimer_cpu_base, hrtimer_bases) =
 	}
 };
 
+// ARM10C 20140830
+// MAX_CLOCKS: 16
+// CLOCK_REALTIME: 0, CLOCK_MONOTONIC: 1
+// CLOCK_BOOTTIME: 7, CLOCK_TAI: 11
+// HRTIMER_BASE_MONOTONIC: 0, HRTIMER_BASE_REALTIME: 1
+// HRTIMER_BASE_BOOTTIME: 2, HRTIMER_BASE_TAI: 3
 static const int hrtimer_clock_to_base_table[MAX_CLOCKS] = {
 	[CLOCK_REALTIME]	= HRTIMER_BASE_REALTIME,
 	[CLOCK_MONOTONIC]	= HRTIMER_BASE_MONOTONIC,
@@ -101,9 +111,13 @@ static const int hrtimer_clock_to_base_table[MAX_CLOCKS] = {
 	[CLOCK_TAI]		= HRTIMER_BASE_TAI,
 };
 
+// ARM10C 20140830
+// clock_id: 1
 static inline int hrtimer_clockid_to_base(clockid_t clock_id)
 {
+	// clock_id: 1, hrtimer_clock_to_base_table[1]: 0
 	return hrtimer_clock_to_base_table[clock_id];
+	// return 0
 }
 
 
@@ -365,7 +379,7 @@ ktime_t ktime_add_safe(const ktime_t lhs, const ktime_t rhs)
 
 EXPORT_SYMBOL_GPL(ktime_add_safe);
 
-#ifdef CONFIG_DEBUG_OBJECTS_TIMERS
+#ifdef CONFIG_DEBUG_OBJECTS_TIMERS // CONFIG_DEBUG_OBJECTS_TIMERS=n
 
 static struct debug_obj_descr hrtimer_debug_descr;
 
@@ -476,16 +490,23 @@ void destroy_hrtimer_on_stack(struct hrtimer *timer)
 }
 
 #else
+// ARM10C 20140830
+// timer: &(&def_rt_bandwidth)->rt_period_timer
 static inline void debug_hrtimer_init(struct hrtimer *timer) { }
 static inline void debug_hrtimer_activate(struct hrtimer *timer) { }
 static inline void debug_hrtimer_deactivate(struct hrtimer *timer) { }
 #endif
 
+// ARM10C 20140830
+// timer: &(&def_rt_bandwidth)->rt_period_timer, clock_id: 1, mode: 1
 static inline void
 debug_init(struct hrtimer *timer, clockid_t clockid,
 	   enum hrtimer_mode mode)
 {
+	// timer: &(&def_rt_bandwidth)->rt_period_timer
 	debug_hrtimer_init(timer);
+
+	// timer: &(&def_rt_bandwidth)->rt_period_timer, clock_id: 1, mode: 1
 	trace_hrtimer_init(timer, clockid, mode);
 }
 
@@ -1175,24 +1196,54 @@ ktime_t hrtimer_get_next_event(void)
 }
 #endif
 
+// ARM10C 20140830
+// timer: &(&def_rt_bandwidth)->rt_period_timer, clock_id: 1, mode: 1
 static void __hrtimer_init(struct hrtimer *timer, clockid_t clock_id,
 			   enum hrtimer_mode mode)
 {
 	struct hrtimer_cpu_base *cpu_base;
 	int base;
 
+	// timer: &(&def_rt_bandwidth)->rt_period_timer, sizeof(struct hrtimer): 40 bytes
 	memset(timer, 0, sizeof(struct hrtimer));
+	// (&def_rt_bandwidth)->rt_period_timer의 값을 0으로 초기화
 
+	// __raw_get_cpu_var(hrtimer_bases):
+	// *({
+	//  	do {
+	// 	 	const void __percpu *__vpp_verify = (typeof((&(hrtimer_bases))))NULL;
+	// 	 	(void)__vpp_verify;
+	//  	} while (0)
+	//  	&(hrtimer_bases) + __my_cpu_offset;
+	// })
 	cpu_base = &__raw_get_cpu_var(hrtimer_bases);
+	// cpu_base:
+	// ({
+	//  	do {
+	// 	 	const void __percpu *__vpp_verify = (typeof((&(hrtimer_bases))))NULL;
+	// 	 	(void)__vpp_verify;
+	//  	} while (0)
+	//  	&(hrtimer_bases) + __my_cpu_offset;
+	// })
 
+	// clock_id: 1, CLOCK_REALTIME: 0, mode: 1, HRTIMER_MODE_ABS: 0
 	if (clock_id == CLOCK_REALTIME && mode != HRTIMER_MODE_ABS)
 		clock_id = CLOCK_MONOTONIC;
 
+	// clock_id: 1, hrtimer_clockid_to_base(1): 0
 	base = hrtimer_clockid_to_base(clock_id);
-	timer->base = &cpu_base->clock_base[base];
-	timerqueue_init(&timer->node);
+	// base: 0
 
-#ifdef CONFIG_TIMER_STATS
+	// timer->base: (&(&def_rt_bandwidth)->rt_period_timer)->base,
+	// base: 0, &cpu_base->clock_base: &hrtimer_bases->clock_base
+	timer->base = &cpu_base->clock_base[base];
+	// timer->base: (&(&def_rt_bandwidth)->rt_period_timer)->base: &hrtimer_bases->clock_base[0]
+
+	// &timer->base: &(&(&def_rt_bandwidth)->rt_period_timer)->node
+	timerqueue_init(&timer->node);
+	// RB Tree의 (&(&(&def_rt_bandwidth)->rt_period_timer)->node)->node 를 초기화
+
+#ifdef CONFIG_TIMER_STATS // CONFIG_TIMER_STATS=n
 	timer->start_site = NULL;
 	timer->start_pid = -1;
 	memset(timer->start_comm, 0, TASK_COMM_LEN);
@@ -1205,11 +1256,21 @@ static void __hrtimer_init(struct hrtimer *timer, clockid_t clock_id,
  * @clock_id:	the clock to be used
  * @mode:	timer mode abs/rel
  */
+// ARM10C 20140830
+// &rt_b->rt_period_timer: &(&def_rt_bandwidth)->rt_period_timer,
+// CLOCK_MONOTONIC: 1, HRTIMER_MODE_REL: 1
 void hrtimer_init(struct hrtimer *timer, clockid_t clock_id,
 		  enum hrtimer_mode mode)
 {
+	// timer: &(&def_rt_bandwidth)->rt_period_timer, clock_id: 1, mode: 1
 	debug_init(timer, clock_id, mode);
+
+	// timer: &(&def_rt_bandwidth)->rt_period_timer, clock_id: 1, mode: 1
 	__hrtimer_init(timer, clock_id, mode);
+	// __hrtimer_init 한일:
+	// (&def_rt_bandwidth)->rt_period_timer의 값을 0으로 초기화
+	// &(&def_rt_bandwidth)->rt_period_timer)->base: &hrtimer_bases->clock_base[0]
+	// RB Tree의 (&(&(&def_rt_bandwidth)->rt_period_timer)->node)->node 를 초기화
 }
 EXPORT_SYMBOL_GPL(hrtimer_init);
 

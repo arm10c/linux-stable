@@ -660,6 +660,7 @@ asmlinkage void __init start_kernel(void)
 	// pcpu 메모리, vmlist 는 slab으로 이관
 
 // 2014/08/09 종료
+// 2014/08/30 시작
 
 	/*
 	 * Set up the scheduler prior starting any interrupts (such as the

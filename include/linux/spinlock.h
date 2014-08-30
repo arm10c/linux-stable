@@ -95,6 +95,8 @@
 #ifdef CONFIG_DEBUG_SPINLOCK
   extern void __raw_spin_lock_init(raw_spinlock_t *lock, const char *name,
 				   struct lock_class_key *key);
+// ARM10C 20140830
+// &rt_b->rt_runtime_lock: &(&def_rt_bandwidth)->rt_runtime_lock
 # define raw_spin_lock_init(lock)				\
 do {								\
 	static struct lock_class_key __key;	/* struct lock_class_key { }; */	\

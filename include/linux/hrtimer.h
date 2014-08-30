@@ -30,8 +30,11 @@ struct hrtimer_cpu_base;
 /*
  * Mode arguments of xxx_hrtimer functions:
  */
+// ARM10C 20140830
 enum hrtimer_mode {
+	// HRTIMER_MODE_ABS: 0
 	HRTIMER_MODE_ABS = 0x0,		/* Time value is absolute */
+	// HRTIMER_MODE_REL: 1
 	HRTIMER_MODE_REL = 0x1,		/* Time value is relative to now */
 	HRTIMER_MODE_PINNED = 0x02,	/* Timer is bound to CPU */
 	HRTIMER_MODE_ABS_PINNED = 0x02,
@@ -105,13 +108,15 @@ enum hrtimer_restart {
  *
  * The hrtimer structure must be initialized by hrtimer_init()
  */
+// ARM10C 20140830
+// sizeof(struct hrtimer): 40 bytes
 struct hrtimer {
 	struct timerqueue_node		node;
 	ktime_t				_softexpires;
 	enum hrtimer_restart		(*function)(struct hrtimer *);
 	struct hrtimer_clock_base	*base;
 	unsigned long			state;
-#ifdef CONFIG_TIMER_STATS
+#ifdef CONFIG_TIMER_STATS // CONFIG_TIMER_STATS=n
 	int				start_pid;
 	void				*start_site;
 	char				start_comm[16];
@@ -153,7 +158,9 @@ struct hrtimer_clock_base {
 	ktime_t			offset;
 };
 
+// ARM10C 20140830
 enum  hrtimer_base_type {
+	// HRTIMER_BASE_MONOTONIC: 0
 	HRTIMER_BASE_MONOTONIC,
 	HRTIMER_BASE_REALTIME,
 	HRTIMER_BASE_BOOTTIME,
@@ -177,11 +184,12 @@ enum  hrtimer_base_type {
  * @max_hang_time:	Maximum time spent in hrtimer_interrupt
  * @clock_base:		array of clock bases for this cpu
  */
+// ARM10C 20140830
 struct hrtimer_cpu_base {
 	raw_spinlock_t			lock;
 	unsigned int			active_bases;
 	unsigned int			clock_was_set;
-#ifdef CONFIG_HIGH_RES_TIMERS
+#ifdef CONFIG_HIGH_RES_TIMERS // CONFIG_HIGH_RES_TIMERS=y
 	ktime_t				expires_next;
 	int				hres_active;
 	int				hang_detected;

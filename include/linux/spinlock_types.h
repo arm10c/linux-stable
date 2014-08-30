@@ -21,6 +21,7 @@
 // arch_spinlock_t의 wrapper다.
 // ARM10C 20140315
 // ARM10C 20140419
+// ARM10C 20140830
 // sizeof(raw_spinlock_t) : 16byte
 typedef struct raw_spinlock {
 	arch_spinlock_t raw_lock; 
