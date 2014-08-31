@@ -1,7 +1,10 @@
 #IAMROOT.ORG Kernel스터디10차(ARM)
 
 #HISTORY
-  - 66th (2014/08/16) week study : [66차 스터디]
+  - 67th (2014/08/23) week study : [67차 스터디](https://github.com/arm10c/linux-stable/blob/master/Reference/88_Review/a10c_67.md)
+    - mm_init() 복습
+	- slub() 복습 (kmem_cache_init(), percpu_init_late(), vmalloc_init())
+  - 66th (2014/08/16) week study : [66차 스터디](https://github.com/arm10c/linux-stable/blob/master/Reference/88_Review/a10c_66.md)
     - mm_init() 복습;
 	- buddy 까지 복습 (mem_init())
   - 65th (2014/08/09) week study : [65차 스터디](https://github.com/arm10c/linux-stable/blob/master/Reference/88_Review/a10c_65.md)
