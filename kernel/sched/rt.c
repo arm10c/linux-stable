@@ -83,71 +83,71 @@ static void start_rt_bandwidth(struct rt_bandwidth *rt_b)
 }
 
 // ARM10C 20140830
-// [pcp0] &rq->rt: &(runqueues)->rt, rq: &(runqueues)
+// [pcp0] &rq->rt: &(&runqueues)->rt, rq: (&runqueues)
 void init_rt_rq(struct rt_rq *rt_rq, struct rq *rq)
 {
 	struct rt_prio_array *array;
 	int i;
 
-	// &rt_rq->active: (&(runqueues)->rt)->active
+	// &rt_rq->active: (&(&runqueues)->rt)->active
 	array = &rt_rq->active;
-	// array: (&(runqueues)->rt)->active
+	// array: (&(&runqueues)->rt)->active
 
 	// MAX_RT_PRIO: 100
 	for (i = 0; i < MAX_RT_PRIO; i++) {
-		// i: 0, array->queue: (&(&(runqueues)->rt)->active)->queue
+		// i: 0, array->queue: (&(&(&runqueues)->rt)->active)->queue
 		INIT_LIST_HEAD(array->queue + i);
-		// (&(&(runqueues)->rt)->active)->queue[0] 의 리스트 초기화
+		// (&(&(&runqueues)->rt)->active)->queue[0] 의 리스트 초기화
 
-		// i: 0, array->bitmap: (&(&(runqueues)->rt)->active)->bitmap
+		// i: 0, array->bitmap: (&(&(&runqueues)->rt)->active)->bitmap
 		__clear_bit(i, array->bitmap);
-		// (&(&(runqueues)->rt)->active)->bitmap의 0 bit를 클리어
+		// (&(&(&runqueues)->rt)->active)->bitmap의 0 bit를 클리어
 
 		// i: 1 ... 99 까지 수행
 	}
 
 	/* delimiter for bitsearch: */
-	// MAX_RT_PRIO: 100, array->bitmap: (&(&(runqueues)->rt)->active)->bitmap
+	// MAX_RT_PRIO: 100, array->bitmap: (&(&(&runqueues)->rt)->active)->bitmap
 	__set_bit(MAX_RT_PRIO, array->bitmap);
-	// (&(&(runqueues)->rt)->active)->bitmap의 100 bit를 1로 세팅
+	// (&(&(&runqueues)->rt)->active)->bitmap의 100 bit를 1로 세팅
 
 #if defined CONFIG_SMP // CONFIG_SMP=y
-	// &rt_rq->highest_prio.curr: (&(runqueues)->rt)->highest_prio.curr, MAX_RT_PRIO: 100
+	// &rt_rq->highest_prio.curr: (&(&runqueues)->rt)->highest_prio.curr, MAX_RT_PRIO: 100
 	rt_rq->highest_prio.curr = MAX_RT_PRIO;
-	// &rt_rq->highest_prio.curr: (&(runqueues)->rt)->highest_prio.curr: 100
+	// &rt_rq->highest_prio.curr: (&(&runqueues)->rt)->highest_prio.curr: 100
 
-	// &rt_rq->highest_prio.next: (&(runqueues)->rt)->highest_prio.next, MAX_RT_PRIO: 100
+	// &rt_rq->highest_prio.next: (&(&runqueues)->rt)->highest_prio.next, MAX_RT_PRIO: 100
 	rt_rq->highest_prio.next = MAX_RT_PRIO;
-	// &rt_rq->highest_prio.next: (&(runqueues)->rt)->highest_prio.next: 100
+	// &rt_rq->highest_prio.next: (&(&runqueues)->rt)->highest_prio.next: 100
 
-	// &rt_rq->rt_nr_migratory: (&(runqueues)->rt)->rt_nr_migratory
+	// &rt_rq->rt_nr_migratory: (&(&runqueues)->rt)->rt_nr_migratory
 	rt_rq->rt_nr_migratory = 0;
-	// &rt_rq->rt_nr_migratory: (&(runqueues)->rt)->rt_nr_migratory: 0
+	// &rt_rq->rt_nr_migratory: (&(&runqueues)->rt)->rt_nr_migratory: 0
 
-	// &rt_rq->overloaded: (&(runqueues)->rt)->overloaded
+	// &rt_rq->overloaded: (&(&runqueues)->rt)->overloaded
 	rt_rq->overloaded = 0;
-	// &rt_rq->overloaded: (&(runqueues)->rt)->overloaded: 0
+	// &rt_rq->overloaded: (&(&runqueues)->rt)->overloaded: 0
 
-	// &rt_rq->pushable_tasks: &(&(runqueues)->rt)->pushable_tasks
+	// &rt_rq->pushable_tasks: &(&(&runqueues)->rt)->pushable_tasks
 	plist_head_init(&rt_rq->pushable_tasks);
-	// (&(&(runqueues)->rt)->pushable_tasks)->node_list 리스트 초기화
+	// (&(&(&runqueues)->rt)->pushable_tasks)->node_list 리스트 초기화
 #endif
 
-	// &rt_rq->rt_time: (&(runqueues)->rt)->rt_time
+	// &rt_rq->rt_time: (&(&runqueues)->rt)->rt_time
 	rt_rq->rt_time = 0;
-	// &rt_rq->rt_time: (&(runqueues)->rt)->rt_time: 0
+	// &rt_rq->rt_time: (&(&runqueues)->rt)->rt_time: 0
 
-	// &rt_rq->rt_throttled: (&(runqueues)->rt)->rt_throttled
+	// &rt_rq->rt_throttled: (&(&runqueues)->rt)->rt_throttled
 	rt_rq->rt_throttled = 0;
-	// &rt_rq->rt_throttled: (&(runqueues)->rt)->rt_throttled: 0
+	// &rt_rq->rt_throttled: (&(&runqueues)->rt)->rt_throttled: 0
 
-	// &rt_rq->rt_runtime: (&(runqueues)->rt)->rt_runtime
+	// &rt_rq->rt_runtime: (&(&runqueues)->rt)->rt_runtime
 	rt_rq->rt_runtime = 0;
-	// &rt_rq->rt_runtime: (&(runqueues)->rt)->rt_runtime: 0
+	// &rt_rq->rt_runtime: (&(&runqueues)->rt)->rt_runtime: 0
 
-	// &rt_rq->rt_runtime_lock: (&(runqueues)->rt)->rt_runtime_lock
+	// &rt_rq->rt_runtime_lock: (&(&runqueues)->rt)->rt_runtime_lock
 	raw_spin_lock_init(&rt_rq->rt_runtime_lock);
-	// (&(runqueues)->rt)->rt_runtime_lock 을 사용한 spinlock 초기화
+	// (&(&runqueues)->rt)->rt_runtime_lock 을 사용한 spinlock 초기화
 }
 
 #ifdef CONFIG_RT_GROUP_SCHED

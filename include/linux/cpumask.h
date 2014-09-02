@@ -355,12 +355,12 @@ static inline void cpumask_setall(struct cpumask *dstp)
  * @dstp: the cpumask pointer
  */
 // ARM10C 20140830
-// *mask: (&def_root_domain->cpupri)->pri_to_cpu[0].mask
+// *mask: (&(&(&def_root_domain)->cpupri)->pri_to_cpu[0])->mask
 static inline void cpumask_clear(struct cpumask *dstp)
 {
-	// dstp: &(&def_root_domain->cpupri)->pri_to_cpu[0].mask, nr_cpumask_bits: 4
+	// dstp: &(&(&(&def_root_domain)->cpupri)->pri_to_cpu[0])->mask, nr_cpumask_bits: 4
 	bitmap_zero(cpumask_bits(dstp), nr_cpumask_bits);
-	// &(&def_root_domain->cpupri)->pri_to_cpu[0].mask.bit[0]: 0
+	// &(&(&(&def_root_domain)->cpupri)->pri_to_cpu[0])->mask.bit[0]: 0
 }
 
 /**
@@ -721,11 +721,11 @@ void free_bootmem_cpumask_var(cpumask_var_t mask);
 typedef struct cpumask cpumask_var_t[1];
 
 // ARM10C 20140830
-// &rd->span: &def_root_domain->span, GFP_KERNEL: 0xD0
+// &rd->span: &(&def_root_domain)->span, GFP_KERNEL: 0xD0
 // ARM10C 20140830
-// &rd->online: &def_root_domain->online, GFP_KERNEL: 0xD0
+// &rd->online: &(&def_root_domain)->online, GFP_KERNEL: 0xD0
 // ARM10C 20140830
-// &rd->rto_mask: &def_root_domain->rto_mask, GFP_KERNEL: 0xD0
+// &rd->rto_mask: &(&def_root_domain)->rto_mask, GFP_KERNEL: 0xD0
 static inline bool alloc_cpumask_var(cpumask_var_t *mask, gfp_t flags)
 {
 	return true;
@@ -738,12 +738,12 @@ static inline bool alloc_cpumask_var_node(cpumask_var_t *mask, gfp_t flags,
 }
 
 // ARM10C 20140830
-// &vec->mask: (&def_root_domain->cpupri)->pri_to_cpu[0].mask, GFP_KERNEL: 0xD0
+// &vec->mask: &(&(&(&def_root_domain)->cpupri)->pri_to_cpu[0])->mask, GFP_KERNEL: 0xD0
 static inline bool zalloc_cpumask_var(cpumask_var_t *mask, gfp_t flags)
 {
-	// *mask: (&def_root_domain->cpupri)->pri_to_cpu[0].mask
+	// *mask: (&(&(&def_root_domain)->cpupri)->pri_to_cpu[0])->mask
 	cpumask_clear(*mask);
-	// &(&def_root_domain->cpupri)->pri_to_cpu[0].mask.bit[0]: 0
+	// (&(&(&def_root_domain)->cpupri)->pri_to_cpu[0])->mask.bit[0]: 0
 
 	return true;
 }

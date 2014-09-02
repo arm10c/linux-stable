@@ -4829,25 +4829,25 @@ static int init_rootdomain(struct root_domain *rd)
 {
 	// rd: &def_root_domain, sizeof(struct root_domain): 860 bytes
 	memset(rd, 0, sizeof(*rd));
-	// *rd 값을 0으로 초기화
+	// def_root_domain 값을 0으로 초기화
 
-	// &rd->span: &def_root_domain->span, GFP_KERNEL: 0xD0
-	// alloc_cpumask_var(&def_root_domain->span, GFP_KERNEL: 0xD0): 1
+	// &rd->span: &(&def_root_domain)->span, GFP_KERNEL: 0xD0
+	// alloc_cpumask_var(&(&def_root_domain)->span, GFP_KERNEL: 0xD0): 1
 	if (!alloc_cpumask_var(&rd->span, GFP_KERNEL))
 		goto out;
 
-	// &rd->online: &def_root_domain->online, GFP_KERNEL: 0xD0
-	// alloc_cpumask_var(&def_root_domain->online, GFP_KERNEL: 0xD0): 1
+	// &rd->online: &(&def_root_domain)->online, GFP_KERNEL: 0xD0
+	// alloc_cpumask_var(&(&def_root_domain)->online, GFP_KERNEL: 0xD0): 1
 	if (!alloc_cpumask_var(&rd->online, GFP_KERNEL))
 		goto free_span;
 
-	// &rd->rto_mask: &def_root_domain->rto_mask, GFP_KERNEL: 0xD0
-	// alloc_cpumask_var(&def_root_domain->rto_mask, GFP_KERNEL: 0xD0): 1
+	// &rd->rto_mask: &(&def_root_domain)->rto_mask, GFP_KERNEL: 0xD0
+	// alloc_cpumask_var(&(&def_root_domain)->rto_mask, GFP_KERNEL: 0xD0): 1
 	if (!alloc_cpumask_var(&rd->rto_mask, GFP_KERNEL))
 		goto free_online;
 
-	// &rd->cpupri: &def_root_domain->cpupri
-	// cpupri_init(&def_root_domain->cpupri): 0
+	// &rd->cpupri: &(&def_root_domain)->cpupri
+	// cpupri_init(&(&def_root_domain)->cpupri): 0
 	if (cpupri_init(&rd->cpupri) != 0)
 		goto free_rto_mask;
 
@@ -4875,9 +4875,9 @@ static void init_defrootdomain(void)
 {
 	init_rootdomain(&def_root_domain);
 	// def_root_domain의 맴버 값을 초기화 수행
-	// (&def_root_domain->cpupri)->pri_to_cpu[0 ... 101].count: 0
-	// &(&def_root_domain->cpupri)->pri_to_cpu[0 ... 101].mask.bit[0]: 0
-	// (&def_root_domain->cpupri)->cpu_to_pri[0 ... 3]: -1
+	// (&(&(&def_root_domain)->cpupri)->pri_to_cpu[0 ... 101])->count: 0
+	// (&(&(&def_root_domain)->cpupri)->pri_to_cpu[0 ... 101])->mask.bit[0]: 0
+	// (&(&def_root_domain)->cpupri)->pri_to_cpu[0 ... 3]: -1
 
 	atomic_set(&def_root_domain.refcount, 1);
 	// &def_root_domain.refcount: 1
@@ -6288,9 +6288,9 @@ void __init sched_init(void)
 #ifdef CONFIG_SMP // CONFIG_SMP=y
 	init_defrootdomain();
 	// def_root_domain의 맴버 값을 초기화 수행
-	// (&def_root_domain->cpupri)->pri_to_cpu[0 ... 101].count: 0
-	// &(&def_root_domain->cpupri)->pri_to_cpu[0 ... 101].mask.bit[0]: 0
-	// (&def_root_domain->cpupri)->cpu_to_pri[0 ... 3]: -1
+	// (&(&(&def_root_domain)->cpupri)->pri_to_cpu[0 ... 101])->count: 0
+	// (&(&(&def_root_domain)->cpupri)->pri_to_cpu[0 ... 101])->mask.bit[0]: 0
+	// (&(&def_root_domain)->cpupri)->pri_to_cpu[0 ... 3]: -1
 	// &def_root_domain.refcount: 1
 #endif
 
@@ -6335,47 +6335,47 @@ void __init sched_init(void)
 		rq = cpu_rq(i);
 		// rq: (&(runqueues) + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋)
 
-		// [pcp0] &rq->lock: &(runqueues)->lock
+		// [pcp0] &rq->lock: &(&runqueues)->lock
 		raw_spin_lock_init(&rq->lock);
-		// [pcp0] &rq->lock: &(runqueues)->lock 을 사용한 spinlock 초기화 수행
+		// [pcp0] &rq->lock: &(&runqueues)->lock 을 사용한 spinlock 초기화 수행
 
-		// [pcp0] &rq->nr_running: &(runqueues)->nr_running
+		// [pcp0] rq->nr_running: (&runqueues)->nr_running
 		rq->nr_running = 0;
-		// [pcp0] &rq->nr_running: &(runqueues)->nr_running: 0
+		// [pcp0] rq->nr_running: (&runqueues)->nr_running: 0
 
-		// [pcp0] &rq->calc_load_active: &(runqueues)->calc_load_active
+		// [pcp0] rq->calc_load_active: (&runqueues)->calc_load_active
 		rq->calc_load_active = 0;
-		// [pcp0] &rq->calc_load_active: &(runqueues)->calc_load_active: 0
+		// [pcp0] rq->calc_load_active: (&runqueues)->calc_load_active: 0
 
-		// [pcp0] &rq->calc_load_update: &(runqueues)->calc_load_update,
+		// [pcp0] rq->calc_load_update: (&runqueues)->calc_load_update,
 		// jiffies: -30000 (0xFFFFFFFFFFFF8AD0): vmlinux.lds.S 에 있음, LOAD_FREQ: 501
 		rq->calc_load_update = jiffies + LOAD_FREQ;
-		// [pcp0] &rq->calc_load_update: &(runqueues)->calc_load_update: -29499 (0xFFFFFFFFFFFF8CC5)
+		// [pcp0] rq->calc_load_update: (&runqueues)->calc_load_update: -29499 (0xFFFFFFFFFFFF8CC5)
 
-		// [pcp0] &rq->cfs: &(runqueues)->cfs
+		// [pcp0] &rq->cfs: &(&runqueues)->cfs
 		init_cfs_rq(&rq->cfs);
 		// init_cfs_rq 에서 한일:
-		// (&(runqueues)->cfs)->tasks_timeline: (struct rb_root) { NULL, }
-		// (&(runqueues)->cfs)->min_vruntime: 0xFFFFFFFFFFF00000
-		// (&(runqueues)->cfs)->min_vruntime_copy: 0xFFFFFFFFFFF00000
-		// (&(runqueues)->cfs)->decay_counter: 1
-		// (&(runqueues)->cfs)->removed_load: 0
+		// (&(&runqueues)->cfs)->tasks_timeline: (struct rb_root) { NULL, }
+		// (&(&runqueues)->cfs)->min_vruntime: 0xFFFFFFFFFFF00000
+		// (&(&runqueues)->cfs)->min_vruntime_copy: 0xFFFFFFFFFFF00000
+		// (&(&runqueues)->cfs)->decay_counter: 1
+		// (&(&runqueues)->cfs)->removed_load: 0
 
-		// [pcp0] &rq->rt: &(runqueues)->rt, rq: &(runqueues)
+		// [pcp0] &rq->rt: &(&runqueues)->rt, rq: (&runqueues)
 		init_rt_rq(&rq->rt, rq);
 		// init_rt_rq 에서 한일:
-		// (&(&(runqueues)->rt)->active)->bitmap의 0 ... 99 bit를 클리어
-		// (&(&(runqueues)->rt)->active)->queue[0 ... 99] 의 리스트 초기화
-		// (&(&(runqueues)->rt)->active)->bitmap의 100 bit를 1로 세팅
-		// (&(runqueues)->rt)->rt_runtime_lock 을 사용한 spinlock 초기화
-		// (&(runqueues)->rt)->rt_runtime: 0
-		// (&(runqueues)->rt)->rt_throttled: 0
-		// (&(runqueues)->rt)->rt_time: 0
-		// (&(&(runqueues)->rt)->pushable_tasks)->node_list 리스트 초기화
-		// (&(runqueues)->rt)->overloaded: 0
-		// (&(runqueues)->rt)->rt_nr_migratory: 0
-		// (&(runqueues)->rt)->highest_prio.next: 100
-		// (&(runqueues)->rt)->highest_prio.curr: 100
+		// (&(&(&runqueues)->rt)->active)->bitmap의 0 ... 99 bit를 클리어
+		// (&(&(&runqueues)->rt)->active)->queue[0 ... 99] 의 리스트 초기화
+		// (&(&(&runqueues)->rt)->active)->bitmap의 100 bit를 1로 세팅
+		// (&(&runqueues)->rt)->rt_runtime_lock 을 사용한 spinlock 초기화
+		// (&(&runqueues)->rt)->rt_runtime: 0
+		// (&(&runqueues)->rt)->rt_throttled: 0
+		// (&(&runqueues)->rt)->rt_time: 0
+		// (&(&(&runqueues)->rt)->pushable_tasks)->node_list 리스트 초기화
+		// (&(&runqueues)->rt)->overloaded: 0
+		// (&(&runqueues)->rt)->rt_nr_migratory: 0
+		// (&(&runqueues)->rt)->highest_prio.next: 100
+		// (&(&runqueues)->rt)->highest_prio.curr: 100
 
 // 2014/08/30 종료
 

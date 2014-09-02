@@ -35,7 +35,7 @@ int  cpupri_find(struct cpupri *cp,
 		 struct task_struct *p, struct cpumask *lowest_mask);
 void cpupri_set(struct cpupri *cp, int cpu, int pri);
 // ARM10C 20140830
-// &rd->cpupri: &def_root_domain->cpupri
+// &rd->cpupri: &(&def_root_domain)->cpupri
 int cpupri_init(struct cpupri *cp);
 void cpupri_cleanup(struct cpupri *cp);
 #else
