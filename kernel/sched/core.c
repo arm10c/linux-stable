@@ -6335,6 +6335,10 @@ void __init sched_init(void)
 		rq = cpu_rq(i);
 		// rq: (&(runqueues) + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋)
 
+		// NOTE:
+		// rq: (&(runqueues) + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋)
+		// 의 주석을 간결하게 하기 위해 [pcp0] 를 변수 앞에 추가하고 rq: (&runqueue) 로 사용함
+
 		// [pcp0] &rq->lock: &(&runqueues)->lock
 		raw_spin_lock_init(&rq->lock);
 		// [pcp0] &rq->lock: &(&runqueues)->lock 을 사용한 spinlock 초기화 수행
@@ -6378,8 +6382,9 @@ void __init sched_init(void)
 		// (&(&runqueues)->rt)->highest_prio.curr: 100
 
 // 2014/08/30 종료
+// 2014/09/13 시작
 
-#ifdef CONFIG_FAIR_GROUP_SCHED
+#ifdef CONFIG_FAIR_GROUP_SCHED // CONFIG_FAIR_GROUP_SCHED=n
 		root_task_group.shares = ROOT_TASK_GROUP_LOAD;
 		INIT_LIST_HEAD(&rq->leaf_cfs_rq_list);
 		/*
@@ -6405,27 +6410,66 @@ void __init sched_init(void)
 		init_tg_cfs_entry(&root_task_group, &rq->cfs, NULL, i, NULL);
 #endif /* CONFIG_FAIR_GROUP_SCHED */
 
+		// [pcp0] rq->rt.rt_runtime: (&runqueues)->rt.rt_runtime,
+		// def_rt_bandwidth.rt_runtime: 950000000
 		rq->rt.rt_runtime = def_rt_bandwidth.rt_runtime;
-#ifdef CONFIG_RT_GROUP_SCHED
+		// [pcp0] rq->rt.rt_runtime: (&runqueues)->rt.rt_runtime: 950000000
+
+#ifdef CONFIG_RT_GROUP_SCHED // CONFIG_RT_GROUP_SCHED=n
 		INIT_LIST_HEAD(&rq->leaf_rt_rq_list);
 		init_tg_rt_entry(&root_task_group, &rq->rt, NULL, i, NULL);
 #endif
 
+		// CPU_LOAD_IDX_MAX: 5
 		for (j = 0; j < CPU_LOAD_IDX_MAX; j++)
+			// [pcp0] j: 0, rq->cpu_load[0]: (&runqueues)->cpu_load[0]
 			rq->cpu_load[j] = 0;
+			// [pcp0] j: 0, rq->cpu_load[0]: (&runqueues)->cpu_load[0]: 0
+			// j: 1 .. 5 까지 수행
 
+		// [pcp0] rq->last_load_update_tick: (&runqueues)->last_load_update_tick
+		// jiffies: -30000 (0xFFFFFFFFFFFF8AD0): vmlinux.lds.S 에 있음
 		rq->last_load_update_tick = jiffies;
+		// [pcp0] rq->last_load_update_tick: (&runqueues)->last_load_update_tick: -30000 (0xFFFFFFFFFFFF8AD0)
 
-#ifdef CONFIG_SMP
+#ifdef CONFIG_SMP // CONFIG_SMP=y
+		// [pcp0] rq->sd: (&runqueues)->sd
 		rq->sd = NULL;
+		// [pcp0] rq->sd: (&runqueues)->sd: NULL
+
+		// [pcp0] rq->rd: (&runqueues)->rd
 		rq->rd = NULL;
+		// [pcp0] rq->rd: (&runqueues)->rd: NULL
+
+		// [pcp0] rq->cpu_power: (&runqueues)->cpu_power, SCHED_POWER_SCALE: 0x400
 		rq->cpu_power = SCHED_POWER_SCALE;
+		// [pcp0] rq->cpu_power: (&runqueues)->cpu_power: 0x400
+
+		// [pcp0] rq->post_schedule: (&runqueues)->post_schedule
 		rq->post_schedule = 0;
+		// [pcp0] rq->post_schedule: (&runqueues)->post_schedule: 0
+
+		// [pcp0] rq->active_balance: (&runqueues)->active_balance
 		rq->active_balance = 0;
+		// [pcp0] rq->active_balance: (&runqueues)->active_balance: 0
+
+		// [pcp0] rq->next_balance: (&runqueues)->next_balance,
+		// jiffies: -30000 (0xFFFFFFFFFFFF8AD0): vmlinux.lds.S 에 있음
 		rq->next_balance = jiffies;
+		// [pcp0] rq->next_balance: (&runqueues)->next_balance: -30000 (0xFFFFFFFFFFFF8AD0)
+
+		// [pcp0] rq->push_cpu: (&runqueues)->push_cpu
 		rq->push_cpu = 0;
+		// [pcp0] rq->push_cpu: (&runqueues)->push_cpu: 0
+
+		// [pcp0] rq->cpu: (&runqueues)->cpu, i: 0
 		rq->cpu = i;
+		// [pcp0] rq->cpu: (&runqueues)->cpu: 0
+
+		// [pcp0] rq->online: (&runqueues)->online
 		rq->online = 0;
+		// [pcp0] rq->online: (&runqueues)->online: 0
+
 		rq->idle_stamp = 0;
 		rq->avg_idle = 2*sysctl_sched_migration_cost;
 		rq->max_idle_balance_cost = sysctl_sched_migration_cost;

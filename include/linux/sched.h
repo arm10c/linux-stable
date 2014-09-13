@@ -776,7 +776,13 @@ enum cpu_idle_type {
 /*
  * Increase resolution of cpu_power calculations
  */
+// ARM10C 20140913
+// SCHED_POWER_SHIFT: 10
 #define SCHED_POWER_SHIFT	10
+
+// ARM10C 20140913
+// SCHED_POWER_SHIFT: 10
+// SCHED_POWER_SCALE: 0x400
 #define SCHED_POWER_SCALE	(1L << SCHED_POWER_SHIFT)
 
 /*
@@ -811,6 +817,7 @@ extern int sched_domain_level_max;
 
 struct sched_group;
 
+// ARM10C 20140913
 struct sched_domain {
 	/* These fields must be setup */
 	struct sched_domain *parent;	/* top domain must be null terminated */
@@ -841,7 +848,7 @@ struct sched_domain {
 	u64 max_newidle_lb_cost;
 	unsigned long next_decay_max_lb_cost;
 
-#ifdef CONFIG_SCHEDSTATS
+#ifdef CONFIG_SCHEDSTATS // CONFIG_SCHEDSTATS=n
 	/* load_balance() stats */
 	unsigned int lb_count[CPU_MAX_IDLE_TYPES];
 	unsigned int lb_failed[CPU_MAX_IDLE_TYPES];
@@ -872,7 +879,7 @@ struct sched_domain {
 	unsigned int ttwu_move_affine;
 	unsigned int ttwu_move_balance;
 #endif
-#ifdef CONFIG_SCHED_DEBUG
+#ifdef CONFIG_SCHED_DEBUG // CONFIG_SCHED_DEBUG=y
 	char *name;
 #endif
 	union {

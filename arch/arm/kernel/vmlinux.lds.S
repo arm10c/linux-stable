@@ -48,6 +48,7 @@ ENTRY(stext)
 #ifndef __ARMEB__
 /*
 // ARM10C 20140830
+// ARM10C 20140913
 // jiffies_64: -30000 (0xFFFFFFFFFFFF8AD0)
 // jiffies: -30000 (0xFFFFFFFFFFFF8AD0)
 */

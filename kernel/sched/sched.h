@@ -338,6 +338,7 @@ static inline int rt_bandwidth_enabled(void)
 
 /* Real-Time classes' related field in a runqueue: */
 // ARM10C 20140830
+// ARM10C 20140913
 struct rt_rq {
 	struct rt_prio_array active;
 	unsigned int rt_nr_running;
@@ -380,6 +381,7 @@ struct rt_rq {
  *
  */
 // ARM10C 20140830
+// ARM10C 20140913
 // sizeof(struct root_domain): 860 bytes
 struct root_domain {
 	atomic_t refcount;
@@ -408,6 +410,7 @@ extern struct root_domain def_root_domain;
  * acquire operations must be ordered by ascending &runqueue.
  */
 // ARM10C 20140830
+// ARM10C 20140913
 struct rq {
 	/* runqueue lock: */
 	raw_spinlock_t lock;
@@ -421,6 +424,7 @@ struct rq {
 	unsigned int nr_numa_running;
 	unsigned int nr_preferred_running;
 #endif
+	// ARM10C 20140913
 	#define CPU_LOAD_IDX_MAX 5
 	unsigned long cpu_load[CPU_LOAD_IDX_MAX];
 	unsigned long last_load_update_tick;
