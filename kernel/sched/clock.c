@@ -72,10 +72,14 @@
  * This is default implementation.
  * Architectures and sub-architectures can override this.
  */
+// ARM10C 20140913
 unsigned long long __attribute__((weak)) sched_clock(void)
 {
+	// jiffies: -30000 (0xFFFFFFFFFFFF8AD0), INITIAL_JIFFIES: -30000 (0xFFFF8AD0)
+	// NSEC_PER_SEC: 1000000000L, HZ: 100
 	return (unsigned long long)(jiffies - INITIAL_JIFFIES)
 					* (NSEC_PER_SEC / HZ);
+	// return 0
 }
 EXPORT_SYMBOL_GPL(sched_clock);
 

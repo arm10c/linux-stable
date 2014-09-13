@@ -363,7 +363,9 @@ struct mm_rss_stat {
 };
 
 struct kioctx_table;
+
 // ARM10C 20131012
+// ARM10C 20140913
 struct mm_struct {
 	struct vm_area_struct * mmap;		/* list of VMAs */
 	struct rb_root mm_rb;

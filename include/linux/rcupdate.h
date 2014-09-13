@@ -176,9 +176,11 @@ extern void call_rcu_sched(struct rcu_head *head,
 
 extern void synchronize_sched(void);
 
-#ifdef CONFIG_PREEMPT_RCU
+#ifdef CONFIG_PREEMPT_RCU // CONFIG_PREEMPT_RCU=y
 
+// ARM10C 20140913
 extern void __rcu_read_lock(void);
+// ARM10C 20140913
 extern void __rcu_read_unlock(void);
 extern void rcu_read_unlock_special(struct task_struct *t);
 void synchronize_rcu(void);
@@ -310,7 +312,7 @@ static inline bool rcu_lockdep_current_cpu_online(void)
 }
 #endif /* #else #if defined(CONFIG_HOTPLUG_CPU) && defined(CONFIG_PROVE_RCU) */
 
-#ifdef CONFIG_DEBUG_LOCK_ALLOC
+#ifdef CONFIG_DEBUG_LOCK_ALLOC // CONFIG_DEBUG_LOCK_ALLOC=n
 
 static inline void rcu_lock_acquire(struct lockdep_map *map)
 {
@@ -419,7 +421,9 @@ static inline int rcu_read_lock_sched_held(void)
 
 #else /* #ifdef CONFIG_DEBUG_LOCK_ALLOC */
 
+// ARM10C 20140913
 # define rcu_lock_acquire(a)		do { } while (0)
+// ARM10C 20140913
 # define rcu_lock_release(a)		do { } while (0)
 
 static inline int rcu_read_lock_held(void)
@@ -446,7 +450,7 @@ static inline int rcu_read_lock_sched_held(void)
 
 #endif /* #else #ifdef CONFIG_DEBUG_LOCK_ALLOC */
 
-#ifdef CONFIG_PROVE_RCU
+#ifdef CONFIG_PROVE_RCU // CONFIG_PROVE_RCU=n
 
 extern int rcu_my_thread_group_empty(void);
 
@@ -489,6 +493,7 @@ static inline void rcu_preempt_sleep_check(void)
 
 #else /* #ifdef CONFIG_PROVE_RCU */
 
+// ARM10C 20140913
 #define rcu_lockdep_assert(c, s) do { } while (0)
 #define rcu_sleep_check() do { } while (0)
 
@@ -781,13 +786,19 @@ static inline void rcu_preempt_sleep_check(void)
  * block, but only when acquiring spinlocks that are subject to priority
  * inheritance.
  */
+// ARM10C 20140913
 static inline void rcu_read_lock(void)
 {
 	__rcu_read_lock();
-	__acquire(RCU);
-	rcu_lock_acquire(&rcu_lock_map);
+	// __rcu_read_lock에서 한일:
+	// (&init_task)->rcu_read_lock_nesting: 1
+
+	__acquire(RCU); // null function
+	rcu_lock_acquire(&rcu_lock_map); // null function
+
+	// rcu_is_watching(): true
 	rcu_lockdep_assert(rcu_is_watching(),
-			   "rcu_read_lock() used illegally while idle");
+			   "rcu_read_lock() used illegally while idle"); // null function
 }
 
 /*
@@ -805,13 +816,17 @@ static inline void rcu_read_lock(void)
  *
  * See rcu_read_lock() for more information.
  */
+// ARM10C 20140913
 static inline void rcu_read_unlock(void)
 {
+	// rcu_is_watching(): true
 	rcu_lockdep_assert(rcu_is_watching(),
-			   "rcu_read_unlock() used illegally while idle");
-	rcu_lock_release(&rcu_lock_map);
-	__release(RCU);
+			   "rcu_read_unlock() used illegally while idle"); // null function
+	rcu_lock_release(&rcu_lock_map); // null function
+	__release(RCU); // null function
 	__rcu_read_unlock();
+	// __rcu_read_unlock에서 한일:
+	// (&init_task)->rcu_read_lock_nesting: 0
 }
 
 /**

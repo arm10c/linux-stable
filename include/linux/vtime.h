@@ -72,7 +72,7 @@ static inline void vtime_account_user(struct task_struct *tsk) { }
 static inline void vtime_account_irq_enter(struct task_struct *tsk) { }
 #endif /* !CONFIG_VIRT_CPU_ACCOUNTING */
 
-#ifdef CONFIG_VIRT_CPU_ACCOUNTING_GEN
+#ifdef CONFIG_VIRT_CPU_ACCOUNTING_GEN // CONFIG_VIRT_CPU_ACCOUNTING_GEN=n
 extern void arch_vtime_task_switch(struct task_struct *tsk);
 extern void vtime_gen_account_irq_exit(struct task_struct *tsk);
 
@@ -101,6 +101,8 @@ static inline void vtime_user_enter(struct task_struct *tsk) { }
 static inline void vtime_user_exit(struct task_struct *tsk) { }
 static inline void vtime_guest_enter(struct task_struct *tsk) { }
 static inline void vtime_guest_exit(struct task_struct *tsk) { }
+// ARM10C 20140913
+// idle: &init_task, cpu: 0
 static inline void vtime_init_idle(struct task_struct *tsk, int cpu) { }
 #endif
 

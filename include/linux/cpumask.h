@@ -25,6 +25,7 @@ typedef struct cpumask { DECLARE_BITMAP(bits, NR_CPUS); } cpumask_t;
  */
 // ARM10C 20140215
 // ARM10C 20140222
+// ARM10C 20140913
 #define cpumask_bits(maskp) ((maskp)->bits)
 
 #if NR_CPUS == 1
@@ -43,6 +44,7 @@ extern int nr_cpu_ids;
 #else
 // ARM10C 20140215
 // ARM10C 20140830
+// ARM10C 20140913
 // NR_CPUS: 4
 // nr_cpumask_bits: 4
 #define nr_cpumask_bits	NR_CPUS
@@ -91,6 +93,7 @@ extern int nr_cpu_ids;
 extern const struct cpumask *const cpu_possible_mask;
 extern const struct cpumask *const cpu_online_mask;
 extern const struct cpumask *const cpu_present_mask;
+// ARM10C 20140913
 extern const struct cpumask *const cpu_active_mask;
 
 #if NR_CPUS > 1
@@ -279,7 +282,9 @@ int cpumask_any_but(const struct cpumask *mask, unsigned int cpu);
  * @cpu: cpu number (< nr_cpu_ids)
  * @dstp: the cpumask pointer
  */
-// ARM10C 20130907 
+// ARM10C 20130907
+// ARM10C 20140913
+// rq->cpu: (&runqueues)->cpu: 0, rd->span: (&def_root_domain)->span: 0
 static inline void cpumask_set_cpu(unsigned int cpu, struct cpumask *dstp)
 {
 	set_bit(cpumask_check(cpu), cpumask_bits(dstp));
@@ -310,6 +315,8 @@ static inline void cpumask_clear_cpu(int cpu, struct cpumask *dstp)
 // test_bit(cpumask_check(0), cpumask_bits((cpu_possible_mask)))
 // cpumask_check(0): 0, cpumask_bits((cpu_possible_mask)): cpu_possible_mask->bits: 0xF
 // test_bit(0, cpu_possible_mask->bits): 1
+// ARM10C 20140913
+// rq->cpu: (&runqueues)->cpu: 0, cpu_active_mask: cpu_active_bits[1]: 0
 #define cpumask_test_cpu(cpu, cpumask) \
 	test_bit(cpumask_check(cpu), cpumask_bits((cpumask)))
 
@@ -496,11 +503,15 @@ static inline bool cpumask_full(const struct cpumask *srcp)
  */
 // ARM10C 20140215
 // cpu_possible_mask: 0xF
+// ARM10C 20140913
+// new_mask: &cpu_bit_bitmap[1][0]
 static inline unsigned int cpumask_weight(const struct cpumask *srcp)
 {
 	// cpumask_bits(cpu_possible_mask): cpu_possible_mask->bits, nr_cpumask_bits: 4
+	// srcp: &cpu_bit_bitmap[1][0], cpumask_bits(&cpu_bit_bitmap[1][0]): (&cpu_bit_bitmap[1][0])->bits, nr_cpumask_bits: 4
 	return bitmap_weight(cpumask_bits(srcp), nr_cpumask_bits);
 	// return 4
+	// return 1
 }
 
 /**
@@ -534,10 +545,17 @@ static inline void cpumask_shift_left(struct cpumask *dstp,
  * @dstp: the result
  * @srcp: the input cpumask
  */
+// ARM10C 20140913
+// p->cpus_allowed: (&init_task)->cpus_allowed, new_mask: &cpu_bit_bitmap[1][0]
 static inline void cpumask_copy(struct cpumask *dstp,
 				const struct cpumask *srcp)
 {
+	// dstp: (&init_task)->cpus_allowed, srcp: &cpu_bit_bitmap[1][0]
+	// cpumask_bits((&init_task)->cpus_allowed): (&init_task)->cpus_allowed->bits,
+	// cpumask_bits(&cpu_bit_bitmap[1][0]): (&cpu_bit_bitmap[1][0])->bits
+	// nr_cpumask_bits: 4
 	bitmap_copy(cpumask_bits(dstp), cpumask_bits(srcp), nr_cpumask_bits);
+	// (&init_task)->cpus_allowed->bits[0]: 1
 }
 
 /**
@@ -570,6 +588,9 @@ static inline void cpumask_copy(struct cpumask *dstp,
  * cpumask_of - the cpumask containing just a given cpu
  * @cpu: the cpu (<= nr_cpu_ids)
  */
+// ARM10C 20140913
+// cpu: 0
+// get_cpu_mask(0): &cpu_bit_bitmap[1][0]
 #define cpumask_of(cpu) (get_cpu_mask(cpu))
 
 /**
@@ -739,11 +760,15 @@ static inline bool alloc_cpumask_var_node(cpumask_var_t *mask, gfp_t flags,
 
 // ARM10C 20140830
 // &vec->mask: &(&(&(&def_root_domain)->cpupri)->pri_to_cpu[0])->mask, GFP_KERNEL: 0xD0
+// ARM10C 20140913
+// &sched_domains_tmpmask, GFP_NOWAIT: 0
 static inline bool zalloc_cpumask_var(cpumask_var_t *mask, gfp_t flags)
 {
 	// *mask: (&(&(&def_root_domain)->cpupri)->pri_to_cpu[0])->mask
+	// *mask: sched_domains_tmpmask
 	cpumask_clear(*mask);
 	// (&(&(&def_root_domain)->cpupri)->pri_to_cpu[0])->mask.bit[0]: 0
+	// sched_domains_tmpmask.bits[0]: 0
 
 	return true;
 }
@@ -808,6 +833,7 @@ void init_cpu_online(const struct cpumask *src);
 // ARM10C 20130831
 // 1 ? (bitmap) : bitmap의 type을 체크하기 위해
 // ARM10C 20140215
+// ARM10C 20140913
 #define to_cpumask(bitmap)						\
 	((struct cpumask *)(1 ? (bitmap)				\
 			    : (void *)sizeof(__check_is_bitmap(bitmap))))
@@ -827,11 +853,21 @@ static inline int __check_is_bitmap(const unsigned long *bitmap)
 extern const unsigned long
 	cpu_bit_bitmap[BITS_PER_LONG+1][BITS_TO_LONGS(NR_CPUS)];
 
+// ARM10C 20140913
+// cpu: 0
 static inline const struct cpumask *get_cpu_mask(unsigned int cpu)
 {
+	// cpu: 0, BITS_PER_LONG: 32, cpu_bit_bitmap[1]
 	const unsigned long *p = cpu_bit_bitmap[1 + cpu % BITS_PER_LONG];
+	// p: &cpu_bit_bitmap[1][0]
+
+	// cpu: 0, BITS_PER_LONG: 32
 	p -= cpu / BITS_PER_LONG;
+	// p: &cpu_bit_bitmap[1][0]
+
+	// p: &cpu_bit_bitmap[1][0]
 	return to_cpumask(p);
+	// return &cpu_bit_bitmap[1][0]
 }
 
 #define cpu_is_offline(cpu)	unlikely(!cpu_online(cpu))

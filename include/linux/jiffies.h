@@ -164,6 +164,7 @@ static inline u64 get_jiffies_64(void)
  * so jiffies wrap bugs show up earlier.
  */
 // ARM10C 20140830
+// ARM10C 20140913
 // HZ: 100
 // INITIAL_JIFFIES: -30000 (0xFFFF8AD0)
 #define INITIAL_JIFFIES ((unsigned long)(unsigned int) (-300*HZ))

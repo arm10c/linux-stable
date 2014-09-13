@@ -115,12 +115,16 @@ struct plist_node {
  */
 // ARM10C 20140830
 // &rt_rq->pushable_tasks: &(&(runqueues)->rt)->pushable_tasks
+// ARM10C 20140913
+// &init_task.pi_waiters
 static inline void
 plist_head_init(struct plist_head *head)
 {
 	// &head->node_list: (&(&(runqueues)->rt)->pushable_tasks)->node_list
+	// &head->node_list: (&init_task.pi_waiters)->node_list
 	INIT_LIST_HEAD(&head->node_list);
 	// (&(&(runqueues)->rt)->pushable_tasks)->node_list 리스트 초기화
+	// (&init_task.pi_waiters)->node_list 리스트 초기화
 }
 
 /**

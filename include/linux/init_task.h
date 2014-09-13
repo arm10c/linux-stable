@@ -112,7 +112,7 @@ extern struct group_info init_groups;
 #else
 #define INIT_TASK_RCU_TREE_PREEMPT(tsk)
 #endif
-#ifdef CONFIG_PREEMPT_RCU
+#ifdef CONFIG_PREEMPT_RCU // CONFIG_PREEMPT_RCU=y
 #define INIT_TASK_RCU_PREEMPT(tsk)					\
 	.rcu_read_lock_nesting = 0,					\
 	.rcu_read_unlock_special = 0,					\
@@ -152,6 +152,8 @@ extern struct task_group root_task_group;
 # define INIT_VTIME(tsk)
 #endif
 
+// ARM10C 20140913
+// INIT_TASK_COMM: "swapper"
 #define INIT_TASK_COMM "swapper"
 
 /*
@@ -164,6 +166,7 @@ extern struct task_group root_task_group;
 // ARM10C 20140510
 // PF_KTHREAD: 0x00200000
 // MAX_PRIO: 140
+// SCHED_NORMAL: 0
 #define INIT_TASK(tsk)							\
 {									\
 	.state		= 0,						\

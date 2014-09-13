@@ -681,6 +681,7 @@ void notify_cpu_starting(unsigned int cpu)
 #define MASK_DECLARE_8(x)	MASK_DECLARE_4(x), MASK_DECLARE_4(x+4)
 
 // ARM10C 20130831
+// ARM10C 20140913
 // cpu_bit_bitmap[33][1]
 const unsigned long cpu_bit_bitmap[BITS_PER_LONG+1][BITS_TO_LONGS(NR_CPUS)] = {
 //      MASK_DECLARE_8(0) 이 아래와 같이 확장됨
@@ -729,7 +730,14 @@ static DECLARE_BITMAP(cpu_present_bits, CONFIG_NR_CPUS) __read_mostly;
 const struct cpumask *const cpu_present_mask = to_cpumask(cpu_present_bits);
 EXPORT_SYMBOL(cpu_present_mask);
 
+// ARM10C 20140913
+// CONFIG_NR_CPUS: 4
+// cpu_active_bits[1]
 static DECLARE_BITMAP(cpu_active_bits, CONFIG_NR_CPUS) __read_mostly;
+
+// ARM10C 20140913
+// to_cpumask(cpu_active_bits): cpu_active_bits[1]
+// cpu_active_mask: cpu_active_bits[1]
 const struct cpumask *const cpu_active_mask = to_cpumask(cpu_active_bits);
 EXPORT_SYMBOL(cpu_active_mask);
 

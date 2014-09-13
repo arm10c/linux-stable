@@ -80,12 +80,15 @@ static __inline__ int get_count_order(unsigned int count)
 
 // ARM10C 20140215
 // src: cpu_possible_mask->bits, BITMAP_LAST_WORD_MASK(4): 0xF
+// ARM10C 20140913
+// 1
 static inline unsigned long hweight_long(unsigned long w)
 {
-	// w: 0xF
-	// hweight32(0xF) 
+	// w: 0xF, hweight32(0xF): 4
+	// w: 0x1, hweight32(0x1): 1
 	return sizeof(w) == 4 ? hweight32(w) : hweight64(w);
 	// hweight32(0xF): 4
+	// hweight32(0x1): 1
 }
 
 /**

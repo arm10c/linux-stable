@@ -8,6 +8,8 @@
 
 // ARM10C 20140215
 // cpu_possible_bits[1]
+// ARM10C 20140913
+// cpu_active_bits[1]
 #define DECLARE_BITMAP(name,bits) \
 	unsigned long name[BITS_TO_LONGS(bits)]
 

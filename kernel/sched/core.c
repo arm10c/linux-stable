@@ -376,7 +376,7 @@ static struct rq *this_rq_lock(void)
 	return rq;
 }
 
-#ifdef CONFIG_SCHED_HRTICK
+#ifdef CONFIG_SCHED_HRTICK // CONFIG_SCHED_HRTICK=y
 /*
  * Use HR-timers to deliver accurate preemption points.
  */
@@ -391,6 +391,7 @@ static void hrtick_clear(struct rq *rq)
  * High-resolution timer tick.
  * Runs from hardirq context with interrupts disabled.
  */
+// ARM10C 20140913
 static enum hrtimer_restart hrtick(struct hrtimer *timer)
 {
 	struct rq *rq = container_of(timer, struct rq, hrtick_timer);
@@ -418,6 +419,8 @@ static int __hrtick_restart(struct rq *rq)
 /*
  * called from hardirq (IPI) context
  */
+// ARM10C 20140913
+// IPI: http://en.wikipedia.org/wiki/Inter-processor_interrupt
 static void __hrtick_start(void *arg)
 {
 	struct rq *rq = arg;
@@ -488,18 +491,38 @@ static inline void init_hrtick(void)
 }
 #endif /* CONFIG_SMP */
 
+// ARM10C 20140913
+// [pcp0] rq: &runqueues
 static void init_rq_hrtick(struct rq *rq)
 {
-#ifdef CONFIG_SMP
+#ifdef CONFIG_SMP // CONFIG_SMP=y
+	// rq->hrtick_csd_pending: (&runqueues)->hrtick_csd_pending
 	rq->hrtick_csd_pending = 0;
+	// rq->hrtick_csd_pending: (&runqueues)->hrtick_csd_pending: 0
 
+	// rq->hrtick_csd.flags: (&runqueues)->hrtick_csd.flags
 	rq->hrtick_csd.flags = 0;
+	// rq->hrtick_csd.flags: (&runqueues)->hrtick_csd.flags: 0
+
+	// rq->hrtick_csd.func: (&runqueues)->hrtick_csd.func
 	rq->hrtick_csd.func = __hrtick_start;
+	// rq->hrtick_csd.func: (&runqueues)->hrtick_csd.func: __hrtick_start
+
+	// rq->hrtick_csd.info: (&runqueues)->hrtick_csd.info, rq: &runqueues
 	rq->hrtick_csd.info = rq;
+	// rq->hrtick_csd.info: (&runqueues)->hrtick_csd.info: &runqueues
 #endif
 
+	// &rq->hrtick_timer: &(&runqueues)->hrtick_timer, CLOCK_MONOTONIC: 1, HRTIMER_MODE_REL: 1
 	hrtimer_init(&rq->hrtick_timer, CLOCK_MONOTONIC, HRTIMER_MODE_REL);
+	// hrtimer_init(hrtick_timer) 한일:
+	// (&runqueues)->hrtick_timer의 값을 0으로 초기화
+	// (&(&runqueues)->hrtick_timer)->base: &hrtimer_bases->clock_base[0]
+	// RB Tree의 (&(&(&runqueues)->hrtick_timer)->node)->node 를 초기화
+
+	// &rq->hrtick_timer.function: &(&runqueues)->hrtick_timerhrtick_timer.function
 	rq->hrtick_timer.function = hrtick;
+	// &rq->hrtick_timer.function: &(&runqueues)->hrtick_timerhrtick_timer.function: hrtick
 }
 #else	/* CONFIG_SCHED_HRTICK */
 static inline void hrtick_clear(struct rq *rq)
@@ -751,22 +774,37 @@ int tg_nop(struct task_group *tg, void *data)
 }
 #endif
 
+// ARM10C 20140913
+// &init_task
 static void set_load_weight(struct task_struct *p)
 {
+	// p->static_prio: (&init_task)->static_prio: 120, MAX_RT_PRIO: 100
 	int prio = p->static_prio - MAX_RT_PRIO;
+	// prio: 20
+
+	// &p->se.load: &(&init_task)->se.load
 	struct load_weight *load = &p->se.load;
+	// load: &(&init_task)->se.load
 
 	/*
 	 * SCHED_IDLE tasks get minimal weight:
 	 */
+	// p->policy: (&init_task)->policy: SCHED_NORMAL: 0, SCHED_IDLE: 5
 	if (p->policy == SCHED_IDLE) {
 		load->weight = scale_load(WEIGHT_IDLEPRIO);
 		load->inv_weight = WMULT_IDLEPRIO;
 		return;
 	}
 
+	// load->weight: (&(&init_task)->se.load)->weight,
+	// prio: 20, prio_to_weight[20]: 1024, scale_load(1024): 1024
 	load->weight = scale_load(prio_to_weight[prio]);
+	// load->weight: (&(&init_task)->se.load)->weight: 1024
+
+	// load->inv_weight: (&(&init_task)->se.load)->inv_weight,
+	// prio: 20, prio_to_wmult[20]: 4194304
 	load->inv_weight = prio_to_wmult[prio];
+	// load->inv_weight: (&(&init_task)->se.load)->inv_weight: 4194304
 }
 
 static void enqueue_task(struct rq *rq, struct task_struct *p, int flags)
@@ -1710,29 +1748,55 @@ int wake_up_state(struct task_struct *p, unsigned int state)
  *
  * __sched_fork() is basic setup used by init_idle() too:
  */
+// ARM10C 20140913
+// 0, idle: &init_task
 static void __sched_fork(unsigned long clone_flags, struct task_struct *p)
 {
+	// p->on_rq: (&init_task)->on_rq
 	p->on_rq			= 0;
+	// p->on_rq: (&init_task)->on_rq: 0
 
+	// p->se.on_rq: (&init_task)->se.on_rq
 	p->se.on_rq			= 0;
-	p->se.exec_start		= 0;
-	p->se.sum_exec_runtime		= 0;
-	p->se.prev_sum_exec_runtime	= 0;
-	p->se.nr_migrations		= 0;
-	p->se.vruntime			= 0;
-	INIT_LIST_HEAD(&p->se.group_node);
+	// p->se.on_rq: (&init_task)->se.on_rq: 0
 
-#ifdef CONFIG_SCHEDSTATS
+	// p->se.exec_start: (&init_task)->se.exec_start
+	p->se.exec_start		= 0;
+	// p->se.exec_start: (&init_task)->se.exec_start: 0
+
+	// p->se.sum_exec_runtime: (&init_task)->se.sum_exec_runtime
+	p->se.sum_exec_runtime		= 0;
+	// p->se.sum_exec_runtime: (&init_task)->se.sum_exec_runtime: 0
+
+	// p->se.prev_sum_exec_runtime: (&init_task)->se.prev_sum_exec_runtime
+	p->se.prev_sum_exec_runtime	= 0;
+	// p->se.prev_sum_exec_runtime: (&init_task)->se.prev_sum_exec_runtime: 0
+
+	// p->se.nr_migrations: (&init_task)->se.nr_migrations
+	p->se.nr_migrations		= 0;
+	// p->se.nr_migrations: (&init_task)->se.nr_migrations: 0
+
+	// p->se.vruntime: (&init_task)->se.vruntime
+	p->se.vruntime			= 0;
+	// p->se.vruntime: (&init_task)->se.vruntime: 0
+
+	// &p->se.group_node: &(&init_task)->se.group_node
+	INIT_LIST_HEAD(&p->se.group_node);
+	// &p->se.group_node: &(&init_task)->se.group_node의 리스트 초기화
+
+#ifdef CONFIG_SCHEDSTATS // CONFIG_SCHEDSTATS=n
 	memset(&p->se.statistics, 0, sizeof(p->se.statistics));
 #endif
 
+	// &p->rt.run_list: &(&init_task)->rt.run_list
 	INIT_LIST_HEAD(&p->rt.run_list);
+	// &p->rt.run_list: &(&init_task)->rt.run_list의 리스트 초기화
 
-#ifdef CONFIG_PREEMPT_NOTIFIERS
+#ifdef CONFIG_PREEMPT_NOTIFIERS // CONFIG_PREEMPT_NOTIFIERS=n
 	INIT_HLIST_HEAD(&p->preempt_notifiers);
 #endif
 
-#ifdef CONFIG_NUMA_BALANCING
+#ifdef CONFIG_NUMA_BALANCING // CONFIG_NUMA_BALANCING=n
 	if (p->mm && atomic_read(&p->mm->mm_users) == 1) {
 		p->mm->numa_next_scan = jiffies + msecs_to_jiffies(sysctl_numa_balancing_scan_delay);
 		p->mm->numa_scan_seq = 0;
@@ -3949,18 +4013,47 @@ void init_idle_bootup_task(struct task_struct *idle)
  * NOTE: this function does not set the idle thread's NEED_RESCHED
  * flag, to make booting more robust.
  */
+// ARM10C 20140913
+// current: init_task, smp_processor_id(): 0
 void init_idle(struct task_struct *idle, int cpu)
 {
+	// cpu: 0, cpu_rq(0): [pcpu0] &runqueues
 	struct rq *rq = cpu_rq(cpu);
+	// rq: [pcpu0] &runqueues
+
 	unsigned long flags;
 
+	// &rq->lock: [pcpu0] &(&runqueues)->lock
 	raw_spin_lock_irqsave(&rq->lock, flags);
+	// &rq->lock: [pcpu0] &(&runqueues)->lock 을 사용하여 lock을 걸고 cpsr을 flags에 저장
 
+	// idle: init_task
 	__sched_fork(0, idle);
-	idle->state = TASK_RUNNING;
-	idle->se.exec_start = sched_clock();
+	// __sched_fork에서 한일:
+	// (&init_task)->on_rq: 0
+	// (&init_task)->se.on_rq: 0
+	// (&init_task)->se.exec_start: 0
+	// (&init_task)->se.sum_exec_runtime: 0
+	// (&init_task)->se.prev_sum_exec_runtime: 0
+	// (&init_task)->se.nr_migrations: 0
+	// (&init_task)->se.vruntime: 0
+	// &(&init_task)->se.group_node의 리스트 초기화
+	// &(&init_task)->rt.run_list의 리스트 초기화
 
+	// idle->state: (&init_task)->state, TASK_RUNNING: 0
+	idle->state = TASK_RUNNING;
+	// idle->state: (&init_task)->state: TASK_RUNNING: 0
+
+	// idle->se.exec_start: (&init_task)->se.exec_start, sched_clock(): 0
+	idle->se.exec_start = sched_clock();
+	// idle->se.exec_start: (&init_task)->se.exec_start: 0
+
+	// idle: &init_task, cpu: 0, cpumask_of(0): &cpu_bit_bitmap[1][0]
 	do_set_cpus_allowed(idle, cpumask_of(cpu));
+	// do_set_cpus_allowed에서 한일:
+	// (&init_task)->cpus_allowed->bits[0]: 1
+	// (&init_task)->nr_cpus_allowed: 1
+
 	/*
 	 * We're having a chicken and egg problem, even though we are
 	 * holding rq->lock, the cpu isn't yet set to this cpu so the
@@ -3972,37 +4065,78 @@ void init_idle(struct task_struct *idle, int cpu)
 	 * Silence PROVE_RCU
 	 */
 	rcu_read_lock();
-	__set_task_cpu(idle, cpu);
-	rcu_read_unlock();
+	// rcu_read_lock에서 한일:
+	// (&init_task)->rcu_read_lock_nesting: 1
 
+	// idle: &init_task, cpu: 0
+	__set_task_cpu(idle, cpu);
+	// __set_task_cpu에서 한일:
+	// ((struct thread_info *)(&init_task)->stack)->cpu: 0
+	// (&init_task)->wake_cpu: 0
+
+	rcu_read_unlock();
+	// rcu_read_unlock에서 한일:
+	// (&init_task)->rcu_read_lock_nesting: 0
+
+	// rq->curr: [pcpu0] (&runqueues)->curr, rq->idle: [pcpu0] (&runqueues)->idle,
+	// idle: &init_task
 	rq->curr = rq->idle = idle;
-#if defined(CONFIG_SMP)
+	// rq->curr: [pcpu0] (&runqueues)->curr: &init_task
+	// rq->idle: [pcpu0] (&runqueues)->idle: &init_task
+
+#if defined(CONFIG_SMP) // CONFIG_SMP=y
+	// idle->on_cpu: (&init_task)->on_cpu
 	idle->on_cpu = 1;
+	// idle->on_cpu: (&init_task)->on_cpu: 1
 #endif
+	// &rq->lock: [pcpu0] &(&runqueues)->lock
 	raw_spin_unlock_irqrestore(&rq->lock, flags);
+	// &rq->lock: [pcpu0] &(&runqueues)->lock 을 사용하여 lock을 풀고 flags에 저장된 cpsr을 복원
 
 	/* Set the preempt count _outside_ the spinlocks! */
+	// idle: &init_task, cpu: 0
 	init_idle_preempt_count(idle, cpu);
+	// ((struct thread_info *)(&init_task)->stack)->preempt_count: PREEMPT_ENABLED: 0
 
 	/*
 	 * The idle tasks have their own, simple scheduling class:
 	 */
+	// idle->sched_class: (&init_task)->sched_class
 	idle->sched_class = &idle_sched_class;
-	ftrace_graph_init_idle_task(idle, cpu);
-	vtime_init_idle(idle, cpu);
-#if defined(CONFIG_SMP)
+	// idle->sched_class: (&init_task)->sched_class: &idle_sched_class
+
+	// idle: &init_task, cpu: 0
+	ftrace_graph_init_idle_task(idle, cpu); // null function
+
+	// idle: &init_task, cpu: 0
+	vtime_init_idle(idle, cpu); // null function
+
+#if defined(CONFIG_SMP) // CONFIG_SMP=y
+	// idle->comm: (&init_task)->comm, INIT_TASK_COMM: "swapper", cpu: 0
 	sprintf(idle->comm, "%s/%d", INIT_TASK_COMM, cpu);
+	// idle->comm: (&init_task)->comm: "swapper/0"
 #endif
 }
 
-#ifdef CONFIG_SMP
+#ifdef CONFIG_SMP // CONFIG_SMP=y
+// ARM10C 20140913
+// idle: &init_task, cpu: 0, cpumask_of(0): &cpu_bit_bitmap[1][0]
 void do_set_cpus_allowed(struct task_struct *p, const struct cpumask *new_mask)
 {
+	// p->sched_class: (&init_task)->sched_class: NULL,
+	// p->sched_class->set_cpus_allowed: (&init_task)->sched_class->set_cpus_allowed: NULL
 	if (p->sched_class && p->sched_class->set_cpus_allowed)
 		p->sched_class->set_cpus_allowed(p, new_mask);
 
+	// p->cpus_allowed: (&init_task)->cpus_allowed, new_mask: &cpu_bit_bitmap[1][0]
 	cpumask_copy(&p->cpus_allowed, new_mask);
+	// (&init_task)->cpus_allowed->bits[0]: 1
+
+	// p->nr_cpus_allowed: (&init_task)->nr_cpus_allowed,
+	// new_mask: &cpu_bit_bitmap[1][0]
+	// cpumask_weight(&cpu_bit_bitmap[1][0]): 1
 	p->nr_cpus_allowed = cpumask_weight(new_mask);
+	// p->nr_cpus_allowed: (&init_task)->nr_cpus_allowed: 1
 }
 
 /*
@@ -4584,8 +4718,9 @@ static int __init migration_init(void)
 early_initcall(migration_init);
 #endif
 
-#ifdef CONFIG_SMP
+#ifdef CONFIG_SMP // CONFIG_SMP=y
 
+// ARM10C 20140913
 static cpumask_var_t sched_domains_tmpmask; /* sched_domains_mutex */
 
 #ifdef CONFIG_SCHED_DEBUG
@@ -4786,13 +4921,18 @@ static void free_rootdomain(struct rcu_head *rcu)
 	kfree(rd);
 }
 
+// ARM10C 20140913
+// [pcp0] rq: &runqueues, &def_root_domain
 static void rq_attach_root(struct rq *rq, struct root_domain *rd)
 {
 	struct root_domain *old_rd = NULL;
 	unsigned long flags;
 
+	// &rq->lock: &(&runqueues)->lock
 	raw_spin_lock_irqsave(&rq->lock, flags);
+	// &rq->lock: &(&runqueues)->lock 를 사용하여 lock 을 걸고 cpsr을 flags에 저장
 
+	// rq->rd: (&runqueues)->rd: NULL
 	if (rq->rd) {
 		old_rd = rq->rd;
 
@@ -4810,15 +4950,28 @@ static void rq_attach_root(struct rq *rq, struct root_domain *rd)
 			old_rd = NULL;
 	}
 
+	// &rq->refcount: &(&runqueues)->refcount: 0
 	atomic_inc(&rd->refcount);
-	rq->rd = rd;
+	// &rq->refcount: &(&runqueues)->refcount: 1
 
+	// rq->rd: (&runqueues)->rd: NULL, rd: &def_root_domain
+	rq->rd = rd;
+	// rq->rd: (&runqueues)->rd: &def_root_domain
+
+	// rq->cpu: (&runqueues)->cpu: 0, rd->span: (&def_root_domain)->span: 0
 	cpumask_set_cpu(rq->cpu, rd->span);
+	// (&def_root_domain)->span: 1
+
+	// rq->cpu: (&runqueues)->cpu: 0, cpu_active_mask: cpu_active_bits[1]: 0
+	// cpumask_test_cpu((&runqueues)->cpu, cpu_active_bits[1]): 0
 	if (cpumask_test_cpu(rq->cpu, cpu_active_mask))
 		set_rq_online(rq);
 
+	// &rq->lock: &(&runqueues)->lock
 	raw_spin_unlock_irqrestore(&rq->lock, flags);
+	// &rq->lock: &(&runqueues)->lock 를 사용하여 lock 을 풀고 flags에 저장되어 있는 cpsr을 복원
 
+	// old_rd: NULL
 	if (old_rd)
 		call_rcu_sched(&old_rd->rcu, free_rootdomain);
 }
@@ -4868,6 +5021,7 @@ out:
  * members (mimicking the global state we have today).
  */
 // ARM10C 20140830
+// ARM10C 20140913
 struct root_domain def_root_domain;
 
 // ARM10C 20140830
@@ -5039,6 +5193,7 @@ cpu_attach_domain(struct sched_domain *sd, struct root_domain *rd, int cpu)
 }
 
 /* cpus with isolated domains */
+// ARM10C 20140913
 static cpumask_var_t cpu_isolated_map;
 
 /* Setup the mask of cpus configured for isolated domains */
@@ -6470,39 +6625,83 @@ void __init sched_init(void)
 		rq->online = 0;
 		// [pcp0] rq->online: (&runqueues)->online: 0
 
+		// [pcp0] rq->idle_stamp: (&runqueues)->idle_stamp
 		rq->idle_stamp = 0;
+		// [pcp0] rq->idle_stamp: (&runqueues)->idle_stamp: 0
+
+		// [pcp0] rq->avg_idle: (&runqueues)->avg_idle,
+		// sysctl_sched_migration_cost: 500000UL
 		rq->avg_idle = 2*sysctl_sched_migration_cost;
+		// [pcp0] rq->avg_idle: (&runqueues)->avg_idle: 1000000UL
+
+		// [pcp0] rq->max_idle_balance_cost: (&runqueues)->max_idle_balance_cost,
+		// sysctl_sched_migration_cost: 500000UL
 		rq->max_idle_balance_cost = sysctl_sched_migration_cost;
+		// [pcp0] rq->max_idle_balance_cost: (&runqueues)->max_idle_balance_cost: 500000UL
 
+		// [pcp0] &rq->cfs_tasks: &(&runqueues)->cfs_tasks
 		INIT_LIST_HEAD(&rq->cfs_tasks);
+		// [pcp0] &rq->cfs_tasks: &(&runqueues)->cfs_tasks 의 list 초기화 수행
 
+		// [pcp0] rq: &runqueues
 		rq_attach_root(rq, &def_root_domain);
-#ifdef CONFIG_NO_HZ_COMMON
+		// rq_attach_root에서 한일:
+		// (&def_root_domain)->span: 1
+		// (&runqueues)->rd: &def_root_domain
+		// &(&runqueues)->refcount: 1
+
+#ifdef CONFIG_NO_HZ_COMMON // CONFIG_NO_HZ_COMMON=y
+		// [pcp0] rq->nohz_flags: (&runqueues)->nohz_flags
 		rq->nohz_flags = 0;
+		// [pcp0] rq->nohz_flags: (&runqueues)->nohz_flags: 0
 #endif
-#ifdef CONFIG_NO_HZ_FULL
+#ifdef CONFIG_NO_HZ_FULL // CONFIG_NO_HZ_FULL=n
 		rq->last_sched_tick = 0;
 #endif
 #endif
+		// [pcp0] rq: &runqueues
 		init_rq_hrtick(rq);
+		// init_rq_hrtick에서 한일:
+		// (&runqueues)->hrtick_csd_pending: 0
+		// (&runqueues)->hrtick_csd.flags: 0
+		// (&runqueues)->hrtick_csd.func: __hrtick_start
+		// (&runqueues)->hrtick_csd.info: &runqueues
+		// (&runqueues)->hrtick_timer의 값을 0으로 초기화
+		// (&(&runqueues)->hrtick_timer)->base: &hrtimer_bases->clock_base[0]
+		// RB Tree의 (&(&(&runqueues)->hrtick_timer)->node)->node 를 초기화
+		// &rq->hrtick_timer.function: &(&runqueues)->hrtick_timerhrtick_timer.function: hrtick
+
+		// [pcp0] &rq->nr_iowait: &(&runqueues)->nr_iowait
 		atomic_set(&rq->nr_iowait, 0);
+		// [pcp0] &rq->nr_iowait: &(&runqueues)->nr_iowait: 0
+		
+		// i: 1 .. 3 까지 루프 수행
 	}
 
 	set_load_weight(&init_task);
+	// set_load_weight에서 한일:
+	// (&(&init_task)->se.load)->weight: 1024
+	// (&(&init_task)->se.load)->inv_weight: 4194304
 
-#ifdef CONFIG_PREEMPT_NOTIFIERS
+#ifdef CONFIG_PREEMPT_NOTIFIERS // CONFIG_PREEMPT_NOTIFIERS=n
 	INIT_HLIST_HEAD(&init_task.preempt_notifiers);
 #endif
 
-#ifdef CONFIG_RT_MUTEXES
+#ifdef CONFIG_RT_MUTEXES // CONFIG_RT_MUTEXES=y
 	plist_head_init(&init_task.pi_waiters);
+	// plist_head_init에서 한일:
+	// (&init_task.pi_waiters)->node_list 리스트 초기화
 #endif
 
 	/*
 	 * The boot idle thread does lazy MMU switching as well:
 	 */
+	// init_mm.mm_count: 1
 	atomic_inc(&init_mm.mm_count);
-	enter_lazy_tlb(&init_mm, current);
+	// init_mm.mm_count: 2
+
+	// current: init_task
+	enter_lazy_tlb(&init_mm, current); // null function
 
 	/*
 	 * Make us the idle thread. Technically, schedule() should not be
@@ -6510,17 +6709,49 @@ void __init sched_init(void)
 	 * but because we are the idle thread, we just pick up running again
 	 * when this runqueue becomes "idle".
 	 */
+	// current: &init_task, smp_processor_id(): 0
 	init_idle(current, smp_processor_id());
+	// init_idle에서 한일:
+	// (&init_task)->on_rq: 0
+	// (&init_task)->se.on_rq: 0
+	// (&init_task)->se.exec_start: 0
+	// (&init_task)->se.sum_exec_runtime: 0
+	// (&init_task)->se.prev_sum_exec_runtime: 0
+	// (&init_task)->se.nr_migrations: 0
+	// (&init_task)->se.vruntime: 0
+	// &(&init_task)->se.group_node의 리스트 초기화
+	// &(&init_task)->rt.run_list의 리스트 초기화
+	// (&init_task)->state: TASK_RUNNING: 0
+	// (&init_task)->se.exec_start: 0
+	// (&init_task)->cpus_allowed->bits[0]: 1
+	// (&init_task)->nr_cpus_allowed: 1
+	// ((struct thread_info *)(&init_task)->stack)->cpu: 0
+	// (&init_task)->wake_cpu: 0
+	// [pcpu0] (&runqueues)->curr: &init_task
+	// [pcpu0] (&runqueues)->idle: &init_task
+	// (&init_task)->on_cpu: 1
+	// ((struct thread_info *)(&init_task)->stack)->preempt_count: PREEMPT_ENABLED: 0
+	// (&init_task)->sched_class: &idle_sched_class
+	// (&init_task)->comm: "swapper/0"
 
+	// jiffies: -30000 (0xFFFFFFFFFFFF8AD0): vmlinux.lds.S 에 있음, LOAD_FREQ: 501
 	calc_load_update = jiffies + LOAD_FREQ;
+	// calc_load_update: -29499 (0xFFFFFFFFFFFF8cc5)
 
 	/*
 	 * During early bootup we pretend to be a normal task:
 	 */
+	// current->sched_class: (&init_task)->sched_class
 	current->sched_class = &fair_sched_class;
+	// current->sched_class: (&init_task)->sched_class: &fair_sched_class
 
-#ifdef CONFIG_SMP
+#ifdef CONFIG_SMP // CONFIG_SMP=y
+	// GFP_NOWAIT: 0
 	zalloc_cpumask_var(&sched_domains_tmpmask, GFP_NOWAIT);
+	// sched_domains_tmpmask.bits[0]: 0
+
+// 2014/09/13 종료
+
 	/* May be allocated at isolcpus cmdline parse time */
 	if (cpu_isolated_map == NULL)
 		zalloc_cpumask_var(&cpu_isolated_map, GFP_NOWAIT);

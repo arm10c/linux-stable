@@ -135,6 +135,8 @@ print_cfs_rq(struct seq_file *m, int cpu, struct cfs_rq *cfs_rq);
  * modifying one set can't modify the other one by
  * mistake.
  */
+// ARM10C 20140913
+// TASK_RUNNING: 0
 #define TASK_RUNNING		0
 #define TASK_INTERRUPTIBLE	1
 // ARM10C 20140315
@@ -944,6 +946,7 @@ struct mempolicy;
 struct pipe_inode_info;
 struct uts_namespace;
 
+// ARM10C 20140913
 struct load_weight {
 	unsigned long weight;
 	u32 inv_weight;
@@ -997,6 +1000,7 @@ struct sched_statistics {
 };
 #endif
 
+// ARM10C 20140913
 struct sched_entity {
 	struct load_weight	load;		/* for load-balancing */
 	struct rb_node		run_node;
@@ -1010,11 +1014,11 @@ struct sched_entity {
 
 	u64			nr_migrations;
 
-#ifdef CONFIG_SCHEDSTATS
+#ifdef CONFIG_SCHEDSTATS // CONFIG_SCHEDSTATS=n
 	struct sched_statistics statistics;
 #endif
 
-#ifdef CONFIG_FAIR_GROUP_SCHED
+#ifdef CONFIG_FAIR_GROUP_SCHED // CONFIG_FAIR_GROUP_SCHED=n
 	struct sched_entity	*parent;
 	/* rq on which this entity is (to be) queued: */
 	struct cfs_rq		*cfs_rq;
@@ -1022,7 +1026,7 @@ struct sched_entity {
 	struct cfs_rq		*my_q;
 #endif
 
-#ifdef CONFIG_SMP
+#ifdef CONFIG_SMP // CONFIG_SMP=y
 	/* Per-entity load-tracking */
 	struct sched_avg	avg;
 #endif
@@ -1053,7 +1057,9 @@ enum perf_event_task_context {
 	perf_sw_context,
 	perf_nr_task_contexts,
 };
+
 // ARM10C 20140315
+// ARM10C 20140913
 struct task_struct {
 	volatile long state;	/* -1 unrunnable, 0 runnable, >0 stopped */
 	void *stack;
@@ -1824,7 +1830,8 @@ static inline void tsk_restore_flags(struct task_struct *task,
 	task->flags |= orig_flags & flags;
 }
 
-#ifdef CONFIG_SMP
+#ifdef CONFIG_SMP // CONFIG_SMP=y
+// ARM10C 20140913
 extern void do_set_cpus_allowed(struct task_struct *p,
 			       const struct cpumask *new_mask);
 
@@ -1998,6 +2005,7 @@ void yield(void);
 extern struct exec_domain	default_exec_domain;
 
 // ARM10C 20140315
+// ARM10C 20140913
 union thread_union {
 	struct thread_info thread_info;
 	unsigned long stack[THREAD_SIZE/sizeof(long)];
@@ -2373,6 +2381,9 @@ static inline void threadgroup_unlock(struct task_struct *tsk) {}
 
 // ARM10C 20140315
 // task_thread_info(init_task): ((struct thread_info *)(init_task)->stack)
+// ARM10C 20140913
+// p: &init_task
+// task_thread_info(&init_task): ((struct thread_info *)(&init_task)->stack)
 #define task_thread_info(task)	((struct thread_info *)(task)->stack)
 #define task_stack_page(task)	((task)->stack)
 

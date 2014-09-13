@@ -64,6 +64,7 @@ unsigned long this_cpu_load(void)
 
 /* Variables and functions for calc_load */
 atomic_long_t calc_load_tasks;
+// ARM10C 20140913
 unsigned long calc_load_update;
 unsigned long avenrun[3];
 EXPORT_SYMBOL(avenrun); /* should be removed */

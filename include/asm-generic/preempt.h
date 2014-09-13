@@ -3,6 +3,8 @@
 
 #include <linux/thread_info.h>
 
+// ARM10C 20140913
+// PREEMPT_ENABLED: 0
 #define PREEMPT_ENABLED	(0)
 
 // ARM10C 20130824
@@ -32,6 +34,14 @@ static __always_inline void preempt_count_set(int pc)
 	task_thread_info(p)->preempt_count = PREEMPT_DISABLED; \
 } while (0)
 
+// ARM10C 20140913
+// idle: &init_task, cpu: 0
+// PREEMPT_ENABLED: 0
+// task_thread_info(&init_task): ((struct thread_info *)(&init_task)->stack)
+//
+// #define init_idle_preempt_count(&init_task, cpu) do {
+// 	((struct thread_info *)(&init_task)->stack)->preempt_count = 0;
+// } while (0)
 #define init_idle_preempt_count(p, cpu) do { \
 	task_thread_info(p)->preempt_count = PREEMPT_ENABLED; \
 } while (0)

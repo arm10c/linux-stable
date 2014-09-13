@@ -31,6 +31,7 @@ struct hrtimer_cpu_base;
  * Mode arguments of xxx_hrtimer functions:
  */
 // ARM10C 20140830
+// ARM10C 20140913
 enum hrtimer_mode {
 	// HRTIMER_MODE_ABS: 0
 	HRTIMER_MODE_ABS = 0x0,		/* Time value is absolute */

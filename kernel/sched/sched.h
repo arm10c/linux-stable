@@ -62,6 +62,8 @@ extern void update_cpu_load_active(struct rq *this_rq);
 # define scale_load_down(w)	((w) >> SCHED_LOAD_RESOLUTION)
 #else
 # define SCHED_LOAD_RESOLUTION	0
+// ARM10C 20140913
+// 1024
 # define scale_load(w)		(w)
 # define scale_load_down(w)	(w)
 #endif
@@ -724,7 +726,7 @@ extern int group_balance_cpu(struct sched_group *sg);
 #include "stats.h"
 #include "auto_group.h"
 
-#ifdef CONFIG_CGROUP_SCHED
+#ifdef CONFIG_CGROUP_SCHED // CONFIG_CGROUP_SCHED=n
 
 /*
  * Return the group to which this tasks belongs.
@@ -764,6 +766,8 @@ static inline void set_task_rq(struct task_struct *p, unsigned int cpu)
 
 #else /* CONFIG_CGROUP_SCHED */
 
+// ARM10C 20140913
+// p: &init_task, cpu: 0
 static inline void set_task_rq(struct task_struct *p, unsigned int cpu) { }
 static inline struct task_group *task_group(struct task_struct *p)
 {
@@ -772,18 +776,31 @@ static inline struct task_group *task_group(struct task_struct *p)
 
 #endif /* CONFIG_CGROUP_SCHED */
 
+// ARM10C 20140913
+// idle: &init_task, cpu: 0
 static inline void __set_task_cpu(struct task_struct *p, unsigned int cpu)
 {
-	set_task_rq(p, cpu);
-#ifdef CONFIG_SMP
+	// p: &init_task, cpu: 0
+	set_task_rq(p, cpu); // null function
+
+#ifdef CONFIG_SMP // CONFIG_SMP=y
 	/*
 	 * After ->cpu is set up to a new value, task_rq_lock(p, ...) can be
 	 * successfuly executed on another CPU. We must ensure that updates of
 	 * per-task data have been completed by this moment.
 	 */
 	smp_wmb();
+	// memory barrier 수행
+
+	// p: &init_task, cpu: 0
+	// (&init_task)->stack: &init_thread_info
+	// task_thread_info(&init_task)->cpu: ((struct thread_info *)(&init_task)->stack)->cpu
 	task_thread_info(p)->cpu = cpu;
+	// task_thread_info(&init_task)->cpu: ((struct thread_info *)(&init_task)->stack)->cpu: 0
+
+	// p->wake_cpu: (&init_task)->wake_cpu, cpu: 0
 	p->wake_cpu = cpu;
+	// p->wake_cpu: (&init_task)->wake_cpu: 0
 #endif
 }
 
@@ -993,6 +1010,7 @@ static inline void finish_lock_switch(struct rq *rq, struct task_struct *prev)
  * If a task goes up by ~10% and another task goes down by ~10% then
  * the relative distance between them is ~25%.)
  */
+// ARM10C 20140913
 static const int prio_to_weight[40] = {
  /* -20 */     88761,     71755,     56483,     46273,     36291,
  /* -15 */     29154,     23254,     18705,     14949,     11916,
@@ -1011,6 +1029,7 @@ static const int prio_to_weight[40] = {
  * precalculated inverse to speed up arithmetics by turning divisions
  * into multiplications:
  */
+// ARM10C 20140913
 static const u32 prio_to_wmult[40] = {
  /* -20 */     48388,     59856,     76040,     92818,    118348,
  /* -15 */    147320,    184698,    229616,    287308,    360437,
@@ -1032,6 +1051,7 @@ static const u32 prio_to_wmult[40] = {
 
 #define DEQUEUE_SLEEP		1
 
+// ARM10C 20140913
 struct sched_class {
 	const struct sched_class *next;
 
@@ -1045,7 +1065,7 @@ struct sched_class {
 	struct task_struct * (*pick_next_task) (struct rq *rq);
 	void (*put_prev_task) (struct rq *rq, struct task_struct *p);
 
-#ifdef CONFIG_SMP
+#ifdef CONFIG_SMP // CONFIG_SMP=y
 	int  (*select_task_rq)(struct task_struct *p, int task_cpu, int sd_flag, int flags);
 	void (*migrate_task_rq)(struct task_struct *p, int next_cpu);
 
@@ -1073,7 +1093,7 @@ struct sched_class {
 	unsigned int (*get_rr_interval) (struct rq *rq,
 					 struct task_struct *task);
 
-#ifdef CONFIG_FAIR_GROUP_SCHED
+#ifdef CONFIG_FAIR_GROUP_SCHED // CONFIG_FAIR_GROUP_SCHED=n
 	void (*task_move_group) (struct task_struct *p, int on_rq);
 #endif
 };

@@ -68,9 +68,13 @@ module_param(rcu_expedited, int, 0);
  * Just increment ->rcu_read_lock_nesting, shared state will be updated
  * if we block.
  */
+// ARM10C 20140913
 void __rcu_read_lock(void)
 {
+	// current->rcu_read_lock_nesting: (&init_task)->rcu_read_lock_nesting: 0
 	current->rcu_read_lock_nesting++;
+	// current->rcu_read_lock_nesting: (&init_task)->rcu_read_lock_nesting: 1
+
 	barrier();  /* critical section after entry code. */
 }
 EXPORT_SYMBOL_GPL(__rcu_read_lock);
@@ -82,25 +86,42 @@ EXPORT_SYMBOL_GPL(__rcu_read_lock);
  * invoke rcu_read_unlock_special() to clean up after a context switch
  * in an RCU read-side critical section and other special cases.
  */
+// ARM10C 20140913
 void __rcu_read_unlock(void)
 {
+	// current: &init_task
 	struct task_struct *t = current;
+	// t: &init_task
 
+	// t->rcu_read_lock_nesting: (&init_task)->rcu_read_lock_nesting: 1
 	if (t->rcu_read_lock_nesting != 1) {
 		--t->rcu_read_lock_nesting;
 	} else {
 		barrier();  /* critical section before exit code. */
+		// barrier 수행
+
+		// t->rcu_read_lock_nesting: (&init_task)->rcu_read_lock_nesting, INT_MIN: 0x80000000
 		t->rcu_read_lock_nesting = INT_MIN;
-#ifdef CONFIG_PROVE_RCU_DELAY
+		// t->rcu_read_lock_nesting: (&init_task)->rcu_read_lock_nesting: 0x80000000
+
+#ifdef CONFIG_PROVE_RCU_DELAY // CONFIG_PROVE_RCU_DELAY=n
 		udelay(10); /* Make preemption more probable. */
 #endif /* #ifdef CONFIG_PROVE_RCU_DELAY */
+
 		barrier();  /* assign before ->rcu_read_unlock_special load */
+		// barrier 수행
+
+		// t->rcu_read_unlock_special: (&init_task)->rcu_read_unlock_special: 0
 		if (unlikely(ACCESS_ONCE(t->rcu_read_unlock_special)))
 			rcu_read_unlock_special(t);
 		barrier();  /* ->rcu_read_unlock_special load before assign */
+		// barrier 수행
+
+		// t->rcu_read_lock_nesting: (&init_task)->rcu_read_lock_nesting: 0x80000000
 		t->rcu_read_lock_nesting = 0;
+		// t->rcu_read_lock_nesting: (&init_task)->rcu_read_lock_nesting: 0
 	}
-#ifdef CONFIG_PROVE_LOCKING
+#ifdef CONFIG_PROVE_LOCKING // CONFIG_PROVE_LOCKING=n
 	{
 		int rrln = ACCESS_ONCE(t->rcu_read_lock_nesting);
 

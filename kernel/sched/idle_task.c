@@ -87,6 +87,7 @@ static unsigned int get_rr_interval_idle(struct rq *rq, struct task_struct *task
 /*
  * Simple, special scheduling class for the per-CPU idle tasks:
  */
+// ARM10C 20140913
 const struct sched_class idle_sched_class = {
 	/* .next is NULL */
 	/* no enqueue/yield_task for idle tasks */
@@ -99,7 +100,7 @@ const struct sched_class idle_sched_class = {
 	.pick_next_task		= pick_next_task_idle,
 	.put_prev_task		= put_prev_task_idle,
 
-#ifdef CONFIG_SMP
+#ifdef CONFIG_SMP // CONFIG_SMP=y
 	.select_task_rq		= select_task_rq_idle,
 	.pre_schedule		= pre_schedule_idle,
 	.post_schedule		= post_schedule_idle,

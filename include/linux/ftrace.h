@@ -761,6 +761,8 @@ static inline void unpause_graph_tracing(void)
 
 static inline void ftrace_graph_init_task(struct task_struct *t) { }
 static inline void ftrace_graph_exit_task(struct task_struct *t) { }
+// ARM10C 20140913
+// idle: &init_task, cpu: 0
 static inline void ftrace_graph_init_idle_task(struct task_struct *t, int cpu) { }
 
 static inline int register_ftrace_graph(trace_func_graph_ret_t retfunc,

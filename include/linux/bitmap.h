@@ -164,6 +164,7 @@ extern int bitmap_ord_to_pos(const unsigned long *bitmap, int n, int bits);
 // nbits: 4
 // ARM10C 20140301
 // nbits: 8
+// ARM10C 20140913
 #define small_const_nbits(nbits) \
 	(__builtin_constant_p(nbits) && (nbits) <= BITS_PER_LONG)
 
@@ -200,11 +201,18 @@ static inline void bitmap_fill(unsigned long *dst, int nbits)
 	// dchunk->populated[0]: 0xFF
 }
 
+// ARM10C 20140913
+// cpumask_bits((&init_task)->cpus_allowed): (&init_task)->cpus_allowed->bits,
+// cpumask_bits(&cpu_bit_bitmap[1][0]): (&cpu_bit_bitmap[1][0])->bits
+// nr_cpumask_bits: 4
 static inline void bitmap_copy(unsigned long *dst, const unsigned long *src,
 			int nbits)
 {
+	// nbits: 4, small_const_nbits(4): true
 	if (small_const_nbits(nbits))
+		// *dst: (&init_task)->cpus_allowed->bits[0], *src: (&cpu_bit_bitmap[1][0])->bits[0]: 1
 		*dst = *src;
+		// *dst: (&init_task)->cpus_allowed->bits[0]: 1
 	else {
 		int len = BITS_TO_LONGS(nbits) * sizeof(unsigned long);
 		memcpy(dst, src, len);
@@ -299,14 +307,21 @@ static inline int bitmap_full(const unsigned long *src, int nbits)
 
 // ARM10C 20140215
 // cpumask_bits(cpu_possible_mask): cpu_possible_mask->bits, nr_cpumask_bits: 4
+// ARM10C 20140913
+// cpumask_bits(&cpu_bit_bitmap[1][0]): (&cpu_bit_bitmap[1][0])->bits, nr_cpumask_bits: 4
 static inline int bitmap_weight(const unsigned long *src, int nbits)
 {
 	// nbits: 4
 	// small_const_nbits(4): 1
+	// nbits: 4
+	// small_const_nbits(4): 1
 	if (small_const_nbits(nbits))
 		// src: cpu_possible_mask->bits, BITMAP_LAST_WORD_MASK(4): 0xF
+		// *src: (&cpu_bit_bitmap[1][0])->bits[0]: 1, BITMAP_LAST_WORD_MASK(4): 0xF
+		// hweight_long(1): 1
 		return hweight_long(*src & BITMAP_LAST_WORD_MASK(nbits));
-		// return 4 
+		// return 4
+		// return 1
 
 	return __bitmap_weight(src, nbits);
 }

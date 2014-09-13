@@ -69,9 +69,11 @@
 // access types. Encoded as option = 0b1011.
 // 공유자원을 다른 cpu core가 사용할수 있게 해주는 옵션
 #define smp_mb()	dmb(ish)
+// ARM10C 20140913
 #define smp_rmb()	smp_mb()
 // ARM10C 20140308
 // ARM10C 20140322
+// ARM10C 20140913
 #define smp_wmb()	dmb(ishst)
 #endif
 

@@ -132,7 +132,7 @@ static inline void rcu_scheduler_starting(void)
 }
 #endif /* #else #ifdef CONFIG_DEBUG_LOCK_ALLOC */
 
-#if defined(CONFIG_DEBUG_LOCK_ALLOC) || defined(CONFIG_RCU_TRACE)
+#if defined(CONFIG_DEBUG_LOCK_ALLOC) || defined(CONFIG_RCU_TRACE) // CONFIG_DEBUG_LOCK_ALLOC=n, CONFIG_RCU_TRACE=n
 
 static inline bool rcu_is_watching(void)
 {
@@ -141,6 +141,7 @@ static inline bool rcu_is_watching(void)
 
 #else /* defined(CONFIG_DEBUG_LOCK_ALLOC) || defined(CONFIG_RCU_TRACE) */
 
+// ARM10C 20140913
 static inline bool rcu_is_watching(void)
 {
 	return true;

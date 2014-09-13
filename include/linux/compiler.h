@@ -38,12 +38,15 @@ extern void __chk_io_ptr(const volatile void __iomem *);
 # define __builtin_warning(x, y...) (1)
 # define __must_hold(x)
 // ARM10C 20140405
+// ARM10C 20140913
 # define __acquires(x)
 // ARM10C 20140412
 # define __releases(x)
 // ARM10C 20140621
+// ARM10C 20140913
 # define __acquire(x) (void)0
 // ARM10C 20140621
+// ARM10C 20140913
 # define __release(x) (void)0
 # define __cond_lock(x,c) (c) //ARM10C this
 // ARM10C 20140308
