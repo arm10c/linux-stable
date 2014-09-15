@@ -507,8 +507,10 @@ static inline bool cpumask_full(const struct cpumask *srcp)
 // new_mask: &cpu_bit_bitmap[1][0]
 static inline unsigned int cpumask_weight(const struct cpumask *srcp)
 {
-	// cpumask_bits(cpu_possible_mask): cpu_possible_mask->bits, nr_cpumask_bits: 4
+	// srcp: cpu_possible_mask, cpumask_bits(cpu_possible_mask): cpu_possible_mask->bits, nr_cpumask_bits: 4
+	// bitmap_weight(cpu_possible_mask->bits, 4): 4
 	// srcp: &cpu_bit_bitmap[1][0], cpumask_bits(&cpu_bit_bitmap[1][0]): (&cpu_bit_bitmap[1][0])->bits, nr_cpumask_bits: 4
+	// bitmap_weight((&cpu_bit_bitmap[1][0])->bits, 4): 1
 	return bitmap_weight(cpumask_bits(srcp), nr_cpumask_bits);
 	// return 4
 	// return 1

@@ -6580,7 +6580,7 @@ void __init sched_init(void)
 			// [pcp0] j: 0, rq->cpu_load[0]: (&runqueues)->cpu_load[0]
 			rq->cpu_load[j] = 0;
 			// [pcp0] j: 0, rq->cpu_load[0]: (&runqueues)->cpu_load[0]: 0
-			// j: 1 .. 5 까지 수행
+			// j: 1 .. 4 까지 수행
 
 		// [pcp0] rq->last_load_update_tick: (&runqueues)->last_load_update_tick
 		// jiffies: -30000 (0xFFFFFFFFFFFF8AD0): vmlinux.lds.S 에 있음

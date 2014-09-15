@@ -43,9 +43,10 @@
  * updating starting before the write_seqcountbeqin() and ending
  * after the write_seqcount_end().
  */
+// ARM10C 20140913
 typedef struct seqcount {
 	unsigned sequence;
-#ifdef CONFIG_DEBUG_LOCK_ALLOC
+#ifdef CONFIG_DEBUG_LOCK_ALLOC // CONFIG_DEBUG_LOCK_ALLOC=n
 	struct lockdep_map dep_map;
 #endif
 } seqcount_t;
@@ -103,17 +104,25 @@ static inline void seqcount_lockdep_reader_access(const seqcount_t *s)
  * Use carefully, only in critical code, and comment how the barrier is
  * provided.
  */
+// ARM10C 20140913
+// s: &cd.seq
 static inline unsigned __read_seqcount_begin(const seqcount_t *s)
 {
 	unsigned ret;
 
 repeat:
+	// s->sequence: (&cd.seq)->sequence: 0
 	ret = ACCESS_ONCE(s->sequence);
+	// ret: 0
+
 	if (unlikely(ret & 1)) {
 		cpu_relax();
 		goto repeat;
 	}
+
+	// ret: 0
 	return ret;
+	// return 0
 }
 
 /**
@@ -125,11 +134,20 @@ repeat:
  * seqcount, but without any lockdep checking. Validity of the critical
  * section is tested by checking read_seqcount_retry function.
  */
+// ARM10C 20140913
+// &cd.seq
 static inline unsigned raw_read_seqcount_begin(const seqcount_t *s)
 {
+	// s: &cd.seq, __read_seqcount_begin(&cd.seq): 0
 	unsigned ret = __read_seqcount_begin(s);
+	// ret: 0
+
 	smp_rmb();
+	// memmory barrier 수행
+
+	// ret: 0
 	return ret;
+	// return 0
 }
 
 /**
@@ -184,9 +202,13 @@ static inline unsigned raw_seqcount_begin(const seqcount_t *s)
  * Use carefully, only in critical code, and comment how the barrier is
  * provided.
  */
+// ARM10C 20140913
+// s: &cd.seq, start: 0
 static inline int __read_seqcount_retry(const seqcount_t *s, unsigned start)
 {
+	// s->sequence: (&cd.seq)->sequence: 0, start: 0
 	return unlikely(s->sequence != start);
+	// return 0
 }
 
 /**
@@ -199,10 +221,16 @@ static inline int __read_seqcount_retry(const seqcount_t *s, unsigned start)
  * If the critical section was invalid, it must be ignored (and typically
  * retried).
  */
+// ARM10C 20140913
+// &cd.seq, seq: 0
 static inline int read_seqcount_retry(const seqcount_t *s, unsigned start)
 {
 	smp_rmb();
+	// memory barrier 수행
+
+	// s: &cd.seq, start: 0, __read_seqcount_retry(&cd.seq, 0): 0
 	return __read_seqcount_retry(s, start);
+	// return 0
 }
 
 

@@ -18,6 +18,7 @@
 #include <linux/seqlock.h>
 #include <linux/bitops.h>
 
+// ARM10C 20140913
 struct clock_data {
 	ktime_t wrap_kt;
 	u64 epoch_ns;
@@ -34,19 +35,25 @@ static int irqtime = -1;
 
 core_param(irqtime, irqtime, int, 0400);
 
+// ARM10C 20140913
+// NSEC_PER_SEC: 1000000000L, HZ: 100
 static struct clock_data cd = {
 	.mult	= NSEC_PER_SEC / HZ,
 };
 
+// ARM10C 20140913
 static u64 __read_mostly sched_clock_mask;
 
+// ARM10C 20140913
 static u64 notrace jiffy_sched_clock_read(void)
 {
 	/*
 	 * We don't need to use get_jiffies_64 on 32-bit arches here
 	 * because we register with BITS_PER_LONG
 	 */
+	// jiffies: -30000 (0xFFFFFFFFFFFF8AD0), INITIAL_JIFFIES: -30000 (0xFFFF8AD0)
 	return (u64)(jiffies - INITIAL_JIFFIES);
+	// return 0
 }
 
 static u32 __read_mostly (*read_sched_clock_32)(void);
@@ -56,13 +63,19 @@ static u64 notrace read_sched_clock_32_wrapper(void)
 	return read_sched_clock_32();
 }
 
+// ARM10C 20140913
 static u64 __read_mostly (*read_sched_clock)(void) = jiffy_sched_clock_read;
 
+// ARM10C 20140913
+// cyc: 0, cd.mult: 10000000, cd.shift: 0
 static inline u64 notrace cyc_to_ns(u64 cyc, u32 mult, u32 shift)
 {
+	// cyc: 0, mult: 10000000, shift: 0
 	return (cyc * mult) >> shift;
+	// return 0
 }
 
+// ARM10C 20140913
 unsigned long long notrace sched_clock(void)
 {
 	u64 epoch_ns;
@@ -70,18 +83,38 @@ unsigned long long notrace sched_clock(void)
 	u64 cyc;
 	unsigned long seq;
 
+	// cd.suspended: 0
 	if (cd.suspended)
 		return cd.epoch_ns;
 
 	do {
+		// raw_read_seqcount_begin(&cd.seq): 0
 		seq = raw_read_seqcount_begin(&cd.seq);
+		// seq: 0
+
+		// cd.epoch_cyc: 0
 		epoch_cyc = cd.epoch_cyc;
+		// epoch_cyc: 0
+
+		// cd.epoch_ns: 0
 		epoch_ns = cd.epoch_ns;
+		// epoch_ns: 0
+
+		// seq: 0, read_seqcount_retry(&cd.seq, 0): 0
 	} while (read_seqcount_retry(&cd.seq, seq));
 
+	// read_sched_clock(): 0
 	cyc = read_sched_clock();
+	// cyc: 0
+
+	// cyc: 0, epoch_cyc: 0, sched_clock_mask: 0
 	cyc = (cyc - epoch_cyc) & sched_clock_mask;
+	// cyc: 0
+
+	// epoch_ns: 0, cyc: 0, cd.mult: 10000000, cd.shift: 0
+	// cyc_to_ns(0, 10000000, 0): 0
 	return epoch_ns + cyc_to_ns(cyc, cd.mult, cd.shift);
+	// return 0
 }
 
 /*
