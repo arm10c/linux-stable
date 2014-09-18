@@ -1,6 +1,13 @@
 #IAMROOT.ORG Kernel스터디10차(ARM)
 
 #HISTORY
+  - 69th (2014/09/13) week study : [69차 스터디](https://github.com/arm10c/linux-stable/blob/master/Reference/88_Review/a10c_69.md)
+   - sched_init()를 계속 분석
+   - sched_init()::for_each_possible_cpu(i) { ... }
+   - sched_init()->set_load_weight()
+   - sched_init()->plist_head_init()
+   - sched_init()->init_idle()
+   - sched_init()->zalloc_cpumask_var()
   - 68th (2014/08/30) week study : [68차 스터디](https://github.com/arm10c/linux-stable/blob/master/Reference/88_Review/a10c_68.md)
     - sched_init()
 	- rq 설정 (for_each_possible_cpu(i))
