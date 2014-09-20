@@ -669,14 +669,22 @@ asmlinkage void __init start_kernel(void)
 	 * time - but meanwhile we still have a functioning scheduler.
 	 */
 	sched_init();
+	// scheduler가 사용하는 자료 구조 초기화, idle_threads를 init_task로 세팅
+
 	/*
 	 * Disable preemption - early bootup scheduling is extremely
 	 * fragile until we cpu_idle() for the first time.
 	 */
 	preempt_disable();
+	// preempt count를 증가시켜 preemption 못하도록 막음
+
+	// irqs_disabled(): 1
 	if (WARN(!irqs_disabled(), "Interrupts were enabled *very* early, fixing it\n"))
 		local_irq_disable();
+
 	idr_init_cache();
+	// integer ID management로 사용하는 idr_layer_cache에 kmem_cache#21 을 생성 및 초기화 후 할당
+
 	rcu_init();
 	tick_nohz_init();
 	context_tracking_init();

@@ -533,6 +533,11 @@ static inline void list_splice_tail_init(struct list_head *list,
 // #define list_for_each_entry(p, &n->partial, lru):
 // for (p = list_first_entry(&n->partial, typeof(*p), lru);
 //      &p->lru != (&n->partial); p = list_next_entry(p, lru))
+//
+// ARM10C 20140920
+// #define: list_for_each_entry(s, &slab_caches, list):
+// for (s = list_first_entry(&slab_caches, typeof(*s), list);
+//      &s->list != (&slab_caches); s = list_next_entry(s, list))
 #define list_for_each_entry(pos, head, member)				\
 	for (pos = list_first_entry(head, typeof(*pos), member);	\
 	     &pos->member != (head);					\

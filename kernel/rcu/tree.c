@@ -107,6 +107,9 @@ static struct rcu_state *rcu_state;
 LIST_HEAD(rcu_struct_flavors);
 
 /* Increase (but not decrease) the CONFIG_RCU_FANOUT_LEAF at boot time. */
+// ARM10C 20140920
+// CONFIG_RCU_FANOUT_LEAF: 16
+// rcu_fanout_leaf: 16
 static int rcu_fanout_leaf = CONFIG_RCU_FANOUT_LEAF;
 module_param(rcu_fanout_leaf, int, 0444);
 int rcu_num_lvls __read_mostly = RCU_NUM_LVLS;
@@ -239,7 +242,13 @@ module_param(blimit, long, 0444);
 module_param(qhimark, long, 0444);
 module_param(qlowmark, long, 0444);
 
+// ARM10C 20140920
+// ULONG_MAX 0xFFFFFFFF
+// jiffies_till_first_fqs: 0xFFFFFFFF
 static ulong jiffies_till_first_fqs = ULONG_MAX;
+// ARM10C 20140920
+// ULONG_MAX 0xFFFFFFFF
+// jiffies_till_next_fqs: 0xFFFFFFFF
 static ulong jiffies_till_next_fqs = ULONG_MAX;
 
 module_param(jiffies_till_first_fqs, ulong, 0644);
@@ -3321,12 +3330,18 @@ static void __init rcu_init_one(struct rcu_state *rsp,
  * replace the definitions in tree.h because those are needed to size
  * the ->node array in the rcu_state structure.
  */
+// ARM10C 20140920
 static void __init rcu_init_geometry(void)
 {
 	ulong d;
 	int i;
 	int j;
+
+	// nr_cpu_ids: 4
 	int n = nr_cpu_ids;
+	// n: 4
+
+	// MAX_RCU_LVLS: 4
 	int rcu_capacity[MAX_RCU_LVLS + 1];
 
 	/*
@@ -3336,16 +3351,28 @@ static void __init rcu_init_geometry(void)
 	 * value, which is a function of HZ, then adding one for each
 	 * RCU_JIFFIES_FQS_DIV CPUs that might be on the system.
 	 */
+	// RCU_JIFFIES_TILL_FORCE_QS: 1, nr_cpu_ids: 4, RCU_JIFFIES_FQS_DIV: 256
 	d = RCU_JIFFIES_TILL_FORCE_QS + nr_cpu_ids / RCU_JIFFIES_FQS_DIV;
+	// d: 1
+
+	// jiffies_till_first_fqs: 0xFFFFFFFF, ULONG_MAX: 0xFFFFFFFF
 	if (jiffies_till_first_fqs == ULONG_MAX)
+		// d: 1
 		jiffies_till_first_fqs = d;
+		// jiffies_till_first_fqs: 1
+
+	// jiffies_till_next_fqs: 0xFFFFFFFF, ULONG_MAX: 0xFFFFFFFF
 	if (jiffies_till_next_fqs == ULONG_MAX)
+		// d: 1
 		jiffies_till_next_fqs = d;
+		// jiffies_till_next_fqs: 1
 
 	/* If the compile-time values are accurate, just leave. */
+	// rcu_fanout_leaf: 16, CONFIG_RCU_FANOUT_LEAF: 16, nr_cpu_ids: 4, NR_CPUS: 4
 	if (rcu_fanout_leaf == CONFIG_RCU_FANOUT_LEAF &&
 	    nr_cpu_ids == NR_CPUS)
 		return;
+		// return 수행
 
 	/*
 	 * Compute number of nodes that can be handled an rcu_node tree
@@ -3391,12 +3418,19 @@ static void __init rcu_init_geometry(void)
 	rcu_num_nodes -= n;
 }
 
+// ARM10C 20140920
 void __init rcu_init(void)
 {
 	int cpu;
 
 	rcu_bootup_announce();
 	rcu_init_geometry();
+	// rcu_init_geometry에서 한일:
+	// jiffies_till_first_fqs: 1
+	// jiffies_till_next_fqs: 1
+
+// 2014/09/20 종료
+	
 	rcu_init_one(&rcu_bh_state, &rcu_bh_data);
 	rcu_init_one(&rcu_sched_state, &rcu_sched_data);
 	__rcu_init_preempt();

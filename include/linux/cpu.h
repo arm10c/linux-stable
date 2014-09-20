@@ -124,6 +124,14 @@ enum {
 //      { .notifier_call = page_alloc_cpu_notify, .priority = 0 };
 //	register_cpu_notifier(&page_alloc_cpu_notify_nb);
 // }
+//
+// ARM10C 20140920
+// cpu_notifier(sched_ilb_notifier, 0):
+// {
+//	static struct notifier_block sched_ilb_notifier_nb =
+//      { .notifier_call = sched_ilb_notifier, .priority = 0 };
+//	register_cpu_notifier(&sched_ilb_notifier_nb);
+// }
 #define cpu_notifier(fn, pri) {					\
 	static struct notifier_block fn##_nb =			\
 		{ .notifier_call = fn, .priority = pri };	\
@@ -134,6 +142,7 @@ enum {
 #endif /* #else #if defined(CONFIG_HOTPLUG_CPU) || !defined(MODULE) */
 #ifdef CONFIG_HOTPLUG_CPU // CONFIG_HOTPLUG_CPU=y
 // ARM10C 20140315
+// ARM10C 20140920
 extern int register_cpu_notifier(struct notifier_block *nb);
 extern void unregister_cpu_notifier(struct notifier_block *nb);
 #else
@@ -189,7 +198,9 @@ extern struct bus_type cpu_subsys;
 
 extern void cpu_hotplug_begin(void);
 extern void cpu_hotplug_done(void);
+// ARM10C 20140920
 extern void get_online_cpus(void);
+// ARM10C 20140920
 extern void put_online_cpus(void);
 extern void cpu_hotplug_disable(void);
 extern void cpu_hotplug_enable(void);

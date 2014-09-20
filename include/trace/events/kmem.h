@@ -43,6 +43,7 @@ DECLARE_EVENT_CLASS(kmem_alloc,
 );
 
 // ARM10C 20140726
+// ARM10C 20140920
 DEFINE_EVENT(kmem_alloc, kmalloc,
 
 	TP_PROTO(unsigned long call_site, const void *ptr,

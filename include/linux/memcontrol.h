@@ -644,6 +644,8 @@ static inline int memcg_cache_id(struct mem_cgroup *memcg)
 	return -1;
 }
 
+// ARM10C 20140920
+// memcg: NULL, s: kmem_cache#21, parent_cache: NULL
 static inline int
 memcg_register_cache(struct mem_cgroup *memcg, struct kmem_cache *s,
 		     struct kmem_cache *root_cache)
@@ -655,6 +657,8 @@ static inline void memcg_release_cache(struct kmem_cache *cachep)
 {
 }
 
+// ARM10C 20140920
+// memcg: NULL, s: kmem_cache#21
 static inline void memcg_cache_list_add(struct mem_cgroup *memcg,
 					struct kmem_cache *s)
 {

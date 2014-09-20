@@ -339,6 +339,7 @@ extern bool force_irqthreads;
    al. should be converted to tasklets, not to softirqs.
  */
 
+// ARM10C 20140920
 enum
 {
 	HI_SOFTIRQ=0,
@@ -348,10 +349,12 @@ enum
 	BLOCK_SOFTIRQ,
 	BLOCK_IOPOLL_SOFTIRQ,
 	TASKLET_SOFTIRQ,
+	// SCHED_SOFTIRQ: 7
 	SCHED_SOFTIRQ,
 	HRTIMER_SOFTIRQ,
 	RCU_SOFTIRQ,    /* Preferable RCU should always be the last softirq */
 
+	// NR_SOFTIRQS: 10
 	NR_SOFTIRQS
 };
 
@@ -366,6 +369,7 @@ extern char *softirq_to_name[NR_SOFTIRQS];
  * asm/hardirq.h to get better cache usage.  KAO
  */
 
+// ARM10C 20140920
 struct softirq_action
 {
 	void	(*action)(struct softirq_action *);
@@ -383,6 +387,7 @@ static inline void do_softirq_own_stack(void)
 }
 #endif
 
+// ARM10C 20140920
 extern void open_softirq(int nr, void (*action)(struct softirq_action *));
 extern void softirq_init(void);
 extern void __raise_softirq_irqoff(unsigned int nr);

@@ -3,8 +3,9 @@
 
 struct task_struct;
 
-#ifdef CONFIG_GENERIC_SMP_IDLE_THREAD
+#ifdef CONFIG_GENERIC_SMP_IDLE_THREAD // CONFIG_GENERIC_SMP_IDLE_THREAD=y
 struct task_struct *idle_thread_get(unsigned int cpu);
+// ARM10C 20140920
 void idle_thread_set_boot_cpu(void);
 void idle_threads_init(void);
 #else

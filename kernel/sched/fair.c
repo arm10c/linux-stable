@@ -6516,6 +6516,7 @@ out_unlock:
  *   needed, they will kick the idle load balancer, which then does idle
  *   load balancing for all the idle CPUs.
  */
+// ARM10C 20140920
 static struct {
 	cpumask_var_t idle_cpus_mask;
 	atomic_t nr_cpus;
@@ -6623,6 +6624,7 @@ void nohz_balance_enter_idle(int cpu)
 	set_bit(NOHZ_TICK_STOPPED, nohz_flags(cpu));
 }
 
+// ARM10C 20140920
 static int sched_ilb_notifier(struct notifier_block *nfb,
 					unsigned long action, void *hcpu)
 {
@@ -6864,6 +6866,7 @@ static void nohz_idle_balance(int this_cpu, enum cpu_idle_type idle) { }
  * run_rebalance_domains is triggered when needed from the scheduler tick.
  * Also triggered for nohz idle balancing (with nohz_balancing_kick set).
  */
+// ARM10C 20140920
 static void run_rebalance_domains(struct softirq_action *h)
 {
 	int this_cpu = smp_processor_id();
@@ -7383,15 +7386,26 @@ void print_cfs_stats(struct seq_file *m, int cpu)
 }
 #endif
 
+// ARM10C 20140920
 __init void init_sched_fair_class(void)
 {
-#ifdef CONFIG_SMP
+#ifdef CONFIG_SMP // CONFIG_SMP=y
+	// SCHED_SOFTIRQ: 7,
 	open_softirq(SCHED_SOFTIRQ, run_rebalance_domains);
+	// softirq_vec[7].action: run_rebalance_domains
 
-#ifdef CONFIG_NO_HZ_COMMON
+#ifdef CONFIG_NO_HZ_COMMON // CONFIG_NO_HZ_COMMON=y
+	// jiffies: -30000 (0xFFFFFFFFFFFF8AD0)
 	nohz.next_balance = jiffies;
+	// nohz.next_balance: -30000 (0xFFFFFFFFFFFF8AD0)
+
+	// GFP_NOWAIT: 0
 	zalloc_cpumask_var(&nohz.idle_cpus_mask, GFP_NOWAIT);
+	// nohz.idle_cpus_mask.bits[0]: 0
+
 	cpu_notifier(sched_ilb_notifier, 0);
+	// (&cpu_chain)->head: sched_ilb_notifier_nb 포인터 대입
+	// (&sched_ilb_notifier_nb)->next은 (&slab_notifier)->next로 대입
 #endif
 #endif /* SMP */
 

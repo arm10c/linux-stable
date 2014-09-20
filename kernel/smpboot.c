@@ -22,6 +22,7 @@
  * For the hotplug case we keep the task structs around and reuse
  * them.
  */
+// ARM10C 20140920
 static DEFINE_PER_CPU(struct task_struct *, idle_threads);
 
 struct task_struct *idle_thread_get(unsigned int cpu)
@@ -34,9 +35,26 @@ struct task_struct *idle_thread_get(unsigned int cpu)
 	return tsk;
 }
 
+// ARM10C 20140920
 void __init idle_thread_set_boot_cpu(void)
 {
+	// smp_processor_id(): 0,
+	// per_cpu(idle_threads, 0):
+	// ({
+	//  	do {
+	// 	 	const void __percpu *__vpp_verify = (typeof(&(idle_threads)))NULL;
+	// 	 	(void)__vpp_verify;
+	//  	} while (0)
+	//  	(&(idle_threads) + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋);
+	// }),
+	// current: &init_task
 	per_cpu(idle_threads, smp_processor_id()) = current;
+	// [pcp0] idle_threads: &init_task
+
+	// NOTE:
+	// 주석의 편의를 위해
+	// (&(idle_threads) + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋) 를
+	// [pcp0] idle_threads 로 표시
 }
 
 /**

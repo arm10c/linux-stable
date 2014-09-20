@@ -30,13 +30,16 @@ enum slab_state slab_state;
 // ARM10C 20140705
 // ARM10C 20140712
 // ARM10C 20140726
+// ARM10C 20140920
 LIST_HEAD(slab_caches);
+// ARM10C 20140920
 DEFINE_MUTEX(slab_mutex);
 // ARM10C 20140419
 // ARM10C 20140628
+// ARM10C 20140920
 struct kmem_cache *kmem_cache;
 
-#ifdef CONFIG_DEBUG_VM
+#ifdef CONFIG_DEBUG_VM // CONFIG_DEBUG_VM=n
 static int kmem_cache_sanity_check(struct mem_cgroup *memcg, const char *name,
 				   size_t size)
 {
@@ -85,6 +88,7 @@ static int kmem_cache_sanity_check(struct mem_cgroup *memcg, const char *name,
 	return 0;
 }
 #else
+// ARM10C 20140920
 static inline int kmem_cache_sanity_check(struct mem_cgroup *memcg,
 					  const char *name, size_t size)
 {
@@ -130,6 +134,8 @@ out:
 // flags: SLAB_HWCACHE_ALIGN: 0x00002000UL, ARCH_KMALLOC_MINALIGN: 64, size: 116
 // ARM10C 20140726
 // flags: 0, ARCH_KMALLOC_MINALIGN: 64, size: 4096
+// ARM10C 20140920
+// flags: SLAB_PANIC: 0x00040000UL, align: 0, size: 1076
 unsigned long calculate_alignment(unsigned long flags,
 		unsigned long align, unsigned long size)
 {
@@ -142,6 +148,7 @@ unsigned long calculate_alignment(unsigned long flags,
 	 */
 	// flags: SLAB_HWCACHE_ALIGN
 	// flags: 0
+	// flags: SLAB_PANIC: 0x00040000UL
 	if (flags & SLAB_HWCACHE_ALIGN) {
 		// cache_line_size(): 64
 		unsigned long ralign = cache_line_size();
@@ -159,14 +166,19 @@ unsigned long calculate_alignment(unsigned long flags,
 
 	// align: 64, ARCH_SLAB_MINALIGN: 8
 	// align: 64, ARCH_SLAB_MINALIGN: 8
+	// align: 0, ARCH_SLAB_MINALIGN: 8
 	if (align < ARCH_SLAB_MINALIGN)
+		// align: 0, ARCH_SLAB_MINALIGN: 8
 		align = ARCH_SLAB_MINALIGN;
+		// align: 8
 
 	// align: 64, sizeof(void *): 4
 	// align: 64, sizeof(void *): 4
+	// align: 8, sizeof(void *): 4
 	return ALIGN(align, sizeof(void *));
 	// return 64
 	// return 64
+	// return 8
 }
 
 
@@ -195,17 +207,27 @@ unsigned long calculate_alignment(unsigned long flags,
  * as davem.
  */
 
+// ARM10C 20140920
+// NULL, name: "idr_layer_cache", size: 1076, align: 0, flags: SLAB_PANIC: 0x00040000UL, ctor: NULL, NULL
 struct kmem_cache *
 kmem_cache_create_memcg(struct mem_cgroup *memcg, const char *name, size_t size,
 			size_t align, unsigned long flags, void (*ctor)(void *),
 			struct kmem_cache *parent_cache)
 {
 	struct kmem_cache *s = NULL;
+	// s: NULL
+
 	int err = 0;
+	// err: 0
 
 	get_online_cpus();
-	mutex_lock(&slab_mutex);
+	// cpu_hotplug.refcount: 1
 
+	mutex_lock(&slab_mutex);
+	// &slab_mutex를 사용한 mutex lock 수행
+
+	// memcg: NULL, name: "idr_layer_cache", size: 1076
+	// kmem_cache_sanity_check(NULL, "idr_layer_cache", 1076): 0
 	if (!kmem_cache_sanity_check(memcg, name, size) == 0)
 		goto out_locked;
 
@@ -215,36 +237,106 @@ kmem_cache_create_memcg(struct mem_cgroup *memcg, const char *name, size_t size,
 	 * case, and we'll just provide them with a sanitized version of the
 	 * passed flags.
 	 */
+	// flags: SLAB_PANIC: 0x00040000UL, CACHE_CREATE_MASK: 0xAF6D00
 	flags &= CACHE_CREATE_MASK;
+	// flags: SLAB_PANIC: 0x00040000UL
 
+	// memcg: NULL, name: "idr_layer_cache", size: 1076, align: 0, flags: SLAB_PANIC: 0x00040000UL, ctor: NULL
+	// __kmem_cache_alias(NULL, "idr_layer_cache", 1076, 0, SLAB_PANIC: 0x00040000UL, NULL): NULL
 	s = __kmem_cache_alias(memcg, name, size, align, flags, ctor);
+	// s: NULL
+
+	// s: NULL
 	if (s)
 		goto out_locked;
 
+	// kmem_cache: kmem_cache#0, GFP_KERNEL: 0xD0
+	// kmem_cache_zalloc(kmem_cache#0, GFP_KERNEL: 0xD0): kmem_cache#21
 	s = kmem_cache_zalloc(kmem_cache, GFP_KERNEL);
-	if (s) {
-		s->object_size = s->size = size;
-		s->align = calculate_alignment(flags, align, size);
-		s->ctor = ctor;
+	// s: kmem_cache#21
 
+	// s: kmem_cache#21
+	if (s) {
+		// s->object_size: (kmem_cache#21)->object_size,
+		// s->size: (kmem_cache#21)->size, size: 1076
+		s->object_size = s->size = size;
+		// s->object_size: (kmem_cache#21)->object_size: 1076
+		// s->size: (kmem_cache#21)->size: 1076
+
+		// s->align: (kmem_cache#21)->align,
+		// flags: SLAB_PANIC: 0x00040000UL, align: 0, size: 1076
+		// calculate_alignment(SLAB_PANIC: 0x00040000UL, 0, 1076): 8
+		s->align = calculate_alignment(flags, align, size);
+		// s->align: (kmem_cache#21)->align: 8
+
+		// s->ctor: (kmem_cache#21)->ctor, ctor: NULL
+		s->ctor = ctor;
+		// s->ctor: (kmem_cache#21)->ctor: NULL
+
+		// memcg: NULL, s: kmem_cache#21, parent_cache: NULL
+		// memcg_register_cache(NULL, kmem_cache#21, NULL): 0
 		if (memcg_register_cache(memcg, s, parent_cache)) {
 			kmem_cache_free(kmem_cache, s);
 			err = -ENOMEM;
 			goto out_locked;
 		}
 
+		// s->name: (kmem_cache#21)->name, name: "idr_layer_cache", GFP_KERNEL: 0xD0
+		// kstrdup("idr_layer_cache", GFP_KERNEL: 0xD0): kmem_cache#30-oX: "idr_layer_cache"
 		s->name = kstrdup(name, GFP_KERNEL);
+		// s->name: (kmem_cache#21)->name: kmem_cache#30-oX: "idr_layer_cache"
+
+		// s->name: (kmem_cache#21)->name: kmem_cache#30-oX: "idr_layer_cache"
 		if (!s->name) {
 			kmem_cache_free(kmem_cache, s);
 			err = -ENOMEM;
 			goto out_locked;
 		}
 
+		// s: kmem_cache#21, flags: SLAB_PANIC: 0x00040000UL
+		// __kmem_cache_create(&kmem_cache#21, SLAB_PANIC: 0x00040000UL): 0
 		err = __kmem_cache_create(s, flags);
+		// err: 0
+
+		// __kmem_cache_create(&kmem_cache#21) 가 한일:
+		// kmem_cache#21.flags: 0
+		// kmem_cache#21.reserved: 0
+		// kmem_cache#21.min_partial: 6
+		// kmem_cache#21.cpu_partial: 2
+		//
+		// 할당 받아 놓은 migratetype이 MIGRATE_UNMOVABLE인 page 를 사용
+		// page 맴버를 셋팅함
+		// page->counters: 0x80400040
+		// page->inuse: 64
+		// page->objects: 64
+		// page->frozen: 1
+		// page->freelist: NULL
+		// MIGRATE_UNMOVABLE인 page 할당 받아 쪼개놓은 object들에서 object를 1개 할당받음
+		// (UNMOVABLE인 page 의 object의 시작 virtual address + 3968 (kmem_cache_node#54))
+		// 54번째 object:
+		// (kmem_cache_node#54)->nr_partial: 0
+		// (kmem_cache_node#54)->list_lock: spinlock 초기화 수행
+		// (kmem_cache_node#54)->slabs: 0,
+		// (kmem_cache_node#54)->total_objects: 0 로 세팀함
+		// (kmem_cache_node#54)->full: 리스트 초기화
+		//
+		// kmem_cache_node#54 가 kmem_cache#21.node[0]에 할당됨
+		//
+		// 할당받은 pcpu 들의 16 byte 공간 (&kmem_cache#21)->cpu_slab 에
+		// 각 cpu에 사용하는 kmem_cache_cpu의 tid 맵버를 설정
+
+		// err: 0
 		if (!err) {
+			// s->refcount: (kmem_cache#21)->refcount
 			s->refcount = 1;
+			// s->refcount: (kmem_cache#21)->refcount: 1
+
+			// s->list: (kmem_cache#21)->list
 			list_add(&s->list, &slab_caches);
-			memcg_cache_list_add(memcg, s);
+			// slab_caches 의 list에 (kmem_cache#21)->list를 등록
+
+			// memcg: NULL, s: kmem_cache#21
+			memcg_cache_list_add(memcg, s); // null function
 		} else {
 			kfree(s->name);
 			kmem_cache_free(kmem_cache, s);
@@ -254,8 +346,12 @@ kmem_cache_create_memcg(struct mem_cgroup *memcg, const char *name, size_t size,
 
 out_locked:
 	mutex_unlock(&slab_mutex);
-	put_online_cpus();
+	// &slab_mutex를 사용한 mutex lock 해제
 
+	put_online_cpus();
+	// cpu_hotplug.refcount: 0
+
+	// err: 0
 	if (err) {
 
 		if (flags & SLAB_PANIC)
@@ -270,14 +366,21 @@ out_locked:
 		return NULL;
 	}
 
+	// s: kmem_cache#21
 	return s;
+	// return kmem_cache#21
 }
 
+// ARM10C 20140920
+// "idr_layer_cache", sizeof(struct idr_layer): 1076 bytes, 0, SLAB_PANIC: 0x00040000UL, NULL
 struct kmem_cache *
 kmem_cache_create(const char *name, size_t size, size_t align,
 		  unsigned long flags, void (*ctor)(void *))
 {
+	// name: "idr_layer_cache", size: 1076, align: 0, flags: SLAB_PANIC: 0x00040000UL, ctor: NULL
+	// kmem_cache_create_memcg(NULL, "idr_layer_cache", 1076, 0, SLAB_PANIC: 0x00040000UL, NULL): kmem_cache#21
 	return kmem_cache_create_memcg(NULL, name, size, align, flags, ctor, NULL);
+	// return kmem_cache#21
 }
 EXPORT_SYMBOL(kmem_cache_create);
 
@@ -630,12 +733,16 @@ static s8 size_index[24] = {
 // i: 8
 // ARM10C 20140726
 // size: 12
+// ARM10C 20140920
+// size: 16
 static inline int size_index_elem(size_t bytes)
 {
 	// bytes: 8
 	// bytes: 12
+	// bytes: 16
 	return (bytes - 1) / 8;
 	// return 0
+	// return 1
 	// return 1
 }
 
@@ -645,24 +752,31 @@ static inline int size_index_elem(size_t bytes)
  */
 // ARM10C 20140726
 // size: 12, gfpflags: GFP_NOWAIT: 0
+// ARM10C 20140920
+// size: 16, gfpflags: GFP_KERNEL: 0xD0
 struct kmem_cache *kmalloc_slab(size_t size, gfp_t flags)
 {
 	int index;
 
 	// size: 12, KMALLOC_MAX_SIZE: 0x40000000
+	// size: 16, KMALLOC_MAX_SIZE: 0x40000000
 	if (unlikely(size > KMALLOC_MAX_SIZE)) {
 		WARN_ON_ONCE(!(flags & __GFP_NOWARN));
 		return NULL;
 	}
 
 	// size: 12
+	// size: 16
 	if (size <= 192) {
 		// size: 12
+		// size: 16
 		if (!size)
 			return ZERO_SIZE_PTR;
 
 		// size: 12, size_index_elem(12): 1, size_index[1]: 6
+		// size: 16, size_index_elem(16): 1, size_index[1]: 6
 		index = size_index[size_index_elem(size)];
+		// index: 6
 		// index: 6
 	} else
 		index = fls(size - 1);
@@ -673,7 +787,9 @@ struct kmem_cache *kmalloc_slab(size_t size, gfp_t flags)
 
 #endif
 	// index: 6, kmalloc_caches[6]: kmem_cache#30
+	// index: 6, kmalloc_caches[6]: kmem_cache#30
 	return kmalloc_caches[index];
+	// return kmem_cache#30
 	// return kmem_cache#30
 }
 

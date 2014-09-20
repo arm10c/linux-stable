@@ -33,6 +33,7 @@ typedef struct cpumask { DECLARE_BITMAP(bits, NR_CPUS); } cpumask_t;
 #else
 // ARM10C 20140215
 // ARM10C 20140726
+// ARM10C 20140920
 // nr_cpu_ids: 4
 extern int nr_cpu_ids;
 #endif
@@ -764,13 +765,21 @@ static inline bool alloc_cpumask_var_node(cpumask_var_t *mask, gfp_t flags,
 // &vec->mask: &(&(&(&def_root_domain)->cpupri)->pri_to_cpu[0])->mask, GFP_KERNEL: 0xD0
 // ARM10C 20140913
 // &sched_domains_tmpmask, GFP_NOWAIT: 0
+// ARM10C 20140920
+// cpu_isolated_map: NULL, GFP_NOWAIT: 0
+// ARM10C 20140920
+// &nohz.idle_cpus_mask, GFP_NOWAIT: 0
 static inline bool zalloc_cpumask_var(cpumask_var_t *mask, gfp_t flags)
 {
 	// *mask: (&(&(&def_root_domain)->cpupri)->pri_to_cpu[0])->mask
 	// *mask: sched_domains_tmpmask
+	// *mask: cpu_isolated_map
+	// *mask: nohz.idle_cpus_mask
 	cpumask_clear(*mask);
 	// (&(&(&def_root_domain)->cpupri)->pri_to_cpu[0])->mask.bit[0]: 0
 	// sched_domains_tmpmask.bits[0]: 0
+	// cpu_isolated_map.bits[0]: 0
+	// nohz.idle_cpus_mask.bits[0]: 0
 
 	return true;
 }

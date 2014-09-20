@@ -146,6 +146,24 @@ static inline void mutex_destroy(struct mutex *lock) {}
 //    { &(cpu_add_remove_lock.wait_list), &(cpu_add_remove_lock.wait_list) }
 //    , .magic = &cpu_add_remove_lock
 // }
+//
+// ARM10C 20140920
+// __MUTEX_INITIALIZER(cpu_hotplug.lock):
+// { .count = { (1) }
+//    , .wait_lock =
+//    (spinlock_t )
+//    { { .rlock =
+//	  {
+//	  .raw_lock = { { 0 } },
+//	  .magic = 0xdead4ead,
+//	  .owner_cpu = -1,
+//	  .owner = 0xffffffff,
+//	  }
+//    } }
+//    , .wait_list =
+//    { &(cpu_hotplug.lock.wait_list), &(cpu_hotplug.lock.wait_list) }
+//    , .magic = &cpu_hotplug.lock
+// }
 #define __MUTEX_INITIALIZER(lockname) \
 		{ .count = ATOMIC_INIT(1) \
 		, .wait_lock = __SPIN_LOCK_UNLOCKED(lockname.wait_lock) \
@@ -187,6 +205,25 @@ static inline void mutex_destroy(struct mutex *lock) {}
 //    , .wait_list =
 //    { &(cpu_add_remove_lock.wait_list), &(cpu_add_remove_lock.wait_list) }
 //    , .magic = &cpu_add_remove_lock
+// }
+//
+// ARM10C 20140920
+// DEFINE_MUTEX(slab_mutex):
+// struct mutex slab_mutex =
+// { .count = { (1) }
+//    , .wait_lock =
+//    (spinlock_t )
+//    { { .rlock =
+//	  {
+//	  .raw_lock = { { 0 } },
+//	  .magic = 0xdead4ead,
+//	  .owner_cpu = -1,
+//	  .owner = 0xffffffff,
+//	  }
+//    } }
+//    , .wait_list =
+//    { &(slab_mutex.wait_list), &(slab_mutex.wait_list) }
+//    , .magic = &slab_mutex
 // }
 #define DEFINE_MUTEX(mutexname) \
 	struct mutex mutexname = __MUTEX_INITIALIZER(mutexname)

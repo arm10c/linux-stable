@@ -27,21 +27,33 @@
 // ARM10C 20140524
 // ARM10C 20140531
 // ARM10C 20140621
+// ARM10C 20140920
+// SLAB_RED_ZONE: 0x00000400UL
 #define SLAB_RED_ZONE		0x00000400UL	/* DEBUG: Red zone objs in a cache */
 // ARM10C 20140419
 // ARM10C 20140524
 // ARM10C 20140531
 // ARM10C 20140621
+// ARM10C 20140920
+// SLAB_POISON: 0x00000800UL
 #define SLAB_POISON		0x00000800UL	/* DEBUG: Poison objects */
 // ARM10C 20140419
 // ARM10C 20140607
+// ARM10C 20140920
+// SLAB_HWCACHE_ALIGN: 0x00002000UL
 #define SLAB_HWCACHE_ALIGN	0x00002000UL	/* Align objs on cache lines */
+// ARM10C 20140920
+// SLAB_CACHE_DMA: 0x00004000UL
 #define SLAB_CACHE_DMA		0x00004000UL	/* Use GFP_DMA memory */
 // ARM10C 20140419
 // ARM10C 20140524
 // ARM10C 20140531
 // ARM10C 20140621
+// ARM10C 20140920
+// SLAB_STORE_USER: 0x00010000UL
 #define SLAB_STORE_USER		0x00010000UL	/* DEBUG: Store the last owner for bug hunting */
+// ARM10C 20140920
+// SLAB_PANIC: 0x00040000UL
 #define SLAB_PANIC		0x00040000UL	/* Panic if kmem_cache_create() fails */
 /*
  * SLAB_DESTROY_BY_RCU - **WARNING** READ THIS!
@@ -80,18 +92,26 @@
  */
 // ARM10C 20140419
 // ARM10C 20140621
+// ARM10C 20140920
+// SLAB_DESTROY_BY_RCU: 0x00080000UL
 #define SLAB_DESTROY_BY_RCU	0x00080000UL	/* Defer freeing slabs to RCU */
 #define SLAB_MEM_SPREAD		0x00100000UL	/* Spread some memory over cpuset */
 // ARM10C 20140419
+// ARM10C 20140920
+// SLAB_TRACE: 0x00200000UL
 #define SLAB_TRACE		0x00200000UL	/* Trace allocations and frees */
 
 /* Flag to prevent checks on free */
-#ifdef CONFIG_DEBUG_OBJECTS
+#ifdef CONFIG_DEBUG_OBJECTS // CONFIG_DEBUG_OBJECTS=n
 # define SLAB_DEBUG_OBJECTS	0x00400000UL
 #else
+// ARM10C 20140920
+// SLAB_DEBUG_OBJECTS: 0x00000000UL
 # define SLAB_DEBUG_OBJECTS	0x00000000UL
 #endif
 
+// ARM10C 20140920
+// SLAB_NOLEAKTRACE: 0x00800000UL
 #define SLAB_NOLEAKTRACE	0x00800000UL	/* Avoid kmemleak tracing */
 
 /* Don't track use of uninitialized memory */
@@ -99,17 +119,26 @@
 # define SLAB_NOTRACK		0x01000000UL
 #else
 // ARM10C 20140524
+// ARM10C 20140920
+// SLAB_NOTRACK: 0x00000000UL
 # define SLAB_NOTRACK		0x00000000UL
 #endif
-#ifdef CONFIG_FAILSLAB
+#ifdef CONFIG_FAILSLAB // CONFIG_FAILSLAB=n
 # define SLAB_FAILSLAB		0x02000000UL	/* Fault injection mark */
 #else
+// ARM10C 20140920
+// SLAB_FAILSLAB: 0x00000000UL
 # define SLAB_FAILSLAB		0x00000000UL
 #endif
 
 /* The following flags affect the page allocator grouping pages by mobility */
 // ARM10C 20140524
+// ARM10C 20140920
+// SLAB_RECLAIM_ACCOUNT: 0x00020000UL
 #define SLAB_RECLAIM_ACCOUNT	0x00020000UL		/* Objects are reclaimable */
+// ARM10C 20140920
+// SLAB_RECLAIM_ACCOUNT: 0x00020000UL
+// SLAB_TEMPORARY: 0x00020000UL
 #define SLAB_TEMPORARY		SLAB_RECLAIM_ACCOUNT	/* Objects are short-lived */
 /*
  * ZERO_SIZE_PTR will be returned for zero sized kmalloc requests.
@@ -137,9 +166,11 @@ struct mem_cgroup;
 void __init kmem_cache_init(void);
 int slab_is_available(void);
 
+// ARM10C 20140920
 struct kmem_cache *kmem_cache_create(const char *, size_t, size_t,
 			unsigned long,
 			void (*)(void *));
+// ARM10C 20140920
 struct kmem_cache *
 kmem_cache_create_memcg(struct mem_cgroup *, const char *, size_t, size_t,
 			unsigned long, void (*)(void *), struct kmem_cache *);
@@ -697,6 +728,8 @@ static inline void *kcalloc(size_t n, size_t size, gfp_t flags)
 extern void *__kmalloc_track_caller(size_t, gfp_t, unsigned long);
 // ARM10C 20140726
 // len: 12, gfp: GFP_NOWAIT: 0
+// ARM10C 20140920
+// len: 16, gfp: GFP_KERNEL: 0xD0
 #define kmalloc_track_caller(size, flags) \
 	__kmalloc_track_caller(size, flags, _RET_IP_)
 #else
@@ -741,6 +774,8 @@ extern void *__kmalloc_node_track_caller(size_t, gfp_t, int, unsigned long);
 // kmem_cache: UNMOVABLE인 page (boot_kmem_cache)의 object의 시작 virtual address, GFP_NOWAIT: 0
 // ARM10C 20140719
 // kmem_cache: UNMOVABLE인 page (boot_kmem_cache)의 object의 시작 virtual address, GFP_NOWAIT: 0
+// ARM10C 20140920
+// kmem_cache: kmem_cache#0, GFP_KERNEL: 0xD0
 static inline void *kmem_cache_zalloc(struct kmem_cache *k, gfp_t flags)
 {
 	// k: &boot_kmem_cache, flags: GFP_NOWAIT: 0, __GFP_ZERO: 0x8000u
@@ -752,10 +787,14 @@ static inline void *kmem_cache_zalloc(struct kmem_cache *k, gfp_t flags)
 	// k: UNMOVABLE인 page (boot_kmem_cache)의 object의 시작 virtual address, flags: GFP_NOWAIT: 0, __GFP_ZERO: 0x8000u
 	// kmem_cache_alloc(UNMOVABLE인 page (boot_kmem_cache)의 object의 시작 virtual address, __GFP_ZERO: 0x8000u):
 	// UNMOVABLE인 page (boot_kmem_cache)의 시작 object의 virtual address + 3840
+	// k: kmem_cache#0, flags: GFP_KERNEL: 0xD0, __GFP_ZERO: 0x8000u
+	// kmem_cache_alloc(kmem_cache#0,, __GFP_ZERO: 0x80D0):
+	// kmem_cache#21
 	return kmem_cache_alloc(k, flags | __GFP_ZERO);
 	// return UNMOVABLE인 page (boot_kmem_cache)의 object의 시작 virtual address
 	// return UNMOVABLE인 page (boot_kmem_cache)의 시작 virtual address + 3968
 	// return UNMOVABLE인 page (boot_kmem_cache)의 시작 object의 virtual address + 3840
+	// return kmem_cache#21
 }
 
 /**

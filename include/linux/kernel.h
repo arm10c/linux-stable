@@ -30,6 +30,7 @@
 #define LONG_MAX	((long)(~0UL>>1))
 #define LONG_MIN	(-LONG_MAX - 1)
 // ARM10C 20140222
+// ARM10C 20140920
 // ULONG_MAX 0xFFFFFFFF	
 #define ULONG_MAX	(~0UL)
 #define LLONG_MAX	((long long)(~0ULL>>1))
@@ -47,6 +48,7 @@
 // ARM10C 20140301
 // ARM10C 20140329
 // ARM10C 20140412
+// ARM10C 20140920
 #define ALIGN(x, a)		__ALIGN_KERNEL((x), (a))
 #define __ALIGN_MASK(x, mask)	__ALIGN_KERNEL_MASK((x), (mask))
 #define PTR_ALIGN(p, a)		((typeof(p))ALIGN((unsigned long)(p), (a)))
@@ -193,6 +195,7 @@ extern int _cond_resched(void);
  static inline void __might_sleep(const char *file, int line,
 				   int preempt_offset) { }
 // ARM10C 20140315
+// ARM10C 20140920
 // might_resched(): NULL function
 # define might_sleep() do { might_resched(); } while (0)
 #endif

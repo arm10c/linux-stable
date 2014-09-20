@@ -73,6 +73,7 @@ static int cpu_hotplug_disabled;
 
 #ifdef CONFIG_HOTPLUG_CPU
 
+// ARM10C 20140920
 static struct {
 	struct task_struct *active_writer;
 	struct mutex lock; /* Synchronizes accesses to refcount, */
@@ -87,30 +88,49 @@ static struct {
 	.refcount = 0,
 };
 
+// ARM10C 20140920
 void get_online_cpus(void)
 {
-	might_sleep();
+	might_sleep(); // null function
+
+	// cpu_hotplug.active_writer: NULL, current: &init_task
 	if (cpu_hotplug.active_writer == current)
 		return;
+
 	mutex_lock(&cpu_hotplug.lock);
+	// &cpu_hotplug.lock을 사용한 mutex lock 수행
+
+	// cpu_hotplug.refcount: 0
 	cpu_hotplug.refcount++;
+	// cpu_hotplug.refcount: 1
+
 	mutex_unlock(&cpu_hotplug.lock);
+	// &cpu_hotplug.lock을 사용한 mutex lock 해재
 
 }
 EXPORT_SYMBOL_GPL(get_online_cpus);
 
+// ARM10C 20140920
 void put_online_cpus(void)
 {
+	// cpu_hotplug.active_writer: NULL, current: &init_task
 	if (cpu_hotplug.active_writer == current)
 		return;
-	mutex_lock(&cpu_hotplug.lock);
 
+	mutex_lock(&cpu_hotplug.lock);
+	// &cpu_hotplug.lock을 사용한 mutex lock 수행
+
+	// cpu_hotplug.refcount: 1
 	if (WARN_ON(!cpu_hotplug.refcount))
 		cpu_hotplug.refcount++; /* try to fix things up */
 
+	// cpu_hotplug.refcount: 1, cpu_hotplug.active_writer: NULL
 	if (!--cpu_hotplug.refcount && unlikely(cpu_hotplug.active_writer))
 		wake_up_process(cpu_hotplug.active_writer);
+	// cpu_hotplug.refcount: 0
+
 	mutex_unlock(&cpu_hotplug.lock);
+	// &cpu_hotplug.lock을 사용한 mutex lock 해재
 
 }
 EXPORT_SYMBOL_GPL(put_online_cpus);
@@ -185,20 +205,26 @@ void cpu_hotplug_enable(void)
 // nb: &page_alloc_cpu_notify_nb
 // ARM10C 20140726
 // &slab_notifier
+// ARM10C 20140920
+// &sched_ilb_notifier_nb
 int __ref register_cpu_notifier(struct notifier_block *nb)
 {
 	int ret;
 	cpu_maps_update_begin();
 	// waiter를 만들어 mutex를 lock을 시도하며 기다리다 가능할 때 mutex lock한다.
 	// waiter를 만들어 mutex를 lock을 시도하며 기다리다 가능할 때 mutex lock한다.
+	// waiter를 만들어 mutex를 lock을 시도하며 기다리다 가능할 때 mutex lock한다.
 
 	// &cpu_chain, nb: &page_alloc_cpu_notify_nb
 	// &cpu_chain, nb: &slab_notifier
+	// &cpu_chain, nb: &sched_ilb_notifier_nb
 	ret = raw_notifier_chain_register(&cpu_chain, nb);
 	// (&cpu_chain)->head: page_alloc_cpu_notify_nb 포인터 대입
 	// (&page_alloc_cpu_notify_nb)->next은 NULL로 대입
 	// (&cpu_chain)->head: slab_notifier 포인터 대입
 	// (&slab_notifier)->next은 (&page_alloc_cpu_notify_nb)->next로 대입
+	// (&cpu_chain)->head: sched_ilb_notifier_nb 포인터 대입
+	// (&sched_ilb_notifier_nb)->next은 (&slab_notifier)->next로 대입
 
 	cpu_maps_update_done();
 	// mutex를 기다리는(waiter)가 있으면 깨우고 아니면 mutex unlock한다.

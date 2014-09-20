@@ -50,51 +50,65 @@ static char __initdata nocb_buf[NR_CPUS * 5];
  * messages about anything out of the ordinary.  If you like #ifdef, you
  * will love this function.
  */
+// ARM10C 20140920
 static void __init rcu_bootup_announce_oddness(void)
 {
-#ifdef CONFIG_RCU_TRACE
+#ifdef CONFIG_RCU_TRACE // CONFIG_RCU_TRACE=n
 	pr_info("\tRCU debugfs-based tracing is enabled.\n");
 #endif
+
+// CONFIG_64BIT=n, CONFIG_RCU_FANOUT=32
 #if (defined(CONFIG_64BIT) && CONFIG_RCU_FANOUT != 64) || (!defined(CONFIG_64BIT) && CONFIG_RCU_FANOUT != 32)
 	pr_info("\tCONFIG_RCU_FANOUT set to non-default value of %d\n",
 	       CONFIG_RCU_FANOUT);
 #endif
-#ifdef CONFIG_RCU_FANOUT_EXACT
+#ifdef CONFIG_RCU_FANOUT_EXACT // CONFIG_RCU_FANOUT_EXACT=n
 	pr_info("\tHierarchical RCU autobalancing is disabled.\n");
 #endif
-#ifdef CONFIG_RCU_FAST_NO_HZ
+
+#ifdef CONFIG_RCU_FAST_NO_HZ // CONFIG_RCU_FAST_NO_HZ=n
 	pr_info("\tRCU dyntick-idle grace-period acceleration is enabled.\n");
 #endif
-#ifdef CONFIG_PROVE_RCU
+
+#ifdef CONFIG_PROVE_RCU // CONFIG_PROVE_RCU=n
 	pr_info("\tRCU lockdep checking is enabled.\n");
 #endif
-#ifdef CONFIG_RCU_TORTURE_TEST_RUNNABLE
+
+#ifdef CONFIG_RCU_TORTURE_TEST_RUNNABLE // CONFIG_RCU_TORTURE_TEST_RUNNABLE=n
 	pr_info("\tRCU torture testing starts during boot.\n");
 #endif
+
+// CONFIG_TREE_PREEMPT_RCU=y, CONFIG_RCU_CPU_STALL_VERBOSE=y
 #if defined(CONFIG_TREE_PREEMPT_RCU) && !defined(CONFIG_RCU_CPU_STALL_VERBOSE)
 	pr_info("\tDump stacks of tasks blocking RCU-preempt GP.\n");
 #endif
-#if defined(CONFIG_RCU_CPU_STALL_INFO)
+
+#if defined(CONFIG_RCU_CPU_STALL_INFO) // CONFIG_RCU_CPU_STALL_INFO=n
 	pr_info("\tAdditional per-CPU info printed with stalls.\n");
 #endif
-#if NUM_RCU_LVL_4 != 0
+
+#if NUM_RCU_LVL_4 != 0 // NUM_RCU_LVL_4: 0
 	pr_info("\tFour-level hierarchy is enabled.\n");
 #endif
+	// rcu_fanout_leaf: 16, CONFIG_RCU_FANOUT_LEAF: 16
 	if (rcu_fanout_leaf != CONFIG_RCU_FANOUT_LEAF)
 		pr_info("\tBoot-time adjustment of leaf fanout to %d.\n", rcu_fanout_leaf);
+
+	// nr_cpu_ids: 4, NR_CPUS: 4
 	if (nr_cpu_ids != NR_CPUS)
 		pr_info("\tRCU restricting CPUs from NR_CPUS=%d to nr_cpu_ids=%d.\n", NR_CPUS, nr_cpu_ids);
-#ifdef CONFIG_RCU_NOCB_CPU
-#ifndef CONFIG_RCU_NOCB_CPU_NONE
+
+#ifdef CONFIG_RCU_NOCB_CPU // CONFIG_RCU_NOCB_CPU=n
+#ifndef CONFIG_RCU_NOCB_CPU_NONE // CONFIG_RCU_NOCB_CPU_NONE=n
 	if (!have_rcu_nocb_mask) {
 		zalloc_cpumask_var(&rcu_nocb_mask, GFP_KERNEL);
 		have_rcu_nocb_mask = true;
 	}
-#ifdef CONFIG_RCU_NOCB_CPU_ZERO
+#ifdef CONFIG_RCU_NOCB_CPU_ZERO // CONFIG_RCU_NOCB_CPU_ZERO=n
 	pr_info("\tOffload RCU callbacks from CPU 0\n");
 	cpumask_set_cpu(0, rcu_nocb_mask);
 #endif /* #ifdef CONFIG_RCU_NOCB_CPU_ZERO */
-#ifdef CONFIG_RCU_NOCB_CPU_ALL
+#ifdef CONFIG_RCU_NOCB_CPU_ALL // CONFIG_RCU_NOCB_CPU_ALL=n
 	pr_info("\tOffload RCU callbacks from all CPUs\n");
 	cpumask_copy(rcu_nocb_mask, cpu_possible_mask);
 #endif /* #ifdef CONFIG_RCU_NOCB_CPU_ALL */
@@ -113,7 +127,7 @@ static void __init rcu_bootup_announce_oddness(void)
 #endif /* #ifdef CONFIG_RCU_NOCB_CPU */
 }
 
-#ifdef CONFIG_TREE_PREEMPT_RCU
+#ifdef CONFIG_TREE_PREEMPT_RCU // CONFIG_TREE_PREEMPT_RCU=y
 
 RCU_STATE_INITIALIZER(rcu_preempt, 'p', call_rcu);
 static struct rcu_state *rcu_state = &rcu_preempt_state;
@@ -123,6 +137,7 @@ static int rcu_preempted_readers_exp(struct rcu_node *rnp);
 /*
  * Tell them what RCU they are running.
  */
+// ARM10C 20140920
 static void __init rcu_bootup_announce(void)
 {
 	pr_info("Preemptible hierarchical RCU implementation.\n");

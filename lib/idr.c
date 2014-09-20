@@ -47,6 +47,7 @@
 /* Number of id_layer structs to leave in free list */
 #define MAX_IDR_FREE (MAX_IDR_LEVEL * 2)
 
+// ARM10C 20140920
 static struct kmem_cache *idr_layer_cache;
 static DEFINE_PER_CPU(struct idr_layer *, idr_preload_head);
 static DEFINE_PER_CPU(int, idr_preload_cnt);
@@ -849,10 +850,14 @@ void *idr_replace(struct idr *idp, void *ptr, int id)
 }
 EXPORT_SYMBOL(idr_replace);
 
+// ARM10C 20140920
 void __init idr_init_cache(void)
 {
+	// sizeof(struct idr_layer): 1076 bytes, SLAB_PANIC: 0x00040000UL
+	// kmem_cache_create("idr_layer_cache", 1076, 0, SLAB_PANIC: 0x00040000UL, NULL): kmem_cache#21
 	idr_layer_cache = kmem_cache_create("idr_layer_cache",
 				sizeof(struct idr_layer), 0, SLAB_PANIC, NULL);
+	// idr_layer_cache: kmem_cache#21
 }
 
 /**
