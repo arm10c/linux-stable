@@ -544,9 +544,9 @@ static void __init mm_init(void)
 // http://www.spinics.net/lists/arm-kernel/msg87677.html
 asmlinkage void __init start_kernel(void)
 {
-	// ATAG,DTB 정보로 사용
 	char * command_line;
 	extern const struct kernel_param __start___param[], __stop___param[];
+	// ATAG,DTB 정보로 사용
 
 	/*
 	 * Need to run as early as possible, to initialize the
@@ -563,28 +563,29 @@ asmlinkage void __init start_kernel(void)
 
 	cgroup_init_early();
 
-	// IRQ를 disable한다.
 	local_irq_disable();
+	// IRQ를 disable한다.
 	early_boot_irqs_disabled = true;
 
 /*
  * Interrupts are still disabled. Do necessary setups, then
  * enable them
  */
-	// 현재 cpu(core id)를 얻어서 cpu_XXX_bits[] 의 cpu를 셋한다.
 	boot_cpu_init();
+	// 현재 cpu(core id)를 얻어서 cpu_XXX_bits[] 의 cpu를 셋한다.
 
 // 2013/09/07 종료
 // 2013/09/14 시작
 	
-	// 128개의 page_address_htable 배열을 초기화
 	page_address_init();
+	// 128개의 page_address_htable 배열을 초기화
 
+	pr_notice("%s", linux_banner);
 	// 배너:
 	//	Linux version 2.6.37_DM385_IPNC_3.50.00
 	// 	(a0875405@bangvideoapps01) (gcc version 4.5.3 20110311 
 	// 	(prerelease) (GCC) ) #1 Fri Dec 21 17:27:08 IST 2012
-	pr_notice("%s", linux_banner);
+
 	setup_arch(&command_line);
 
 // 2014/02/15 종료
