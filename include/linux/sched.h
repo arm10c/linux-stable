@@ -1060,6 +1060,7 @@ enum perf_event_task_context {
 
 // ARM10C 20140315
 // ARM10C 20140913
+// ARM10C 20140920
 struct task_struct {
 	volatile long state;	/* -1 unrunnable, 0 runnable, >0 stopped */
 	void *stack;
@@ -1067,7 +1068,7 @@ struct task_struct {
 	unsigned int flags;	/* per process flags, defined below */
 	unsigned int ptrace;
 
-#ifdef CONFIG_SMP
+#ifdef CONFIG_SMP // CONFIG_SMP=y
 	struct llist_node wake_entry;
 	int on_cpu;
 	struct task_struct *last_wakee;
@@ -1083,16 +1084,16 @@ struct task_struct {
 	const struct sched_class *sched_class;
 	struct sched_entity se;
 	struct sched_rt_entity rt;
-#ifdef CONFIG_CGROUP_SCHED
+#ifdef CONFIG_CGROUP_SCHED // CONFIG_CGROUP_SCHED=n
 	struct task_group *sched_task_group;
 #endif
 
-#ifdef CONFIG_PREEMPT_NOTIFIERS
+#ifdef CONFIG_PREEMPT_NOTIFIERS // CONFIG_PREEMPT_NOTIFIERS=n
 	/* list of struct preempt_notifier: */
 	struct hlist_head preempt_notifiers;
 #endif
 
-#ifdef CONFIG_BLK_DEV_IO_TRACE
+#ifdef CONFIG_BLK_DEV_IO_TRACE // CONFIG_BLK_DEV_IO_TRACE=n
 	unsigned int btrace_seq;
 #endif
 
@@ -1100,32 +1101,32 @@ struct task_struct {
 	int nr_cpus_allowed;
 	cpumask_t cpus_allowed;
 
-#ifdef CONFIG_PREEMPT_RCU
+#ifdef CONFIG_PREEMPT_RCU // CONFIG_PREEMPT_RCU=y
 	int rcu_read_lock_nesting;
 	char rcu_read_unlock_special;
 	struct list_head rcu_node_entry;
 #endif /* #ifdef CONFIG_PREEMPT_RCU */
-#ifdef CONFIG_TREE_PREEMPT_RCU
+#ifdef CONFIG_TREE_PREEMPT_RCU // CONFIG_TREE_PREEMPT_RCU=y
 	struct rcu_node *rcu_blocked_node;
 #endif /* #ifdef CONFIG_TREE_PREEMPT_RCU */
-#ifdef CONFIG_RCU_BOOST
+#ifdef CONFIG_RCU_BOOST // CONFIG_RCU_BOOST=n
 	struct rt_mutex *rcu_boost_mutex;
 #endif /* #ifdef CONFIG_RCU_BOOST */
 
-#if defined(CONFIG_SCHEDSTATS) || defined(CONFIG_TASK_DELAY_ACCT)
+#if defined(CONFIG_SCHEDSTATS) || defined(CONFIG_TASK_DELAY_ACCT) // CONFIG_SCHEDSTATS=n, CONFIG_TASK_DELAY_ACCT=n
 	struct sched_info sched_info;
 #endif
 
 	struct list_head tasks;
-#ifdef CONFIG_SMP
+#ifdef CONFIG_SMP // CONFIG_SMP=y
 	struct plist_node pushable_tasks;
 #endif
 
 	struct mm_struct *mm, *active_mm;
-#ifdef CONFIG_COMPAT_BRK
+#ifdef CONFIG_COMPAT_BRK // CONFIG_COMPAT_BRK=y
 	unsigned brk_randomized:1;
 #endif
-#if defined(SPLIT_RSS_COUNTING)
+#if defined(SPLIT_RSS_COUNTING) // defined
 	struct task_rss_stat	rss_stat;
 #endif
 /* task state */
@@ -1152,7 +1153,7 @@ struct task_struct {
 	pid_t pid;
 	pid_t tgid;
 
-#ifdef CONFIG_CC_STACKPROTECTOR
+#ifdef CONFIG_CC_STACKPROTECTOR // CONFIG_CC_STACKPROTECTOR=n
 	/* Canary value for the -fstack-protector gcc feature */
 	unsigned long stack_canary;
 #endif
@@ -1188,10 +1189,10 @@ struct task_struct {
 
 	cputime_t utime, stime, utimescaled, stimescaled;
 	cputime_t gtime;
-#ifndef CONFIG_VIRT_CPU_ACCOUNTING_NATIVE
+#ifndef CONFIG_VIRT_CPU_ACCOUNTING_NATIVE // CONFIG_VIRT_CPU_ACCOUNTING_NATIVE=n
 	struct cputime prev_cputime;
 #endif
-#ifdef CONFIG_VIRT_CPU_ACCOUNTING_GEN
+#ifdef CONFIG_VIRT_CPU_ACCOUNTING_GEN // CONFIG_VIRT_CPU_ACCOUNTING_GEN=n
 	seqlock_t vtime_seqlock;
 	unsigned long long vtime_snap;
 	enum {
@@ -1220,11 +1221,11 @@ struct task_struct {
 				     - initialized normally by setup_new_exec */
 /* file system info */
 	int link_count, total_link_count;
-#ifdef CONFIG_SYSVIPC
+#ifdef CONFIG_SYSVIPC // CONFIG_SYSVIPC=y
 /* ipc stuff */
 	struct sysv_sem sysvsem;
 #endif
-#ifdef CONFIG_DETECT_HUNG_TASK
+#ifdef CONFIG_DETECT_HUNG_TASK // CONFIG_DETECT_HUNG_TASK=y
 /* hung task detection */
 	unsigned long last_switch_count;
 #endif
@@ -1252,7 +1253,7 @@ struct task_struct {
 	struct callback_head *task_works;
 
 	struct audit_context *audit_context;
-#ifdef CONFIG_AUDITSYSCALL
+#ifdef CONFIG_AUDITSYSCALL // CONFIG_AUDITSYSCALL=n
 	kuid_t loginuid;
 	unsigned int sessionid;
 #endif
@@ -1268,7 +1269,7 @@ struct task_struct {
 	/* Protection of the PI data structures: */
 	raw_spinlock_t pi_lock;
 
-#ifdef CONFIG_RT_MUTEXES
+#ifdef CONFIG_RT_MUTEXES // CONFIG_RT_MUTEXES=y
 	/* PI waiters blocked on a rt_mutex held by this task */
 	struct plist_head pi_waiters;
 	/* Deadlock detection and priority inheritance handling */
@@ -1279,7 +1280,7 @@ struct task_struct {
 	/* mutex deadlock detection */
 	struct mutex_waiter *blocked_on;
 #endif
-#ifdef CONFIG_TRACE_IRQFLAGS
+#ifdef CONFIG_TRACE_IRQFLAGS // CONFIG_TRACE_IRQFLAGS=n
 	unsigned int irq_events;
 	unsigned long hardirq_enable_ip;
 	unsigned long hardirq_disable_ip;
@@ -1294,7 +1295,7 @@ struct task_struct {
 	int softirqs_enabled;
 	int softirq_context;
 #endif
-#ifdef CONFIG_LOCKDEP
+#ifdef CONFIG_LOCKDEP // CONFIG_LOCKDEP=n
 # define MAX_LOCK_DEPTH 48UL
 	u64 curr_chain_key;
 	int lockdep_depth;
@@ -1309,7 +1310,7 @@ struct task_struct {
 /* stacked block device info */
 	struct bio_list *bio_list;
 
-#ifdef CONFIG_BLOCK
+#ifdef CONFIG_BLOCK // CONFIG_BLOCK=y
 /* stack plugging */
 	struct blk_plug *plug;
 #endif
@@ -1324,7 +1325,7 @@ struct task_struct {
 	unsigned long ptrace_message;
 	siginfo_t *last_siginfo; /* For ptrace use.  */
 	struct task_io_accounting ioac;
-#if defined(CONFIG_TASK_XACCT)
+#if defined(CONFIG_TASK_XACCT) // CONFIG_TASK_XACCT=n
 	u64 acct_rss_mem1;	/* accumulated rss usage */
 	u64 acct_vm_mem1;	/* accumulated virtual memory usage */
 	cputime_t acct_timexpd;	/* stime + utime since last update */
@@ -1335,31 +1336,31 @@ struct task_struct {
 	int cpuset_mem_spread_rotor;
 	int cpuset_slab_spread_rotor;
 #endif
-#ifdef CONFIG_CGROUPS
+#ifdef CONFIG_CGROUPS // CONFIG_CGROUPS=n
 	/* Control Group info protected by css_set_lock */
 	struct css_set __rcu *cgroups;
 	/* cg_list protected by css_set_lock and tsk->alloc_lock */
 	struct list_head cg_list;
 #endif
-#ifdef CONFIG_FUTEX
+#ifdef CONFIG_FUTEX // CONFIG_FUTEX=y
 	struct robust_list_head __user *robust_list;
-#ifdef CONFIG_COMPAT
+#ifdef CONFIG_COMPAT // CONFIG_COMPAT=n
 	struct compat_robust_list_head __user *compat_robust_list;
 #endif
 	struct list_head pi_state_list;
 	struct futex_pi_state *pi_state_cache;
 #endif
-#ifdef CONFIG_PERF_EVENTS
+#ifdef CONFIG_PERF_EVENTS // CONFIG_PERF_EVENTS=n
 	struct perf_event_context *perf_event_ctxp[perf_nr_task_contexts];
 	struct mutex perf_event_mutex;
 	struct list_head perf_event_list;
 #endif
-#ifdef CONFIG_NUMA
+#ifdef CONFIG_NUMA // CONFIG_NUMA=n
 	struct mempolicy *mempolicy;	/* Protected by alloc_lock */
 	short il_next;
 	short pref_node_fork;
 #endif
-#ifdef CONFIG_NUMA_BALANCING
+#ifdef CONFIG_NUMA_BALANCING // CONFIG_NUMA_BALANCING=n
 	int numa_scan_seq;
 	unsigned int numa_scan_period;
 	unsigned int numa_scan_period_max;
@@ -1407,10 +1408,10 @@ struct task_struct {
 
 	struct page_frag task_frag;
 
-#ifdef	CONFIG_TASK_DELAY_ACCT
+#ifdef	CONFIG_TASK_DELAY_ACCT // CONFIG_TASK_DELAY_ACCT=n
 	struct task_delay_info *delays;
 #endif
-#ifdef CONFIG_FAULT_INJECTION
+#ifdef CONFIG_FAULT_INJECTION // CONFIG_FAULT_INJECTION=n
 	int make_it_fail;
 #endif
 	/*
@@ -1421,7 +1422,7 @@ struct task_struct {
 	int nr_dirtied_pause;
 	unsigned long dirty_paused_when; /* start of a write-and-pause period */
 
-#ifdef CONFIG_LATENCYTOP
+#ifdef CONFIG_LATENCYTOP // CONFIG_LATENCYTOP=n
 	int latency_record_count;
 	struct latency_record latency_record[LT_SAVECOUNT];
 #endif
@@ -1432,7 +1433,7 @@ struct task_struct {
 	unsigned long timer_slack_ns;
 	unsigned long default_timer_slack_ns;
 
-#ifdef CONFIG_FUNCTION_GRAPH_TRACER
+#ifdef CONFIG_FUNCTION_GRAPH_TRACER // CONFIG_FUNCTION_GRAPH_TRACER=n
 	/* Index of current stored address in ret_stack */
 	int curr_ret_stack;
 	/* Stack of return addresses for return function tracing */
@@ -1447,13 +1448,15 @@ struct task_struct {
 	/* Pause for the tracing */
 	atomic_t tracing_graph_pause;
 #endif
-#ifdef CONFIG_TRACING
+#ifdef CONFIG_TRACING // CONFIG_TRACING=n
 	/* state flags for use by tracers */
 	unsigned long trace;
 	/* bitmask and counter of trace recursion */
 	unsigned long trace_recursion;
 #endif /* CONFIG_TRACING */
-#ifdef CONFIG_MEMCG /* memcg uses this to do batch job */
+
+/* memcg uses this to do batch job */ 
+#ifdef CONFIG_MEMCG // CONFIG_MEMCG=n
 	struct memcg_batch_info {
 		int do_batch;	/* incremented when batch uncharge started */
 		struct mem_cgroup *memcg; /* target memcg of uncharge */
@@ -1468,10 +1471,10 @@ struct task_struct {
 		unsigned int may_oom:1;
 	} memcg_oom;
 #endif
-#ifdef CONFIG_UPROBES
+#ifdef CONFIG_UPROBES // CONFIG_UPROBES=n
 	struct uprobe_task *utask;
 #endif
-#if defined(CONFIG_BCACHE) || defined(CONFIG_BCACHE_MODULE)
+#if defined(CONFIG_BCACHE) || defined(CONFIG_BCACHE_MODULE) // CONFIG_BCACHE=n, CONFIG_BCACHE_MODULE=n
 	unsigned int	sequential_io;
 	unsigned int	sequential_io_avg;
 #endif

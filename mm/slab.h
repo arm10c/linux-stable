@@ -30,6 +30,7 @@ extern struct mutex slab_mutex;
 
 /* The list of all slab caches on the system */
 // ARM10C 20140705
+// ARM10C 20140920
 extern struct list_head slab_caches;
 
 /* The slab cache that manages slab cache information */
@@ -57,6 +58,7 @@ extern void create_boot_cache(struct kmem_cache *, const char *name,
 
 struct mem_cgroup;
 #ifdef CONFIG_SLUB
+// ARM10C 20140920
 struct kmem_cache *
 __kmem_cache_alias(struct mem_cgroup *memcg, const char *name, size_t size,
 		   size_t align, unsigned long flags, void (*ctor)(void *));
@@ -69,6 +71,11 @@ __kmem_cache_alias(struct mem_cgroup *memcg, const char *name, size_t size,
 
 
 /* Legal flag mask for kmem_cache_create(), for various configurations */
+// ARM10C 20140920
+// SLAB_HWCACHE_ALIGN: 0x00002000UL, SLAB_CACHE_DMA: 0x00004000UL
+// SLAB_PANIC: 0x00040000UL, SLAB_DESTROY_BY_RCU: 0x00080000UL
+// SLAB_DEBUG_OBJECTS: 0x00000000UL
+// SLAB_CORE_FLAGS; 0x000C6000
 #define SLAB_CORE_FLAGS (SLAB_HWCACHE_ALIGN | SLAB_CACHE_DMA | SLAB_PANIC | \
 			 SLAB_DESTROY_BY_RCU | SLAB_DEBUG_OBJECTS )
 
@@ -85,16 +92,25 @@ __kmem_cache_alias(struct mem_cgroup *memcg, const char *name, size_t size,
 #define SLAB_DEBUG_FLAGS (0)
 #endif
 
-#if defined(CONFIG_SLAB)
+#if defined(CONFIG_SLAB) // CONFIG_SLAB=n
 #define SLAB_CACHE_FLAGS (SLAB_MEM_SPREAD | SLAB_NOLEAKTRACE | \
 			  SLAB_RECLAIM_ACCOUNT | SLAB_TEMPORARY | SLAB_NOTRACK)
-#elif defined(CONFIG_SLUB)
+#elif defined(CONFIG_SLUB) // CONFIG_SLUB=y
+// ARM10C 20140920
+// SLAB_NOLEAKTRACE: 0x00800000UL, SLAB_RECLAIM_ACCOUNT: 0x00020000UL
+// SLAB_TEMPORARY: 0x00020000UL, SLAB_NOTRACK: 0x00000000UL
+// SLAB_CACHE_FLAGS: 0x820000
 #define SLAB_CACHE_FLAGS (SLAB_NOLEAKTRACE | SLAB_RECLAIM_ACCOUNT | \
 			  SLAB_TEMPORARY | SLAB_NOTRACK)
 #else
 #define SLAB_CACHE_FLAGS (0)
 #endif
 
+// ARM10C 20140920
+// SLAB_CORE_FLAGS; 0xC6000
+// SLAB_DEBUG_FLAGS: 0x210D00
+// SLAB_CACHE_FLAGS: 0x820000
+// CACHE_CREATE_MASK: 0xAF6D00
 #define CACHE_CREATE_MASK (SLAB_CORE_FLAGS | SLAB_DEBUG_FLAGS | SLAB_CACHE_FLAGS)
 
 int __kmem_cache_shutdown(struct kmem_cache *);

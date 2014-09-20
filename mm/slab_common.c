@@ -30,13 +30,15 @@ enum slab_state slab_state;
 // ARM10C 20140705
 // ARM10C 20140712
 // ARM10C 20140726
+// ARM10C 20140920
 LIST_HEAD(slab_caches);
+// ARM10C 20140920
 DEFINE_MUTEX(slab_mutex);
 // ARM10C 20140419
 // ARM10C 20140628
 struct kmem_cache *kmem_cache;
 
-#ifdef CONFIG_DEBUG_VM
+#ifdef CONFIG_DEBUG_VM // CONFIG_DEBUG_VM=n
 static int kmem_cache_sanity_check(struct mem_cgroup *memcg, const char *name,
 				   size_t size)
 {
@@ -85,6 +87,7 @@ static int kmem_cache_sanity_check(struct mem_cgroup *memcg, const char *name,
 	return 0;
 }
 #else
+// ARM10C 20140920
 static inline int kmem_cache_sanity_check(struct mem_cgroup *memcg,
 					  const char *name, size_t size)
 {
@@ -130,6 +133,8 @@ out:
 // flags: SLAB_HWCACHE_ALIGN: 0x00002000UL, ARCH_KMALLOC_MINALIGN: 64, size: 116
 // ARM10C 20140726
 // flags: 0, ARCH_KMALLOC_MINALIGN: 64, size: 4096
+// ARM10C 20140920
+// flags: SLAB_PANIC: 0x00040000UL, align: 0, size: 1076
 unsigned long calculate_alignment(unsigned long flags,
 		unsigned long align, unsigned long size)
 {
@@ -142,6 +147,7 @@ unsigned long calculate_alignment(unsigned long flags,
 	 */
 	// flags: SLAB_HWCACHE_ALIGN
 	// flags: 0
+	// flags: SLAB_PANIC: 0x00040000UL
 	if (flags & SLAB_HWCACHE_ALIGN) {
 		// cache_line_size(): 64
 		unsigned long ralign = cache_line_size();
@@ -159,14 +165,19 @@ unsigned long calculate_alignment(unsigned long flags,
 
 	// align: 64, ARCH_SLAB_MINALIGN: 8
 	// align: 64, ARCH_SLAB_MINALIGN: 8
+	// align: 0, ARCH_SLAB_MINALIGN: 8
 	if (align < ARCH_SLAB_MINALIGN)
+		// align: 0, ARCH_SLAB_MINALIGN: 8
 		align = ARCH_SLAB_MINALIGN;
+		// align: 8
 
 	// align: 64, sizeof(void *): 4
 	// align: 64, sizeof(void *): 4
+	// align: 8, sizeof(void *): 4
 	return ALIGN(align, sizeof(void *));
 	// return 64
 	// return 64
+	// return 8
 }
 
 
@@ -195,17 +206,27 @@ unsigned long calculate_alignment(unsigned long flags,
  * as davem.
  */
 
+// ARM10C 20140920
+// NULL, name: "idr_layer_cache", size: 1076, align: 0, flags: SLAB_PANIC: 0x00040000UL, ctor: NULL, NULL
 struct kmem_cache *
 kmem_cache_create_memcg(struct mem_cgroup *memcg, const char *name, size_t size,
 			size_t align, unsigned long flags, void (*ctor)(void *),
 			struct kmem_cache *parent_cache)
 {
 	struct kmem_cache *s = NULL;
+	// s: NULL
+
 	int err = 0;
+	// err: 0
 
 	get_online_cpus();
-	mutex_lock(&slab_mutex);
+	// cpu_hotplug.refcount: 1
 
+	mutex_lock(&slab_mutex);
+	// &slab_mutex를 사용한 mutex lock 수행
+
+	// memcg: NULL, name: "idr_layer_cache", size: 1076
+	// kmem_cache_sanity_check(NULL, "idr_layer_cache", 1076): 0
 	if (!kmem_cache_sanity_check(memcg, name, size) == 0)
 		goto out_locked;
 
@@ -215,8 +236,11 @@ kmem_cache_create_memcg(struct mem_cgroup *memcg, const char *name, size_t size,
 	 * case, and we'll just provide them with a sanitized version of the
 	 * passed flags.
 	 */
+	// flags: SLAB_PANIC: 0x00040000UL, CACHE_CREATE_MASK: 0xAF6D00
 	flags &= CACHE_CREATE_MASK;
+	// flags: SLAB_PANIC: 0x00040000UL
 
+	// memcg: NULL, name: "idr_layer_cache", size: 1076, align: 0, flags: SLAB_PANIC: 0x00040000UL, ctor: NULL
 	s = __kmem_cache_alias(memcg, name, size, align, flags, ctor);
 	if (s)
 		goto out_locked;
@@ -273,10 +297,13 @@ out_locked:
 	return s;
 }
 
+// ARM10C 20140920
+// "idr_layer_cache", sizeof(struct idr_layer): 1076 bytes, 0, SLAB_PANIC: 0x00040000UL, NULL
 struct kmem_cache *
 kmem_cache_create(const char *name, size_t size, size_t align,
 		  unsigned long flags, void (*ctor)(void *))
 {
+	// name: "idr_layer_cache", size: 1076, align: 0, flags: SLAB_PANIC: 0x00040000UL, ctor: NULL
 	return kmem_cache_create_memcg(NULL, name, size, align, flags, ctor, NULL);
 }
 EXPORT_SYMBOL(kmem_cache_create);

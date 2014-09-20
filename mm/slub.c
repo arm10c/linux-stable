@@ -208,10 +208,20 @@ static inline bool kmem_cache_has_cpu_partial(struct kmem_cache *s)
 /*
  * Set of flags that will prevent slab merging
  */
+// ARM10C 20140920
+// SLAB_RED_ZONE: 0x00000400UL, SLAB_POISON: 0x00000800UL
+// SLAB_STORE_USER: 0x00010000UL, SLAB_TRACE: 0x00200000UL
+// SLAB_DESTROY_BY_RCU: 0x00080000UL, SLAB_NOLEAKTRACE: 0x00800000UL
+// SLAB_FAILSLAB: 0x00000000UL
+// SLUB_NEVER_MERGE: 0xA90C00
 #define SLUB_NEVER_MERGE (SLAB_RED_ZONE | SLAB_POISON | SLAB_STORE_USER | \
 		SLAB_TRACE | SLAB_DESTROY_BY_RCU | SLAB_NOLEAKTRACE | \
 		SLAB_FAILSLAB)
 
+// ARM10C 20140920
+// SLAB_DEBUG_FREE: 0x00000100UL, SLAB_RECLAIM_ACCOUNT: 0x00020000UL
+// SLAB_CACHE_DMA: 0x00004000UL SLAB_NOTRACK: 0x00000000UL
+// SLUB_MERGE_SAME: 0x24100
 #define SLUB_MERGE_SAME (SLAB_DEBUG_FREE | SLAB_RECLAIM_ACCOUNT | \
 		SLAB_CACHE_DMA | SLAB_NOTRACK)
 
@@ -1781,6 +1791,8 @@ __setup("slub_debug", setup_slub_debug);
 // ARM10C 20140726
 // s->size: kmem_cache#30.size: 64, flags: 0,
 // s->name: kmem_cache#30.name: NULL, s->ctor: kmem_cache#30.ctor: NULL
+// ARM10C 20140920
+// size: 1080, flags: SLAB_PANIC: 0x00040000UL, name: "idr_layer_cache"
 static unsigned long kmem_cache_flags(unsigned long object_size,
 	unsigned long flags, const char *name,
 	void (*ctor)(void *))
@@ -5174,6 +5186,7 @@ static int slub_min_objects;
  * Merge control. If this is set then no merging of slab caches will occur.
  * (Could be removed. This was introduced to pacify the merge skeptics.)
  */
+// ARM10C 20140920
 static int slub_nomerge;
 
 /*
@@ -7367,74 +7380,121 @@ void __init kmem_cache_init_late(void)
 /*
  * Find a mergeable slab cache
  */
+// ARM10C 20140920
+// s: &kmalloc_caches[11]
 static int slab_unmergeable(struct kmem_cache *s)
 {
+	// slub_nomerge: 0, s->flags: (&kmalloc_caches[11])->flags: 0, SLUB_NEVER_MERGE: 0xA90C00
 	if (slub_nomerge || (s->flags & SLUB_NEVER_MERGE))
 		return 1;
 
+	// s->ctor: (&kmalloc_caches[11])->ctor: NULL
 	if (s->ctor)
 		return 1;
 
 	/*
 	 * We may have set a slab to be unmergeable during bootstrap.
 	 */
+	// s->refcount: (&kmalloc_caches[11])->refcount: 1
 	if (s->refcount < 0)
 		return 1;
 
 	return 0;
+	// return 0
 }
 
+// ARM10C 20140920
+// memcg: NULL, size: 1076, align: 0, flags: SLAB_PANIC: 0x00040000UL, name: "idr_layer_cache", ctor: NULL
 static struct kmem_cache *find_mergeable(struct mem_cgroup *memcg, size_t size,
 		size_t align, unsigned long flags, const char *name,
 		void (*ctor)(void *))
 {
 	struct kmem_cache *s;
 
+	// slub_nomerge: 0, flags: SLAB_PANIC: 0x00040000UL, SLUB_NEVER_MERGE: 0xA90C00
 	if (slub_nomerge || (flags & SLUB_NEVER_MERGE))
 		return NULL;
 
+	// ctor: NULL
 	if (ctor)
 		return NULL;
 
+	// size: 1076, sizeof(void *): 4
 	size = ALIGN(size, sizeof(void *));
+	// size: 1076
+
+	// flags: SLAB_PANIC: 0x00040000UL, align: 0, size: 1076
+	// calculate_alignment(SLAB_PANIC: 0x00040000UL, 0, 1076): 8
 	align = calculate_alignment(flags, align, size);
+	// align: 8
+
+	// size: 1076, align: 8
 	size = ALIGN(size, align);
+	// size: 1080
+
+	// size: 1080, flags: SLAB_PANIC: 0x00040000UL, name: "idr_layer_cache"
 	flags = kmem_cache_flags(size, flags, name, NULL);
+	// flags: SLAB_PANIC: 0x00040000UL
 
 	list_for_each_entry(s, &slab_caches, list) {
+	// for (s = list_first_entry(&slab_caches, typeof(*s), list);
+	//      &s->list != (&slab_caches); s = list_next_entry(s, list))
+
+		// s: &kmalloc_caches[11]
+
+		// NOTE:
+		// slab_caches에 연결된 kmem_cache들 중 현재 size: 1080에 맞는 kmem_cache를 선택
+
+		// s: &kmalloc_caches[11]
+		// slab_unmergeable(&kmalloc_caches[11]): 0
 		if (slab_unmergeable(s))
 			continue;
 
+		// size: 1080, s->size: (&kmalloc_caches[11])->size: 2048
 		if (size > s->size)
 			continue;
 
+		// flags: SLAB_PANIC: 0x00040000UL, SLUB_MERGE_SAME: 0x24100
+		// s->flags: (&kmalloc_caches[11])->flags: 0
 		if ((flags & SLUB_MERGE_SAME) != (s->flags & SLUB_MERGE_SAME))
 				continue;
 		/*
 		 * Check if alignment is compatible.
 		 * Courtesy of Adrian Drzewiecki
 		 */
+		// s->size: (&kmalloc_caches[11])->size: 2048, align: 8
 		if ((s->size & ~(align - 1)) != s->size)
 			continue;
 
+		// s->size: (&kmalloc_caches[11])->size: 2048, size: 1080, sizeof(void *): 4
 		if (s->size - size >= sizeof(void *))
 			continue;
+			// continue 수행
 
 		if (!cache_match_memcg(s, memcg))
 			continue;
 
 		return s;
 	}
+	// &slab_caches 에 등록된 kmem_cache 중 size: 1080 에 적합한 것을 찾지 못함
+
 	return NULL;
+	// return NULL
 }
 
+// ARM10C 20140920
+// memcg: NULL, name: "idr_layer_cache", size: 1076, align: 0, flags: SLAB_PANIC: 0x00040000UL, ctor: NULL
 struct kmem_cache *
 __kmem_cache_alias(struct mem_cgroup *memcg, const char *name, size_t size,
 		   size_t align, unsigned long flags, void (*ctor)(void *))
 {
 	struct kmem_cache *s;
 
+	// memcg: NULL, size: 1076, align: 0, flags: SLAB_PANIC: 0x00040000UL, name: "idr_layer_cache", ctor: NULL
+	// find_mergeable(NULL, 1076, 0, SLAB_PANIC: 0x00040000UL, "idr_layer_cache", NULL): NULL
 	s = find_mergeable(memcg, size, align, flags, name, ctor);
+	// s: NULL
+
 	if (s) {
 		s->refcount++;
 		/*

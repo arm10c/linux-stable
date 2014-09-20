@@ -23,13 +23,24 @@
  * tree depth of 4.  Each idr_layer is slightly larger than 2k on 64bit and
  * 1k on 32bit.
  */
+// ARM10C 20140920
+// IDR_BITS: 8
 #define IDR_BITS 8
+// ARM10C 20140920
+// IDR_BITS: 8
+// IDR_SIZE: 0x100
 #define IDR_SIZE (1 << IDR_BITS)
 #define IDR_MASK ((1 << IDR_BITS)-1)
 
+// ARM10C 20140920
+// DECLARE_BITMAP(bitmap, 0x100): bitmap[8]
+//
+// sizeof(struct idr_layer): 1076 bytes
 struct idr_layer {
 	int			prefix;	/* the ID prefix of this idr_layer */
+	// IDR_SIZE: 0x100
 	DECLARE_BITMAP(bitmap, IDR_SIZE); /* A zero bit means "space here" */
+	// IDR_BITS: 8
 	struct idr_layer __rcu	*ary[1<<IDR_BITS];
 	int			count;	/* When zero, we can release it */
 	int			layer;	/* distance from leaf */

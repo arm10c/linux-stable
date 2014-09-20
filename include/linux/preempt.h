@@ -20,6 +20,7 @@
 // CONFIG_DEBUG_PREEMPT=y, CONFIG_PREEMPT_TRACER=n
 #if defined(CONFIG_DEBUG_PREEMPT) || defined(CONFIG_PREEMPT_TRACER)
 // ARM10C 20140315
+// ARM10C 20140920
 extern void preempt_count_add(int val);
 extern void preempt_count_sub(int val);
 // ARM10C 20140614
@@ -35,6 +36,7 @@ extern void preempt_count_sub(int val);
 
 // ARM10C 20140125
 // ARM10C 20140315
+// ARM10C 20140920
 #define preempt_count_inc() preempt_count_add(1)
 // ARM10C 20140125
 #define preempt_count_dec() preempt_count_sub(1)
@@ -47,6 +49,7 @@ extern void preempt_count_sub(int val);
 // ARM10C 20140614
 // ARM10C 20140621
 // ARM10C 20140628
+// ARM10C 20140920
 #define preempt_disable()/*ARM10C this*/	\
 do { \
 	preempt_count_inc(); \

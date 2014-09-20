@@ -10,6 +10,8 @@
 // cpu_possible_bits[1]
 // ARM10C 20140913
 // cpu_active_bits[1]
+// ARM10C 20140920
+// DECLARE_BITMAP(bitmap, 0x100): bitmap[8]
 #define DECLARE_BITMAP(name,bits) \
 	unsigned long name[BITS_TO_LONGS(bits)]
 
@@ -227,6 +229,7 @@ struct ustat {
 // ARM10C 20140419
 // ARM10C 20140809
 // ARM10C 20140830
+// ARM10C 20140920
 // sizeof(struct callback_head): 8 bytes
 struct callback_head {
 	struct callback_head *next;
@@ -235,6 +238,8 @@ struct callback_head {
 // ARM10C 20140419
 // ARM10C 20140809
 // ARM10C 20140830
+// ARM10C 20140920
+// sizeof(rcu_head): 8 bytes
 #define rcu_head callback_head
 
 #endif /*  __ASSEMBLY__ */

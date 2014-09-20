@@ -295,6 +295,7 @@ const_debug unsigned int sysctl_sched_time_avg = MSEC_PER_SEC;
 // sysctl_sched_rt_period: 1000000
 unsigned int sysctl_sched_rt_period = 1000000;
 
+// ARM10C 20140920
 __read_mostly int scheduler_running;
 
 /*
@@ -2440,6 +2441,7 @@ notrace unsigned long get_parent_ip(unsigned long addr)
 
 // ARM10C 20130907
 // ARM10C 20140315
+// ARM10C 20140920
 void __kprobes preempt_count_add(int val)
 {
 #ifdef CONFIG_DEBUG_PREEMPT // ARM10C Y 
@@ -5194,6 +5196,7 @@ cpu_attach_domain(struct sched_domain *sd, struct root_domain *rd, int cpu)
 
 /* cpus with isolated domains */
 // ARM10C 20140913
+// ARM10C 20140920
 static cpumask_var_t cpu_isolated_map;
 
 /* Setup the mask of cpus configured for isolated domains */
@@ -6751,15 +6754,28 @@ void __init sched_init(void)
 	// sched_domains_tmpmask.bits[0]: 0
 
 // 2014/09/13 종료
+// 2014/09/20 시작
 
 	/* May be allocated at isolcpus cmdline parse time */
+	// cpu_isolated_map: NULL
 	if (cpu_isolated_map == NULL)
+		// cpu_isolated_map: NULL, GFP_NOWAIT: 0
 		zalloc_cpumask_var(&cpu_isolated_map, GFP_NOWAIT);
+		// cpu_isolated_map.bits[0]: 0
+
 	idle_thread_set_boot_cpu();
+	// [pcp0] idle_threads: &init_task
 #endif
 	init_sched_fair_class();
+	// init_sched_fair_class가 한일:
+	// softirq_vec[7].action: run_rebalance_domains
+	// nohz.next_balance: -30000 (0xFFFFFFFFFFFF8AD0)
+	// nohz.idle_cpus_mask.bits[0]: 0
+	// (&cpu_chain)->head: sched_ilb_notifier_nb 포인터 대입
+	// (&sched_ilb_notifier_nb)->next은 (&slab_notifier)->next로 대입
 
 	scheduler_running = 1;
+	// scheduler_running: 1
 }
 
 #ifdef CONFIG_DEBUG_ATOMIC_SLEEP

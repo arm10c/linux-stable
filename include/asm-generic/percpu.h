@@ -167,6 +167,26 @@ extern unsigned long __per_cpu_offset[NR_CPUS];
 //  	} while (0)
 //  	(&(runqueues) + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋);
 // })
+//
+// ARM10C 20140920
+// per_cpu_offset(0): __per_cpu_offset[0]
+// SHIFT_PERCPU_PTR(&(idle_threads), per_cpu_offset(0)):
+// ({
+//  	do {
+// 	 	const void __percpu *__vpp_verify = (typeof(&(idle_threads)))NULL;
+// 	 	(void)__vpp_verify;
+//  	} while (0)
+//  	(&(idle_threads) + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋);
+// })
+//
+// per_cpu(idle_threads, (0)):
+// ({
+//  	do {
+// 	 	const void __percpu *__vpp_verify = (typeof(&(idle_threads)))NULL;
+// 	 	(void)__vpp_verify;
+//  	} while (0)
+//  	(&(idle_threads) + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋);
+// })
 #define per_cpu(var, cpu) \
 	(*SHIFT_PERCPU_PTR(&(var), per_cpu_offset(cpu)))
 
