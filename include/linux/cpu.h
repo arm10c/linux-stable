@@ -200,6 +200,7 @@ extern void cpu_hotplug_begin(void);
 extern void cpu_hotplug_done(void);
 // ARM10C 20140920
 extern void get_online_cpus(void);
+// ARM10C 20140920
 extern void put_online_cpus(void);
 extern void cpu_hotplug_disable(void);
 extern void cpu_hotplug_enable(void);

@@ -680,7 +680,10 @@ asmlinkage void __init start_kernel(void)
 	// irqs_disabled(): 1
 	if (WARN(!irqs_disabled(), "Interrupts were enabled *very* early, fixing it\n"))
 		local_irq_disable();
+
 	idr_init_cache();
+	// integer ID management로 사용하는 idr_layer_cache에 kmem_cache#21 을 생성 및 초기화 후 할당
+
 	rcu_init();
 	tick_nohz_init();
 	context_tracking_init();

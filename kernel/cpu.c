@@ -110,18 +110,27 @@ void get_online_cpus(void)
 }
 EXPORT_SYMBOL_GPL(get_online_cpus);
 
+// ARM10C 20140920
 void put_online_cpus(void)
 {
+	// cpu_hotplug.active_writer: NULL, current: &init_task
 	if (cpu_hotplug.active_writer == current)
 		return;
-	mutex_lock(&cpu_hotplug.lock);
 
+	mutex_lock(&cpu_hotplug.lock);
+	// &cpu_hotplug.lock을 사용한 mutex lock 수행
+
+	// cpu_hotplug.refcount: 1
 	if (WARN_ON(!cpu_hotplug.refcount))
 		cpu_hotplug.refcount++; /* try to fix things up */
 
+	// cpu_hotplug.refcount: 1, cpu_hotplug.active_writer: NULL
 	if (!--cpu_hotplug.refcount && unlikely(cpu_hotplug.active_writer))
 		wake_up_process(cpu_hotplug.active_writer);
+	// cpu_hotplug.refcount: 0
+
 	mutex_unlock(&cpu_hotplug.lock);
+	// &cpu_hotplug.lock을 사용한 mutex lock 해재
 
 }
 EXPORT_SYMBOL_GPL(put_online_cpus);

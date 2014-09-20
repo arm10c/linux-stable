@@ -4821,6 +4821,8 @@ redo:
 // s: UNMOVABLE인 page (boot_kmem_cache)의 object의 시작 virtual address, gfpflags: __GFP_ZERO: 0x8000
 // ARM10C 20140726
 // s: kmem_cache#30, gfpflags: GFP_NOWAIT: 0, _RET_IP_
+// ARM10C 20140920
+// s: kmem_cache#30, gfpflags: GFP_KERNEL: 0xD0, _RET_IP_
 static __always_inline void *slab_alloc(struct kmem_cache *s,
 		gfp_t gfpflags, unsigned long addr)
 {
@@ -7495,6 +7497,7 @@ __kmem_cache_alias(struct mem_cgroup *memcg, const char *name, size_t size,
 	s = find_mergeable(memcg, size, align, flags, name, ctor);
 	// s: NULL
 
+	// s: NULL
 	if (s) {
 		s->refcount++;
 		/*
@@ -7510,7 +7513,9 @@ __kmem_cache_alias(struct mem_cgroup *memcg, const char *name, size_t size,
 		}
 	}
 
+	// s: NULL
 	return s;
+	// return NULL
 }
 
 // ARM10C 20140419
@@ -7521,6 +7526,8 @@ __kmem_cache_alias(struct mem_cgroup *memcg, const char *name, size_t size,
 // s: &kmem_cache#30, flags: 0
 // ARM10C 20140726
 // s: &kmem_cache#23, flags: 0
+// ARM10C 20140920
+// s: kmem_cache#21, flags: SLAB_PANIC: 0x00040000UL
 int __kmem_cache_create(struct kmem_cache *s, unsigned long flags)
 {
 	int err;
@@ -7727,20 +7734,27 @@ static struct notifier_block slab_notifier = {
 
 // ARM10C 20140726
 // len: 12, gfp: GFP_NOWAIT: 0, _RET_IP_
+// ARM10C 20140920
+// len: 16, gfp: GFP_KERNEL: 0xD0, _RET_IP_
 void *__kmalloc_track_caller(size_t size, gfp_t gfpflags, unsigned long caller)
 {
 	struct kmem_cache *s;
 	void *ret;
 
 	// size: 12, KMALLOC_MAX_CACHE_SIZE: 0x2000
+	// size: 16, KMALLOC_MAX_CACHE_SIZE: 0x2000
 	if (unlikely(size > KMALLOC_MAX_CACHE_SIZE))
 		return kmalloc_large(size, gfpflags);
 
 	// size: 12, gfpflags: GFP_NOWAIT: 0
 	// kmalloc_slab(12, 0): kmem_cache#30
+	// size: 16, gfpflags: GFP_KERNEL: 0xD0
+	// kmalloc_slab(16, 0xD0): kmem_cache#30
 	s = kmalloc_slab(size, gfpflags);
 	// s: kmem_cache#30
+	// s: kmem_cache#30
 
+	// s: kmem_cache#30, ZERO_OR_NULL_PTR(kmem_cache#30): 0
 	// s: kmem_cache#30, ZERO_OR_NULL_PTR(kmem_cache#30): 0
 	if (unlikely(ZERO_OR_NULL_PTR(s)))
 		return s;
@@ -7748,15 +7762,21 @@ void *__kmalloc_track_caller(size_t size, gfp_t gfpflags, unsigned long caller)
 	// s: kmem_cache#30, gfpflags: GFP_NOWAIT: 0, _RET_IP_
 	// slab_alloc(kmem_cache#30, GFP_NOWAIT: 0, _RET_IP_):
 	// UNMOVABLE인 page (kmem_cache#30)의 시작 virtual address (kmem_cache#30-o0)
+	// s: kmem_cache#30, gfpflags: GFP_KERNEL: 0xD0, _RET_IP_
+	// slab_alloc(kmem_cache#30, GFP_NOWAIT: 0, _RET_IP_):
+	// kmem_cache#30-oX
 	ret = slab_alloc(s, gfpflags, caller);
 	// ret: kmem_cache#30-o0
+	// ret: kmem_cache#30-oX
 
 	/* Honor the call site pointer we received. */
 	trace_kmalloc(caller, ret, size, s->size, gfpflags);
 
 	// ret: kmem_cache#30-o0
+	// ret: kmem_cache#30-oX
 	return ret;
 	// return kmem_cache#30-o0
+	// return kmem_cache#30-oX
 }
 
 #ifdef CONFIG_NUMA

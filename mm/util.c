@@ -22,19 +22,35 @@
  * @s: the string to duplicate
  * @gfp: the GFP mask used in the kmalloc() call when allocating memory
  */
+// ARM10C 20140920
+// name: "idr_layer_cache", GFP_KERNEL: 0xD0
 char *kstrdup(const char *s, gfp_t gfp)
 {
 	size_t len;
 	char *buf;
 
+	// s: "idr_layer_cache"
 	if (!s)
 		return NULL;
 
+	// s: "idr_layer_cache", strlen("idr_layer_cache"): 15
 	len = strlen(s) + 1;
+	// len: 16
+
+	// len: 16, gfp: GFP_KERNEL: 0xD0
+	// kmalloc_track_caller(16, GFP_KERNEL: 0xD0): kmem_cache#30-oX
 	buf = kmalloc_track_caller(len, gfp);
+	// buf: kmem_cache#30-oX
+
+	// buf: kmem_cache#30-oX
 	if (buf)
+		// buf: kmem_cache#30-oX, s: "idr_layer_cache", len: 16
 		memcpy(buf, s, len);
+		// buf: kmem_cache#30-oX: "idr_layer_cache"
+
+	// buf: kmem_cache#30-oX: "idr_layer_cache"
 	return buf;
+	// return kmem_cache#30-oX: "idr_layer_cache"
 }
 EXPORT_SYMBOL(kstrdup);
 

@@ -33,6 +33,7 @@ typedef struct cpumask { DECLARE_BITMAP(bits, NR_CPUS); } cpumask_t;
 #else
 // ARM10C 20140215
 // ARM10C 20140726
+// ARM10C 20140920
 // nr_cpu_ids: 4
 extern int nr_cpu_ids;
 #endif

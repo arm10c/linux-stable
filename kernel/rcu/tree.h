@@ -36,18 +36,26 @@
  * In practice, this did work well going from three levels to four.
  * Of course, your mileage may vary.
  */
+// ARM10C 20140920
+// MAX_RCU_LVLS: 4
 #define MAX_RCU_LVLS 4
+// ARM10C 20140920
+// CONFIG_RCU_FANOUT_LEAF: 16
+// RCU_FANOUT_1: 16
 #define RCU_FANOUT_1	      (CONFIG_RCU_FANOUT_LEAF)
 #define RCU_FANOUT_2	      (RCU_FANOUT_1 * CONFIG_RCU_FANOUT)
 #define RCU_FANOUT_3	      (RCU_FANOUT_2 * CONFIG_RCU_FANOUT)
 #define RCU_FANOUT_4	      (RCU_FANOUT_3 * CONFIG_RCU_FANOUT)
 
+// NR_CPUS: 4, RCU_FANOUT_1: 16
 #if NR_CPUS <= RCU_FANOUT_1
 #  define RCU_NUM_LVLS	      1
 #  define NUM_RCU_LVL_0	      1
 #  define NUM_RCU_LVL_1	      (NR_CPUS)
 #  define NUM_RCU_LVL_2	      0
 #  define NUM_RCU_LVL_3	      0
+// ARM10C 20140920
+// NUM_RCU_LVL_4: 0
 #  define NUM_RCU_LVL_4	      0
 #elif NR_CPUS <= RCU_FANOUT_2
 #  define RCU_NUM_LVLS	      2
@@ -353,10 +361,15 @@ struct rcu_data {
 #define RCU_FORCE_QS		3	/* Need to force quiescent state. */
 #define RCU_SIGNAL_INIT		RCU_SAVE_DYNTICK
 
+// ARM10C 20140920
+// HZ: 100
+// RCU_JIFFIES_TILL_FORCE_QS: 1
 #define RCU_JIFFIES_TILL_FORCE_QS (1 + (HZ > 250) + (HZ > 500))
 					/* For jiffies_till_first_fqs and */
 					/*  and jiffies_till_next_fqs. */
 
+// ARM10C 20140920
+// RCU_JIFFIES_FQS_DIV: 256
 #define RCU_JIFFIES_FQS_DIV	256	/* Very large systems need more */
 					/*  delay between bouts of */
 					/*  quiescent-state forcing. */
