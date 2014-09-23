@@ -282,11 +282,11 @@ kmem_cache_create_memcg(struct mem_cgroup *memcg, const char *name, size_t size,
 		}
 
 		// s->name: (kmem_cache#21)->name, name: "idr_layer_cache", GFP_KERNEL: 0xD0
-		// kstrdup("idr_layer_cache", GFP_KERNEL: 0xD0): kmem_cache#30-oX: "idr_layer_cache"
+		// kstrdup("idr_layer_cache", GFP_KERNEL: 0xD0): kmem_cache#30-o17: "idr_layer_cache"
 		s->name = kstrdup(name, GFP_KERNEL);
-		// s->name: (kmem_cache#21)->name: kmem_cache#30-oX: "idr_layer_cache"
+		// s->name: (kmem_cache#21)->name: kmem_cache#30-o17: "idr_layer_cache"
 
-		// s->name: (kmem_cache#21)->name: kmem_cache#30-oX: "idr_layer_cache"
+		// s->name: (kmem_cache#21)->name: kmem_cache#30-o17: "idr_layer_cache"
 		if (!s->name) {
 			kmem_cache_free(kmem_cache, s);
 			err = -ENOMEM;
@@ -298,11 +298,11 @@ kmem_cache_create_memcg(struct mem_cgroup *memcg, const char *name, size_t size,
 		err = __kmem_cache_create(s, flags);
 		// err: 0
 
-		// __kmem_cache_create(&kmem_cache#21) 가 한일:
-		// kmem_cache#21.flags: 0
+		// __kmem_cache_open(&kmem_cache#21) 가 한일:
+		// kmem_cache#21.flags: SLAB_PANIC: 0x00040000UL
 		// kmem_cache#21.reserved: 0
-		// kmem_cache#21.min_partial: 6
-		// kmem_cache#21.cpu_partial: 2
+		// kmem_cache#21.min_partial: 5
+		// kmem_cache#21.cpu_partial: 6
 		//
 		// 할당 받아 놓은 migratetype이 MIGRATE_UNMOVABLE인 page 를 사용
 		// page 맴버를 셋팅함
@@ -312,8 +312,8 @@ kmem_cache_create_memcg(struct mem_cgroup *memcg, const char *name, size_t size,
 		// page->frozen: 1
 		// page->freelist: NULL
 		// MIGRATE_UNMOVABLE인 page 할당 받아 쪼개놓은 object들에서 object를 1개 할당받음
-		// (UNMOVABLE인 page 의 object의 시작 virtual address + 3968 (kmem_cache_node#54))
-		// 54번째 object:
+		// (UNMOVABLE인 page 의 object의 시작 virtual address + 3456 (kmem_cache_node#54))
+		// 55번째 object:
 		// (kmem_cache_node#54)->nr_partial: 0
 		// (kmem_cache_node#54)->list_lock: spinlock 초기화 수행
 		// (kmem_cache_node#54)->slabs: 0,

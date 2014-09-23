@@ -15,6 +15,8 @@
 // size: 192
 // ARM10C 20140726
 // size: 4096
+// ARM10C 20140920
+// size: 1080
 static inline __attribute_const__
 int __get_order(unsigned long size)
 {
@@ -23,37 +25,44 @@ int __get_order(unsigned long size)
 	// size: 64
 	// size: 192
 	// size: 4096
+	// size: 1080
 	size--;
 	// size: 63
 	// size: 191
-	// size: 4095
+	// size: 1079
 
 	// size: 63, PAGE_SHIFT: 12
 	// size: 191, PAGE_SHIFT: 12
 	// size: 4095, PAGE_SHIFT: 12
+	// size: 1079, PAGE_SHIFT: 12
 	size >>= PAGE_SHIFT;
 	// size : 0
 	// size : 0
 	// size : 1
+	// size : 0
 
 #if BITS_PER_LONG == 32 // BITS_PER_LONG: 32
 	// size : 0
 	// size : 0
 	// size : 1
+	// size : 0
 	order = fls(size);
 	// order: 0
 	// order: 0
 	// order: 1
+	// order: 0
 #else
 	order = fls64(size);
 #endif
 	// order: 0
 	// order: 0
 	// order: 1
+	// order: 0
 	return order;
 	// return 0
 	// return 0
 	// return 1
+	// return 0
 }
 
 /**
@@ -81,6 +90,7 @@ int __get_order(unsigned long size)
 // ARM10C 20140419
 // ARM10C 20140614
 // ARM10C 20140726
+// ARM10C 20140920
 #define get_order(n)						\
 (								\
 	__builtin_constant_p(n) ? (				\

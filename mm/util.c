@@ -38,19 +38,19 @@ char *kstrdup(const char *s, gfp_t gfp)
 	// len: 16
 
 	// len: 16, gfp: GFP_KERNEL: 0xD0
-	// kmalloc_track_caller(16, GFP_KERNEL: 0xD0): kmem_cache#30-oX
+	// kmalloc_track_caller(16, GFP_KERNEL: 0xD0): kmem_cache#30-o17
 	buf = kmalloc_track_caller(len, gfp);
-	// buf: kmem_cache#30-oX
+	// buf: kmem_cache#30-o17
 
-	// buf: kmem_cache#30-oX
+	// buf: kmem_cache#30-o17
 	if (buf)
-		// buf: kmem_cache#30-oX, s: "idr_layer_cache", len: 16
+		// buf: kmem_cache#30-o17, s: "idr_layer_cache", len: 16
 		memcpy(buf, s, len);
-		// buf: kmem_cache#30-oX: "idr_layer_cache"
+		// buf: kmem_cache#30-o17: "idr_layer_cache"
 
-	// buf: kmem_cache#30-oX: "idr_layer_cache"
+	// buf: kmem_cache#30-o17: "idr_layer_cache"
 	return buf;
-	// return kmem_cache#30-oX: "idr_layer_cache"
+	// return kmem_cache#30-o17: "idr_layer_cache"
 }
 EXPORT_SYMBOL(kstrdup);
 
