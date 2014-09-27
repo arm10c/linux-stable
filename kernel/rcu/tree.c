@@ -3323,6 +3323,8 @@ static void rcu_prepare_cpu(int cpu)
 	//     &rsp->flavors != (&rcu_struct_flavors); rsp = list_next_entry(rsp, flavors))
 
 		// cpu: 0, rsp: &rcu_bh_state, rsp->name: (&rcu_bh_state)->name: "rcu_bh", strcmp("rcu_bh", "rcu_preempt"): -1
+		// cpu: 0, rsp: &rcu_sched_data, rsp->name: (&rcu_bh_state)->name: "rcu_sched", strcmp("rcu_sched", "rcu_preempt"): -1
+		// cpu: 0, rsp: &rcu_preempt_data, rsp->name: (&rcu_preempt_state)->name: "rcu_preempt", strcmp("rcu_preempt", "rcu_preempt"): 0
 		rcu_init_percpu_data(cpu, rsp,
 				     strcmp(rsp->name, "rcu_preempt") == 0);
 		// rcu_init_percpu_data(0, &rcu_bh_state, 0)에 한일:
@@ -3403,50 +3405,47 @@ static int rcu_cpu_notify(struct notifier_block *self,
 		// cpu: 0
 		rcu_prepare_cpu(cpu);
 		// rcu_prepare_cpu에서 한일:
-		// rcu_init_percpu_data(0...3, &rcu_bh_state, 0)에 한일:
-		// [pcp0...3] (&rcu_bh_data)->beenonline: 1
-		// [pcp0...3] (&rcu_bh_data)->preemptible: 0
-		// [pcp0...3] (&rcu_bh_data)->len_last_fqs_check: 0
-		// [pcp0...3] (&rcu_bh_data)->n_force_qs_snap: 0
-		// [pcp0...3] (&rcu_bh_data)->blimit: 10
-		// [pcp0...3] (&rcu_bh_data)->nxtlist: NULL
-		// [pcp0...3] (&rcu_bh_data)->nxttail[0...3]: [pcp0...3] &(&rcu_bh_data)->nxtlist
-		// [pcp0...3] (&rcu_bh_data)->dynticks->dynticks_nesting: 0x140000000000000
-		// [pcp0...3] (&rcu_bh_data)->dynticks->dynticks: 1
-		// [pcp0...3] ((&rcu_bh_state)->level[0])->qsmaskinit: [pcp0] 1, [pcp1] 2, [pcp2] 4, [pcp3] 8
-		// [pcp0...3] (&rcu_bh_data)->gpnum: 0xfffffed4
-		// [pcp0...3] (&rcu_bh_data)->passed_quiesce: 0
-		// [pcp0...3] (&rcu_bh_data)->qs_pending: 0
+		// [pcp0] (&rcu_bh_data)->beenonline: 1
+		// [pcp0] (&rcu_bh_data)->preemptible: 0
+		// [pcp0] (&rcu_bh_data)->len_last_fqs_check: 0
+		// [pcp0] (&rcu_bh_data)->n_force_qs_snap: 0
+		// [pcp0] (&rcu_bh_data)->blimit: 10
+		// [pcp0] (&rcu_bh_data)->nxtlist: NULL
+		// [pcp0] (&rcu_bh_data)->nxttail[0...3]: [pcp0] &(&rcu_bh_data)->nxtlist
+		// [pcp0] (&rcu_bh_data)->dynticks->dynticks_nesting: 0x140000000000000
+		// [pcp0] (&rcu_bh_data)->dynticks->dynticks: 1
+		// [pcp0] ((&rcu_bh_state)->level[0])->qsmaskinit: 1
+		// [pcp0] (&rcu_bh_data)->gpnum: 0xfffffed4
+		// [pcp0] (&rcu_bh_data)->passed_quiesce: 0
+		// [pcp0] (&rcu_bh_data)->qs_pending: 0
 		//
-		// rcu_init_percpu_data(0...3, &rcu_sched_state, 0)에 한일:
-		// [pcp0...3] (&rcu_sched_data)->beenonline: 1
-		// [pcp0...3] (&rcu_sched_data)->preemptible: 0
-		// [pcp0...3] (&rcu_sched_data)->len_last_fqs_check: 0
-		// [pcp0...3] (&rcu_sched_data)->n_force_qs_snap: 0
-		// [pcp0...3] (&rcu_sched_data)->blimit: 10
-		// [pcp0...3] (&rcu_sched_data)->nxtlist: NULL
-		// [pcp0...3] (&rcu_sched_data)->nxttail[0...3]: [pcp0...3] &(&rcu_sched_data)->nxtlist
-		// [pcp0...3] (&rcu_sched_data)->dynticks->dynticks_nesting: 0x140000000000000
-		// [pcp0...3] (&rcu_sched_data)->dynticks->dynticks: 1
-		// [pcp0...3] ((&rcu_sched_state)->level[0])->qsmaskinit: [pcp0] 1, [pcp1] 2, [pcp2] 4, [pcp3] 8
-		// [pcp0...3] (&rcu_sched_data)->gpnum: 0xfffffed4
-		// [pcp0...3] (&rcu_sched_data)->passed_quiesce: 0
-		// [pcp0...3] (&rcu_sched_data)->qs_pending: 0
+		// [pcp0] (&rcu_sched_data)->beenonline: 1
+		// [pcp0] (&rcu_sched_data)->preemptible: 0
+		// [pcp0] (&rcu_sched_data)->len_last_fqs_check: 0
+		// [pcp0] (&rcu_sched_data)->n_force_qs_snap: 0
+		// [pcp0] (&rcu_sched_data)->blimit: 10
+		// [pcp0] (&rcu_sched_data)->nxtlist: NULL
+		// [pcp0] (&rcu_sched_data)->nxttail[0...3]: [pcp0] &(&rcu_sched_data)->nxtlist
+		// [pcp0] (&rcu_sched_data)->dynticks->dynticks_nesting: 0x140000000000000
+		// [pcp0] (&rcu_sched_data)->dynticks->dynticks: 1
+		// [pcp0] ((&rcu_sched_state)->level[0])->qsmaskinit: 1
+		// [pcp0] (&rcu_sched_data)->gpnum: 0xfffffed4
+		// [pcp0] (&rcu_sched_data)->passed_quiesce: 0
+		// [pcp0] (&rcu_sched_data)->qs_pending: 0
 		//
-		// rcu_init_percpu_data(0...3, &rcu_preempt_state, 1)에 한일:
-		// [pcp0...3] (&rcu_preempt_data)->beenonline: 1
-		// [pcp0...3] (&rcu_preempt_data)->preemptible: 1
-		// [pcp0...3] (&rcu_preempt_data)->len_last_fqs_check: 0
-		// [pcp0...3] (&rcu_preempt_data)->n_force_qs_snap: 0
-		// [pcp0...3] (&rcu_preempt_data)->blimit: 10
-		// [pcp0...3] (&rcu_preempt_data)->nxtlist: NULL
-		// [pcp0...3] (&rcu_preempt_data)->nxttail[0...3]: [pcp0...3] &(&rcu_preempt_data)->nxtlist
-		// [pcp0...3] (&rcu_preempt_data)->dynticks->dynticks_nesting: 0x140000000000000
-		// [pcp0...3] (&rcu_preempt_data)->dynticks->dynticks: 1
-		// [pcp0...3] ((&rcu_preempt_state)->level[0])->qsmaskinit: [pcp0] 1, [pcp1] 2, [pcp2] 4, [pcp3] 8
-		// [pcp0...3] (&rcu_preempt_data)->gpnum: 0xfffffed4
-		// [pcp0...3] (&rcu_preempt_data)->passed_quiesce: 0
-		// [pcp0...3] (&rcu_preempt_data)->qs_pending: 0
+		// [pcp0] (&rcu_preempt_data)->beenonline: 1
+		// [pcp0] (&rcu_preempt_data)->preemptible: 1
+		// [pcp0] (&rcu_preempt_data)->len_last_fqs_check: 0
+		// [pcp0] (&rcu_preempt_data)->n_force_qs_snap: 0
+		// [pcp0] (&rcu_preempt_data)->blimit: 10
+		// [pcp0] (&rcu_preempt_data)->nxtlist: NULL
+		// [pcp0] (&rcu_preempt_data)->nxttail[0...3]: [pcp0] &(&rcu_preempt_data)->nxtlist
+		// [pcp0] (&rcu_preempt_data)->dynticks->dynticks_nesting: 0x140000000000000
+		// [pcp0] (&rcu_preempt_data)->dynticks->dynticks: 1
+		// [pcp0] ((&rcu_preempt_state)->level[0])->qsmaskinit: 1
+		// [pcp0] (&rcu_preempt_data)->gpnum: 0xfffffed4
+		// [pcp0] (&rcu_preempt_data)->passed_quiesce: 0
+		// [pcp0] (&rcu_preempt_data)->qs_pending: 0
 
 		// cpu: 0
 		rcu_prepare_kthreads(cpu); // null function
@@ -4133,9 +4132,57 @@ void __init rcu_init(void)
 
 		// CPU_UP_PREPARE: 0x0003, cpu: 0
 		// rcu_cpu_notify(NULL, 0x0003, 0): NOTIFY_OK: 0x0001
+		// CPU_UP_PREPARE: 0x0003, cpu: 1
+		// rcu_cpu_notify(NULL, 0x0003, 1): NOTIFY_OK: 0x0001
+		// CPU_UP_PREPARE: 0x0003, cpu: 2
+		// rcu_cpu_notify(NULL, 0x0003, 2): NOTIFY_OK: 0x0001
+		// CPU_UP_PREPARE: 0x0003, cpu: 3
+		// rcu_cpu_notify(NULL, 0x0003, 3): NOTIFY_OK: 0x0001
 		rcu_cpu_notify(NULL, CPU_UP_PREPARE, (void *)(long)cpu);
+		// rcu_cpu_notify에서 한일:
+		// [pcp0...3] (&rcu_bh_data)->beenonline: 1
+		// [pcp0...3] (&rcu_bh_data)->preemptible: 0
+		// [pcp0...3] (&rcu_bh_data)->len_last_fqs_check: 0
+		// [pcp0...3] (&rcu_bh_data)->n_force_qs_snap: 0
+		// [pcp0...3] (&rcu_bh_data)->blimit: 10
+		// [pcp0...3] (&rcu_bh_data)->nxtlist: NULL
+		// [pcp0...3] (&rcu_bh_data)->nxttail[0...3]: [pcp0...3] &(&rcu_bh_data)->nxtlist
+		// [pcp0...3] (&rcu_bh_data)->dynticks->dynticks_nesting: 0x140000000000000
+		// [pcp0...3] (&rcu_bh_data)->dynticks->dynticks: 1
+		// [pcp0...3] ((&rcu_bh_state)->level[0])->qsmaskinit: [pcp0] 1, [pcp1] 2, [pcp2] 4, [pcp3] 8
+		// [pcp0...3] (&rcu_bh_data)->gpnum: 0xfffffed4
+		// [pcp0...3] (&rcu_bh_data)->passed_quiesce: 0
+		// [pcp0...3] (&rcu_bh_data)->qs_pending: 0
+		//
+		// [pcp0...3] (&rcu_sched_data)->beenonline: 1
+		// [pcp0...3] (&rcu_sched_data)->preemptible: 0
+		// [pcp0...3] (&rcu_sched_data)->len_last_fqs_check: 0
+		// [pcp0...3] (&rcu_sched_data)->n_force_qs_snap: 0
+		// [pcp0...3] (&rcu_sched_data)->blimit: 10
+		// [pcp0...3] (&rcu_sched_data)->nxtlist: NULL
+		// [pcp0...3] (&rcu_sched_data)->nxttail[0...3]: [pcp0...3] &(&rcu_sched_data)->nxtlist
+		// [pcp0...3] (&rcu_sched_data)->dynticks->dynticks_nesting: 0x140000000000000
+		// [pcp0...3] (&rcu_sched_data)->dynticks->dynticks: 1
+		// [pcp0...3] ((&rcu_sched_state)->level[0])->qsmaskinit: [pcp0] 1, [pcp1] 2, [pcp2] 4, [pcp3] 8
+		// [pcp0...3] (&rcu_sched_data)->gpnum: 0xfffffed4
+		// [pcp0...3] (&rcu_sched_data)->passed_quiesce: 0
+		// [pcp0...3] (&rcu_sched_data)->qs_pending: 0
+		//
+		// [pcp0...3] (&rcu_preempt_data)->beenonline: 1
+		// [pcp0...3] (&rcu_preempt_data)->preemptible: 1
+		// [pcp0...3] (&rcu_preempt_data)->len_last_fqs_check: 0
+		// [pcp0...3] (&rcu_preempt_data)->n_force_qs_snap: 0
+		// [pcp0...3] (&rcu_preempt_data)->blimit: 10
+		// [pcp0...3] (&rcu_preempt_data)->nxtlist: NULL
+		// [pcp0...3] (&rcu_preempt_data)->nxttail[0...3]: [pcp0...3] &(&rcu_preempt_data)->nxtlist
+		// [pcp0...3] (&rcu_preempt_data)->dynticks->dynticks_nesting: 0x140000000000000
+		// [pcp0...3] (&rcu_preempt_data)->dynticks->dynticks: 1
+		// [pcp0...3] ((&rcu_preempt_state)->level[0])->qsmaskinit: [pcp0] 1, [pcp1] 2, [pcp2] 4, [pcp3] 8
+		// [pcp0...3] (&rcu_preempt_data)->gpnum: 0xfffffed4
+		// [pcp0...3] (&rcu_preempt_data)->passed_quiesce: 0
+		// [pcp0...3] (&rcu_preempt_data)->qs_pending: 0
 
-	// 2014/09/27 종료
+// 2014/09/27 종료
 }
 
 #include "tree_plugin.h"
