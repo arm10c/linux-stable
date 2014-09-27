@@ -10,11 +10,20 @@
 #include <linux/wait.h>
 #include <linux/hash.h>
 
+// ARM10C 20140927
+// &rsp->gp_wq: &(&rcu_bh_state)->gp_wq, "&rsp->gp_wq", &__key
 void __init_waitqueue_head(wait_queue_head_t *q, const char *name, struct lock_class_key *key)
 {
+	// &q->lock: &(&(&rcu_bh_state)->gp_wq)->lock
 	spin_lock_init(&q->lock);
-	lockdep_set_class_and_name(&q->lock, key, name);
+	// &q->lock: &(&(&rcu_bh_state)->gp_wq)->lock을 사용한 spinlock 초기화
+
+	// &q->lock: &(&(&rcu_bh_state)->gp_wq)->lock, key: &__key, name: "&rsp->gp_wq"
+	lockdep_set_class_and_name(&q->lock, key, name); // null function
+
+	// &q->task_list: &(&(&rcu_bh_state)->gp_wq)->task_list
 	INIT_LIST_HEAD(&q->task_list);
+	// &q->task_list: &(&(&rcu_bh_state)->gp_wq)->task_list를 사용한 list 초기화
 }
 
 EXPORT_SYMBOL(__init_waitqueue_head);

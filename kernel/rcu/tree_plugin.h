@@ -129,6 +129,25 @@ static void __init rcu_bootup_announce_oddness(void)
 
 #ifdef CONFIG_TREE_PREEMPT_RCU // CONFIG_TREE_PREEMPT_RCU=y
 
+// ARM10C 20140927
+// #define RCU_STATE_INITIALIZER(rcu_preempt, 's', call_rcu)
+// static char rcu_preempt_varname[] = "rcu_preempt";
+// static const char *tp_rcu_preempt_varname __used __tracepoint_string = rcu_preempt_varname;
+// struct rcu_state rcu_preempt_state = {
+// 	.level = { &rcu_preempt_state.node[0] },
+// 	.call = call_rcu,
+// 	.fqs_state = RCU_GP_IDLE,
+// 	.gpnum = 0UL - 300UL,
+// 	.completed = 0UL - 300UL,
+// 	.orphan_lock = __RAW_SPIN_LOCK_UNLOCKED(&rcu_preempt_state.orphan_lock),
+// 	.orphan_nxttail = &rcu_preempt_state.orphan_nxtlist,
+// 	.orphan_donetail = &rcu_preempt_state.orphan_donelist,
+// 	.barrier_mutex = __MUTEX_INITIALIZER(rcu_preempt_state.barrier_mutex),
+// 	.onoff_mutex = __MUTEX_INITIALIZER(rcu_preempt_state.onoff_mutex),
+// 	.name = rcu_preempt_varname,
+// 	.abbr = 'p',
+// };
+// DEFINE_PER_CPU(struct rcu_data, rcu_preempt_data)
 RCU_STATE_INITIALIZER(rcu_preempt, 'p', call_rcu);
 static struct rcu_state *rcu_state = &rcu_preempt_state;
 
@@ -945,9 +964,73 @@ EXPORT_SYMBOL_GPL(rcu_barrier);
 /*
  * Initialize preemptible RCU's state structures.
  */
+// ARM10C 20140927
 static void __init __rcu_init_preempt(void)
 {
 	rcu_init_one(&rcu_preempt_state, &rcu_preempt_data);
+	// rcu_init_one(&rcu_preempt_state)한일:
+	// (&rcu_preempt_state)->levelcnt[0]: 1
+	// (&rcu_preempt_state)->levelspread[0]: 4
+	// &((&rcu_preempt_state)->level[0])->lock 사용한 spinlock 초기화
+	// &((&rcu_preempt_state)->level[0])->fqslock 사용한 spinlock 초기화
+	// ((&rcu_preempt_state)->level[0])->completed: 0xfffffed4
+	// ((&rcu_preempt_state)->level[0])->qsmask: 0
+	// ((&rcu_preempt_state)->level[0])->qsmaskinit: 0
+	// ((&rcu_preempt_state)->level[0])->grplo: 0
+	// ((&rcu_preempt_state)->level[0])->grphi: 3
+	// ((&rcu_preempt_state)->level[0])->gpnum: 0
+	// ((&rcu_preempt_state)->level[0])->grpmask: 0
+	// ((&rcu_preempt_state)->level[0])->parent: NULL
+	// ((&rcu_preempt_state)->level[0])->level: 0
+	// &((&rcu_preempt_state)->level[0])->blkd_tasks 을 사용한 list 초기화
+	//
+	// (&rcu_preempt_state)->rda: &rcu_preempt_data
+	// &(&(&rcu_preempt_state)->gp_wq)->lock을 사용한 spinlock 초기화
+	// &(&(&rcu_preempt_state)->gp_wq)->task_list를 사용한 list 초기화
+	// (&(&rcu_preempt_state)->wakeup_work)->flags: 0
+	// (&(&rcu_preempt_state)->wakeup_work)->func: rsp_wakeup
+	//
+	// (&rcu_preempt_state)->level[0]
+	//
+	// [pcp0] (&rcu_preempt_data)->mynode: (&rcu_preempt_state)->level[0]
+	// [pcp1] (&rcu_preempt_data)->mynode: (&rcu_preempt_state)->level[0]
+	// [pcp2] (&rcu_preempt_data)->mynode: (&rcu_preempt_state)->level[0]
+	// [pcp3] (&rcu_preempt_data)->mynode: (&rcu_preempt_state)->level[0]
+	//
+	// [pcp0] (&rcu_preempt_data)->grpmask: 1
+	// [pcp0] (&rcu_preempt_data)->nxtlist: NULL
+	// [pcp0] (&rcu_preempt_data)->nxttail[0...3]: [pcp0] &(&rcu_preempt_data)->nxtlist
+	// [pcp0] (&rcu_preempt_data)->qlen_lazy: 0
+	// [pcp0] (&rcu_preempt_data)->qlen: 0
+	// [pcp0] (&rcu_preempt_data)->dynticks: [pcp0] &rcu_dynticks
+	// [pcp0] (&rcu_preempt_data)->cpu: 0
+	// [pcp0] (&rcu_preempt_data)->rsp: &rcu_preempt_state
+	// [pcp1] (&rcu_preempt_data)->grpmask: 2
+	// [pcp1] (&rcu_preempt_data)->nxtlist: NULL
+	// [pcp1] (&rcu_preempt_data)->nxttail[0...3]: [pcp0] &(&rcu_preempt_data)->nxtlist
+	// [pcp1] (&rcu_preempt_data)->qlen_lazy: 0
+	// [pcp1] (&rcu_preempt_data)->qlen: 0
+	// [pcp1] (&rcu_preempt_data)->dynticks: [pcp1] &rcu_dynticks
+	// [pcp1] (&rcu_preempt_data)->cpu: 1
+	// [pcp1] (&rcu_preempt_data)->rsp: &rcu_preempt_state
+	// [pcp2] (&rcu_preempt_data)->grpmask: 4
+	// [pcp2] (&rcu_preempt_data)->nxtlist: NULL
+	// [pcp2] (&rcu_preempt_data)->nxttail[0...3]: [pcp2] &(&rcu_preempt_data)->nxtlist
+	// [pcp2] (&rcu_preempt_data)->qlen_lazy: 0
+	// [pcp2] (&rcu_preempt_data)->qlen: 0
+	// [pcp2] (&rcu_preempt_data)->dynticks: [pcp2] &rcu_dynticks
+	// [pcp2] (&rcu_preempt_data)->cpu: 2
+	// [pcp2] (&rcu_preempt_data)->rsp: &rcu_preempt_state
+	// [pcp3] (&rcu_preempt_data)->grpmask: 8
+	// [pcp3] (&rcu_preempt_data)->nxtlist: NULL
+	// [pcp3] (&rcu_preempt_data)->nxttail[0...3]: [pcp3] &(&rcu_preempt_data)->nxtlist
+	// [pcp3] (&rcu_preempt_data)->qlen_lazy: 0
+	// [pcp3] (&rcu_preempt_data)->qlen: 0
+	// [pcp3] (&rcu_preempt_data)->dynticks: [pcp3] &rcu_dynticks
+	// [pcp3] (&rcu_preempt_data)->cpu: 3
+	// [pcp3] (&rcu_preempt_data)->rsp: &rcu_preempt_state
+	//
+	// rcu_struct_flavors에 (&rcu_preempt_state)->flavors를 list 추가
 }
 
 /*
@@ -1146,7 +1229,7 @@ void exit_rcu(void)
 
 #endif /* #else #ifdef CONFIG_TREE_PREEMPT_RCU */
 
-#ifdef CONFIG_RCU_BOOST
+#ifdef CONFIG_RCU_BOOST // CONFIG_RCU_BOOST=n
 
 #include "../locking/rtmutex_common.h"
 
@@ -1567,6 +1650,7 @@ static int __init rcu_scheduler_really_started(void)
 }
 early_initcall(rcu_scheduler_really_started);
 
+// ARM10C 20140927
 static void rcu_prepare_kthreads(int cpu)
 {
 }
@@ -2016,7 +2100,7 @@ static void increment_cpu_stall_ticks(void)
 
 #endif /* #else #ifdef CONFIG_RCU_CPU_STALL_INFO */
 
-#ifdef CONFIG_RCU_NOCB_CPU
+#ifdef CONFIG_RCU_NOCB_CPU // CONFIG_RCU_NOCB_CPU=n
 
 /*
  * Offload callback processing from the boot-time-specified set of CPUs
@@ -2375,6 +2459,8 @@ static void rcu_nocb_gp_set(struct rcu_node *rnp, int nrq)
 {
 }
 
+// ARM10C 20140927
+// rnp: (&rcu_bh_state)->level[0]
 static void rcu_init_one_nocb(struct rcu_node *rnp)
 {
 }
@@ -2391,6 +2477,8 @@ static bool __maybe_unused rcu_nocb_adopt_orphan_cbs(struct rcu_state *rsp,
 	return 0;
 }
 
+// ARM10C 20140927
+// rdp: [pcp0] &rcu_bh_data
 static void __init rcu_boot_init_nocb_percpu_data(struct rcu_data *rdp)
 {
 }
@@ -2399,6 +2487,8 @@ static void __init rcu_spawn_nocb_kthreads(struct rcu_state *rsp)
 {
 }
 
+// ARM10C 20140927
+// rdp: [pcp0] &rcu_bh_data
 static bool init_nocb_callback_list(struct rcu_data *rdp)
 {
 	return false;
@@ -2424,7 +2514,7 @@ static void rcu_kick_nohz_cpu(int cpu)
 }
 
 
-#ifdef CONFIG_NO_HZ_FULL_SYSIDLE
+#ifdef CONFIG_NO_HZ_FULL_SYSIDLE // CONFIG_NO_HZ_FULL_SYSIDLE=n
 
 /*
  * Define RCU flavor that holds sysidle state.  This needs to be the
@@ -2839,6 +2929,8 @@ static void rcu_sysidle_report_gp(struct rcu_state *rsp, int isidle,
 {
 }
 
+// ARM10C 20140927
+// rdp->dynticks: [pcp0] (&rcu_bh_data)->dynticks
 static void rcu_sysidle_init_percpu_data(struct rcu_dynticks *rdtp)
 {
 }

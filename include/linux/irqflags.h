@@ -112,6 +112,7 @@
 // ARM10C 20130322
 // ARM10C 20140412
 // ARM10C 20140510
+// ARM10C 20140927
 #define local_irq_restore(flags)			\
 	do {						\
 		if (raw_irqs_disabled_flags(flags)) {/*irq가 disabled 인가?*/	\

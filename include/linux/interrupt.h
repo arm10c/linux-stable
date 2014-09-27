@@ -340,6 +340,7 @@ extern bool force_irqthreads;
  */
 
 // ARM10C 20140920
+// ARM10C 20140927
 enum
 {
 	HI_SOFTIRQ=0,
@@ -352,6 +353,7 @@ enum
 	// SCHED_SOFTIRQ: 7
 	SCHED_SOFTIRQ,
 	HRTIMER_SOFTIRQ,
+	// RCU_SOFTIRQ: 9
 	RCU_SOFTIRQ,    /* Preferable RCU should always be the last softirq */
 
 	// NR_SOFTIRQS: 10

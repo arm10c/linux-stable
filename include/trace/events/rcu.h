@@ -17,6 +17,7 @@
  * An "@" character within "<activity>" is a comment character: Data
  * reduction scripts will ignore the "@" and the remainder of the line.
  */
+// ARM10C 20140927
 TRACE_EVENT(rcu_utilization,
 
 	TP_PROTO(const char *s),
@@ -701,6 +702,7 @@ TRACE_EVENT(rcu_barrier,
 
 #else /* #ifdef CONFIG_RCU_TRACE */
 
+// ARM10C 20140927
 #define trace_rcu_grace_period(rcuname, gpnum, gpevent) do { } while (0)
 #define trace_rcu_grace_period_init(rcuname, gpnum, level, grplo, grphi, \
 				    qsmask) do { } while (0)

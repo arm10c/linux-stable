@@ -342,7 +342,7 @@ static inline bool system_entering_hibernation(void) { return false; }
 
 extern struct mutex pm_mutex;
 
-#ifdef CONFIG_PM_SLEEP
+#ifdef CONFIG_PM_SLEEP // CONFIG_PM_SLEEP=y
 void save_processor_state(void);
 void restore_processor_state(void);
 
@@ -350,6 +350,13 @@ void restore_processor_state(void);
 extern int register_pm_notifier(struct notifier_block *nb);
 extern int unregister_pm_notifier(struct notifier_block *nb);
 
+// ARM10C 20140927
+// #define pm_notifier(rcu_pm_notify, 0):
+// {
+// 	static struct notifier_block rcu_pm_notify_nb =
+// 		{ .notifier_call = rcu_pm_notify, .priority = 0 };
+// 	register_pm_notifier(&rcu_pm_notify_nb);
+// }
 #define pm_notifier(fn, pri) {				\
 	static struct notifier_block fn##_nb =			\
 		{ .notifier_call = fn, .priority = pri };	\

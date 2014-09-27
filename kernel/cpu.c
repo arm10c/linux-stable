@@ -207,6 +207,8 @@ void cpu_hotplug_enable(void)
 // &slab_notifier
 // ARM10C 20140920
 // &sched_ilb_notifier_nb
+// ARM10C 20140927
+// &rcu_cpu_notify_nb
 int __ref register_cpu_notifier(struct notifier_block *nb)
 {
 	int ret;
@@ -214,10 +216,12 @@ int __ref register_cpu_notifier(struct notifier_block *nb)
 	// waiter를 만들어 mutex를 lock을 시도하며 기다리다 가능할 때 mutex lock한다.
 	// waiter를 만들어 mutex를 lock을 시도하며 기다리다 가능할 때 mutex lock한다.
 	// waiter를 만들어 mutex를 lock을 시도하며 기다리다 가능할 때 mutex lock한다.
+	// waiter를 만들어 mutex를 lock을 시도하며 기다리다 가능할 때 mutex lock한다.
 
 	// &cpu_chain, nb: &page_alloc_cpu_notify_nb
 	// &cpu_chain, nb: &slab_notifier
 	// &cpu_chain, nb: &sched_ilb_notifier_nb
+	// &cpu_chain, nb: &rcu_cpu_notify_nb
 	ret = raw_notifier_chain_register(&cpu_chain, nb);
 	// (&cpu_chain)->head: page_alloc_cpu_notify_nb 포인터 대입
 	// (&page_alloc_cpu_notify_nb)->next은 NULL로 대입
@@ -225,8 +229,12 @@ int __ref register_cpu_notifier(struct notifier_block *nb)
 	// (&slab_notifier)->next은 (&page_alloc_cpu_notify_nb)->next로 대입
 	// (&cpu_chain)->head: sched_ilb_notifier_nb 포인터 대입
 	// (&sched_ilb_notifier_nb)->next은 (&slab_notifier)->next로 대입
+	// (&cpu_chain)->head: rcu_cpu_notify_nb 포인터 대입
+	// (&rcu_cpu_notify_nb)->next은 (&sched_ilb_notifier_nb)->next로 대입
 
 	cpu_maps_update_done();
+	// mutex를 기다리는(waiter)가 있으면 깨우고 아니면 mutex unlock한다.
+	// mutex를 기다리는(waiter)가 있으면 깨우고 아니면 mutex unlock한다.
 	// mutex를 기다리는(waiter)가 있으면 깨우고 아니면 mutex unlock한다.
 	// mutex를 기다리는(waiter)가 있으면 깨우고 아니면 mutex unlock한다.
 
@@ -748,7 +756,10 @@ static DECLARE_BITMAP(cpu_possible_bits, CONFIG_NR_CPUS) __read_mostly;
 const struct cpumask *const cpu_possible_mask = to_cpumask(cpu_possible_bits);
 EXPORT_SYMBOL(cpu_possible_mask);
 
+// ARM10C 20140927
+// CONFIG_NR_CPUS: 4
 static DECLARE_BITMAP(cpu_online_bits, CONFIG_NR_CPUS) __read_mostly;
+// ARM10C 20140927
 const struct cpumask *const cpu_online_mask = to_cpumask(cpu_online_bits);
 EXPORT_SYMBOL(cpu_online_mask);
 

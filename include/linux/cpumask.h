@@ -34,6 +34,7 @@ typedef struct cpumask { DECLARE_BITMAP(bits, NR_CPUS); } cpumask_t;
 // ARM10C 20140215
 // ARM10C 20140726
 // ARM10C 20140920
+// ARM10C 20140927
 // nr_cpu_ids: 4
 extern int nr_cpu_ids;
 #endif
@@ -816,9 +817,13 @@ extern const DECLARE_BITMAP(cpu_all_bits, NR_CPUS);
 // ARM10C 20140607
 // ARM10C 20140726
 // ARM10C 20140830
+// ARM10C 20140927
 // #define for_each_cpu(i, cpu_possible_mask)
 //	for ((i) = -1; (i) = cpumask_next((i), (cpu_possible_mask)), (i) < nr_cpu_ids; )
 #define for_each_possible_cpu(cpu) for_each_cpu((cpu), cpu_possible_mask)
+// ARM10C 20140927
+// #define for_each_cpu(i, cpu_online_mask)
+//	for ((i) = -1; (i) = cpumask_next((i), (cpu_online_mask)), (i) < nr_cpu_ids; )
 #define for_each_online_cpu(cpu)   for_each_cpu((cpu), cpu_online_mask)
 #define for_each_present_cpu(cpu)  for_each_cpu((cpu), cpu_present_mask)
 
@@ -845,6 +850,7 @@ void init_cpu_online(const struct cpumask *src);
 // 1 ? (bitmap) : bitmap의 type을 체크하기 위해
 // ARM10C 20140215
 // ARM10C 20140913
+// ARM10C 20140927
 #define to_cpumask(bitmap)						\
 	((struct cpumask *)(1 ? (bitmap)				\
 			    : (void *)sizeof(__check_is_bitmap(bitmap))))

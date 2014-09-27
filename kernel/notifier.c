@@ -22,11 +22,14 @@ BLOCKING_NOTIFIER_HEAD(reboot_notifier_list);
 // *nl: (&cpu_chain)->head: NULL, n: &page_alloc_cpu_notify_nb
 // ARM10C 20140726
 // nh->head: (&cpu_chain)->head: &page_alloc_cpu_notify_nb, n: &slab_notifier
+// ARM10C 20140927
+// &nh->head: (&pm_chain_head)->head: NULL, n: &rcu_pm_notify_nb
 static int notifier_chain_register(struct notifier_block **nl,
 		struct notifier_block *n)
 {
 	// *nl: (&cpu_chain)->head: NULL
 	// *nl: (&cpu_chain)->head: &page_alloc_cpu_notify_nb
+	// *nl: (&pm_chain_head)->head: NULL
 	while ((*nl) != NULL) {
 		// (*nl)->priority: (&page_alloc_cpu_notify_nb)->priority: 0,
 		// (*n)->priority: (&slab_notifier)->priority: 0
@@ -40,15 +43,19 @@ static int notifier_chain_register(struct notifier_block **nl,
 
 	// n->next: (&page_alloc_cpu_notify_nb)->next, *nl: (&cpu_chain)->head: NULL
 	// n->next: (&slab_notifier)->next, *nl: (&page_alloc_cpu_notify_nb)->next
+	// n->next: (&rcu_pm_notify_nb)->next, *nl: (&pm_chain_head)->head: NULL
 	n->next = *nl;
 	// n->next: (&page_alloc_cpu_notify_nb)->next: NULL
 	// n->next: (&slab_notifier)->next: (&page_alloc_cpu_notify_nb)->next
+	// n->next: (&rcu_pm_notify_nb)->next: NULL
 
 	// *nl: (&cpu_chain)->head: NULL, n: &page_alloc_cpu_notify_nb
 	// *nl: (&cpu_chain)->head: &page_alloc_cpu_notify_nb, n: &slab_notifier
+	// *nl: (&pm_chain_head)->head: NULL, n: &rcu_pm_notify_nb
 	rcu_assign_pointer(*nl, n);
-	// (&cpu_chain)->head: page_alloc_cpu_notifier 포인터 대입
+	// (&cpu_chain)->head: page_alloc_cpu_notifier_nb 포인터 대입
 	// (&cpu_chain)->head: slab_notifier 포인터 대입
+	// (&pm_chain_head)->head: rcu_pm_notify_nb 포인터 대입
 
 	return 0;
 }
@@ -229,6 +236,8 @@ EXPORT_SYMBOL_GPL(atomic_notifier_call_chain);
  *
  *	Currently always returns zero.
  */
+// ARM10C 20140927
+// &pm_chain_head, nb: &rcu_pm_notify_nb
 int blocking_notifier_chain_register(struct blocking_notifier_head *nh,
 		struct notifier_block *n)
 {
@@ -239,8 +248,14 @@ int blocking_notifier_chain_register(struct blocking_notifier_head *nh,
 	 * not yet working and interrupts must remain disabled.  At
 	 * such times we must not call down_write().
 	 */
+	// system_state: 0, SYSTEM_BOOTING: 0
 	if (unlikely(system_state == SYSTEM_BOOTING))
+		// &nh->head: (&pm_chain_head)->head: NULL, n: &rcu_pm_notify_nb
+		// notifier_chain_register((&pm_chain_head)->head, &rcu_pm_notify_nb): 0
 		return notifier_chain_register(&nh->head, n);
+		// notifier_chain_register에서 한일:
+		// (&pm_chain_head)->head: rcu_pm_notify_nb 포인터 대입
+		// n->next: (&rcu_pm_notify_nb)->next: NULL
 
 	down_write(&nh->rwsem);
 	ret = notifier_chain_register(&nh->head, n);
@@ -369,18 +384,23 @@ EXPORT_SYMBOL_GPL(blocking_notifier_call_chain);
 // &cpu_chain, nb: &slab_notifier
 // ARM10C 20140920
 // &cpu_chain, nb: &sched_ilb_notifier_nb
+// ARM10C 20140927
+// &cpu_chain, nb: &rcu_cpu_notify_nb
 int raw_notifier_chain_register(struct raw_notifier_head *nh,
 		struct notifier_block *n)
 {
 	// nh->head: (&cpu_chain)->head: NULL, n: &page_alloc_cpu_notify_nb
 	// nh->head: (&cpu_chain)->head: &page_alloc_cpu_notify_nb, n: &slab_notifier
 	// nh->head: (&cpu_chain)->head: &slab_notifier, n: &sched_ilb_notifier_nb
+	// nh->head: (&cpu_chain)->head: &sched_ilb_notifier_nb, n: &rcu_cpu_notify_nb
 	return notifier_chain_register(&nh->head, n);
 	// (&cpu_chain)->head: &page_alloc_cpu_notify_nb
 	// &nh->head에 n의 포인터를 대입함
 	// (&cpu_chain)->head: &slab_notifier
 	// &nh->head에 n의 포인터를 대입함
 	// (&cpu_chain)->head: &sched_ilb_notifier_nb
+	// &nh->head에 n의 포인터를 대입함
+	// (&cpu_chain)->head: &rcu_cpu_notify_nb
 	// &nh->head에 n의 포인터를 대입함
 }
 EXPORT_SYMBOL_GPL(raw_notifier_chain_register);

@@ -113,6 +113,7 @@ extern void tc_init(void);
 bool early_boot_irqs_disabled __read_mostly;
 
 // ARM10C 20140308
+// ARM10C 20140927
 enum system_states system_state __read_mostly;
 EXPORT_SYMBOL(system_state);
 

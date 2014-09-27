@@ -538,6 +538,11 @@ static inline void list_splice_tail_init(struct list_head *list,
 // #define: list_for_each_entry(s, &slab_caches, list):
 // for (s = list_first_entry(&slab_caches, typeof(*s), list);
 //      &s->list != (&slab_caches); s = list_next_entry(s, list))
+//
+// ARM10C 20140927
+// list_for_each_entry((rsp), &rcu_struct_flavors, flavors):
+// for (rsp = list_first_entry(&rcu_struct_flavors, typeof(*rsp), flavors);
+//     &rsp->flavors != (&rcu_struct_flavors); rsp = list_next_entry(rsp, flavors))
 #define list_for_each_entry(pos, head, member)				\
 	for (pos = list_first_entry(head, typeof(*pos), member);	\
 	     &pos->member != (head);					\

@@ -20,15 +20,22 @@
 
 DEFINE_MUTEX(pm_mutex);
 
-#ifdef CONFIG_PM_SLEEP
+#ifdef CONFIG_PM_SLEEP // CONFIG_PM_SLEEP=y
 
 /* Routines for PM-transition notifications */
 
+// ARM10C 20140927
+// BLOCKING_NOTIFIER_HEAD(pm_chain_head):
+// struct blocking_notifier_head pm_chain_head = LOCKING_NOTIFIER_INIT(pm_chain_head)
 static BLOCKING_NOTIFIER_HEAD(pm_chain_head);
 
+// ARM10C 20140927
+// &rcu_pm_notify_nb
 int register_pm_notifier(struct notifier_block *nb)
 {
+	// nb: &rcu_pm_notify_nb, blocking_notifier_chain_register(&pm_chain_head, &rcu_pm_notify_nb): 0
 	return blocking_notifier_chain_register(&pm_chain_head, nb);
+	// return 0
 }
 EXPORT_SYMBOL_GPL(register_pm_notifier);
 

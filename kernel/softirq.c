@@ -51,6 +51,7 @@ EXPORT_SYMBOL(irq_stat);
 #endif
 
 // ARM10C 20140920
+// ARM10C 20140927
 // NR_SOFTIRQS: 10
 static struct softirq_action softirq_vec[NR_SOFTIRQS] __cacheline_aligned_in_smp;
 
@@ -423,11 +424,15 @@ void __raise_softirq_irqoff(unsigned int nr)
 
 // ARM10C 20140920
 // SCHED_SOFTIRQ: 7, run_rebalance_domains
+// ARM10C 20140927
+// RCU_SOFTIRQ: 9, rcu_process_callbacks
 void open_softirq(int nr, void (*action)(struct softirq_action *))
 {
 	// nr: 7, action: run_rebalance_domains
+	// nr: 9, action: rcu_process_callbacks
 	softirq_vec[nr].action = action;
 	// softirq_vec[7].action: run_rebalance_domains
+	// softirq_vec[9].action: rcu_process_callbacks
 }
 
 /*

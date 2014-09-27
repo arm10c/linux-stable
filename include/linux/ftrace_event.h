@@ -413,11 +413,13 @@ do {									\
  * does not change during the life of the module, it is fine to use
  * tracepoint_string() within a module.
  */
+// ARM10C 20140927
 #define tracepoint_string(str)						\
 	({								\
 		static const char *___tp_str __tracepoint_string = str; \
 		___tp_str;						\
 	})
+// ARM10C 20140927
 #define __tracepoint_string	__attribute__((section("__tracepoint_str")))
 
 #ifdef CONFIG_PERF_EVENTS

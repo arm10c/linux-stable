@@ -56,6 +56,7 @@ typedef	int (*notifier_fn_t)(struct notifier_block *nb,
 // ARM10C 20140322
 // ARM10C 20140607
 // ARM10C 20140726
+// ARM10C 20140927
 struct notifier_block {
 	notifier_fn_t notifier_call;
 	struct notifier_block __rcu *next;
@@ -67,6 +68,7 @@ struct atomic_notifier_head {
 	struct notifier_block __rcu *head;
 };
 
+// ARM10C 20140927
 struct blocking_notifier_head {
 	struct rw_semaphore rwsem;
 	struct notifier_block __rcu *head;
@@ -104,6 +106,8 @@ extern void srcu_init_notifier_head(struct srcu_notifier_head *nh);
 #define ATOMIC_NOTIFIER_INIT(name) {				\
 		.lock = __SPIN_LOCK_UNLOCKED(name.lock),	\
 		.head = NULL }
+
+// ARM10C 20140927
 #define BLOCKING_NOTIFIER_INIT(name) {				\
 		.rwsem = __RWSEM_INITIALIZER((name).rwsem),	\
 		.head = NULL }
@@ -116,6 +120,11 @@ extern void srcu_init_notifier_head(struct srcu_notifier_head *nh);
 #define ATOMIC_NOTIFIER_HEAD(name)				\
 	struct atomic_notifier_head name =			\
 		ATOMIC_NOTIFIER_INIT(name)
+
+// ARM10C 20140927
+// #define BLOCKING_NOTIFIER_HEAD(pm_chain_head)
+// 	struct blocking_notifier_head pm_chain_head =
+// 	BLOCKING_NOTIFIER_INIT(pm_chain_head)
 #define BLOCKING_NOTIFIER_HEAD(name)				\
 	struct blocking_notifier_head name =			\
 		BLOCKING_NOTIFIER_INIT(name)
@@ -171,6 +180,8 @@ extern int __srcu_notifier_call_chain(struct srcu_notifier_head *nh,
 	unsigned long val, void *v, int nr_to_call, int *nr_calls);
 
 #define NOTIFY_DONE		0x0000		/* Don't care */
+// ARM10C 20140927
+// NOTIFY_OK: 0x0001
 #define NOTIFY_OK		0x0001		/* Suits me */
 #define NOTIFY_STOP_MASK	0x8000		/* Don't call further */
 #define NOTIFY_BAD		(NOTIFY_STOP_MASK|0x0002)

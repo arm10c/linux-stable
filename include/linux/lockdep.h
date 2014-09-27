@@ -394,6 +394,7 @@ static inline void lockdep_on(void)
 		do { (void)(name); (void)(key); } while (0)
 # define lockdep_set_class(lock, key)		do { (void)(key); } while (0)
 // ARM10C 20140111
+// ARM10C 20140927
 # define lockdep_set_class_and_name(lock, key, name) \
 		do { (void)(key); (void)(name); } while (0)
 #define lockdep_set_class_and_subclass(lock, key, sub) \
@@ -416,6 +417,7 @@ static inline void lockdep_on(void)
  * The class key takes no space if lockdep is disabled:
  */
 // ARM10C 20140111
+// ARM10C 20140927
 struct lock_class_key { };
 
 #define lockdep_depth(tsk)	(0)

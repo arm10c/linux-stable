@@ -82,6 +82,8 @@ enum {
 };
 
 #define CPU_ONLINE		0x0002 /* CPU (unsigned)v is up */
+// ARM10C 20140927
+// CPU_UP_PREPARE: 0x0003
 #define CPU_UP_PREPARE		0x0003 /* CPU (unsigned)v coming up */
 #define CPU_UP_CANCELED		0x0004 /* CPU (unsigned)v NOT coming up */
 #define CPU_DOWN_PREPARE	0x0005 /* CPU (unsigned)v going down */
@@ -131,6 +133,14 @@ enum {
 //	static struct notifier_block sched_ilb_notifier_nb =
 //      { .notifier_call = sched_ilb_notifier, .priority = 0 };
 //	register_cpu_notifier(&sched_ilb_notifier_nb);
+// }
+//
+// ARM10C 20140927
+// cpu_notifier(rcu_cpu_notify, 0):
+// {
+//	static struct notifier_block rcu_cpu_notify_nb =
+//      { .notifier_call = rcu_cpu_notify, .priority = 0 };
+//	register_cpu_notifier(&rcu_cpu_notify_nb);
 // }
 #define cpu_notifier(fn, pri) {					\
 	static struct notifier_block fn##_nb =			\

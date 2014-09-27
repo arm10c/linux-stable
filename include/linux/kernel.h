@@ -31,8 +31,10 @@
 #define LONG_MIN	(-LONG_MAX - 1)
 // ARM10C 20140222
 // ARM10C 20140920
-// ULONG_MAX 0xFFFFFFFF	
+// ULONG_MAX 0xFFFFFFFF
 #define ULONG_MAX	(~0UL)
+// ARM10C 20140927
+// LLONG_MAX: 0x7FFFFFFFFFFFFFFF
 #define LLONG_MAX	((long long)(~0ULL>>1))
 #define LLONG_MIN	(-LLONG_MAX - 1)
 // ARM10C 20131019
@@ -446,6 +448,7 @@ extern bool early_boot_irqs_disabled;
 
 /* Values used for system_state */
 // ARM10C 20140308
+// ARM10C 20140927
 extern enum system_states {
 	SYSTEM_BOOTING,
 	SYSTEM_RUNNING,

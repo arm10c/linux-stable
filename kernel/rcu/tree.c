@@ -70,7 +70,11 @@ MODULE_ALIAS("rcutree");
 
 /* Data structures. */
 
+// ARM10C 20140927
+// RCU_NUM_LVLS: 1
 static struct lock_class_key rcu_node_class[RCU_NUM_LVLS];
+// ARM10C 20140927
+// RCU_NUM_LVLS: 1
 static struct lock_class_key rcu_fqs_class[RCU_NUM_LVLS];
 
 /*
@@ -100,10 +104,50 @@ struct rcu_state sname##_state = { \
 }; \
 DEFINE_PER_CPU(struct rcu_data, sname##_data)
 
+// ARM10C 20140927
+// #define RCU_STATE_INITIALIZER(rcu_sched, 's', call_rcu_sched)
+// static char rcu_sched_varname[] = "rcu_sched";
+// static const char *tp_rcu_sched_varname __used __tracepoint_string = rcu_sched_varname;
+// struct rcu_state rcu_sched_state = {
+// 	.level = { &rcu_sched_state.node[0] },
+// 	.call = call_rcu_sched,
+// 	.fqs_state = RCU_GP_IDLE,
+// 	.gpnum = 0UL - 300UL,
+// 	.completed = 0UL - 300UL,
+// 	.orphan_lock = __RAW_SPIN_LOCK_UNLOCKED(&rcu_sched_state.orphan_lock),
+// 	.orphan_nxttail = &rcu_sched_state.orphan_nxtlist,
+// 	.orphan_donetail = &rcu_sched_state.orphan_donelist,
+// 	.barrier_mutex = __MUTEX_INITIALIZER(rcu_sched_state.barrier_mutex),
+// 	.onoff_mutex = __MUTEX_INITIALIZER(rcu_sched_state.onoff_mutex),
+// 	.name = rcu_sched_varname,
+// 	.abbr = 's',
+// };
+// DEFINE_PER_CPU(struct rcu_data, rcu_sched_data)
 RCU_STATE_INITIALIZER(rcu_sched, 's', call_rcu_sched);
+
+// ARM10C 20140927
+// #define RCU_STATE_INITIALIZER(rcu_bh, 'b', call_rcu_bh)
+// static char rcu_bh_varname[] = "rcu_bh";
+// static const char *tp_rcu_bh_varname __used __tracepoint_string = rcu_bh_varname;
+// struct rcu_state rcu_bh_state = {
+// 	.level = { &rcu_bh_state.node[0] },
+// 	.call = call_rcu_bh,
+// 	.fqs_state = RCU_GP_IDLE,
+// 	.gpnum = 0UL - 300UL,
+// 	.completed = 0UL - 300UL,
+// 	.orphan_lock = __RAW_SPIN_LOCK_UNLOCKED(&rcu_bh_state.orphan_lock),
+// 	.orphan_nxttail = &rcu_bh_state.orphan_nxtlist,
+// 	.orphan_donetail = &rcu_bh_state.orphan_donelist,
+// 	.barrier_mutex = __MUTEX_INITIALIZER(rcu_bh_state.barrier_mutex),
+// 	.onoff_mutex = __MUTEX_INITIALIZER(rcu_bh_state.onoff_mutex),
+// 	.name = rcu_bh_varname,
+// 	.abbr = 'b',
+// };
+// DEFINE_PER_CPU(struct rcu_data, rcu_bh_data)
 RCU_STATE_INITIALIZER(rcu_bh, 'b', call_rcu_bh);
 
 static struct rcu_state *rcu_state;
+// ARM10C 20140927
 LIST_HEAD(rcu_struct_flavors);
 
 /* Increase (but not decrease) the CONFIG_RCU_FANOUT_LEAF at boot time. */
@@ -112,12 +156,21 @@ LIST_HEAD(rcu_struct_flavors);
 // rcu_fanout_leaf: 16
 static int rcu_fanout_leaf = CONFIG_RCU_FANOUT_LEAF;
 module_param(rcu_fanout_leaf, int, 0444);
+// ARM10C 20140927
+// RCU_NUM_LVLS: 1
+// rcu_num_lvls: 1
 int rcu_num_lvls __read_mostly = RCU_NUM_LVLS;
+// ARM10C 20140927
 static int num_rcu_lvl[] = {  /* Number of rcu_nodes at specified level. */
+	// NUM_RCU_LVL_0: 1
 	NUM_RCU_LVL_0,
+	// NUM_RCU_LVL_1: 4
 	NUM_RCU_LVL_1,
+	// NUM_RCU_LVL_2: 0
 	NUM_RCU_LVL_2,
+	// NUM_RCU_LVL_3: 0
 	NUM_RCU_LVL_3,
+	// NUM_RCU_LVL_4: 0
 	NUM_RCU_LVL_4,
 };
 int rcu_num_nodes __read_mostly = NUM_RCU_NODES; /* Total # rcu_nodes in use. */
@@ -225,15 +278,18 @@ void rcu_note_context_switch(int cpu)
 }
 EXPORT_SYMBOL_GPL(rcu_note_context_switch);
 
+// ARM10C 20140927
 static DEFINE_PER_CPU(struct rcu_dynticks, rcu_dynticks) = {
+	// DYNTICK_TASK_EXIT_IDLE: 0x140000000000000
 	.dynticks_nesting = DYNTICK_TASK_EXIT_IDLE,
 	.dynticks = ATOMIC_INIT(1),
-#ifdef CONFIG_NO_HZ_FULL_SYSIDLE
+#ifdef CONFIG_NO_HZ_FULL_SYSIDLE // CONFIG_NO_HZ_FULL_SYSIDLE=n
 	.dynticks_idle_nesting = DYNTICK_TASK_NEST_VALUE,
 	.dynticks_idle = ATOMIC_INIT(1),
 #endif /* #ifdef CONFIG_NO_HZ_FULL_SYSIDLE */
 };
 
+// ARM10C 20140927
 static long blimit = 10;	/* Maximum callbacks per rcu_do_batch. */
 static long qhimark = 10000;	/* If this many pending, ignore blimit. */
 static long qlowmark = 100;	/* Once only this many pending, use blimit. */
@@ -363,9 +419,13 @@ cpu_needs_another_gp(struct rcu_state *rsp, struct rcu_data *rdp)
 /*
  * Return the root node of the specified rcu_state structure.
  */
+// ARM10C 20140927
+// rsp: &rcu_bh_state
 static struct rcu_node *rcu_get_root(struct rcu_state *rsp)
 {
+	// &rsp->node[0]: &(&rcu_bh_state)->node[0]
 	return &rsp->node[0];
+	// return &(&rcu_bh_state)->node[0]
 }
 
 /*
@@ -1046,15 +1106,28 @@ void rcu_cpu_stall_reset(void)
 /*
  * Initialize the specified rcu_data structure's callback list to empty.
  */
+// ARM10C 20140927
+// rdp: [pcp0] &rcu_bh_data
 static void init_callback_list(struct rcu_data *rdp)
 {
 	int i;
 
+	// rdp: [pcp0] &rcu_bh_data, init_nocb_callback_list(&rcu_bh_data): false
 	if (init_nocb_callback_list(rdp))
 		return;
+
+	// rdp->nxtlist: [pcp0] (&rcu_bh_data)->nxtlist
 	rdp->nxtlist = NULL;
+	// rdp->nxtlist: [pcp0] (&rcu_bh_data)->nxtlist: NULL
+
+	// RCU_NEXT_SIZE: 4
 	for (i = 0; i < RCU_NEXT_SIZE; i++)
+		// i: 0, rdp->nxttail[0]: [pcp0] (&rcu_bh_data)->nxttail[0],
+		// &rdp->nxtlist: [pcp0] &(&rcu_bh_data)->nxtlist
 		rdp->nxttail[i] = &rdp->nxtlist;
+		// rdp->nxttail[0]: [pcp0] (&rcu_bh_data)->nxttail[0]: [pcp0] &(&rcu_bh_data)->nxtlist
+		
+		// i: 1 .. 3 수행
 }
 
 /*
@@ -1629,6 +1702,7 @@ static int __noreturn rcu_gp_kthread(void *arg)
 	}
 }
 
+// ARM10C 20140927
 static void rsp_wakeup(struct irq_work *work)
 {
 	struct rcu_state *rsp = container_of(work, struct rcu_state, wakeup_work);
@@ -2317,6 +2391,7 @@ __rcu_process_callbacks(struct rcu_state *rsp)
 /*
  * Do RCU core processing for the current CPU.
  */
+// ARM10C 20140927
 static void rcu_process_callbacks(struct softirq_action *unused)
 {
 	struct rcu_state *rsp;
@@ -3023,26 +3098,69 @@ EXPORT_SYMBOL_GPL(rcu_barrier_sched);
 /*
  * Do boot-time initialization of a CPU's per-CPU RCU data.
  */
+// ARM10C 20140927
+// i: 0, rsp: &rcu_bh_state
 static void __init
 rcu_boot_init_percpu_data(int cpu, struct rcu_state *rsp)
 {
 	unsigned long flags;
+	// rsp->rda: (&rcu_bh_state)->rda: &rcu_bh_data, cpu: 0
+	// per_cpu_ptr(&rcu_bh_data, 0): [pcp0] &rcu_bh_data
 	struct rcu_data *rdp = per_cpu_ptr(rsp->rda, cpu);
+	// rdp: [pcp0] &rcu_bh_data
+
+	// rsp: &rcu_bh_state, rcu_get_root(&rcu_bh_state): &(&rcu_bh_state)->node[0]
 	struct rcu_node *rnp = rcu_get_root(rsp);
+	// rnp: &(&rcu_bh_state)->node[0]
 
 	/* Set up local state, ensuring consistent view of global state. */
+	// &rnp->lock: &(&(&rcu_bh_state)->node[0])->lock
 	raw_spin_lock_irqsave(&rnp->lock, flags);
+	// &rnp->lock: &(&(&rcu_bh_state)->node[0])->lock을 사용하여 spinlock을 걸고 cpsr을 flags에 저장
+
+	// rdp->grpmask: [pcp0] (&rcu_bh_data)->grpmask, cpu: 0,
+	// rdp->mynode->grplo: [pcp0] (&rcu_bh_data)->mynode->grplo: 0
 	rdp->grpmask = 1UL << (cpu - rdp->mynode->grplo);
+	// rdp->grpmask: [pcp0] (&rcu_bh_data)->grpmask: 1
+
+	// rdp: [pcp0] &rcu_bh_data
 	init_callback_list(rdp);
+	// init_callback_list에서 한일:
+	// rdp->nxtlist: [pcp0] (&rcu_bh_data)->nxtlist: NULL
+	// rdp->nxttail[0...3]: [pcp0] (&rcu_bh_data)->nxttail[0...3]: [pcp0] &(&rcu_bh_data)->nxtlist
+
+	// rdp->qlen_lazy: [pcp0] (&rcu_bh_data)->qlen_lazy
 	rdp->qlen_lazy = 0;
+	// rdp->qlen_lazy: [pcp0] (&rcu_bh_data)->qlen_lazy: 0
+
+	// rdp->qlen: [pcp0] (&rcu_bh_data)->qlen
 	ACCESS_ONCE(rdp->qlen) = 0;
+	// rdp->qlen: [pcp0] (&rcu_bh_data)->qlen: 0
+
+	// rdp->dynticks: [pcp0] (&rcu_bh_data)->dynticks
+	// cpu: 0, &per_cpu(rcu_dynticks, 0): [pcp0] &rcu_dynticks
 	rdp->dynticks = &per_cpu(rcu_dynticks, cpu);
+	// rdp->dynticks: [pcp0] (&rcu_bh_data)->dynticks: [pcp0] &rcu_dynticks
+
+	// rdp->dynticks->dynticks_nesting: [pcp0] (&rcu_bh_data)->dynticks->dynticks_nesting: DYNTICK_TASK_EXIT_IDLE: 0x140000000000000
 	WARN_ON_ONCE(rdp->dynticks->dynticks_nesting != DYNTICK_TASK_EXIT_IDLE);
+	// rdp->dynticks->dynticks: [pcp0] (&rcu_bh_data)->dynticks->dynticks: 1
 	WARN_ON_ONCE(atomic_read(&rdp->dynticks->dynticks) != 1);
+
+	// rdp->cpu: [pcp0] (&rcu_bh_data)->cpu, cpu: 0
 	rdp->cpu = cpu;
+	// rdp->cpu: [pcp0] (&rcu_bh_data)->cpu: 0
+
+	// rdp->rsp: [pcp0] (&rcu_bh_data)->rsp, rsp: &rcu_bh_state
 	rdp->rsp = rsp;
-	rcu_boot_init_nocb_percpu_data(rdp);
+	// rdp->rsp: [pcp0] (&rcu_bh_data)->rsp: &rcu_bh_state
+
+	// rdp: [pcp0] &rcu_bh_data
+	rcu_boot_init_nocb_percpu_data(rdp); // null function
+
+	// &rnp->lock: &(&(&rcu_bh_state)->node[0])->lock
 	raw_spin_unlock_irqrestore(&rnp->lock, flags);
+	// &rnp->lock: &(&(&rcu_bh_state)->node[0])->lock을 사용하여 spinlock을 해재하고 flags에 저장된 cpsr을 복원
 }
 
 /*
@@ -3051,85 +3169,288 @@ rcu_boot_init_percpu_data(int cpu, struct rcu_state *rsp)
  * can accept some slop in the rsp->completed access due to the fact
  * that this CPU cannot possibly have any RCU callbacks in flight yet.
  */
+// ARM10C 20140927
+// cpu: 0, rsp: &rcu_bh_state, 0
 static void
 rcu_init_percpu_data(int cpu, struct rcu_state *rsp, int preemptible)
 {
 	unsigned long flags;
 	unsigned long mask;
+
+	// rsp->rda: (&rcu_bh_state)->rda: &rcu_bh_data, cpu: 0
+	// per_cpu_ptr(&rcu_bh_data, 0): [pcp0] &rcu_bh_data
 	struct rcu_data *rdp = per_cpu_ptr(rsp->rda, cpu);
+	// rdp: [pcp0] &rcu_bh_data
+
+	// rsp: &rcu_bh_state, rcu_get_root(&rcu_bh_state): &(&rcu_bh_state)->node[0]
 	struct rcu_node *rnp = rcu_get_root(rsp);
+	// rnp: &(&rcu_bh_state)->node[0]
 
 	/* Exclude new grace periods. */
+	// &rsp->onoff_mutex: &(&rcu_bh_state)->onoff_mutex
 	mutex_lock(&rsp->onoff_mutex);
+	// &rsp->onoff_mutex: &(&rcu_bh_state)->onoff_mutex을 사용한 mutex lock 수행
 
 	/* Set up local state, ensuring consistent view of global state. */
+	// &rnp->lock: &(&(&rcu_bh_state)->node[0])->lock
 	raw_spin_lock_irqsave(&rnp->lock, flags);
+	// &rnp->lock: &(&(&rcu_bh_state)->node[0])->lock을 사용한 spinlock을 걸고 cpsr을 flags에 저장
+
+	// rdp->beenonline: [pcp0] (&rcu_bh_data)->beenonline
 	rdp->beenonline = 1;	 /* We have now been online. */
+	// rdp->beenonline: [pcp0] (&rcu_bh_data)->beenonline: 1
+
+	// rdp->preemptible: [pcp0] (&rcu_bh_data)->preemptible, preemptible: 0
 	rdp->preemptible = preemptible;
+	// rdp->preemptible: [pcp0] (&rcu_bh_data)->preemptible: 0
+
+	// rdp->len_last_fqs_check: [pcp0] (&rcu_bh_data)->len_last_fqs_check
 	rdp->qlen_last_fqs_check = 0;
+	// rdp->len_last_fqs_check: [pcp0] (&rcu_bh_data)->len_last_fqs_check: 0
+
+	// rdp->n_force_qs_snap: [pcp0] (&rcu_bh_data)->n_force_qs_snap
+	// rsp->n_force_qs: (&rcu_bh_state)->n_force_qs: 0
 	rdp->n_force_qs_snap = rsp->n_force_qs;
+	// rdp->n_force_qs_snap: [pcp0] (&rcu_bh_data)->n_force_qs_snap: 0
+
+	// rdp->blimit: [pcp0] (&rcu_bh_data)->blimit, blimit: 10
 	rdp->blimit = blimit;
+	// rdp->blimit: [pcp0] (&rcu_bh_data)->blimit: 10
+
+	// rdp: [pcp0] &rcu_bh_data
 	init_callback_list(rdp);  /* Re-enable callbacks on this CPU. */
+	// init_callback_list에서 한일:
+	// [pcp0] (&rcu_bh_data)->nxtlist: NULL
+	// [pcp0] (&rcu_bh_data)->nxttail[0...3]: [pcp0] &(&rcu_bh_data)->nxtlist
+
+	// rdp->dynticks->dynticks_nesting: [pcp0] (&rcu_bh_data)->dynticks->dynticks_nesting,
+	// DYNTICK_TASK_EXIT_IDLE: 0x140000000000000
 	rdp->dynticks->dynticks_nesting = DYNTICK_TASK_EXIT_IDLE;
-	rcu_sysidle_init_percpu_data(rdp->dynticks);
+	// rdp->dynticks->dynticks_nesting: [pcp0] (&rcu_bh_data)->dynticks->dynticks_nesting: 0x140000000000000
+
+	// rdp->dynticks: [pcp0] (&rcu_bh_data)->dynticks
+	rcu_sysidle_init_percpu_data(rdp->dynticks); // null function
+
+	// &rdp->dynticks->dynticks: [pcp0] (&rcu_bh_data)->dynticks->dynticks: 1,
+	// atomic_read((&rcu_bh_data)->dynticks->dynticks): 1
 	atomic_set(&rdp->dynticks->dynticks,
 		   (atomic_read(&rdp->dynticks->dynticks) & ~0x1) + 1);
+	// &rdp->dynticks->dynticks: [pcp0] (&rcu_bh_data)->dynticks->dynticks: 1
+
+	// &rnp->lock: &(&(&rcu_bh_state)->node[0])->lock
 	raw_spin_unlock(&rnp->lock);		/* irqs remain disabled. */
+	// &rnp->lock: &(&(&rcu_bh_state)->node[0])->lock을 사용한 spinlock을 풀고 flags에 저장된 cpsr을 복원
 
 	/* Add CPU to rcu_node bitmasks. */
+	// rdp->mynode: [pcp0] (&rcu_bh_data)->mynode: (&rcu_bh_state)->level[0]
 	rnp = rdp->mynode;
+	// rnp: [pcp0] (&rcu_bh_state)->level[0]
+
+	// rdp->grpmask: [pcp0] (&rcu_bh_data)->grpmask: 1
 	mask = rdp->grpmask;
+	// mask: 1
+
 	do {
 		/* Exclude any attempts to start a new GP on small systems. */
+		// &rnp->lock: [pcp0] &((&rcu_bh_state)->level[0])->lock
 		raw_spin_lock(&rnp->lock);	/* irqs already disabled. */
+		// &rnp->lock: [pcp0] &((&rcu_bh_state)->level[0])->lock을 사용한 spinlock 수행
+
+		// rnp->qsmaskinit: [pcp0] ((&rcu_bh_state)->level[0])->qsmaskinit: 0, mask: 1
 		rnp->qsmaskinit |= mask;
+		// rnp->qsmaskinit: [pcp0] ((&rcu_bh_state)->level[0])->qsmaskinit: 1
+
+		// rnp->grpmask: [pcp0] ((&rcu_bh_state)->level[0])->grpmask: 0, mask: 1
 		mask = rnp->grpmask;
+		// mask: 0
+
+		// rnp: [pcp0] (&rcu_bh_state)->level[0],
+		// rdp->mynode: [pcp0] (&rcu_bh_data)->mynode: (&rcu_bh_state)->level[0]
 		if (rnp == rdp->mynode) {
 			/*
 			 * If there is a grace period in progress, we will
 			 * set up to wait for it next time we run the
 			 * RCU core code.
 			 */
+			// rdp->gpnum: [pcp0] (&rcu_bh_data)->gpnum,
+			// rnp->completed: [pcp0] ((&rcu_bh_state)->level[0])->completed: 0xfffffed4
 			rdp->gpnum = rnp->completed;
-			rdp->completed = rnp->completed;
-			rdp->passed_quiesce = 0;
-			rdp->qs_pending = 0;
-			trace_rcu_grace_period(rsp->name, rdp->gpnum, TPS("cpuonl"));
-		}
-		raw_spin_unlock(&rnp->lock); /* irqs already disabled. */
-		rnp = rnp->parent;
-	} while (rnp != NULL && !(rnp->qsmaskinit & mask));
-	local_irq_restore(flags);
+			// rdp->gpnum: [pcp0] (&rcu_bh_data)->gpnum: 0xfffffed4
 
+			// rdp->completed: [pcp0] (&rcu_bh_data)->completed,
+			// rnp->completed: [pcp0] ((&rcu_bh_state)->level[0])->completed: 0xfffffed4
+			rdp->completed = rnp->completed;
+			// rdp->completed: [pcp0] (&rcu_bh_data)->completed: 0xfffffed4
+
+			// rdp->passed_quiesce: [pcp0] (&rcu_bh_data)->passed_quiesce
+			rdp->passed_quiesce = 0;
+			// rdp->passed_quiesce: [pcp0] (&rcu_bh_data)->passed_quiesce: 0
+
+			// rdp->qs_pending: [pcp0] (&rcu_bh_data)->qs_pending
+			rdp->qs_pending = 0;
+			// rdp->qs_pending: [pcp0] (&rcu_bh_data)->qs_pending: 0
+
+			// rsp->name: (&rcu_bh_state)->name: "rcu_bh", rdp->gpnum: [pcp0] (&rcu_bh_data)->gpnum: 0xfffffed4
+			trace_rcu_grace_period(rsp->name, rdp->gpnum, TPS("cpuonl")); // null function
+		}
+		// &rnp->lock: [pcp0] &((&rcu_bh_state)->level[0])->lock
+		raw_spin_unlock(&rnp->lock); /* irqs already disabled. */
+		// &rnp->lock: [pcp0] &((&rcu_bh_state)->level[0])->lock을 사용한 spin unlock 수행
+
+		// rnp->parent: (&(&rcu_bh_state)->node[0])->parent: NULL
+		rnp = rnp->parent;
+		// rnp: NULL
+
+		// rnp: NULL, rnp->qsmaskinit: (&(&rcu_bh_state)->node[0])->qsmaskinit: 1, mask: 0
+	} while (rnp != NULL && !(rnp->qsmaskinit & mask));
+
+	local_irq_restore(flags);
+	// flags에 저장된 cpsr을 복원
+
+	// &rsp->onoff_mutex: &(&rcu_bh_state)->onoff_mutex
 	mutex_unlock(&rsp->onoff_mutex);
+	// &rsp->onoff_mutex: &(&rcu_bh_state)->onoff_mutex을 사용한 mutex unlock 수행
 }
 
+// ARM10C 20140927
+// cpu: 0
 static void rcu_prepare_cpu(int cpu)
 {
 	struct rcu_state *rsp;
 
 	for_each_rcu_flavor(rsp)
+	// for (rsp = list_first_entry(&rcu_struct_flavors, typeof(*rsp), flavors);
+	//     &rsp->flavors != (&rcu_struct_flavors); rsp = list_next_entry(rsp, flavors))
+
+		// cpu: 0, rsp: &rcu_bh_state, rsp->name: (&rcu_bh_state)->name: "rcu_bh", strcmp("rcu_bh", "rcu_preempt"): -1
 		rcu_init_percpu_data(cpu, rsp,
 				     strcmp(rsp->name, "rcu_preempt") == 0);
+		// rcu_init_percpu_data(0, &rcu_bh_state, 0)에 한일:
+		// [pcp0] (&rcu_bh_data)->beenonline: 1
+		// [pcp0] (&rcu_bh_data)->preemptible: 0
+		// [pcp0] (&rcu_bh_data)->len_last_fqs_check: 0
+		// [pcp0] (&rcu_bh_data)->n_force_qs_snap: 0
+		// [pcp0] (&rcu_bh_data)->blimit: 10
+		// [pcp0] (&rcu_bh_data)->nxtlist: NULL
+		// [pcp0] (&rcu_bh_data)->nxttail[0...3]: [pcp0] &(&rcu_bh_data)->nxtlist
+		// [pcp0] (&rcu_bh_data)->dynticks->dynticks_nesting: 0x140000000000000
+		// [pcp0] (&rcu_bh_data)->dynticks->dynticks: 1
+		// [pcp0] ((&rcu_bh_state)->level[0])->qsmaskinit: 1
+		// [pcp0] (&rcu_bh_data)->gpnum: 0xfffffed4
+		// [pcp0] (&rcu_bh_data)->passed_quiesce: 0
+		// [pcp0] (&rcu_bh_data)->qs_pending: 0
+		//
+		// rcu_init_percpu_data(0, &rcu_sched_state, 0)에 한일:
+		// [pcp0] (&rcu_sched_data)->beenonline: 1
+		// [pcp0] (&rcu_sched_data)->preemptible: 0
+		// [pcp0] (&rcu_sched_data)->len_last_fqs_check: 0
+		// [pcp0] (&rcu_sched_data)->n_force_qs_snap: 0
+		// [pcp0] (&rcu_sched_data)->blimit: 10
+		// [pcp0] (&rcu_sched_data)->nxtlist: NULL
+		// [pcp0] (&rcu_sched_data)->nxttail[0...3]: [pcp0] &(&rcu_sched_data)->nxtlist
+		// [pcp0] (&rcu_sched_data)->dynticks->dynticks_nesting: 0x140000000000000
+		// [pcp0] (&rcu_sched_data)->dynticks->dynticks: 1
+		// [pcp0] ((&rcu_sched_state)->level[0])->qsmaskinit: 1
+		// [pcp0] (&rcu_sched_data)->gpnum: 0xfffffed4
+		// [pcp0] (&rcu_sched_data)->passed_quiesce: 0
+		// [pcp0] (&rcu_sched_data)->qs_pending: 0
+		//
+		// rcu_init_percpu_data(0, &rcu_preempt_state, 1)에 한일:
+		// [pcp0] (&rcu_preempt_data)->beenonline: 1
+		// [pcp0] (&rcu_preempt_data)->preemptible: 1
+		// [pcp0] (&rcu_preempt_data)->len_last_fqs_check: 0
+		// [pcp0] (&rcu_preempt_data)->n_force_qs_snap: 0
+		// [pcp0] (&rcu_preempt_data)->blimit: 10
+		// [pcp0] (&rcu_preempt_data)->nxtlist: NULL
+		// [pcp0] (&rcu_preempt_data)->nxttail[0...3]: [pcp0] &(&rcu_preempt_data)->nxtlist
+		// [pcp0] (&rcu_preempt_data)->dynticks->dynticks_nesting: 0x140000000000000
+		// [pcp0] (&rcu_preempt_data)->dynticks->dynticks: 1
+		// [pcp0] ((&rcu_preempt_state)->level[0])->qsmaskinit: 1
+		// [pcp0] (&rcu_preempt_data)->gpnum: 0xfffffed4
+		// [pcp0] (&rcu_preempt_data)->passed_quiesce: 0
+		// [pcp0] (&rcu_preempt_data)->qs_pending: 0
 }
 
 /*
  * Handle CPU online/offline notification events.
  */
+// ARM10C 20140927
+// NULL, CPU_UP_PREPARE: 0x0003, cpu: 0
 static int rcu_cpu_notify(struct notifier_block *self,
 				    unsigned long action, void *hcpu)
 {
+	// hcpu: 0
 	long cpu = (long)hcpu;
+	// cpu: 0
+
+	// rcu_state->rda: (&rcu_preempt_state)->rda: &rcu_preempt_data, cpu: 0
+	// per_cpu_ptr(&rcu_preempt_data, 0): [pcp0] &rcu_preempt_data
 	struct rcu_data *rdp = per_cpu_ptr(rcu_state->rda, cpu);
+	// rdp: [pcp0] &rcu_preempt_data
+
+	// rdp->mynode: [pcp0] (&rcu_preempt_data)->mynode: (&rcu_preempt_state)->level[0]: &rcu_preempt_state.node[0]
 	struct rcu_node *rnp = rdp->mynode;
+	// rnp: (&rcu_preempt_state)->level[0]
+
 	struct rcu_state *rsp;
 
 	trace_rcu_utilization(TPS("Start CPU hotplug"));
+
+	// action: CPU_UP_PREPARE: 0x0003
 	switch (action) {
 	case CPU_UP_PREPARE:
 	case CPU_UP_PREPARE_FROZEN:
+		// cpu: 0
 		rcu_prepare_cpu(cpu);
-		rcu_prepare_kthreads(cpu);
+		// rcu_prepare_cpu에서 한일:
+		// rcu_init_percpu_data(0...3, &rcu_bh_state, 0)에 한일:
+		// [pcp0...3] (&rcu_bh_data)->beenonline: 1
+		// [pcp0...3] (&rcu_bh_data)->preemptible: 0
+		// [pcp0...3] (&rcu_bh_data)->len_last_fqs_check: 0
+		// [pcp0...3] (&rcu_bh_data)->n_force_qs_snap: 0
+		// [pcp0...3] (&rcu_bh_data)->blimit: 10
+		// [pcp0...3] (&rcu_bh_data)->nxtlist: NULL
+		// [pcp0...3] (&rcu_bh_data)->nxttail[0...3]: [pcp0...3] &(&rcu_bh_data)->nxtlist
+		// [pcp0...3] (&rcu_bh_data)->dynticks->dynticks_nesting: 0x140000000000000
+		// [pcp0...3] (&rcu_bh_data)->dynticks->dynticks: 1
+		// [pcp0...3] ((&rcu_bh_state)->level[0])->qsmaskinit: [pcp0] 1, [pcp1] 2, [pcp2] 4, [pcp3] 8
+		// [pcp0...3] (&rcu_bh_data)->gpnum: 0xfffffed4
+		// [pcp0...3] (&rcu_bh_data)->passed_quiesce: 0
+		// [pcp0...3] (&rcu_bh_data)->qs_pending: 0
+		//
+		// rcu_init_percpu_data(0...3, &rcu_sched_state, 0)에 한일:
+		// [pcp0...3] (&rcu_sched_data)->beenonline: 1
+		// [pcp0...3] (&rcu_sched_data)->preemptible: 0
+		// [pcp0...3] (&rcu_sched_data)->len_last_fqs_check: 0
+		// [pcp0...3] (&rcu_sched_data)->n_force_qs_snap: 0
+		// [pcp0...3] (&rcu_sched_data)->blimit: 10
+		// [pcp0...3] (&rcu_sched_data)->nxtlist: NULL
+		// [pcp0...3] (&rcu_sched_data)->nxttail[0...3]: [pcp0...3] &(&rcu_sched_data)->nxtlist
+		// [pcp0...3] (&rcu_sched_data)->dynticks->dynticks_nesting: 0x140000000000000
+		// [pcp0...3] (&rcu_sched_data)->dynticks->dynticks: 1
+		// [pcp0...3] ((&rcu_sched_state)->level[0])->qsmaskinit: [pcp0] 1, [pcp1] 2, [pcp2] 4, [pcp3] 8
+		// [pcp0...3] (&rcu_sched_data)->gpnum: 0xfffffed4
+		// [pcp0...3] (&rcu_sched_data)->passed_quiesce: 0
+		// [pcp0...3] (&rcu_sched_data)->qs_pending: 0
+		//
+		// rcu_init_percpu_data(0...3, &rcu_preempt_state, 1)에 한일:
+		// [pcp0...3] (&rcu_preempt_data)->beenonline: 1
+		// [pcp0...3] (&rcu_preempt_data)->preemptible: 1
+		// [pcp0...3] (&rcu_preempt_data)->len_last_fqs_check: 0
+		// [pcp0...3] (&rcu_preempt_data)->n_force_qs_snap: 0
+		// [pcp0...3] (&rcu_preempt_data)->blimit: 10
+		// [pcp0...3] (&rcu_preempt_data)->nxtlist: NULL
+		// [pcp0...3] (&rcu_preempt_data)->nxttail[0...3]: [pcp0...3] &(&rcu_preempt_data)->nxtlist
+		// [pcp0...3] (&rcu_preempt_data)->dynticks->dynticks_nesting: 0x140000000000000
+		// [pcp0...3] (&rcu_preempt_data)->dynticks->dynticks: 1
+		// [pcp0...3] ((&rcu_preempt_state)->level[0])->qsmaskinit: [pcp0] 1, [pcp1] 2, [pcp2] 4, [pcp3] 8
+		// [pcp0...3] (&rcu_preempt_data)->gpnum: 0xfffffed4
+		// [pcp0...3] (&rcu_preempt_data)->passed_quiesce: 0
+		// [pcp0...3] (&rcu_preempt_data)->qs_pending: 0
+
+		// cpu: 0
+		rcu_prepare_kthreads(cpu); // null function
+
 		break;
 	case CPU_ONLINE:
 	case CPU_DOWN_FAILED:
@@ -3157,6 +3478,7 @@ static int rcu_cpu_notify(struct notifier_block *self,
 	return NOTIFY_OK;
 }
 
+// ARM10C 20140927
 static int rcu_pm_notify(struct notifier_block *self,
 			 unsigned long action, void *hcpu)
 {
@@ -3218,7 +3540,7 @@ void rcu_scheduler_starting(void)
  * Compute the per-level fanout, either using the exact fanout specified
  * or balancing the tree, depending on CONFIG_RCU_FANOUT_EXACT.
  */
-#ifdef CONFIG_RCU_FANOUT_EXACT
+#ifdef CONFIG_RCU_FANOUT_EXACT // CONFIG_RCU_FANOUT_EXACT=n
 static void __init rcu_init_levelspread(struct rcu_state *rsp)
 {
 	int i;
@@ -3228,17 +3550,32 @@ static void __init rcu_init_levelspread(struct rcu_state *rsp)
 	rsp->levelspread[0] = rcu_fanout_leaf;
 }
 #else /* #ifdef CONFIG_RCU_FANOUT_EXACT */
+// ARM10C 20140927
+// rsp: &rcu_bh_state
 static void __init rcu_init_levelspread(struct rcu_state *rsp)
 {
 	int ccur;
 	int cprv;
 	int i;
 
+	// nr_cpu_ids: 4
 	cprv = nr_cpu_ids;
+	// cprv: 4
+
+	// rcu_num_lvls: 1
 	for (i = rcu_num_lvls - 1; i >= 0; i--) {
+		// i: 0, rsp->levelcnt[0]: (&rcu_bh_state)->levelcnt[0]: 1
 		ccur = rsp->levelcnt[i];
+		// ccur: 1
+
+		// i: 0, rsp->levelspread[0]: (&rcu_bh_state)->levelspread[0]
+		// cprv: 4, ccur: 1
 		rsp->levelspread[i] = (cprv + ccur - 1) / ccur;
+		// rsp->levelspread[0]: (&rcu_bh_state)->levelspread[0]: 4
+
+		// cprv: 4, ccur: 1
 		cprv = ccur;
+		// cprv: 1
 	}
 }
 #endif /* #else #ifdef CONFIG_RCU_FANOUT_EXACT */
@@ -3246,6 +3583,12 @@ static void __init rcu_init_levelspread(struct rcu_state *rsp)
 /*
  * Helper function for rcu_init() that initializes one rcu_state structure.
  */
+// ARM10C 20140927
+// &rcu_bh_state, &rcu_bh_data
+// ARM10C 20140927
+// &rcu_sched_state, &rcu_sched_data
+// ARM10C 20140927
+// &rcu_preempt_state, &rcu_preempt_data
 static void __init rcu_init_one(struct rcu_state *rsp,
 		struct rcu_data __percpu *rda)
 {
@@ -3258,71 +3601,209 @@ static void __init rcu_init_one(struct rcu_state *rsp,
 			       "rcu_node_fqs_2",
 			       "rcu_node_fqs_3" };  /* Match MAX_RCU_LVLS */
 	int cpustride = 1;
+	// cpustride: 1
 	int i;
 	int j;
 	struct rcu_node *rnp;
 
+	// MAX_RCU_LVLS: 4, ARRAY_SIZE(buf): 4
 	BUILD_BUG_ON(MAX_RCU_LVLS > ARRAY_SIZE(buf));  /* Fix buf[] init! */
 
 	/* Silence gcc 4.8 warning about array index out of range. */
+	// rcu_num_lvls: 1, RCU_NUM_LVLS: 1
 	if (rcu_num_lvls > RCU_NUM_LVLS)
 		panic("rcu_init_one: rcu_num_lvls overflow");
 
 	/* Initialize the level-tracking arrays. */
 
+	// rcu_num_lvls: 1
 	for (i = 0; i < rcu_num_lvls; i++)
+		// i:0, rsp->levelcnt[0]: (&rcu_bh_state)->levelcnt[0], num_rcu_lvl[0]: 1
 		rsp->levelcnt[i] = num_rcu_lvl[i];
+		// rsp->levelcnt[0]: (&rcu_bh_state)->levelcnt[0]: 1
+
+	// rcu_num_lvls: 1
 	for (i = 1; i < rcu_num_lvls; i++)
 		rsp->level[i] = rsp->level[i - 1] + rsp->levelcnt[i - 1];
+
+	// rsp: &rcu_bh_state
 	rcu_init_levelspread(rsp);
+	// rcu_init_levelspread에서 한일:
+	// rsp->levelspread[0]: (&rcu_bh_state)->levelspread[0]: 4
 
 	/* Initialize the elements themselves, starting from the leaves. */
 
+	// rcu_num_lvls: 1
 	for (i = rcu_num_lvls - 1; i >= 0; i--) {
+		// i: 0, cpustride: 1, rsp->levelspread[0]: (&rcu_bh_state)->levelspread[0]: 4
 		cpustride *= rsp->levelspread[i];
+		// cpustride: 4
+
+		// i: 0, rsp->level[0]: (&rcu_bh_state)->level[0]
 		rnp = rsp->level[i];
+		// rnp: (&rcu_bh_state)->level[0]: &rcu_bh_state.node[0]
+
+		// i: 0, rsp->levelcnt[0]: (&rcu_bh_state)->levelcnt[0]: 1
 		for (j = 0; j < rsp->levelcnt[i]; j++, rnp++) {
+			// &rnp->lock: &((&rcu_bh_state)->level[0])->lock
 			raw_spin_lock_init(&rnp->lock);
+			// &((&rcu_bh_state)->level[0])->lock 사용한 spinlock 초기화
+
+			// &rnp->lock: &((&rcu_bh_state)->level[0])->lock,
+			// i: 0, rcu_node_class[0], buf[0]: "rcu_node_0"
 			lockdep_set_class_and_name(&rnp->lock,
-						   &rcu_node_class[i], buf[i]);
+						   &rcu_node_class[i], buf[i]); // null function
+
+			// &rnp->fqslock: &((&rcu_bh_state)->level[0])->fqslock
 			raw_spin_lock_init(&rnp->fqslock);
+			// &((&rcu_bh_state)->level[0])->fqslock 사용한 spinlock 초기화
+
+			// &rnp->fqslock: &((&rcu_bh_state)->level[0])->fqslock,
+			// i: 0, rcu_fqs_class[0], fqs[0]: "rcu_node_fqs_0"
 			lockdep_set_class_and_name(&rnp->fqslock,
-						   &rcu_fqs_class[i], fqs[i]);
+						   &rcu_fqs_class[i], fqs[i]); // null function
+
+			// rnp: ((&rcu_bh_state)->level[0])->gpnum,
+			// rsp->gpnum: (&rcu_bh_state)->gpnum: 0xfffffed4
 			rnp->gpnum = rsp->gpnum;
+			// rnp->gpnum: ((&rcu_bh_state)->level[0])->gpnum: 0xfffffed4
+
+			// rnp->completed: ((&rcu_bh_state)->level[0])->completed,
+			// rsp->completed: (&rcu_bh_state)->completed: 0xfffffed4
 			rnp->completed = rsp->completed;
+			// rnp->completed: ((&rcu_bh_state)->level[0])->completed: 0xfffffed4
+
+			// rnp->qsmask: ((&rcu_bh_state)->level[0])->qsmask
 			rnp->qsmask = 0;
+			// rnp->qsmask: ((&rcu_bh_state)->level[0])->qsmask: 0
+
+			// rnp->qsmaskinit: ((&rcu_bh_state)->level[0])->qsmaskinit
 			rnp->qsmaskinit = 0;
+			// rnp->qsmaskinit: ((&rcu_bh_state)->level[0])->qsmaskinit: 0
+
+			// rnp->grplo: ((&rcu_bh_state)->level[0])->grplo, j: 0, cpustride: 4
 			rnp->grplo = j * cpustride;
+			// rnp->grplo: ((&rcu_bh_state)->level[0])->grplo: 0
+
+			// rnp->grphi: ((&rcu_bh_state)->level[0])->grphi, j: 0, cpustride: 4
 			rnp->grphi = (j + 1) * cpustride - 1;
+			// rnp->grphi: ((&rcu_bh_state)->level[0])->grphi: 3
+
+			// rnp->grphi: ((&rcu_bh_state)->level[0])->grphi: 3, NR_CPUS: 4
 			if (rnp->grphi >= NR_CPUS)
 				rnp->grphi = NR_CPUS - 1;
+
+			// i: 0
 			if (i == 0) {
+				// rnp->gpnum: ((&rcu_bh_state)->level[0])->gpnum: 0xfffffed4
 				rnp->grpnum = 0;
+				// rnp->gpnum: ((&rcu_bh_state)->level[0])->gpnum: 0
+
+				// rnp->grpmask: ((&rcu_bh_state)->level[0])->grpmask
 				rnp->grpmask = 0;
+				// rnp->grpmask: ((&rcu_bh_state)->level[0])->grpmask: 0
+
+				// rnp->parent: ((&rcu_bh_state)->level[0])->parent
 				rnp->parent = NULL;
+				// rnp->parent: ((&rcu_bh_state)->level[0])->parent: NULL
 			} else {
 				rnp->grpnum = j % rsp->levelspread[i - 1];
 				rnp->grpmask = 1UL << rnp->grpnum;
 				rnp->parent = rsp->level[i - 1] +
 					      j / rsp->levelspread[i - 1];
 			}
+			// rnp->level: ((&rcu_bh_state)->level[0])->level, i: 0
 			rnp->level = i;
+			// rnp->level: ((&rcu_bh_state)->level[0])->level: 0
+
+			// &rnp->blkd_tasks: &((&rcu_bh_state)->level[0])->blkd_tasks
 			INIT_LIST_HEAD(&rnp->blkd_tasks);
-			rcu_init_one_nocb(rnp);
+			// &rnp->blkd_tasks: &((&rcu_bh_state)->level[0])->blkd_tasks 을 사용한 list 초기화
+
+			// rnp: (&rcu_bh_state)->level[0]
+			rcu_init_one_nocb(rnp); // null function
 		}
 	}
 
+	// rsp->rda: (&rcu_bh_state)->rda, rda: &rcu_bh_data
 	rsp->rda = rda;
+	// rsp->rda: (&rcu_bh_state)->rda: &rcu_bh_data
+
+	// &rsp->gp_wq: &(&rcu_bh_state)->gp_wq
 	init_waitqueue_head(&rsp->gp_wq);
+	// init_waitqueue_head에서 한일:
+	// &q->lock: &(&(&rcu_bh_state)->gp_wq)->lock을 사용한 spinlock 초기화
+	// &q->task_list: &(&(&rcu_bh_state)->gp_wq)->task_list를 사용한 list 초기화
+
+	// &rsp->wakeup_work: &(&rcu_bh_state)->wakeup_work
 	init_irq_work(&rsp->wakeup_work, rsp_wakeup);
+	// init_irq_work에서 한일:
+	// work->flags: (&(&rcu_bh_state)->wakeup_work)->flags: 0
+	// work->func: (&(&rcu_bh_state)->wakeup_work)->func: rsp_wakeup
+
+	// rcu_num_lvls: 1, rsp->level[0]: (&rcu_bh_state)->level[0]
 	rnp = rsp->level[rcu_num_lvls - 1];
+	// rnp: (&rcu_bh_state)->level[0]
+
 	for_each_possible_cpu(i) {
+	// for ((i) = -1; (i) = cpumask_next((i), (cpu_possible_mask)), (i) < nr_cpu_ids; )
+
+		// i: 0, rnp->grphi: ((&rcu_bh_state)->level[0])->grphi: 3
 		while (i > rnp->grphi)
 			rnp++;
+
+		// rsp->rda: (&rcu_bh_state)->rda: &rcu_bh_data, i: 0
+		// per_cpu_ptr(&rcu_bh_data, 0)->mynode: [pcp0] (&rcu_bh_data)->mynode,
+		// rnp: (&rcu_bh_state)->level[0]
 		per_cpu_ptr(rsp->rda, i)->mynode = rnp;
+		// per_cpu_ptr(&rcu_bh_data, 0)->mynode: [pcp0] (&rcu_bh_data)->mynode: (&rcu_bh_state)->level[0]
+
+		// i: 0, rsp: &rcu_bh_state
 		rcu_boot_init_percpu_data(i, rsp);
+		// rcu_boot_init_percpu_data(0) 에서 한일:
+		// rdp->grpmask: [pcp0] (&rcu_bh_data)->grpmask: 1
+		// rdp->nxtlist: [pcp0] (&rcu_bh_data)->nxtlist: NULL
+		// rdp->nxttail[0...3]: [pcp0] (&rcu_bh_data)->nxttail[0...3]: [pcp0] &(&rcu_bh_data)->nxtlist
+		// rdp->qlen_lazy: [pcp0] (&rcu_bh_data)->qlen_lazy: 0
+		// rdp->qlen: [pcp0] (&rcu_bh_data)->qlen: 0
+		// rdp->dynticks: [pcp0] (&rcu_bh_data)->dynticks: [pcp0] &rcu_dynticks
+		// rdp->cpu: [pcp0] (&rcu_bh_data)->cpu: 0
+		// rdp->rsp: [pcp0] (&rcu_bh_data)->rsp: &rcu_bh_state
+		//
+		// rcu_boot_init_percpu_data(1) 에서 한일:
+		// rdp->grpmask: [pcp1] (&rcu_bh_data)->grpmask: 2
+		// rdp->nxtlist: [pcp1] (&rcu_bh_data)->nxtlist: NULL
+		// rdp->nxttail[0...3]: [pcp1] (&rcu_bh_data)->nxttail[0...3]: [pcp0] &(&rcu_bh_data)->nxtlist
+		// rdp->qlen_lazy: [pcp1] (&rcu_bh_data)->qlen_lazy: 0
+		// rdp->qlen: [pcp1] (&rcu_bh_data)->qlen: 0
+		// rdp->dynticks: [pcp1] (&rcu_bh_data)->dynticks: [pcp1] &rcu_dynticks
+		// rdp->cpu: [pcp1] (&rcu_bh_data)->cpu: 1
+		// rdp->rsp: [pcp1] (&rcu_bh_data)->rsp: &rcu_bh_state
+		//
+		// rcu_boot_init_percpu_data(2) 에서 한일:
+		// rdp->grpmask: [pcp2] (&rcu_bh_data)->grpmask: 4
+		// rdp->nxtlist: [pcp2] (&rcu_bh_data)->nxtlist: NULL
+		// rdp->nxttail[0...3]: [pcp2] (&rcu_bh_data)->nxttail[0...3]: [pcp2] &(&rcu_bh_data)->nxtlist
+		// rdp->qlen_lazy: [pcp2] (&rcu_bh_data)->qlen_lazy: 0
+		// rdp->qlen: [pcp2] (&rcu_bh_data)->qlen: 0
+		// rdp->dynticks: [pcp2] (&rcu_bh_data)->dynticks: [pcp2] &rcu_dynticks
+		// rdp->cpu: [pcp2] (&rcu_bh_data)->cpu: 2
+		// rdp->rsp: [pcp2] (&rcu_bh_data)->rsp: &rcu_bh_state
+		//
+		// rcu_boot_init_percpu_data(3) 에서 한일:
+		// rdp->grpmask: [pcp3] (&rcu_bh_data)->grpmask: 8
+		// rdp->nxtlist: [pcp3] (&rcu_bh_data)->nxtlist: NULL
+		// rdp->nxttail[0...3]: [pcp3] (&rcu_bh_data)->nxttail[0...3]: [pcp3] &(&rcu_bh_data)->nxtlist
+		// rdp->qlen_lazy: [pcp3] (&rcu_bh_data)->qlen_lazy: 0
+		// rdp->qlen: [pcp3] (&rcu_bh_data)->qlen: 0
+		// rdp->dynticks: [pcp3] (&rcu_bh_data)->dynticks: [pcp3] &rcu_dynticks
+		// rdp->cpu: [pcp3] (&rcu_bh_data)->cpu: 3
+		// rdp->rsp: [pcp3] (&rcu_bh_data)->rsp: &rcu_bh_state
 	}
+
+	// rsp->flavors: (&rcu_bh_state)->flavors
 	list_add(&rsp->flavors, &rcu_struct_flavors);
+	// rcu_struct_flavors에 (&rcu_bh_state)->flavors를 list 추가
 }
 
 /*
@@ -3430,11 +3911,207 @@ void __init rcu_init(void)
 	// jiffies_till_next_fqs: 1
 
 // 2014/09/20 종료
+// 2014/09/27 시작
 	
 	rcu_init_one(&rcu_bh_state, &rcu_bh_data);
+	// rcu_init_one(&rcu_bh_state)한일:
+	// (&rcu_bh_state)->levelcnt[0]: 1
+	// (&rcu_bh_state)->levelspread[0]: 4
+	// &((&rcu_bh_state)->level[0])->lock 사용한 spinlock 초기화
+	// &((&rcu_bh_state)->level[0])->fqslock 사용한 spinlock 초기화
+	// ((&rcu_bh_state)->level[0])->completed: 0xfffffed4
+	// ((&rcu_bh_state)->level[0])->qsmask: 0
+	// ((&rcu_bh_state)->level[0])->qsmaskinit: 0
+	// ((&rcu_bh_state)->level[0])->grplo: 0
+	// ((&rcu_bh_state)->level[0])->grphi: 3
+	// ((&rcu_bh_state)->level[0])->gpnum: 0
+	// ((&rcu_bh_state)->level[0])->grpmask: 0
+	// ((&rcu_bh_state)->level[0])->parent: NULL
+	// ((&rcu_bh_state)->level[0])->level: 0
+	// &((&rcu_bh_state)->level[0])->blkd_tasks 을 사용한 list 초기화
+	//
+	// (&rcu_bh_state)->rda: &rcu_bh_data
+	// &(&(&rcu_bh_state)->gp_wq)->lock을 사용한 spinlock 초기화
+	// &(&(&rcu_bh_state)->gp_wq)->task_list를 사용한 list 초기화
+	// (&(&rcu_bh_state)->wakeup_work)->flags: 0
+	// (&(&rcu_bh_state)->wakeup_work)->func: rsp_wakeup
+	//
+	// (&rcu_bh_state)->level[0]
+	//
+	// [pcp0] (&rcu_bh_data)->mynode: (&rcu_bh_state)->level[0]
+	// [pcp1] (&rcu_bh_data)->mynode: (&rcu_bh_state)->level[0]
+	// [pcp2] (&rcu_bh_data)->mynode: (&rcu_bh_state)->level[0]
+	// [pcp3] (&rcu_bh_data)->mynode: (&rcu_bh_state)->level[0]
+	//
+	// [pcp0] (&rcu_bh_data)->grpmask: 1
+	// [pcp0] (&rcu_bh_data)->nxtlist: NULL
+	// [pcp0] (&rcu_bh_data)->nxttail[0...3]: [pcp0] &(&rcu_bh_data)->nxtlist
+	// [pcp0] (&rcu_bh_data)->qlen_lazy: 0
+	// [pcp0] (&rcu_bh_data)->qlen: 0
+	// [pcp0] (&rcu_bh_data)->dynticks: [pcp0] &rcu_dynticks
+	// [pcp0] (&rcu_bh_data)->cpu: 0
+	// [pcp0] (&rcu_bh_data)->rsp: &rcu_bh_state
+	// [pcp1] (&rcu_bh_data)->grpmask: 2
+	// [pcp1] (&rcu_bh_data)->nxtlist: NULL
+	// [pcp1] (&rcu_bh_data)->nxttail[0...3]: [pcp0] &(&rcu_bh_data)->nxtlist
+	// [pcp1] (&rcu_bh_data)->qlen_lazy: 0
+	// [pcp1] (&rcu_bh_data)->qlen: 0
+	// [pcp1] (&rcu_bh_data)->dynticks: [pcp1] &rcu_dynticks
+	// [pcp1] (&rcu_bh_data)->cpu: 1
+	// [pcp1] (&rcu_bh_data)->rsp: &rcu_bh_state
+	// [pcp2] (&rcu_bh_data)->grpmask: 4
+	// [pcp2] (&rcu_bh_data)->nxtlist: NULL
+	// [pcp2] (&rcu_bh_data)->nxttail[0...3]: [pcp2] &(&rcu_bh_data)->nxtlist
+	// [pcp2] (&rcu_bh_data)->qlen_lazy: 0
+	// [pcp2] (&rcu_bh_data)->qlen: 0
+	// [pcp2] (&rcu_bh_data)->dynticks: [pcp2] &rcu_dynticks
+	// [pcp2] (&rcu_bh_data)->cpu: 2
+	// [pcp2] (&rcu_bh_data)->rsp: &rcu_bh_state
+	// [pcp3] (&rcu_bh_data)->grpmask: 8
+	// [pcp3] (&rcu_bh_data)->nxtlist: NULL
+	// [pcp3] (&rcu_bh_data)->nxttail[0...3]: [pcp3] &(&rcu_bh_data)->nxtlist
+	// [pcp3] (&rcu_bh_data)->qlen_lazy: 0
+	// [pcp3] (&rcu_bh_data)->qlen: 0
+	// [pcp3] (&rcu_bh_data)->dynticks: [pcp3] &rcu_dynticks
+	// [pcp3] (&rcu_bh_data)->cpu: 3
+	// [pcp3] (&rcu_bh_data)->rsp: &rcu_bh_state
+	//
+	// rcu_struct_flavors에 (&rcu_bh_state)->flavors를 list 추가
+
 	rcu_init_one(&rcu_sched_state, &rcu_sched_data);
+	// rcu_init_one(&rcu_sched_state)한일:
+	// (&rcu_sched_state)->levelcnt[0]: 1
+	// (&rcu_sched_state)->levelspread[0]: 4
+	// &((&rcu_sched_state)->level[0])->lock 사용한 spinlock 초기화
+	// &((&rcu_sched_state)->level[0])->fqslock 사용한 spinlock 초기화
+	// ((&rcu_sched_state)->level[0])->completed: 0xfffffed4
+	// ((&rcu_sched_state)->level[0])->qsmask: 0
+	// ((&rcu_sched_state)->level[0])->qsmaskinit: 0
+	// ((&rcu_sched_state)->level[0])->grplo: 0
+	// ((&rcu_sched_state)->level[0])->grphi: 3
+	// ((&rcu_sched_state)->level[0])->gpnum: 0
+	// ((&rcu_sched_state)->level[0])->grpmask: 0
+	// ((&rcu_sched_state)->level[0])->parent: NULL
+	// ((&rcu_sched_state)->level[0])->level: 0
+	// &((&rcu_sched_state)->level[0])->blkd_tasks 을 사용한 list 초기화
+	//
+	// (&rcu_sched_state)->rda: &rcu_sched_data
+	// &(&(&rcu_sched_state)->gp_wq)->lock을 사용한 spinlock 초기화
+	// &(&(&rcu_sched_state)->gp_wq)->task_list를 사용한 list 초기화
+	// (&(&rcu_sched_state)->wakeup_work)->flags: 0
+	// (&(&rcu_sched_state)->wakeup_work)->func: rsp_wakeup
+	//
+	// (&rcu_sched_state)->level[0]
+	//
+	// [pcp0] (&rcu_sched_data)->mynode: (&rcu_sched_state)->level[0]
+	// [pcp1] (&rcu_sched_data)->mynode: (&rcu_sched_state)->level[0]
+	// [pcp2] (&rcu_sched_data)->mynode: (&rcu_sched_state)->level[0]
+	// [pcp3] (&rcu_sched_data)->mynode: (&rcu_sched_state)->level[0]
+	//
+	// [pcp0] (&rcu_sched_data)->grpmask: 1
+	// [pcp0] (&rcu_sched_data)->nxtlist: NULL
+	// [pcp0] (&rcu_sched_data)->nxttail[0...3]: [pcp0] &(&rcu_sched_data)->nxtlist
+	// [pcp0] (&rcu_sched_data)->qlen_lazy: 0
+	// [pcp0] (&rcu_sched_data)->qlen: 0
+	// [pcp0] (&rcu_sched_data)->dynticks: [pcp0] &rcu_dynticks
+	// [pcp0] (&rcu_sched_data)->cpu: 0
+	// [pcp0] (&rcu_sched_data)->rsp: &rcu_sched_state
+	// [pcp1] (&rcu_sched_data)->grpmask: 2
+	// [pcp1] (&rcu_sched_data)->nxtlist: NULL
+	// [pcp1] (&rcu_sched_data)->nxttail[0...3]: [pcp0] &(&rcu_sched_data)->nxtlist
+	// [pcp1] (&rcu_sched_data)->qlen_lazy: 0
+	// [pcp1] (&rcu_sched_data)->qlen: 0
+	// [pcp1] (&rcu_sched_data)->dynticks: [pcp1] &rcu_dynticks
+	// [pcp1] (&rcu_sched_data)->cpu: 1
+	// [pcp1] (&rcu_sched_data)->rsp: &rcu_sched_state
+	// [pcp2] (&rcu_sched_data)->grpmask: 4
+	// [pcp2] (&rcu_sched_data)->nxtlist: NULL
+	// [pcp2] (&rcu_sched_data)->nxttail[0...3]: [pcp2] &(&rcu_sched_data)->nxtlist
+	// [pcp2] (&rcu_sched_data)->qlen_lazy: 0
+	// [pcp2] (&rcu_sched_data)->qlen: 0
+	// [pcp2] (&rcu_sched_data)->dynticks: [pcp2] &rcu_dynticks
+	// [pcp2] (&rcu_sched_data)->cpu: 2
+	// [pcp2] (&rcu_sched_data)->rsp: &rcu_sched_state
+	// [pcp3] (&rcu_sched_data)->grpmask: 8
+	// [pcp3] (&rcu_sched_data)->nxtlist: NULL
+	// [pcp3] (&rcu_sched_data)->nxttail[0...3]: [pcp3] &(&rcu_sched_data)->nxtlist
+	// [pcp3] (&rcu_sched_data)->qlen_lazy: 0
+	// [pcp3] (&rcu_sched_data)->qlen: 0
+	// [pcp3] (&rcu_sched_data)->dynticks: [pcp3] &rcu_dynticks
+	// [pcp3] (&rcu_sched_data)->cpu: 3
+	// [pcp3] (&rcu_sched_data)->rsp: &rcu_sched_state
+	//
+	// rcu_struct_flavors에 (&rcu_sched_state)->flavors를 list 추가
+
 	__rcu_init_preempt();
+	// __rcu_init_preempt 한일:
+	// (&rcu_preempt_state)->levelcnt[0]: 1
+	// (&rcu_preempt_state)->levelspread[0]: 4
+	// &((&rcu_preempt_state)->level[0])->lock 사용한 spinlock 초기화
+	// &((&rcu_preempt_state)->level[0])->fqslock 사용한 spinlock 초기화
+	// ((&rcu_preempt_state)->level[0])->completed: 0xfffffed4
+	// ((&rcu_preempt_state)->level[0])->qsmask: 0
+	// ((&rcu_preempt_state)->level[0])->qsmaskinit: 0
+	// ((&rcu_preempt_state)->level[0])->grplo: 0
+	// ((&rcu_preempt_state)->level[0])->grphi: 3
+	// ((&rcu_preempt_state)->level[0])->gpnum: 0
+	// ((&rcu_preempt_state)->level[0])->grpmask: 0
+	// ((&rcu_preempt_state)->level[0])->parent: NULL
+	// ((&rcu_preempt_state)->level[0])->level: 0
+	// &((&rcu_preempt_state)->level[0])->blkd_tasks 을 사용한 list 초기화
+	//
+	// (&rcu_preempt_state)->rda: &rcu_preempt_data
+	// &(&(&rcu_preempt_state)->gp_wq)->lock을 사용한 spinlock 초기화
+	// &(&(&rcu_preempt_state)->gp_wq)->task_list를 사용한 list 초기화
+	// (&(&rcu_preempt_state)->wakeup_work)->flags: 0
+	// (&(&rcu_preempt_state)->wakeup_work)->func: rsp_wakeup
+	//
+	// (&rcu_preempt_state)->level[0]
+	//
+	// [pcp0] (&rcu_preempt_data)->mynode: (&rcu_preempt_state)->level[0]
+	// [pcp1] (&rcu_preempt_data)->mynode: (&rcu_preempt_state)->level[0]
+	// [pcp2] (&rcu_preempt_data)->mynode: (&rcu_preempt_state)->level[0]
+	// [pcp3] (&rcu_preempt_data)->mynode: (&rcu_preempt_state)->level[0]
+	//
+	// [pcp0] (&rcu_preempt_data)->grpmask: 1
+	// [pcp0] (&rcu_preempt_data)->nxtlist: NULL
+	// [pcp0] (&rcu_preempt_data)->nxttail[0...3]: [pcp0] &(&rcu_preempt_data)->nxtlist
+	// [pcp0] (&rcu_preempt_data)->qlen_lazy: 0
+	// [pcp0] (&rcu_preempt_data)->qlen: 0
+	// [pcp0] (&rcu_preempt_data)->dynticks: [pcp0] &rcu_dynticks
+	// [pcp0] (&rcu_preempt_data)->cpu: 0
+	// [pcp0] (&rcu_preempt_data)->rsp: &rcu_preempt_state
+	// [pcp1] (&rcu_preempt_data)->grpmask: 2
+	// [pcp1] (&rcu_preempt_data)->nxtlist: NULL
+	// [pcp1] (&rcu_preempt_data)->nxttail[0...3]: [pcp0] &(&rcu_preempt_data)->nxtlist
+	// [pcp1] (&rcu_preempt_data)->qlen_lazy: 0
+	// [pcp1] (&rcu_preempt_data)->qlen: 0
+	// [pcp1] (&rcu_preempt_data)->dynticks: [pcp1] &rcu_dynticks
+	// [pcp1] (&rcu_preempt_data)->cpu: 1
+	// [pcp1] (&rcu_preempt_data)->rsp: &rcu_preempt_state
+	// [pcp2] (&rcu_preempt_data)->grpmask: 4
+	// [pcp2] (&rcu_preempt_data)->nxtlist: NULL
+	// [pcp2] (&rcu_preempt_data)->nxttail[0...3]: [pcp2] &(&rcu_preempt_data)->nxtlist
+	// [pcp2] (&rcu_preempt_data)->qlen_lazy: 0
+	// [pcp2] (&rcu_preempt_data)->qlen: 0
+	// [pcp2] (&rcu_preempt_data)->dynticks: [pcp2] &rcu_dynticks
+	// [pcp2] (&rcu_preempt_data)->cpu: 2
+	// [pcp2] (&rcu_preempt_data)->rsp: &rcu_preempt_state
+	// [pcp3] (&rcu_preempt_data)->grpmask: 8
+	// [pcp3] (&rcu_preempt_data)->nxtlist: NULL
+	// [pcp3] (&rcu_preempt_data)->nxttail[0...3]: [pcp3] &(&rcu_preempt_data)->nxtlist
+	// [pcp3] (&rcu_preempt_data)->qlen_lazy: 0
+	// [pcp3] (&rcu_preempt_data)->qlen: 0
+	// [pcp3] (&rcu_preempt_data)->dynticks: [pcp3] &rcu_dynticks
+	// [pcp3] (&rcu_preempt_data)->cpu: 3
+	// [pcp3] (&rcu_preempt_data)->rsp: &rcu_preempt_state
+	//
+	// rcu_struct_flavors에 (&rcu_preempt_state)->flavors를 list 추가
+
+	// RCU_SOFTIRQ: 9,
 	open_softirq(RCU_SOFTIRQ, rcu_process_callbacks);
+	// open_softirq에서 한일:
+	// softirq_vec[9].action: rcu_process_callbacks
 
 	/*
 	 * We don't need protection against CPU-hotplug here because
@@ -3442,9 +4119,23 @@ void __init rcu_init(void)
 	 * or the scheduler are operational.
 	 */
 	cpu_notifier(rcu_cpu_notify, 0);
+	// cpu_notifier에서 한일:
+	// (&cpu_chain)->head: rcu_cpu_notify_nb 포인터 대입
+	// (&rcu_cpu_notify_nb)->next은 (&sched_ilb_notifier_nb)->next로 대입
+
 	pm_notifier(rcu_pm_notify, 0);
+	// pm_notifier에서 한일:
+	// (&pm_chain_head)->head: rcu_pm_notify_nb 포인터 대입
+	// n->next: (&rcu_pm_notify_nb)->next: NULL
+
 	for_each_online_cpu(cpu)
+	// for ((cpu) = -1; (cpu) = cpumask_next((cpu), (cpu_online_mask)), (cpu) < nr_cpu_ids; )
+
+		// CPU_UP_PREPARE: 0x0003, cpu: 0
+		// rcu_cpu_notify(NULL, 0x0003, 0): NOTIFY_OK: 0x0001
 		rcu_cpu_notify(NULL, CPU_UP_PREPARE, (void *)(long)cpu);
+
+	// 2014/09/27 종료
 }
 
 #include "tree_plugin.h"

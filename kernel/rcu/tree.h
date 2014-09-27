@@ -37,6 +37,7 @@
  * Of course, your mileage may vary.
  */
 // ARM10C 20140920
+// ARM10C 20140927
 // MAX_RCU_LVLS: 4
 #define MAX_RCU_LVLS 4
 // ARM10C 20140920
@@ -49,10 +50,21 @@
 
 // NR_CPUS: 4, RCU_FANOUT_1: 16
 #if NR_CPUS <= RCU_FANOUT_1
+// ARM10C 20140927
+// RCU_NUM_LVLS: 1
 #  define RCU_NUM_LVLS	      1
+// ARM10C 20140927
+// NUM_RCU_LVL_0: 1
 #  define NUM_RCU_LVL_0	      1
+// ARM10C 20140927
+// NR_CPUS: 4
+// NUM_RCU_LVL_1: 4
 #  define NUM_RCU_LVL_1	      (NR_CPUS)
+// ARM10C 20140927
+// NUM_RCU_LVL_2: 0
 #  define NUM_RCU_LVL_2	      0
+// ARM10C 20140927
+// NUM_RCU_LVL_3: 0
 #  define NUM_RCU_LVL_3	      0
 // ARM10C 20140920
 // NUM_RCU_LVL_4: 0
@@ -129,6 +141,7 @@ struct rcu_dynticks {
 /*
  * Definition for node within the RCU grace-period-detection hierarchy.
  */
+// ARM10C 20140927
 struct rcu_node {
 	raw_spinlock_t lock;	/* Root rcu_node's lock protects some */
 				/*  rcu_state fields as well as following. */
@@ -171,7 +184,7 @@ struct rcu_node {
 				/*  if there is no such task.  If there */
 				/*  is no current expedited grace period, */
 				/*  then there can cannot be any such task. */
-#ifdef CONFIG_RCU_BOOST
+#ifdef CONFIG_RCU_BOOST // CONFIG_RCU_BOOST=n
 	struct list_head *boost_tasks;
 				/* Pointer to first task that needs to be */
 				/*  priority boosted, or NULL if no priority */
@@ -207,7 +220,7 @@ struct rcu_node {
 				/* Refused to boost: not sure why, though. */
 				/*  This can happen due to race conditions. */
 #endif /* #ifdef CONFIG_RCU_BOOST */
-#ifdef CONFIG_RCU_NOCB_CPU
+#ifdef CONFIG_RCU_NOCB_CPU // CONFIG_RCU_NOCB_CPU=n
 	wait_queue_head_t nocb_gp_wq[2];
 				/* Place for rcu_nocb_kthread() to wait GP. */
 #endif /* #ifdef CONFIG_RCU_NOCB_CPU */
@@ -248,9 +261,12 @@ struct rcu_node {
 #define RCU_WAIT_TAIL		1	/* Also RCU_NEXT_READY head. */
 #define RCU_NEXT_READY_TAIL	2	/* Also RCU_NEXT head. */
 #define RCU_NEXT_TAIL		3
+// ARM10C 20140927
+// RCU_NEXT_SIZE: 4
 #define RCU_NEXT_SIZE		4
 
 /* Per-CPU data for read-copy update. */
+// ARM10C 20140927
 struct rcu_data {
 	/* 1) quiescent-state and grace-period handling : */
 	unsigned long	completed;	/* Track rsp->completed gp number */
@@ -263,7 +279,7 @@ struct rcu_data {
 	bool		preemptible;	/* Preemptible RCU? */
 	struct rcu_node *mynode;	/* This CPU's leaf of hierarchy */
 	unsigned long grpmask;		/* Mask to apply to leaf qsmask. */
-#ifdef CONFIG_RCU_CPU_STALL_INFO
+#ifdef CONFIG_RCU_CPU_STALL_INFO // CONFIG_RCU_CPU_STALL_INFO=n
 	unsigned long	ticks_this_gp;	/* The number of scheduling-clock */
 					/*  ticks this CPU has handled */
 					/*  during and after the last grace */
@@ -329,12 +345,12 @@ struct rcu_data {
 
 	/* 6) _rcu_barrier() and OOM callbacks. */
 	struct rcu_head barrier_head;
-#ifdef CONFIG_RCU_FAST_NO_HZ
+#ifdef CONFIG_RCU_FAST_NO_HZ // CONFIG_RCU_FAST_NO_HZ=n
 	struct rcu_head oom_head;
 #endif /* #ifdef CONFIG_RCU_FAST_NO_HZ */
 
 	/* 7) Callback offloading. */
-#ifdef CONFIG_RCU_NOCB_CPU
+#ifdef CONFIG_RCU_NOCB_CPU // CONFIG_RCU_NOCB_CPU=n
 	struct rcu_head *nocb_head;	/* CBs waiting for kthread. */
 	struct rcu_head **nocb_tail;
 	atomic_long_t nocb_q_count;	/* # CBs waiting for kthread */
@@ -346,7 +362,7 @@ struct rcu_data {
 #endif /* #ifdef CONFIG_RCU_NOCB_CPU */
 
 	/* 8) RCU CPU stall data. */
-#ifdef CONFIG_RCU_CPU_STALL_INFO
+#ifdef CONFIG_RCU_CPU_STALL_INFO // CONFIG_RCU_CPU_STALL_INFO=n
 	unsigned int softirq_snap;	/* Snapshot of softirq activity. */
 #endif /* #ifdef CONFIG_RCU_CPU_STALL_INFO */
 
@@ -399,6 +415,7 @@ do {									\
  * CPUs and by CONFIG_RCU_FANOUT.  Small systems will have a "hierarchy"
  * consisting of a single rcu_node.
  */
+// ARM10C 20140927
 struct rcu_state {
 	struct rcu_node node[NUM_RCU_NODES];	/* Hierarchy. */
 	struct rcu_node *level[RCU_NUM_LVLS];	/* Hierarchy levels. */
@@ -481,6 +498,10 @@ struct rcu_state {
 extern struct list_head rcu_struct_flavors;
 
 /* Sequence through rcu_state structures for each RCU flavor. */
+// ARM10C 20140927
+// #define for_each_rcu_flavor(rsp):
+// for (rsp = list_first_entry(&rcu_struct_flavors, typeof(*rsp), flavors);
+//     &rsp->flavors != (&rcu_struct_flavors); rsp = list_next_entry(rsp, flavors))
 #define for_each_rcu_flavor(rsp) \
 	list_for_each_entry((rsp), &rcu_struct_flavors, flavors)
 
@@ -494,14 +515,19 @@ extern struct list_head rcu_struct_flavors;
 /*
  * RCU implementation internal declarations:
  */
+// ARM10C 20140927
 extern struct rcu_state rcu_sched_state;
 DECLARE_PER_CPU(struct rcu_data, rcu_sched_data);
 
+// ARM10C 20140927
 extern struct rcu_state rcu_bh_state;
+// ARM10C 20140927
 DECLARE_PER_CPU(struct rcu_data, rcu_bh_data);
 
-#ifdef CONFIG_TREE_PREEMPT_RCU
+#ifdef CONFIG_TREE_PREEMPT_RCU // CONFIG_TREE_PREEMPT_RCU=y
+// ARM10C 20140927
 extern struct rcu_state rcu_preempt_state;
+// ARM10C 20140927
 DECLARE_PER_CPU(struct rcu_data, rcu_preempt_data);
 #endif /* #ifdef CONFIG_TREE_PREEMPT_RCU */
 

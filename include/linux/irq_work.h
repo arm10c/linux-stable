@@ -23,11 +23,18 @@ struct irq_work {
 	void (*func)(struct irq_work *);
 };
 
+// ARM10C 20140927
+// &rsp->wakeup_work: &(&rcu_bh_state)->wakeup_work, rsp_wakeup
 static inline
 void init_irq_work(struct irq_work *work, void (*func)(struct irq_work *))
 {
+	// work->flags: (&(&rcu_bh_state)->wakeup_work)->flags
 	work->flags = 0;
+	// work->flags: (&(&rcu_bh_state)->wakeup_work)->flags: 0
+
+	// work->func: (&(&rcu_bh_state)->wakeup_work)->func, func: rsp_wakeup
 	work->func = func;
+	// work->func: (&(&rcu_bh_state)->wakeup_work)->func: rsp_wakeup
 }
 
 void irq_work_queue(struct irq_work *work);

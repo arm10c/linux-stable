@@ -12,6 +12,8 @@
 // cpu_active_bits[1]
 // ARM10C 20140920
 // DECLARE_BITMAP(bitmap, 0x100): bitmap[8]
+// ARM10C 20140927
+// cpu_online_bits[1]
 #define DECLARE_BITMAP(name,bits) \
 	unsigned long name[BITS_TO_LONGS(bits)]
 

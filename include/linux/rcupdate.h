@@ -969,6 +969,8 @@ static inline notrace void rcu_read_unlock_sched_notrace(void)
 //	  smp_wmb(); // dmb();
 //	  ((&cpu_chain)->head) = (typeof(*&slab_notifier) __force *)(&slab_notifier);
 // } while (0)
+//
+// ARM10C 20140927
 #define rcu_assign_pointer(p, v)		\
 	__rcu_assign_pointer((p), (v), __rcu)
 
