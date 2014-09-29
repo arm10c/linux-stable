@@ -1,6 +1,7 @@
 #IAMROOT.ORG Kernel스터디10차(ARM)
 
 #HISTORY
+- 71th (2014/09/27) week study : [71차 스터디](https://github.com/arm10c/linux-stable/blob/master/Reference/88_Review/a10c_71.md)
 - 70th (2014/09/20) week study : [70차 스터디](https://github.com/arm10c/linux-stable/blob/master/Reference/88_Review/a10c_70.md)
 - 69th (2014/09/13) week study : [69차 스터디](https://github.com/arm10c/linux-stable/blob/master/Reference/88_Review/a10c_69.md)
  - sched_init()를 계속 분석
