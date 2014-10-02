@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 #IAMROOT.ORG Kernel스터디10차(ARM)
 
 #HISTORY
@@ -66,3 +67,10 @@
  - 리눅스 커널 내부구조 (p. 88~ p.150)
 * 01th (2012-04-28) week study: [01차 스터디] 34명
  - 리눅스 커널 내부구조 (처음  ~ p. 88)
+=======
+# The Linux Kernel review for ARMv7 3.13.0 (exynos 5420)
+* Community name: IAMROOT.ORG ARM kernel study 10th C team
+* Target Soc    : Samsung Exynos 5420 (ARMv7 A7&A15)
+* Kernel version: Linux kernel 3.13.x
+  - 1st: 3.9.6
+>>>>>>> bf253cdce3cda79bcb92b7763a4b10cb3a390fe7
