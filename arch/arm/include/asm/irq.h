@@ -1,11 +1,16 @@
 #ifndef __ASM_ARM_IRQ_H
 #define __ASM_ARM_IRQ_H
 
+// ARM10C 20141004
+// NR_IRQS_LEGACY: 16
 #define NR_IRQS_LEGACY	16
 
-#ifndef CONFIG_SPARSE_IRQ
+#ifndef CONFIG_SPARSE_IRQ // CONFIG_SPARSE_IRQ=y
 #include <mach/irqs.h>
 #else
+// ARM10C 20141004
+// NR_IRQS_LEGACY: 16
+// NR_IRQS: 16
 #define NR_IRQS NR_IRQS_LEGACY
 #endif
 

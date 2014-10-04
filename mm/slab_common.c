@@ -209,6 +209,8 @@ unsigned long calculate_alignment(unsigned long flags,
 
 // ARM10C 20140920
 // NULL, name: "idr_layer_cache", size: 1076, align: 0, flags: SLAB_PANIC: 0x00040000UL, ctor: NULL, NULL
+// ARM10C 20141004
+// name: "radix_tree_node", size: 296, align: 0, flags: 0x00060000UL, ctor: radix_tree_node_ctor
 struct kmem_cache *
 kmem_cache_create_memcg(struct mem_cgroup *memcg, const char *name, size_t size,
 			size_t align, unsigned long flags, void (*ctor)(void *),
@@ -373,14 +375,19 @@ out_locked:
 
 // ARM10C 20140920
 // "idr_layer_cache", sizeof(struct idr_layer): 1076 bytes, 0, SLAB_PANIC: 0x00040000UL, NULL
+// ARM10C 20141004
+// "radix_tree_node", sizeof(struct radix_tree_node): 296 bytes, 0, 0x00060000UL, radix_tree_node_ctor
 struct kmem_cache *
 kmem_cache_create(const char *name, size_t size, size_t align,
 		  unsigned long flags, void (*ctor)(void *))
 {
 	// name: "idr_layer_cache", size: 1076, align: 0, flags: SLAB_PANIC: 0x00040000UL, ctor: NULL
 	// kmem_cache_create_memcg(NULL, "idr_layer_cache", 1076, 0, SLAB_PANIC: 0x00040000UL, NULL): kmem_cache#21
+	// name: "radix_tree_node", size: 296, align: 0, flags: 0x00060000UL, ctor: radix_tree_node_ctor
+	// kmem_cache_create_memcg(NULL, "radix_tree_node", 296, 0, 0x00060000UL, radix_tree_node_ctor): kmem_cache#20
 	return kmem_cache_create_memcg(NULL, name, size, align, flags, ctor, NULL);
 	// return kmem_cache#21
+	// return kmem_cache#20
 }
 EXPORT_SYMBOL(kmem_cache_create);
 

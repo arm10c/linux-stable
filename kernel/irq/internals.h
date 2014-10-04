@@ -7,7 +7,10 @@
  */
 #include <linux/irqdesc.h>
 
-#ifdef CONFIG_SPARSE_IRQ
+#ifdef CONFIG_SPARSE_IRQ // CONFIG_SPARSE_IRQ=y
+// ARM10C 20141004
+// NR_IRQS: 16
+// IRQ_BITMAP_BITS: 8212
 # define IRQ_BITMAP_BITS	(NR_IRQS + 8196)
 #else
 # define IRQ_BITMAP_BITS	NR_IRQS

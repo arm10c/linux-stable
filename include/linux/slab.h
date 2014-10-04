@@ -53,6 +53,7 @@
 // SLAB_STORE_USER: 0x00010000UL
 #define SLAB_STORE_USER		0x00010000UL	/* DEBUG: Store the last owner for bug hunting */
 // ARM10C 20140920
+// ARM10C 20141004
 // SLAB_PANIC: 0x00040000UL
 #define SLAB_PANIC		0x00040000UL	/* Panic if kmem_cache_create() fails */
 /*
@@ -134,6 +135,7 @@
 /* The following flags affect the page allocator grouping pages by mobility */
 // ARM10C 20140524
 // ARM10C 20140920
+// ARM10C 20141004
 // SLAB_RECLAIM_ACCOUNT: 0x00020000UL
 #define SLAB_RECLAIM_ACCOUNT	0x00020000UL		/* Objects are reclaimable */
 // ARM10C 20140920
@@ -171,6 +173,7 @@ struct kmem_cache *kmem_cache_create(const char *, size_t, size_t,
 			unsigned long,
 			void (*)(void *));
 // ARM10C 20140920
+// ARM10C 20141004
 struct kmem_cache *
 kmem_cache_create_memcg(struct mem_cgroup *, const char *, size_t, size_t,
 			unsigned long, void (*)(void *), struct kmem_cache *);
@@ -308,6 +311,7 @@ struct kmem_cache {
 #define KMALLOC_MAX_SIZE	(1UL << KMALLOC_SHIFT_MAX)
 /* Maximum size for which we actually use a slab cache */
 // ARM10C 20140726
+// ARM10C 20141004
 // KMALLOC_SHIFT_HIGH: 13
 // KMALLOC_MAX_CACHE_SIZE: 0x2000
 #define KMALLOC_MAX_CACHE_SIZE	(1UL << KMALLOC_SHIFT_HIGH)
@@ -339,29 +343,37 @@ extern struct kmem_cache *kmalloc_dma_caches[KMALLOC_SHIFT_HIGH + 1];
 // size: 512
 // ARM10C 20140809
 // size: 52
+// ARM10C 20141004
+// size: 156
 static __always_inline int kmalloc_index(size_t size)
 {
 	// size: 512
 	// size: 52
+	// size: 156
 	if (!size)
 		return 0;
 
 	// size: 512, KMALLOC_MIN_SIZE: 64
 	// size: 52, KMALLOC_MIN_SIZE: 64
+	// size: 156, KMALLOC_MIN_SIZE: 64
 	if (size <= KMALLOC_MIN_SIZE)
 		// KMALLOC_SHIFT_LOW: 6
 		return KMALLOC_SHIFT_LOW;
 		// return 6
 
 	// size: 512, KMALLOC_MIN_SIZE: 64
+	// size: 156, KMALLOC_MIN_SIZE: 64
 	if (KMALLOC_MIN_SIZE <= 32 && size > 64 && size <= 96)
 		return 1;
 
 	// size: 512, KMALLOC_MIN_SIZE: 64
+	// size: 156, KMALLOC_MIN_SIZE: 64
 	if (KMALLOC_MIN_SIZE <= 64 && size > 128 && size <= 192)
 		return 2;
+		// return 2
 
 	// size: 512
+	// size: 156
 	if (size <=          8) return 3;
 	if (size <=         16) return 4;
 	if (size <=         32) return 5;
@@ -411,6 +423,8 @@ static __always_inline void *__kmalloc_node(size_t size, gfp_t flags, int node)
 // kmem_cache_node: &boot_kmem_cache_node, GFP_KERNEL: 0xD0, node: 0
 // ARM10C 20140726
 // kmem_cache_node: kmem_cache#31, GFP_KERNEL: 0xD0, node: 0
+// ARM10C 20141004
+// s: kmem_cache#28, gfpflags: 0x80D0, node: 0
 static __always_inline void *kmem_cache_alloc_node(struct kmem_cache *s, gfp_t flags, int node)
 {
 	// s: &boot_kmem_cache_node, flags: GFP_KERNEL: 0xD0
@@ -419,9 +433,12 @@ static __always_inline void *kmem_cache_alloc_node(struct kmem_cache *s, gfp_t f
 	// s: &kmem_cache#31, flags: GFP_KERNEL: 0xD0
 	// kmem_cache_alloc(&kmem_cache#31, GFP_KERNEL: 0xD0):
 	// UNMOVABLE인 page 의 시작 virtual address + 4032
+	// s: &kmem_cache#28, flags: 0x80D0
+	// kmem_cache_alloc(&kmem_cache#28, 0x80D0): kmem_cache#28-o0
 	return kmem_cache_alloc(s, flags);
 	// return UNMOVABLE인 page 의 object의 시작 virtual address + 64
 	// return UNMOVABLE인 page 의 시작 virtual address + 4032
+	// return kmem_cache#28-o0
 }
 #endif
 
@@ -457,12 +474,17 @@ static __always_inline void *kmem_cache_alloc_trace(struct kmem_cache *s,
 	// return kmem_cache#30-o9
 }
 
+// ARM10C 20141004
+// kmalloc_caches[2]: kmem_cache#28, flags: 0x80D0, node: 0, size: 156
 static __always_inline void *
 kmem_cache_alloc_node_trace(struct kmem_cache *s,
 			      gfp_t gfpflags,
 			      int node, size_t size)
 {
+	// s: kmem_cache#28, gfpflags: 0x80D0, node: 0
+	// kmem_cache_alloc_node(kmem_cache#28, 0x80D0, 0): kmem_cache#28-o0
 	return kmem_cache_alloc_node(s, gfpflags, node);
+	// return kmem_cache#28-o0
 }
 #endif /* CONFIG_TRACING */
 
@@ -621,18 +643,27 @@ static __always_inline int kmalloc_size(int n)
 	return 0;
 }
 
+// ARM10C 20141004
+// size: 156, flags: 0x80D0, node: 0
 static __always_inline void *kmalloc_node(size_t size, gfp_t flags, int node)
 {
-#ifndef CONFIG_SLOB
+#ifndef CONFIG_SLOB // CONFIG_SLOB=n
+	// size: 156, KMALLOC_MAX_CACHE_SIZE: 0x2000, flags: 0x80D0, GFP_DMA: 0x01u
 	if (__builtin_constant_p(size) &&
 		size <= KMALLOC_MAX_CACHE_SIZE && !(flags & GFP_DMA)) {
+		// size: 156, kmalloc_index(156): 2
 		int i = kmalloc_index(size);
+		// i: 2
 
+		// i: 2
 		if (!i)
 			return ZERO_SIZE_PTR;
 
+		// i: 2, kmalloc_caches[2]: kmem_cache#28, flags: 0x80D0, node: 0, size: 156
+		// kmem_cache_alloc_node_trace(kmem_cache#28, 0x80D0, 0, 156): kmem_cache#28-o0
 		return kmem_cache_alloc_node_trace(kmalloc_caches[i],
 						flags, node, size);
+		// return kmem_cache#28-o0
 	}
 #endif
 	return __kmalloc_node(size, flags, node);
@@ -821,9 +852,14 @@ static inline void *kzalloc(size_t size, gfp_t flags)
  * @flags: the type of memory to allocate (see kmalloc).
  * @node: memory node from which to allocate
  */
+// ARM10C 20141004
+// sizeof(struct irq_desc): 156 bytes, gfp: GFP_KERNEL: 0xD0, node: 0
 static inline void *kzalloc_node(size_t size, gfp_t flags, int node)
 {
+	// size: 156, flags: GFP_KERNEL: 0xD0, __GFP_ZERO: 0x8000u, node: 0
+	// kmalloc_node(156, 0x80D0, 0): kmem_cache#28-o0
 	return kmalloc_node(size, flags | __GFP_ZERO, node);
+	// return kmem_cache#28-o0
 }
 
 /*

@@ -4183,6 +4183,7 @@ void __init rcu_init(void)
 		// [pcp0...3] (&rcu_preempt_data)->qs_pending: 0
 
 // 2014/09/27 종료
+// 2014/10/04 시작
 }
 
 #include "tree_plugin.h"

@@ -4888,6 +4888,8 @@ static __always_inline void *slab_alloc(struct kmem_cache *s,
 // s: kmem_cache#26, flags: 0x80D0
 // ARM10C 20140809
 // s: kmem_cache#30, flags: 0x8000
+// ARM10C 20141004
+// s: kmem_cache#28, 0x80D0
 void *kmem_cache_alloc(struct kmem_cache *s, gfp_t gfpflags)
 {
 	// s: &boot_kmem_cache_node, gfpflags: GFP_KERNEL: 0xD0

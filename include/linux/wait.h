@@ -32,10 +32,14 @@ struct wait_bit_queue {
 	wait_queue_t		wait;
 };
 
+// ARM10C 20141004
+// sizeof(struct __wait_queue_head): 24 bytes
 struct __wait_queue_head {
 	spinlock_t		lock;
 	struct list_head	task_list;
 };
+
+// ARM10C 20141004
 typedef struct __wait_queue_head wait_queue_head_t;
 
 struct task_struct;

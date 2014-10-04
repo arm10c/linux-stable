@@ -47,6 +47,7 @@ extern int nr_cpu_ids;
 // ARM10C 20140215
 // ARM10C 20140830
 // ARM10C 20140913
+// ARM10C 20141004
 // NR_CPUS: 4
 // nr_cpumask_bits: 4
 #define nr_cpumask_bits	NR_CPUS
@@ -354,9 +355,14 @@ static inline int cpumask_test_and_clear_cpu(int cpu, struct cpumask *cpumask)
  * cpumask_setall - set all cpus (< nr_cpu_ids) in a cpumask
  * @dstp: the cpumask pointer
  */
+// ARM10C 20141004
+// irq_default_affinity
 static inline void cpumask_setall(struct cpumask *dstp)
 {
+	// dstp: irq_default_affinity, cpumask_bits(irq_default_affinity): irq_default_affinity->bits,
+	// nr_cpumask_bits: 4
 	bitmap_fill(cpumask_bits(dstp), nr_cpumask_bits);
+	// irq_default_affinity->bits[0]: 0xF
 }
 
 /**
@@ -751,6 +757,8 @@ typedef struct cpumask cpumask_var_t[1];
 // &rd->online: &(&def_root_domain)->online, GFP_KERNEL: 0xD0
 // ARM10C 20140830
 // &rd->rto_mask: &(&def_root_domain)->rto_mask, GFP_KERNEL: 0xD0
+// ARM10C 20141004
+// &irq_default_affinity, GFP_NOWAIT: 0
 static inline bool alloc_cpumask_var(cpumask_var_t *mask, gfp_t flags)
 {
 	return true;

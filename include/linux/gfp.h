@@ -161,6 +161,7 @@ struct vm_area_struct;
 // ARM10C 20140621
 // ARM10C 20140628
 // ARM10C 20140726
+// ARM10C 20141004
 // ___GFP_ZERO: 0x8000u
 // __GFP_ZERO: 0x8000u
 #define __GFP_ZERO	((__force gfp_t)___GFP_ZERO)	/* Return zeroed page on success */
@@ -218,6 +219,7 @@ struct vm_area_struct;
 // ARM10C 20140809
 // ARM10C 20140913
 // ARM10C 20140920
+// ARM10C 20141004
 // GFP_ATOMIC: 0x20u
 // __GFP_HIGH: 0x20u
 // GFP_NOWAIT: 0
@@ -234,6 +236,7 @@ struct vm_area_struct;
 // ARM10C 20140726
 // ARM10C 20140830
 // ARM10C 20140920
+// ARM10C 20141004
 // __GFP_WAIT: 0x10
 // __GFP_IO: 0x40
 // __GFP_FS: 0x80
@@ -312,6 +315,7 @@ struct vm_area_struct;
    platforms, used as appropriate on others */
 
 // ARM10C 20140726
+// ARM10C 20141004
 // ___GFP_DMA: 0x01u
 // GFP_DMA: 0x01u
 #define GFP_DMA		__GFP_DMA

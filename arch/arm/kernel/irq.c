@@ -131,11 +131,16 @@ void __init set_handle_irq(void (*handle_irq)(struct pt_regs *))
 }
 #endif
 
-#ifdef CONFIG_SPARSE_IRQ
+#ifdef CONFIG_SPARSE_IRQ // CONFIG_SPARSE_IRQ=y
 int __init arch_probe_nr_irqs(void)
 {
+	// machine_desc->nr_irqs: __mach_desc_EXYNOS5_DT.nr_irqs: 0, NR_IRQS: 16
 	nr_irqs = machine_desc->nr_irqs ? machine_desc->nr_irqs : NR_IRQS;
+	// nr_irqs: 16
+
+	// nr_irqs: 16
 	return nr_irqs;
+	// return 16
 }
 #endif
 

@@ -16,6 +16,8 @@
 #define BITS_PER_BYTE		8
 // ARM10C 20140607
 // pcpu_unit_pages: 0x8
+// ARM10C 20141004
+// 4
 #define BITS_TO_LONGS(nr)	DIV_ROUND_UP(nr, BITS_PER_BYTE * sizeof(long))
 #endif
 

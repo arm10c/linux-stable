@@ -143,6 +143,8 @@ struct irq_domain;
  * cleaned up the direct references and switched everything over to
  * irq_data.
  */
+// ARM10C 20141004
+// sizeof(struct irq_data): 44 bytes
 struct irq_data {
 	u32			mask;
 	unsigned int		irq;

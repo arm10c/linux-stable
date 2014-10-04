@@ -486,6 +486,8 @@ static inline int num_node_state(enum node_states state)
 	for ( (node) = 0; (node) == 0; (node) = 1)
 
 // ARM10C 20140329
+// ARM10C 20141004
+// first_online_node: 0
 #define first_online_node	0
 // ARM10C 20140329
 // MAX_NUMNODES: 1

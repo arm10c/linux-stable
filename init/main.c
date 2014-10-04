@@ -687,9 +687,15 @@ asmlinkage void __init start_kernel(void)
 	// integer ID management로 사용하는 idr_layer_cache에 kmem_cache#21 을 생성 및 초기화 후 할당
 
 	rcu_init();
-	tick_nohz_init();
-	context_tracking_init();
+	// rcu 자료구조 bh, sched, preempt 를 각각 초기화 수행함
+
+	tick_nohz_init(); // null function
+	context_tracking_init(); // null function
+
 	radix_tree_init();
+	// radix tree로 사용하는 radix_tree_node_cachep에 kmem_cache#20을 생성 및 초기화 후 할당하고
+	// height_to_maxindex을 초기화 수행
+
 	/* init some links before init_ISA_irqs() */
 	early_irq_init();
 	init_IRQ();

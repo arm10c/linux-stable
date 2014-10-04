@@ -37,11 +37,13 @@ struct irq_desc;
  * @dir:		/proc/irq/ procfs entry
  * @name:		flow handler name for /proc/interrupts output
  */
+// ARM10C 20141004
+// sizeof(struct irq_desc): 156 bytes
 struct irq_desc {
 	struct irq_data		irq_data;
 	unsigned int __percpu	*kstat_irqs;
 	irq_flow_handler_t	handle_irq;
-#ifdef CONFIG_IRQ_PREFLOW_FASTEOI
+#ifdef CONFIG_IRQ_PREFLOW_FASTEOI // CONFIG_IRQ_PREFLOW_FASTEOI=n
 	irq_preflow_handler_t	preflow_handler;
 #endif
 	struct irqaction	*action;	/* IRQ action list */
@@ -54,17 +56,17 @@ struct irq_desc {
 	unsigned int		irqs_unhandled;
 	raw_spinlock_t		lock;
 	struct cpumask		*percpu_enabled;
-#ifdef CONFIG_SMP
+#ifdef CONFIG_SMP // CONFIG_SMP=y
 	const struct cpumask	*affinity_hint;
 	struct irq_affinity_notify *affinity_notify;
-#ifdef CONFIG_GENERIC_PENDING_IRQ
+#ifdef CONFIG_GENERIC_PENDING_IRQ // CONFIG_GENERIC_PENDING_IRQ=n
 	cpumask_var_t		pending_mask;
 #endif
 #endif
 	unsigned long		threads_oneshot;
 	atomic_t		threads_active;
 	wait_queue_head_t       wait_for_threads;
-#ifdef CONFIG_PROC_FS
+#ifdef CONFIG_PROC_FS // CONFIG_PROC_FS=y
 	struct proc_dir_entry	*dir;
 #endif
 	int			parent_irq;

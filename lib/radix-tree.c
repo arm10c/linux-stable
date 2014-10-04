@@ -36,17 +36,29 @@
 
 
 #ifdef __KERNEL__
+// ARM10C 20141004
+// CONFIG_BASE_SMALL: 0
+// RADIX_TREE_MAP_SHIFT: 6
 #define RADIX_TREE_MAP_SHIFT	(CONFIG_BASE_SMALL ? 4 : 6)
 #else
 #define RADIX_TREE_MAP_SHIFT	3	/* For more stressful testing */
 #endif
 
+// ARM10C 20141004
+// RADIX_TREE_MAP_SHIFT: 6
+// RADIX_TREE_MAP_SIZE: 64
 #define RADIX_TREE_MAP_SIZE	(1UL << RADIX_TREE_MAP_SHIFT)
 #define RADIX_TREE_MAP_MASK	(RADIX_TREE_MAP_SIZE-1)
 
+// ARM10C 20141004
+// RADIX_TREE_MAP_SIZE: 64
+// BITS_PER_LONG: 32
+// RADIX_TREE_TAG_LONGS: 2
 #define RADIX_TREE_TAG_LONGS	\
 	((RADIX_TREE_MAP_SIZE + BITS_PER_LONG - 1) / BITS_PER_LONG)
 
+// ARM10C 20141004
+// sizeof(struct radix_tree_node): 296 bytes
 struct radix_tree_node {
 	unsigned int	height;		/* Height from the bottom */
 	unsigned int	count;
@@ -54,11 +66,19 @@ struct radix_tree_node {
 		struct radix_tree_node *parent;	/* Used when ascending tree */
 		struct rcu_head	rcu_head;	/* Used when freeing node */
 	};
+	// RADIX_TREE_MAP_SIZE: 64
 	void __rcu	*slots[RADIX_TREE_MAP_SIZE];
+	// RADIX_TREE_MAX_TAGS: 3, RADIX_TREE_TAG_LONGS: 2
 	unsigned long	tags[RADIX_TREE_MAX_TAGS][RADIX_TREE_TAG_LONGS];
 };
 
+// ARM10C 20141004
+// RADIX_TREE_INDEX_BITS: 32
 #define RADIX_TREE_INDEX_BITS  (8 /* CHAR_BIT */ * sizeof(unsigned long))
+// ARM10C 20141004
+// RADIX_TREE_INDEX_BITS: 32, RADIX_TREE_MAP_SHIFT: 6
+// DIV_ROUND_UP(32, 6): 6
+// RADIX_TREE_MAX_PATH: 6
 #define RADIX_TREE_MAX_PATH (DIV_ROUND_UP(RADIX_TREE_INDEX_BITS, \
 					  RADIX_TREE_MAP_SHIFT))
 
@@ -66,11 +86,14 @@ struct radix_tree_node {
  * The height_to_maxindex array needs to be one deeper than the maximum
  * path as height 0 holds only 1 entry.
  */
+// ARM10C 20141004
+// RADIX_TREE_MAX_PATH: 6
 static unsigned long height_to_maxindex[RADIX_TREE_MAX_PATH + 1] __read_mostly;
 
 /*
  * Radix tree node cache.
  */
+// ARM10C 20141004
 static struct kmem_cache *radix_tree_node_cachep;
 
 /*
@@ -1435,32 +1458,70 @@ int radix_tree_tagged(struct radix_tree_root *root, unsigned int tag)
 }
 EXPORT_SYMBOL(radix_tree_tagged);
 
+// ARM10C 20141004
 static void
 radix_tree_node_ctor(void *node)
 {
 	memset(node, 0, sizeof(struct radix_tree_node));
 }
 
+// ARM10C 20141004
+// 0
+// 1
 static __init unsigned long __maxindex(unsigned int height)
 {
+	// RADIX_TREE_MAP_SHIFT: 6
+	// RADIX_TREE_MAP_SHIFT: 6
 	unsigned int width = height * RADIX_TREE_MAP_SHIFT;
+	// width: 0
+	// width: 6
+	// RADIX_TREE_INDEX_BITS: 32
+	// RADIX_TREE_INDEX_BITS: 32
 	int shift = RADIX_TREE_INDEX_BITS - width;
+	// shift: 32
+	// shift: 26
 
+	// shift: 32
+	// shift: 26
 	if (shift < 0)
 		return ~0UL;
+
+	// shift: 32, BITS_PER_LONG: 32
+	// shift: 26, BITS_PER_LONG: 32
 	if (shift >= BITS_PER_LONG)
 		return 0UL;
+		// return 0
+
+	// shift: 26
 	return ~0UL >> shift;
+	// return 0x3F
 }
 
+// ARM10C 20141004
 static __init void radix_tree_init_maxindex(void)
 {
 	unsigned int i;
 
+	// ARRAY_SIZE(height_to_maxindex): 7
 	for (i = 0; i < ARRAY_SIZE(height_to_maxindex); i++)
+		// i: 0, __maxindex(0): 0
+		// i: 1, __maxindex(1): 0x3f
+		// i: 2, __maxindex(2): 0xfff
+		// i: 3, __maxindex(3): 0x3ffff
+		// i: 4, __maxindex(4): 0xffffff
+		// i: 5, __maxindex(5): 0x3fffffff
+		// i: 6, __maxindex(5): 0xffffffff
 		height_to_maxindex[i] = __maxindex(i);
+		// height_to_maxindex[0]: 0
+		// height_to_maxindex[1]: 0x3f
+		// height_to_maxindex[2]: 0xfff
+		// height_to_maxindex[3]: 0x3ffff
+		// height_to_maxindex[4]: 0xffffff
+		// height_to_maxindex[5]: 0x3fffffff
+		// height_to_maxindex[6]: 0xffffffff
 }
 
+// ARM10C 20141004
 static int radix_tree_callback(struct notifier_block *nfb,
                             unsigned long action,
                             void *hcpu)
@@ -1481,12 +1542,30 @@ static int radix_tree_callback(struct notifier_block *nfb,
        return NOTIFY_OK;
 }
 
+// ARM10C 20141004
 void __init radix_tree_init(void)
 {
+	// sizeof(struct radix_tree_node): 296 bytes,
+	// SLAB_PANIC: 0x00040000UL, SLAB_RECLAIM_ACCOUNT: 0x00020000UL
+	// kmem_cache_create("radix_tree_node", 296, 0x00060000UL, radix_tree_node_ctor): kmem_cache#20
 	radix_tree_node_cachep = kmem_cache_create("radix_tree_node",
 			sizeof(struct radix_tree_node), 0,
 			SLAB_PANIC | SLAB_RECLAIM_ACCOUNT,
 			radix_tree_node_ctor);
+	// radix_tree_node_cachep: kmem_cache#20
+
 	radix_tree_init_maxindex();
+	// radix_tree_init_maxindex에서 한일:
+	// height_to_maxindex[0]: 0
+	// height_to_maxindex[1]: 0x3f
+	// height_to_maxindex[2]: 0xfff
+	// height_to_maxindex[3]: 0x3ffff
+	// height_to_maxindex[4]: 0xffffff
+	// height_to_maxindex[5]: 0x3fffffff
+	// height_to_maxindex[6]: 0xffffffff
+
 	hotcpu_notifier(radix_tree_callback, 0);
+	// hotcpu_notifier에서 한일:
+	// (&cpu_chain)->head: radix_tree_callback_nb 포인터 대입
+	// (&radix_tree_callback_nb)->next은 (&rcu_cpu_notify_nb)->next로 대입
 }

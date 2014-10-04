@@ -22,11 +22,15 @@
  */
 static struct lock_class_key irq_desc_lock_class;
 
-#if defined(CONFIG_SMP)
+#if defined(CONFIG_SMP) // CONFIG_SMP=y
+// ARM10C 20141004
 static void __init init_irq_default_affinity(void)
 {
+	// GFP_NOWAIT: 0
+	// alloc_cpumask_var(&irq_default_affinity, 0): 0
 	alloc_cpumask_var(&irq_default_affinity, GFP_NOWAIT);
 	cpumask_setall(irq_default_affinity);
+	// irq_default_affinity->bits[0]: 0xF
 }
 #else
 static void __init init_irq_default_affinity(void)
@@ -93,13 +97,16 @@ static void desc_set_defaults(unsigned int irq, struct irq_desc *desc, int node,
 	desc_smp_init(desc, node);
 }
 
+// ARM10C 20141004
+// NR_IRQS: 16
+// nr_irqs: 16
 int nr_irqs = NR_IRQS;
 EXPORT_SYMBOL_GPL(nr_irqs);
 
 static DEFINE_MUTEX(sparse_irq_lock);
 static DECLARE_BITMAP(allocated_irqs, IRQ_BITMAP_BITS);
 
-#ifdef CONFIG_SPARSE_IRQ
+#ifdef CONFIG_SPARSE_IRQ // CONFIG_SPARSE_IRQ=y
 
 static RADIX_TREE(irq_desc_tree, GFP_KERNEL);
 
@@ -131,16 +138,29 @@ static void free_masks(struct irq_desc *desc)
 static inline void free_masks(struct irq_desc *desc) { }
 #endif
 
+// ARM10C 20141004
+// i: 0, node: 0, null
 static struct irq_desc *alloc_desc(int irq, int node, struct module *owner)
 {
 	struct irq_desc *desc;
+	// GFP_KERNEL: 0xD0
 	gfp_t gfp = GFP_KERNEL;
+	// gfp: GFP_KERNEL: 0xD0
 
+	// sizeof(struct irq_desc): 156 bytes, gfp: GFP_KERNEL: 0xD0, node: 0
+	// kzalloc_node(156, GFP_KERNEL: 0xD0, 0): kmem_cache#28-o0
 	desc = kzalloc_node(sizeof(*desc), gfp, node);
+	// desc: kmem_cache#28-o0
+
+	// desc: kmem_cache#28-o0
 	if (!desc)
 		return NULL;
 	/* allocate based on nr_cpu_ids */
+	// desc->kstat_irqs: (kmem_cache#28-o0)->kstat_irqs
+	// alloc_percpu(unsigned int): pcp 4 byte 공간 할당
 	desc->kstat_irqs = alloc_percpu(unsigned int);
+	// desc->kstat_irqs: (kmem_cache#28-o0)->kstat_irqs: pcp 4 byte 공간
+
 	if (!desc->kstat_irqs)
 		goto err_desc;
 
@@ -210,27 +230,42 @@ static int irq_expand_nr_irqs(unsigned int nr)
 	return 0;
 }
 
+// ARM10C 20141004
 int __init early_irq_init(void)
 {
+	// first_online_node: 0
 	int i, initcnt, node = first_online_node;
+	// node: 0
 	struct irq_desc *desc;
 
 	init_irq_default_affinity();
+	// init_irq_default_affinity에서 한일:
+	// irq_default_affinity->bits[0]: 0xF
 
 	/* Let arch update nr_irqs and return the nr of preallocated irqs */
+	// arch_probe_nr_irqs(): 16
 	initcnt = arch_probe_nr_irqs();
-	printk(KERN_INFO "NR_IRQS:%d nr_irqs:%d %d\n", NR_IRQS, nr_irqs, initcnt);
+	// initcnt: 16
 
+	// NR_IRQS: 16, nr_irqs: 16, initcnt: 16
+	printk(KERN_INFO "NR_IRQS:%d nr_irqs:%d %d\n", NR_IRQS, nr_irqs, initcnt);
+	// "NR_IRQS:16 nr_irqs:16 16"
+
+	// nr_irqs: 16, IRQ_BITMAP_BITS: 8212
 	if (WARN_ON(nr_irqs > IRQ_BITMAP_BITS))
 		nr_irqs = IRQ_BITMAP_BITS;
 
+	// initcnt: 16, IRQ_BITMAP_BITS: 8212
 	if (WARN_ON(initcnt > IRQ_BITMAP_BITS))
 		initcnt = IRQ_BITMAP_BITS;
 
+	// initcnt: 16, nr_irqs: 16
 	if (initcnt > nr_irqs)
 		nr_irqs = initcnt;
 
+	// initcnt: 16
 	for (i = 0; i < initcnt; i++) {
+		// i: 0, node: 0
 		desc = alloc_desc(i, node, NULL);
 		set_bit(i, allocated_irqs);
 		irq_insert_desc(i, desc);

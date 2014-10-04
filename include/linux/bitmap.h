@@ -165,6 +165,7 @@ extern int bitmap_ord_to_pos(const unsigned long *bitmap, int n, int bits);
 // ARM10C 20140301
 // nbits: 8
 // ARM10C 20140913
+// ARM10C 20141004
 #define small_const_nbits(nbits) \
 	(__builtin_constant_p(nbits) && (nbits) <= BITS_PER_LONG)
 
@@ -183,22 +184,29 @@ static inline void bitmap_zero(unsigned long *dst, int nbits)
 // ARM10C 20140301
 // dst: schunk->populated, nbits: 8
 // dst: dchunk->populated, nbits: 8
+// ARM10C 20141004
+// irq_default_affinity->bits, nr_cpumask_bits: 4
 static inline void bitmap_fill(unsigned long *dst, int nbits)
 {
 	// nbits: 8, BITS_TO_LONGS(8): 1
+	// nbits: 4, BITS_TO_LONGS(4): 1
 	size_t nlongs = BITS_TO_LONGS(nbits);
+	// nlongs: 1
 	// nlongs: 1
 
 	// nbits: 8, small_const_nbits(8): 1
+	// nbits: 4, small_const_nbits(4): 1
 	if (!small_const_nbits(nbits)) {
 		int len = (nlongs - 1) * sizeof(unsigned long);
 		memset(dst, 0xff,  len);
 	}
 
 	// dst: schunk->populated, nlongs: 1, nbits: 8, BITMAP_LAST_WORD_MASK(8): 0xFF
+	// dst: irq_default_affinity->bits, nlongs: 1, nbits: 4, BITMAP_LAST_WORD_MASK(4): 0xF
 	dst[nlongs - 1] = BITMAP_LAST_WORD_MASK(nbits);
 	// schunk->populated[0]: 0xFF
 	// dchunk->populated[0]: 0xFF
+	// irq_default_affinity->bits[0]: 0xF
 }
 
 // ARM10C 20140913
