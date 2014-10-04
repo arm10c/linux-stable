@@ -345,20 +345,26 @@ extern struct kmem_cache *kmalloc_dma_caches[KMALLOC_SHIFT_HIGH + 1];
 // size: 52
 // ARM10C 20141004
 // size: 156
+// ARM10C 20141004
+// size: 16
 static __always_inline int kmalloc_index(size_t size)
 {
 	// size: 512
 	// size: 52
 	// size: 156
+	// size: 16
 	if (!size)
 		return 0;
 
 	// size: 512, KMALLOC_MIN_SIZE: 64
 	// size: 52, KMALLOC_MIN_SIZE: 64
 	// size: 156, KMALLOC_MIN_SIZE: 64
+	// size: 16, KMALLOC_MIN_SIZE: 64
 	if (size <= KMALLOC_MIN_SIZE)
 		// KMALLOC_SHIFT_LOW: 6
+		// KMALLOC_SHIFT_LOW: 6
 		return KMALLOC_SHIFT_LOW;
+		// return 6
 		// return 6
 
 	// size: 512, KMALLOC_MIN_SIZE: 64
@@ -464,14 +470,18 @@ kmem_cache_alloc_node_trace(struct kmem_cache *s,
 // kmalloc_caches[9]: kmem_cache#26, flags: 0x80D0, size: 512
 // ARM10C 20140809
 // kmalloc_caches[6]: kmem_cache#30, flags: 0x8000, size: 52
+// ARM10C 20141004
+// kmalloc_caches[6]: kmem_cache#30, flags: 0x80D0, size: 16
 static __always_inline void *kmem_cache_alloc_trace(struct kmem_cache *s,
 		gfp_t flags, size_t size)
 {
 	// s: kmem_cache#26, flags: 0x80D0
 	// s: kmem_cache#30, flags: 0x8000
+	// s: kmem_cache#30, flags: 0x80D0
 	return kmem_cache_alloc(s, flags);
 	// return kmem_cache#26-o0
 	// return kmem_cache#30-o9
+	// return kmem_cache#30-o10
 }
 
 // ARM10C 20141004
@@ -581,36 +591,47 @@ static __always_inline void *kmalloc_large(size_t size, gfp_t flags)
 // size: 512, GFP_KERNEL | __GFP_ZERO: 0x80D0
 // ARM10C 20140809
 // size: 52, GFP_NOWAIT | __GFP_ZERO: 0x8000u
+// ARM10C 20141004
+// size: 16, GFP_KERNEL: 0xD0, __GFP_ZERO: 0x8000u
 static __always_inline void *kmalloc(size_t size, gfp_t flags)
 {
 	// size: 512
 	// size: 52
+	// size: 16
 	if (__builtin_constant_p(size)) {
 		// size: 512, KMALLOC_MAX_CACHE_SIZE: 0x2000
 		// size: 52, KMALLOC_MAX_CACHE_SIZE: 0x2000
+		// size: 16, KMALLOC_MAX_CACHE_SIZE: 0x2000
 		if (size > KMALLOC_MAX_CACHE_SIZE)
 			return kmalloc_large(size, flags);
+
 #ifndef CONFIG_SLOB // CONFIG_SLOB=n
 		// flags: 0x80D0, GFP_DMA: 0x01u
 		// flags: 0x8000, GFP_DMA: 0x01u
+		// flags: 0x80D0, GFP_DMA: 0x01u
 		if (!(flags & GFP_DMA)) {
 			// size: 512, kmalloc_index(512): 9
 			// size: 52, kmalloc_index(52): 6
+			// size: 16, kmalloc_index(16): 6
 			int index = kmalloc_index(size);
 			// index: 9
 			// index: 6
+			// index: 6
 
 			// index: 9
+			// index: 6
 			// index: 6
 			if (!index)
 				return ZERO_SIZE_PTR;
 
 			// index: 9, kmalloc_caches[9]: kmem_cache#26, flags: 0x80D0, size: 512
 			// index: 6, kmalloc_caches[6]: kmem_cache#30, flags: 0x8000, size: 52
+			// index: 6, kmalloc_caches[6]: kmem_cache#30, flags: 0x80D0, size: 16
 			return kmem_cache_alloc_trace(kmalloc_caches[index],
 					flags, size);
 			// return kmem_cache#26-o0
 			// return kmem_cache#30-o9
+			// return kmem_cache#30-o10
 		}
 #endif
 	}
@@ -837,13 +858,17 @@ static inline void *kmem_cache_zalloc(struct kmem_cache *k, gfp_t flags)
 // size: 512, GFP_KERNEL: 0xD0
 // ARM10C 20140809
 // sizeof(struct vmap_area): 52 bytes, GFP_NOWAIT: 0
+// ARM10C 20141004
+// sizeof(struct intc_desc): 16 bytes, GFP_KERNEL: 0xD0
 static inline void *kzalloc(size_t size, gfp_t flags)
 {
 	// size: 512, GFP_KERNEL: 0xD0, __GFP_ZERO: 0x8000u
 	// size: 52, GFP_NOWAIT: 0x0, __GFP_ZERO: 0x8000u
+	// size: 16, GFP_KERNEL: 0xD0, __GFP_ZERO: 0x8000u
 	return kmalloc(size, flags | __GFP_ZERO);
 	// return kmem_cache#26-o0
 	// return kmem_cache#30-o9
+	// return kmem_cache#30-o10
 }
 
 /**

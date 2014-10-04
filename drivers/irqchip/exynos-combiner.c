@@ -232,5 +232,10 @@ static int __init combiner_of_init(struct device_node *np,
 
 	return 0;
 }
+// ARM10C 20141004
+// #define IRQCHIP_DECLARE(exynos4210_combiner, "samsung,exynos4210-combiner", combiner_of_init):
+// 	static const struct of_device_id irqchip_of_match_exynos4210_combiner
+// 	__used __section(__irqchip_of_table)
+// 	= { .compatible = "samsung,exynos4210-combiner", .data = combiner_of_init }
 IRQCHIP_DECLARE(exynos4210_combiner, "samsung,exynos4210-combiner",
 		combiner_of_init);

@@ -18,6 +18,9 @@
 // pcpu_unit_pages: 0x8
 // ARM10C 20141004
 // 4
+// ARM10C 20141004
+// IRQ_BITMAP_BITS: 8212
+// BITS_TO_LONGS(8212, 32): 257
 #define BITS_TO_LONGS(nr)	DIV_ROUND_UP(nr, BITS_PER_BYTE * sizeof(long))
 #endif
 

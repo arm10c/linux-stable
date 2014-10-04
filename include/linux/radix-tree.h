@@ -63,18 +63,41 @@ static inline int radix_tree_is_indirect_ptr(void *ptr)
 #define RADIX_TREE_MAX_TAGS 3
 
 /* root tags are stored in gfp_mask, shifted by __GFP_BITS_SHIFT */
+// ARM10C 20141004
 struct radix_tree_root {
 	unsigned int		height;
 	gfp_t			gfp_mask;
 	struct radix_tree_node	__rcu *rnode;
 };
 
+// ARM10C 20141004
+// #define RADIX_TREE_INIT(GFP_KERNEL):
+// {
+// 	.height = 0,
+// 	.gfp_mask = (GFP_KERNEL),
+// 	.rnode = NULL,
+// }
 #define RADIX_TREE_INIT(mask)	{					\
 	.height = 0,							\
 	.gfp_mask = (mask),						\
 	.rnode = NULL,							\
 }
 
+// ARM10C 20141004
+// #define RADIX_TREE_INIT(GFP_KERNEL):
+// {
+// 	.height = 0,
+// 	.gfp_mask = (GFP_KERNEL),
+// 	.rnode = NULL,
+// }
+//
+// #define RADIX_TREE(irq_desc_tree, GFP_KERNEL):
+// 	struct radix_tree_root irq_desc_tree =
+//	{
+//		.height = 0,
+//		.gfp_mask = (GFP_KERNEL),
+//		.rnode = NULL,
+//	}
 #define RADIX_TREE(name, mask) \
 	struct radix_tree_root name = RADIX_TREE_INIT(mask)
 

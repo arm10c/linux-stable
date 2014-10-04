@@ -31,6 +31,7 @@
 LIST_HEAD(aliases_lookup);
 
 // ARM10C 20140208
+// ARM10C 20141004
 struct device_node *of_allnodes;
 EXPORT_SYMBOL(of_allnodes);
 struct device_node *of_chosen;
@@ -44,6 +45,7 @@ DEFINE_MUTEX(of_aliases_mutex);
  * or parent members of struct device_node.
  */
 // ARM10C 20140215
+// ARM10C 20141004
 DEFINE_RAW_SPINLOCK(devtree_lock);
 
 int of_n_addr_cells(struct device_node *np)
@@ -85,7 +87,7 @@ int __weak of_node_to_nid(struct device_node *np)
 }
 #endif
 
-#if defined(CONFIG_OF_DYNAMIC)
+#if defined(CONFIG_OF_DYNAMIC) // CONFIG_OF_DYNAMIC=n
 /**
  *	of_node_get - Increment refcount of a node
  *	@node:	Node to inc refcount, NULL is supported to
@@ -161,28 +163,41 @@ EXPORT_SYMBOL(of_node_put);
 #endif /* CONFIG_OF_DYNAMIC */
 
 // ARM10C 20140208
+// ARM10C 20141004
+// np: devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소, name: "interrupt-controller", lenp: NULL
 static struct property *__of_find_property(const struct device_node *np,
 					   const char *name, int *lenp)
 {
 	struct property *pp;
 
+	// np: devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소
 	if (!np)
 		return NULL;
 
+	// np: devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소
 	for (pp = np->properties; pp; pp = pp->next) {
+		// pp: pp->name이 "interrupt-controller" 일때의 주소 (exynos5.dtsi)
+
+		// pp->name: "interrupt-controller", name: "interrupt-controller"
+		// of_prop_cmp("interrupt-controller", "interrupt-controller"): 0
 		if (of_prop_cmp(pp->name, name) == 0) {
+			// lenp: NULL
 			if (lenp)
 				*lenp = pp->length;
 			break;
 		}
 	}
 
+	// pp: combiner node의 "interrupt-controller" property의 주소
 	return pp;
+	// return combiner node의 "interrupt-controller" property의 주소
 }
 
 // ARM10C 20140208
 // ARM10C 20140215
 // np: cpu0의 node의 주소값, propname: "reg", NULL
+// ARM10C 20141004
+// np: devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소, "interrupt-controller", NULL
 struct property *of_find_property(const struct device_node *np,
 				  const char *name,
 				  int *lenp)
@@ -191,10 +206,20 @@ struct property *of_find_property(const struct device_node *np,
 	unsigned long flags;
 
 	raw_spin_lock_irqsave(&devtree_lock, flags);
-	pp = __of_find_property(np, name, lenp);
-	raw_spin_unlock_irqrestore(&devtree_lock, flags);
+	// devtree_lock을 사용한 spin lock 수행하고 cpsr을 flags에 저장
 
+	// np: devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소, name: "interrupt-controller", lenp: NULL
+	// __of_find_property(devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소, "interrupt-controller", NULL):
+	// combiner node의 "interrupt-controller" property의 주소
+	pp = __of_find_property(np, name, lenp);
+	// pp: combiner node의 "interrupt-controller" property의 주소
+
+	raw_spin_unlock_irqrestore(&devtree_lock, flags);
+	// devtree_lock을 사용한 spin lock 해재하고 flags에 저장된 cpsr을 복원
+
+	// pp: combiner node의 "interrupt-controller" property의 주소
 	return pp;
+	// return: combiner node의 "interrupt-controller" property의 주소
 }
 EXPORT_SYMBOL(of_find_property);
 
@@ -226,6 +251,7 @@ EXPORT_SYMBOL(of_find_all_nodes);
  * Find a property with a given name for a given node
  * and return the value.
  */
+// ARM10C 20141004
 static const void *__of_get_property(const struct device_node *np,
 				     const char *name, int *lenp)
 {
@@ -354,18 +380,33 @@ EXPORT_SYMBOL(of_get_cpu_node);
 /** Checks if the given "compat" string matches one of the strings in
  * the device's "compatible" property
  */
+// ARM10C 20141004
+// node: of_allnodes,
+// matches->compatible: irqchip_of_match_exynos4210_combiner->compatible: "samsung,exynos4210-combiner"
 static int __of_device_is_compatible(const struct device_node *device,
 				     const char *compat)
 {
 	const char* cp;
 	int cplen, l;
+	
+	// exynos5.dtsi 에 정의된
+	// compatible 이 "samsung,exynos4210-combiner" 인 combiner node를 찾음
 
+	// device: of_allnodes
 	cp = __of_get_property(device, "compatible", &cplen);
+	// cp: "samsung,exynos4210-combiner", cplen: 28
+
+	// cp: "samsung,exynos4210-combiner"
 	if (cp == NULL)
 		return 0;
+
+	// cplen: 28
 	while (cplen > 0) {
+		// cp: "samsung,exynos4210-combiner", compat: "samsung,exynos4210-combiner"
+		// of_compat_cmp("samsung,exynos4210-combiner", "samsung,exynos4210-combiner", 28): 0
 		if (of_compat_cmp(cp, compat, strlen(compat)) == 0)
 			return 1;
+			// return 1
 		l = strlen(cp) + 1;
 		cp += l;
 		cplen -= l;
@@ -464,18 +505,30 @@ EXPORT_SYMBOL(of_device_is_available);
  *	Returns a node pointer with refcount incremented, use
  *	of_node_put() on it when done.
  */
+// ARM10C 20141004
+// child: devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소
 struct device_node *of_get_parent(const struct device_node *node)
 {
 	struct device_node *np;
 	unsigned long flags;
 
+	// node: devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소
 	if (!node)
 		return NULL;
 
 	raw_spin_lock_irqsave(&devtree_lock, flags);
+	// devtree_lock을 사용한 spin lock 수행하고 cpsr을 flags에 저장
+
+	// node->parent: devtree에서 allnext로 순회 하면서 찾은 combiner node의 parent주소
 	np = of_node_get(node->parent);
+	// np: devtree에서 allnext로 순회 하면서 찾은 combiner node의 parent주소
+
 	raw_spin_unlock_irqrestore(&devtree_lock, flags);
+	// devtree_lock을 사용한 spin lock 해재하고 flags에 저장된 cpsr을 복원
+
+	// np: devtree에서 allnext로 순회 하면서 찾은 combiner node의 parent주소
 	return np;
+	// return devtree에서 allnext로 순회 하면서 찾은 combiner node의 parent주소
 }
 EXPORT_SYMBOL(of_get_parent);
 
@@ -742,26 +795,48 @@ out:
 }
 EXPORT_SYMBOL(of_find_node_with_property);
 
+// ARM10C 20141004
+// matches: irqchip_of_match_exynos4210_combiner, np: of_allnodes
 static
 const struct of_device_id *__of_match_node(const struct of_device_id *matches,
 					   const struct device_node *node)
 {
+	// matches: irqchip_of_match_exynos4210_combiner
 	if (!matches)
 		return NULL;
 
+	// matches->name[0]: irqchip_of_match_exynos4210_combiner->name[0]: NULL,
+	// matches->type[0]: irqchip_of_match_exynos4210_combiner->type[0]: NULL,
+	// matches->compatible[0]: irqchip_of_match_exynos4210_combiner->compatible[0]: 's'
 	while (matches->name[0] || matches->type[0] || matches->compatible[0]) {
 		int match = 1;
+		// match: 1
+
+		// matches->name[0]: irqchip_of_match_exynos4210_combiner->name[0]: NULL
 		if (matches->name[0])
 			match &= node->name
 				&& !strcmp(matches->name, node->name);
+
+		// matches->type[0]: irqchip_of_match_exynos4210_combiner->type[0]: NULL
 		if (matches->type[0])
 			match &= node->type
 				&& !strcmp(matches->type, node->type);
+
+		// matches->compatible[0]: irqchip_of_match_exynos4210_combiner->compatible[0]: "samsung,exynos4210-combiner"
 		if (matches->compatible[0])
+			// match: 1, node: of_allnodes,
+			// matches->compatible: irqchip_of_match_exynos4210_combiner->compatible: "samsung,exynos4210-combiner"
+			// __of_device_is_compatible(of_allnodes, "samsung,exynos4210-combiner"): 1
 			match &= __of_device_is_compatible(node,
 							   matches->compatible);
+			// match: 1
+
+		// match: 1
 		if (match)
+			// matches: irqchip_of_match_exynos4210_combiner
 			return matches;
+			// return irqchip_of_match_exynos4210_combiner
+
 		matches++;
 	}
 	return NULL;
@@ -800,6 +875,8 @@ EXPORT_SYMBOL(of_match_node);
  *	Returns a node pointer with refcount incremented, use
  *	of_node_put() on it when done.
  */
+// ARM10C 20141004
+// from: null, matches: irqchip_of_match_exynos4210_combiner, NULL
 struct device_node *of_find_matching_node_and_match(struct device_node *from,
 					const struct of_device_id *matches,
 					const struct of_device_id **match)
@@ -808,22 +885,48 @@ struct device_node *of_find_matching_node_and_match(struct device_node *from,
 	const struct of_device_id *m;
 	unsigned long flags;
 
+	// match: NULL
 	if (match)
 		*match = NULL;
 
 	raw_spin_lock_irqsave(&devtree_lock, flags);
+	// devtree_lock을 사용한 spin lock 수행하고 cpsr을 flags에 저장
+
+	// from: NULL
 	np = from ? from->allnext : of_allnodes;
+	// np: of_allnodes
+
+	// unflatten_device_tree 에서 만든 tree의 root node가 of_allnodes에 저장되어 있음
+
+	// np: of_allnodes
 	for (; np; np = np->allnext) {
+		// np: devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소
+
+		// matches: irqchip_of_match_exynos4210_combiner, np: of_allnodes
+		// __of_match_node(irqchip_of_match_exynos4210_combiner, of_allnodes): irqchip_of_match_exynos4210_combiner
 		m = __of_match_node(matches, np);
+		// m: irqchip_of_match_exynos4210_combiner
+
+		// m: irqchip_of_match_exynos4210_combiner,
+		// np: devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소
+		// of_node_get(np): np
 		if (m && of_node_get(np)) {
+			// match: NULL
 			if (match)
 				*match = m;
 			break;
 		}
 	}
-	of_node_put(from);
+
+	// from: null
+	of_node_put(from); // null function
+
 	raw_spin_unlock_irqrestore(&devtree_lock, flags);
+	// devtree_lock을 사용한 spin lock 해재하고 flags에 저장된 cpsr을 복원
+
+	// np: devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소
 	return np;
+	// return devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소
 }
 EXPORT_SYMBOL(of_find_matching_node_and_match);
 

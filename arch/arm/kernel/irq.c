@@ -113,8 +113,10 @@ void set_irq_flags(unsigned int irq, unsigned int iflags)
 }
 EXPORT_SYMBOL_GPL(set_irq_flags);
 
+// ARM10C 20141004
 void __init init_IRQ(void)
 {
+	// CONFIG_OF=y, machine_desc->init_irq: __mach_desc_EXYNOS5_DT.init_irq: 0
 	if (IS_ENABLED(CONFIG_OF) && !machine_desc->init_irq)
 		irqchip_init();
 	else

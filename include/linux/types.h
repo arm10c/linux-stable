@@ -14,6 +14,9 @@
 // DECLARE_BITMAP(bitmap, 0x100): bitmap[8]
 // ARM10C 20140927
 // cpu_online_bits[1]
+// ARM10C 20141004
+// IRQ_BITMAP_BITS: 8212
+// DECLARE_BITMAP(allocated_irqs, 8212): allocated_irqs[257]
 #define DECLARE_BITMAP(name,bits) \
 	unsigned long name[BITS_TO_LONGS(bits)]
 

@@ -148,7 +148,8 @@
 #define CLKSRC_OF_TABLES()
 #endif
 
-#ifdef CONFIG_IRQCHIP
+#ifdef CONFIG_IRQCHIP // CONFIG_IRQCHIP=y
+// ARM10C 20141004
 #define IRQCHIP_OF_MATCH_TABLE()					\
 	. = ALIGN(8);							\
 	VMLINUX_SYMBOL(__irqchip_begin) = .;				\

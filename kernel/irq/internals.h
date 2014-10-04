@@ -173,9 +173,13 @@ static inline void irqd_clear(struct irq_data *d, unsigned int mask)
 	d->state_use_accessors &= ~mask;
 }
 
+// ARM10C 20141004
+// &desc->irq_data: &(kmem_cache#28-o0)->irq_data, IRQD_IRQ_DISABLED: 0x10000
 static inline void irqd_set(struct irq_data *d, unsigned int mask)
 {
+	// d->state_use_accessors: (&(kmem_cache#28-o0)->irq_data)->state_use_accessors: 0, mask: 0x10000
 	d->state_use_accessors |= mask;
+	// d->state_use_accessors: (&(kmem_cache#28-o0)->irq_data)->state_use_accessors: 0x10000
 }
 
 static inline bool irqd_has_set(struct irq_data *d, unsigned int mask)

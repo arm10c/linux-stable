@@ -171,6 +171,8 @@ extern int bitmap_ord_to_pos(const unsigned long *bitmap, int n, int bits);
 
 // ARM10C 20140830
 // dstp: &(&(&(&def_root_domain)->cpupri)->pri_to_cpu[0])->mask, nr_cpumask_bits: 4
+// ARM10C 20141004
+// dstp: (kmem_cache#28-o0)->irq_data.affinity, nr_cpumask_bits: 4
 static inline void bitmap_zero(unsigned long *dst, int nbits)
 {
 	if (small_const_nbits(nbits))

@@ -20,6 +20,7 @@
 /*
  * lockdep: we want to handle all irq_desc locks as a single lock-class:
  */
+// ARM10C 20141004
 static struct lock_class_key irq_desc_lock_class;
 
 #if defined(CONFIG_SMP) // CONFIG_SMP=y
@@ -38,13 +39,18 @@ static void __init init_irq_default_affinity(void)
 }
 #endif
 
-#ifdef CONFIG_SMP
+#ifdef CONFIG_SMP // CONFIG_SMP=y
+// ARM10C 20141004
+// desc: kmem_cache#28-o0, gfp: GFP_KERNEL: 0xD0, node: 0
 static int alloc_masks(struct irq_desc *desc, gfp_t gfp, int node)
 {
+	// desc->irq_data.affinity: &(kmem_cache#28-o0)->irq_data.affinity, gfp: GFP_KERNEL: 0xD0, node: 0
+	// zalloc_cpumask_var_node(&(kmem_cache#28-o0)->irq_data.affinity, GFP_KERNEL: 0xD0, 0): true
 	if (!zalloc_cpumask_var_node(&desc->irq_data.affinity, gfp, node))
 		return -ENOMEM;
+	// (kmem_cache#28-o0)->irq_data.affinity.bits[0]: 0
 
-#ifdef CONFIG_GENERIC_PENDING_IRQ
+#ifdef CONFIG_GENERIC_PENDING_IRQ // CONFIG_GENERIC_PENDING_IRQ=n
 	if (!zalloc_cpumask_var_node(&desc->pending_mask, gfp, node)) {
 		free_cpumask_var(desc->irq_data.affinity);
 		return -ENOMEM;
@@ -53,11 +59,20 @@ static int alloc_masks(struct irq_desc *desc, gfp_t gfp, int node)
 	return 0;
 }
 
+// ARM10C 20141004
+// desc: kmem_cache#28-o0, node: 0
 static void desc_smp_init(struct irq_desc *desc, int node)
 {
+	// desc->irq_data.node: (kmem_cache#28-o0)->irq_data.node, node: 0
 	desc->irq_data.node = node;
+	// desc->irq_data.node: (kmem_cache#28-o0)->irq_data.node: 0
+
+	// desc->irq_data.affinity: (kmem_cache#28-o0)->irq_data.affinity,
+	// irq_default_affinity->bits[0]: 0xF
 	cpumask_copy(desc->irq_data.affinity, irq_default_affinity);
-#ifdef CONFIG_GENERIC_PENDING_IRQ
+	// desc->irq_data.affinity: (kmem_cache#28-o0)->irq_data.affinity.bits[0]: 0xF
+
+#ifdef CONFIG_GENERIC_PENDING_IRQ // CONFIG_GENERIC_PENDING_IRQ=n
 	cpumask_clear(desc->pending_mask);
 #endif
 }
@@ -74,27 +89,79 @@ static inline void desc_smp_init(struct irq_desc *desc, int node) { }
 static inline int desc_node(struct irq_desc *desc) { return 0; }
 #endif
 
+// ARM10C 20141004
+// irq: 0, desc: kmem_cache#28-o0, node: 0, owner: null
 static void desc_set_defaults(unsigned int irq, struct irq_desc *desc, int node,
 		struct module *owner)
 {
 	int cpu;
 
+	// desc->irq_data.irq: (kmem_cache#28-o0)->irq_data.irq, irq: 0
 	desc->irq_data.irq = irq;
+	// desc->irq_data.irq: (kmem_cache#28-o0)->irq_data.irq: 0
+
+	// desc->irq_data.chip: (kmem_cache#28-o0)->irq_data.chip
 	desc->irq_data.chip = &no_irq_chip;
+	// desc->irq_data.chip: (kmem_cache#28-o0)->irq_data.chip: &no_irq_chip
+
+	// desc->irq_data.chip_data: (kmem_cache#28-o0)->irq_data.chip_data
 	desc->irq_data.chip_data = NULL;
+	// desc->irq_data.chip_data: (kmem_cache#28-o0)->irq_data.chip_data: NULL
+
+	// desc->irq_data.handler_data: (kmem_cache#28-o0)->irq_data.handler_data
 	desc->irq_data.handler_data = NULL;
+	// desc->irq_data.handler_data: (kmem_cache#28-o0)->irq_data.handler_data: NULL
+
+	// desc->irq_data.msi_desc: (kmem_cache#28-o0)->irq_data.msi_desc
 	desc->irq_data.msi_desc = NULL;
+	// desc->irq_data.msi_desc: (kmem_cache#28-o0)->irq_data.msi_desc: NULL
+
+	// desc: kmem_cache#28-o0, 0xFFFFFFFF, _IRQ_DEFAULT_INIT_FLAGS: 0xc00
 	irq_settings_clr_and_set(desc, ~0, _IRQ_DEFAULT_INIT_FLAGS);
+	// irq_settings_clr_and_set에서 한일:
+	// desc->status_use_accessors: (kmem_cache#28-o0)->status_use_accessors: 0xc00
+
+	// &desc->irq_data: &(kmem_cache#28-o0)->irq_data, IRQD_IRQ_DISABLED: 0x10000
 	irqd_set(&desc->irq_data, IRQD_IRQ_DISABLED);
+	// irqd_set에서 한일:
+	// d->state_use_accessors: (&(kmem_cache#28-o0)->irq_data)->state_use_accessors: 0x10000
+
+	// desc->handle_irq: (kmem_cache#28-o0)->handle_irq
 	desc->handle_irq = handle_bad_irq;
+	// desc->handle_irq: (kmem_cache#28-o0)->handle_irq: handle_bad_irq
+
+	// desc->depth: (kmem_cache#28-o0)->depth
 	desc->depth = 1;
+	// desc->depth: (kmem_cache#28-o0)->depth: 1
+
+	// desc->irq_count: (kmem_cache#28-o0)->irq_count
 	desc->irq_count = 0;
+	// desc->irq_count: (kmem_cache#28-o0)->irq_count: 0
+
+	// desc->irqs_unhandled: (kmem_cache#28-o0)->irqs_unhandled
 	desc->irqs_unhandled = 0;
+	// desc->irqs_unhandled: (kmem_cache#28-o0)->irqs_unhandled: 0
+
+	// desc->name: (kmem_cache#28-o0)->name
 	desc->name = NULL;
+	// desc->name: (kmem_cache#28-o0)->name: NULL
+
+	// desc->owner: (kmem_cache#28-o0)->owner, owner: null
 	desc->owner = owner;
+	// desc->owner: (kmem_cache#28-o0)->owner: null
+
 	for_each_possible_cpu(cpu)
+	// for ((cpu) = -1; (cpu) = cpumask_next((cpu), (cpu_possible_mask)), (cpu) < nr_cpu_ids; )
+		// desc->kstat_irqs: (kmem_cache#28-o0)->kstat_irqs, cpu: 0
 		*per_cpu_ptr(desc->kstat_irqs, cpu) = 0;
+		// [pcp0] (kmem_cache#28-o0)->kstat_irqs: 0
+		// cpu: 1 .. 3 수행
+
+	// desc: kmem_cache#28-o0, node: 0
 	desc_smp_init(desc, node);
+	// desc_smp_init에서 한일:
+	// desc->irq_data.node: (kmem_cache#28-o0)->irq_data.node: 0
+	// desc->irq_data.affinity: (kmem_cache#28-o0)->irq_data.affinity.bits[0]: 0xF
 }
 
 // ARM10C 20141004
@@ -104,15 +171,31 @@ int nr_irqs = NR_IRQS;
 EXPORT_SYMBOL_GPL(nr_irqs);
 
 static DEFINE_MUTEX(sparse_irq_lock);
+// ARM10C 20141004
+// IRQ_BITMAP_BITS: 8212
+// DECLARE_BITMAP(allocated_irqs, 8212): allocated_irqs[257]
 static DECLARE_BITMAP(allocated_irqs, IRQ_BITMAP_BITS);
 
 #ifdef CONFIG_SPARSE_IRQ // CONFIG_SPARSE_IRQ=y
 
+// ARM10C 20141004
+// GFP_KERNEL: 0xD0
+// RADIX_TREE(irq_desc_tree, GFP_KERNEL):
+// struct radix_tree_root irq_desc_tree =
+// {
+//	.height = 0,
+//	.gfp_mask = (GFP_KERNEL),
+//	.rnode = NULL,
+// }
 static RADIX_TREE(irq_desc_tree, GFP_KERNEL);
 
+// ARM10C 20141004
+// i: 0, desc: kmem_cache#28-o0
 static void irq_insert_desc(unsigned int irq, struct irq_desc *desc)
 {
+	// irq: 0, desc: kmem_cache#28-o0
 	radix_tree_insert(&irq_desc_tree, irq, desc);
+	// radix tree에 kmem_cache#28-o0를 노드로 추가
 }
 
 struct irq_desc *irq_to_desc(unsigned int irq)
@@ -155,22 +238,50 @@ static struct irq_desc *alloc_desc(int irq, int node, struct module *owner)
 	// desc: kmem_cache#28-o0
 	if (!desc)
 		return NULL;
+
 	/* allocate based on nr_cpu_ids */
 	// desc->kstat_irqs: (kmem_cache#28-o0)->kstat_irqs
 	// alloc_percpu(unsigned int): pcp 4 byte 공간 할당
 	desc->kstat_irqs = alloc_percpu(unsigned int);
 	// desc->kstat_irqs: (kmem_cache#28-o0)->kstat_irqs: pcp 4 byte 공간
 
+	// desc->kstat_irqs: (kmem_cache#28-o0)->kstat_irqs: pcp 4 byte 공간
 	if (!desc->kstat_irqs)
 		goto err_desc;
 
+	// desc: kmem_cache#28-o0, gfp: GFP_KERNEL: 0xD0, node: 0
+	// alloc_masks(kmem_cache#28-o0, GFP_KERNEL: 0xD0, 0): 0
 	if (alloc_masks(desc, gfp, node))
 		goto err_kstat;
+	// alloc_masks에서 한일:
+	// (kmem_cache#28-o0)->irq_data.affinity.bits[0]: 0
 
+	// desc->lock: (kmem_cache#28-o0)->lock
 	raw_spin_lock_init(&desc->lock);
-	lockdep_set_class(&desc->lock, &irq_desc_lock_class);
+	// desc->lock: (kmem_cache#28-o0)->lock 을 이용한 spinlock 초기화 수행
 
+	// desc->lock: (kmem_cache#28-o0)->lock
+	lockdep_set_class(&desc->lock, &irq_desc_lock_class); // null function
+
+	// irq: 0, desc: kmem_cache#28-o0, node: 0, owner: null
 	desc_set_defaults(irq, desc, node, owner);
+	// desc_set_defaults에서 한일:
+	// (kmem_cache#28-o0)->irq_data.irq: 0
+	// (kmem_cache#28-o0)->irq_data.chip: &no_irq_chip
+	// (kmem_cache#28-o0)->irq_data.chip_data: NULL
+	// (kmem_cache#28-o0)->irq_data.handler_data: NULL
+	// (kmem_cache#28-o0)->irq_data.msi_desc: NULL
+	// (kmem_cache#28-o0)->status_use_accessors: 0xc00
+	// (&(kmem_cache#28-o0)->irq_data)->state_use_accessors: 0x10000
+	// (kmem_cache#28-o0)->handle_irq: handle_bad_irq
+	// (kmem_cache#28-o0)->depth: 1
+	// (kmem_cache#28-o0)->irq_count: 0
+	// (kmem_cache#28-o0)->irqs_unhandled: 0
+	// (kmem_cache#28-o0)->name: NULL
+	// (kmem_cache#28-o0)->owner: null
+	// [pcp0...3] (kmem_cache#28-o0)->kstat_irqs: 0
+	// (kmem_cache#28-o0)->irq_data.node: 0
+	// (kmem_cache#28-o0)->irq_data.affinity.bits[0]: 0xF
 
 	return desc;
 
@@ -266,11 +377,44 @@ int __init early_irq_init(void)
 	// initcnt: 16
 	for (i = 0; i < initcnt; i++) {
 		// i: 0, node: 0
+		// alloc_desc(0, 0, NULL): kmem_cache#28-o0
 		desc = alloc_desc(i, node, NULL);
+		// desc: kmem_cache#28-o0
+
+		// alloc_desc(0)에서 한일:
+		// (kmem_cache#28-o0)->kstat_irqs: pcp 4 byte 공간
+		// (kmem_cache#28-o0)->lock 을 이용한 spinlock 초기화 수행
+		// (kmem_cache#28-o0)->irq_data.irq: 0
+		// (kmem_cache#28-o0)->irq_data.chip: &no_irq_chip
+		// (kmem_cache#28-o0)->irq_data.chip_data: NULL
+		// (kmem_cache#28-o0)->irq_data.handler_data: NULL
+		// (kmem_cache#28-o0)->irq_data.msi_desc: NULL
+		// (kmem_cache#28-o0)->status_use_accessors: 0xc00
+		// (&(kmem_cache#28-o0)->irq_data)->state_use_accessors: 0x10000
+		// (kmem_cache#28-o0)->handle_irq: handle_bad_irq
+		// (kmem_cache#28-o0)->depth: 1
+		// (kmem_cache#28-o0)->irq_count: 0
+		// (kmem_cache#28-o0)->irqs_unhandled: 0
+		// (kmem_cache#28-o0)->name: NULL
+		// (kmem_cache#28-o0)->owner: null
+		// [pcp0...3] (kmem_cache#28-o0)->kstat_irqs: 0
+		// (kmem_cache#28-o0)->irq_data.node: 0
+		// (kmem_cache#28-o0)->irq_data.affinity.bits[0]: 0xF
+
+		// i: 0
 		set_bit(i, allocated_irqs);
+		// allocated_irqs[0]: 0x1
+
+		// i: 0, desc: kmem_cache#28-o0
 		irq_insert_desc(i, desc);
+		// radix tree에 kmem_cache#28-o0를 노드로 추가
+
+		// i: 1 ... 15 수행
 	}
+
+	// arch_early_irq_init(): 0
 	return arch_early_irq_init();
+	// return 0
 }
 
 #else /* !CONFIG_SPARSE_IRQ */

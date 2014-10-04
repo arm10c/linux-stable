@@ -2,7 +2,10 @@
  * Internal header to deal with irq_desc->status which will be renamed
  * to irq_desc->settings.
  */
+// ARM10C 20141004
 enum {
+	// IRQ_DEFAULT_INIT_FLAGS: 0xc00
+	// _IRQ_DEFAULT_INIT_FLAGS: 0xc00
 	_IRQ_DEFAULT_INIT_FLAGS	= IRQ_DEFAULT_INIT_FLAGS,
 	_IRQ_PER_CPU		= IRQ_PER_CPU,
 	_IRQ_LEVEL		= IRQ_LEVEL,
@@ -15,6 +18,8 @@ enum {
 	_IRQ_NESTED_THREAD	= IRQ_NESTED_THREAD,
 	_IRQ_PER_CPU_DEVID	= IRQ_PER_CPU_DEVID,
 	_IRQ_IS_POLLED		= IRQ_IS_POLLED,
+	// IRQF_MODIFY_MASK: 0x3ff0f
+	// _IRQF_MODIFY_MASK: 0x3ff0f
 	_IRQF_MODIFY_MASK	= IRQF_MODIFY_MASK,
 };
 
@@ -31,11 +36,19 @@ enum {
 #undef IRQF_MODIFY_MASK
 #define IRQF_MODIFY_MASK	GOT_YOU_MORON
 
+// ARM10C 20141004
+// desc: kmem_cache#28-o0, 0xFFFFFFFF, _IRQ_DEFAULT_INIT_FLAGS: 0xc00
 static inline void
 irq_settings_clr_and_set(struct irq_desc *desc, u32 clr, u32 set)
 {
+	// desc->status_use_accessors: (kmem_cache#28-o0)->status_use_accessors: 0
+	// clr: 0xFFFFFFFF, _IRQF_MODIFY_MASK: 0x3ff0f
 	desc->status_use_accessors &= ~(clr & _IRQF_MODIFY_MASK);
+	// desc->status_use_accessors: (kmem_cache#28-o0)->status_use_accessors: 0
+
+	// set: 0xc00, _IRQF_MODIFY_MASK: 0x3ff0f
 	desc->status_use_accessors |= (set & _IRQF_MODIFY_MASK);
+	// desc->status_use_accessors: (kmem_cache#28-o0)->status_use_accessors: 0xc00
 }
 
 static inline bool irq_settings_is_per_cpu(struct irq_desc *desc)

@@ -11,7 +11,8 @@
 #ifndef _LINUX_IRQCHIP_H
 #define _LINUX_IRQCHIP_H
 
-#ifdef CONFIG_IRQCHIP
+#ifdef CONFIG_IRQCHIP // CONFIG_IRQCHIP=y
+// ARM10C 20141004
 void irqchip_init(void);
 #else
 static inline void irqchip_init(void) {}

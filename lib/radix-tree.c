@@ -417,6 +417,8 @@ out:
  *
  *	Insert an item into the radix tree at position @index.
  */
+// ARM10C 20141004
+// &irq_desc_tree, irq: 0, desc: kmem_cache#28-o0
 int radix_tree_insert(struct radix_tree_root *root,
 			unsigned long index, void *item)
 {

@@ -16,6 +16,9 @@ void set_irq_flags(unsigned int irq, unsigned int flags);
 #define IRQF_PROBE	(1 << 1)
 #define IRQF_NOAUTOEN	(1 << 2)
 
+// ARM10C 20141004
+// IRQ_NOPROBE: 0x400, IRQ_NOREQUEST: 0x800
+// ARCH_IRQ_INIT_FLAGS: 0xc00
 #define ARCH_IRQ_INIT_FLAGS	(IRQ_NOREQUEST | IRQ_NOPROBE)
 
 #endif

@@ -27,6 +27,7 @@
  *
  * Handles spurious and unhandled IRQ's. It also prints a debugmessage.
  */
+// ARM10C 20141004
 void handle_bad_irq(unsigned int irq, struct irq_desc *desc)
 {
 	print_irq_desc(irq, desc);

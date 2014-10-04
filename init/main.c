@@ -698,6 +698,9 @@ asmlinkage void __init start_kernel(void)
 
 	/* init some links before init_ISA_irqs() */
 	early_irq_init();
+	// irq_desc 0 ~ 15 까지의 object을 할당 받고 초기화를 수행
+	// allocated_irqs에 bit를 1로 세팅하고 radix tree에 각 irq_desc를 노트로 추가
+
 	init_IRQ();
 	tick_init();
 	init_timers();

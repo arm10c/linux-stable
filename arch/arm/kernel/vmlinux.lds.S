@@ -220,7 +220,10 @@ SECTIONS
 		__pv_table_end = .;
 	}
 	.init.data : {
-#ifndef CONFIG_XIP_KERNEL
+#ifndef CONFIG_XIP_KERNEL // CONFIG_XIP_KERNEL=n
+		/*
+		// ARM10C 20141004
+		*/
 		INIT_DATA
 #endif
 		INIT_SETUP(16)

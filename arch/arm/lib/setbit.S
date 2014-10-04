@@ -12,5 +12,7 @@
 #include "bitops.h"
 		.text
 
-// ARM10C 20130907 
+// ARM10C 20130907
+// ARM10C 20141004
+// 0, allocated_irqs
 bitop	_set_bit, orr

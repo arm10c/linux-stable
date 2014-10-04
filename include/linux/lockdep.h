@@ -395,6 +395,7 @@ static inline void lockdep_on(void)
 # define lockdep_set_class(lock, key)		do { (void)(key); } while (0)
 // ARM10C 20140111
 // ARM10C 20140927
+// ARM10C 20141004
 # define lockdep_set_class_and_name(lock, key, name) \
 		do { (void)(key); (void)(name); } while (0)
 #define lockdep_set_class_and_subclass(lock, key, sub) \
@@ -418,6 +419,7 @@ static inline void lockdep_on(void)
  */
 // ARM10C 20140111
 // ARM10C 20140927
+// ARM10C 20141004
 struct lock_class_key { };
 
 #define lockdep_depth(tsk)	(0)

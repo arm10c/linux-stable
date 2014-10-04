@@ -52,26 +52,48 @@ EXPORT_SYMBOL_GPL(irq_of_parse_and_map);
  * Returns a pointer to the interrupt parent node, or NULL if the interrupt
  * parent could not be determined.
  */
+// ARM10C 20141004
+// np: devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소
 struct device_node *of_irq_find_parent(struct device_node *child)
 {
 	struct device_node *p;
 	const __be32 *parp;
 
+	// child: devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소
+	// of_node_get(devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소):
+	// devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소
 	if (!of_node_get(child))
 		return NULL;
 
 	do {
+		// child: devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소
+		// of_get_property(devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소, "interrupt-parent", NULL): NULL
 		parp = of_get_property(child, "interrupt-parent", NULL);
+		// parp: NULL
+
+		// parp: NULL
 		if (parp == NULL)
+			// child: devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소
+			// of_get_parent(devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소):
+			// devtree에서 allnext로 순회 하면서 찾은 combiner node의 parent주소
 			p = of_get_parent(child);
+			// p: devtree에서 allnext로 순회 하면서 찾은 combiner node의 parent주소
+
 		else {
 			if (of_irq_workarounds & OF_IMAP_NO_PHANDLE)
 				p = of_node_get(of_irq_dflt_pic);
 			else
 				p = of_find_node_by_phandle(be32_to_cpup(parp));
 		}
-		of_node_put(child);
+
+		// child: devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소
+		of_node_put(child); // null function
+
+		// child: devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소,
+		// p: devtree에서 allnext로 순회 하면서 찾은 combiner node의 parent주소
 		child = p;
+		// child: devtree에서 allnext로 순회 하면서 찾은 combiner node의 parent주소
+
 	} while (p && of_get_property(p, "#interrupt-cells", NULL) == NULL);
 
 	return p;
@@ -412,6 +434,8 @@ int of_irq_to_resource_table(struct device_node *dev, struct resource *res,
 }
 EXPORT_SYMBOL_GPL(of_irq_to_resource_table);
 
+// ARM10C 20141004
+// sizeof(struct intc_desc): 16 bytes
 struct intc_desc {
 	struct list_head	list;
 	struct device_node	*dev;
@@ -425,27 +449,50 @@ struct intc_desc {
  * This function scans the device tree for matching interrupt controller nodes,
  * and calls their initialization functions in order with parents first.
  */
+// ARM10C 20141004
+// __irqchip_begin: irqchip_of_match_exynos4210_combiner
 void __init of_irq_init(const struct of_device_id *matches)
 {
 	struct device_node *np, *parent = NULL;
+	// parent: NULL
 	struct intc_desc *desc, *temp_desc;
 	struct list_head intc_desc_list, intc_parent_list;
 
 	INIT_LIST_HEAD(&intc_desc_list);
-	INIT_LIST_HEAD(&intc_parent_list);
+	// intc_desc_list 리스트 초기화 수행
 
+	INIT_LIST_HEAD(&intc_parent_list);
+	// intc_parent_list 리스트 초기화 수행
+
+	// matches: irqchip_of_match_exynos4210_combiner
 	for_each_matching_node(np, matches) {
+	// for (np = of_find_matching_node(NULL, matches); np; np = of_find_matching_node(np, matches))
+
+		// np: devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소
+		// of_find_property(devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소, "interrupt-controller", NULL):
+		// combiner node의 "interrupt-controller" property의 주소
 		if (!of_find_property(np, "interrupt-controller", NULL))
 			continue;
 		/*
 		 * Here, we allocate and populate an intc_desc with the node
 		 * pointer, interrupt-parent device_node etc.
 		 */
+		// sizeof(struct intc_desc): 16 bytes, GFP_KERNEL: 0xD0
+		// kzalloc(16, GFP_KERNEL: 0xD0): kmem_cache#30-o10
 		desc = kzalloc(sizeof(*desc), GFP_KERNEL);
+		// desc: kmem_cache#30-o10
+
+		// desc: kmem_cache#30-o10
 		if (WARN_ON(!desc))
 			goto err;
 
+		// desc->dev: (kmem_cache#30-o10)->dev, np: devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소
 		desc->dev = np;
+		// desc->dev: (kmem_cache#30-o10)->dev: devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소
+
+// 2014/10/04 종료
+
+		// desc->interrupt_parent: (kmem_cache#30-o10)->interrupt_parent, np: devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소
 		desc->interrupt_parent = of_irq_find_parent(np);
 		if (desc->interrupt_parent == np)
 			desc->interrupt_parent = NULL;
