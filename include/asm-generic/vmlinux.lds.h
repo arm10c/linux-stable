@@ -149,7 +149,9 @@
 #endif
 
 #ifdef CONFIG_IRQCHIP // CONFIG_IRQCHIP=y
+/*
 // ARM10C 20141004
+*/
 #define IRQCHIP_OF_MATCH_TABLE()					\
 	. = ALIGN(8);							\
 	VMLINUX_SYMBOL(__irqchip_begin) = .;				\
@@ -482,6 +484,9 @@
 #endif
 
 /* init and exit section handling */
+/*
+// ARM10C 20141004
+*/
 #define INIT_DATA							\
 	*(.init.data)							\
 	MEM_DISCARD(init.data)						\
