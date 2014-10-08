@@ -1,9 +1,16 @@
-<<<<<<< HEAD
 #IAMROOT.ORG Kernel스터디10차(ARM)
 
 #HISTORY
+- 72th (2014/10/04) week study : [72차 스터디](https://github.com/arm10c/linux-stable/blob/master/Reference/88_Review/a10c_72.md)
+ - tick_nohz_init()
+ - context_tracking_init()
+ - radix_tree_init()
+ - early_irq_init()
+ - init_IRQ()
 - 71th (2014/09/27) week study : [71차 스터디](https://github.com/arm10c/linux-stable/blob/master/Reference/88_Review/a10c_71.md)
+ - rcu_init()
 - 70th (2014/09/20) week study : [70차 스터디](https://github.com/arm10c/linux-stable/blob/master/Reference/88_Review/a10c_70.md)
+ - rcu_init()
 - 69th (2014/09/13) week study : [69차 스터디](https://github.com/arm10c/linux-stable/blob/master/Reference/88_Review/a10c_69.md)
  - sched_init()를 계속 분석
  - sched_init()::for_each_possible_cpu(i) { ... }
@@ -73,4 +80,6 @@
 * Target Soc    : Samsung Exynos 5420 (ARMv7 A7&A15)
 * Kernel version: Linux kernel 3.13.x
   - 1st: 3.9.6
->>>>>>> bf253cdce3cda79bcb92b7763a4b10cb3a390fe7
+  - 2nd: 3.10.x
+  - 3th: 3.11.x
+  - current : 3.13.x
