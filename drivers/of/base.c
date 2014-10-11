@@ -385,6 +385,9 @@ EXPORT_SYMBOL(of_get_cpu_node);
 // ARM10C 20141004
 // node: of_allnodes,
 // matches->compatible: irqchip_of_match_exynos4210_combiner->compatible: "samsung,exynos4210-combiner"
+// ARM10C 20141011
+// node: gic node의 주소
+// matches->compatible: irqchip_of_match_cortex_a15_gic->compatible: "arm,cortex-a15-gic"
 static int __of_device_is_compatible(const struct device_node *device,
 				     const char *compat)
 {
@@ -393,24 +396,36 @@ static int __of_device_is_compatible(const struct device_node *device,
 	
 	// exynos5.dtsi 에 정의된
 	// compatible 이 "samsung,exynos4210-combiner" 인 combiner node를 찾음
+	// exynos5.dtsi 에 정의된
+	// compatible 이 "arm,cortex-a15-gic" 인 gic node를 찾음
 
 	// device: of_allnodes
+	// device: gic node의 주소
 	cp = __of_get_property(device, "compatible", &cplen);
 	// cp: "samsung,exynos4210-combiner", cplen: 28
+	// cp: "arm,cortex-a15-gic""arm,cortex-a9-gic", cplen: 37
 
 	// cp: "samsung,exynos4210-combiner"
+	// cp: "arm,cortex-a15-gic""arm,cortex-a9-gic"
 	if (cp == NULL)
 		return 0;
 
 	// cplen: 28
+	// cplen: 37
 	while (cplen > 0) {
 		// cp: "samsung,exynos4210-combiner", compat: "samsung,exynos4210-combiner"
 		// of_compat_cmp("samsung,exynos4210-combiner", "samsung,exynos4210-combiner", 28): 0
+		// cp: "arm,cortex-a15-gic""arm,cortex-a9-gic", compat: "arm,cortex-a15-gic"
+		// of_compat_cmp("arm,cortex-a15-gic""arm,cortex-a9-gic", "arm,cortex-a15-gic", 19): 0
 		if (of_compat_cmp(cp, compat, strlen(compat)) == 0)
 			return 1;
 			// return 1
+			// return 1
+
 		l = strlen(cp) + 1;
+
 		cp += l;
+
 		cplen -= l;
 	}
 
@@ -800,45 +815,64 @@ EXPORT_SYMBOL(of_find_node_with_property);
 
 // ARM10C 20141004
 // matches: irqchip_of_match_exynos4210_combiner, np: of_allnodes
+// ARM10C 20141011
+// matches: irqchip_of_match_cortex_a15_gic, np: gic node의 주소
+// ARM10C 20141011
+// matches: irqchip_of_match_exynos4210_combiner, node: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소
 static
 const struct of_device_id *__of_match_node(const struct of_device_id *matches,
 					   const struct device_node *node)
 {
 	// matches: irqchip_of_match_exynos4210_combiner
+	// matches: irqchip_of_match_cortex_a15_gic
 	if (!matches)
 		return NULL;
 
 	// matches->name[0]: irqchip_of_match_exynos4210_combiner->name[0]: NULL,
 	// matches->type[0]: irqchip_of_match_exynos4210_combiner->type[0]: NULL,
 	// matches->compatible[0]: irqchip_of_match_exynos4210_combiner->compatible[0]: 's'
+	// matches->name[0]: irqchip_of_match_cortex_a15_gic->name[0]: NULL,
+	// matches->type[0]: irqchip_of_match_cortex_a15_gic->type[0]: NULL,
+	// matches->compatible[0]: irqchip_of_match_cortex_a15_gic->compatible[0]: 'a'
 	while (matches->name[0] || matches->type[0] || matches->compatible[0]) {
 		int match = 1;
 		// match: 1
+		// match: 1
 
 		// matches->name[0]: irqchip_of_match_exynos4210_combiner->name[0]: NULL
+		// matches->name[0]: irqchip_of_match_cortex_a15_gic->name[0]: NULL
 		if (matches->name[0])
 			match &= node->name
 				&& !strcmp(matches->name, node->name);
 
 		// matches->type[0]: irqchip_of_match_exynos4210_combiner->type[0]: NULL
+		// matches->type[0]: irqchip_of_match_cortex_a15_gic->type[0]: NULL
 		if (matches->type[0])
 			match &= node->type
 				&& !strcmp(matches->type, node->type);
 
-		// matches->compatible[0]: irqchip_of_match_exynos4210_combiner->compatible[0]: "samsung,exynos4210-combiner"
+		// matches->compatible[0]: irqchip_of_match_exynos4210_combiner->compatible[0]: 's'
+		// matches->compatible[0]: irqchip_of_match_cortex_a15_gic->compatible[0]: 'a'
 		if (matches->compatible[0])
 			// match: 1, node: of_allnodes,
 			// matches->compatible: irqchip_of_match_exynos4210_combiner->compatible: "samsung,exynos4210-combiner"
 			// __of_device_is_compatible(of_allnodes, "samsung,exynos4210-combiner"): 1
+			// match: 1, node: gic node의 주소,
+			// matches->compatible: irqchip_of_match_cortex_a15_gic->compatible: "arm,cortex-a15-gic"
+			// __of_device_is_compatible(gic node의 주소, "arm,cortex-a15-gic"): 1
 			match &= __of_device_is_compatible(node,
 							   matches->compatible);
 			// match: 1
+			// match: 1
 
+		// match: 1
 		// match: 1
 		if (match)
 			// matches: irqchip_of_match_exynos4210_combiner
+			// matches: irqchip_of_match_cortex_a15_gic
 			return matches;
 			// return irqchip_of_match_exynos4210_combiner
+			// return irqchip_of_match_cortex_a15_gic
 
 		matches++;
 	}
@@ -852,6 +886,9 @@ const struct of_device_id *__of_match_node(const struct of_device_id *matches,
  *
  *	Low level utility function used by device matching.
  */
+// ARM10C 20141011
+// matches: irqchip_of_match_exynos4210_combiner,
+// desc->dev: (kmem_cache#30-o11)->dev: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소
 const struct of_device_id *of_match_node(const struct of_device_id *matches,
 					 const struct device_node *node)
 {
@@ -859,9 +896,20 @@ const struct of_device_id *of_match_node(const struct of_device_id *matches,
 	unsigned long flags;
 
 	raw_spin_lock_irqsave(&devtree_lock, flags);
+	// devtree_lock을 사용한 spin lock 수행하고 cpsr을 flags에 저장
+
+	// matches: irqchip_of_match_exynos4210_combiner, node: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소
+	// __of_match_node(irqchip_of_match_exynos4210_combiner, devtree에서 allnext로 순회 하면서 찾은 gic node의 주소):
+	// irqchip_of_match_cortex_a15_gic
 	match = __of_match_node(matches, node);
+	// match: irqchip_of_match_cortex_a15_gic
+
 	raw_spin_unlock_irqrestore(&devtree_lock, flags);
+	// devtree_lock을 사용한 spin lock 해재하고 flags에 저장된 cpsr을 복원
+
+	// match: irqchip_of_match_cortex_a15_gic
 	return match;
+	// return irqchip_of_match_cortex_a15_gic
 }
 EXPORT_SYMBOL(of_match_node);
 
@@ -880,6 +928,9 @@ EXPORT_SYMBOL(of_match_node);
  */
 // ARM10C 20141004
 // from: null, matches: irqchip_of_match_exynos4210_combiner, NULL
+// ARM10C 20141011
+// devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소,
+// irqchip_of_match_exynos4210_combiner, NULL
 struct device_node *of_find_matching_node_and_match(struct device_node *from,
 					const struct of_device_id *matches,
 					const struct of_device_id **match)
@@ -889,31 +940,44 @@ struct device_node *of_find_matching_node_and_match(struct device_node *from,
 	unsigned long flags;
 
 	// match: NULL
+	// match: NULL
 	if (match)
 		*match = NULL;
 
 	raw_spin_lock_irqsave(&devtree_lock, flags);
 	// devtree_lock을 사용한 spin lock 수행하고 cpsr을 flags에 저장
+	// devtree_lock을 사용한 spin lock 수행하고 cpsr을 flags에 저장
 
 	// from: NULL
+	// from: devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소
 	np = from ? from->allnext : of_allnodes;
 	// np: of_allnodes
+	// np: gic node의 주소
 
 	// unflatten_device_tree 에서 만든 tree의 root node가 of_allnodes에 저장되어 있음
 
 	// np: of_allnodes
+	// np: gic node의 주소
 	for (; np; np = np->allnext) {
 		// np: devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소
+		// np: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소
 
 		// matches: irqchip_of_match_exynos4210_combiner, np: of_allnodes
 		// __of_match_node(irqchip_of_match_exynos4210_combiner, of_allnodes): irqchip_of_match_exynos4210_combiner
+		// matches: irqchip_of_match_cortex_a15_gic, np: gic node의 주소
+		// __of_match_node(irqchip_of_match_cortex_a15_gic, gic node의 주소): irqchip_of_match_cortex_a15_gic
 		m = __of_match_node(matches, np);
 		// m: irqchip_of_match_exynos4210_combiner
+		// m: irqchip_of_match_cortex_a15_gic
 
 		// m: irqchip_of_match_exynos4210_combiner,
 		// np: devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소
 		// of_node_get(np): np
+		// m: irqchip_of_match_cortex_a15_gic,
+		// np: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소
+		// of_node_get(np): np
 		if (m && of_node_get(np)) {
+			// match: NULL
 			// match: NULL
 			if (match)
 				*match = m;
@@ -922,14 +986,18 @@ struct device_node *of_find_matching_node_and_match(struct device_node *from,
 	}
 
 	// from: null
+	// from: devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소
 	of_node_put(from); // null function
 
 	raw_spin_unlock_irqrestore(&devtree_lock, flags);
 	// devtree_lock을 사용한 spin lock 해재하고 flags에 저장된 cpsr을 복원
+	// devtree_lock을 사용한 spin lock 해재하고 flags에 저장된 cpsr을 복원
 
 	// np: devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소
+	// np: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소
 	return np;
 	// return devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소
+	// return devtree에서 allnext로 순회 하면서 찾은 gic node의 주소
 }
 EXPORT_SYMBOL(of_find_matching_node_and_match);
 

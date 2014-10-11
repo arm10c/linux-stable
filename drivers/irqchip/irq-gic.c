@@ -971,7 +971,7 @@ void __init gic_init_bases(unsigned int gic_nr, int irq_start,
 	gic_pm_init(gic);
 }
 
-#ifdef CONFIG_OF
+#ifdef CONFIG_OF // CONFIG_OF=y
 static int gic_cnt __initdata;
 
 int __init gic_of_init(struct device_node *node, struct device_node *parent)
@@ -1004,9 +1004,33 @@ int __init gic_of_init(struct device_node *node, struct device_node *parent)
 	gic_cnt++;
 	return 0;
 }
+
+// ARM10C 20141011
+// #define IRQCHIP_DECLARE(cortex_a15_gic,"arm,cortex-a15-gic",gic_of_init)
+// 	static const struct of_device_id irqchip_of_match_cortex_a15_gic
+// 	__used __section(__irqchip_of_table)
+// 	= { .compatible = "arm,cortex-a15-gic", .data = gic_of_init }
 IRQCHIP_DECLARE(cortex_a15_gic, "arm,cortex-a15-gic", gic_of_init);
+
+// ARM10C 20141011
+// #define IRQCHIP_DECLARE(cortex_a9_gic,"arm,cortex-a9-gic",gic_of_init)
+// 	static const struct of_device_id irqchip_of_match_cortex_a9_gic
+// 	__used __section(__irqchip_of_table)
+// 	= { .compatible = "arm,cortex-a9-gic", .data = gic_of_init }
 IRQCHIP_DECLARE(cortex_a9_gic, "arm,cortex-a9-gic", gic_of_init);
+
+// ARM10C 20141011
+// #define IRQCHIP_DECLARE(msm_8660_qgic,"qcom,msm-8660-qgic",gic_of_init)
+// 	static const struct of_device_id irqchip_of_match_msm_8660_qgic
+// 	__used __section(__irqchip_of_table)
+// 	= { .compatible = "qcom,msm-8660-qgic", .data = gic_of_init }
 IRQCHIP_DECLARE(msm_8660_qgic, "qcom,msm-8660-qgic", gic_of_init);
+
+// ARM10C 20141011
+// #define IRQCHIP_DECLARE(msm_qgic2,"qcom,msm-qgic2",gic_of_init)
+// 	static const struct of_device_id irqchip_of_match_msm_qgic2
+// 	__used __section(__irqchip_of_table)
+// 	= { .compatible = "qcom,msm-qgic2", .data = gic_of_init }
 IRQCHIP_DECLARE(msm_qgic2, "qcom,msm-qgic2", gic_of_init);
 
 #endif

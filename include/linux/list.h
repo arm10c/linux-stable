@@ -439,6 +439,7 @@ static inline void list_splice_tail_init(struct list_head *list,
 // list_entry((&pcpu_slot[1])->next, typeof(*chunk), list)
 // ARM10C 20140614
 // ARM10C 20140705
+// ARM10C 20141011
 #define list_first_entry(ptr, type, member) \
 	list_entry((ptr)->next, type, member)
 
@@ -624,6 +625,12 @@ static inline void list_splice_tail_init(struct list_head *list,
 // 	page2 = list_next_entry(page, lru);
 // 	&page->lru != (&n->partial);
 // 	page = page2, page2 = list_next_entry(page2, lru))
+// ARM10C 20141011
+// #define list_for_each_entry_safe(desc, temp_desc, &intc_desc_list, list)
+// for (desc = list_first_entry(&intc_desc_list, typeof(*desc), list),
+// 	temp_desc = list_next_entry(desc, list);
+//      &desc->list != (&intc_desc_list);
+//      desc = temp_desc, temp_desc = list_next_entry(temp_desc, list))
 #define list_for_each_entry_safe(pos, n, head, member)			\
 	for (pos = list_first_entry(head, typeof(*pos), member),	\
 		n = list_next_entry(pos, member);			\

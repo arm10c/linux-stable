@@ -288,6 +288,10 @@ elif [ "${SRCARCH}" = "arm" -a "${SUBARCH}" != "" ]; then
 				;;
 			*"plat-"${SUBARCH})
 				;;
+			*"mach-"${SUBARCH2})
+				;;
+			*"plat-"${SUBARCH2})
+				;;
 			*)
 				subarchprune="$subarchprune \
 						-wholename $i -prune -o"

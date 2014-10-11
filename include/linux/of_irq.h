@@ -8,6 +8,7 @@
 #include <linux/ioport.h>
 #include <linux/of.h>
 
+// ARM10C 20141011
 typedef int (*of_irq_init_cb_t)(struct device_node *, struct device_node *);
 
 /*

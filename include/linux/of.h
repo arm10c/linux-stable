@@ -88,7 +88,6 @@ extern void of_node_put(struct device_node *node);
 // ARM10C 20140215
 // ARM10C 20141004
 // ARM10C 20141011
-// ARM10C 20141011
 static inline struct device_node *of_node_get(struct device_node *node)
 {
 	return node;
@@ -208,6 +207,9 @@ extern struct device_node *of_find_matching_node_and_match(
 
 // ARM10C 20141004
 // null, matches: irqchip_of_match_exynos4210_combiner
+// ARM10C 20141011
+// np: devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소,
+// matches: irqchip_of_match_exynos4210_combiner
 static inline struct device_node *of_find_matching_node(
 	struct device_node *from,
 	const struct of_device_id *matches)
@@ -215,8 +217,14 @@ static inline struct device_node *of_find_matching_node(
 	// from: null, matches: irqchip_of_match_exynos4210_combiner
 	// of_find_matching_node_and_match(null, irqchip_of_match_exynos4210_combiner):
 	// devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소
+	// from: devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소,
+	// matches: irqchip_of_match_exynos4210_combiner
+	// of_find_matching_node_and_match(devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소,
+	// irqchip_of_match_exynos4210_combiner):
+	// devtree에서 allnext로 순회 하면서 찾은 gic node의 주소
 	return of_find_matching_node_and_match(from, matches, NULL);
 	// return devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소
+	// return devtree에서 allnext로 순회 하면서 찾은 gic node의 주소
 }
 
 // ARM10C 20141004
@@ -321,6 +329,7 @@ extern struct device_node *of_get_cpu_node(int cpu, unsigned int *thread);
 
 extern int of_n_addr_cells(struct device_node *np);
 extern int of_n_size_cells(struct device_node *np);
+// ARM10C 20141011
 extern const struct of_device_id *of_match_node(
 	const struct of_device_id *matches, const struct device_node *node);
 extern int of_modalias_node(struct device_node *node, char *modalias, int len);

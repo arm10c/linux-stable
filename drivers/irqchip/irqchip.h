@@ -22,6 +22,7 @@
  * @fn: initialization function
  */
 // ARM10C 20141004
+// ARM10C 20141011
 #define IRQCHIP_DECLARE(name,compstr,fn)				\
 	static const struct of_device_id irqchip_of_match_##name	\
 	__used __section(__irqchip_of_table)				\
