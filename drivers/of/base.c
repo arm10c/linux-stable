@@ -32,6 +32,7 @@ LIST_HEAD(aliases_lookup);
 
 // ARM10C 20140208
 // ARM10C 20141004
+// ARM10C 20141011
 struct device_node *of_allnodes;
 EXPORT_SYMBOL(of_allnodes);
 struct device_node *of_chosen;
@@ -265,6 +266,7 @@ static const void *__of_get_property(const struct device_node *np,
  * and return the value.
  */
 // ARM10C 20140208
+// ARM10C 20141011
 const void *of_get_property(const struct device_node *np, const char *name,
 			    int *lenp)
 {
@@ -506,6 +508,7 @@ EXPORT_SYMBOL(of_device_is_available);
  *	of_node_put() on it when done.
  */
 // ARM10C 20141004
+// ARM10C 20141011
 // child: devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소
 struct device_node *of_get_parent(const struct device_node *node)
 {
@@ -964,18 +967,34 @@ EXPORT_SYMBOL_GPL(of_modalias_node);
  * Returns a node pointer with refcount incremented, use
  * of_node_put() on it when done.
  */
+// ARM10C 20141011
+// parp: gic 의 주소
 struct device_node *of_find_node_by_phandle(phandle handle)
 {
 	struct device_node *np;
 	unsigned long flags;
 
 	raw_spin_lock_irqsave(&devtree_lock, flags);
+	// devtree_lock을 사용한 spin lock 수행하고 cpsr을 flags에 저장
+
 	for (np = of_allnodes; np; np = np->allnext)
+		// np: phandle의 값이 gic 의 주소인 node, handle: gic 의 주소
 		if (np->phandle == handle)
 			break;
+			// break로 탈출
+
+	// FIXME:
+	// np 값이 exynos5.dtsi에 있는 gic node로 가정 (분석상 무한루프 탈출을 위해)
+
+	// np: exynos5.dtsi 에 있는 gic node
 	of_node_get(np);
+
 	raw_spin_unlock_irqrestore(&devtree_lock, flags);
+	// devtree_lock을 사용한 spin lock 해재하고 flags에 저장된 cpsr을 복원
+
+	// np: exynos5.dtsi 에 있는 gic node
 	return np;
+	// return exynos5.dtsi 에 있는 gic node
 }
 EXPORT_SYMBOL(of_find_node_by_phandle);
 

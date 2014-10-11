@@ -106,6 +106,7 @@
 #define be64_to_cpup __be64_to_cpup
 #define cpu_to_be32p __cpu_to_be32p
 // ARM10C 20131005
+// ARM10C 20141011
 #define be32_to_cpup __be32_to_cpup
 #define cpu_to_be16p __cpu_to_be16p
 #define be16_to_cpup __be16_to_cpup

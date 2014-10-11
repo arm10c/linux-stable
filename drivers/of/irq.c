@@ -53,6 +53,7 @@ EXPORT_SYMBOL_GPL(irq_of_parse_and_map);
  * parent could not be determined.
  */
 // ARM10C 20141004
+// ARM10C 20141011
 // np: devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소
 struct device_node *of_irq_find_parent(struct device_node *child)
 {
@@ -66,37 +67,55 @@ struct device_node *of_irq_find_parent(struct device_node *child)
 		return NULL;
 
 	do {
-		// child: devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소
-		// of_get_property(devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소, "interrupt-parent", NULL): NULL
+		// [1] child: devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소
+		// [1] of_get_property(devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소, "interrupt-parent", NULL): NULL
+		// [2] child: devtree에서 allnext로 순회 하면서 찾은 combiner node의 parent주소
+		// [2] of_get_property(devtree에서 allnext로 순회 하면서 찾은 combiner node의 parent주소, "interrupt-parent", NULL): gic 의 주소
 		parp = of_get_property(child, "interrupt-parent", NULL);
-		// parp: NULL
+		// [1] parp: NULL
+		// [2] parp: gic 의 주소
 
-		// parp: NULL
+		// [1] parp: NULL
+		// [2] parp: gic 의 주소
 		if (parp == NULL)
-			// child: devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소
-			// of_get_parent(devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소):
-			// devtree에서 allnext로 순회 하면서 찾은 combiner node의 parent주소
+			// [1] child: devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소
+			// [1] of_get_parent(devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소):
+			// [1] devtree에서 allnext로 순회 하면서 찾은 combiner node의 parent주소
 			p = of_get_parent(child);
-			// p: devtree에서 allnext로 순회 하면서 찾은 combiner node의 parent주소
+			// [1] p: devtree에서 allnext로 순회 하면서 찾은 combiner node의 parent주소
 
 		else {
+			// [2] of_irq_workarounds: 0, OF_IMAP_NO_PHANDLE: 0x00000002
 			if (of_irq_workarounds & OF_IMAP_NO_PHANDLE)
 				p = of_node_get(of_irq_dflt_pic);
 			else
+				// [2] parp: gic 의 주소
+				// [2] of_find_node_by_phandlei(gic 의 주소): exynos5.dtsi 에 있는 gic node
 				p = of_find_node_by_phandle(be32_to_cpup(parp));
+				// [2] p: exynos5.dtsi 에 있는 gic node
 		}
 
-		// child: devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소
+		// [1] child: devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소
+		// [2] child: devtree에서 allnext로 순회 하면서 찾은 combiner node의 parent주소
 		of_node_put(child); // null function
 
-		// child: devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소,
-		// p: devtree에서 allnext로 순회 하면서 찾은 combiner node의 parent주소
+		// [1] child: devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소,
+		// [1] p: devtree에서 allnext로 순회 하면서 찾은 combiner node의 parent주소
+		// [2] child: devtree에서 allnext로 순회 하면서 찾은 combiner node의 parent주소,
+		// [2] p: exynos5.dtsi 에 있는 gic node
 		child = p;
-		// child: devtree에서 allnext로 순회 하면서 찾은 combiner node의 parent주소
+		// [1] child: devtree에서 allnext로 순회 하면서 찾은 combiner node의 parent주소
+		// [2] child: exynos5.dtsi 에 있는 gic node
 
+		// [1] p: devtree에서 allnext로 순회 하면서 찾은 combiner node의 parent주소,
+		// [1] of_get_property(devtree에서 allnext로 순회 하면서 찾은 combiner node의 parent주소, "#interrupt-cells", NULL): NULL
+		// [2] p: exynos5.dtsi 에 있는 gic node
+		// [2] of_get_property(exynos5.dtsi 에 있는 gic node, "#interrupt-cells", NULL): 3
 	} while (p && of_get_property(p, "#interrupt-cells", NULL) == NULL);
 
+	// [2] p: exynos5.dtsi 에 있는 gic node
 	return p;
+	// return exynos5.dtsi 에 있는 gic node
 }
 
 /**
@@ -491,9 +510,13 @@ void __init of_irq_init(const struct of_device_id *matches)
 		// desc->dev: (kmem_cache#30-o10)->dev: devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소
 
 // 2014/10/04 종료
+// 2014/10/11 시작
 
 		// desc->interrupt_parent: (kmem_cache#30-o10)->interrupt_parent, np: devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소
+		// of_irq_find_parent(devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소): exynos5.dtsi 에 있는 gic node
 		desc->interrupt_parent = of_irq_find_parent(np);
+		// desc->interrupt_parent: (kmem_cache#30-o10)->interrupt_parent: exynos5.dtsi 에 있는 gic node
+
 		if (desc->interrupt_parent == np)
 			desc->interrupt_parent = NULL;
 		list_add_tail(&desc->list, &intc_desc_list);

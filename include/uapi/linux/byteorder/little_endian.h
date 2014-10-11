@@ -79,6 +79,7 @@ static inline __be32 __cpu_to_be32p(const __u32 *p)
 	return (__force __be32)__swab32p(p);
 }
 // ARM10C 20131005
+// ARM10C 20141011
 static inline __u32 __be32_to_cpup(const __be32 *p)
 {
 	return __swab32p((__u32 *)p);

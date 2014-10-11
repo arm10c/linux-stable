@@ -14,14 +14,17 @@ typedef int (*of_irq_init_cb_t)(struct device_node *, struct device_node *);
  * Workarounds only applied to 32bit powermac machines
  */
 #define OF_IMAP_OLDWORLD_MAC	0x00000001
+// ARM10C 20141011
+// OF_IMAP_NO_PHANDLE: 0x00000002
 #define OF_IMAP_NO_PHANDLE	0x00000002
 
-#if defined(CONFIG_PPC32) && defined(CONFIG_PPC_PMAC)
+#if defined(CONFIG_PPC32) && defined(CONFIG_PPC_PMAC) // CONFIG_PPC32=n, CONFIG_PPC_PMAC=n
 extern unsigned int of_irq_workarounds;
 extern struct device_node *of_irq_dflt_pic;
 extern int of_irq_parse_oldworld(struct device_node *device, int index,
 			       struct of_phandle_args *out_irq);
 #else /* CONFIG_PPC32 && CONFIG_PPC_PMAC */
+// ARM10C 20141011
 #define of_irq_workarounds (0)
 #define of_irq_dflt_pic (NULL)
 static inline int of_irq_parse_oldworld(struct device_node *device, int index,

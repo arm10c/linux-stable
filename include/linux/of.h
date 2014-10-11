@@ -87,6 +87,8 @@ extern void of_node_put(struct device_node *node);
 /* Dummy ref counting routines - to be implemented later */
 // ARM10C 20140215
 // ARM10C 20141004
+// ARM10C 20141011
+// ARM10C 20141011
 static inline struct device_node *of_node_get(struct device_node *node)
 {
 	return node;
