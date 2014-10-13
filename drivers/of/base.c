@@ -199,6 +199,8 @@ static struct property *__of_find_property(const struct device_node *np,
 // np: cpu0의 node의 주소값, propname: "reg", NULL
 // ARM10C 20141004
 // np: devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소, "interrupt-controller", NULL
+// ARM10C 20141011
+// np: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소 (cortex_a15_gic), "interrupt-controller", NULL
 struct property *of_find_property(const struct device_node *np,
 				  const char *name,
 				  int *lenp)
@@ -818,7 +820,7 @@ EXPORT_SYMBOL(of_find_node_with_property);
 // ARM10C 20141011
 // matches: irqchip_of_match_cortex_a15_gic, np: gic node의 주소
 // ARM10C 20141011
-// matches: irqchip_of_match_exynos4210_combiner, node: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소
+// matches: irqchip_of_match_exynos4210_combiner, node: devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소
 static
 const struct of_device_id *__of_match_node(const struct of_device_id *matches,
 					   const struct device_node *node)
@@ -888,7 +890,7 @@ const struct of_device_id *__of_match_node(const struct of_device_id *matches,
  */
 // ARM10C 20141011
 // matches: irqchip_of_match_exynos4210_combiner,
-// desc->dev: (kmem_cache#30-o11)->dev: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소
+// desc->dev: (kmem_cache#30-o10)->dev: devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소
 const struct of_device_id *of_match_node(const struct of_device_id *matches,
 					 const struct device_node *node)
 {
@@ -898,18 +900,18 @@ const struct of_device_id *of_match_node(const struct of_device_id *matches,
 	raw_spin_lock_irqsave(&devtree_lock, flags);
 	// devtree_lock을 사용한 spin lock 수행하고 cpsr을 flags에 저장
 
-	// matches: irqchip_of_match_exynos4210_combiner, node: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소
-	// __of_match_node(irqchip_of_match_exynos4210_combiner, devtree에서 allnext로 순회 하면서 찾은 gic node의 주소):
-	// irqchip_of_match_cortex_a15_gic
+	// matches: irqchip_of_match_exynos4210_combiner, node: devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소
+	// __of_match_node(irqchip_of_match_exynos4210_combiner, devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소):
+	// irqchip_of_match_exynos4210_combiner
 	match = __of_match_node(matches, node);
-	// match: irqchip_of_match_cortex_a15_gic
+	// match: irqchip_of_match_exynos4210_combiner
 
 	raw_spin_unlock_irqrestore(&devtree_lock, flags);
 	// devtree_lock을 사용한 spin lock 해재하고 flags에 저장된 cpsr을 복원
 
-	// match: irqchip_of_match_cortex_a15_gic
+	// match: irqchip_of_match_exynos4210_combiner
 	return match;
-	// return irqchip_of_match_cortex_a15_gic
+	// return irqchip_of_match_exynos4210_combiner
 }
 EXPORT_SYMBOL(of_match_node);
 
@@ -1046,23 +1048,27 @@ struct device_node *of_find_node_by_phandle(phandle handle)
 	// devtree_lock을 사용한 spin lock 수행하고 cpsr을 flags에 저장
 
 	for (np = of_allnodes; np; np = np->allnext)
-		// np: phandle의 값이 gic 의 주소인 node, handle: gic 의 주소
+		// np->phandle: NULL, handle: gic 의 주소
 		if (np->phandle == handle)
 			break;
-			// break로 탈출
 
-	// FIXME:
-	// np 값이 exynos5.dtsi에 있는 gic node로 가정 (분석상 무한루프 탈출을 위해)
+	// NOTE:
+	// np->phandle에 값이 존재하기 위해선 exynos5420 용 dts 파일들의 node 들 중에
+	// "phandle", "linux,phandle" property를 가지는 node가 존재해야 값을 가짐 (fdt.c의 360 line 참고)
+	// exynos5420 용 dts 파일들의 node를 찾아 본 결과 "phandle", "linux,phandle" property를
+	// 가지는 node는 존재하지 않음
+	// for loop 수행 결과 np값은 NULL을 가지게 됨
 
-	// np: exynos5.dtsi 에 있는 gic node
+
+	// np: NULL
 	of_node_get(np);
 
 	raw_spin_unlock_irqrestore(&devtree_lock, flags);
 	// devtree_lock을 사용한 spin lock 해재하고 flags에 저장된 cpsr을 복원
 
-	// np: exynos5.dtsi 에 있는 gic node
+	// np: NULL
 	return np;
-	// return exynos5.dtsi 에 있는 gic node
+	// return NULL
 }
 EXPORT_SYMBOL(of_find_node_by_phandle);
 
