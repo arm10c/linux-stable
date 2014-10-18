@@ -82,8 +82,8 @@ struct device_node *of_irq_find_parent(struct device_node *child)
 		// child: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소
 		// of_get_property(devtree에서 allnext로 순회 하면서 찾은 gic node의 주소, "interrupt-parent", NULL): gic 의 주소
 		parp = of_get_property(child, "interrupt-parent", NULL);
-		// parp: gic 의 주소
-		// parp: gic 의 주소
+		// parp: exynos5420 dtb상의 gic 의 주소
+		// parp: exynos5420 dtb상의 gic 의 주소
 
 		// parp: gic 의 주소
 		// parp: gic 의 주소
@@ -95,32 +95,32 @@ struct device_node *of_irq_find_parent(struct device_node *child)
 			if (of_irq_workarounds & OF_IMAP_NO_PHANDLE)
 				p = of_node_get(of_irq_dflt_pic);
 			else
-				// parp: gic 의 주소, of_find_node_by_phandle(gic 의 주소): NULL
-				// parp: gic 의 주소, of_find_node_by_phandle(gic 의 주소): NULL
+				// parp: exynos5420 dtb상의 gic 의 주소, of_find_node_by_phandle(exynos5420 dtb상의 gic 의 주소): gic node의 주소
+				// parp: exynos5420 dtb상의 gic 의 주소, of_find_node_by_phandle(exynos5420 dtb상의 gic 의 주소): gic node의 주소
 				p = of_find_node_by_phandle(be32_to_cpup(parp));
-				// p: NULL
-				// p: NULL
+				// p: gic node의 주소
+				// p: gic node의 주소
 		}
 
 		// child: devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소
 		// child: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소
 		of_node_put(child); // null function
 
-		// child: devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소, p: NULL
-		// child: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소, p: NULL
+		// child: devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소, p: gic node의 주소
+		// child: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소, p: gic node의 주소
 		child = p;
-		// child: NULL
-		// child: NULL
+		// child: gic node의 주소
+		// child: gic node의 주소
 
-		// p: NULL, of_get_property(NULL, "#interrupt-cells", NULL): NULL
-		// p: NULL, of_get_property(NULL, "#interrupt-cells", NULL): NULL
+		// p: gic node의 주소, of_get_property(gic node의 주소, "#interrupt-cells", NULL): 2
+		// p: gic node의 주소, of_get_property(gic node의 주소, "#interrupt-cells", NULL): 3
 	} while (p && of_get_property(p, "#interrupt-cells", NULL) == NULL);
 
-	// p: NULL
-	// p: NULL
+	// p: gic node의 주소
+	// p: gic node의 주소
 	return p;
-	// return NULL
-	// return NULL
+	// return gic node의 주소
+	// return gic node의 주소
 }
 
 /**
@@ -527,19 +527,21 @@ void __init of_irq_init(const struct of_device_id *matches)
 // 2014/10/11 시작
 
 		// desc->interrupt_parent: (kmem_cache#30-o10)->interrupt_parent, np: devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소
-		// of_irq_find_parent(devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소): NULL
+		// of_irq_find_parent(devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소): gic node 주소
 		// desc->interrupt_parent: (kmem_cache#30-o11)->interrupt_parent, np: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소
-		// of_irq_find_parent(devtree에서 allnext로 순회 하면서 찾은 gic node의 주소): exynos5.dtsi 에 있는 gic node
+		// of_irq_find_parent(devtree에서 allnext로 순회 하면서 찾은 gic node의 주소): gic node 주소
 		desc->interrupt_parent = of_irq_find_parent(np);
-		// desc->interrupt_parent: (kmem_cache#30-o10)->interrupt_parent: NULL
-		// desc->interrupt_parent: (kmem_cache#30-o11)->interrupt_parent: NULL
+		// desc->interrupt_parent: (kmem_cache#30-o10)->interrupt_parent: gic node 주소
+		// desc->interrupt_parent: (kmem_cache#30-o11)->interrupt_parent: gic node 주소
 
-		// desc->interrupt_parent: (kmem_cache#30-o10)->interrupt_parent: NULL
+		// desc->interrupt_parent: (kmem_cache#30-o10)->interrupt_parent: gic node 주소
 		// np: devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소
-		// desc->interrupt_parent: (kmem_cache#30-o11)->interrupt_parent: NULL
+		// desc->interrupt_parent: (kmem_cache#30-o11)->interrupt_parent: gic node 주소
 		// np: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소
 		if (desc->interrupt_parent == np)
+			// desc->interrupt_parent: (kmem_cache#30-o11)->interrupt_parent: gic node 주소
 			desc->interrupt_parent = NULL;
+			// desc->interrupt_parent: (kmem_cache#30-o11)->interrupt_parent: NULL
 
 		// &desc->list: &(kmem_cache#30-o10)->list
 		// &desc->list: &(kmem_cache#30-o11)->list
@@ -570,27 +572,30 @@ void __init of_irq_init(const struct of_device_id *matches)
 		//      desc = temp_desc, temp_desc = list_next_entry(temp_desc, list))
 
 			// desc: kmem_cache#30-o10 (exynos4210_combiner), temp_desc: kmem_cache#30-o11 (cortex_a15_gic)
+			// desc: kmem_cache#30-o11 (cortex_a15_gic), temp_desc: NULL
 
 			const struct of_device_id *match;
 			int ret;
 			of_irq_init_cb_t irq_init_cb;
 
-			// desc->interrupt_parent: (kmem_cache#30-o10)->interrupt_parent: NULL, parent: NULL
+			// desc->interrupt_parent: (kmem_cache#30-o10)->interrupt_parent: gic node 주소, parent: NULL
+			// desc->interrupt_parent: (kmem_cache#30-o11)->interrupt_parent: NULL, parent: NULL
 			if (desc->interrupt_parent != parent)
 				continue;
+				// continue 수행 (exynos4210_combiner)
 
-			// &desc->list: (kmem_cache#30-o10)->list
+			// &desc->list: (kmem_cache#30-o11)->list
 			list_del(&desc->list);
-			// intc_desc_list에서 (kmem_cache#30-o10)->list를 삭제
+			// intc_desc_list에서 (kmem_cache#30-o11)->list를 삭제
 
-			// matches: irqchip_of_match_exynos4210_combiner,
-			// desc->dev: (kmem_cache#30-o10)->dev: devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소
-			// of_match_node(irqchip_of_match_exynos4210_combiner, devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소):
-			// irqchip_of_match_exynos4210_combiner
+			// matches: irqchip_of_match_cortex_a15_gic,
+			// desc->dev: (kmem_cache#30-o11)->dev: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소
+			// of_match_node(cortex_a15_gic, devtree에서 allnext로 순회 하면서 찾은 gic node의 주소):
+			// irqchip_of_match_cortex_a15_gic
 			match = of_match_node(matches, desc->dev);
-			// match: irqchip_of_match_exynos4210_combiner
+			// match: irqchip_of_match_cortex_a15_gic
 
-			// match->data; irqchip_of_match_exynos4210_combiner.data: combiner_of_init
+			// match->data; irqchip_of_match_cortex_a15_gic.data: gic_of_init
 			if (WARN(!match->data,
 			    "of_irq_init: no init function for %s\n",
 			    match->compatible)) {
@@ -598,17 +603,24 @@ void __init of_irq_init(const struct of_device_id *matches)
 				continue;
 			}
 
-			// match->compatible; irqchip_of_match_exynos4210_combiner.compatible: "samsung,exynos4210-combiner",
-			// desc->dev: (kmem_cache#30-o10)->dev: devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소
-			// desc->interrupt_parent: (kmem_cache#30-o10)->interrupt_parent: NULL
+			// match->compatible: irqchip_of_match_cortex_a15_gic.compatible: "arm,cortex-a15-gic",
+			// desc->dev: (kmem_cache#30-o11)->dev: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소
+			// desc->interrupt_parent: (kmem_cache#30-o11)->interrupt_parent: NULL
 			pr_debug("of_irq_init: init %s @ %p, parent %p\n",
 				 match->compatible,
 				 desc->dev, desc->interrupt_parent);
-			// "of_irq_init: init samsung,exynos4210-combiner @ 0x(combiner node의 주소), parent 0\n"
+			// "of_irq_init: init arm,cortex-a15-gic @ 0x(gic node의 주소), parent 0\n"
 
 // 2014/10/11 종료
+// 2014/10/18 시작
 
+			// match->data; irqchip_of_match_cortex_a15_gic.data: gic_of_init
 			irq_init_cb = (of_irq_init_cb_t)match->data;
+			// irq_init_cb: gic_of_init
+
+			// desc->dev: (kmem_cache#30-o11)->dev: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소,
+			// desc->interrupt_parent: (kmem_cache#30-o11)->interrupt_parent: NULL
+			// gic_of_init(devtree에서 allnext로 순회 하면서 찾은 gic node의 주소, NULL):
 			ret = irq_init_cb(desc->dev, desc->interrupt_parent);
 			if (ret) {
 				kfree(desc);

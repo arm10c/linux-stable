@@ -245,6 +245,7 @@ __setup("noalign", noalign_setup);
 #define PROT_SECT_DEVICE	PMD_TYPE_SECT|PMD_SECT_AP_WRITE
 
 // ARM10C 20131026
+// ARM10C 20141018
 static struct mem_type mem_types[] = {
 	[MT_DEVICE] = {		  /* Strongly ordered / ARMv6 shared device */
 		.prot_pte	= PROT_PTE_DEVICE | L_PTE_MT_DEV_SHARED |
@@ -347,9 +348,13 @@ static struct mem_type mem_types[] = {
 	},
 };
 
+// ARM10C 20141018
+// mtype: MT_DEVICE: 0
 const struct mem_type *get_mem_type(unsigned int type)
 {
+	// type: MT_DEVICE: 0, ARRAY_SIZE(mem_types): 16
 	return type < ARRAY_SIZE(mem_types) ? &mem_types[type] : NULL;
+	// return &mem_types[0]
 }
 EXPORT_SYMBOL(get_mem_type);
 

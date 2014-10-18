@@ -8,8 +8,17 @@
 #include <linux/string.h>
 
 /* Max address size we deal with */
+// ARM10C 20141018
+// OF_MAX_ADDR_CELLS: 4
 #define OF_MAX_ADDR_CELLS	4
+// ARM10C 20141018
+// OF_MAX_ADDR_CELLS: 4
+// na: 1
+// OF_CHECK_ADDR_COUNT(1): 1
 #define OF_CHECK_ADDR_COUNT(na)	((na) > 0 && (na) <= OF_MAX_ADDR_CELLS)
+// ARM10C 20141018
+// na: 1, ns: 1
+// OF_CHECK_COUNTS(1, 1): 1
 #define OF_CHECK_COUNTS(na, ns)	(OF_CHECK_ADDR_COUNT(na) && (ns) > 0)
 
 static struct of_bus *of_match_bus(struct device_node *np);
@@ -27,10 +36,12 @@ static void of_dump_addr(const char *s, const __be32 *addr, int na)
 	printk("\n");
 }
 #else
+// ARM10C 20141018
 static void of_dump_addr(const char *s, const __be32 *addr, int na) { }
 #endif
 
 /* Callbacks for bus specific translators */
+// ARM10C 20141018
 struct of_bus {
 	const char	*name;
 	const char	*addresses;
@@ -47,13 +58,24 @@ struct of_bus {
  * Default translator (generic bus)
  */
 
+// ARM10C 20141018
+// dev: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소, &na, &ns
 static void of_bus_default_count_cells(struct device_node *dev,
 				       int *addrc, int *sizec)
 {
+	// addrc: &na
 	if (addrc)
+		// dev: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소
+		// of_n_addr_cells(devtree에서 allnext로 순회 하면서 찾은 gic node의 주소): 1
 		*addrc = of_n_addr_cells(dev);
+		// *addrc: na: 1
+
+	// sizec: &ns
 	if (sizec)
+		// dev: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소
+		// of_n_size_cells(devtree에서 allnext로 순회 하면서 찾은 gic node의 주소): 1
 		*sizec = of_n_size_cells(dev);
+		// *sizec: ns: 1
 }
 
 static u64 of_bus_default_map(__be32 *addr, const __be32 *range,
@@ -86,9 +108,13 @@ static int of_bus_default_translate(__be32 *addr, u64 offset, int na)
 	return 0;
 }
 
+// ARM10C 20141018
+// gic node의 reg property의 값의 시작주소
 static unsigned int of_bus_default_get_flags(const __be32 *addr)
 {
+	// IORESOURCE_MEM: 0x00000200
 	return IORESOURCE_MEM;
+	// return IORESOURCE_MEM: 0x00000200
 }
 
 #ifdef CONFIG_PCI
@@ -297,9 +323,14 @@ EXPORT_SYMBOL_GPL(of_pci_range_parser_one);
  * ISA bus specific translator
  */
 
+// ARM10C 20141018
+// np: root node의 주소
 static int of_bus_isa_match(struct device_node *np)
 {
+	// np->name: (root node의 주소)->name: NULL
+	// strcmp((root node의 주소)->name, "isa"): -1
 	return !strcmp(np->name, "isa");
+	// return 0
 }
 
 static void of_bus_isa_count_cells(struct device_node *child,
@@ -355,8 +386,9 @@ static unsigned int of_bus_isa_get_flags(const __be32 *addr)
  * Array of bus specific translators
  */
 
+// ARM10C 20141018
 static struct of_bus of_busses[] = {
-#ifdef CONFIG_PCI
+#ifdef CONFIG_PCI // CONFIG_PCI=n
 	/* PCI */
 	{
 		.name = "pci",
@@ -390,13 +422,21 @@ static struct of_bus of_busses[] = {
 	},
 };
 
+// ARM10C 20141018
+// parent: root node의 주소
 static struct of_bus *of_match_bus(struct device_node *np)
 {
 	int i;
 
+	// ARRAY_SIZE(of_busses): 2
 	for (i = 0; i < ARRAY_SIZE(of_busses); i++)
+		// i: 0, of_busses[0].match: of_bus_isa_match
+		// np: root node의 주소, of_bus_isa_match(root node의 주소): 0
+		// i: 1, of_busses[1].match: NULL  np: root node의 주소
 		if (!of_busses[i].match || of_busses[i].match(np))
+			// i: 1
 			return &of_busses[i];
+			// return &of_busses[1]
 	BUG();
 	return NULL;
 }
@@ -473,50 +513,94 @@ static int of_translate_one(struct device_node *parent, struct of_bus *bus,
  * that can be mapped to a cpu physical address). This is not really specified
  * that way, but this is traditionally the way IBM at least do things
  */
+// ARM10C 20141018
+// dev: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소,
+// in_addr: gic node의 reg property의 값의 시작주소, "ranges"
 static u64 __of_translate_address(struct device_node *dev,
 				  const __be32 *in_addr, const char *rprop)
 {
 	struct device_node *parent = NULL;
 	struct of_bus *bus, *pbus;
+	// OF_MAX_ADDR_CELLS: 4
 	__be32 addr[OF_MAX_ADDR_CELLS];
 	int na, ns, pna, pns;
+	// OF_BAD_ADDR: 0xFFFFFFFFFFFFFFFF
 	u64 result = OF_BAD_ADDR;
+	// result: 0xFFFFFFFFFFFFFFFF
 
+	// dev: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소
+	// of_node_full_name(devtree에서 allnext로 순회 하면서 찾은 gic node의 주소): "/interrupt-controller@10481000"
 	pr_debug("OF: ** translation for device %s **\n", of_node_full_name(dev));
+	// "OF: ** translation for device "/interrupt-controller@10481000" **\n"
 
 	/* Increase refcount at current level */
+	// dev: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소
 	of_node_get(dev);
 
 	/* Get parent & match bus type */
+	// dev: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소
+	// of_get_parent(devtree에서 allnext로 순회 하면서 찾은 gic node의 주소): root node의 주소
 	parent = of_get_parent(dev);
+	// parent: root node의 주소
+
+	// parent: root node의 주소
 	if (parent == NULL)
 		goto bail;
+
+	// parent: root node의 주소
+	// of_match_bus(root node의 주소): &of_busses[1]
 	bus = of_match_bus(parent);
+	// bus: &of_busses[1]
 
 	/* Count address cells & copy address locally */
+	// bus->count_cells: (&of_busses[1])->count_cells: of_bus_default_count_cells
+	// dev: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소
+	// of_bus_default_count_cells(devtree에서 allnext로 순회 하면서 찾은 gic node의 주소, &na, &ns):
+	// na: 1, ns: 1
 	bus->count_cells(dev, &na, &ns);
+
+	// na: 1, ns: 1
+	// OF_CHECK_COUNTS(1, 1): 1
 	if (!OF_CHECK_COUNTS(na, ns)) {
 		printk(KERN_ERR "prom_parse: Bad cell count for %s\n",
 		       of_node_full_name(dev));
 		goto bail;
 	}
-	memcpy(addr, in_addr, na * 4);
 
+	// in_addr: gic node의 reg property의 값의 시작주소, na: 1
+	memcpy(addr, in_addr, na * 4);
+	// addr[0]: 0x10481000
+
+	// bus->name: (&of_busses[1])->name: "default", na: 1, ns: 1,
+	// parent: root node의 주소, of_node_full_name(root node의 주소): "/"
+	// addr[0]: 0x10481000
 	pr_debug("OF: bus is %s (na=%d, ns=%d) on %s\n",
 	    bus->name, na, ns, of_node_full_name(parent));
 	of_dump_addr("OF: translating address:", addr, na);
+	// "OF: bus is default (na=1, ns=1) on /\n"
 
 	/* Translate */
 	for (;;) {
 		/* Switch to parent bus */
-		of_node_put(dev);
+		// dev: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소
+		of_node_put(dev); // null function
+
+		// parent: root node의 주소
 		dev = parent;
+		// dev: root node의 주소
+
+		// dev: root node의 주소, of_get_parent(root node의 주소): NULL
 		parent = of_get_parent(dev);
+		// parent: NULL
 
 		/* If root, we have finished */
+		// parent: NULL
 		if (parent == NULL) {
 			pr_debug("OF: reached root node\n");
+			// addr[0]: 0x10481000, na: 1
+			// of_read_number(addr, 1): 0x10481000
 			result = of_read_number(addr, na);
+			// result: 0x10481000
 			break;
 		}
 
@@ -544,15 +628,28 @@ static u64 __of_translate_address(struct device_node *dev,
 		of_dump_addr("OF: one level translation:", addr, na);
 	}
  bail:
-	of_node_put(parent);
-	of_node_put(dev);
+	// parent: root node의 주소
+	of_node_put(parent); // null function
 
+	// dev: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소
+	of_node_put(dev); // null function
+
+	// result: 0x10481000
 	return result;
+	// return 0x10481000
 }
 
+// ARM10C 20141018
+// dev: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소,
+// addrp: gic node의 reg property의 값의 시작주소
 u64 of_translate_address(struct device_node *dev, const __be32 *in_addr)
 {
+	// dev: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소,
+	// in_addr: gic node의 reg property의 값의 시작주소
+	// __of_translate_address(devtree에서 allnext로 순회 하면서 찾은 gic node의 주소,
+	// gic node의 reg property의 값의 시작주소, "ranges"): 0x10481000
 	return __of_translate_address(dev, in_addr, "ranges");
+	// return 0x10481000
 }
 EXPORT_SYMBOL(of_translate_address);
 
@@ -581,6 +678,8 @@ bool of_can_translate_address(struct device_node *dev)
 }
 EXPORT_SYMBOL(of_can_translate_address);
 
+// ARM10C 20141018
+// dev: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소, index: 0, &size, &flags
 const __be32 *of_get_address(struct device_node *dev, int index, u64 *size,
 		    unsigned int *flags)
 {
@@ -591,29 +690,77 @@ const __be32 *of_get_address(struct device_node *dev, int index, u64 *size,
 	int onesize, i, na, ns;
 
 	/* Get parent & match bus type */
+	// dev: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소
+	// of_get_parent(devtree에서 allnext로 순회 하면서 찾은 gic node의 주소): root node의 주소
 	parent = of_get_parent(dev);
+	// parent: root node의 주소
+
+	// parent: root node의 주소
 	if (parent == NULL)
 		return NULL;
+
+	// parent: root node의 주소
+	// of_match_bus(root node의 주소): &of_busses[1]
 	bus = of_match_bus(parent);
+	// bus: &of_busses[1]
+
+	// bus->count_cells: (&of_busses[1])->count_cells: of_bus_default_count_cells
+	// dev: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소
+	// of_bus_default_count_cells(devtree에서 allnext로 순회 하면서 찾은 gic node의 주소, &na, &ns)
 	bus->count_cells(dev, &na, &ns);
-	of_node_put(parent);
+	// of_bus_default_count_cells에서 한일:
+	// ns: 1, na: 1
+
+	// parent: root node의 주소
+	of_node_put(parent); // null function
+
+	// na: 1, OF_CHECK_ADDR_COUNT(1): 1
 	if (!OF_CHECK_ADDR_COUNT(na))
 		return NULL;
 
 	/* Get "reg" or "assigned-addresses" property */
+	// dev: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소,
+	// bus->addresses: (&of_busses[1])->addresses: "reg"
+	// of_get_property(devtree에서 allnext로 순회 하면서 찾은 gic node의 주소, "reg", &psize):
+	// gic node의 reg property의 값의 시작주소, psize: 32
 	prop = of_get_property(dev, bus->addresses, &psize);
+	// prop: gic node의 reg property의 값의 시작주소
+
+	// prop: gic node의 reg property의 값의 시작주소
 	if (prop == NULL)
 		return NULL;
-	psize /= 4;
 
+	// psize: 32
+	psize /= 4;
+	// psize: 8
+
+	// na: 1, ns: 1
 	onesize = na + ns;
+	// onesize: 2
+
+	// psize: 8, onesize: 2
 	for (i = 0; psize >= onesize; psize -= onesize, prop += onesize, i++)
+		// i: 0, index: 0
 		if (i == index) {
+			// size: &size
 			if (size)
+				// prop: gic node의 reg property의 값의 시작주소, na: 1, ns: 1
+				// of_read_number(gic node의 reg property의 값의 시작주소 + 1, 1): 0x1000
 				*size = of_read_number(prop + na, ns);
+				// *size: size: 0x1000
+
+			// flags: &flags
 			if (flags)
+				// bus->get_flags: (&of_busses[1])->get_flags: of_bus_default_get_flags
+				// prop: gic node의 reg property의 값의 시작주소
+				// of_bus_default_get_flags(gic node의 reg property의 값의 시작주소):
+				// IORESOURCE_MEM: 0x00000200
 				*flags = bus->get_flags(prop);
+				// *flags: flags: IORESOURCE_MEM: 0x00000200
+
+			// prop: gic node의 reg property의 값의 시작주소
 			return prop;
+			// return gic node의 reg property의 값의 시작주소
 		}
 	return NULL;
 }
@@ -627,18 +774,36 @@ unsigned long __weak pci_address_to_pio(phys_addr_t address)
 	return (unsigned long) address;
 }
 
+// ARM10C 20141018
+// dev: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소,
+// addrp: gic node의 reg property의 값의 시작주소, size: 0x1000, flags: IORESOURCE_MEM: 0x00000200
+// name: NULL, r: &res
 static int __of_address_to_resource(struct device_node *dev,
 		const __be32 *addrp, u64 size, unsigned int flags,
 		const char *name, struct resource *r)
 {
 	u64 taddr;
 
+	// flags: IORESOURCE_MEM: 0x00000200, IORESOURCE_IO: 0x00000100
 	if ((flags & (IORESOURCE_IO | IORESOURCE_MEM)) == 0)
 		return -EINVAL;
+
+	// dev: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소,
+	// addrp: gic node의 reg property의 값의 시작주소
+	// of_translate_address(devtree에서 allnext로 순회 하면서 찾은 gic node의 주소,
+	// gic node의 reg property의 값의 시작주소): 0x10481000
 	taddr = of_translate_address(dev, addrp);
+	// taddr: 0x10481000
+
+	// taddr: 0x10481000, OF_BAD_ADDR: 0xFFFFFFFFFFFFFFFF
 	if (taddr == OF_BAD_ADDR)
 		return -EINVAL;
+
+	// r: &res
 	memset(r, 0, sizeof(struct resource));
+	// res 값을 0으로 초기화
+
+	// flags: IORESOURCE_MEM: 0x00000200, IORESOURCE_IO: 0x00000100
 	if (flags & IORESOURCE_IO) {
 		unsigned long port;
 		port = pci_address_to_pio(taddr);
@@ -647,11 +812,22 @@ static int __of_address_to_resource(struct device_node *dev,
 		r->start = port;
 		r->end = port + size - 1;
 	} else {
+		// r->start: (&res)->start, taddr: 0x10481000
 		r->start = taddr;
+		// r->start: (&res)->start: 0x10481000
+
+		// r->end: (&res)->end, taddr: 0x10481000, size: 0x1000
 		r->end = taddr + size - 1;
+		// r->end: (&res)->end: 0x10481fff
 	}
+	// r->flags: (&res)->flags, flags: IORESOURCE_MEM: 0x00000200
 	r->flags = flags;
+	// r->flags: (&res)->flags: IORESOURCE_MEM: 0x00000200
+
+	// r->name: (&res)->name, name: NULL
+	// dev->full_name: (gic node의 주소)->full_name: "/interrupt-controller@10481000"
 	r->name = name ? name : dev->full_name;
+	// r->name: (&res)->name: "/interrupt-controller@10481000"
 
 	return 0;
 }
@@ -664,6 +840,8 @@ static int __of_address_to_resource(struct device_node *dev,
  * pci_address_to_pio(), that is because it's either called to early or it
  * can't be matched to any host bridge IO space
  */
+// ARM10C 20141018
+// np: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소, index: 0, &res
 int of_address_to_resource(struct device_node *dev, int index,
 			   struct resource *r)
 {
@@ -672,14 +850,27 @@ int of_address_to_resource(struct device_node *dev, int index,
 	unsigned int	flags;
 	const char	*name = NULL;
 
+	// dev: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소, index: 0
+	// of_get_address(devtree에서 allnext로 순회 하면서 찾은 gic node의 주소, 0, &size, &flags):
+	// gic node의 reg property의 값의 시작주소, size: 0x1000, flags: IORESOURCE_MEM: 0x00000200
 	addrp = of_get_address(dev, index, &size, &flags);
+	// addrp: gic node의 reg property의 값의 시작주소
+
+	// addrp: gic node의 reg property의 값의 시작주소
 	if (addrp == NULL)
 		return -EINVAL;
 
 	/* Get optional "reg-names" property to add a name to a resource */
+	// dev: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소, index: 0
 	of_property_read_string_index(dev, "reg-names",	index, &name);
 
+	// dev: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소,
+	// addrp: gic node의 reg property의 값의 시작주소, size: 0x1000, flags: IORESOURCE_MEM: 0x00000200
+	// name: NULL, r: &res
+	// __of_address_to_resource(devtree에서 allnext로 순회 하면서 찾은 gic node의 주소,
+	// gic node의 reg property의 값의 시작주소, 0x1000, IORESOURCE_MEM: 0x00000200, NULL, &res): 0
 	return __of_address_to_resource(dev, addrp, size, flags, name, r);
+	// return 0
 }
 EXPORT_SYMBOL_GPL(of_address_to_resource);
 
@@ -709,13 +900,24 @@ struct device_node *of_find_matching_node_by_address(struct device_node *from,
  *
  * Returns a pointer to the mapped memory
  */
+// ARM10C 20141018
+// node: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소, 0
 void __iomem *of_iomap(struct device_node *np, int index)
 {
 	struct resource res;
 
+	// np: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소, index: 0
+	// of_address_to_resource(devtree에서 allnext로 순회 하면서 찾은 gic node의 주소, 0, &res): 0
 	if (of_address_to_resource(np, index, &res))
 		return NULL;
 
+	// of_address_to_resource에서 한일:
+	// (&res)->start: 0x10481000
+	// (&res)->end: 0x10481fff
+	// (&res)->flags: IORESOURCE_MEM: 0x00000200
+	// (&res)->name: "/interrupt-controller@10481000"
+
+	// res.start: 0x10481000, resource_size(&res): 0x1000
 	return ioremap(res.start, resource_size(&res));
 }
 EXPORT_SYMBOL(of_iomap);
