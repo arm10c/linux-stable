@@ -974,6 +974,9 @@ void __init gic_init_bases(unsigned int gic_nr, int irq_start,
 #ifdef CONFIG_OF // CONFIG_OF=y
 static int gic_cnt __initdata;
 
+// ARM10C 20141018
+// desc->dev: (kmem_cache#30-o11)->dev: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소,
+// desc->interrupt_parent: (kmem_cache#30-o11)->interrupt_parent: NULL
 int __init gic_of_init(struct device_node *node, struct device_node *parent)
 {
 	void __iomem *cpu_base;
@@ -981,9 +984,11 @@ int __init gic_of_init(struct device_node *node, struct device_node *parent)
 	u32 percpu_offset;
 	int irq;
 
+	// node: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소
 	if (WARN_ON(!node))
 		return -ENODEV;
 
+	// node: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소
 	dist_base = of_iomap(node, 0);
 	WARN(!dist_base, "unable to map gic dist registers\n");
 

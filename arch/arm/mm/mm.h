@@ -61,6 +61,8 @@ extern void __flush_dcache_page(struct address_space *mapping, struct page *page
 
 /* permanent static mappings from iotable_init() */
 // ARM10C 20131130
+// ARM10C 20141018
+// VM_ARM_STATIC_MAPPING: 0x40000000
 #define VM_ARM_STATIC_MAPPING	0x40000000
 
 /* empty mapping */
@@ -68,8 +70,11 @@ extern void __flush_dcache_page(struct address_space *mapping, struct page *page
 
 /* mapping type (attributes) for permanent static mappings */
 // ARM10C 20131130
+// ARM10C 20141018
 // md->type = MT_DEVICE
 #define VM_ARM_MTYPE(mt)		((mt) << 20)
+// ARM10C 20141018
+// VM_ARM_MTYPE_MASK: 0x1f00000
 #define VM_ARM_MTYPE_MASK	(0x1f << 20)
 
 /* consistent regions used by dma_alloc_attrs() */

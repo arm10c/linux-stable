@@ -16,6 +16,7 @@
  * nesting etc..
  */
 // ARM10C 20140125
+// ARM10C 20141018
 struct resource {
 	resource_size_t start;
 	resource_size_t end;
@@ -30,7 +31,11 @@ struct resource {
 #define IORESOURCE_BITS		0x000000ff	/* Bus-specific bits */
 
 #define IORESOURCE_TYPE_BITS	0x00001f00	/* Resource type */
+// ARM10C 20141018
+// IORESOURCE_IO: 0x00000100
 #define IORESOURCE_IO		0x00000100	/* PCI/ISA I/O ports */
+// ARM10C 20141018
+// IORESOURCE_MEM: 0x00000200
 #define IORESOURCE_MEM		0x00000200
 #define IORESOURCE_REG		0x00000300	/* Register offsets */
 #define IORESOURCE_IRQ		0x00000400
@@ -162,6 +167,7 @@ struct resource *lookup_resource(struct resource *root, resource_size_t start);
 int adjust_resource(struct resource *res, resource_size_t start,
 		    resource_size_t size);
 resource_size_t resource_alignment(struct resource *res);
+// ARM10C 20141018
 static inline resource_size_t resource_size(const struct resource *res)
 {
 	return res->end - res->start + 1;

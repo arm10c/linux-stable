@@ -48,6 +48,7 @@ struct of_irq_controller;
 
 // ARM10C 20140208
 // ARM10C 20141004
+// ARM10C 20141018
 // size : 60 byte
 struct device_node {
 	const char *name;
@@ -88,12 +89,14 @@ extern void of_node_put(struct device_node *node);
 // ARM10C 20140215
 // ARM10C 20141004
 // ARM10C 20141011
+// ARM10C 20141018
 static inline struct device_node *of_node_get(struct device_node *node)
 {
 	return node;
 }
 // ARM10C 20140215
 // ARM10C 20141004
+// ARM10C 20141018
 static inline void of_node_put(struct device_node *node) { }
 #endif /* !CONFIG_OF_DYNAMIC */
 
@@ -133,6 +136,8 @@ extern struct device_node *of_find_all_nodes(struct device_node *prev);
 
 /* Helper to read a big number; size is in cells (not bytes) */
 // ARM10C 20131012
+// ARM10C 20141018
+// prop: gic node의 reg property의 값의 시작주소, na: 1, ns: 1
 static inline u64 of_read_number(const __be32 *cell, int size)
 {
 	u64 r = 0;
@@ -178,11 +183,18 @@ static inline unsigned long of_read_ulong(const __be32 *cell, int size)
 #define OF_IS_DYNAMIC(x) test_bit(OF_DYNAMIC, &x->_flags)
 #define OF_MARK_DYNAMIC(x) set_bit(OF_DYNAMIC, &x->_flags)
 
+// ARM10C 20141018
+// OF_BAD_ADDR: 0xFFFFFFFFFFFFFFFF
 #define OF_BAD_ADDR	((u64)-1)
 
+// ARM10C 20141018
+// dev: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소
 static inline const char *of_node_full_name(const struct device_node *np)
 {
+	// np: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소
+	// np->full_name: (gic node의 주소)->full_name: "/interrupt-controller@10481000"
 	return np ? np->full_name : "<no-node>";
+	// return "/interrupt-controller@10481000"
 }
 
 extern struct device_node *of_find_node_by_name(struct device_node *from,

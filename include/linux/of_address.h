@@ -92,7 +92,7 @@ static inline struct of_pci_range *of_pci_range_parser_one(
 }
 #endif /* CONFIG_OF_ADDRESS */
 
-#ifdef CONFIG_OF
+#ifdef CONFIG_OF // CONFIG_OF=y
 extern int of_address_to_resource(struct device_node *dev, int index,
 				  struct resource *r);
 void __iomem *of_iomap(struct device_node *node, int index);

@@ -119,6 +119,8 @@ static inline u32 __raw_readl(const volatile void __iomem *addr)
 /*
  * Architecture ioremap implementation.
  */
+// ARM10C 20141018
+// MT_DEVICE: 0
 #define MT_DEVICE		0
 #define MT_DEVICE_NONSHARED	1
 #define MT_DEVICE_CACHED	2
@@ -331,6 +333,9 @@ extern void _memset_io(volatile void __iomem *, int, size_t);
  * Documentation/io-mapping.txt.
  *
  */
+// ARM10C 20141018
+// MT_DEVICE: 0
+// res.start: 0x10481000, resource_size(&res): 0x1000
 #define ioremap(cookie,size)		__arm_ioremap((cookie), (size), MT_DEVICE)
 #define ioremap_nocache(cookie,size)	__arm_ioremap((cookie), (size), MT_DEVICE)
 #define ioremap_cache(cookie,size)	__arm_ioremap((cookie), (size), MT_DEVICE_CACHED)
