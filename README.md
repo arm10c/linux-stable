@@ -1,19 +1,31 @@
 #IAMROOT.ORG Kernel스터디10차(ARM)
 
 #HISTORY
+<<<<<<< HEAD
 - 73th (2014/10/11) week: [73차](https://github.com/arm10c/linux-stable/blob/master/Reference/88_Review/a10c_73.md)
  - init_IRQ()
 - 72th (2014/10/04) week: [72차](https://github.com/arm10c/linux-stable/blob/master/Reference/88_Review/a10c_72.md)
+=======
+- 72th (2014/10/04) week study : [72차 스터디](https://github.com/arm10c/linux-stable/blob/master/Reference/88_Review/a10c_72.md)
+>>>>>>> dd63d927b79559dd3277da3e81615b33617edccc
  - tick_nohz_init()
  - context_tracking_init()
  - radix_tree_init()
  - early_irq_init()
  - init_IRQ()
+<<<<<<< HEAD
 - 71th (2014/09/27) week: [71차](https://github.com/arm10c/linux-stable/blob/master/Reference/88_Review/a10c_71.md)
  - rcu_init()
 - 70th (2014/09/20) week: [70차](https://github.com/arm10c/linux-stable/blob/master/Reference/88_Review/a10c_70.md)
  - rcu_init()
 - 69th (2014/09/13) week: [69차](https://github.com/arm10c/linux-stable/blob/master/Reference/88_Review/a10c_69.md)
+=======
+- 71th (2014/09/27) week study : [71차 스터디](https://github.com/arm10c/linux-stable/blob/master/Reference/88_Review/a10c_71.md)
+ - rcu_init()
+- 70th (2014/09/20) week study : [70차 스터디](https://github.com/arm10c/linux-stable/blob/master/Reference/88_Review/a10c_70.md)
+ - rcu_init()
+- 69th (2014/09/13) week study : [69차 스터디](https://github.com/arm10c/linux-stable/blob/master/Reference/88_Review/a10c_69.md)
+>>>>>>> dd63d927b79559dd3277da3e81615b33617edccc
  - sched_init()를 계속 분석
  - sched_init()::for_each_possible_cpu(i) { ... }
  - sched_init()->set_load_weight()
@@ -76,3 +88,12 @@
  - 리눅스 커널 내부구조 (p. 88~ p.150)
 * 01th (2012-04-28) week: [01차] 34명
  - 리눅스 커널 내부구조 (처음  ~ p. 88)
+=======
+# The Linux Kernel review for ARMv7 3.13.0 (exynos 5420)
+* Community name: IAMROOT.ORG ARM kernel study 10th C team
+* Target Soc    : Samsung Exynos 5420 (ARMv7 A7&A15)
+* Kernel version: Linux kernel 3.13.x
+  - 1st: 3.9.6
+  - 2nd: 3.10.x
+  - 3th: 3.11.x
+  - current : 3.13.x
