@@ -113,7 +113,7 @@ struct device_node *of_irq_find_parent(struct device_node *child)
 		// child: gic node의 주소
 
 		// p: gic node의 주소, of_get_property(gic node의 주소, "#interrupt-cells", NULL): 2
-		// p: gic node의 주소, of_get_property(gic node의 주소, "#interrupt-cells", NULL): 3
+		// p: gic node의 주소, of_get_property(gic node의 주소, "#interrupt-cells", NULL): 2
 	} while (p && of_get_property(p, "#interrupt-cells", NULL) == NULL);
 
 	// p: gic node의 주소
