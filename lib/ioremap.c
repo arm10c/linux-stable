@@ -49,6 +49,8 @@ static inline int ioremap_pmd_range(pud_t *pud, unsigned long addr,
 	return 0;
 }
 
+// ARM10C 20141025
+// pgd: 0xc0004780, addr: 0xf0000000, next: 0xf0001000, phys_addr: 0x20481000, prot: 0x653
 static inline int ioremap_pud_range(pgd_t *pgd, unsigned long addr,
 		unsigned long end, phys_addr_t phys_addr, pgprot_t prot)
 {
@@ -67,6 +69,9 @@ static inline int ioremap_pud_range(pgd_t *pgd, unsigned long addr,
 	return 0;
 }
 
+// ARM10C 20141025
+// addr: 0xf0000000, end: 0xf0001000, paddr: 0x10481000,
+// type->prot_pte: (&mem_types[0])->prot_pte: PROT_PTE_DEVICE | L_PTE_MT_DEV_SHARED | L_PTE_SHARED (0x653)
 int ioremap_page_range(unsigned long addr,
 		       unsigned long end, phys_addr_t phys_addr, pgprot_t prot)
 {
@@ -75,13 +80,30 @@ int ioremap_page_range(unsigned long addr,
 	unsigned long next;
 	int err;
 
+	// addr: 0xf0000000, end: 0xf0001000
 	BUG_ON(addr >= end);
 
+	// addr: 0xf0000000
 	start = addr;
+	// start: 0xf0000000
+
+	// phys_addr: 0x10481000, addr: 0xf0000000
 	phys_addr -= addr;
+	// phys_addr: 0x20481000
+
+	// addr: 0xf0000000, pgd_offset_k(0xf0000000): (0xc0004000 + 0x780)
 	pgd = pgd_offset_k(addr);
+	// pgd: (0xc0004000 + 0x780)
+
 	do {
+		// addr: 0xf0000000, end: 0xf0001000
+		// pgd_addr_end(0xf0000000, 0xf0001000): 0xf0001000
 		next = pgd_addr_end(addr, end);
+		// next: 0xf0001000
+
+// 2014/10/25 종료
+
+		// pgd: 0xc0004780, addr: 0xf0000000, next: 0xf0001000, phys_addr: 0x20481000, prot: 0x653
 		err = ioremap_pud_range(pgd, addr, next, phys_addr+addr, prot);
 		if (err)
 			break;

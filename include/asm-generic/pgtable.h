@@ -243,6 +243,9 @@ static inline int pmd_same(pmd_t pmd_a, pmd_t pmd_b)
 // addr: 0xC0000000, end: 0xef800000
 // PGDIR_SIZE: 0x00200000, PGDIR_MASK: 0xFFE00000
 // __boundary: 0xC0200000
+// ARM10C 20141025
+// addr: 0xf0000000, end: 0xf0001000
+// pgd_addr_end(0xf0000000, 0xf0001000): 0xf0001000
 #define pgd_addr_end(addr, end)						\
 ({	unsigned long __boundary = ((addr) + PGDIR_SIZE) & PGDIR_MASK;	\
 	(__boundary - 1 < (end) - 1)? __boundary: (end);		\

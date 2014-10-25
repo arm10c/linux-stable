@@ -150,12 +150,16 @@
 // ARM10C 20131123
 // L_PTE_VALID: 0x1
 #define L_PTE_VALID		(_AT(pteval_t, 1) << 0)		/* Valid */
+// ARM10C 20141025
+// L_PTE_PRESENT: 0x1
 #define L_PTE_PRESENT		(_AT(pteval_t, 1) << 0)
 // ARM10C 20131123
+// ARM10C 20141025
 // L_PTE_YOUNG: 0x2
 #define L_PTE_YOUNG		(_AT(pteval_t, 1) << 1)
 #define L_PTE_FILE		(_AT(pteval_t, 1) << 2)	/* only when !PRESENT */
 // ARM10C 20131123
+// ARM10C 20141025
 // L_PTE_DIRTY: 0x40
 #define L_PTE_DIRTY		(_AT(pteval_t, 1) << 6)
 // ARM10C 20131123
@@ -165,8 +169,11 @@
 // L_PTE_USER: 0x100
 #define L_PTE_USER		(_AT(pteval_t, 1) << 8)
 // ARM10C 20131123
+// ARM10C 20141025
 // L_PTE_XN: 0x200
 #define L_PTE_XN		(_AT(pteval_t, 1) << 9)
+// ARM10C 20141025
+// L_PTE_SHARED: 0x400
 #define L_PTE_SHARED		(_AT(pteval_t, 1) << 10)	/* shared(v6), coherent(xsc3) */
 // ARM10C 20131123
 // L_PTE_NONE: 0x800 
@@ -182,6 +189,8 @@
 #define L_PTE_MT_WRITEBACK	(_AT(pteval_t, 0x03) << 2)	/* 0011 */
 #define L_PTE_MT_MINICACHE	(_AT(pteval_t, 0x06) << 2)	/* 0110 (sa1100, xscale) */
 #define L_PTE_MT_WRITEALLOC	(_AT(pteval_t, 0x07) << 2)	/* 0111 */
+// ARM10C 20141025
+// L_PTE_MT_DEV_SHARED: 0x10
 #define L_PTE_MT_DEV_SHARED	(_AT(pteval_t, 0x04) << 2)	/* 0100 */
 #define L_PTE_MT_DEV_NONSHARED	(_AT(pteval_t, 0x0c) << 2)	/* 1100 */
 #define L_PTE_MT_DEV_WC		(_AT(pteval_t, 0x09) << 2)	/* 1001 */

@@ -18,6 +18,7 @@
 #ifndef __ASSEMBLY__
 
 // ARM10C 20140222
+// ARM10C 20141025
 // -MAX_ERRNO: 0xFFFFF001
 #define IS_ERR_VALUE(x) unlikely((x) >= (unsigned long)-MAX_ERRNO)
 
@@ -32,6 +33,7 @@ static inline long __must_check PTR_ERR(__force const void *ptr)
 }
 
 // ARM10C 20140222
+// ARM10C 20141025
 static inline long __must_check IS_ERR(__force const void *ptr)
 {
 	return IS_ERR_VALUE((unsigned long)ptr);

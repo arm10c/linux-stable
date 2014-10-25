@@ -372,13 +372,49 @@ void __iomem * __arm_ioremap_pfn_caller(unsigned long pfn,
 		return NULL;
 
 	// size: 0x1000, VM_IOREMAP: 0x00000001, caller: __builtin_return_address(0)
+	// get_vm_area_caller(0x1000, 0x00000001, __builtin_return_address(0)): kmem_cache#30-oX (vm_struct)
 	area = get_vm_area_caller(size, VM_IOREMAP, caller);
+	// area: kmem_cache#30-oX (vm_struct)
+
+	/*
+	// get_vm_area_caller이 한일:
+	// alloc area (GIC) 를 만들고 rb tree에 alloc area 를 추가
+	// 가상주소 va_start 기준으로 GIC 를 RB Tree 추가한 결과
+	//
+	//                                  CHID-b
+	//                               (0xF8000000)
+	//                              /            \
+	//                         TMR-r               PMU-r
+	//                    (0xF6300000)             (0xF8180000)
+	//                      /      \               /           \
+	//                 SYSC-b      WDT-b         CMU-b         SRAM-b
+	//            (0xF6100000)   (0xF6400000)  (0xF8100000)   (0xF8400000)
+	//             /                                                 \
+	//        GIC-r                                                   ROMC-r
+	//   (0xF0000000)                                                 (0xF84C0000)
+	//
+	// (kmem_cache#30-oX (vm_struct))->flags: GFP_KERNEL: 0xD0
+	// (kmem_cache#30-oX (vm_struct))->addr: 0xf0000000
+	// (kmem_cache#30-oX (vm_struct))->size: 0x2000
+	// (kmem_cache#30-oX (vm_struct))->caller: __builtin_return_address(0)
+	//
+	// (kmem_cache#30-oX (vmap_area GIC))->vm: kmem_cache#30-oX (vm_struct)
+	// (kmem_cache#30-oX (vmap_area GIC))->flags: 0x04
+	*/
+
+	// area: kmem_cache#30-oX (vm_struct)
  	if (!area)
  		return NULL;
- 	addr = (unsigned long)area->addr;
-	area->phys_addr = paddr;
 
-#if !defined(CONFIG_SMP) && !defined(CONFIG_ARM_LPAE)
+	// area->addr: (kmem_cache#30-oX (vm_struct))->addr: 0xf0000000
+ 	addr = (unsigned long)area->addr;
+	// addr: 0xf0000000
+
+	// area->phys_addr: (kmem_cache#30-oX (vm_struct))->phys_addr, paddr: 0x10481000
+	area->phys_addr = paddr;
+	// area->phys_addr: (kmem_cache#30-oX (vm_struct))->phys_addr: 0x10481000
+
+#if !defined(CONFIG_SMP) && !defined(CONFIG_ARM_LPAE) // CONFIG_SMP=y, CONFIG_ARM_LPAE=n
 	if (DOMAIN_IO == 0 &&
 	    (((cpu_architecture() >= CPU_ARCH_ARMv6) && (get_cr() & CR_XP)) ||
 	       cpu_is_xsc3()) && pfn >= 0x100000 &&
@@ -390,6 +426,8 @@ void __iomem * __arm_ioremap_pfn_caller(unsigned long pfn,
 		err = remap_area_sections(addr, pfn, size, type);
 	} else
 #endif
+		// addr: 0xf0000000, size: 0x1000, paddr: 0x10481000,
+		// type->prot_pte: (&mem_types[0])->prot_pte: PROT_PTE_DEVICE | L_PTE_MT_DEV_SHARED | L_PTE_SHARED (0x653)
 		err = ioremap_page_range(addr, addr + size, paddr,
 					 __pgprot(type->prot_pte));
 

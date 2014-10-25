@@ -72,6 +72,7 @@ typedef pteval_t pgprot_t;
 // ARM10C 20131026
 // ARM10C 20131102
 // ARM10C 20131123
+// ARM10C 20141025
 #define __pgprot(x)     (x)
 
 #endif /* STRICT_MM_TYPECHECKS */

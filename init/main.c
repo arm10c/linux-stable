@@ -538,6 +538,21 @@ static void __init mm_init(void)
 
 	vmalloc_init();
 	// vmlist에 등록된 vm struct 들을 slab으로 이관하고 RB Tree로 구성
+	/*
+	// 가상주소 va_start 기준으로 RB Tree 구성한 결과
+	//
+	//                          CHID-b
+	//                       (0xF8000000)
+	//                      /            \
+	//                 TMR-r               PMU-r
+	//            (0xF6300000)             (0xF8180000)
+	//              /      \               /           \
+	//         SYSC-b      WDT-b         CMU-b         SRAM-b
+	//    (0xF6100000)   (0xF6400000)  (0xF8100000)   (0xF8400000)
+	//                                                       \
+	//                                                        ROMC-r
+	//                                                        (0xF84C0000)
+	*/
 }
 
 // ARM10C 20130824

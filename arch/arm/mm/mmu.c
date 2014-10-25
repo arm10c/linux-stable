@@ -240,14 +240,22 @@ __setup("noalign", noalign_setup);
 
 #endif /* ifdef CONFIG_CPU_CP15 / else */
 
+// ARM10C 20141025
+// L_PTE_PRESENT: 0x1
+// L_PTE_YOUNG: 0x2
+// L_PTE_DIRTY: 0x40
+// L_PTE_XN: 0x200
+// PROT_PTE_DEVICE: 0x243
 #define PROT_PTE_DEVICE		L_PTE_PRESENT|L_PTE_YOUNG|L_PTE_DIRTY|L_PTE_XN
 #define PROT_PTE_S2_DEVICE	PROT_PTE_DEVICE
 #define PROT_SECT_DEVICE	PMD_TYPE_SECT|PMD_SECT_AP_WRITE
 
 // ARM10C 20131026
 // ARM10C 20141018
+// ARM10C 20141025
 static struct mem_type mem_types[] = {
 	[MT_DEVICE] = {		  /* Strongly ordered / ARMv6 shared device */
+		// PROT_PTE_DEVICE: 0x243, L_PTE_MT_DEV_SHARED: 0x10, L_PTE_SHARED: 0x400
 		.prot_pte	= PROT_PTE_DEVICE | L_PTE_MT_DEV_SHARED |
 				  L_PTE_SHARED,
 		.prot_pte_s2	= s2_policy(PROT_PTE_S2_DEVICE) |
