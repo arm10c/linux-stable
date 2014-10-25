@@ -100,6 +100,7 @@ static inline void kmemleak_not_leak(const void *ptr)
 static inline void kmemleak_ignore(const void *ptr)
 {
 }
+// ARM10C 20141025
 static inline void kmemleak_scan_area(const void *ptr, size_t size, gfp_t gfp)
 {
 }

@@ -50,6 +50,8 @@ int __ilog2_u64(u64 n)
 
 static inline __attribute__((const))
 // ARM10C 20131214
+// ARM10C 20141025
+// align: 0x2000
 bool is_power_of_2(unsigned long n)
 {
 	return (n != 0 && ((n & (n - 1)) == 0));

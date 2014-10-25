@@ -63,6 +63,7 @@ typedef __kernel_loff_t		loff_t;
 #ifndef _SIZE_T
 #define _SIZE_T
 // ARM10C 20140607
+// ARM10C 20141025
 typedef __kernel_size_t		size_t;
 #endif
 

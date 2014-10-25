@@ -362,13 +362,16 @@ void __iomem * __arm_ioremap_pfn_caller(unsigned long pfn,
 	}
 
 // 2014/10/18 종료
+// 2014/10/25 시작
 
 	/*
 	 * Don't allow RAM to be mapped - this causes problems with ARMv6+
 	 */
+	// pfn: 0x10481, pfn_valid(0x10481): 0
 	if (WARN_ON(pfn_valid(pfn)))
 		return NULL;
 
+	// size: 0x1000, VM_IOREMAP: 0x00000001, caller: __builtin_return_address(0)
 	area = get_vm_area_caller(size, VM_IOREMAP, caller);
  	if (!area)
  		return NULL;

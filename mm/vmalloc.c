@@ -275,17 +275,23 @@ EXPORT_SYMBOL(vmalloc_to_pfn);
 // ARM10C 20140809
 #define VM_VM_AREA	0x04
 
+// ARM10C 20141025
 static DEFINE_SPINLOCK(vmap_area_lock);
 /* Export for kexec only */
 LIST_HEAD(vmap_area_list);
 // ARM10C 20140809
+// ARM10C 20141025
 // RB_ROOT: (struct rb_root) { NULL, }
 static struct rb_root vmap_area_root = RB_ROOT;
 
 /* The vmap cache globals are protected by vmap_area_lock */
+// ARM10C 20141025
 static struct rb_node *free_vmap_cache;
+// ARM10C 20141025
 static unsigned long cached_hole_size;
+// ARM10C 20141025
 static unsigned long cached_vstart;
+// ARM10C 20141025
 static unsigned long cached_align;
 
 // ARM10C 20140809
@@ -356,6 +362,8 @@ static void purge_vmap_area_lazy(void);
  * Allocate a region of KVA of the specified size and alignment, within the
  * vstart and vend.
  */
+// ARM10C 20141025
+// size: 0x2000, align: 0x2000, start: 0xf0000000, end: 0xff000000, node: -1, gfp_mask: GFP_KERNEL: 0xD0
 static struct vmap_area *alloc_vmap_area(unsigned long size,
 				unsigned long align,
 				unsigned long vstart, unsigned long vend,
@@ -365,14 +373,25 @@ static struct vmap_area *alloc_vmap_area(unsigned long size,
 	struct rb_node *n;
 	unsigned long addr;
 	int purged = 0;
+	// purged: 0
 	struct vmap_area *first;
 
+	// size: 0x2000
 	BUG_ON(!size);
+
+	// size: 0x2000, PAGE_MASK: 0xFFFFF000
 	BUG_ON(size & ~PAGE_MASK);
+
+	// align: 0x2000, is_power_of_2(0x2000): 1
 	BUG_ON(!is_power_of_2(align));
 
+	// sizeof(struct vmap_area): 52 bytes, gfp_mask: GFP_KERNEL: 0xD0, GFP_RECLAIM_MASK: 0x13ef0, node: -1
+	// kmalloc_node(52, GFP_KERNEL: 0xD0, -1): kmem_cache#30-oX
 	va = kmalloc_node(sizeof(struct vmap_area),
 			gfp_mask & GFP_RECLAIM_MASK, node);
+	// va: kmem_cache#30-oX
+
+	// va: kmem_cache#30-oX
 	if (unlikely(!va))
 		return ERR_PTR(-ENOMEM);
 
@@ -380,10 +399,13 @@ static struct vmap_area *alloc_vmap_area(unsigned long size,
 	 * Only scan the relevant parts containing pointers to other objects
 	 * to avoid false negatives.
 	 */
-	kmemleak_scan_area(&va->rb_node, SIZE_MAX, gfp_mask & GFP_RECLAIM_MASK);
+	// &va->rb_node: &(kmem_cache#30-oX)->rb_node, SIZE_MAX: 0xFFFFFFFF, gfp_mask: GFP_KERNEL: 0xD0, GFP_RECLAIM_MASK: 0x13ef0
+	kmemleak_scan_area(&va->rb_node, SIZE_MAX, gfp_mask & GFP_RECLAIM_MASK); // null function
 
 retry:
 	spin_lock(&vmap_area_lock);
+	// vmap_area_lock을 이용한 spinlock 설정 수행
+
 	/*
 	 * Invalidate cache if we have more permissive parameters.
 	 * cached_hole_size notes the largest hole noticed _below_
@@ -393,19 +415,32 @@ retry:
 	 * Note that __free_vmap_area may update free_vmap_cache
 	 * without updating cached_hole_size or cached_align.
 	 */
+	// free_vmap_cache: NULL, size: 0x2000, cached_hole_size: 0
+	// vstart: 0xf0000000, cached_vstart: 0, align: 0x2000, cached_align: 0
 	if (!free_vmap_cache ||
 			size < cached_hole_size ||
 			vstart < cached_vstart ||
 			align < cached_align) {
 nocache:
+		// cached_hole_size: 0
 		cached_hole_size = 0;
+		// cached_hole_size: 0
+
+		// free_vmap_cache: NULL
 		free_vmap_cache = NULL;
+		// free_vmap_cache: NULL
 	}
 	/* record if we encounter less permissive parameters */
+	// cached_vstart: 0, vstart: 0xf0000000
 	cached_vstart = vstart;
+	// cached_vstart: 0xf0000000
+
+	// cached_align: 0, align: 0x2000
 	cached_align = align;
+	// cached_align: 0x2000
 
 	/* find starting point for our search */
+	// free_vmap_cache: NULL
 	if (free_vmap_cache) {
 		first = rb_entry(free_vmap_cache, struct vmap_area, rb_node);
 		addr = ALIGN(first->va_end, align);
@@ -415,18 +450,46 @@ nocache:
 			goto overflow;
 
 	} else {
+		// vstart: 0xf0000000, 0x2000, ALIGN(0xf0000000, 0x2000): 0xf0000000
 		addr = ALIGN(vstart, align);
+		// addr: 0xf0000000
+
+		// addr: 0xf0000000, size: 0x2000
 		if (addr + size < addr)
 			goto overflow;
 
-		n = vmap_area_root.rb_node;
-		first = NULL;
+		// NOTE:
+		// vmalloc_init에서 추가한 vmap_area들 SYSC TMR WDT CHID CMU PMU SRAM ROMC 중에
+		// vmap_area_root.rb_node 값을 가지고 있음. 정확한 vmap_area_root.rb_node 값을 모르지만
+		// CMU의 값이 중간이므로 root 일 것이라 가정하고 코드 분석을 진행
+		// vmap_area_root.rb_node: CMU rb_node
 
+		// vmap_area_root.rb_node: CMU rb_node
+		n = vmap_area_root.rb_node;
+		// n: CMU rb_node
+
+		first = NULL;
+		// first: NULL
+
+		// n: CMU rb_node
 		while (n) {
 			struct vmap_area *tmp;
+
+			// n: CMU rb_node, rb_entry(CMU rb_node, struct vmap_area, rb_node): CMU vmap_area 의 시작주소
 			tmp = rb_entry(n, struct vmap_area, rb_node);
+			// tmp: CMU vmap_area 의 시작주소
+
+			// CMU vmap_area의 맴버값
+			// va->va_start: 0xf8100000
+			// va->va_end: 0xf8124000
+
+			// tmp->va_end: (CMU)->va_end: 0xf8124000, addr: 0xf0000000
 			if (tmp->va_end >= addr) {
+				// tmp: CMU vmap_area 의 시작주소
 				first = tmp;
+				// first: CMU vmap_area 의 시작주소
+
+				// tmp->va_start: (CMU)->va_start: 0xf8100000, addr: 0xf0000000
 				if (tmp->va_start <= addr)
 					break;
 				n = n->rb_left;
@@ -1255,6 +1318,23 @@ void __init vmalloc_init(void)
 	// PMU : 0xf8180000 +  64kB   PA:0x10040000
 	// SRAM: 0xf8400000 +   4kB   PA:0x02020000
 	// ROMC: 0xf84c0000 +   4kB   PA:0x12250000
+	//
+	// SYSC:
+	// va_start: 0xf6100000, va_end: 0xf6110000
+	// TMR:
+	// va_start: 0xf6300000, va_end: 0xf6304000
+	// WDT:
+	// va_start: 0xf6400000, va_end: 0xf6401000
+	// CHID:
+	// va_start: 0xf8000000, va_end: 0xf8001000
+	// CMU:
+	// va_start: 0xf8100000, va_end: 0xf8124000
+	// PMU:
+	// va_start: 0xf8180000, va_end: 0xf8190000
+	// SRAM:
+	// va_start: 0xf8400000, va_end: 0xf8401000
+	// ROMC:
+	// va_start: 0xf84c0000, va_end: 0xf84c1000
 	for (tmp = vmlist; tmp; tmp = tmp->next) {
 		// tmp: SYSC
 
@@ -1399,6 +1479,9 @@ static void clear_vm_uninitialized_flag(struct vm_struct *vm)
 	vm->flags &= ~VM_UNINITIALIZED;
 }
 
+// ARM10C 20141025
+// size: 0x1000, 1, VM_IOREMAP: 0x00000001, VMALLOC_START: 0xf0000000,VMALLOC_END: 0xff000000UL,
+// NUMA_NO_NODE: -1, GFP_KERNEL: 0xD0, caller: __builtin_return_address(0)
 static struct vm_struct *__get_vm_area_node(unsigned long size,
 		unsigned long align, unsigned long flags, unsigned long start,
 		unsigned long end, int node, gfp_t gfp_mask, const void *caller)
@@ -1406,23 +1489,41 @@ static struct vm_struct *__get_vm_area_node(unsigned long size,
 	struct vmap_area *va;
 	struct vm_struct *area;
 
+	// in_interrupt(): 0
 	BUG_ON(in_interrupt());
-	if (flags & VM_IOREMAP)
-		align = 1ul << clamp(fls(size), PAGE_SHIFT, IOREMAP_MAX_ORDER);
 
+	// flags: VM_IOREMAP: 0x00000001
+	if (flags & VM_IOREMAP)
+		// size: 0x1000, fls(0x1000): 13, PAGE_SHIFT: 12, IOREMAP_MAX_ORDER: 24
+		// clamp(13, 12, 24): 13
+		align = 1ul << clamp(fls(size), PAGE_SHIFT, IOREMAP_MAX_ORDER);
+		// align: 0x2000
+
+	// size: 0x1000
 	size = PAGE_ALIGN(size);
+	// size: 0x1000
+
+	// size: 0x1000
 	if (unlikely(!size))
 		return NULL;
 
+	// sizeof(*area): 32, gfp_mask: GFP_KERNEL: 0xD0, GFP_RECLAIM_MASK: 0x13ef0, node: -1
+	// kzalloc_node(32, GFP_KERNEL: 0xD0, -1): kmem_cache#30-oX
 	area = kzalloc_node(sizeof(*area), gfp_mask & GFP_RECLAIM_MASK, node);
+	// area: kmem_cache#30-oX
+
+	// area: kmem_cache#30-oX
 	if (unlikely(!area))
 		return NULL;
 
 	/*
 	 * We always allocate a guard page.
 	 */
+	// size: 0x1000, PAGE_SIZE: 0x1000
 	size += PAGE_SIZE;
+	// size: 0x2000
 
+	// size: 0x2000, align: 0x2000, start: 0xf0000000, end: 0xff000000, node: -1, gfp_mask: GFP_KERNEL: 0xD0
 	va = alloc_vmap_area(size, align, start, end, node, gfp_mask);
 	if (IS_ERR(va)) {
 		kfree(area);
@@ -1466,9 +1567,13 @@ struct vm_struct *get_vm_area(unsigned long size, unsigned long flags)
 				  __builtin_return_address(0));
 }
 
+// ARM10C 20141025
+// size: 0x1000, VM_IOREMAP: 0x00000001, caller: __builtin_return_address(0)
 struct vm_struct *get_vm_area_caller(unsigned long size, unsigned long flags,
 				const void *caller)
 {
+	// size: 0x1000, 1, VM_IOREMAP: 0x00000001, VMALLOC_START: 0xf0000000,VMALLOC_END: 0xff000000UL,
+	// NUMA_NO_NODE: -1, GFP_KERNEL: 0xD0, caller: __builtin_return_address(0)
 	return __get_vm_area_node(size, 1, flags, VMALLOC_START, VMALLOC_END,
 				  NUMA_NO_NODE, GFP_KERNEL, caller);
 }

@@ -39,6 +39,8 @@
 #define LLONG_MIN	(-LLONG_MAX - 1)
 // ARM10C 20131019
 #define ULLONG_MAX	(~0ULL)
+// ARM10C 20141025
+// SIZE_MAX: 0xFFFFFFFF
 #define SIZE_MAX	(~(size_t)0)
 
 #define STACK_MAGIC	0xdeadbeef
@@ -764,6 +766,8 @@ static inline void ftrace_dump(enum ftrace_dump_mode oops_dump_mode) { }
 // 가정: this_start: 0x4F800000, this_end: 0xA0000000
 // this_start: 0x4F800000, start: 0x00001000, end: 0x4f800000
 // this_end: 0xA0000000, start: 0x00001000, end: 0x4f800000
+// ARM10C 20141025
+// fls(0x1000): 13, PAGE_SHIFT: 12, IOREMAP_MAX_ORDER: 24
 #define clamp(val, min, max) ({			\
 	typeof(val) __val = (val);		\
 	typeof(min) __min = (min);		\

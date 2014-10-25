@@ -103,6 +103,8 @@
 /*
  * Allow 16MB-aligned ioremap pages
  */
+// ARM10C 20141025
+// IOREMAP_MAX_ORDER: 24
 #define IOREMAP_MAX_ORDER	24
 
 #define CONSISTENT_END		(0xffe00000UL)
@@ -160,6 +162,7 @@
 // ARM10C 20131123
 // ARM10C 20131207
 // ARM10C 20141018
+// ARM10C 20141025
 */
 #define	__pfn_to_phys(pfn)	((phys_addr_t)(pfn) << PAGE_SHIFT)
 

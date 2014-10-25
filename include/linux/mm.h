@@ -63,6 +63,7 @@ extern unsigned long sysctl_admin_reserve_kbytes;
 // ARM10C 20131012
 // ARM10C 20131109
 // ARM10C 20131207
+// ARM10C 20141025
 #define PAGE_ALIGN(addr) ALIGN(addr, PAGE_SIZE)
 
 /* test whether an address (unsigned long or pointer) is aligned to PAGE_SIZE */

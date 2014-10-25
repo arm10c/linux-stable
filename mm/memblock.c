@@ -30,6 +30,7 @@ static struct memblock_region memblock_reserved_init_regions[INIT_MEMBLOCK_REGIO
 // ARM10C 20131019
 // ARM10C 20131026
 // ARM10C 20140419
+// ARM10C 20141025
 struct memblock memblock __initdata_memblock = {
 	.memory.regions		= memblock_memory_init_regions,
 	.memory.cnt		= 1,	/* empty dummy entry */
@@ -1110,24 +1111,36 @@ void __init memblock_enforce_memory_limit(phys_addr_t limit)
 }
 
 // ARM10C 20131026
+// ARM10C 20141025
+// &memblock.memory, addr: 0x10481000
 static int __init_memblock memblock_search(struct memblock_type *type, phys_addr_t addr)
 {
 	// type->cnt: 1
+	// type->cnt: (&memblock.memory)->cnt: 1
 	unsigned int left = 0, right = type->cnt;
+	// left: 0, right: 1
 
 	do {
-		// mid: 0
+		// left: 0, right: 1
 		unsigned int mid = (right + left) / 2;
+		// mid: 0
 
+		// addr: 0x10481000, mid: 0, type->regions[0].base: (&memblock.memory)->regions[0].base: 0x20000000
 		if (addr < type->regions[mid].base)
+			// mid: 0
 			right = mid;
+			// right: 0
 		else if (addr >= (type->regions[mid].base +
 				  type->regions[mid].size))
 			left = mid + 1;
 		else
 			return mid;
+
+		// left: 0, right: 0
 	} while (left < right);
+
 	return -1;
+	// return -1
 }
 
 int __init memblock_is_reserved(phys_addr_t addr)
@@ -1137,11 +1150,15 @@ int __init memblock_is_reserved(phys_addr_t addr)
 
 // ARM10C 20140118
 // __pfn_to_phys(pfn) : 0x20000000
+// ARM10C 20141025
+// __pfn_to_phys(0x10481): 0x10481000
 int __init_memblock memblock_is_memory(phys_addr_t addr)
 {
 	// addr : 0x20000000
+	// addr : 0x10481000, memblock_search(&memblock.memory, 0x10481000): -1
 	return memblock_search(&memblock.memory, addr) != -1;
-	// addr이 속한 region의 번호 0이 -1하고 다르니까 1 리턴 
+	// addr이 속한 region의 번호 0이 -1하고 다르니까 1 리턴
+	// return 0
 }
 
 #ifdef CONFIG_HAVE_MEMBLOCK_NODE_MAP

@@ -74,12 +74,13 @@
 #define hardirq_count()	(preempt_count() & HARDIRQ_MASK)
 #define softirq_count()	(preempt_count() & SOFTIRQ_MASK)
 // ARM10C 20140315
+// ARM10C 20141025
 // preept_count() : 0x4000 0001, & HARDIRQ_BITS : 10 
 // HARDIRQ_MASK : 0x3FF0000 : 0x3FF << 16 : (__IRQ_MASK(HARDIRQ_BITS : 10 ) : 0x3FF << HARDIRQ_SHIFT : 16)
 // SOFTIRQ_MASK : 0xFF00
 // NMI_MASK     : 0x4000000
 // irq_count() : 0 : (0x4000 0001 & 0x07FFFF00)
-// 지금(140315)은 인터럽트가 0이다. 
+// 지금(140315)은 인터럽트가 0이다.
 #define irq_count()	(preempt_count() & (HARDIRQ_MASK | SOFTIRQ_MASK \
 				 | NMI_MASK))
 
@@ -92,7 +93,8 @@
 #define in_irq()		(hardirq_count())
 #define in_softirq()		(softirq_count())
 // ARM10C 20140315
-// in_interrupt() : 0
+// ARM10C 20141025
+// in_interrupt(): 0
 #define in_interrupt()		(irq_count())
 #define in_serving_softirq()	(softirq_count() & SOFTIRQ_OFFSET)
 

@@ -237,6 +237,7 @@ struct vm_area_struct;
 // ARM10C 20140830
 // ARM10C 20140920
 // ARM10C 20141004
+// ARM10C 20141025
 // __GFP_WAIT: 0x10
 // __GFP_IO: 0x40
 // __GFP_FS: 0x80
@@ -277,6 +278,7 @@ struct vm_area_struct;
 
 /* Control page allocator reclaim behavior */
 // ARM10C 20140426
+// ARM10C 20141025
 // __GFP_WAIT: 0x10
 // __GFP_HIGH: 0x20
 // __GFP_IO: 0x40

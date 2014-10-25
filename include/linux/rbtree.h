@@ -33,6 +33,7 @@
 #include <linux/stddef.h>
 
 // ARM10C 20140809
+// ARM10C 20141025
 // sizeof(struct rb_node): 12 bytes
 struct rb_node {
 	unsigned long  __rb_parent_color;
@@ -42,6 +43,7 @@ struct rb_node {
     /* The alignment might seem pointless, but allegedly CRIS needs it */
 
 // ARM10C 20140809
+// ARM10C 20141025
 struct rb_root {
 	struct rb_node *rb_node;
 };
@@ -53,6 +55,8 @@ struct rb_root {
 // ARM10C 20140830
 // RB_ROOT: (struct rb_root) { NULL, }
 #define RB_ROOT	(struct rb_root) { NULL, }
+
+// ARM10C 20141025
 #define	rb_entry(ptr, type, member) container_of(ptr, type, member)
 
 #define RB_EMPTY_ROOT(root)  ((root)->rb_node == NULL)
