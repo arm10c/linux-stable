@@ -879,6 +879,7 @@ static void __init request_standard_resources(const struct machine_desc *mdesc)
 		res->flags = IORESOURCE_MEM | IORESOURCE_BUSY;
 		// res->flags: 0x80000200
 
+		/*
 		// iomem_resource, res->name  = "System RAM", res->flags: 0x80000200
 		// root의 영역이 잘못되어 속하지 않거나 기존에 값이 있다면
 		// 충돌이 난것이으므로 root를 반환 받는다.
@@ -890,6 +891,8 @@ static void __init request_standard_resources(const struct machine_desc *mdesc)
 		//  /      /               \
 		// kernel_code  ------->  kernel_data ------> null
 		//                sibling
+		*/
+
 		request_resource(&iomem_resource, res);
 
 		if (kernel_code.start >= res->start &&
