@@ -1,4 +1,4 @@
-/*
+﻿/*
   Red Black Trees
   (C) 1999  Andrea Arcangeli <andrea@suse.de>
   (C) 2002  David Woodhouse <dwmw2@infradead.org>
@@ -158,10 +158,22 @@ __rb_insert(struct rb_node *node, struct rb_root *root,
 			__rb_rotate_set_parents(gparent, parent, root, RB_RED);
 			augment_rotate(gparent, parent);
 			break;
-		} else {
+		} else {	/* parent == gparent->rb_right */
 			tmp = gparent->rb_left;
 			if (tmp && rb_is_red(tmp)) {
-				/* Case 1 - color flips */
+				/*
+				 * Case 1 - color flips
+				 *
+				 *       G            g
+				 *      / \          / \
+				 *     u   p  -->   U   P
+				 *          \            \
+				 *           n            N
+				 *
+				 * However, since g's parent might be red, and
+				 * 4) does not allow this, we need to recurse
+				 * at g.
+				 */
 				rb_set_parent_color(tmp, gparent, RB_BLACK);
 				rb_set_parent_color(parent, gparent, RB_BLACK);
 				node = gparent;
@@ -172,7 +184,18 @@ __rb_insert(struct rb_node *node, struct rb_root *root,
 
 			tmp = parent->rb_left;
 			if (node == tmp) {
-				/* Case 2 - right rotate at parent */
+				/*
+				 * Case 2 - right rotate at parent
+				 *
+				 *      G             G
+				 *     / \           / \
+				 *    U   p   -->   U   n
+				 *       /               \
+				 *      n                 p
+				 *
+				 * This still leaves us in violation of 4), the
+				 * continuation into Case 3 will fix that.
+				 */
 				parent->rb_left = tmp = node->rb_right;
 				node->rb_right = parent;
 				if (tmp)
@@ -184,7 +207,15 @@ __rb_insert(struct rb_node *node, struct rb_root *root,
 				tmp = node->rb_left;
 			}
 
-			/* Case 3 - left rotate at gparent */
+			/*
+			 * Case 3 - left rotate at gparent
+			 *
+			 *        G           P
+			 *       / \         / \
+			 *      U   p  -->  g   n
+			 *           \     /
+			 *            n   U
+			 */
 			gparent->rb_right = tmp;  /* == parent->rb_left */
 			parent->rb_left = gparent;
 			if (tmp)
@@ -308,10 +339,18 @@ ____rb_erase_color(struct rb_node *parent, struct rb_root *root,
 						RB_BLACK);
 			augment_rotate(parent, sibling);
 			break;
-		} else {
+		} else {	/* node == parent->rb_right */
 			sibling = parent->rb_left;
 			if (rb_is_red(sibling)) {
-				/* Case 1 - right rotate at parent */
+				/* Case 1 - right rotate at parent
+				 *
+				 *       P               S
+				 *      / \             / \
+				 *     s   N    -->   Sl   p
+				 *    / \                 / \
+				 *   Sl  Sr             Sr   N
+				 *
+				 */
 				parent->rb_left = tmp1 = sibling->rb_right;
 				sibling->rb_right = parent;
 				rb_set_parent_color(tmp1, parent, RB_BLACK);
@@ -324,7 +363,21 @@ ____rb_erase_color(struct rb_node *parent, struct rb_root *root,
 			if (!tmp1 || rb_is_black(tmp1)) {
 				tmp2 = sibling->rb_right;
 				if (!tmp2 || rb_is_black(tmp2)) {
-					/* Case 2 - sibling color flip */
+				 	/*
+					 * Case 2 - sibling color flip
+					 * (p could be either color here)
+					 *
+					 *      (p)           (p)
+					 *      / \           / \
+					 *     S   N    -->  s   N
+					 *    / \           / \
+					 *   Sl  Sr        Sl  Sr
+					 *
+					 * This leaves us violating 5) which
+					 * can be fixed by flipping p to black
+					 * if it was red, or by recursing at p.
+					 * p is red when coming from Case 1.
+					 */
 					rb_set_parent_color(sibling, parent,
 							    RB_RED);
 					if (rb_is_red(parent))
@@ -337,7 +390,18 @@ ____rb_erase_color(struct rb_node *parent, struct rb_root *root,
 					}
 					break;
 				}
-				/* Case 3 - right rotate at sibling */
+				/*
+				 * Case 3 - left rotate at sibling
+				 * (p could be either color here)
+				 *
+				 *     (p)           (p)
+				 *     / \           / \
+				 *    S   N    -->  Sr   N
+				 *   / \           /
+				 *  Sl  sr        s
+				 *               /
+				 *             Sl
+				 */
 				sibling->rb_right = tmp1 = tmp2->rb_left;
 				tmp2->rb_left = sibling;
 				parent->rb_left = tmp2;
@@ -348,7 +412,18 @@ ____rb_erase_color(struct rb_node *parent, struct rb_root *root,
 				tmp1 = sibling;
 				sibling = tmp2;
 			}
-			/* Case 4 - left rotate at parent + color flips */
+			/*
+			 * Case 4 - right rotate at parent + color flips
+			 * (p and sl could be either color here.
+			 *  After rotation, p becomes black, s acquires
+			 *  p's color, and sl keeps its color)
+			 *
+			 *       (p)             (s)
+			 *       / \             / \
+			 *      S   N    -->   Sl   P
+			 *     / \                 / \
+			 *   (sl) sr             (sr)  N
+			 */
 			parent->rb_left = tmp2 = sibling->rb_right;
 			sibling->rb_right = parent;
 			rb_set_parent_color(tmp1, sibling, RB_BLACK);
