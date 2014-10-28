@@ -1567,7 +1567,6 @@ static void setup_vmalloc_vm(struct vm_struct *vm, struct vmap_area *va,
 
 	// va->flags: (kmem_cache#30-oX (vmap_area GIC))->flags: 0, VM_VM_AREA: 0x04
 	va->flags |= VM_VM_AREA;
-	// va->vm: (kmem_cache#30-oX (vmap_area GIC))->vm: kmem_cache#30-oX (vm_struct)
 	// va->flags: (kmem_cache#30-oX (vmap_area GIC))->flags: 0x04
 
 	spin_unlock(&vmap_area_lock);
