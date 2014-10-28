@@ -1,6 +1,9 @@
 #IAMROOT.ORG Kernel스터디10차(ARM)
 
 #HISTORY
+- 75th (2014/10/25) week: [75차](https://github.com/arm10c/linux-stable/blob/master/Reference/88_Review/a10c_75.md)
+ - init_IRQ()
+ - RBTree 알고리즘
 - 74th (2014/10/18) week: [74차](https://github.com/arm10c/linux-stable/blob/master/Reference/88_Review/a10c_74.md)
  - init_IRQ()
 - 73th (2014/10/11) week: [73차](https://github.com/arm10c/linux-stable/blob/master/Reference/88_Review/a10c_73.md)
