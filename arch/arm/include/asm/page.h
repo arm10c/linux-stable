@@ -13,6 +13,7 @@
 /* PAGE_SHIFT determines the page size */
 /*
 // ARM10C 20141025
+// ARM10C 20141101
 // PAGE_SHIFT: 12
 */
 #define PAGE_SHIFT		12

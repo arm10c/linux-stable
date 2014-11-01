@@ -73,6 +73,7 @@ struct vm_area_struct;
 // ___GFP_DMA: 0x01u
 #define __GFP_DMA	((__force gfp_t)___GFP_DMA)
 // ARM10C 20140426
+// ARM10C 20141101
 // ___GFP_HIGHMEM: 0x02u
 // __GFP_HIGHMEM: 0x02u
 #define __GFP_HIGHMEM	((__force gfp_t)___GFP_HIGHMEM)
@@ -137,6 +138,7 @@ struct vm_area_struct;
 // __GFP_NOWARN: 0x200u
 #define __GFP_NOWARN	((__force gfp_t)___GFP_NOWARN)	/* Suppress page allocation failure warning */
 // ARM10C 20140426
+// ARM10C 20141101
 // ___GFP_REPEAT: 0x400u
 // __GFP_REPEAT: 0x400u
 #define __GFP_REPEAT	((__force gfp_t)___GFP_REPEAT)	/* See above */
@@ -162,6 +164,7 @@ struct vm_area_struct;
 // ARM10C 20140628
 // ARM10C 20140726
 // ARM10C 20141004
+// ARM10C 20141101
 // ___GFP_ZERO: 0x8000u
 // __GFP_ZERO: 0x8000u
 #define __GFP_ZERO	((__force gfp_t)___GFP_ZERO)	/* Return zeroed page on success */
@@ -186,6 +189,7 @@ struct vm_area_struct;
 // __GFP_RECLAIMABLE: 0x80000u
 #define __GFP_RECLAIMABLE ((__force gfp_t)___GFP_RECLAIMABLE) /* Page is reclaimable */
 // ARM10C 20140426
+// ARM10C 20141101
 // ___GFP_NOTRACK: 0x200000u
 // __GFP_NOTRACK: 0x200000u
 #define __GFP_NOTRACK	((__force gfp_t)___GFP_NOTRACK)  /* Don't track with kmemcheck */
@@ -238,6 +242,7 @@ struct vm_area_struct;
 // ARM10C 20140920
 // ARM10C 20141004
 // ARM10C 20141025
+// ARM10C 20141101
 // __GFP_WAIT: 0x10
 // __GFP_IO: 0x40
 // __GFP_FS: 0x80
@@ -539,6 +544,8 @@ static inline int gfp_zonelist(gfp_t flags)
 // nid: 0, gfp_mask: 0x201200
 // ARM10C 20140628
 // node_zonelist(0, 0x201200)
+// ARM10C 20141101
+// node_zonelist(0, 0x2084D0)
 static inline struct zonelist *node_zonelist(int nid, gfp_t flags)
 {
 	// nid: 0, flags: 0xD0
@@ -571,6 +578,8 @@ __alloc_pages_nodemask(gfp_t gfp_mask, unsigned int order,
 // ARM10C 20140628
 // gfp_mask: 0x201200, order: 0, nid: 0,
 // node_zonelist(0, 0x201200): contig_page_data->node_zonelists
+// ARM10C 20141101
+// gfp_mask: PGALLOC_GFP: 0x2084D0, order: 0, node_zonelist(0, 0x2084D0): contig_page_data->node_zonelists
 static inline struct page *
 __alloc_pages(gfp_t gfp_mask, unsigned int order,
 		struct zonelist *zonelist)
@@ -583,16 +592,21 @@ __alloc_pages(gfp_t gfp_mask, unsigned int order,
 
 // ARM10C 20140628
 // numa_node_id(): 0, flags: 0x201200, order: 0
+// ARM10C 20141101
+// numa_node_id(): 0, gfp_mask: PGALLOC_GFP: 0x2084D0, order: 0
 static inline struct page *alloc_pages_node(int nid, gfp_t gfp_mask,
 						unsigned int order)
 {
 	/* Unknown node is current node */
 	// nid: 0
+	// nid: 0
 	if (nid < 0)
 		nid = numa_node_id();
 
 	// gfp_mask: 0x201200, order: 0, nid: 0, node_zonelist(0, 0x201200): contig_page_data->node_zonelists
+	// gfp_mask: PGALLOC_GFP: 0x2084D0, order: 0, node_zonelist(0, 0x2084D0): contig_page_data->node_zonelists
 	return __alloc_pages(gfp_mask, order, node_zonelist(nid, gfp_mask));
+	// return migratetype이 MIGRATE_UNMOVABLE인 page
 	// return migratetype이 MIGRATE_UNMOVABLE인 page
 }
 
@@ -625,6 +639,9 @@ extern struct page *alloc_pages_vma(gfp_t gfp_mask, int order,
 // ARM10C 20140628
 // numa_node_id(): 0
 // flags: 0x201200, order: 0
+// ARM10C 20141101
+// numa_node_id(): 0
+// gfp_mask: PGALLOC_GFP: 0x2084D0, order: 0
 #define alloc_pages(gfp_mask, order) \
 		alloc_pages_node(numa_node_id(), gfp_mask, order)
 #define alloc_pages_vma(gfp_mask, order, vma, addr, node)	\
@@ -644,6 +661,8 @@ void free_pages_exact(void *virt, size_t size);
 /* This is different from alloc_pages_exact_node !!! */
 void *alloc_pages_exact_nid(int nid, size_t size, gfp_t gfp_mask);
 
+// ARM10C 20141101
+// PGALLOC_GFP: 0x2084D0
 #define __get_free_page(gfp_mask) \
 		__get_free_pages((gfp_mask), 0)
 

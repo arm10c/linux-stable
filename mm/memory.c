@@ -592,24 +592,47 @@ int __pte_alloc(struct mm_struct *mm, struct vm_area_struct *vma,
 	return 0;
 }
 
+// ARM10C 20141101
+// pmd: 0xc0004780, addr: 0xf0000000
 int __pte_alloc_kernel(pmd_t *pmd, unsigned long address)
 {
+	// addr: 0xf0000000
+	// pte_alloc_one_kernel(&init_mm, 0xf0000000): migratetype이 MIGRATE_UNMOVABLE인 page의 가상주소
 	pte_t *new = pte_alloc_one_kernel(&init_mm, address);
+	// new: migratetype이 MIGRATE_UNMOVABLE인 page의 가상주소
+
+	// new: migratetype이 MIGRATE_UNMOVABLE인 page의 가상주소
 	if (!new)
 		return -ENOMEM;
 
 	smp_wmb(); /* See comment in __pte_alloc */
+	// memory barrier 반영
 
 	spin_lock(&init_mm.page_table_lock);
+	// &init_mm.page_table_lock을 사용한 spinlock 설정
+
+	// *pmd: *(0xc0004780): NULL, pmd_none(NULL): 1
 	if (likely(pmd_none(*pmd))) {	/* Has another populated it ? */
+		// pmd: 0xc0004780, new: migratetype이 MIGRATE_UNMOVABLE인 page의 가상주소
 		pmd_populate_kernel(&init_mm, pmd, new);
+		// pmd_populate_kernel에서 한일:
+		// 0xc0004780, 0xc0004784에 할당받은 pte의 주소를 연결하고 메모리에 반영
+
+		// new: migratetype이 MIGRATE_UNMOVABLE인 page의 가상주소
 		new = NULL;
+		// new: NULL
 	} else
 		VM_BUG_ON(pmd_trans_splitting(*pmd));
+
 	spin_unlock(&init_mm.page_table_lock);
+	// &init_mm.page_table_lock을 사용한 spinlock 해제
+
+	// new: NULL
 	if (new)
 		pte_free_kernel(&init_mm, new);
+
 	return 0;
+	// return 0
 }
 
 static inline void init_rss_vec(int *rss)
@@ -3842,6 +3865,7 @@ int __pud_alloc(struct mm_struct *mm, pgd_t *pgd, unsigned long address)
  * Allocate page middle directory.
  * We've already handled the fast-path in-line.
  */
+// ARM10C 20141101
 int __pmd_alloc(struct mm_struct *mm, pud_t *pud, unsigned long address)
 {
 	pmd_t *new = pmd_alloc_one(mm, address);

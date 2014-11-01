@@ -3633,6 +3633,8 @@ EXPORT_SYMBOL(__alloc_pages_nodemask);
 /*
  * Common helper functions.
  */
+// ARM10C 20141101
+// PGALLOC_GFP: 0x2084D0, 0
 unsigned long __get_free_pages(gfp_t gfp_mask, unsigned int order)
 {
 	struct page *page;
@@ -3641,12 +3643,22 @@ unsigned long __get_free_pages(gfp_t gfp_mask, unsigned int order)
 	 * __get_free_pages() returns a 32-bit address, which cannot represent
 	 * a highmem page
 	 */
+	// gfp_mask: PGALLOC_GFP: 0x2084D0, __GFP_HIGHMEM: 0x02u
 	VM_BUG_ON((gfp_mask & __GFP_HIGHMEM) != 0);
 
+	// gfp_mask: PGALLOC_GFP: 0x2084D0, order: 0
+	// alloc_pages(PGALLOC_GFP: 0x2084D0, 0): migratetype이 MIGRATE_UNMOVABLE인 page
 	page = alloc_pages(gfp_mask, order);
+	// page: migratetype이 MIGRATE_UNMOVABLE인 page
+
+	// page: migratetype이 MIGRATE_UNMOVABLE인 page
 	if (!page)
 		return 0;
+
+	// page: migratetype이 MIGRATE_UNMOVABLE인 page
+	// page_address(migratetype이 MIGRATE_UNMOVABLE인 page): migratetype이 MIGRATE_UNMOVABLE인 page의 가상주소
 	return (unsigned long) page_address(page);
+	// return migratetype이 MIGRATE_UNMOVABLE인 page의 가상주소
 }
 EXPORT_SYMBOL(__get_free_pages);
 

@@ -19,6 +19,7 @@
 #define dsb(option) __asm__ __volatile__ ("dsb " #option : : : "memory")
 // ARM10C 20131109
 // ARM10C 20140621
+// ARM10C 20141101
 // A.R.M: A8.8.43 DMB
 // ISH option:
 // ISH Inner Shareable is the required shareability domain, reads and writes are the required
@@ -74,6 +75,12 @@
 // ARM10C 20140308
 // ARM10C 20140322
 // ARM10C 20140913
+// ARM10C 20141101
+// A.R.M: A8.8.43 DMB
+// ISHST option:
+// Inner Shareable is the required shareability domain, writes are the required access type.
+// Encoded as option = 0b1010.
+// 공유자원을 다른 cpu core가 사용할수 있게 해주는 옵션
 #define smp_wmb()	dmb(ishst)
 #endif
 

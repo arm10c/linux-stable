@@ -13,13 +13,19 @@
 #include <asm/cacheflush.h>
 #include <asm/pgtable.h>
 
+// ARM10C 20141101
+// pmd: 0xc0004780, addr: 0xf0000000, next: 0xf0001000, phys_addr: 0x10481000, prot: 0x653
 static int ioremap_pte_range(pmd_t *pmd, unsigned long addr,
 		unsigned long end, phys_addr_t phys_addr, pgprot_t prot)
 {
 	pte_t *pte;
 	u64 pfn;
 
+	// phys_addr: 0x10481000, PAGE_SHIFT: 12
 	pfn = phys_addr >> PAGE_SHIFT;
+	// pfn: 10481
+
+	// pmd: 0xc0004780, addr: 0xf0000000
 	pte = pte_alloc_kernel(pmd, addr);
 	if (!pte)
 		return -ENOMEM;
@@ -31,18 +37,33 @@ static int ioremap_pte_range(pmd_t *pmd, unsigned long addr,
 	return 0;
 }
 
+// ARM10C 20141101
+// pud: 0xc0004780, addr: 0xf0000000, next: 0xf0001000, phys_addr: 0x10481000, prot: 0x653
 static inline int ioremap_pmd_range(pud_t *pud, unsigned long addr,
 		unsigned long end, phys_addr_t phys_addr, pgprot_t prot)
 {
 	pmd_t *pmd;
 	unsigned long next;
 
+	// phys_addr: 0x10481000, addr: 0xf0000000
 	phys_addr -= addr;
+	// phys_addr: 0x20481000
+
+	// pud: 0xc0004780, addr: 0xf0000000
+	// pmd_alloc(&init_mm, 0xc0004780, 0xf0000000): 0xc0004780
 	pmd = pmd_alloc(&init_mm, pud, addr);
+	// pmd: 0xc0004780
+
+	// pmd: 0xc0004780
 	if (!pmd)
 		return -ENOMEM;
 	do {
+		// addr: 0xf0000000, end: 0xf0001000
+		// pmd_addr_end(0xf0000000, 0xf0001000): 0xf0001000
 		next = pmd_addr_end(addr, end);
+		// next: 0xf0001000
+
+		// pmd: 0xc0004780, addr: 0xf0000000, next: 0xf0001000, phys_addr: 0x20481000, prot: 0x653
 		if (ioremap_pte_range(pmd, addr, next, phys_addr + addr, prot))
 			return -ENOMEM;
 	} while (pmd++, addr = next, addr != end);
@@ -50,19 +71,32 @@ static inline int ioremap_pmd_range(pud_t *pud, unsigned long addr,
 }
 
 // ARM10C 20141025
-// pgd: 0xc0004780, addr: 0xf0000000, next: 0xf0001000, phys_addr: 0x20481000, prot: 0x653
+// pgd: 0xc0004780, addr: 0xf0000000, next: 0xf0001000, phys_addr: 0x10481000, prot: 0x653
 static inline int ioremap_pud_range(pgd_t *pgd, unsigned long addr,
 		unsigned long end, phys_addr_t phys_addr, pgprot_t prot)
 {
 	pud_t *pud;
 	unsigned long next;
 
+	// phys_addr: 0x10481000, addr: 0xf0000000
 	phys_addr -= addr;
+	// phys_addr: 0x20481000
+
+	// pgd: 0xc0004780, addr: 0xf0000000
+	// pud_alloc(&init_mm, 0xc0004780, 0xf0000000): 0xc0004780
 	pud = pud_alloc(&init_mm, pgd, addr);
+	// pud: 0xc0004780
+
+	// pud: 0xc0004780
 	if (!pud)
 		return -ENOMEM;
 	do {
+		// addr: 0xf0000000, end: 0xf0001000
+		// pud_addr_end(0xf0000000, 0xf0001000): 0xf0001000
 		next = pud_addr_end(addr, end);
+		// next: 0xf0001000
+
+		// pud: 0xc0004780, addr: 0xf0000000, next: 0xf0001000, phys_addr: 0x20481000, prot: 0x653
 		if (ioremap_pmd_range(pud, addr, next, phys_addr + addr, prot))
 			return -ENOMEM;
 	} while (pud++, addr = next, addr != end);
@@ -102,6 +136,7 @@ int ioremap_page_range(unsigned long addr,
 		// next: 0xf0001000
 
 // 2014/10/25 종료
+// 2014/11/01 시작
 
 		// pgd: 0xc0004780, addr: 0xf0000000, next: 0xf0001000, phys_addr: 0x20481000, prot: 0x653
 		err = ioremap_pud_range(pgd, addr, next, phys_addr+addr, prot);

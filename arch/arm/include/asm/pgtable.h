@@ -205,6 +205,7 @@ extern pgd_t swapper_pg_dir[PTRS_PER_PGD];
 #define pgd_offset_k(addr)	pgd_offset(&init_mm, addr)
 
 // ARM10C 20131109
+// ARM10C 20141101
 #define pmd_none(pmd)		(!pmd_val(pmd))
 #define pmd_present(pmd)	(pmd_val(pmd))
 
@@ -236,6 +237,7 @@ static inline pte_t *pmd_page_vaddr(pmd_t pmd)
 // pmd: 0xc0007FF8, addr: 0xffff0000
 // pmd_page_vaddr(*(pmd)): 0xEF7FD000,  pte_index(0xffff0000): 0x1F0
 // pte_offset_kernel(0x4F7FD8XX, 0xffff0000): 0xEF7FD1F0
+// ARM10C 20141101
 #define pte_offset_kernel(pmd,addr)	(pmd_page_vaddr(*(pmd)) + pte_index(addr))
 
 #define pte_offset_map(pmd,addr)	(__pte_map(pmd) + pte_index(addr))

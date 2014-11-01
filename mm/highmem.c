@@ -358,6 +358,8 @@ static struct page_address_slot *page_slot(const struct page *page)
 // page: migratetype이 MIGRATE_UNMOVABLE인 page
 // ARM10C 20140628
 // page: UNMOVABLE인 page (boot_kmem_cache)
+// ARM10C 20141101
+// page: migratetype이 MIGRATE_UNMOVABLE인 page
 void *page_address(const struct page *page)
 {
 	unsigned long flags;

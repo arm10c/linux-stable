@@ -70,17 +70,23 @@
  */
 // ARM10C 20131123
 // ARM10C 20140419
+// ARM10C 20141101
+// PTRS_PER_PTE: 512
 #define PTRS_PER_PTE		512
 #define PTRS_PER_PMD		1
 // ARM10C 20131026
 #define PTRS_PER_PGD		2048
 
+// ARM10C 20141101
+// PTRS_PER_PTE: 512
+// PTE_HWTABLE_PTRS: 512
 #define PTE_HWTABLE_PTRS	(PTRS_PER_PTE)
 // ARM10C 20131123
 // PTE_HWTABLE_PTRS: 512, sizeof(pte_t): 4
 // PTE_HWTABLE_OFF: 2048
 #define PTE_HWTABLE_OFF		(PTE_HWTABLE_PTRS * sizeof(pte_t))
 // ARM10C 20131123
+// ARM10C 20141101
 // PTRS_PER_PTE: 512, sizeof(u32): 4
 // PTE_HWTABLE_SIZE: 2048
 #define PTE_HWTABLE_SIZE	(PTRS_PER_PTE * sizeof(u32))
@@ -211,6 +217,8 @@
 #define set_pud(pud,pudp)	do { } while (0)
 
 // ARM10C 20131102
+// ARM10C 20141101
+// pud: 0xc0004780, addr: 0xf0000000
 static inline pmd_t *pmd_offset(pud_t *pud, unsigned long addr)
 {
 	return (pmd_t *)pud;
@@ -235,6 +243,8 @@ static inline pmd_t *pmd_offset(pud_t *pud, unsigned long addr)
 	} while (0)
 
 /* we don't need complex calculations here as the pmd is folded into the pgd */
+// ARM10C 20141101
+// addr: 0xf0000000, end: 0xf0001000
 #define pmd_addr_end(addr,end) (end)
 
 // ARM10C 20131123

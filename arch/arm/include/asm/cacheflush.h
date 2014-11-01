@@ -293,6 +293,8 @@ extern void flush_cache_page(struct vm_area_struct *vma, unsigned long user_addr
  * Perform necessary cache operations to ensure that the TLB will
  * see data written in the specified area.
  */
+// ARM10C 20141101
+// pte: migratetype이 MIGRATE_UNMOVABLE인 page의 가상주소 + 512, PTE_HWTABLE_SIZE: 2048
 #define clean_dcache_area(start,size)	cpu_dcache_clean_area(start, size)
 
 /*

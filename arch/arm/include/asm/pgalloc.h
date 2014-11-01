@@ -24,6 +24,7 @@
 
 #define _PAGE_USER_TABLE	(PMD_TYPE_TABLE | PMD_BIT4 | PMD_DOMAIN(DOMAIN_USER))
 // ARM10C 20131130
+// ARM10C 20141101
 // PMD_TYPE_TABLE: 0x1, PMD_BIT4: 0x10
 // DOMAIN_KERNEL: 0, PMD_DOMAIN(DOMAIN_KERNEL): 0
 // _PAGE_KERNEL_TABLE: 0x11
@@ -61,11 +62,22 @@ static inline void pud_populate(struct mm_struct *mm, pud_t *pud, pmd_t *pmd)
 extern pgd_t *pgd_alloc(struct mm_struct *mm);
 extern void pgd_free(struct mm_struct *mm, pgd_t *pgd);
 
+// ARM10C 20141101
+// GFP_KERNEL: 0xD0
+// __GFP_NOTRACK: 0x200000u
+// __GFP_REPEAT: 0x400u
+// __GFP_ZERO: 0x8000u
+// PGALLOC_GFP: 0x2084D0
 #define PGALLOC_GFP	(GFP_KERNEL | __GFP_NOTRACK | __GFP_REPEAT | __GFP_ZERO)
 
+// ARM10C 20141101
+// pte: migratetype이 MIGRATE_UNMOVABLE인 page의 가상주소
 static inline void clean_pte_table(pte_t *pte)
 {
+	// pte: migratetype이 MIGRATE_UNMOVABLE인 page의 가상주소
+	// PTE_HWTABLE_PTRS: 512, PTE_HWTABLE_SIZE: 2048
 	clean_dcache_area(pte + PTE_HWTABLE_PTRS, PTE_HWTABLE_SIZE);
+	// migratetype이 MIGRATE_UNMOVABLE인 page의 가상주의 dcache를 메모리에 반영
 }
 
 /*
@@ -74,26 +86,39 @@ static inline void clean_pte_table(pte_t *pte)
  * This actually allocates two hardware PTE tables, but we wrap this up
  * into one table thus:
  *
- *  +------------+
+ *  +------------+ 0
  *  | Linux pt 0 |
- *  +------------+
+ *  +------------+ 256
  *  | Linux pt 1 |
- *  +------------+
+ *  +------------+ 512
  *  |  h/w pt 0  |
- *  +------------+
+ *  +------------+ 768
  *  |  h/w pt 1  |
- *  +------------+
+ *  +------------+ 1024
  */
+// ARM10C 20141101
+// &init_mm, addr: 0xf0000000
 static inline pte_t *
 pte_alloc_one_kernel(struct mm_struct *mm, unsigned long addr)
 {
 	pte_t *pte;
 
+	// PGALLOC_GFP: 0x2084D0
+	// __get_free_page(PGALLOC_GFP: 0x2084D0):
+	// migratetype이 MIGRATE_UNMOVABLE인 page의 가상주소
 	pte = (pte_t *)__get_free_page(PGALLOC_GFP);
-	if (pte)
-		clean_pte_table(pte);
+	// pte: migratetype이 MIGRATE_UNMOVABLE인 page의 가상주소
 
+	// pte: migratetype이 MIGRATE_UNMOVABLE인 page의 가상주소
+	if (pte)
+		// pte: migratetype이 MIGRATE_UNMOVABLE인 page의 가상주소
+		clean_pte_table(pte);
+		// clean_pte_table에서 한일:
+		// migratetype이 MIGRATE_UNMOVABLE인 page의 가상주의 dcache를 메모리에 반영
+
+	// pte: migratetype이 MIGRATE_UNMOVABLE인 page의 가상주소
 	return pte;
+	// return migratetype이 MIGRATE_UNMOVABLE인 page의 가상주소
 }
 
 static inline pgtable_t
@@ -133,7 +158,9 @@ static inline void pte_free(struct mm_struct *mm, pgtable_t pte)
 }
 
 // ARM10C 20131123
-// pmd: 0xc0007FF8, __pa(pte): 0x4F7FD000, 
+// pmd: 0xc0007FF8, __pa(pte): 0x4F7FD000,
+// ARM10C 20141101
+// pmdp: 0xc0004780, migratetype이 MIGRATE_UNMOVABLE인 page의 물리주소, _PAGE_KERNEL_TABLE: 0x11
 static inline void __pmd_populate(pmd_t *pmdp, phys_addr_t pte,
 				  pmdval_t prot)
 {
@@ -155,13 +182,20 @@ static inline void __pmd_populate(pmd_t *pmdp, phys_addr_t pte,
  *
  * Ensure that we always set both PMD entries.
  */
+// ARM10C 20141101
+// &init_mm, pmd: 0xc0004780, new: migratetype이 MIGRATE_UNMOVABLE인 page의 가상주소
 static inline void
 pmd_populate_kernel(struct mm_struct *mm, pmd_t *pmdp, pte_t *ptep)
 {
 	/*
 	 * The pmd must be loaded with the physical address of the PTE table
 	 */
+	// pmdp: 0xc0004780, ptep: migratetype이 MIGRATE_UNMOVABLE인 page의 가상주소,
+	// __pa(migratetype이 MIGRATE_UNMOVABLE인 page의 가상주소): migratetype이 MIGRATE_UNMOVABLE인 page의 물리주소
+	// _PAGE_KERNEL_TABLE: 0x11
 	__pmd_populate(pmdp, __pa(ptep), _PAGE_KERNEL_TABLE);
+	// __pmd_populate에서 한일:
+	// 0xc0004780, 0xc0004784에 할당받은 pte의 주소를 연결하고 메모리에 반영
 }
 
 static inline void

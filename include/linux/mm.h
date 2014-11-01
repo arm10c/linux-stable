@@ -1010,6 +1010,7 @@ static inline void set_page_address(struct page *page, void *address)
 #if defined(HASHED_PAGE_VIRTUAL)    // ARM10C Y 
 // ARM10C 20140125
 // ARM10C 20140531
+// ARM10C 20141101
 void *page_address(const struct page *page);
 void set_page_address(struct page *page, void *virtual);
 void page_address_init(void);	// ARM10C this 
@@ -1463,7 +1464,7 @@ int __pte_alloc_kernel(pmd_t *pmd, unsigned long address);
  * The following ifdef needed to get the 4level-fixup.h header to work.
  * Remove it when 4level-fixup.h has been removed.
  */
-#if defined(CONFIG_MMU) && !defined(__ARCH_HAS_4LEVEL_HACK)
+#if defined(CONFIG_MMU) && !defined(__ARCH_HAS_4LEVEL_HACK) // CONFIG_MMU=y, __ARCH_HAS_4LEVEL_HACK: defined
 static inline pud_t *pud_alloc(struct mm_struct *mm, pgd_t *pgd, unsigned long address)
 {
 	return (unlikely(pgd_none(*pgd)) && __pud_alloc(mm, pgd, address))?
@@ -1579,6 +1580,8 @@ static inline void pgtable_page_dtor(struct page *page)
 							pmd, address))?	\
 		NULL: pte_offset_map_lock(mm, pmd, address, ptlp))
 
+// ARM10C 20141101
+// pmd: 0xc0004780, addr: 0xf0000000
 #define pte_alloc_kernel(pmd, address)			\
 	((unlikely(pmd_none(*(pmd))) && __pte_alloc_kernel(pmd, address))? \
 		NULL: pte_offset_kernel(pmd, address))

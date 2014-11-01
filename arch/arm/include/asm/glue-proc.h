@@ -255,7 +255,9 @@
 #define cpu_proc_fin			__glue(CPU_NAME,_proc_fin)
 #define cpu_reset			__glue(CPU_NAME,_reset)
 #define cpu_do_idle			__glue(CPU_NAME,_do_idle)
-#define cpu_dcache_clean_area		__glue(CPU_NAME,_dcache_clean_area)
+// ARM10C 20141101
+// pte: migratetype이 MIGRATE_UNMOVABLE인 page의 가상주소 + 512, PTE_HWTABLE_SIZE: 2048
+#define cpu_dcache_clean_area		__glue(CPU_NAME,_dcache_clean_area) // cpu_v7_dcache_clean_area
 #define cpu_do_switch_mm		__glue(CPU_NAME,_switch_mm)
 // ARM10C 20131123
 // ptep: 0xEF7FD1F0, pte: 0x4F7FEXXX, ext:0
