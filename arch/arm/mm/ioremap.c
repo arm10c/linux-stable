@@ -54,6 +54,8 @@ LIST_HEAD(static_vmlist);
 
 // ARM10C 20141018
 // paddr: 0x10481000 size: 0x1000, mtype: MT_DEVICE: 0
+// ARM10C 20141101
+// paddr: 0x10482000 size: 0x1000, mtype: MT_DEVICE: 0
 static struct static_vm *find_static_vm_paddr(phys_addr_t paddr,
 			size_t size, unsigned int mtype)
 {
@@ -87,7 +89,7 @@ static struct static_vm *find_static_vm_paddr(phys_addr_t paddr,
 
 		return svm;
 	}
-	// loop 수행 결과 static_vmlist에 등록된 svm 중에 해당하는 영역이 없음 
+	// loop 수행 결과 static_vmlist에 등록된 svm 중에 해당하는 영역이 없음
 
 	return NULL;
 	// return NULL
@@ -307,6 +309,8 @@ remap_area_supersections(unsigned long virt, unsigned long pfn,
 
 // ARM10C 20141018
 // pfn: 0x10481, offset: 0, size: 0x1000, mtype: MT_DEVICE: 0, caller: __builtin_return_address(0)
+// ARM10C 20141101
+// pfn: 0x10482, offset: 0, size: 0x1000, mtype: MT_DEVICE: 0, caller: __builtin_return_address(0)
 void __iomem * __arm_ioremap_pfn_caller(unsigned long pfn,
 	unsigned long offset, size_t size, unsigned int mtype, void *caller)
 {
@@ -315,23 +319,30 @@ void __iomem * __arm_ioremap_pfn_caller(unsigned long pfn,
 	unsigned long addr;
 	struct vm_struct *area;
 	// pfn: 0x10481, __pfn_to_phys(0x10481): 0x10481000
+	// pfn: 0x10482, __pfn_to_phys(0x10482): 0x10482000
 	phys_addr_t paddr = __pfn_to_phys(pfn);
 	// paddr: 0x10481000
+	// paddr: 0x10482000
 
 #ifndef CONFIG_ARM_LPAE // CONFIG_ARM_LPAE=n
 	/*
 	 * High mappings must be supersection aligned
 	 */
 	// pfn: 0x10481, paddr: 0x10481000, SUPERSECTION_MASK: 0xff000000
+	// pfn: 0x10482, paddr: 0x10482000, SUPERSECTION_MASK: 0xff000000
 	if (pfn >= 0x100000 && (paddr & ~SUPERSECTION_MASK))
 		return NULL;
 #endif
 
 	// mtype: MT_DEVICE: 0
 	// get_mem_type(MT_DEVICE: 0): &mem_types[0]
+	// mtype: MT_DEVICE: 0
+	// get_mem_type(MT_DEVICE: 0): &mem_types[0]
 	type = get_mem_type(mtype);
 	// type: &mem_types[0]
+	// type: &mem_types[0]
 
+	// type: &mem_types[0]
 	// type: &mem_types[0]
 	if (!type)
 		return NULL;
@@ -340,19 +351,28 @@ void __iomem * __arm_ioremap_pfn_caller(unsigned long pfn,
 	 * Page align the mapping size, taking account of any offset.
 	 */
 	// offset: 0, size: 0x1000, PAGE_ALIGN(0x1000): 0x1000
+	// offset: 0, size: 0x1000, PAGE_ALIGN(0x1000): 0x1000
 	size = PAGE_ALIGN(offset + size);
+	// size: 0x1000
 	// size: 0x1000
 
 	/*
 	 * Try to reuse one of the static mapping whenever possible.
 	 */
 	// size: 0x1000, sizeof(phys_addr_t): 4, pfn: 0x10481
+	// size: 0x1000, sizeof(phys_addr_t): 4, pfn: 0x10482
 	if (size && !(sizeof(phys_addr_t) == 4 && pfn >= 0x100000)) {
 		struct static_vm *svm;
 
 		// paddr: 0x10481000 size: 0x1000, mtype: MT_DEVICE: 0
 		// find_static_vm_paddr(0x10481000, 0x1000, MT_DEVICE: 0): NULL
+		// paddr: 0x10482000 size: 0x1000, mtype: MT_DEVICE: 0
+		// find_static_vm_paddr(0x10482000, 0x1000, MT_DEVICE: 0): NULL
 		svm = find_static_vm_paddr(paddr, size, mtype);
+		// svm: NULL
+		// svm: NULL
+
+		// svm: NULL
 		// svm: NULL
 		if (svm) {
 			addr = (unsigned long)svm->vm.addr;
@@ -368,13 +388,17 @@ void __iomem * __arm_ioremap_pfn_caller(unsigned long pfn,
 	 * Don't allow RAM to be mapped - this causes problems with ARMv6+
 	 */
 	// pfn: 0x10481, pfn_valid(0x10481): 0
+	// pfn: 0x10482, pfn_valid(0x10482): 0
 	if (WARN_ON(pfn_valid(pfn)))
 		return NULL;
 
 	// size: 0x1000, VM_IOREMAP: 0x00000001, caller: __builtin_return_address(0)
 	// get_vm_area_caller(0x1000, 0x00000001, __builtin_return_address(0)): kmem_cache#30-oX (vm_struct)
+	// size: 0x1000, VM_IOREMAP: 0x00000001, caller: __builtin_return_address(0)
+	// get_vm_area_caller(0x1000, 0x00000001, __builtin_return_address(0)): kmem_cache#30-oX (vm_struct)-2
 	area = get_vm_area_caller(size, VM_IOREMAP, caller);
 	// area: kmem_cache#30-oX (vm_struct)
+	// area: kmem_cache#30-oX (vm_struct)-2
 
 	/*
 	// get_vm_area_caller이 한일:
@@ -428,46 +452,88 @@ void __iomem * __arm_ioremap_pfn_caller(unsigned long pfn,
 #endif
 		// addr: 0xf0000000, size: 0x1000, paddr: 0x10481000,
 		// type->prot_pte: (&mem_types[0])->prot_pte: PROT_PTE_DEVICE | L_PTE_MT_DEV_SHARED | L_PTE_SHARED (0x653)
+		// ioremap_page_range(0xf0000000, 0xf0001000, 0x10481000, PROT_PTE_DEVICE | L_PTE_MT_DEV_SHARED | L_PTE_SHARED (0x653)): 0
 		err = ioremap_page_range(addr, addr + size, paddr,
 					 __pgprot(type->prot_pte));
+		// err: 0
+		// ioremap_page_range에서 한일:
+		// 0xc0004780이 가리키는 pte의 시작주소에 0x10481653 값을 갱신
+		// (linux pgtable과 hardware pgtable의 값 같이 갱신)
+		/*
+		 *  pgd                   pte
+		 * |              |
+		 * +--------------+
+		 * |              |       +--------------+ +0
+		 * |              |       |  0xXXXXXXXX  | ---> 0x10481653 에 매칭되는 linux pgtable 값
+		 * +- - - - - - - +       |  Linux pt 0  |
+		 * |              |       +--------------+ +1024
+		 * |              |       |              |
+		 * +--------------+ +0    |  Linux pt 1  |
+		 * | *(c0004780)  |-----> +--------------+ +2048
+		 * |              |       |  0x10481653  | ---> 2052
+		 * +- - - - - - - + +4    |   h/w pt 0   |
+		 * | *(c0004784)  |-----> +--------------+ +3072
+		 * |              |       +              +
+		 * +--------------+ +8    |   h/w pt 1   |
+		 * |              |       +--------------+ +4096
+		 */
 
+	// err: 0
 	if (err) {
  		vunmap((void *)addr);
  		return NULL;
  	}
 
+	// addr: 0xf0000000, size: 0x1000
 	flush_cache_vmap(addr, addr + size);
+	// cache의 값을 전부 메모리에 반영
+
+	// offset:0, addr: 0xf0000000
 	return (void __iomem *) (offset + addr);
+	// return 0xf0000000
 }
 
 // ARM10C 20141018
 // phys_addr: 0x10481000, size: 0x1000, mtype: MT_DEVICE: 0, __builtin_return_address(0)
+// ARM10C 20141101
+// phys_addr: 0x10482000, size: 0x1000, mtype: MT_DEVICE: 0, __builtin_return_address(0)
 void __iomem *__arm_ioremap_caller(phys_addr_t phys_addr, size_t size,
 	unsigned int mtype, void *caller)
 {
 	phys_addr_t last_addr;
 	// phys_addr: 0x10481000, PAGE_MASK: 0xFFFFF000
+	// phys_addr: 0x10482000, PAGE_MASK: 0xFFFFF000
  	unsigned long offset = phys_addr & ~PAGE_MASK;
+	// offset: 0
 	// offset: 0
 
 	// phys_addr: 0x10481000, __phys_to_pfn(0x10481000): 0x10481
+	// phys_addr: 0x10482000, __phys_to_pfn(0x10482000): 0x10482
  	unsigned long pfn = __phys_to_pfn(phys_addr);
 	// pfn: 0x10481
+	// pfn: 0x10482
 
  	/*
  	 * Don't allow wraparound or zero size
 	 */
 	// phys_addr: 0x10481000, size: 0x1000
+	// phys_addr: 0x10482000, size: 0x1000
 	last_addr = phys_addr + size - 1;
 	// last_addr: 0x10481fff
+	// last_addr: 0x10482fff
 
 	// size: 0x1000, last_addr: 0x10481fff, phys_addr: 0x10481000
+	// size: 0x1000, last_addr: 0x10482fff, phys_addr: 0x10482000
 	if (!size || last_addr < phys_addr)
 		return NULL;
 
 	// pfn: 0x10481, offset: 0, size: 0x1000, mtype: MT_DEVICE: 0, caller: __builtin_return_address(0)
+	// __arm_ioremap_pfn_caller(0x10481, 0, 0x1000, MT_DEVICE: 0, __builtin_return_address(0)): 0xf0000000
+	// pfn: 0x10482, offset: 0, size: 0x1000, mtype: MT_DEVICE: 0, caller: __builtin_return_address(0)
+	// __arm_ioremap_pfn_caller(0x10482, 0, 0x1000, MT_DEVICE: 0, __builtin_return_address(0)):
 	return __arm_ioremap_pfn_caller(pfn, offset, size, mtype,
 			caller);
+	// return 0xf0000000
 }
 
 /*
@@ -495,12 +561,18 @@ void __iomem * (*arch_ioremap_caller)(phys_addr_t, size_t,
 
 // ARM10C 20141018
 // res.start: 0x10481000, resource_size(&res): 0x1000, MT_DEVICE: 0
+// ARM10C 20141101
+// res.start: 0x10482000, resource_size(&res): 0x1000, MT_DEVICE: 0
 void __iomem *
 __arm_ioremap(phys_addr_t phys_addr, size_t size, unsigned int mtype)
 {
 	// phys_addr: 0x10481000, size: 0x1000, mtype: MT_DEVICE: 0
+	// arch_ioremap_caller(0x10481000, 0x1000, MT_DEVICE: 0, __builtin_return_address(0)): 0xf0000000
+	// phys_addr: 0x10482000, size: 0x1000, mtype: MT_DEVICE: 0
+	// arch_ioremap_caller(0x10482000, 0x1000, MT_DEVICE: 0, __builtin_return_address(0)):
 	return arch_ioremap_caller(phys_addr, size, mtype,
 		__builtin_return_address(0));
+	// return 0xf0000000
 }
 EXPORT_SYMBOL(__arm_ioremap);
 

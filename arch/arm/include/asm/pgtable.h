@@ -211,6 +211,8 @@ extern pgd_t swapper_pg_dir[PTRS_PER_PGD];
 
 // ARM10C 20131123
 // pmd: 0x6F7FD8XX
+// ARM10C 20141101
+// *pmd: *(0xc0004780)
 static inline pte_t *pmd_page_vaddr(pmd_t pmd)
 {
 	// pmd_val(pmd): 0x6F7FD8XX, PHYS_MASK: 0xFFFFFFFF, PAGE_MASK: 0xFFFFF000
@@ -231,6 +233,9 @@ static inline pte_t *pmd_page_vaddr(pmd_t pmd)
 // ARM10C 20131123
 // addr: 0xffff0000,  PTRS_PER_PTE: 512
 // pte_index(0xffff0000): 0x1F0
+// ARM10C 20141101
+// addr: 0xf0000000
+// pte_index(0xf0000000): 0
 #define pte_index(addr)		(((addr) >> PAGE_SHIFT) & (PTRS_PER_PTE - 1))
 
 // ARM10C 20131123
@@ -238,6 +243,9 @@ static inline pte_t *pmd_page_vaddr(pmd_t pmd)
 // pmd_page_vaddr(*(pmd)): 0xEF7FD000,  pte_index(0xffff0000): 0x1F0
 // pte_offset_kernel(0x4F7FD8XX, 0xffff0000): 0xEF7FD1F0
 // ARM10C 20141101
+// pmd: 0xc0004780, addr: 0xf0000000
+// pmd_page_vaddr(*(0xc0004780)): 0xc0004780이 가리키는 pte의 시작주소, pte_index(0xf0000000): 0
+// pte_offset_kernel(0xc0004780,0xf0000000): 0xc0004780이 가리키는 pte의 시작주소
 #define pte_offset_kernel(pmd,addr)	(pmd_page_vaddr(*(pmd)) + pte_index(addr))
 
 #define pte_offset_map(pmd,addr)	(__pte_map(pmd) + pte_index(addr))
@@ -247,6 +255,10 @@ static inline pte_t *pmd_page_vaddr(pmd_t pmd)
 // ARM10C 20131123
 // pfn: 0x6F7FE, __pfn_to_phys(pfn): 0x6F7FE000
 // __pte(__pfn_to_phys(pfn) | pgprot_val(prot)): 0x6F7FEXXX
+// ARM10C 20141101
+// pfn: 0x10481, prot: 0x653
+// __pfn_to_phys(0x10481): 0x10481000, pgprot_val(0x653): 0x653
+// pfn_pte(0x10481,0x653): 0x10481653
 #define pfn_pte(pfn,prot)	__pte(__pfn_to_phys(pfn) | pgprot_val(prot))
 
 #define pte_page(pte)		pfn_to_page(pte_pfn(pte))
@@ -254,7 +266,13 @@ static inline pte_t *pmd_page_vaddr(pmd_t pmd)
 
 #define pte_clear(mm,addr,ptep)	set_pte_ext(ptep, __pte(0), 0)
 
+// ARM10C 20141101
+// *pte: *(0xc0004780이 가리키는 pte의 시작주소)
 #define pte_none(pte)		(!pte_val(pte))
+// ARM10C 20141101
+// L_PTE_PRESENT: 0x1
+// pte: 0x10481653
+// pte_present(0x10481653): 1
 #define pte_present(pte)	(pte_val(pte) & L_PTE_PRESENT)
 #define pte_write(pte)		(!(pte_val(pte) & L_PTE_RDONLY))
 #define pte_dirty(pte)		(pte_val(pte) & L_PTE_DIRTY)
@@ -262,9 +280,14 @@ static inline pte_t *pmd_page_vaddr(pmd_t pmd)
 #define pte_exec(pte)		(!(pte_val(pte) & L_PTE_XN))
 #define pte_special(pte)	(0)
 
+// ARM10C 20141101
+// L_PTE_USER: 0x100
+// pteval: 0x10481653
+// pte_present(0x10481653): 1
+// pte_present_user(0x10481653): 0
 #define pte_present_user(pte)  (pte_present(pte) && (pte_val(pte) & L_PTE_USER))
 
-#if __LINUX_ARM_ARCH__ < 6
+#if __LINUX_ARM_ARCH__ < 6 // __LINUX_ARM_ARCH__: 7
 static inline void __sync_icache_dcache(pte_t pteval)
 {
 }
@@ -272,17 +295,43 @@ static inline void __sync_icache_dcache(pte_t pteval)
 extern void __sync_icache_dcache(pte_t pteval);
 #endif
 
+// ARM10C 20141101
+// &init_mm, addr: 0xf0000000, pte: 0xc0004780이 가리키는 pte의 시작주소, pfn_pte(0x10481,0x653): 0x10481653
 static inline void set_pte_at(struct mm_struct *mm, unsigned long addr,
 			      pte_t *ptep, pte_t pteval)
 {
 	unsigned long ext = 0;
+	// ext: 0
 
+	// addr: 0xf0000000, TASK_SIZE: 0xBF000000, pteval: 0x10481653
+	// pte_present_user(0x10481653): 0
 	if (addr < TASK_SIZE && pte_present_user(pteval)) {
 		__sync_icache_dcache(pteval);
 		ext |= PTE_EXT_NG;
 	}
 
+	// ptep: 0xc0004780이 가리키는 pte의 시작주소, pteval: 0x10481653, ext: 0
 	set_pte_ext(ptep, pteval, ext);
+	// 0xc0004780이 가리키는 pte의 시작주소에 0x10481653 값을 갱신
+	// (linux pgtable과 hardware pgtable의 값 같이 갱신)
+	/*
+	 *  pgd                   pte
+	 * |              |
+	 * +--------------+
+	 * |              |       +--------------+ +0
+	 * |              |       |  0xXXXXXXXX  | ---> 0x10481653 에 매칭되는 linux pgtable 값
+	 * +- - - - - - - +       |  Linux pt 0  |
+	 * |              |       +--------------+ +1024
+	 * |              |       |              |
+	 * +--------------+ +0    |  Linux pt 1  |
+	 * | *(c0004780)  |-----> +--------------+ +2048
+	 * |              |       |  0x10481653  | ---> 2052
+	 * +- - - - - - - + +4    |   h/w pt 0   |
+	 * | *(c0004784)  |-----> +--------------+ +3072
+	 * |              |       +              +
+	 * +--------------+ +8    |   h/w pt 1   |
+	 * |              |       +--------------+ +4096
+	 */
 }
 
 #define PTE_BIT_FUNC(fn,op) \

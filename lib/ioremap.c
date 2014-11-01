@@ -23,18 +23,57 @@ static int ioremap_pte_range(pmd_t *pmd, unsigned long addr,
 
 	// phys_addr: 0x10481000, PAGE_SHIFT: 12
 	pfn = phys_addr >> PAGE_SHIFT;
-	// pfn: 10481
+	// pfn: 0x10481
 
 	// pmd: 0xc0004780, addr: 0xf0000000
+	// pte_offset_kernel(0xc0004780,0xf0000000): 0xc0004780이 가리키는 pte의 시작주소
 	pte = pte_alloc_kernel(pmd, addr);
+	// pte: 0xc0004780이 가리키는 pte의 시작주소
+
+	// pte: 0xc0004780이 가리키는 pte의 시작주소
 	if (!pte)
 		return -ENOMEM;
 	do {
+		// pte: 0xc0004780이 가리키는 pte의 시작주소
+		// pte_none(*(0xc0004780이 가리키는 pte의 시작주소)): 1
 		BUG_ON(!pte_none(*pte));
+
+		// addr: 0xf0000000, pte: 0xc0004780이 가리키는 pte의 시작주소, pfn: 0x10481, prot: 0x653
+		// pfn_pte(0x10481,0x653): 0x10481653
 		set_pte_at(&init_mm, addr, pte, pfn_pte(pfn, prot));
+		// set_pte_at에서 한일:
+		// 0xc0004780이 가리키는 pte의 시작주소에 0x10481653 값을 갱신
+		// (linux pgtable과 hardware pgtable의 값 같이 갱신)
+		/*
+		 *  pgd                   pte
+		 * |              |
+		 * +--------------+
+		 * |              |       +--------------+ +0
+		 * |              |       |  0xXXXXXXXX  | ---> 0x10481653 에 매칭되는 linux pgtable 값
+		 * +- - - - - - - +       |  Linux pt 0  |
+		 * |              |       +--------------+ +1024
+		 * |              |       |              |
+		 * +--------------+ +0    |  Linux pt 1  |
+		 * | *(c0004780)  |-----> +--------------+ +2048
+		 * |              |       |  0x10481653  | ---> 2052
+		 * +- - - - - - - + +4    |   h/w pt 0   |
+		 * | *(c0004784)  |-----> +--------------+ +3072
+		 * |              |       +              +
+		 * +--------------+ +8    |   h/w pt 1   |
+		 * |              |       +--------------+ +4096
+		 */
+
+		// pfn: 0x10481
 		pfn++;
+		// pfn: 0x10482
+
+		// pte: 0xc0004780이 가리키는 pte의 시작주소, addr: 0xf0000000,
+		// PAGE_SIZE: 0x1000, end: 0xf0001000
 	} while (pte++, addr += PAGE_SIZE, addr != end);
+	// addr: 0xf0001000
+
 	return 0;
+	// return 0
 }
 
 // ARM10C 20141101
@@ -64,10 +103,37 @@ static inline int ioremap_pmd_range(pud_t *pud, unsigned long addr,
 		// next: 0xf0001000
 
 		// pmd: 0xc0004780, addr: 0xf0000000, next: 0xf0001000, phys_addr: 0x20481000, prot: 0x653
+		// ioremap_pte_range(0xc0004780, 0xf0000000, 0xf0001000, 0x10481000, 0x653): 0
 		if (ioremap_pte_range(pmd, addr, next, phys_addr + addr, prot))
 			return -ENOMEM;
+		// ioremap_pte_range에서 한일:
+		// 0xc0004780이 가리키는 pte의 시작주소에 0x10481653 값을 갱신
+		// (linux pgtable과 hardware pgtable의 값 같이 갱신)
+		/*
+		 *  pgd                   pte
+		 * |              |
+		 * +--------------+
+		 * |              |       +--------------+ +0
+		 * |              |       |  0xXXXXXXXX  | ---> 0x10481653 에 매칭되는 linux pgtable 값
+		 * +- - - - - - - +       |  Linux pt 0  |
+		 * |              |       +--------------+ +1024
+		 * |              |       |              |
+		 * +--------------+ +0    |  Linux pt 1  |
+		 * | *(c0004780)  |-----> +--------------+ +2048
+		 * |              |       |  0x10481653  | ---> 2052
+		 * +- - - - - - - + +4    |   h/w pt 0   |
+		 * | *(c0004784)  |-----> +--------------+ +3072
+		 * |              |       +              +
+		 * +--------------+ +8    |   h/w pt 1   |
+		 * |              |       +--------------+ +4096
+		 */
+
+		// pmd: 0xc0004780, addr: 0xf0000000, next: 0xf0001000, end: 0xf0001000
 	} while (pmd++, addr = next, addr != end);
+	// addr: 0xf0001000
+
 	return 0;
+	// return 0
 }
 
 // ARM10C 20141025
@@ -97,10 +163,37 @@ static inline int ioremap_pud_range(pgd_t *pgd, unsigned long addr,
 		// next: 0xf0001000
 
 		// pud: 0xc0004780, addr: 0xf0000000, next: 0xf0001000, phys_addr: 0x20481000, prot: 0x653
+		// ioremap_pmd_range(0xc0004780, 0xf0000000, 0xf0001000, 0x10481000, 0x653): 0
 		if (ioremap_pmd_range(pud, addr, next, phys_addr + addr, prot))
 			return -ENOMEM;
+		// ioremap_pmd_range에서 한일:
+		// 0xc0004780이 가리키는 pte의 시작주소에 0x10481653 값을 갱신
+		// (linux pgtable과 hardware pgtable의 값 같이 갱신)
+		/*
+		 *  pgd                   pte
+		 * |              |
+		 * +--------------+
+		 * |              |       +--------------+ +0
+		 * |              |       |  0xXXXXXXXX  | ---> 0x10481653 에 매칭되는 linux pgtable 값
+		 * +- - - - - - - +       |  Linux pt 0  |
+		 * |              |       +--------------+ +1024
+		 * |              |       |              |
+		 * +--------------+ +0    |  Linux pt 1  |
+		 * | *(c0004780)  |-----> +--------------+ +2048
+		 * |              |       |  0x10481653  | ---> 2052
+		 * +- - - - - - - + +4    |   h/w pt 0   |
+		 * | *(c0004784)  |-----> +--------------+ +3072
+		 * |              |       +              +
+		 * +--------------+ +8    |   h/w pt 1   |
+		 * |              |       +--------------+ +4096
+		 */
+
+		// pud: 0xc0004780, addr: 0xf0000000, next: 0xf0001000, end: 0xf0001000
 	} while (pud++, addr = next, addr != end);
+	// addr: 0xf0001000
+
 	return 0;
+	// return 0
 }
 
 // ARM10C 20141025
@@ -139,13 +232,46 @@ int ioremap_page_range(unsigned long addr,
 // 2014/11/01 시작
 
 		// pgd: 0xc0004780, addr: 0xf0000000, next: 0xf0001000, phys_addr: 0x20481000, prot: 0x653
+		// ioremap_pud_range(0xc0004780, 0xf0000000, 0xf0001000, 0x10481000, 0x653): 0
 		err = ioremap_pud_range(pgd, addr, next, phys_addr+addr, prot);
+		// err: 0
+		// ioremap_pud_range에서 한일:
+		// 0xc0004780이 가리키는 pte의 시작주소에 0x10481653 값을 갱신
+		// (linux pgtable과 hardware pgtable의 값 같이 갱신)
+		/*
+		 *  pgd                   pte
+		 * |              |
+		 * +--------------+
+		 * |              |       +--------------+ +0
+		 * |              |       |  0xXXXXXXXX  | ---> 0x10481653 에 매칭되는 linux pgtable 값
+		 * +- - - - - - - +       |  Linux pt 0  |
+		 * |              |       +--------------+ +1024
+		 * |              |       |              |
+		 * +--------------+ +0    |  Linux pt 1  |
+		 * | *(c0004780)  |-----> +--------------+ +2048
+		 * |              |       |  0x10481653  | ---> 2052
+		 * +- - - - - - - + +4    |   h/w pt 0   |
+		 * | *(c0004784)  |-----> +--------------+ +3072
+		 * |              |       +              +
+		 * +--------------+ +8    |   h/w pt 1   |
+		 * |              |       +--------------+ +4096
+		 */
+
+		// err: 0
 		if (err)
 			break;
+
+		// pgd: 0xc0004780, addr: 0xf0000000, next: 0xf0001000, end: 0xf0001000
 	} while (pgd++, addr = next, addr != end);
+	// addr: 0xf0001000
 
+	// start: 0xf0000000, end: 0xf0001000
 	flush_cache_vmap(start, end);
+	// flush_cache_vmap에서 한일:
+	// cache의 값을 전부 메모리에 반영
 
+	// err: 0
 	return err;
+	// return 0
 }
 EXPORT_SYMBOL_GPL(ioremap_page_range);

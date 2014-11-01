@@ -989,9 +989,68 @@ int __init gic_of_init(struct device_node *node, struct device_node *parent)
 		return -ENODEV;
 
 	// node: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소
+	// of_iomap(devtree에서 allnext로 순회 하면서 찾은 gic node의 주소, 0): 0xf0000000
 	dist_base = of_iomap(node, 0);
+	// dist_base: 0xf0000000
+
+	// of_iomap에서 한일:
+	// device tree 있는  gic node에서 node의 resource 값을 가져옴
+	// (&res)->start: 0x10481000
+	// (&res)->end: 0x10481fff
+	// (&res)->flags: IORESOURCE_MEM: 0x00000200
+	// (&res)->name: "/interrupt-controller@10481000"
+	/*
+	// alloc area (GIC) 를 만들고 rb tree에 alloc area 를 추가
+	// 가상주소 va_start 기준으로 GIC 를 RB Tree 추가한 결과
+	//
+	//                                  CHID-b
+	//                               (0xF8000000)
+	//                              /            \
+	//                         TMR-r               PMU-r
+	//                    (0xF6300000)             (0xF8180000)
+	//                      /      \               /           \
+	//                 SYSC-b      WDT-b         CMU-b         SRAM-b
+	//            (0xF6100000)   (0xF6400000)  (0xF8100000)   (0xF8400000)
+	//             /                                                 \
+	//        GIC-r                                                   ROMC-r
+	//   (0xF0000000)                                                 (0xF84C0000)
+	//
+	// (kmem_cache#30-oX (vm_struct))->flags: GFP_KERNEL: 0xD0
+	// (kmem_cache#30-oX (vm_struct))->addr: 0xf0000000
+	// (kmem_cache#30-oX (vm_struct))->size: 0x2000
+	// (kmem_cache#30-oX (vm_struct))->caller: __builtin_return_address(0)
+	//
+	// (kmem_cache#30-oX (vmap_area GIC))->vm: kmem_cache#30-oX (vm_struct)
+	// (kmem_cache#30-oX (vmap_area GIC))->flags: 0x04
+	*/
+	// device tree 있는  gic node에서 node의 resource 값을 pgtable에 매핑함
+	// 0xc0004780이 가리키는 pte의 시작주소에 0x10481653 값을 갱신
+	// (linux pgtable과 hardware pgtable의 값 같이 갱신)
+	//
+	//  pgd                   pte
+	// |              |
+	// +--------------+
+	// |              |       +--------------+ +0
+	// |              |       |  0xXXXXXXXX  | ---> 0x10481653 에 매칭되는 linux pgtable 값
+	// +- - - - - - - +       |  Linux pt 0  |
+	// |              |       +--------------+ +1024
+	// |              |       |              |
+	// +--------------+ +0    |  Linux pt 1  |
+	// | *(c0004780)  |-----> +--------------+ +2048
+	// |              |       |  0x10481653  | ---> 2052
+	// +- - - - - - - + +4    |   h/w pt 0   |
+	// | *(c0004784)  |-----> +--------------+ +3072
+	// |              |       +              +
+	// +--------------+ +8    |   h/w pt 1   |
+	// |              |       +--------------+ +4096
+	//
+	// cache의 값을 전부 메모리에 반영
+
+	// dist_base: 0xf000000
 	WARN(!dist_base, "unable to map gic dist registers\n");
 
+	// node: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소
+	// of_iomap(devtree에서 allnext로 순회 하면서 찾은 gic node의 주소, 1): 0xf001000
 	cpu_base = of_iomap(node, 1);
 	WARN(!cpu_base, "unable to map gic cpu registers\n");
 

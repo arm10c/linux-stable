@@ -1356,6 +1356,8 @@ EXPORT_SYMBOL_GPL(of_property_read_string);
  */
 // ARM10C 20141018
 // dev: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소, "reg-names", index: 0, , &name
+// ARM10C 20141101
+// dev: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소, "reg-names", index: 1, , &name
 int of_property_read_string_index(struct device_node *np, const char *propname,
 				  int index, const char **output)
 {

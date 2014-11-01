@@ -1587,6 +1587,9 @@ static void clear_vm_uninitialized_flag(struct vm_struct *vm)
 // ARM10C 20141025
 // size: 0x1000, 1, VM_IOREMAP: 0x00000001, VMALLOC_START: 0xf0000000,VMALLOC_END: 0xff000000UL,
 // NUMA_NO_NODE: -1, GFP_KERNEL: 0xD0, caller: __builtin_return_address(0)
+// ARM10C 20141101
+// size: 0x1000, 1, VM_IOREMAP: 0x00000001, VMALLOC_START: 0xf0000000,VMALLOC_END: 0xff000000UL,
+// NUMA_NO_NODE: -1, GFP_KERNEL: 0xD0, caller: __builtin_return_address(0)
 static struct vm_struct *__get_vm_area_node(unsigned long size,
 		unsigned long align, unsigned long flags, unsigned long start,
 		unsigned long end, int node, gfp_t gfp_mask, const void *caller)
@@ -1595,29 +1598,41 @@ static struct vm_struct *__get_vm_area_node(unsigned long size,
 	struct vm_struct *area;
 
 	// in_interrupt(): 0
+	// in_interrupt(): 0
 	BUG_ON(in_interrupt());
 
+	// flags: VM_IOREMAP: 0x00000001
 	// flags: VM_IOREMAP: 0x00000001
 	if (flags & VM_IOREMAP)
 		// size: 0x1000, fls(0x1000): 13, PAGE_SHIFT: 12, IOREMAP_MAX_ORDER: 24
 		// clamp(13, 12, 24): 13
+		// size: 0x1000, fls(0x1000): 13, PAGE_SHIFT: 12, IOREMAP_MAX_ORDER: 24
+		// clamp(13, 12, 24): 13
 		align = 1ul << clamp(fls(size), PAGE_SHIFT, IOREMAP_MAX_ORDER);
+		// align: 0x2000
 		// align: 0x2000
 
 	// size: 0x1000
+	// size: 0x1000
 	size = PAGE_ALIGN(size);
 	// size: 0x1000
+	// size: 0x1000
 
+	// size: 0x1000
 	// size: 0x1000
 	if (unlikely(!size))
 		return NULL;
 
 	// sizeof(*area): 32, gfp_mask: GFP_KERNEL: 0xD0, GFP_RECLAIM_MASK: 0x13ef0, node: -1
 	// kzalloc_node(32, GFP_KERNEL: 0xD0, -1): kmem_cache#30-oX (vm_struct)
+	// sizeof(*area): 32, gfp_mask: GFP_KERNEL: 0xD0, GFP_RECLAIM_MASK: 0x13ef0, node: -1
+	// kzalloc_node(32, GFP_KERNEL: 0xD0, -1): kmem_cache#30-oX (vm_struct)-2
 	area = kzalloc_node(sizeof(*area), gfp_mask & GFP_RECLAIM_MASK, node);
 	// area: kmem_cache#30-oX (vm_struct)
+	// area: kmem_cache#30-oX (vm_struct)-2
 
 	// area: kmem_cache#30-oX (vm_struct)
+	// area: kmem_cache#30-oX (vm_struct)-2
 	if (unlikely(!area))
 		return NULL;
 
@@ -1625,11 +1640,16 @@ static struct vm_struct *__get_vm_area_node(unsigned long size,
 	 * We always allocate a guard page.
 	 */
 	// size: 0x1000, PAGE_SIZE: 0x1000
+	// size: 0x1000, PAGE_SIZE: 0x1000
 	size += PAGE_SIZE;
 	// size: 0x2000
+	// size: 0x2000
+
+// 2014/11/01 종료
 
 	// size: 0x2000, align: 0x2000, start: 0xf0000000, end: 0xff000000, node: -1, gfp_mask: GFP_KERNEL: 0xD0
 	// alloc_vmap_area(0x2000, 0x2000, 0xf0000000, 0xff000000, -1, GFP_KERNEL: 0xD0): kmem_cache#30-oX (vmap_area GIC)
+	// size: 0x2000, align: 0x2000, start: 0xf0000000, end: 0xff000000, node: -1, gfp_mask: GFP_KERNEL: 0xD0
 	va = alloc_vmap_area(size, align, start, end, node, gfp_mask);
 	// va: kmem_cache#30-oX (vmap_area GIC)
 	/*
@@ -1708,6 +1728,8 @@ struct vm_struct *get_vm_area(unsigned long size, unsigned long flags)
 
 // ARM10C 20141025
 // size: 0x1000, VM_IOREMAP: 0x00000001, caller: __builtin_return_address(0)
+// ARM10C 20141101
+// size: 0x1000, VM_IOREMAP: 0x00000001, caller: __builtin_return_address(0)
 struct vm_struct *get_vm_area_caller(unsigned long size, unsigned long flags,
 				const void *caller)
 {
@@ -1715,6 +1737,10 @@ struct vm_struct *get_vm_area_caller(unsigned long size, unsigned long flags,
 	// NUMA_NO_NODE: -1, GFP_KERNEL: 0xD0, caller: __builtin_return_address(0)
 	// __get_vm_area_node(0x1000, VM_IOREMAP: 0x00000001, 0xf0000000, 0xff000000UL, -1, GFP_KERNEL: 0xD0, __builtin_return_address(0)):
 	// kmem_cache#30-oX (vm_struct)
+	// size: 0x1000, 1, VM_IOREMAP: 0x00000001, VMALLOC_START: 0xf0000000, VMALLOC_END: 0xff000000UL,
+	// NUMA_NO_NODE: -1, GFP_KERNEL: 0xD0, caller: __builtin_return_address(0)
+	// __get_vm_area_node(0x1000, VM_IOREMAP: 0x00000001, 0xf0000000, 0xff000000UL, -1, GFP_KERNEL: 0xD0, __builtin_return_address(0)):
+	// kmem_cache#30-oX (vm_struct)-2
 	return __get_vm_area_node(size, 1, flags, VMALLOC_START, VMALLOC_END,
 				  NUMA_NO_NODE, GFP_KERNEL, caller);
 	// return kmem_cache#30-oX (vm_struct)
