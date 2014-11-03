@@ -12,11 +12,13 @@
 // OF_MAX_ADDR_CELLS: 4
 #define OF_MAX_ADDR_CELLS	4
 // ARM10C 20141018
+// ARM10C 20141101
 // OF_MAX_ADDR_CELLS: 4
 // na: 1
 // OF_CHECK_ADDR_COUNT(1): 1
 #define OF_CHECK_ADDR_COUNT(na)	((na) > 0 && (na) <= OF_MAX_ADDR_CELLS)
 // ARM10C 20141018
+// ARM10C 20141101
 // na: 1, ns: 1
 // OF_CHECK_COUNTS(1, 1): 1
 #define OF_CHECK_COUNTS(na, ns)	(OF_CHECK_ADDR_COUNT(na) && (ns) > 0)
@@ -60,21 +62,31 @@ struct of_bus {
 
 // ARM10C 20141018
 // dev: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소, &na, &ns
+// ARM10C 20141101
+// dev: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소, &na, &ns
 static void of_bus_default_count_cells(struct device_node *dev,
 				       int *addrc, int *sizec)
 {
 	// addrc: &na
+	// addrc: &na
 	if (addrc)
+		// dev: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소
+		// of_n_addr_cells(devtree에서 allnext로 순회 하면서 찾은 gic node의 주소): 1
 		// dev: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소
 		// of_n_addr_cells(devtree에서 allnext로 순회 하면서 찾은 gic node의 주소): 1
 		*addrc = of_n_addr_cells(dev);
 		// *addrc: na: 1
+		// *addrc: na: 1
 
+	// sizec: &ns
 	// sizec: &ns
 	if (sizec)
 		// dev: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소
 		// of_n_size_cells(devtree에서 allnext로 순회 하면서 찾은 gic node의 주소): 1
+		// dev: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소
+		// of_n_size_cells(devtree에서 allnext로 순회 하면서 찾은 gic node의 주소): 1
 		*sizec = of_n_size_cells(dev);
+		// *sizec: ns: 1
 		// *sizec: ns: 1
 }
 
@@ -109,6 +121,8 @@ static int of_bus_default_translate(__be32 *addr, u64 offset, int na)
 }
 
 // ARM10C 20141018
+// gic node의 reg property의 값의 시작주소
+// ARM10C 20141101
 // gic node의 reg property의 값의 시작주소
 static unsigned int of_bus_default_get_flags(const __be32 *addr)
 {
@@ -783,8 +797,8 @@ const __be32 *of_get_address(struct device_node *dev, int index, u64 *size,
 			if (size)
 				// prop: gic node의 reg property의 값의 시작주소, na: 1, ns: 1
 				// of_read_number(gic node의 reg property의 값의 시작주소 + 1, 1): 0x1000
-				// prop: gic node의 reg property의 값의 시작주소, na: 1, ns: 1
-				// of_read_number(gic node의 reg property의 값의 시작주소 + 1, 1): 0x1000
+				// prop: gic node의 reg property의 값의 시작주소 + 2, na: 1, ns: 1
+				// of_read_number(gic node의 reg property의 값의 시작주소 + 2 + 1, 1): 0x1000
 				*size = of_read_number(prop + na, ns);
 				// *size: size: 0x1000
 				// *size: size: 0x1000
@@ -797,8 +811,8 @@ const __be32 *of_get_address(struct device_node *dev, int index, u64 *size,
 				// of_bus_default_get_flags(gic node의 reg property의 값의 시작주소):
 				// IORESOURCE_MEM: 0x00000200
 				// bus->get_flags: (&of_busses[1])->get_flags: of_bus_default_get_flags
-				// prop: gic node의 reg property의 값의 시작주소
-				// of_bus_default_get_flags(gic node의 reg property의 값의 시작주소):
+				// prop: gic node의 reg property의 값의 시작주소 + 2
+				// of_bus_default_get_flags(gic node의 reg property의 값의 시작주소 + 2):
 				// IORESOURCE_MEM: 0x00000200
 				*flags = bus->get_flags(prop);
 				// *flags: flags: IORESOURCE_MEM: 0x00000200
@@ -900,6 +914,8 @@ static int __of_address_to_resource(struct device_node *dev,
 	// r->name: (&res)->name: "/interrupt-controller@10481000"
 
 	return 0;
+	// return 0
+	// return 0
 }
 
 /**
@@ -926,6 +942,7 @@ int of_address_to_resource(struct device_node *dev, int index,
 	// of_get_address(devtree에서 allnext로 순회 하면서 찾은 gic node의 주소, 0, &size, &flags):
 	// gic node의 reg property의 값의 시작주소, size: 0x1000, flags: IORESOURCE_MEM: 0x00000200
 	// dev: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소, index: 1
+	// of_get_address(devtree에서 allnext로 순회 하면서 찾은 gic node의 주소, 0, &size, &flags):
 	// gic node의 reg property의 값의 시작주소 + 2, size: 0x1000, flags: IORESOURCE_MEM: 0x00000200
 	addrp = of_get_address(dev, index, &size, &flags);
 	// addrp: gic node의 reg property의 값의 시작주소
@@ -994,6 +1011,7 @@ void __iomem *of_iomap(struct device_node *np, int index)
 	// np: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소, index: 0
 	// of_address_to_resource(devtree에서 allnext로 순회 하면서 찾은 gic node의 주소, 0, &res): 0
 	// np: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소, index: 1
+	// of_address_to_resource(devtree에서 allnext로 순회 하면서 찾은 gic node의 주소, 1, &res): 0
 	if (of_address_to_resource(np, index, &res))
 		return NULL;
 
@@ -1012,7 +1030,7 @@ void __iomem *of_iomap(struct device_node *np, int index)
 	// res.start: 0x10481000, resource_size(&res): 0x1000
 	// ioremap(0x10481000, 0x1000): 0xf0000000
 	// res.start: 0x10482000, resource_size(&res): 0x1000
-	// ioremap(0x10482000, 0x1000): 0xf0000000
+	// ioremap(0x10482000, 0x1000):
 	return ioremap(res.start, resource_size(&res));
 	// return 0xf0000000
 }

@@ -925,6 +925,8 @@ static inline void *kzalloc(size_t size, gfp_t flags)
 // sizeof(struct irq_desc): 156 bytes, gfp: GFP_KERNEL: 0xD0, node: 0
 // ARM10C 20141025
 // sizeof(*area): 32, gfp_mask: GFP_KERNEL: 0xD0, node: -1
+// ARM10C 20141101
+// sizeof(*area): 32, gfp_mask: GFP_KERNEL: 0xD0, node: -1
 static inline void *kzalloc_node(size_t size, gfp_t flags, int node)
 {
 	// size: 156, flags: GFP_KERNEL: 0xD0, __GFP_ZERO: 0x8000u, node: 0

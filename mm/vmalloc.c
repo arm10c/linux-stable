@@ -566,7 +566,7 @@ found:
 	va->va_start = addr;
 	// va->va_start: (kmem_cache#30-oX)->va_start: 0xf0000000
 
-	// va->va_end: (kmem_cache#30-oX)->va_end, start: 0xf0000000, size: 0x2000
+	// va->va_end: (kmem_cache#30-oX)->va_end, addr: 0xf0000000, size: 0x2000
 	va->va_end = addr + size;
 	// va->va_end: (kmem_cache#30-oX)->va_end: 0xf0002000
 
@@ -605,7 +605,7 @@ found:
 	// va->va_start: (kmem_cache#30-oX)->va_start: 0xf0000000, vstart: 0xf0000000
 	BUG_ON(va->va_start < vstart);
 
-	// va->va_start: (kmem_cache#30-oX)->va_start: 0xf0000000, vend: 0xff000000
+	// va->va_end: (kmem_cache#30-oX)->va_end: 0xf0002000, vend: 0xff000000
 	BUG_ON(va->va_end > vend);
 
 	// va: kmem_cache#30-oX (GIC)
@@ -1740,7 +1740,6 @@ struct vm_struct *get_vm_area_caller(unsigned long size, unsigned long flags,
 	// size: 0x1000, 1, VM_IOREMAP: 0x00000001, VMALLOC_START: 0xf0000000, VMALLOC_END: 0xff000000UL,
 	// NUMA_NO_NODE: -1, GFP_KERNEL: 0xD0, caller: __builtin_return_address(0)
 	// __get_vm_area_node(0x1000, VM_IOREMAP: 0x00000001, 0xf0000000, 0xff000000UL, -1, GFP_KERNEL: 0xD0, __builtin_return_address(0)):
-	// kmem_cache#30-oX (vm_struct)-2
 	return __get_vm_area_node(size, 1, flags, VMALLOC_START, VMALLOC_END,
 				  NUMA_NO_NODE, GFP_KERNEL, caller);
 	// return kmem_cache#30-oX (vm_struct)

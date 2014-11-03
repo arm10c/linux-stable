@@ -97,6 +97,7 @@ static inline struct device_node *of_node_get(struct device_node *node)
 // ARM10C 20140215
 // ARM10C 20141004
 // ARM10C 20141018
+// ARM10C 20141101
 static inline void of_node_put(struct device_node *node) { }
 #endif /* !CONFIG_OF_DYNAMIC */
 

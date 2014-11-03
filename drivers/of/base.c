@@ -51,26 +51,37 @@ DEFINE_RAW_SPINLOCK(devtree_lock);
 
 // ARM10C 20141018
 // dev: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소
+// ARM10C 20141101
+// dev: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소
 int of_n_addr_cells(struct device_node *np)
 {
 	const __be32 *ip;
 
 	do {
 		// np->parent: (gic node의 주소)->parent: root node의 주소
+		// np->parent: (gic node의 주소)->parent: root node의 주소
 		if (np->parent)
 			// np->parent: (gic node의 주소)->parent: root node의 주소
+			// np->parent: (gic node의 주소)->parent: root node의 주소
 			np = np->parent;
+			// np: root node의 주소
 			// np: root node의 주소
 
 		// np: root node의 주소,
 		// of_get_property(root node의 주소, "#address-cells", NULL): 1
+		// np: root node의 주소,
+		// of_get_property(root node의 주소, "#address-cells", NULL): 1
 		ip = of_get_property(np, "#address-cells", NULL);
+		// ip: 1
 		// ip: 1
 
 		// ip: 1
+		// ip: 1
 		if (ip)
 			// ip: 1
+			// ip: 1
 			return be32_to_cpup(ip);
+			// return 1
 			// return 1
 
 	} while (np->parent);
@@ -81,26 +92,37 @@ EXPORT_SYMBOL(of_n_addr_cells);
 
 // ARM10C 20141018
 // dev: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소
+// ARM10C 20141101
+// dev: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소
 int of_n_size_cells(struct device_node *np)
 {
 	const __be32 *ip;
 
 	do {
 		// np->parent: (gic node의 주소)->parent: root node의 주소
+		// np->parent: (gic node의 주소)->parent: root node의 주소
 		if (np->parent)
 			// np->parent: (gic node의 주소)->parent: root node의 주소
+			// np->parent: (gic node의 주소)->parent: root node의 주소
 			np = np->parent;
+			// np: root node의 주소
 			// np: root node의 주소
 
 		// np: root node의 주소,
 		// of_get_property(root node의 주소, "#size-cells", NULL): 1
+		// np: root node의 주소,
+		// of_get_property(root node의 주소, "#size-cells", NULL): 1
 		ip = of_get_property(np, "#size-cells", NULL);
+		// ip: 1
 		// ip: 1
 
 		// ip: 1
+		// ip: 1
 		if (ip)
 			// ip: 1
+			// ip: 1
 			return be32_to_cpup(ip);
+			// return 1
 			// return 1
 
 	} while (np->parent);
@@ -300,6 +322,7 @@ static const void *__of_get_property(const struct device_node *np,
 // ARM10C 20140208
 // ARM10C 20141011
 // ARM10C 20141018
+// ARM10C 20141101
 const void *of_get_property(const struct device_node *np, const char *name,
 			    int *lenp)
 {

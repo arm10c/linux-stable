@@ -395,10 +395,9 @@ void __iomem * __arm_ioremap_pfn_caller(unsigned long pfn,
 	// size: 0x1000, VM_IOREMAP: 0x00000001, caller: __builtin_return_address(0)
 	// get_vm_area_caller(0x1000, 0x00000001, __builtin_return_address(0)): kmem_cache#30-oX (vm_struct)
 	// size: 0x1000, VM_IOREMAP: 0x00000001, caller: __builtin_return_address(0)
-	// get_vm_area_caller(0x1000, 0x00000001, __builtin_return_address(0)): kmem_cache#30-oX (vm_struct)-2
+	// get_vm_area_caller(0x1000, 0x00000001, __builtin_return_address(0)):
 	area = get_vm_area_caller(size, VM_IOREMAP, caller);
 	// area: kmem_cache#30-oX (vm_struct)
-	// area: kmem_cache#30-oX (vm_struct)-2
 
 	/*
 	// get_vm_area_caller이 한일:
