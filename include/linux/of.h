@@ -652,6 +652,8 @@ static inline int of_property_read_u16(const struct device_node *np,
 
 // ARM10C 20140215
 // [0] cpu: cpu0의 node의 주소값, "reg", &hwid
+// ARM10C 20141108
+// node: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소
 static inline int of_property_read_u32(const struct device_node *np,
 				       const char *propname,
 				       u32 *out_value)

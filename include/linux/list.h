@@ -239,7 +239,10 @@ static inline void list_move_tail(struct list_head *list,
 static inline int list_is_last(const struct list_head *list,
 				const struct list_head *head)
 {
+	// list->next: (&(GIC)->list)->next: &(SYSC)->list
+	// head: &vmap_area_list
 	return list->next == head;
+	// return 0
 }
 
 /**
@@ -426,6 +429,7 @@ static inline void list_splice_tail_init(struct list_head *list,
 // #define list_entry((&pcpu_slot[1])->next, typeof(*chunk), list):
 // container_of((&pcpu_slot[1])->next, typeof(*chunk), list)
 // ARM10C 20140705
+// ARM10C 20141108
 #define list_entry(ptr, type, member)		\
 	container_of(ptr, type, member)
 

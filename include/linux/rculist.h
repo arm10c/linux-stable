@@ -50,15 +50,15 @@ static inline void INIT_LIST_HEAD_RCU(struct list_head *list)
  * the prev/next entries already!
  */
 #ifndef CONFIG_DEBUG_LIST // CONFIG_DEBUG_LIST=n
-// ARM10C 20141108
+// ARM10C 20141025
 // new: &(kmem_cache#30-oX (GIC))->list, head: &vmap_area_list,
-// head->next: &vmap_area_list
+// head->next: (SYSC)->list
 static inline void __list_add_rcu(struct list_head *new,
 		struct list_head *prev, struct list_head *next)
 {
-	// new->next: ((GIC)->list)->next, next: &vmap_area_list
+	// new->next: ((GIC)->list)->next, next: (SYSC)->list
 	new->next = next;
-	// new->next: ((GIC)->list)->next: &vmap_area_list
+	// new->next: ((GIC)->list)->next: (SYSC)->list
 
 	// new->prev: ((GIC)->list)->prev, prev: &vmap_area_list
 	new->prev = prev;
@@ -67,7 +67,14 @@ static inline void __list_add_rcu(struct list_head *new,
 	// prev: &vmap_area_list, new: &((GIC))->list
 	// list_next_rcu(&vmap_area_list): (*((struct list_head __rcu **)(&(&vmap_area_list)->next)))
 	rcu_assign_pointer(list_next_rcu(prev), new);
+	// rcu_assign_pointer에서 한일:
+	// core간 write memory barrier 수행
+	// ((*((struct list_head __rcu **)(&(&vmap_area_list)->next)))) =
+	// (typeof(*&((GIC))->list) __force space *)(&((GIC))->list)
+
+	// next->prev: ((SYSC)->list)->prev, new: &(GIC)->list
 	next->prev = new;
+	// next->prev: ((SYSC)->list)->prev: &(GIC)->list
 }
 #else
 extern void __list_add_rcu(struct list_head *new,
@@ -90,12 +97,14 @@ extern void __list_add_rcu(struct list_head *new,
  * the _rcu list-traversal primitives, such as
  * list_for_each_entry_rcu().
  */
+// ARM10C 20141025
+// &va->list: &(kmem_cache#30-oX (GIC#0))->list, &vmap_area_list
 // ARM10C 20141108
-// &va->list: &(kmem_cache#30-oX (GIC))->list, &vmap_area_list
+// &va->list: &(kmem_cache#30-oX (GIC#1))->list, &prev->list: &(GIC#0)->list
 static inline void list_add_rcu(struct list_head *new, struct list_head *head)
 {
-	// new: &(kmem_cache#30-oX (GIC))->list, head: &vmap_area_list,
-	// head->next: &vmap_area_list
+	// new: &(kmem_cache#30-oX (GIC#0))->list, head: &vmap_area_list,
+	// head->next: (SYSC)->list
 	__list_add_rcu(new, head, head->next);
 }
 

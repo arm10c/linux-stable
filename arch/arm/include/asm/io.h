@@ -104,16 +104,21 @@ static inline u8 __raw_readb(const volatile void __iomem *addr)
 }
 
 // ARM10C 20131130
+// ARM10C 20141108
+// 0xf0000000 + 0x004
 static inline u32 __raw_readl(const volatile void __iomem *addr)
 {
 	u32 val;
 
 	// +, Q, o : inline asm의 문법 
 	// FIXME: (*(volatile u32 __force *)addr) 의 문법? addr에 *해서 쓰는 이유?
+	// addr: 0xf0000004
 	asm volatile("ldr %1, %0"
 		     : "+Qo" (*(volatile u32 __force *)addr),
 		       "=r" (val));
+	// val: 0x0000FC24
 	return val;
+	// return 0x0000FC24
 }
 
 /*
@@ -297,6 +302,9 @@ extern void _memset_io(volatile void __iomem *, int, size_t);
 #define readb_relaxed(c) ({ u8  __r = __raw_readb(c); __r; })
 #define readw_relaxed(c) ({ u16 __r = le16_to_cpu((__force __le16) \
 					__raw_readw(c)); __r; })
+// ARM10C 20141108
+// __raw_readl(0xf0000004): 0x0000FC24
+// readl_relaxed(0xf0000000 + 0x004): 0x0000FC24
 #define readl_relaxed(c) ({ u32 __r = le32_to_cpu((__force __le32) \
 					__raw_readl(c)); __r; })
 

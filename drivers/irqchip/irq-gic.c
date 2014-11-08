@@ -53,10 +53,11 @@ union gic_base {
 	void __percpu __iomem **percpu_base;
 };
 
+// ARM10C 20141108
 struct gic_chip_data {
 	union gic_base dist_base;
 	union gic_base cpu_base;
-#ifdef CONFIG_CPU_PM
+#ifdef CONFIG_CPU_PM // CONFIG_CPU_PM=y
 	u32 saved_spi_enable[DIV_ROUND_UP(1020, 32)];
 	u32 saved_spi_conf[DIV_ROUND_UP(1020, 16)];
 	u32 saved_spi_target[DIV_ROUND_UP(1020, 4)];
@@ -65,7 +66,7 @@ struct gic_chip_data {
 #endif
 	struct irq_domain *domain;
 	unsigned int gic_irqs;
-#ifdef CONFIG_GIC_NON_BANKED
+#ifdef CONFIG_GIC_NON_BANKED // CONFIG_GIC_NON_BANKED=n
 	void __iomem *(*get_base)(union gic_base *);
 #endif
 };
@@ -77,7 +78,12 @@ static DEFINE_RAW_SPINLOCK(irq_controller_lock);
  * the logical CPU numbering.  Let's use a mapping as returned
  * by the GIC itself.
  */
+// ARM10C 20141108
+// NR_GIC_CPU_IF: 8
 #define NR_GIC_CPU_IF 8
+
+// ARM10C 20141108
+// NR_GIC_CPU_IF: 8
 static u8 gic_cpu_map[NR_GIC_CPU_IF] __read_mostly;
 
 /*
@@ -94,12 +100,16 @@ struct irq_chip gic_arch_extn = {
 };
 
 #ifndef MAX_GIC_NR
+// ARM10C 20141108
+// MAX_GIC_NR: 1
 #define MAX_GIC_NR	1
 #endif
 
+// ARM10C 20141108
+// MAX_GIC_NR: 1
 static struct gic_chip_data gic_data[MAX_GIC_NR] __read_mostly;
 
-#ifdef CONFIG_GIC_NON_BANKED
+#ifdef CONFIG_GIC_NON_BANKED // CONFIG_GIC_NON_BANKED=n
 static void __iomem *gic_get_percpu_base(union gic_base *base)
 {
 	return *__this_cpu_ptr(base->percpu_base);
@@ -126,8 +136,10 @@ static inline void gic_set_base_accessor(struct gic_chip_data *data,
 	data->get_base = f;
 }
 #else
+// ARM10C 20141108
 #define gic_data_dist_base(d)	((d)->dist_base.common_base)
 #define gic_data_cpu_base(d)	((d)->cpu_base.common_base)
+// ARM10C 20141108
 #define gic_set_base_accessor(d, f)
 #endif
 
@@ -874,6 +886,9 @@ const struct irq_domain_ops gic_irq_domain_ops = {
 	.xlate = gic_irq_domain_xlate,
 };
 
+// ARM10C 20141108
+// gic_cnt: 0, -1, dist_base: 0xf0000000, cpu_base: 0xf0002000, percpu_offset: 0,
+// node: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소
 void __init gic_init_bases(unsigned int gic_nr, int irq_start,
 			   void __iomem *dist_base, void __iomem *cpu_base,
 			   u32 percpu_offset, struct device_node *node)
@@ -882,10 +897,14 @@ void __init gic_init_bases(unsigned int gic_nr, int irq_start,
 	struct gic_chip_data *gic;
 	int gic_irqs, irq_base, i;
 
+	// gic_nr: 0, MAX_GIC_NR: 1
 	BUG_ON(gic_nr >= MAX_GIC_NR);
 
+	// gic_nr: 0
 	gic = &gic_data[gic_nr];
-#ifdef CONFIG_GIC_NON_BANKED
+	// gic: &gic_data[0]
+
+#ifdef CONFIG_GIC_NON_BANKED // CONFIG_GIC_NON_BANKED=n
 	if (percpu_offset) { /* Frankein-GIC without banked registers... */
 		unsigned int cpu;
 
@@ -908,27 +927,45 @@ void __init gic_init_bases(unsigned int gic_nr, int irq_start,
 	} else
 #endif
 	{			/* Normal, sane GIC... */
+		// percpu_offset: 0
 		WARN(percpu_offset,
 		     "GIC_NON_BANKED not enabled, ignoring %08x offset!",
 		     percpu_offset);
+		// gic->dist_base.common_base: (&gic_data[0])->dist_base.common_base, dist_base: 0xf0000000
 		gic->dist_base.common_base = dist_base;
+		// gic->dist_base.common_base: (&gic_data[0])->dist_base.common_base: 0xf0000000
+
+		// gic->cpu_base.common_base: (&gic_data[0])->cpu_base.common_base, cpu_base: 0xf0002000
 		gic->cpu_base.common_base = cpu_base;
-		gic_set_base_accessor(gic, gic_get_common_base);
+		// gic->cpu_base.common_base: (&gic_data[0])->cpu_base.common_base: 0xf0002000
+
+		// gic: &gic_data[0]
+		gic_set_base_accessor(gic, gic_get_common_base); // null function
 	}
 
 	/*
 	 * Initialize the CPU interface map to all CPUs.
 	 * It will be refined as each CPU probes its ID.
 	 */
+	// NR_GIC_CPU_IF: 8
 	for (i = 0; i < NR_GIC_CPU_IF; i++)
+		// i: 0
 		gic_cpu_map[i] = 0xff;
+		// gic_cpu_map[0]: 0xff
+		// i: 1...7 까지 수행
+
+	// gic_cpu_map[0...7]: 0xff
 
 	/*
 	 * For primary GICs, skip over SGIs.
 	 * For secondary GICs, skip over PPIs, too.
 	 */
+	// gic_nr: 0, irq_start: -1
 	if (gic_nr == 0 && (irq_start & 31) > 0) {
 		hwirq_base = 16;
+		// hwirq_base: 16
+
+		// irq_start: -1
 		if (irq_start != -1)
 			irq_start = (irq_start & ~31) + 16;
 	} else {
@@ -939,7 +976,17 @@ void __init gic_init_bases(unsigned int gic_nr, int irq_start,
 	 * Find out how many interrupts are supported.
 	 * The GIC only supports up to 1020 interrupt sources.
 	 */
+	// T.R.M: 8.3.2 Distributor register descriptions
+	// Interrupt Controller Type Register:
+	// b00100 Up to 160 interrupts, 128 external interrupt lines.
+	//
+	// gic: &gic_data[0], gic_data_dist_base(&gic_data[0]): 0xf0000000, GIC_DIST_CTR: 0x004
+	// readl_relaxed(0xf0000000 + 0x004): 0x0000FC24
 	gic_irqs = readl_relaxed(gic_data_dist_base(gic) + GIC_DIST_CTR) & 0x1f;
+	// gic_irqs: 0x4
+
+// 2014/11/08 종료
+
 	gic_irqs = (gic_irqs + 1) * 32;
 	if (gic_irqs > 1020)
 		gic_irqs = 1020;
@@ -972,6 +1019,7 @@ void __init gic_init_bases(unsigned int gic_nr, int irq_start,
 }
 
 #ifdef CONFIG_OF // CONFIG_OF=y
+// ARM10C 20141108
 static int gic_cnt __initdata;
 
 // ARM10C 20141018
@@ -1000,8 +1048,8 @@ int __init gic_of_init(struct device_node *node, struct device_node *parent)
 	// (&res)->flags: IORESOURCE_MEM: 0x00000200
 	// (&res)->name: "/interrupt-controller@10481000"
 	/*
-	// alloc area (GIC) 를 만들고 rb tree에 alloc area 를 추가
-	// 가상주소 va_start 기준으로 GIC 를 RB Tree 추가한 결과
+	// alloc area (GIC#0) 를 만들고 rb tree에 alloc area 를 추가
+	// 가상주소 va_start 기준으로 GIC#0 를 RB Tree 추가한 결과
 	//
 	//                                  CHID-b
 	//                               (0xF8000000)
@@ -1012,16 +1060,19 @@ int __init gic_of_init(struct device_node *node, struct device_node *parent)
 	//                 SYSC-b      WDT-b         CMU-b         SRAM-b
 	//            (0xF6100000)   (0xF6400000)  (0xF8100000)   (0xF8400000)
 	//             /                                                 \
-	//        GIC-r                                                   ROMC-r
+	//        GIC#0-r                                                 ROMC-r
 	//   (0xF0000000)                                                 (0xF84C0000)
+	//
+	// vmap_area_list에 GIC#0 - SYSC -TMR - WDT - CHID - CMU - PMU - SRAM - ROMC
+	// 순서로 리스트에 연결이 됨
 	//
 	// (kmem_cache#30-oX (vm_struct))->flags: GFP_KERNEL: 0xD0
 	// (kmem_cache#30-oX (vm_struct))->addr: 0xf0000000
 	// (kmem_cache#30-oX (vm_struct))->size: 0x2000
 	// (kmem_cache#30-oX (vm_struct))->caller: __builtin_return_address(0)
 	//
-	// (kmem_cache#30-oX (vmap_area GIC))->vm: kmem_cache#30-oX (vm_struct)
-	// (kmem_cache#30-oX (vmap_area GIC))->flags: 0x04
+	// (kmem_cache#30-oX (vmap_area GIC#0))->vm: kmem_cache#30-oX (vm_struct)
+	// (kmem_cache#30-oX (vmap_area GIC#0))->flags: 0x04
 	*/
 	// device tree 있는  gic node에서 node의 resource 값을 pgtable에 매핑함
 	// 0xc0004780이 가리키는 pte의 시작주소에 0x10481653 값을 갱신
@@ -1050,13 +1101,78 @@ int __init gic_of_init(struct device_node *node, struct device_node *parent)
 	WARN(!dist_base, "unable to map gic dist registers\n");
 
 	// node: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소
-	// of_iomap(devtree에서 allnext로 순회 하면서 찾은 gic node의 주소, 1): 0xf001000
+	// of_iomap(devtree에서 allnext로 순회 하면서 찾은 gic node의 주소, 1): 0xf002000
 	cpu_base = of_iomap(node, 1);
+	// cpu_base: 0xf0002000
+
+	// of_iomap에서 한일:
+	// device tree 있는  gic node에서 node의 resource 값을 가져옴
+	// (&res)->start: 0x10482000
+	// (&res)->end: 0x10482fff
+	// (&res)->flags: IORESOURCE_MEM: 0x00000200
+	// (&res)->name: "/interrupt-controller@10481000"
+	/*
+	// alloc area (GIC#1) 를 만들고 rb tree에 alloc area 를 추가
+	// 가상주소 va_start 기준으로 GIC#1 를 RB Tree 추가한 결과
+	//
+	//                                  CHID-b
+	//                               (0xF8000000)
+	//                              /            \
+	//                         TMR-r               PMU-r
+	//                    (0xF6300000)             (0xF8180000)
+	//                      /      \               /           \
+	//                GIC#1-b      WDT-b         CMU-b         SRAM-b
+	//            (0xF0002000)   (0xF6400000)  (0xF8100000)   (0xF8400000)
+	//             /       \                                          \
+	//        GIC#0-r     SYSC-r                                       ROMC-r
+	//    (0xF0000000)   (0xF6100000)                                 (0xF84C0000)
+	//
+	// vmap_area_list에 GIC#0 - GIC#1 - SYSC -TMR - WDT - CHID - CMU - PMU - SRAM - ROMC
+	// 순서로 리스트에 연결이 됨
+	//
+	// (kmem_cache#30-oX (vm_struct))->flags: GFP_KERNEL: 0xD0
+	// (kmem_cache#30-oX (vm_struct))->addr: 0xf0002000
+	// (kmem_cache#30-oX (vm_struct))->size: 0x2000
+	// (kmem_cache#30-oX (vm_struct))->caller: __builtin_return_address(0)
+	//
+	// (kmem_cache#30-oX (vmap_area GIC#1))->vm: kmem_cache#30-oX (vm_struct)
+	// (kmem_cache#30-oX (vmap_area GIC#1))->flags: 0x04
+	*/
+	// device tree 있는  gic node에서 node의 resource 값을 pgtable에 매핑함
+	// 0xc0004780이 가리키는 pte의 시작주소에 0x10482653 값을 갱신
+	// (linux pgtable과 hardware pgtable의 값 같이 갱신)
+	//
+	//  pgd                   pte
+	// |              |
+	// +--------------+
+	// |              |       +--------------+ +0
+	// |              |       |  0xXXXXXXXX  | ---> 0x10482653 에 매칭되는 linux pgtable 값
+	// +- - - - - - - +       |  Linux pt 0  |
+	// |              |       +--------------+ +1024
+	// |              |       |              |
+	// +--------------+ +0    |  Linux pt 1  |
+	// | *(c0004780)  |-----> +--------------+ +2048
+	// |              |       |  0x10482653  | ---> 2060
+	// +- - - - - - - + +4    |   h/w pt 0   |
+	// | *(c0004784)  |-----> +--------------+ +3072
+	// |              |       +              +
+	// +--------------+ +8    |   h/w pt 1   |
+	// |              |       +--------------+ +4096
+	//
+	// cache의 값을 전부 메모리에 반영
+
+	// cpu_base: 0xf0002000
 	WARN(!cpu_base, "unable to map gic cpu registers\n");
 
+	// node: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소
+	// of_property_read_u32(devtree에서 allnext로 순회 하면서 찾은 gic node의 주소, "cpu-offset", &percpu_offset):
+	// 0이 아닌 err 값
 	if (of_property_read_u32(node, "cpu-offset", &percpu_offset))
 		percpu_offset = 0;
+		// percpu_offset: 0
 
+	// gic_cnt: 0, dist_base: 0xf0000000, cpu_base: 0xf0002000, percpu_offset: 0,
+	// node: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소
 	gic_init_bases(gic_cnt, -1, dist_base, cpu_base, percpu_offset, node);
 	if (!gic_cnt)
 		gic_init_physaddr(node);

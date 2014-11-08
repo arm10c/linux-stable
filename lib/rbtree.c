@@ -560,13 +560,17 @@ struct rb_node *rb_next(const struct rb_node *node)
 EXPORT_SYMBOL(rb_next);
 
 // ARM10C 20141025
-// va->rb_node: (kmem_cache#30-oX (GIC))->rb_node
+// va->rb_node: (kmem_cache#30-oX (GIC#0))->rb_node
+// ARM10C 20141108
+// va->rb_node: (kmem_cache#30-oX (GIC#1))->rb_node
 struct rb_node *rb_prev(const struct rb_node *node)
 {
 	struct rb_node *parent;
 
-	// node: (kmem_cache#30-oX (GIC))->rb_node
-	// RB_EMPTY_NODE((kmem_cache#30-oX (GIC))->rb_node): 0
+	// node: (kmem_cache#30-oX (GIC#0))->rb_node
+	// RB_EMPTY_NODE((kmem_cache#30-oX (GIC#0))->rb_node): 0
+	// node: (kmem_cache#30-oX (GIC#1))->rb_node
+	// RB_EMPTY_NODE((kmem_cache#30-oX (GIC#1))->rb_node): 0
 	if (RB_EMPTY_NODE(node))
 		return NULL;
 
@@ -574,12 +578,20 @@ struct rb_node *rb_prev(const struct rb_node *node)
 	 * If we have a left-hand child, go down and then right as far
 	 * as we can.
 	 */
-	// node->rb_left: ((kmem_cache#30-oX (GIC))->rb_node)->rb_left: NULL
+	// node->rb_left: ((kmem_cache#30-oX (GIC#0))->rb_node)->rb_left: NULL
+	// node->rb_left: ((kmem_cache#30-oX (GIC#1))->rb_node)->rb_left: (GIC#0)->rb_node
 	if (node->rb_left) {
-		node = node->rb_left; 
+		// node->rb_left: ((kmem_cache#30-oX (GIC#1))->rb_node)->rb_left: (GIC#0)->rb_node
+		node = node->rb_left;
+		// node: (GIC#0)->rb_node
+
+		// node->rb_right: ((GIC#0)->rb_node)->rb_right: NULL
 		while (node->rb_right)
 			node=node->rb_right;
+
+		// node: (GIC#0)->rb_node
 		return (struct rb_node *)node;
+		// return (GIC#0)->rb_node
 	}
 
 	/*

@@ -395,14 +395,15 @@ void __iomem * __arm_ioremap_pfn_caller(unsigned long pfn,
 	// size: 0x1000, VM_IOREMAP: 0x00000001, caller: __builtin_return_address(0)
 	// get_vm_area_caller(0x1000, 0x00000001, __builtin_return_address(0)): kmem_cache#30-oX (vm_struct)
 	// size: 0x1000, VM_IOREMAP: 0x00000001, caller: __builtin_return_address(0)
-	// get_vm_area_caller(0x1000, 0x00000001, __builtin_return_address(0)):
+	// get_vm_area_caller(0x1000, 0x00000001, __builtin_return_address(0)): kmem_cache#30-oX (vm_struct)
 	area = get_vm_area_caller(size, VM_IOREMAP, caller);
+	// area: kmem_cache#30-oX (vm_struct)
 	// area: kmem_cache#30-oX (vm_struct)
 
 	/*
 	// get_vm_area_caller이 한일:
-	// alloc area (GIC) 를 만들고 rb tree에 alloc area 를 추가
-	// 가상주소 va_start 기준으로 GIC 를 RB Tree 추가한 결과
+	// alloc area (GIC#0) 를 만들고 rb tree에 alloc area 를 추가
+	// 가상주소 va_start 기준으로 GIC#0 를 RB Tree 추가한 결과
 	//
 	//                                  CHID-b
 	//                               (0xF8000000)
@@ -413,29 +414,65 @@ void __iomem * __arm_ioremap_pfn_caller(unsigned long pfn,
 	//                 SYSC-b      WDT-b         CMU-b         SRAM-b
 	//            (0xF6100000)   (0xF6400000)  (0xF8100000)   (0xF8400000)
 	//             /                                                 \
-	//        GIC-r                                                   ROMC-r
+	//        GIC#0-r                                                 ROMC-r
 	//   (0xF0000000)                                                 (0xF84C0000)
+	//
+	// vmap_area_list에 GIC#0 - SYSC -TMR - WDT - CHID - CMU - PMU - SRAM - ROMC
+	// 순서로 리스트에 연결이 됨
 	//
 	// (kmem_cache#30-oX (vm_struct))->flags: GFP_KERNEL: 0xD0
 	// (kmem_cache#30-oX (vm_struct))->addr: 0xf0000000
 	// (kmem_cache#30-oX (vm_struct))->size: 0x2000
 	// (kmem_cache#30-oX (vm_struct))->caller: __builtin_return_address(0)
 	//
-	// (kmem_cache#30-oX (vmap_area GIC))->vm: kmem_cache#30-oX (vm_struct)
-	// (kmem_cache#30-oX (vmap_area GIC))->flags: 0x04
+	// (kmem_cache#30-oX (vmap_area GIC#0))->vm: kmem_cache#30-oX (vm_struct)
+	// (kmem_cache#30-oX (vmap_area GIC#0))->flags: 0x04
+	*/
+	/*
+	// get_vm_area_caller이 한일:
+	// alloc area (GIC#1) 를 만들고 rb tree에 alloc area 를 추가
+	// 가상주소 va_start 기준으로 GIC#1 를 RB Tree 추가한 결과
+	//
+	//                                  CHID-b
+	//                               (0xF8000000)
+	//                              /            \
+	//                         TMR-r               PMU-r
+	//                    (0xF6300000)             (0xF8180000)
+	//                      /      \               /           \
+	//                GIC#1-b      WDT-b         CMU-b         SRAM-b
+	//            (0xF0002000)   (0xF6400000)  (0xF8100000)   (0xF8400000)
+	//             /       \                                          \
+	//        GIC#0-r     SYSC-r                                       ROMC-r
+	//    (0xF0000000)   (0xF6100000)                                 (0xF84C0000)
+	//
+	// vmap_area_list에 GIC#0 - GIC#1 - SYSC -TMR - WDT - CHID - CMU - PMU - SRAM - ROMC
+	// 순서로 리스트에 연결이 됨
+	//
+	// (kmem_cache#30-oX (vm_struct))->flags: GFP_KERNEL: 0xD0
+	// (kmem_cache#30-oX (vm_struct))->addr: 0xf0002000
+	// (kmem_cache#30-oX (vm_struct))->size: 0x2000
+	// (kmem_cache#30-oX (vm_struct))->caller: __builtin_return_address(0)
+	//
+	// (kmem_cache#30-oX (vmap_area GIC#1))->vm: kmem_cache#30-oX (vm_struct)
+	// (kmem_cache#30-oX (vmap_area GIC#1))->flags: 0x04
 	*/
 
+	// area: kmem_cache#30-oX (vm_struct)
 	// area: kmem_cache#30-oX (vm_struct)
  	if (!area)
  		return NULL;
 
 	// area->addr: (kmem_cache#30-oX (vm_struct))->addr: 0xf0000000
+	// area->addr: (kmem_cache#30-oX (vm_struct))->addr: 0xf0002000
  	addr = (unsigned long)area->addr;
 	// addr: 0xf0000000
+	// addr: 0xf0002000
 
 	// area->phys_addr: (kmem_cache#30-oX (vm_struct))->phys_addr, paddr: 0x10481000
+	// area->phys_addr: (kmem_cache#30-oX (vm_struct))->phys_addr, paddr: 0x10482000
 	area->phys_addr = paddr;
 	// area->phys_addr: (kmem_cache#30-oX (vm_struct))->phys_addr: 0x10481000
+	// area->phys_addr: (kmem_cache#30-oX (vm_struct))->phys_addr: 0x10482000
 
 #if !defined(CONFIG_SMP) && !defined(CONFIG_ARM_LPAE) // CONFIG_SMP=y, CONFIG_ARM_LPAE=n
 	if (DOMAIN_IO == 0 &&
@@ -452,9 +489,14 @@ void __iomem * __arm_ioremap_pfn_caller(unsigned long pfn,
 		// addr: 0xf0000000, size: 0x1000, paddr: 0x10481000,
 		// type->prot_pte: (&mem_types[0])->prot_pte: PROT_PTE_DEVICE | L_PTE_MT_DEV_SHARED | L_PTE_SHARED (0x653)
 		// ioremap_page_range(0xf0000000, 0xf0001000, 0x10481000, PROT_PTE_DEVICE | L_PTE_MT_DEV_SHARED | L_PTE_SHARED (0x653)): 0
+		// addr: 0xf0002000, size: 0x1000, paddr: 0x10482000,
+		// type->prot_pte: (&mem_types[0])->prot_pte: PROT_PTE_DEVICE | L_PTE_MT_DEV_SHARED | L_PTE_SHARED (0x653)
+		// ioremap_page_range(0xf0002000, 0xf0003000, 0x10482000, PROT_PTE_DEVICE | L_PTE_MT_DEV_SHARED | L_PTE_SHARED (0x653)): 0
 		err = ioremap_page_range(addr, addr + size, paddr,
 					 __pgprot(type->prot_pte));
 		// err: 0
+		// err: 0
+
 		// ioremap_page_range에서 한일:
 		// 0xc0004780이 가리키는 pte의 시작주소에 0x10481653 값을 갱신
 		// (linux pgtable과 hardware pgtable의 값 같이 갱신)
@@ -475,7 +517,29 @@ void __iomem * __arm_ioremap_pfn_caller(unsigned long pfn,
 		// |              |       +              +
 		// +--------------+ +8    |   h/w pt 1   |
 		// |              |       +--------------+ +4096
+		//
+		// ioremap_page_range에서 한일:
+		// 0xc0004780이 가리키는 pte의 시작주소에 0x10482653 값을 갱신
+		// (linux pgtable과 hardware pgtable의 값 같이 갱신)
+		//
+		//  pgd                   pte
+		// |              |
+		// +--------------+
+		// |              |       +--------------+ +0
+		// |              |       |  0xXXXXXXXX  | ---> 0x10482653 에 매칭되는 linux pgtable 값
+		// +- - - - - - - +       |  Linux pt 0  |
+		// |              |       +--------------+ +1024
+		// |              |       |              |
+		// +--------------+ +0    |  Linux pt 1  |
+		// | *(c0004780)  |-----> +--------------+ +2048
+		// |              |       |  0x10482653  | ---> 2060
+		// +- - - - - - - + +4    |   h/w pt 0   |
+		// | *(c0004784)  |-----> +--------------+ +3072
+		// |              |       +              +
+		// +--------------+ +8    |   h/w pt 1   |
+		// |              |       +--------------+ +4096
 
+	// err: 0
 	// err: 0
 	if (err) {
  		vunmap((void *)addr);
@@ -483,12 +547,16 @@ void __iomem * __arm_ioremap_pfn_caller(unsigned long pfn,
  	}
 
 	// addr: 0xf0000000, size: 0x1000
+	// addr: 0xf0002000, size: 0x1000
 	flush_cache_vmap(addr, addr + size);
+	// cache의 값을 전부 메모리에 반영
 	// cache의 값을 전부 메모리에 반영
 
 	// offset:0, addr: 0xf0000000
+	// offset:0, addr: 0xf0002000
 	return (void __iomem *) (offset + addr);
 	// return 0xf0000000
+	// return 0xf0002000
 }
 
 // ARM10C 20141018
@@ -567,10 +635,11 @@ __arm_ioremap(phys_addr_t phys_addr, size_t size, unsigned int mtype)
 	// phys_addr: 0x10481000, size: 0x1000, mtype: MT_DEVICE: 0
 	// arch_ioremap_caller(0x10481000, 0x1000, MT_DEVICE: 0, __builtin_return_address(0)): 0xf0000000
 	// phys_addr: 0x10482000, size: 0x1000, mtype: MT_DEVICE: 0
-	// arch_ioremap_caller(0x10482000, 0x1000, MT_DEVICE: 0, __builtin_return_address(0)):
+	// arch_ioremap_caller(0x10482000, 0x1000, MT_DEVICE: 0, __builtin_return_address(0)): 0xf0002000
 	return arch_ioremap_caller(phys_addr, size, mtype,
 		__builtin_return_address(0));
 	// return 0xf0000000
+	// return 0xf0002000
 }
 EXPORT_SYMBOL(__arm_ioremap);
 

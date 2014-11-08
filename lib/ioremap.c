@@ -199,6 +199,9 @@ static inline int ioremap_pud_range(pgd_t *pgd, unsigned long addr,
 // ARM10C 20141025
 // addr: 0xf0000000, end: 0xf0001000, paddr: 0x10481000,
 // type->prot_pte: (&mem_types[0])->prot_pte: PROT_PTE_DEVICE | L_PTE_MT_DEV_SHARED | L_PTE_SHARED (0x653)
+// ARM10C 20141108
+// addr: 0xf0002000, size: 0x1000, paddr: 0x10482000,
+// type->prot_pte: (&mem_types[0])->prot_pte: PROT_PTE_DEVICE | L_PTE_MT_DEV_SHARED | L_PTE_SHARED (0x653)
 int ioremap_page_range(unsigned long addr,
 		       unsigned long end, phys_addr_t phys_addr, pgprot_t prot)
 {

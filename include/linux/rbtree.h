@@ -65,7 +65,9 @@ struct rb_root {
 
 /* 'empty' nodes are nodes that are known not to be inserted in an rbree */
 // ARM10C 20141025
-// node: (kmem_cache#30-oX (GIC))->rb_node
+// node: (kmem_cache#30-oX (GIC#0))->rb_node
+// ARM10C 20141108
+// node: (kmem_cache#30-oX (GIC#1))->rb_node
 #define RB_EMPTY_NODE(node)  \
 	((node)->__rb_parent_color == (unsigned long)(node))
 // ARM10C 20140830
