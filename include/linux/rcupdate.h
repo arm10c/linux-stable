@@ -568,6 +568,13 @@ static inline void rcu_preempt_sleep_check(void)
 //	  smp_wmb(); // dmb();
 //	  ((&cpu_chain)->head) = (typeof(*&slab_notifier) __force *)(&slab_notifier);
 // } while (0)
+// ARM10C 20141108
+// __rcu_assign_pointer((*((struct list_head __rcu **)(&(&vmap_area_list)->next))), new: &((GIC))->list, __rcu):
+// do {
+//	smp_wmb();
+//	((*((struct list_head __rcu **)(&(&vmap_area_list)->next)))) =
+//	(typeof(*&((GIC))->list) __force space *)(&((GIC))->list);
+// } while (0)
 #define __rcu_assign_pointer(p, v, space)	\
 	do { \
 		smp_wmb(); \
@@ -971,6 +978,8 @@ static inline notrace void rcu_read_unlock_sched_notrace(void)
 // } while (0)
 //
 // ARM10C 20140927
+// ARM10C 20141108
+// (*((struct list_head __rcu **)(&(&vmap_area_list)->next))), new: &((GIC))->list
 #define rcu_assign_pointer(p, v)		\
 	__rcu_assign_pointer((p), (v), __rcu)
 

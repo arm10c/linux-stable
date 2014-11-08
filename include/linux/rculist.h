@@ -37,6 +37,10 @@ static inline void INIT_LIST_HEAD_RCU(struct list_head *list)
  * return the ->next pointer of a list_head in an rcu safe
  * way, we must not access it directly
  */
+// ARM10C 20141108
+// prev: &vmap_area_list
+// list_next_rcu(&vmap_area_list):
+// (*((struct list_head __rcu **)(&(&vmap_area_list)->next)))
 #define list_next_rcu(list)	(*((struct list_head __rcu **)(&(list)->next)))
 
 /*
@@ -45,12 +49,23 @@ static inline void INIT_LIST_HEAD_RCU(struct list_head *list)
  * This is only for internal list manipulation where we know
  * the prev/next entries already!
  */
-#ifndef CONFIG_DEBUG_LIST
+#ifndef CONFIG_DEBUG_LIST // CONFIG_DEBUG_LIST=n
+// ARM10C 20141108
+// new: &(kmem_cache#30-oX (GIC))->list, head: &vmap_area_list,
+// head->next: &vmap_area_list
 static inline void __list_add_rcu(struct list_head *new,
 		struct list_head *prev, struct list_head *next)
 {
+	// new->next: ((GIC)->list)->next, next: &vmap_area_list
 	new->next = next;
+	// new->next: ((GIC)->list)->next: &vmap_area_list
+
+	// new->prev: ((GIC)->list)->prev, prev: &vmap_area_list
 	new->prev = prev;
+	// new->prev: ((GIC)->list)->prev: &vmap_area_list
+
+	// prev: &vmap_area_list, new: &((GIC))->list
+	// list_next_rcu(&vmap_area_list): (*((struct list_head __rcu **)(&(&vmap_area_list)->next)))
 	rcu_assign_pointer(list_next_rcu(prev), new);
 	next->prev = new;
 }
@@ -75,8 +90,12 @@ extern void __list_add_rcu(struct list_head *new,
  * the _rcu list-traversal primitives, such as
  * list_for_each_entry_rcu().
  */
+// ARM10C 20141108
+// &va->list: &(kmem_cache#30-oX (GIC))->list, &vmap_area_list
 static inline void list_add_rcu(struct list_head *new, struct list_head *head)
 {
+	// new: &(kmem_cache#30-oX (GIC))->list, head: &vmap_area_list,
+	// head->next: &vmap_area_list
 	__list_add_rcu(new, head, head->next);
 }
 

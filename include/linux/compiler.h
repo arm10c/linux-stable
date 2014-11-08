@@ -55,6 +55,7 @@ extern void __chk_io_ptr(const volatile void __iomem *);
 // ARM10C 20140315
 // ARM10C 20140322
 // ARM10C 20141004
+// ARM10C 20141108
 # define __rcu
 #endif
 

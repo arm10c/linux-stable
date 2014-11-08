@@ -71,6 +71,8 @@ __rb_rotate_set_parents(struct rb_node *old, struct rb_node *new,
 
 // ARM10C 20140809
 // node: &(kmem_cache#30-o9)->rb_node, root: &vmap_area_root, dummy_rotate
+// ARM10C 20141025
+// node: &(kmem_cache#30-oX (GIC))->rb_node, root: &vmap_area_root
 static __always_inline void
 __rb_insert(struct rb_node *node, struct rb_root *root,
 	    void (*augment_rotate)(struct rb_node *old, struct rb_node *new))
@@ -463,9 +465,12 @@ static const struct rb_augment_callbacks dummy_callbacks = {
 
 // ARM10C 20140809
 // &va->rb_node: &(kmem_cache#30-o9)->rb_node, &vmap_area_root
+// ARM10C 20141025
+// va->rb_node: (kmem_cache#30-oX (GIC))->rb_node
 void rb_insert_color(struct rb_node *node, struct rb_root *root)
 {
 	// node: &(kmem_cache#30-o9)->rb_node, root: &vmap_area_root
+	// node: &(kmem_cache#30-oX (GIC))->rb_node, root: &vmap_area_root
 	__rb_insert(node, root, dummy_rotate);
 }
 EXPORT_SYMBOL(rb_insert_color);
@@ -554,10 +559,14 @@ struct rb_node *rb_next(const struct rb_node *node)
 }
 EXPORT_SYMBOL(rb_next);
 
+// ARM10C 20141025
+// va->rb_node: (kmem_cache#30-oX (GIC))->rb_node
 struct rb_node *rb_prev(const struct rb_node *node)
 {
 	struct rb_node *parent;
 
+	// node: (kmem_cache#30-oX (GIC))->rb_node
+	// RB_EMPTY_NODE((kmem_cache#30-oX (GIC))->rb_node): 0
 	if (RB_EMPTY_NODE(node))
 		return NULL;
 
@@ -565,6 +574,7 @@ struct rb_node *rb_prev(const struct rb_node *node)
 	 * If we have a left-hand child, go down and then right as far
 	 * as we can.
 	 */
+	// node->rb_left: ((kmem_cache#30-oX (GIC))->rb_node)->rb_left: NULL
 	if (node->rb_left) {
 		node = node->rb_left; 
 		while (node->rb_right)
@@ -576,10 +586,19 @@ struct rb_node *rb_prev(const struct rb_node *node)
 	 * No left-hand children. Go up till we find an ancestor which
 	 * is a right-hand child of its parent.
 	 */
+	// node: (kmem_cache#30-oX (GIC))->rb_node,
+	// rb_parent((kmem_cache#30-oX (GIC))->rb_node): (SYSC)->rb_node
+	// parent: (SYSC)->rb_node, parent->rb_left: ((SYSC)->rb_node)->rb_left: (GIC)->rb_node
 	while ((parent = rb_parent(node)) && node == parent->rb_left)
+		// node: (kmem_cache#30-oX (GIC))->rb_node, parent: (SYSC)->rb_node
 		node = parent;
+		// node: (SYSC)->rb_node
 
+	// loop 수행 결과 root node로 가서 parent가 NULL이 됨
+
+	// parent: NULL
 	return parent;
+	// return NULL
 }
 EXPORT_SYMBOL(rb_prev);
 

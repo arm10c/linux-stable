@@ -26,6 +26,7 @@
 
 // ARM10C 20131116
 // ARM10C 20131130
+// ARM10C 20141108
 #define LIST_HEAD(name) \
 	struct list_head name = LIST_HEAD_INIT(name)
 
@@ -233,6 +234,8 @@ static inline void list_move_tail(struct list_head *list,
  * @list: the entry to test
  * @head: the head of the list
  */
+// ARM10C 20141108
+// &first->list: &(GIC)->list, &vmap_area_list
 static inline int list_is_last(const struct list_head *list,
 				const struct list_head *head)
 {

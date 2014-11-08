@@ -49,6 +49,8 @@ struct rb_root {
 };
 
 
+// ARM10C 20141025
+// node: (kmem_cache#30-oX (GIC))->rb_node
 #define rb_parent(r)   ((struct rb_node *)((r)->__rb_parent_color & ~3))
 
 // ARM10C 20140809
@@ -62,6 +64,8 @@ struct rb_root {
 #define RB_EMPTY_ROOT(root)  ((root)->rb_node == NULL)
 
 /* 'empty' nodes are nodes that are known not to be inserted in an rbree */
+// ARM10C 20141025
+// node: (kmem_cache#30-oX (GIC))->rb_node
 #define RB_EMPTY_NODE(node)  \
 	((node)->__rb_parent_color == (unsigned long)(node))
 // ARM10C 20140830
@@ -94,20 +98,28 @@ extern void rb_replace_node(struct rb_node *victim, struct rb_node *new,
 
 // ARM10C 20140809
 // &va->rb_node: &(kmem_cache#30-o9)->rb_node, parent: NULL, p: &vmap_area_root.rb_node
+// ARM10C 20141025
+// va->rb_node: (kmem_cache#30-oX (GIC))->rb_node, parent: SYSC node, p: (SYSC node)->rb_left
 static inline void rb_link_node(struct rb_node * node, struct rb_node * parent,
 				struct rb_node ** rb_link)
 {
 	// node->__rb_parent_color: (kmem_cache#30-o9)->rb_node.__rb_parent_color, parent: NULL
+	// ((GIC)->rb_node)->__rb_parent_color, parent: (SYSC)->rb_node
 	node->__rb_parent_color = (unsigned long)parent;
 	// node->__rb_parent_color: (kmem_cache#30-o9)->rb_node.__rb_parent_color: NULL
+	// ((GIC)->rb_node)->__rb_parent_color: (SYSC)->rb_node
 
 	node->rb_left = node->rb_right = NULL;
 	// node->rb_left: (kmem_cache#30-o9)->rb_node.rb_left: NULL
 	// node->rb_right: (kmem_cache#30-o9)->rb_node.rb_right: NULL
+	// ((GIC)->rb_node)->rb_left: ((GIC)->rb_node).rb_left: NULL
+	// ((GIC)->rb_node)->rb_right: ((GIC)->rb_node).rb_right: NULL
 
 	// *rb_link: vmap_area_root.rb_node, node: &(kmem_cache#30-o9)->rb_node
+	// *rb_link: (SYSC node)->rb_left, node: &(GIC)->rb_node
 	*rb_link = node;
 	// vmap_area_root.rb_node: &(kmem_cache#30-o9)->rb_node
+	// (SYSC node)->rb_left: &(GIC)->rb_node
 }
 
 #define rb_entry_safe(ptr, type, member) \

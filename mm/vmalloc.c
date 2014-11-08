@@ -280,9 +280,11 @@ EXPORT_SYMBOL(vmalloc_to_pfn);
 // ARM10C 20141025
 static DEFINE_SPINLOCK(vmap_area_lock);
 /* Export for kexec only */
+// ARM10C 20141108
 LIST_HEAD(vmap_area_list);
 // ARM10C 20140809
 // ARM10C 20141025
+// ARM10C 20141108
 // RB_ROOT: (struct rb_root) { NULL, }
 static struct rb_root vmap_area_root = RB_ROOT;
 
@@ -326,37 +328,81 @@ static void __insert_vmap_area(struct vmap_area *va)
 {
 	struct rb_node **p = &vmap_area_root.rb_node;
 	// p: &vmap_area_root.rb_node
+	// p: &vmap_area_root.rb_node
 	struct rb_node *parent = NULL;
+	// parent: NULL
 	struct rb_node *tmp;
 
 	// *p: vmap_area_root.rb_node: NULL
+	// *p: vmap_area_root.rb_node: CHID node
 	while (*p) {
 		struct vmap_area *tmp_va;
 
+		// *p: vmap_area_root.rb_node: CHID node
 		parent = *p;
+		// parent: CHID node
+
+		// parent: CHID node
+		// rb_entry(CHID node, struct vmap_area, rb_node):
+		// CHID 의 vmap_area 시작주소
 		tmp_va = rb_entry(parent, struct vmap_area, rb_node);
+		// tmp_va: CHID 의 vmap_area 시작주소
+
+		// va->va_start: (kmem_cache#30-oX (GIC))->va_start: 0xf0000000,
+		// tmp_va->va_end: (CHID 의 vmap_area 시작주소)->va_end: 0xf8001000
 		if (va->va_start < tmp_va->va_end)
+			// &(*p)->rb_left: &(CHID node)->rb_left
 			p = &(*p)->rb_left;
+			// p: TMR node
 		else if (va->va_end > tmp_va->va_start)
 			p = &(*p)->rb_right;
 		else
 			BUG();
+
+		// GIC node를 추가 할때 까지 루프 수행
 	}
+	// while 수행 결과 rbtree를 순회 하여 GIC node를 rbtree에 추가함
+	/*
+	// 가상주소 va_start 기준으로 GIC 를 RB Tree 추가한 결과
+	//
+	//                                  CHID-b
+	//                               (0xF8000000)
+	//                              /            \
+	//                         TMR-r               PMU-r
+	//                    (0xF6300000)             (0xF8180000)
+	//                      /      \               /           \
+	//                 SYSC-b      WDT-b         CMU-b         SRAM-b
+	//            (0xF6100000)   (0xF6400000)  (0xF8100000)   (0xF8400000)
+	//             /                                                 \
+	//        GIC-r                                                   ROMC-r
+	//   (0xF0000000)                                                 (0xF84C0000)
+	//
+	*/
 
 	// va->rb_node: (kmem_cache#30-o9)->rb_node, parent: NULL, p: &vmap_area_root.rb_node
+	// va->rb_node: (kmem_cache#30-oX (GIC))->rb_node, parent: SYSC node, p: (SYSC node)->rb_left
 	rb_link_node(&va->rb_node, parent, p);
 	// vmap_area_root.rb_node: &(kmem_cache#30-o9)->rb_node
+	// (SYSC node)->rb_left: &(GIC)->rb_node
 
 	// va->rb_node: (kmem_cache#30-o9)->rb_node
+	// va->rb_node: (kmem_cache#30-oX (GIC))->rb_node
 	rb_insert_color(&va->rb_node, &vmap_area_root);
+	// rbtree 조건에 맞게 tree 구성 및 안정화 작업 수행
 
 	/* address-sort this list */
+	// va->rb_node: (kmem_cache#30-oX (GIC))->rb_node
+	// rb_prev((kmem_cache#30-oX (GIC))->rb_node): NULL
 	tmp = rb_prev(&va->rb_node);
+	// tmp: NULL
+
+	// tmp: NULL
 	if (tmp) {
 		struct vmap_area *prev;
 		prev = rb_entry(tmp, struct vmap_area, rb_node);
 		list_add_rcu(&va->list, &prev->list);
 	} else
+		// &va->list: &(kmem_cache#30-oX (GIC))->list
 		list_add_rcu(&va->list, &vmap_area_list);
 }
 
@@ -368,6 +414,8 @@ static void purge_vmap_area_lazy(void);
  */
 // ARM10C 20141025
 // size: 0x2000, align: 0x2000, start: 0xf0000000, end: 0xff000000, node: -1, gfp_mask: GFP_KERNEL: 0xD0
+// ARM10C 20141108
+// size: 0x2000, align: 0x2000, start: 0xf0000000, end: 0xff000000, node: -1, gfp_mask: GFP_KERNEL: 0xD0
 static struct vmap_area *alloc_vmap_area(unsigned long size,
 				unsigned long align,
 				unsigned long vstart, unsigned long vend,
@@ -378,23 +426,31 @@ static struct vmap_area *alloc_vmap_area(unsigned long size,
 	unsigned long addr;
 	int purged = 0;
 	// purged: 0
+	// purged: 0
 	struct vmap_area *first;
 
+	// size: 0x2000
 	// size: 0x2000
 	BUG_ON(!size);
 
 	// size: 0x2000, PAGE_MASK: 0xFFFFF000
+	// size: 0x2000, PAGE_MASK: 0xFFFFF000
 	BUG_ON(size & ~PAGE_MASK);
 
+	// align: 0x2000, is_power_of_2(0x2000): 1
 	// align: 0x2000, is_power_of_2(0x2000): 1
 	BUG_ON(!is_power_of_2(align));
 
 	// sizeof(struct vmap_area): 52 bytes, gfp_mask: GFP_KERNEL: 0xD0, GFP_RECLAIM_MASK: 0x13ef0, node: -1
 	// kmalloc_node(52, GFP_KERNEL: 0xD0, -1): kmem_cache#30-oX
+	// sizeof(struct vmap_area): 52 bytes, gfp_mask: GFP_KERNEL: 0xD0, GFP_RECLAIM_MASK: 0x13ef0, node: -1
+	// kmalloc_node(52, GFP_KERNEL: 0xD0, -1): kmem_cache#30-oX
 	va = kmalloc_node(sizeof(struct vmap_area),
 			gfp_mask & GFP_RECLAIM_MASK, node);
 	// va: kmem_cache#30-oX
+	// va: kmem_cache#30-oX
 
+	// va: kmem_cache#30-oX
 	// va: kmem_cache#30-oX
 	if (unlikely(!va))
 		return ERR_PTR(-ENOMEM);
@@ -404,10 +460,12 @@ static struct vmap_area *alloc_vmap_area(unsigned long size,
 	 * to avoid false negatives.
 	 */
 	// &va->rb_node: &(kmem_cache#30-oX)->rb_node, SIZE_MAX: 0xFFFFFFFF, gfp_mask: GFP_KERNEL: 0xD0, GFP_RECLAIM_MASK: 0x13ef0
+	// &va->rb_node: &(kmem_cache#30-oX)->rb_node, SIZE_MAX: 0xFFFFFFFF, gfp_mask: GFP_KERNEL: 0xD0, GFP_RECLAIM_MASK: 0x13ef0
 	kmemleak_scan_area(&va->rb_node, SIZE_MAX, gfp_mask & GFP_RECLAIM_MASK); // null function
 
 retry:
 	spin_lock(&vmap_area_lock);
+	// vmap_area_lock을 이용한 spinlock 설정 수행
 	// vmap_area_lock을 이용한 spinlock 설정 수행
 
 	/*
@@ -421,6 +479,8 @@ retry:
 	 */
 	// free_vmap_cache: NULL, size: 0x2000, cached_hole_size: 0
 	// vstart: 0xf0000000, cached_vstart: 0, align: 0x2000, cached_align: 0
+	// free_vmap_cache: &(kmem_cache#30-oX)->rb_node (GIC), size: 0x2000, cached_hole_size: 0
+	// vstart: 0xf0000000, cached_vstart: 0xf0000000, align: 0x2000, cached_align: 0x2000
 	if (!free_vmap_cache ||
 			size < cached_hole_size ||
 			vstart < cached_vstart ||
@@ -436,20 +496,37 @@ nocache:
 	}
 	/* record if we encounter less permissive parameters */
 	// cached_vstart: 0, vstart: 0xf0000000
+	// cached_vstart: 0xf0000000, vstart: 0xf0000000
 	cached_vstart = vstart;
+	// cached_vstart: 0xf0000000
 	// cached_vstart: 0xf0000000
 
 	// cached_align: 0, align: 0x2000
+	// cached_align: 0x2000, align: 0x2000
 	cached_align = align;
+	// cached_align: 0x2000
 	// cached_align: 0x2000
 
 	/* find starting point for our search */
 	// free_vmap_cache: NULL
+	// free_vmap_cache: &(kmem_cache#30-oX)->rb_node (GIC)
 	if (free_vmap_cache) {
+		// free_vmap_cache: &(kmem_cache#30-oX)->rb_node (GIC)
+		// rb_entry(&(kmem_cache#30-oX)->rb_node (GIC), struct vmap_area, rb_node):
+		// kmem_cache#30-oX (GIC)
 		first = rb_entry(free_vmap_cache, struct vmap_area, rb_node);
+		// first: kmem_cache#30-oX (GIC)
+
+		// first->va_end: (kmem_cache#30-oX)->va_end: 0xf0002000, align: 0x2000
+		// ALIGN(0xf0002000, 0x2000): 0xf0002000
 		addr = ALIGN(first->va_end, align);
+		// addr: 0xf0002000
+
+		// addr: 0xf0002000, vstart: 0xf0000000
 		if (addr < vstart)
 			goto nocache;
+
+		// addr: 0xf0002000, size: 0x2000
 		if (addr + size < addr)
 			goto overflow;
 
@@ -543,13 +620,21 @@ nocache:
 
 	/* from the starting point, walk areas until a suitable hole is found */
 	// addr: 0xf0000000, size: 0x2000, first->va_start: (SYSC)->va_start: 0xf6100000, vend: 0xff000000
+	// addr: 0xf0002000, size: 0x2000, first->va_start: (GIC)->va_start: 0xf0000000, vend: 0xff000000
 	while (addr + size > first->va_start && addr + size <= vend) {
+		// addr: 0xf0002000, cached_hole_size: 0, first->va_start: (GIC)->va_start: 0xf0000000
 		if (addr + cached_hole_size < first->va_start)
 			cached_hole_size = first->va_start - addr;
+
+		// first->va_end: (GIC)->va_end: 0xf0002000, align: 0x2000
 		addr = ALIGN(first->va_end, align);
+		// addr: 0xf0002000
+
+		// addr: 0xf0002000, size: 0x2000
 		if (addr + size < addr)
 			goto overflow;
 
+		// &first->list: &(GIC)->list
 		if (list_is_last(&first->list, &vmap_area_list))
 			goto found;
 
@@ -1646,6 +1731,7 @@ static struct vm_struct *__get_vm_area_node(unsigned long size,
 	// size: 0x2000
 
 // 2014/11/01 종료
+// 2014/11/08 시작
 
 	// size: 0x2000, align: 0x2000, start: 0xf0000000, end: 0xff000000, node: -1, gfp_mask: GFP_KERNEL: 0xD0
 	// alloc_vmap_area(0x2000, 0x2000, 0xf0000000, 0xff000000, -1, GFP_KERNEL: 0xD0): kmem_cache#30-oX (vmap_area GIC)
