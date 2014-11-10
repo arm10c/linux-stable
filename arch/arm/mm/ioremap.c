@@ -428,6 +428,7 @@ void __iomem * __arm_ioremap_pfn_caller(unsigned long pfn,
 	// (kmem_cache#30-oX (vmap_area GIC#0))->vm: kmem_cache#30-oX (vm_struct)
 	// (kmem_cache#30-oX (vmap_area GIC#0))->flags: 0x04
 	*/
+
 	/*
 	// get_vm_area_caller이 한일:
 	// alloc area (GIC#1) 를 만들고 rb tree에 alloc area 를 추가
@@ -517,7 +518,7 @@ void __iomem * __arm_ioremap_pfn_caller(unsigned long pfn,
 		// |              |       +              +
 		// +--------------+ +8    |   h/w pt 1   |
 		// |              |       +--------------+ +4096
-		//
+
 		// ioremap_page_range에서 한일:
 		// 0xc0004780이 가리키는 pte의 시작주소에 0x10482653 값을 갱신
 		// (linux pgtable과 hardware pgtable의 값 같이 갱신)
@@ -596,10 +597,11 @@ void __iomem *__arm_ioremap_caller(phys_addr_t phys_addr, size_t size,
 	// pfn: 0x10481, offset: 0, size: 0x1000, mtype: MT_DEVICE: 0, caller: __builtin_return_address(0)
 	// __arm_ioremap_pfn_caller(0x10481, 0, 0x1000, MT_DEVICE: 0, __builtin_return_address(0)): 0xf0000000
 	// pfn: 0x10482, offset: 0, size: 0x1000, mtype: MT_DEVICE: 0, caller: __builtin_return_address(0)
-	// __arm_ioremap_pfn_caller(0x10482, 0, 0x1000, MT_DEVICE: 0, __builtin_return_address(0)):
+	// __arm_ioremap_pfn_caller(0x10482, 0, 0x1000, MT_DEVICE: 0, __builtin_return_address(0)): 0xf0002000
 	return __arm_ioremap_pfn_caller(pfn, offset, size, mtype,
 			caller);
 	// return 0xf0000000
+	// return 0xf0002000
 }
 
 /*
@@ -621,6 +623,7 @@ __arm_ioremap_pfn(unsigned long pfn, unsigned long offset, size_t size,
 EXPORT_SYMBOL(__arm_ioremap_pfn);
 
 // ARM10C 20141018
+// ARM10C 20141101
 void __iomem * (*arch_ioremap_caller)(phys_addr_t, size_t,
 				      unsigned int, void *) =
 	__arm_ioremap_caller;

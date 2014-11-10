@@ -29,6 +29,7 @@ void __iowrite64_copy(void __iomem *to, const void *from, size_t count);
 
 #ifdef CONFIG_MMU // CONFIG_MMU=y
 // ARM10C 20141025
+// ARM10C 20141108
 int ioremap_page_range(unsigned long addr, unsigned long end,
 		       phys_addr_t phys_addr, pgprot_t prot);
 #else
