@@ -48,6 +48,9 @@
 // RADIX_TREE_MAP_SHIFT: 6
 // RADIX_TREE_MAP_SIZE: 64
 #define RADIX_TREE_MAP_SIZE	(1UL << RADIX_TREE_MAP_SHIFT)
+// ARM10C 20141004
+// RADIX_TREE_MAP_SIZE: 64
+// RADIX_TREE_MAP_MASK: 0x3f
 #define RADIX_TREE_MAP_MASK	(RADIX_TREE_MAP_SIZE-1)
 
 // ARM10C 20141004
@@ -58,6 +61,7 @@
 	((RADIX_TREE_MAP_SIZE + BITS_PER_LONG - 1) / BITS_PER_LONG)
 
 // ARM10C 20141004
+// ARM10C 20141115
 // sizeof(struct radix_tree_node): 296 bytes
 struct radix_tree_node {
 	unsigned int	height;		/* Height from the bottom */
@@ -118,19 +122,43 @@ struct radix_tree_preload {
 };
 static DEFINE_PER_CPU(struct radix_tree_preload, radix_tree_preloads) = { 0, };
 
+// ARM10C 20141004
+// node: kmem_cache#20-o0
+// ARM10C 20141115
+// node: kmem_cache#20-o1
 static inline void *ptr_to_indirect(void *ptr)
 {
+	// ptr: kmem_cache#20-o0, RADIX_TREE_INDIRECT_PTR: 1
 	return (void *)((unsigned long)ptr | RADIX_TREE_INDIRECT_PTR);
+	// return kmem_cache#20-o0 (RADIX_LSB: 1)
+	// NOTE:
+	// "RADIX_LSB: 1" 의 의미는 RADIX tree에서 최하위 bit를 1로 설정하여
+	// RADIX tree의 INDIRECT 주소임을 나타내는 것을 의미함
 }
 
+// ARM10C 20141004
+// root->rnode: (&irq_desc_tree)->rnode: NULL
+// ARM10C 20141004
+// root->rnode: (&irq_desc_tree)->rnode: kmem_cache#20-o0 (RADIX_LSB: 1)
+// ARM10C 20141115
+// slot: kmem_cache#20-o0 (radix height 1 관리 주소)
+// ARM10C 20141115
+// root->rnode: (&irq_desc_tree)->rnode: kmem_cache#20-o1 (RADIX_LSB: 1)
 static inline void *indirect_to_ptr(void *ptr)
 {
+	// ptr: NULL, RADIX_TREE_INDIRECT_PTR: 1
 	return (void *)((unsigned long)ptr & ~RADIX_TREE_INDIRECT_PTR);
+	// return 0
 }
 
+// ARM10C 20141004
+// root: &irq_desc_tree
 static inline gfp_t root_gfp_mask(struct radix_tree_root *root)
 {
+	// root->gfp_mask: (&irq_desc_tree)->gfp_mask: GFP_KERNEL: 0xD0,
+	// __GFP_BITS_MASK: 0x1ffffff
 	return root->gfp_mask & __GFP_BITS_MASK;
+	// return GFP_KERNEL: 0xD0
 }
 
 static inline void tag_set(struct radix_tree_node *node, unsigned int tag,
@@ -145,10 +173,17 @@ static inline void tag_clear(struct radix_tree_node *node, unsigned int tag,
 	__clear_bit(offset, node->tags[tag]);
 }
 
+// ARM10C 20141004
+// node: kmem_cache#20-o0 (RADIX_LSB: 0), 0, offset: 1
+// ARM10C 20141004
+// node: kmem_cache#20-o0 (RADIX_LSB: 0), 1, offset: 1
 static inline int tag_get(struct radix_tree_node *node, unsigned int tag,
 		int offset)
 {
+	// offset: 1, tag: 0, node->tags[0]: (kmem_cache#20-o0 (RADIX_LSB: 0))->tags[0]
+	// test_bit(1, (kmem_cache#20-o0 (RADIX_LSB: 0))->tags[0]): 0
 	return test_bit(offset, node->tags[tag]);
+	// return 0
 }
 
 static inline void root_tag_set(struct radix_tree_root *root, unsigned int tag)
@@ -166,9 +201,17 @@ static inline void root_tag_clear_all(struct radix_tree_root *root)
 	root->gfp_mask &= __GFP_BITS_MASK;
 }
 
+// ARM10C 20141004
+// root: &irq_desc_tree, 0
+// ARM10C 20141004
+// root: &irq_desc_tree, 1
+// ARM10C 20141004
+// root: &irq_desc_tree, tag: 0
 static inline int root_tag_get(struct radix_tree_root *root, unsigned int tag)
 {
+	// root->gfp_mask: (&irq_desc_tree)->gfp_mask: GFP_KERNEL: 0xD0, tag: 0, __GFP_BITS_SHIFT: 25
 	return (__force unsigned)root->gfp_mask & (1 << (tag + __GFP_BITS_SHIFT));
+	// return 0
 }
 
 /*
@@ -225,17 +268,28 @@ radix_tree_find_next_bit(const unsigned long *addr,
  * This assumes that the caller has performed appropriate preallocation, and
  * that the caller has pinned this thread of control to the current CPU.
  */
+// ARM10C 20141004
+// root: &irq_desc_tree
+// ARM10C 20141115
+// root: &irq_desc_tree
+// ARM10C 20141115
+// root: &irq_desc_tree
 static struct radix_tree_node *
 radix_tree_node_alloc(struct radix_tree_root *root)
 {
 	struct radix_tree_node *ret = NULL;
+	// ret: NULL
+
+	// root: &irq_desc_tree, root_gfp_mask(&irq_desc_tree): GFP_KERNEL: 0xD0
 	gfp_t gfp_mask = root_gfp_mask(root);
+	// gfp_mask: GFP_KERNEL: 0xD0
 
 	/*
 	 * Preload code isn't irq safe and it doesn't make sence to use
 	 * preloading in the interrupt anyway as all the allocations have to
 	 * be atomic. So just do normal allocation when in interrupt.
 	 */
+	// gfp_mask: GFP_KERNEL: 0xD0, __GFP_WAIT: 0x10u, in_interrupt(): 0
 	if (!(gfp_mask & __GFP_WAIT) && !in_interrupt()) {
 		struct radix_tree_preload *rtp;
 
@@ -251,11 +305,21 @@ radix_tree_node_alloc(struct radix_tree_root *root)
 			rtp->nr--;
 		}
 	}
-	if (ret == NULL)
-		ret = kmem_cache_alloc(radix_tree_node_cachep, gfp_mask);
 
+	// ret: NULL
+	if (ret == NULL)
+		// radix_tree_node_cachep: kmem_cache#20, gfp_mask: GFP_KERNEL: 0xD0
+		// kmem_cache_alloc(kmem_cache#20, GFP_KERNEL: 0xD0): kmem_cache#20-o0
+		ret = kmem_cache_alloc(radix_tree_node_cachep, gfp_mask);
+		// ret: kmem_cache#20-o0
+
+	// ret: kmem_cache#20-o0
+	// radix_tree_is_indirect_ptr(kmem_cache#20-o0): 0
 	BUG_ON(radix_tree_is_indirect_ptr(ret));
+
+	// ret: kmem_cache#20-o0
 	return ret;
+	// return kmem_cache#20-o0
 }
 
 static void radix_tree_node_rcu_free(struct rcu_head *head)
@@ -354,14 +418,28 @@ EXPORT_SYMBOL(radix_tree_maybe_preload);
  *	Return the maximum key which can be store into a
  *	radix tree with height HEIGHT.
  */
+// ARM10C 20141004
+// root->height: (&irq_desc_tree)->height: 0
+// ARM10C 20141004
+// height: 1
+// ARM10C 20141115
+// height: 1
 static inline unsigned long radix_tree_maxindex(unsigned int height)
 {
+	// height: 0, height_to_maxindex[0]: 0
+	// height: 1, height_to_maxindex[1]: 63
 	return height_to_maxindex[height];
+	// return 0
+	// return 63
 }
 
 /*
  *	Extend a radix tree so it can store key @index.
  */
+// ARM10C 20141004
+// root: &irq_desc_tree, index: 1
+// ARM10C 20141115
+// root: &irq_desc_tree, index: 64
 static int radix_tree_extend(struct radix_tree_root *root, unsigned long index)
 {
 	struct radix_tree_node *node;
@@ -370,10 +448,19 @@ static int radix_tree_extend(struct radix_tree_root *root, unsigned long index)
 	int tag;
 
 	/* Figure out what the height should be.  */
+	// root->height: (&irq_desc_tree)->height: 0
+	// root->height: (&irq_desc_tree)->height: 1
 	height = root->height + 1;
+	// height: 1
+	// height: 2
+
+	// index: 1, height: 1, radix_tree_maxindex(1): 63
+	// index: 64, height: 2, radix_tree_maxindex(2): 4095
 	while (index > radix_tree_maxindex(height))
 		height++;
 
+	// root->rnode: (&irq_desc_tree)->rnode: kmem_cache#28-o0 (irq 0)
+	// root->rnode: (&irq_desc_tree)->rnode: kmem_cache#20-o0 (radix height 1 관리 주소)
 	if (root->rnode == NULL) {
 		root->height = height;
 		goto out;
@@ -381,32 +468,108 @@ static int radix_tree_extend(struct radix_tree_root *root, unsigned long index)
 
 	do {
 		unsigned int newheight;
+
+		// root: &irq_desc_tree, radix_tree_node_alloc(&irq_desc_tree): kmem_cache#20-o0
+		// node: kmem_cache#20-o0
+		// root: &irq_desc_tree, radix_tree_node_alloc(&irq_desc_tree): kmem_cache#20-o1
+		// node: kmem_cache#20-o1
 		if (!(node = radix_tree_node_alloc(root)))
 			return -ENOMEM;
 
 		/* Propagate the aggregated tag info into the new root */
+		// RADIX_TREE_MAX_TAGS: 3
+		// RADIX_TREE_MAX_TAGS: 3
 		for (tag = 0; tag < RADIX_TREE_MAX_TAGS; tag++) {
+			// root: &irq_desc_tree, tag: 0, root_tag_get(&irq_desc_tree, 0): 0
+			// root: &irq_desc_tree, tag: 1, root_tag_get(&irq_desc_tree, 1): 0
+			// root: &irq_desc_tree, tag: 2, root_tag_get(&irq_desc_tree, 2): 0
+			// root: &irq_desc_tree, tag: 0, root_tag_get(&irq_desc_tree, 0): 0
+			// root: &irq_desc_tree, tag: 1, root_tag_get(&irq_desc_tree, 1): 0
+			// root: &irq_desc_tree, tag: 2, root_tag_get(&irq_desc_tree, 2): 0
 			if (root_tag_get(root, tag))
 				tag_set(node, tag, 0);
 		}
 
 		/* Increase the height.  */
+		// root->height: (&irq_desc_tree)->height: 0
+		// root->height: (&irq_desc_tree)->height: 1
 		newheight = root->height+1;
+		// newheight: 1
+		// newheight: 2
+
+		// node->height: (kmem_cache#20-o0)->height, newheight: 1
+		// node->height: (kmem_cache#20-o1)->height, newheight: 2
 		node->height = newheight;
+		// node->height: (kmem_cache#20-o0)->height: 1
+		// node->height: (kmem_cache#20-o1)->height: 2
+
+		// node->count: (kmem_cache#20-o0)->count
+		// node->count: (kmem_cache#20-o1)->count
 		node->count = 1;
+		// node->count: (kmem_cache#20-o0)->count: 1
+		// node->count: (kmem_cache#20-o1)->count: 1
+
+		// node->parent: (kmem_cache#20-o0)->parent
+		// node->parent: (kmem_cache#20-o1)->parent
 		node->parent = NULL;
+		// node->parent: (kmem_cache#20-o0)->parent: NULL
+		// node->parent: (kmem_cache#20-o1)->parent: NULL
+
+		// root->rnode: (&irq_desc_tree)->rnode: kmem_cache#28-o0 (irq 0)
+		// root->rnode: (&irq_desc_tree)->rnode: kmem_cache#20-o0 (radix height 1 관리 주소)
 		slot = root->rnode;
+		// slot: kmem_cache#28-o0 (irq 0)
+		// slot: kmem_cache#20-o0 (radix height 1 관리 주소)
+
+		// newheight: 1
+		// newheight: 2
 		if (newheight > 1) {
+			// slot: kmem_cache#20-o0 (radix height 1 관리 주소)
+			// indirect_to_ptr(kmem_cache#20-o0): kmem_cache#20-o0 (radix height 1 관리 주소)
 			slot = indirect_to_ptr(slot);
+			// slot: kmem_cache#20-o0 (radix height 1 관리 주소)
+
+			// slot->parent: (kmem_cache#20-o0 (radix height 1 관리 주소))->parent,
+			// node: kmem_cache#20-o1
 			slot->parent = node;
+			// slot->parent: (kmem_cache#20-o0 (radix height 1 관리 주소))->parent: kmem_cache#20-o1
 		}
+
+		// node->slots[0]: (kmem_cache#20-o0)->slots[0], slot: kmem_cache#28-o0 (irq 0)
+		// node->slots[0]: (kmem_cache#20-o1)->slots[0], slot: kmem_cache#20-o0 (radix height 1 관리 주소)
 		node->slots[0] = slot;
+		// node->slots[0]: (kmem_cache#20-o0)->slots[0]: kmem_cache#28-o0 (irq 0)
+		// node->slots[0]: (kmem_cache#20-o1)->slots[0]: kmem_cache#20-o0 (radix height 1 관리 주소)
+
+		// node: kmem_cache#20-o0
+		// ptr_to_indirect(kmem_cache#20-o0): kmem_cache#20-o0 (RADIX_LSB: 1)
+		// node: kmem_cache#20-o1
+		// ptr_to_indirect(kmem_cache#20-o1): kmem_cache#20-o1 (RADIX_LSB: 1)
 		node = ptr_to_indirect(node);
+		// node: kmem_cache#20-o0 (RADIX_LSB: 1)
+		// node: kmem_cache#20-o1 (RADIX_LSB: 1)
+
+		// root->rnode: (&irq_desc_tree)->rnode: kmem_cache#28-o0 (irq 0),
+		// node: kmem_cache#20-o0 (RADIX_LSB: 1)
+		// root->rnode: (&irq_desc_tree)->rnode: kmem_cache#20-o0,
+		// node: kmem_cache#20-o1 (RADIX_LSB: 1)
 		rcu_assign_pointer(root->rnode, node);
+		// root->rnode: (&irq_desc_tree)->rnode: kmem_cache#20-o0 (RADIX_LSB: 1)
+		// root->rnode: (&irq_desc_tree)->rnode: kmem_cache#20-o1 (RADIX_LSB: 1)
+
+		// root->height: (&irq_desc_tree)->height: 0, newheight: 1
+		// root->height: (&irq_desc_tree)->height: 1, newheight: 2
 		root->height = newheight;
+		// root->height: (&irq_desc_tree)->height: 1
+		// root->height: (&irq_desc_tree)->height: 2
+
+		// height: 1, root->height: (&irq_desc_tree)->height: 1
+		// height: 2, root->height: (&irq_desc_tree)->height: 2
 	} while (height > root->height);
 out:
 	return 0;
+	// return 0
+	// return 0
 }
 
 /**
@@ -419,66 +582,231 @@ out:
  */
 // ARM10C 20141004
 // &irq_desc_tree, irq: 0, desc: kmem_cache#28-o0
+// ARM10C 20141004
+// &irq_desc_tree, irq: 1, desc: kmem_cache#28-o1
+// ARM10C 20141115
+// &irq_desc_tree, irq: 64, desc: kmem_cache#28-oX (irq 64)
 int radix_tree_insert(struct radix_tree_root *root,
 			unsigned long index, void *item)
 {
 	struct radix_tree_node *node = NULL, *slot;
+	// node: NULL
+	// node: NULL
+	// node: NULL
 	unsigned int height, shift;
 	int offset;
 	int error;
 
+	// item: kmem_cache#28-o0
+	// radix_tree_is_indirect_ptr(kmem_cache#28-o0): 0
+	// item: kmem_cache#28-o1
+	// radix_tree_is_indirect_ptr(kmem_cache#28-o1): 0
+	// item: kmem_cache#28-oX (irq 64)
+	// radix_tree_is_indirect_ptr(kmem_cache#28-oX (irq 64)): 0
 	BUG_ON(radix_tree_is_indirect_ptr(item));
 
 	/* Make sure the tree is high enough.  */
+	// index: 0, root->height: (&irq_desc_tree)->height: 0, radix_tree_maxindex(0): 0
+	// index: 1, root->height: (&irq_desc_tree)->height: 0, radix_tree_maxindex(0): 0
+	// index: 64, root->height: (&irq_desc_tree)->height: 1, radix_tree_maxindex(1): 63
 	if (index > radix_tree_maxindex(root->height)) {
+		// root: &irq_desc_tree, index: 1
+		// radix_tree_extend(&irq_desc_tree, 1): 0
+		// root: &irq_desc_tree, index: 64
+		// radix_tree_extend(&irq_desc_tree, 64): 0
 		error = radix_tree_extend(root, index);
+		// error: 0
+		// error: 0
+
+		// radix_tree_extend(1)에서 한일:
+		// radix_tree_node_cachep를 사용한 struct radix_tree_node 용 메모리 할당: kmem_cache#20-o0
+		// (kmem_cache#20-o0)->height: 1
+		// (kmem_cache#20-o0)->count: 1
+		// (kmem_cache#20-o0)->parent: NULL
+		// (kmem_cache#20-o0)->slots[0]: kmem_cache#28-o0 (irq 0)
+		// radix tree의 root node: &irq_desc_tree 값을 변경
+		// (&irq_desc_tree)->rnode: kmem_cache#20-o0 (RADIX_LSB: 1)
+		// (&irq_desc_tree)->height: 1
+
+		// radix_tree_extend(64)에서 한일:
+		// radix_tree_node_cachep를 사용한 struct radix_tree_node 용 메모리 할당: kmem_cache#20-o1
+		// (kmem_cache#20-o0 (radix height 1 관리 주소))->parent: kmem_cache#20-o1
+		// (kmem_cache#20-o1)->height: 2
+		// (kmem_cache#20-o1)->count: 1
+		// (kmem_cache#20-o1)->parent: NULL
+		// (kmem_cache#20-o1)->slots[0]: kmem_cache#20-o0 (radix height 1 관리 주소)
+		// radix tree의 root node: &irq_desc_tree 값을 변경
+		// (&irq_desc_tree)->rnode: kmem_cache#20-o1 (RADIX_LSB: 1)
+		// (&irq_desc_tree)->height: 2
+
+		// error: 0
+		// error: 0
 		if (error)
 			return error;
 	}
 
+	// root->rnode: (&irq_desc_tree)->rnode: NULL
+	// indirect_to_ptr(NULL): NULL
+	// root->rnode: (&irq_desc_tree)->rnode: kmem_cache#20-o0 (RADIX_LSB: 1)
+	// indirect_to_ptr(kmem_cache#20-o0): kmem_cache#20-o0 (RADIX_LSB: 0)
+	// root->rnode: (&irq_desc_tree)->rnode: kmem_cache#20-o1 (RADIX_LSB: 1)
+	// indirect_to_ptr(kmem_cache#20-o1): kmem_cache#20-o1 (RADIX_LSB: 0)
 	slot = indirect_to_ptr(root->rnode);
+	// slot: NULL
+	// slot: kmem_cache#20-o0 (RADIX_LSB: 0)
+	// slot: kmem_cache#20-o1 (RADIX_LSB: 0)
 
+	// root->height: (&irq_desc_tree)->height: 0
+	// root->height: (&irq_desc_tree)->height: 1
+	// root->height: (&irq_desc_tree)->height: 2
 	height = root->height;
+	// height: 0
+	// height: 1
+	// height: 2
+
+	// height: 0, RADIX_TREE_MAP_SHIFT: 6
+	// height: 1, RADIX_TREE_MAP_SHIFT: 6
+	// height: 2, RADIX_TREE_MAP_SHIFT: 6
 	shift = (height-1) * RADIX_TREE_MAP_SHIFT;
+	// shift: 0xfffffffa
+	// shift: 0
+	// shift: 6
 
 	offset = 0;			/* uninitialised var warning */
+	// offset: 0
+	// offset: 0
+	// offset: 0
+
+	// height: 0
+	// height: 1
+	// height: 2
 	while (height > 0) {
+		// slot: kmem_cache#20-o0 (RADIX_LSB: 0)
+		// slot: kmem_cache#20-o1 (RADIX_LSB: 0)
+		// slot: NULL
 		if (slot == NULL) {
 			/* Have to add a child node.  */
+			// slot: NULL, root: &irq_desc_tree,
+			// radix_tree_node_alloc(&irq_desc_tree): kmem_cache#20-o2
+			// slot: kmem_cache#20-o2
 			if (!(slot = radix_tree_node_alloc(root)))
 				return -ENOMEM;
+
+			// slot->height: (kmem_cache#20-o2)->height, height: 1
 			slot->height = height;
+			// slot->height: (kmem_cache#20-o2)->height: 1
+
+			// slot->parent: (kmem_cache#20-o2)->parent,
+			// node: kmem_cache#20-o1 (RADIX_LSB: 0)
 			slot->parent = node;
+			// slot->parent: (kmem_cache#20-o2)->parent: kmem_cache#20-o1 (RADIX_LSB: 0)
+
+			// node: kmem_cache#20-o1 (RADIX_LSB: 0)
 			if (node) {
+				// offset: 1, node->slots[1]: (kmem_cache#20-o1 (RADIX_LSB: 0))->slots[1],
+				// slot: kmem_cache#20-o2
 				rcu_assign_pointer(node->slots[offset], slot);
+				// node->slots[1]: (kmem_cache#20-o1 (RADIX_LSB: 0))->slots[1]: kmem_cache#20-o2
+
+				// node->count: (kmem_cache#20-o1 (RADIX_LSB: 0))->count: 1
 				node->count++;
+				// node->count: (kmem_cache#20-o1 (RADIX_LSB: 0))->count: 2
 			} else
 				rcu_assign_pointer(root->rnode, ptr_to_indirect(slot));
 		}
 
 		/* Go a level down */
+		// offset: 0, index: 1, shift: 0, RADIX_TREE_MAP_MASK: 0x3f
+		// offset: 0, index: 64, shift: 6, RADIX_TREE_MAP_MASK: 0x3f
+		// offset: 1, index: 64, shift: 0, RADIX_TREE_MAP_MASK: 0x3f
 		offset = (index >> shift) & RADIX_TREE_MAP_MASK;
+		// offset: 1
+		// offset: 1
+		// offset: 0
+
+		// node: NULL, slot: kmem_cache#20-o0 (RADIX_LSB: 0)
+		// node: NULL, slot: kmem_cache#20-o1 (RADIX_LSB: 0)
+		// node: NULL, slot: kmem_cache#20-o2 (RADIX_LSB: 0)
 		node = slot;
+		// node: kmem_cache#20-o0 (RADIX_LSB: 0)
+		// node: kmem_cache#20-o1 (RADIX_LSB: 0)
+		// node: kmem_cache#20-o2 (RADIX_LSB: 0)
+
+		// offset: 1, node->slots[1]: (kmem_cache#20-o0 (RADIX_LSB: 0))->slots[1]: NULL
+		// offset: 1, node->slots[1]: (kmem_cache#20-o1 (RADIX_LSB: 0))->slots[1]: NULL
+		// offset: 0, node->slots[0]: (kmem_cache#20-o2 (RADIX_LSB: 0))->slots[0]: NULL
 		slot = node->slots[offset];
+		// slot: NULL
+		// slot: NULL
+		// slot: NULL
+
+		// shift: 0, RADIX_TREE_MAP_SHIFT: 6
+		// shift: 6, RADIX_TREE_MAP_SHIFT: 6
+		// shift: 0, RADIX_TREE_MAP_SHIFT: 6
 		shift -= RADIX_TREE_MAP_SHIFT;
+		// shift: 0xfffffffa
+		// shift: 0
+		// shift: 0xfffffffa
+
+		// height: 1
+		// height: 2
+		// height: 1
 		height--;
+		// height: 0
+		// height: 1
+		// height: 0
 	}
 
+	// slot: NULL
+	// slot: NULL
+	// slot: NULL
 	if (slot != NULL)
 		return -EEXIST;
 
+	// node: NULL
+	// node: kmem_cache#20-o0 (RADIX_LSB: 0)
+	// node: kmem_cache#20-o2 (RADIX_LSB: 0)
 	if (node) {
+		// node->count: (kmem_cache#20-o0 (RADIX_LSB: 0))->count: 1
+		// node->count: (kmem_cache#20-o2 (RADIX_LSB: 0))->count: 0
 		node->count++;
+		// node->count: (kmem_cache#20-o0 (RADIX_LSB: 0))->count: 2
+		// node->count: (kmem_cache#20-o2 (RADIX_LSB: 0))->count: 1
+
+		// offset: 1, node->slots[1]: (kmem_cache#20-o0 (RADIX_LSB: 0))->slots[1], item: kmem_cache#28-o1 (irq 1)
+		// offset: 0, node->slots[0]: (kmem_cache#20-o2 (RADIX_LSB: 0))->slots[0], item: kmem_cache#28-oX (irq 64)
 		rcu_assign_pointer(node->slots[offset], item);
+		// node->slots[1]: (kmem_cache#20-o0 (RADIX_LSB: 0))->slots[1]: kmem_cache#28-o1 (irq 1)
+		// node->slots[0]: (kmem_cache#20-o2 (RADIX_LSB: 0))->slots[0]: kmem_cache#28-oX (irq 64)
+
+		// node: kmem_cache#20-o0 (RADIX_LSB: 0), offset: 1
+		// tag_get(kmem_cache#20-o0 (RADIX_LSB: 0), 0, 1): 0
+		// node: kmem_cache#20-o2 (RADIX_LSB: 0), offset: 0
+		// tag_get(kmem_cache#20-o2 (RADIX_LSB: 0), 0, 1): 0
 		BUG_ON(tag_get(node, 0, offset));
+
+		// node: kmem_cache#20-o0 (RADIX_LSB: 0), offset: 1
+		// tag_get(kmem_cache#20-o0 (RADIX_LSB: 0), 1, 1): 0
+		// node: kmem_cache#20-o2 (RADIX_LSB: 0), offset: 0
+		// tag_get(kmem_cache#20-o2 (RADIX_LSB: 0), 1, 1): 0
 		BUG_ON(tag_get(node, 1, offset));
 	} else {
+		// root->rnode: (&irq_desc_tree)->rnode: NULL, item: kmem_cache#28-o0
 		rcu_assign_pointer(root->rnode, item);
+		// rcu_assign_pointer에서 한일:
+		// ((&irq_desc_tree)->rnode) = (typeof(*kmem_cache#28-o0) __force rcu *)(kmem_cache#28-o0);
+
+		// root: &irq_desc_tree, root_tag_get(&irq_desc_tree, 0): 0
 		BUG_ON(root_tag_get(root, 0));
+
+		// root: &irq_desc_tree, root_tag_get(&irq_desc_tree, 1): 0
 		BUG_ON(root_tag_get(root, 1));
 	}
 
 	return 0;
+	// return 0
+	// return 0
+	// return 0
 }
 EXPORT_SYMBOL(radix_tree_insert);
 

@@ -568,12 +568,19 @@ static inline void rcu_preempt_sleep_check(void)
 //	  smp_wmb(); // dmb();
 //	  ((&cpu_chain)->head) = (typeof(*&slab_notifier) __force *)(&slab_notifier);
 // } while (0)
+// ARM10C 20141004
+// #define __rcu_assign_pointer((&irq_desc_tree)->rnode, kmem_cache#28-o0, rcu):
+// do {
+//	smp_wmb();
+//	((&irq_desc_tree)->rnode) = (typeof(*kmem_cache#28-o0) __force rcu *)(kmem_cache#28-o0);
+// } while (0)
+// ARM10C 20141025
 // ARM10C 20141025
 // __rcu_assign_pointer((*((struct list_head __rcu **)(&(&vmap_area_list)->next))), new: &((GIC))->list, __rcu):
 // do {
 //	smp_wmb();
 //	((*((struct list_head __rcu **)(&(&vmap_area_list)->next)))) =
-//	(typeof(*&((GIC))->list) __force space *)(&((GIC))->list);
+//	(typeof(*&((GIC))->list) __force rcu *)(&((GIC))->list);
 // } while (0)
 #define __rcu_assign_pointer(p, v, space)	\
 	do { \
@@ -978,8 +985,21 @@ static inline notrace void rcu_read_unlock_sched_notrace(void)
 // } while (0)
 //
 // ARM10C 20140927
+// ARM10C 20141004
+// root->rnode: (&irq_desc_tree)->rnode: NULL, item: kmem_cache#28-o0
+// ARM10C 20141004
+// root->rnode: (&irq_desc_tree)->rnode: kmem_cache#28-o0,
+// node: kmem_cache#20-o0 (RADIX_LSB: 1)
+// ARM10C 20141004
+// node->slots[1]: (kmem_cache#20-o0 (RADIX_LSB: 0))->slots[1], item: kmem_cache#28-o1 (irq 1)
 // ARM10C 20141025
 // (*((struct list_head __rcu **)(&(&vmap_area_list)->next))), new: &((GIC))->list
+// ARM10C 20141115
+// root->rnode: (&irq_desc_tree)->rnode: kmem_cache#20-o0,
+// node: kmem_cache#20-o1 (RADIX_LSB: 1)
+// ARM10C 20141115
+// offset: 1, node->slots[1]: (kmem_cache#20-o1 (RADIX_LSB: 0))->slots[1],
+// slot: kmem_cache#20-o2
 #define rcu_assign_pointer(p, v)		\
 	__rcu_assign_pointer((p), (v), __rcu)
 

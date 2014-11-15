@@ -93,6 +93,7 @@
 #define in_irq()		(hardirq_count())
 #define in_softirq()		(softirq_count())
 // ARM10C 20140315
+// ARM10C 20141004
 // ARM10C 20141025
 // in_interrupt(): 0
 #define in_interrupt()		(irq_count())

@@ -195,13 +195,22 @@ static RADIX_TREE(irq_desc_tree, GFP_KERNEL);
 
 // ARM10C 20141004
 // i: 0, desc: kmem_cache#28-o0
+// ARM10C 20141004
+// i: 1, desc: kmem_cache#28-o1
 // ARM10C 20141115
 // 16, desc: kmem_cache#28-oX
+// ARM10C 20141115
+// 64, desc: kmem_cache#28-oX (irq 64)
 static void irq_insert_desc(unsigned int irq, struct irq_desc *desc)
 {
 	// irq: 0, desc: kmem_cache#28-o0
+	// irq: 1, desc: kmem_cache#28-o1
+	// irq: 16, desc: kmem_cache#28-oX
+	// irq: 64, desc: kmem_cache#28-oX (irq 64)
 	radix_tree_insert(&irq_desc_tree, irq, desc);
 	// radix tree에 kmem_cache#28-o0를 노드로 추가
+	// radix tree에 kmem_cache#28-o1를 노드로 추가
+	// radix tree에 kmem_cache#28-oX를 노드로 추가
 }
 
 struct irq_desc *irq_to_desc(unsigned int irq)
@@ -230,7 +239,9 @@ static inline void free_masks(struct irq_desc *desc) { }
 // ARM10C 20141004
 // i: 0, node: 0, null
 // ARM10C 20141115
-// i: 0, start: 16, node: 0, owner: NULL
+// 16, node: 0, owner: NULL
+// ARM10C 20141115
+// 64, node: 0, owner: NULL
 static struct irq_desc *alloc_desc(int irq, int node, struct module *owner)
 {
 	struct irq_desc *desc;
@@ -327,8 +338,11 @@ static int alloc_descs(unsigned int start, unsigned int cnt, int node,
 	for (i = 0; i < cnt; i++) {
 		// i: 0, start: 16, node: 0, owner: NULL
 		// alloc_desc(16, 0, NULL): kmem_cache#28-oX
+		// i: 48, start: 16, node: 0, owner: NULL
+		// alloc_desc(64, 0, NULL): kmem_cache#28-oX (irq 64)
 		desc = alloc_desc(start + i, node, owner);
 		// desc: kmem_cache#28-oX
+		// desc: kmem_cache#28-oX (irq 64)
 
 		// alloc_desc(16)에서 한일:
 		// (kmem_cache#28-oX)->kstat_irqs: pcp 4 byte 공간
@@ -350,17 +364,50 @@ static int alloc_descs(unsigned int start, unsigned int cnt, int node,
 		// (kmem_cache#28-oX)->irq_data.node: 0
 		// (kmem_cache#28-oX)->irq_data.affinity.bits[0]: 0xF
 
+		// alloc_desc(64)에서 한일:
+		// (kmem_cache#28-oX)->kstat_irqs: pcp 4 byte 공간
+		// (kmem_cache#28-oX)->lock 을 이용한 spinlock 초기화 수행
+		// (kmem_cache#28-oX)->irq_data.irq: 64
+		// (kmem_cache#28-oX)->irq_data.chip: &no_irq_chip
+		// (kmem_cache#28-oX)->irq_data.chip_data: NULL
+		// (kmem_cache#28-oX)->irq_data.handler_data: NULL
+		// (kmem_cache#28-oX)->irq_data.msi_desc: NULL
+		// (kmem_cache#28-oX)->status_use_accessors: 0xc00
+		// (&(kmem_cache#28-oX)->irq_data)->state_use_accessors: 0x10000
+		// (kmem_cache#28-oX)->handle_irq: handle_bad_irq
+		// (kmem_cache#28-oX)->depth: 1
+		// (kmem_cache#28-oX)->irq_count: 0
+		// (kmem_cache#28-oX)->irqs_unhandled: 0
+		// (kmem_cache#28-oX)->name: NULL
+		// (kmem_cache#28-oX)->owner: null
+		// [pcp0...3] (kmem_cache#28-oX)->kstat_irqs: 0
+		// (kmem_cache#28-oX)->irq_data.node: 0
+		// (kmem_cache#28-oX)->irq_data.affinity.bits[0]: 0xF
+
 		// desc: kmem_cache#28-oX
+		// desc: kmem_cache#28-oX (irq 64)
 		if (!desc)
 			goto err;
 
 		mutex_lock(&sparse_irq_lock);
 		// sparse_irq_lock을 이용한 mutex lock 수행
+		// sparse_irq_lock을 이용한 mutex lock 수행
 
-		// i: 0, start: 16, desc: kmem_cache#28-oX
+		// i: 0, start: 16, desc: kmem_cache#28-oX, irq_insert_desc(16, kmem_cache#28-oX): 0
+		// i: 48, start: 16, desc: kmem_cache#28-oX (irq 64), irq_insert_desc(48, kmem_cache#28-oX (irq 64)): 0
 		irq_insert_desc(start + i, desc);
+
+// 2014/11/15 종료
+
+		// irq_insert_desc(16)에서 한일:
+		// (kmem_cache#20-o0)->count: 16
+		// (kmem_cache#20-o0)->slots[16]: kmem_cache#28-o16 (irq 16)
+
 		mutex_unlock(&sparse_irq_lock);
 		// sparse_irq_lock을 이용한 mutex unlock 수행
+		// sparse_irq_lock을 이용한 mutex unlock 수행
+
+		// 17 ... 160 까지 루프 수행
 	}
 	return start;
 
@@ -457,6 +504,24 @@ int __init early_irq_init(void)
 		// i: 0, desc: kmem_cache#28-o0
 		irq_insert_desc(i, desc);
 		// radix tree에 kmem_cache#28-o0를 노드로 추가
+
+		// irq_insert_desc(0)에서 한일:
+		// ((&irq_desc_tree)->rnode) = (typeof(*kmem_cache#28-o0) __force rcu *)(kmem_cache#28-o0);
+		//
+		// irq_insert_desc(1)에서 한일:
+		// radix_tree_node_cachep를 사용한 struct radix_tree_node 용 메모리 할당: kmem_cache#20-o0
+		// (kmem_cache#20-o0)->height: 1
+		// (kmem_cache#20-o0)->count: 1
+		// (kmem_cache#20-o0)->parent: NULL
+		// (kmem_cache#20-o0)->slots[0]: kmem_cache#28-o0 (irq 0)
+		// (kmem_cache#20-o0)->slots[1]: kmem_cache#28-o1 (irq 1)
+		// radix tree의 root node: &irq_desc_tree 값을 변경
+		// (&irq_desc_tree)->rnode: kmem_cache#20-o0 (RADIX_LSB: 1)
+		// (&irq_desc_tree)->height: 1
+		//
+		// irq_insert_desc(2)에서 한일:
+		// (kmem_cache#20-o0)->count: 2
+		// (kmem_cache#20-o0)->slots[2]: kmem_cache#28-o2 (irq 2)
 
 		// i: 1 ... 15 수행
 	}

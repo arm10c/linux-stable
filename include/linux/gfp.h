@@ -114,6 +114,7 @@ struct vm_area_struct;
 // ARM10C 20140426
 // ARM10C 20140524
 // ARM10C 20140614
+// ARM10C 20141004
 // ___GFP_WAIT: 0x10u
 // __GFP_WAIT: 0x10u
 #define __GFP_WAIT	((__force gfp_t)___GFP_WAIT)	/* Can wait and reschedule? */
@@ -209,8 +210,11 @@ struct vm_area_struct;
 #define __GFP_NOTRACK_FALSE_POSITIVE (__GFP_NOTRACK)
 
 // ARM10C 20140426
+// ARM10C 20141004
+// __GFP_BITS_SHIFT: 25
 #define __GFP_BITS_SHIFT 25	/* Room for N __GFP_FOO bits */
 // ARM10C 20140426
+// ARM10C 20141004
 // __GFP_BITS_SHIFT: 25
 // __GFP_BITS_MASK: 0x1ffffff
 #define __GFP_BITS_MASK ((__force gfp_t)((1 << __GFP_BITS_SHIFT) - 1))

@@ -41,6 +41,8 @@
  * when it is shrunk, before we rcu free the node. See shrink code for
  * details.
  */
+// ARM10C 20141004
+// RADIX_TREE_INDIRECT_PTR: 1
 #define RADIX_TREE_INDIRECT_PTR		1
 /*
  * A common use of the radix tree is to store pointers to struct pages;
@@ -51,9 +53,17 @@
 #define RADIX_TREE_EXCEPTIONAL_ENTRY	2
 #define RADIX_TREE_EXCEPTIONAL_SHIFT	2
 
+// ARM10C 20141004
+// item: kmem_cache#28-o0
+// ARM10C 20141004
+// ret: kmem_cache#20-o0
+// ARM10C 20141115
+// item: kmem_cache#28-oX (irq 64)
 static inline int radix_tree_is_indirect_ptr(void *ptr)
 {
+	// ptr: kmem_cache#28-o0, RADIX_TREE_INDIRECT_PTR: 1
 	return (int)((unsigned long)ptr & RADIX_TREE_INDIRECT_PTR);
+	// return 0
 }
 
 /*** radix-tree API starts here ***/
