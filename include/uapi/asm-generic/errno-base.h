@@ -18,6 +18,8 @@
 #define	EFAULT		14	/* Bad address */
 #define	ENOTBLK		15	/* Block device required */
 #define	EBUSY		16	/* Device or resource busy */
+// ARM10C 20141115
+// EEXIST: 17
 #define	EEXIST		17	/* File exists */
 #define	EXDEV		18	/* Cross-device link */
 #define	ENODEV		19	/* No such device */

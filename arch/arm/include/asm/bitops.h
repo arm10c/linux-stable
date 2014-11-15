@@ -163,9 +163,11 @@ extern int _test_and_change_bit(int nr, volatile unsigned long * p);
  */
 extern int _find_first_zero_bit_le(const void * p, unsigned size);
 // ARM10C 20140607
+// ARM10C 20141115
 extern int _find_next_zero_bit_le(const void * p, int size, int offset);
 extern int _find_first_bit_le(const unsigned long *p, unsigned size);
 // ARM10C 20140607
+// ARM10C 20141115
 extern int _find_next_bit_le(const unsigned long *p, int size, int offset);
 
 /*
@@ -214,6 +216,8 @@ extern int _find_next_bit_be(const unsigned long *p, int size, int offset);
 // ARM10C 20131207
 // ARM10C 20140607
 // chunk->populated: dchunk->populated[0]: 0xff, end: 0x4, *rs: 0x4
+// ARM10C 20141115
+// map: allocated_irqs, size: 8212, start: 16
 #define find_next_zero_bit(p,sz,off)	_find_next_zero_bit_le(p,sz,off)
 #define find_first_bit(p,sz)		_find_first_bit_le(p,sz)
 // ARM10C 20140215
@@ -221,6 +225,8 @@ extern int _find_next_bit_be(const unsigned long *p, int size, int offset);
 // p: cpu_possible_mask->bits: 0xF , sz: 4, off: 0
 // ARM10C 20140607
 // chunk->populated: dchunk->populated[0]: 0xff, end: 0x4, *rs: 0x3
+// ARM10C 20141115
+// map: allocated_irqs, end: 160, index: 16
 #define find_next_bit(p,sz,off)		_find_next_bit_le(p,sz,off)
 
 #else

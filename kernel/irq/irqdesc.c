@@ -165,13 +165,17 @@ static void desc_set_defaults(unsigned int irq, struct irq_desc *desc, int node,
 }
 
 // ARM10C 20141004
+// ARM10C 20141115
 // NR_IRQS: 16
 // nr_irqs: 16
 int nr_irqs = NR_IRQS;
 EXPORT_SYMBOL_GPL(nr_irqs);
 
+// ARM10C 20141115
 static DEFINE_MUTEX(sparse_irq_lock);
+
 // ARM10C 20141004
+// ARM10C 20141115
 // IRQ_BITMAP_BITS: 8212
 // DECLARE_BITMAP(allocated_irqs, 8212): allocated_irqs[257]
 static DECLARE_BITMAP(allocated_irqs, IRQ_BITMAP_BITS);
@@ -191,6 +195,8 @@ static RADIX_TREE(irq_desc_tree, GFP_KERNEL);
 
 // ARM10C 20141004
 // i: 0, desc: kmem_cache#28-o0
+// ARM10C 20141115
+// 16, desc: kmem_cache#28-oX
 static void irq_insert_desc(unsigned int irq, struct irq_desc *desc)
 {
 	// irq: 0, desc: kmem_cache#28-o0
@@ -223,6 +229,8 @@ static inline void free_masks(struct irq_desc *desc) { }
 
 // ARM10C 20141004
 // i: 0, node: 0, null
+// ARM10C 20141115
+// i: 0, start: 16, node: 0, owner: NULL
 static struct irq_desc *alloc_desc(int irq, int node, struct module *owner)
 {
 	struct irq_desc *desc;
@@ -307,19 +315,52 @@ static void free_desc(unsigned int irq)
 	kfree(desc);
 }
 
+// ARM10C 20141115
+// start: 16, cnt: 144, node: 0, owner: NULL
 static int alloc_descs(unsigned int start, unsigned int cnt, int node,
 		       struct module *owner)
 {
 	struct irq_desc *desc;
 	int i;
 
+	// cnt: 144
 	for (i = 0; i < cnt; i++) {
+		// i: 0, start: 16, node: 0, owner: NULL
+		// alloc_desc(16, 0, NULL): kmem_cache#28-oX
 		desc = alloc_desc(start + i, node, owner);
+		// desc: kmem_cache#28-oX
+
+		// alloc_desc(16)에서 한일:
+		// (kmem_cache#28-oX)->kstat_irqs: pcp 4 byte 공간
+		// (kmem_cache#28-oX)->lock 을 이용한 spinlock 초기화 수행
+		// (kmem_cache#28-oX)->irq_data.irq: 16
+		// (kmem_cache#28-oX)->irq_data.chip: &no_irq_chip
+		// (kmem_cache#28-oX)->irq_data.chip_data: NULL
+		// (kmem_cache#28-oX)->irq_data.handler_data: NULL
+		// (kmem_cache#28-oX)->irq_data.msi_desc: NULL
+		// (kmem_cache#28-oX)->status_use_accessors: 0xc00
+		// (&(kmem_cache#28-oX)->irq_data)->state_use_accessors: 0x10000
+		// (kmem_cache#28-oX)->handle_irq: handle_bad_irq
+		// (kmem_cache#28-oX)->depth: 1
+		// (kmem_cache#28-oX)->irq_count: 0
+		// (kmem_cache#28-oX)->irqs_unhandled: 0
+		// (kmem_cache#28-oX)->name: NULL
+		// (kmem_cache#28-oX)->owner: null
+		// [pcp0...3] (kmem_cache#28-oX)->kstat_irqs: 0
+		// (kmem_cache#28-oX)->irq_data.node: 0
+		// (kmem_cache#28-oX)->irq_data.affinity.bits[0]: 0xF
+
+		// desc: kmem_cache#28-oX
 		if (!desc)
 			goto err;
+
 		mutex_lock(&sparse_irq_lock);
+		// sparse_irq_lock을 이용한 mutex lock 수행
+
+		// i: 0, start: 16, desc: kmem_cache#28-oX
 		irq_insert_desc(start + i, desc);
 		mutex_unlock(&sparse_irq_lock);
+		// sparse_irq_lock을 이용한 mutex unlock 수행
 	}
 	return start;
 
@@ -333,12 +374,20 @@ err:
 	return -ENOMEM;
 }
 
+// ARM10C 20141115
+// 160
 static int irq_expand_nr_irqs(unsigned int nr)
 {
+	// nr: 160, IRQ_BITMAP_BITS: 8212
 	if (nr > IRQ_BITMAP_BITS)
 		return -ENOMEM;
+
+	// nr_irqs: 16, nr: 160
 	nr_irqs = nr;
+	// nr_irqs: 160
+
 	return 0;
+	// return 0
 }
 
 // ARM10C 20141004
@@ -529,15 +578,19 @@ EXPORT_SYMBOL_GPL(irq_free_descs);
  *
  * Returns the first irq number or error code
  */
+// ARM10C 20141115
+// irq_start: -1, 16, gic_irqs: 144, numa_node_id(): 0, THIS_MODULE: ((struct module *)0)
 int __ref
 __irq_alloc_descs(int irq, unsigned int from, unsigned int cnt, int node,
 		  struct module *owner)
 {
 	int start, ret;
 
+	// cnt: 144
 	if (!cnt)
 		return -EINVAL;
 
+	// irq: -1
 	if (irq >= 0) {
 		if (from > irq)
 			return -EINVAL;
@@ -545,21 +598,45 @@ __irq_alloc_descs(int irq, unsigned int from, unsigned int cnt, int node,
 	}
 
 	mutex_lock(&sparse_irq_lock);
+	// sparse_irq_lock을 이용한 mutex lock 수행
 
+	// IRQ_BITMAP_BITS: 8212, from: 16, cnt: 144
+	// bitmap_find_next_zero_area(allocated_irqs, 8212, 16, 144, 0): 16
 	start = bitmap_find_next_zero_area(allocated_irqs, IRQ_BITMAP_BITS,
 					   from, cnt, 0);
+	// start: 16
+
+	// EEXIST: 17
 	ret = -EEXIST;
+	// ret: -17
+
+	// irq: -1, start: 16
 	if (irq >=0 && start != irq)
 		goto err;
 
+	// start: 16, cnt: 144, nr_irqs: 16
 	if (start + cnt > nr_irqs) {
+		// start: 16, cnt: 144
+		// irq_expand_nr_irqs(160): 0
 		ret = irq_expand_nr_irqs(start + cnt);
+		// ret: 0
+		// irq_expand_nr_irqs에서 한일:
+		// 전역변수 nr_irqs 값을 160으로 갱신
+
+		// ret: 0
 		if (ret)
 			goto err;
 	}
 
+	// start: 16, cnt: 144
 	bitmap_set(allocated_irqs, start, cnt);
+	// bitmap_set에서 한일:
+	// allocated_irqs 의 16 bit 부터 144 bit를 1로 set
+
 	mutex_unlock(&sparse_irq_lock);
+	// sparse_irq_lock을 이용한 mutex unlock 수행
+
+	// start: 16, cnt: 144, node: 0, owner: NULL
 	return alloc_descs(start, cnt, node, owner);
 
 err:

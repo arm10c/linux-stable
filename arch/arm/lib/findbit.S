@@ -50,6 +50,8 @@ ENDPROC(_find_first_zero_bit_le)
 // node_bootmem_map[0]: 0x7
 // ARM10C 20140607
 // chunk->populated: dchunk->populated[0]: 0xff, end: 0x4, *rs: 0x4
+// ARM10C 20141115
+// map: allocated_irqs, size: 8212, start: 16
 ENTRY(_find_next_zero_bit_le)
 		teq	r1, #0
 		beq	3b
@@ -95,6 +97,8 @@ ENDPROC(_find_first_bit_le)
 // p: cpu_possible_mask->bits: 0xF , sz: 4, off: 0
 // ARM10C 20140607
 // chunk->populated: dchunk->populated[0]: 0xff, end: 0x4, *rs: 0x3
+// ARM10C 20141115
+// map: allocated_irqs, end: 160, index: 16
 ENTRY(_find_next_bit_le)
 		teq	r1, #0
 		beq	3b

@@ -273,20 +273,51 @@ int __bitmap_weight(const unsigned long *bitmap, int bits)
 }
 EXPORT_SYMBOL(__bitmap_weight);
 
+// ARM10C 20141115
+// allocated_irqs, start: 16, cnt: 144
 void bitmap_set(unsigned long *map, int start, int nr)
 {
+	// map: allocated_irqs, start: 16, BIT_WORD(16): 0
 	unsigned long *p = map + BIT_WORD(start);
-	const int size = start + nr;
-	int bits_to_set = BITS_PER_LONG - (start % BITS_PER_LONG);
-	unsigned long mask_to_set = BITMAP_FIRST_WORD_MASK(start);
+	// p: &allocated_irqs[0]
 
+	// start: 16, nr: 144
+	const int size = start + nr;
+	// size: 160
+
+	// BITS_PER_LONG: 32, start: 16
+	int bits_to_set = BITS_PER_LONG - (start % BITS_PER_LONG);
+	// bits_to_set: 16
+
+	// start: 16, BITMAP_FIRST_WORD_MASK(16): 0xffff0000
+	unsigned long mask_to_set = BITMAP_FIRST_WORD_MASK(start);
+	// mask_to_set: 0xffff0000
+
+	// nr: 144, bits_to_set: 16
 	while (nr - bits_to_set >= 0) {
+		// *p: allocated_irqs[0]: 0x0000ffff, mask_to_set: 0xffff0000
 		*p |= mask_to_set;
+		// *p: allocated_irqs[0]: 0xffffffff
+
+		// nr: 144, bits_to_set: 16
 		nr -= bits_to_set;
+		// nr: 128
+
+		// bits_to_set: 16, BITS_PER_LONG: 32
 		bits_to_set = BITS_PER_LONG;
+		// bits_to_set: 32
+
+		// ~0: 0xffffffff
 		mask_to_set = ~0UL;
+		// mask_to_set: 0xffffffff
+
+		// p: &allocated_irqs[0]
 		p++;
+		// p: &allocated_irqs[1]
 	}
+	// nr 값이 0이 될때 loop 탈출
+
+	// nr: 0
 	if (nr) {
 		mask_to_set &= BITMAP_LAST_WORD_MASK(size);
 		*p |= mask_to_set;
@@ -327,6 +358,8 @@ EXPORT_SYMBOL(bitmap_clear);
  * the bit offset of all zero areas this function finds is multiples of that
  * power of 2. A @align_mask of 0 means no alignment is required.
  */
+// ARM10C 20141115
+// allocated_irqs, IRQ_BITMAP_BITS: 8212, from: 16, cnt: 144, 0
 unsigned long bitmap_find_next_zero_area(unsigned long *map,
 					 unsigned long size,
 					 unsigned long start,
@@ -335,20 +368,39 @@ unsigned long bitmap_find_next_zero_area(unsigned long *map,
 {
 	unsigned long index, end, i;
 again:
+	// map: allocated_irqs, size: 8212, start: 16
+	// find_next_zero_bit(allocated_irqs, 8212, 16): 16
 	index = find_next_zero_bit(map, size, start);
+	// index: 16
 
 	/* Align allocation */
+	// index: 16, align_mask: 0
+	// __ALIGN_MASK(16, 0): 16
 	index = __ALIGN_MASK(index, align_mask);
+	// index: 16
 
+	// index: 16, nr: 144
 	end = index + nr;
+	// end: 160
+
+	// end: 160, size: 8212
 	if (end > size)
 		return end;
+
+	// map: allocated_irqs, end: 160, index: 16
+	// find_next_bit(allocated_irqs, 160, 16): 160
 	i = find_next_bit(map, end, index);
+	// i: 160
+
+	// i: 160, end: 160
 	if (i < end) {
 		start = i + 1;
 		goto again;
 	}
+
+	// index: 16
 	return index;
+	// return 16
 }
 EXPORT_SYMBOL(bitmap_find_next_zero_area);
 

@@ -986,13 +986,25 @@ void __init gic_init_bases(unsigned int gic_nr, int irq_start,
 	// gic_irqs: 0x4
 
 // 2014/11/08 종료
+// 2014/11/15 시작
 
+	// gic_irqs: 0x4
 	gic_irqs = (gic_irqs + 1) * 32;
+	// gic_irqs: 160
+
+	// gic_irqs: 160
 	if (gic_irqs > 1020)
 		gic_irqs = 1020;
-	gic->gic_irqs = gic_irqs;
 
+	// gic->gic_irqs: (&gic_data[0])->gic_irqs, gic_irqs: 160
+	gic->gic_irqs = gic_irqs;
+	// gic->gic_irqs: (&gic_data[0])->gic_irqs: 160
+
+	// gic_irqs: 160, hwirq_base: 16
 	gic_irqs -= hwirq_base; /* calculate # of irqs to allocate */
+	// gic_irqs: 144
+
+	// irq_start: -1, gic_irqs: 144, numa_node_id(): 0
 	irq_base = irq_alloc_descs(irq_start, 16, gic_irqs, numa_node_id());
 	if (IS_ERR_VALUE(irq_base)) {
 		WARN(1, "Cannot allocate irq_descs @ IRQ%d, assuming pre-allocated\n",

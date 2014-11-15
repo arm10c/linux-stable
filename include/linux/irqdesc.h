@@ -38,6 +38,7 @@ struct irq_desc;
  * @name:		flow handler name for /proc/interrupts output
  */
 // ARM10C 20141004
+// ARM10C 20141115
 // sizeof(struct irq_desc): 156 bytes
 struct irq_desc {
 	struct irq_data		irq_data;
