@@ -379,9 +379,21 @@ int irq_domain_associate(struct irq_domain *domain, unsigned int virq,
 	// domain->ops->map: (kmem_cache#25-o0)->ops->map: gic_irq_domain_map
 	if (domain->ops->map) {
 		// domain->ops->map: (kmem_cache#25-o0)->ops->map: gic_irq_domain_map
-		// domain: domain: kmem_cache#25-o0, virq: 16, hwirq: 16
-		// gic_irq_domain_map(kmem_cache#25-o0, 16, 16): 
+		// domain: kmem_cache#25-o0, virq: 16, hwirq: 16
+		// gic_irq_domain_map(kmem_cache#25-o0, 16, 16): 0
 		ret = domain->ops->map(domain, virq, hwirq);
+		// ret: 0
+
+		// gic_irq_domain_map에서 한일:
+		// (kmem_cache#28-oX (irq 16))->percpu_enabled: kmem_cache#30-oX
+		// (kmem_cache#28-oX (irq 16))->status_use_accessors: 0x31600
+		// (&(kmem_cache#28-oX (irq 16))->irq_data)->state_use_accessors: 0x10800
+		// (kmem_cache#28-oX (irq 16))->irq_data.chip: &gic_chip
+		// (kmem_cache#28-oX (irq 16))->handle_irq: handle_percpu_devid_irq
+		// (kmem_cache#28-oX (irq 16))->name: NULL
+		// (kmem_cache#28-oX (irq 16))->irq_data.chip_data: &gic_data[0]
+
+		// ret: 0
 		if (ret != 0) {
 			/*
 			 * If map() returns -EPERM, this interrupt is protected
@@ -399,22 +411,35 @@ int irq_domain_associate(struct irq_domain *domain, unsigned int virq,
 		}
 
 		/* If not already assigned, give the domain the chip's name */
+		// domain->name: (kmem_cache#25-o0)->name: NULL,
+		// irq_data->chip: (&(kmem_cache#28-oX (irq 16))->irq_data)->chip: &gic_chip
 		if (!domain->name && irq_data->chip)
+			// domain->name: (kmem_cache#25-o0)->name: NULL,
+			// irq_data->chip->name: ((&(kmem_cache#28-oX (irq 16))->irq_data)->chip)->name: "GIC"
 			domain->name = irq_data->chip->name;
+			// domain->name: (kmem_cache#25-o0)->name: "GIC"
 	}
 
+	// hwirq: 16, domain->revmap_size: (kmem_cache#25-o0)->revmap_size: 160
 	if (hwirq < domain->revmap_size) {
+		// hwirq: 16, domain->linear_revmap[16]: (kmem_cache#25-o0)->linear_revmap[16], virq: 16
 		domain->linear_revmap[hwirq] = virq;
+		// domain->linear_revmap[16]: (kmem_cache#25-o0)->linear_revmap[16]: 16
 	} else {
 		mutex_lock(&revmap_trees_mutex);
 		radix_tree_insert(&domain->revmap_tree, hwirq, irq_data);
 		mutex_unlock(&revmap_trees_mutex);
 	}
 	mutex_unlock(&irq_domain_mutex);
+	// irq_domain_mutex을 사용한 mutex lock 해재
 
+	// virq: 16, IRQ_NOREQUEST: 0x800
 	irq_clear_status_flags(virq, IRQ_NOREQUEST);
+	// irq_clear_status_flags에서 한일:
+	// (kmem_cache#28-oX (irq 16))->status_use_accessors: 0x31600
 
 	return 0;
+	// return 0
 }
 EXPORT_SYMBOL_GPL(irq_domain_associate);
 
@@ -435,7 +460,10 @@ void irq_domain_associate_many(struct irq_domain *domain, unsigned int irq_base,
 	// count: 144
 	for (i = 0; i < count; i++) {
 		// domain: kmem_cache#25-o0, irq_base: 16, i: 0, hwirq_base: 16
+		// irq_domain_associate(kmem_cache#25-o0, 16, 16): 0
 		irq_domain_associate(domain, irq_base + i, hwirq_base + i);
+
+// 2014/11/22 종료
 	}
 }
 EXPORT_SYMBOL_GPL(irq_domain_associate_many);

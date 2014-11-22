@@ -344,6 +344,7 @@ static void gic_handle_cascade_irq(unsigned int irq, struct irq_desc *desc)
 	chained_irq_exit(chip, desc);
 }
 
+// ARM10C 20141122
 static struct irq_chip gic_chip = {
 	.name			= "GIC",
 	.irq_mask		= gic_mask_irq,
@@ -351,7 +352,7 @@ static struct irq_chip gic_chip = {
 	.irq_eoi		= gic_eoi_irq,
 	.irq_set_type		= gic_set_type,
 	.irq_retrigger		= gic_retrigger,
-#ifdef CONFIG_SMP
+#ifdef CONFIG_SMP // CONFIG_SMP=y
 	.irq_set_affinity	= gic_set_affinity,
 #endif
 	.irq_set_wake		= gic_set_wake,
@@ -829,18 +830,40 @@ void __init gic_init_physaddr(struct device_node *node)
 static int gic_irq_domain_map(struct irq_domain *d, unsigned int irq,
 				irq_hw_number_t hw)
 {
+	// hw: 16
 	if (hw < 32) {
+		// irq: 16
 		irq_set_percpu_devid(irq);
+		// irq_set_percpu_devid에서 한일:
+		// (kmem_cache#28-oX (irq 16))->percpu_enabled: kmem_cache#30-oX
+		// (kmem_cache#28-oX (irq 16))->status_use_accessors: 0x31600
+		// (&(kmem_cache#28-oX (irq 16))->irq_data)->state_use_accessors: 0x10800
+
+		// irq: 16
 		irq_set_chip_and_handler(irq, &gic_chip,
 					 handle_percpu_devid_irq);
+		// irq_set_chip_and_handler에서 한일:
+		// (kmem_cache#28-oX (irq 16))->irq_data.chip: &gic_chip
+		// (kmem_cache#28-oX (irq 16))->handle_irq: handle_percpu_devid_irq
+		// (kmem_cache#28-oX (irq 16))->name: NULL
+
+		// irq: 16, IRQF_VALID: 1, IRQF_NOAUTOEN: 0x4
 		set_irq_flags(irq, IRQF_VALID | IRQF_NOAUTOEN);
+		// set_irq_flags에서 한일:
+		// (kmem_cache#28-oX (irq 16))->status_use_accessors: 0x31600
+		// (&(kmem_cache#28-oX (irq 16))->irq_data)->state_use_accessors: 0x10800
 	} else {
 		irq_set_chip_and_handler(irq, &gic_chip,
 					 handle_fasteoi_irq);
 		set_irq_flags(irq, IRQF_VALID | IRQF_PROBE);
 	}
+	// irq: 16, d->host_data: (kmem_cache#25-o0)->host_data: &gic_data[0]
 	irq_set_chip_data(irq, d->host_data);
+	// irq_set_chip_data에서 한일:
+	// desc->irq_data.chip_data: (kmem_cache#28-oX (irq 16))->irq_data.chip_data: &gic_data[0]
+
 	return 0;
+	// return 0
 }
 
 static int gic_irq_domain_xlate(struct irq_domain *d,

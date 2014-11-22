@@ -176,6 +176,7 @@ static DEFINE_MUTEX(sparse_irq_lock);
 
 // ARM10C 20141004
 // ARM10C 20141115
+// ARM10C 20141122
 // IRQ_BITMAP_BITS: 8212
 // DECLARE_BITMAP(allocated_irqs, 8212): allocated_irqs[257]
 static DECLARE_BITMAP(allocated_irqs, IRQ_BITMAP_BITS);
@@ -829,22 +830,40 @@ EXPORT_SYMBOL_GPL(__irq_alloc_descs);
  *
  * Returns 0 on success or an appropriate error code
  */
+// ARM10C 20141122
+// irq: 16, 1
 int irq_reserve_irqs(unsigned int from, unsigned int cnt)
 {
 	unsigned int start;
 	int ret = 0;
+	// ret: 0
 
+	// cnt: 1, from: 16, nr_irqs: 160
 	if (!cnt || (from + cnt) > nr_irqs)
 		return -EINVAL;
 
 	mutex_lock(&sparse_irq_lock);
+	// sparse_irq_lock을 이용한 mutex lock 수행
+
+	// nr_irqs: 160, from: 16, cnt: 1
+	// bitmap_find_next_zero_area(allocated_irqs, 160, 16, 1, 0): 161
 	start = bitmap_find_next_zero_area(allocated_irqs, nr_irqs, from, cnt, 0);
+	// start: 161
+
+	// start: 161, from: 16
 	if (start == from)
 		bitmap_set(allocated_irqs, start, cnt);
 	else
+		// ret: 0, EEXIST: 17
 		ret = -EEXIST;
+		// ret: -17 (EEXIST)
+
 	mutex_unlock(&sparse_irq_lock);
+	// sparse_irq_lock을 이용한 mutex unlock 수행
+
+	// ret: -17 (EEXIST)
 	return ret;
+	// return -17 (EEXIST)
 }
 
 /**
@@ -858,13 +877,25 @@ unsigned int irq_get_next_irq(unsigned int offset)
 	return find_next_bit(allocated_irqs, nr_irqs, offset);
 }
 
+// ARM10C 20141122
+// irq: 16, flags: &flags, false, check: 0
+// ARM10C 20141122
+// irq: 16, flags: &flags, true, check: 0
 struct irq_desc *
 __irq_get_desc_lock(unsigned int irq, unsigned long *flags, bool bus,
 		    unsigned int check)
 {
+	// irq: 16, irq_to_desc(16): kmem_cache#28-oX (irq 16)
+	// irq: 16, irq_to_desc(16): kmem_cache#28-oX (irq 16)
 	struct irq_desc *desc = irq_to_desc(irq);
+	// desc: kmem_cache#28-oX (irq 16)
+	// desc: kmem_cache#28-oX (irq 16)
 
+	// desc: kmem_cache#28-oX (irq 16)
+	// desc: kmem_cache#28-oX (irq 16)
 	if (desc) {
+		// check: 0, _IRQ_DESC_CHECK: 1
+		// check: 0, _IRQ_DESC_CHECK: 1
 		if (check & _IRQ_DESC_CHECK) {
 			if ((check & _IRQ_DESC_PERCPU) &&
 			    !irq_settings_is_per_cpu_devid(desc))
@@ -875,37 +906,72 @@ __irq_get_desc_lock(unsigned int irq, unsigned long *flags, bool bus,
 				return NULL;
 		}
 
+		// bus: false
+		// bus: true
 		if (bus)
+			// desc: kmem_cache#28-oX (irq 16)
 			chip_bus_lock(desc);
+
+		// &desc->lock: &(kmem_cache#28-oX (irq 16))->lock, *flags: flags
+		// &desc->lock: &(kmem_cache#28-oX (irq 16))->lock, *flags: flags
 		raw_spin_lock_irqsave(&desc->lock, *flags);
+		// &(kmem_cache#28-oX (irq 16))->lock을 사용하여 spinlock을 설정하고 cpsr을 flags에 저장
+		// &(kmem_cache#28-oX (irq 16))->lock을 사용하여 spinlock을 설정하고 cpsr을 flags에 저장
 	}
+
+	// desc: kmem_cache#28-oX (irq 16)
+	// desc: kmem_cache#28-oX (irq 16)
 	return desc;
+	// return kmem_cache#28-oX (irq 16)
+	// return kmem_cache#28-oX (irq 16)
 }
 
+// ARM10C 20141122
+// desc: kmem_cache#28-oX (irq 16), flags, false
 void __irq_put_desc_unlock(struct irq_desc *desc, unsigned long flags, bool bus)
 {
+	// &desc->lock: &(kmem_cache#28-oX (irq 16))->lock, flags: flags
 	raw_spin_unlock_irqrestore(&desc->lock, flags);
+	// &(kmem_cache#28-oX (irq 16))->lock을 사용한 spinlock 해재하고 flags에 저장된 cpsr을 복원
+
+	// bus: false
 	if (bus)
 		chip_bus_sync_unlock(desc);
 }
 
+// ARM10C 20141122
+// irq: 16
 int irq_set_percpu_devid(unsigned int irq)
 {
+	// irq: 16, irq_to_desc(16): kmem_cache#28-oX (irq 16)
 	struct irq_desc *desc = irq_to_desc(irq);
+	// desc: kmem_cache#28-oX (irq 16)
 
+	// desc: kmem_cache#28-oX (irq 16)
 	if (!desc)
 		return -EINVAL;
 
+	// desc->percpu_enabled: (kmem_cache#28-oX (irq 16))->percpu_enabled: NULL
 	if (desc->percpu_enabled)
 		return -EINVAL;
 
+	// desc->percpu_enabled: (kmem_cache#28-oX (irq 16))->percpu_enabled: NULL
+	// sizeof(struct cpumask): 4, GFP_KERNEL: 0xD0, kzalloc(4, GFP_KERNEL: 0xD0): kmem_cache#30-oX
 	desc->percpu_enabled = kzalloc(sizeof(*desc->percpu_enabled), GFP_KERNEL);
+	// desc->percpu_enabled: (kmem_cache#28-oX (irq 16))->percpu_enabled: kmem_cache#30-oX
 
+	// desc->percpu_enabled: (kmem_cache#28-oX (irq 16))->percpu_enabled: kmem_cache#30-oX
 	if (!desc->percpu_enabled)
 		return -ENOMEM;
 
+	// irq: 16
 	irq_set_percpu_devid_flags(irq);
+	// irq_set_percpu_devid_flags에서 한일:
+	// (kmem_cache#28-oX (irq 16))->status_use_accessors: 0x31600
+	// (&(kmem_cache#28-oX (irq 16))->irq_data)->state_use_accessors: 0x10800
+
 	return 0;
+	// return 0
 }
 
 /**

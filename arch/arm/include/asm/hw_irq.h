@@ -12,8 +12,14 @@ static inline void ack_bad_irq(int irq)
 
 void set_irq_flags(unsigned int irq, unsigned int flags);
 
+// ARM10C 20141122
+// IRQF_VALID: 1
 #define IRQF_VALID	(1 << 0)
+// ARM10C 20141122
+// IRQF_PROBE: 0x2
 #define IRQF_PROBE	(1 << 1)
+// ARM10C 20141122
+// IRQF_NOAUTOEN: 0x4
 #define IRQF_NOAUTOEN	(1 << 2)
 
 // ARM10C 20141004

@@ -74,6 +74,7 @@ typedef	void (*irq_preflow_handler_t)(struct irq_data *data);
  *				  it from the spurious interrupt detection
  *				  mechanism and from core side polling.
  */
+// ARM10C 20141122
 enum {
 	IRQ_TYPE_NONE		= 0x00000000,
 	IRQ_TYPE_EDGE_RISING	= 0x00000001,
@@ -203,14 +204,20 @@ struct irq_data {
  * IRQD_IRQ_INPROGRESS		- In progress state of the interrupt
  */
 // ARM10C 20141004
+// ARM10C 20141122
 enum {
+	// IRQD_TRIGGER_MASK: 0xf
 	IRQD_TRIGGER_MASK		= 0xf,
 	IRQD_SETAFFINITY_PENDING	= (1 <<  8),
+	// IRQD_NO_BALANCING: 0x400
 	IRQD_NO_BALANCING		= (1 << 10),
+	// IRQD_PER_CPU: 0x800
 	IRQD_PER_CPU			= (1 << 11),
 	IRQD_AFFINITY_SET		= (1 << 12),
+	// IRQD_LEVEL: 0x2000
 	IRQD_LEVEL			= (1 << 13),
 	IRQD_WAKEUP_STATE		= (1 << 14),
+	// IRQD_MOVE_PCNTXT: 0x8000
 	IRQD_MOVE_PCNTXT		= (1 << 15),
 	// IRQD_IRQ_DISABLED: 0x10000
 	IRQD_IRQ_DISABLED		= (1 << 16),
@@ -335,6 +342,7 @@ static inline irq_hw_number_t irqd_to_hwirq(struct irq_data *d)
  * @irq_print_chip:	optional to print special chip info in show_interrupts
  * @flags:		chip specific flags
  */
+// ARM10C 20141122
 struct irq_chip {
 	const char	*name;
 	unsigned int	(*irq_startup)(struct irq_data *data);
@@ -472,9 +480,12 @@ extern void
 irq_set_chip_and_handler_name(unsigned int irq, struct irq_chip *chip,
 			      irq_flow_handler_t handle, const char *name);
 
+// ARM10C 20141122
+// irq: 16, &gic_chip, handle_percpu_devid_irq
 static inline void irq_set_chip_and_handler(unsigned int irq, struct irq_chip *chip,
 					    irq_flow_handler_t handle)
 {
+	// irq: 16, chip: &gic_chip, handle: handle_percpu_devid_irq
 	irq_set_chip_and_handler_name(irq, chip, handle, NULL);
 }
 
@@ -503,13 +514,19 @@ irq_set_chained_handler(unsigned int irq, irq_flow_handler_t handle)
 
 void irq_modify_status(unsigned int irq, unsigned long clr, unsigned long set);
 
+// ARM10C 20141122
+// irq: 16, 0x31600
 static inline void irq_set_status_flags(unsigned int irq, unsigned long set)
 {
+	// irq: 16, set: 0x31600
 	irq_modify_status(irq, 0, set);
 }
 
+// ARM10C 20141122
+// virq: 16, IRQ_NOREQUEST: 0x800
 static inline void irq_clear_status_flags(unsigned int irq, unsigned long clr)
 {
+	// irq: 16, clr: 0x800
 	irq_modify_status(irq, clr, 0);
 }
 
@@ -541,8 +558,12 @@ static inline void irq_set_nested_thread(unsigned int irq, bool nest)
 		irq_clear_status_flags(irq, IRQ_NESTED_THREAD);
 }
 
+// ARM10C 20141122
+// irq: 16
 static inline void irq_set_percpu_devid_flags(unsigned int irq)
 {
+	// irq: 16, IRQ_NOAUTOEN: 0x1000, IRQ_PER_CPU: 0x200, IRQ_NOTHREAD: 0x10000
+	// IRQ_NOPROBE: 0x400, IRQ_PER_CPU_DEVID: 0x20000
 	irq_set_status_flags(irq,
 			     IRQ_NOAUTOEN | IRQ_PER_CPU | IRQ_NOTHREAD |
 			     IRQ_NOPROBE | IRQ_PER_CPU_DEVID);
@@ -656,9 +677,13 @@ static inline void irq_free_desc(unsigned int irq)
 	irq_free_descs(irq, 1);
 }
 
+// ARM10C 20141122
+// irq: 16
 static inline int irq_reserve_irq(unsigned int irq)
 {
+	// irq: 16, irq_reserve_irqs(16, 1): -17 (EEXIST)
 	return irq_reserve_irqs(irq, 1);
+	// return -17 (EEXIST)
 }
 
 #ifndef irq_reg_writel

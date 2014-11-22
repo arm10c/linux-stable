@@ -360,6 +360,8 @@ EXPORT_SYMBOL(bitmap_clear);
  */
 // ARM10C 20141115
 // allocated_irqs, IRQ_BITMAP_BITS: 8212, from: 16, cnt: 144, 0
+// ARM10C 20141122
+// allocated_irqs, nr_irqs: 160, from: 16, cnt: 1, 0
 unsigned long bitmap_find_next_zero_area(unsigned long *map,
 					 unsigned long size,
 					 unsigned long start,
@@ -370,22 +372,33 @@ unsigned long bitmap_find_next_zero_area(unsigned long *map,
 again:
 	// map: allocated_irqs, size: 8212, start: 16
 	// find_next_zero_bit(allocated_irqs, 8212, 16): 16
+	// map: allocated_irqs, size: 160, start: 16
+	// find_next_zero_bit(allocated_irqs, 160, 16): 160
 	index = find_next_zero_bit(map, size, start);
 	// index: 16
+	// index: 160
 
 	/* Align allocation */
 	// index: 16, align_mask: 0
 	// __ALIGN_MASK(16, 0): 16
+	// index: 160, align_mask: 0
+	// __ALIGN_MASK(16, 0): 160
 	index = __ALIGN_MASK(index, align_mask);
 	// index: 16
+	// index: 160
 
 	// index: 16, nr: 144
+	// index: 160, nr: 1
 	end = index + nr;
 	// end: 160
+	// end: 161
 
 	// end: 160, size: 8212
+	// end: 161, size: 160
 	if (end > size)
+		// end: 161
 		return end;
+		// return 161
 
 	// map: allocated_irqs, end: 160, index: 16
 	// find_next_bit(allocated_irqs, 160, 16): 160

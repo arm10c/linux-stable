@@ -93,23 +93,40 @@ asm_do_IRQ(unsigned int irq, struct pt_regs *regs)
 	handle_IRQ(irq, regs);
 }
 
+// ARM10C 20141122
+// irq: 16, 0x5
 void set_irq_flags(unsigned int irq, unsigned int iflags)
 {
+	// IRQ_NOREQUEST: 0x800, IRQ_NOPROBE: 0x400, IRQ_NOAUTOEN: 0x1000
 	unsigned long clr = 0, set = IRQ_NOREQUEST | IRQ_NOPROBE | IRQ_NOAUTOEN;
+	// clr: 0, set: 0x1c00
 
+	// irq; 16, nr_irqs: 160
 	if (irq >= nr_irqs) {
 		printk(KERN_ERR "Trying to set irq flags for IRQ%d\n", irq);
 		return;
 	}
 
+	// iflags: 0x5, IRQF_VALID: 1
 	if (iflags & IRQF_VALID)
+		// clr: 0, IRQ_NOREQUEST: 0x800
 		clr |= IRQ_NOREQUEST;
+		// clr: 0x800
+
+	// iflags: 0x5, IRQF_PROBE: 0x2
 	if (iflags & IRQF_PROBE)
 		clr |= IRQ_NOPROBE;
+
+	// iflags: 0x5, IRQF_NOAUTOEN: 0x4
 	if (!(iflags & IRQF_NOAUTOEN))
 		clr |= IRQ_NOAUTOEN;
+
 	/* Order is clear bits in "clr" then set bits in "set" */
+	// irq: 16, clr: 0x800, set: 0x1c00
 	irq_modify_status(irq, clr, set & ~clr);
+	// irq_modify_status에서 한일:
+	// (kmem_cache#28-oX (irq 16))->status_use_accessors: 0x31600
+	// (&(kmem_cache#28-oX (irq 16))->irq_data)->state_use_accessors: 0x10800
 }
 EXPORT_SYMBOL_GPL(set_irq_flags);
 

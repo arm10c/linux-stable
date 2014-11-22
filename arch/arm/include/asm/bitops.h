@@ -218,6 +218,8 @@ extern int _find_next_bit_be(const unsigned long *p, int size, int offset);
 // chunk->populated: dchunk->populated[0]: 0xff, end: 0x4, *rs: 0x4
 // ARM10C 20141115
 // map: allocated_irqs, size: 8212, start: 16
+// ARM10C 20141122
+// map: allocated_irqs, size: 160, start: 16
 #define find_next_zero_bit(p,sz,off)	_find_next_zero_bit_le(p,sz,off)
 #define find_first_bit(p,sz)		_find_first_bit_le(p,sz)
 // ARM10C 20140215

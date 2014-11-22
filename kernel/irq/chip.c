@@ -25,26 +25,47 @@
  *	@irq:	irq number
  *	@chip:	pointer to irq chip description structure
  */
+// ARM10C 20141122
+// irq: 16, chip: &gic_chip
 int irq_set_chip(unsigned int irq, struct irq_chip *chip)
 {
 	unsigned long flags;
-	struct irq_desc *desc = irq_get_desc_lock(irq, &flags, 0);
 
+	// irq: 16, irq_get_desc_lock(16, &flags, 0): kmem_cache#28-oX (irq 16)
+	struct irq_desc *desc = irq_get_desc_lock(irq, &flags, 0);
+	// desc: kmem_cache#28-oX (irq 16)
+
+	// irq_get_desc_lock(16)에서 한일:
+	// irq 16의 desc: kmem_cache#28-oX (irq 16) 값을 가져옴
+	// &(kmem_cache#28-oX (irq 16))->lock을 사용하여 spinlock을 설정하고 cpsr을 flags에 저장
+
+	// desc: kmem_cache#28-oX (irq 16)
 	if (!desc)
 		return -EINVAL;
 
+	// chip: &gic_chip
 	if (!chip)
 		chip = &no_irq_chip;
 
+	// desc->irq_data.chip: (kmem_cache#28-oX (irq 16))->irq_data.chip, chip: &gic_chip
 	desc->irq_data.chip = chip;
+	// desc->irq_data.chip: (kmem_cache#28-oX (irq 16))->irq_data.chip: &gic_chip
+
+	// desc: kmem_cache#28-oX (irq 16)
 	irq_put_desc_unlock(desc, flags);
+	// irq_put_desc_unlock에서 한일:
+	// &(kmem_cache#28-oX (irq 16))->lock을 사용한 spinlock 해재하고 flags에 저장된 cpsr을 복원
+
 	/*
 	 * For !CONFIG_SPARSE_IRQ make the irq show up in
 	 * allocated_irqs. For the CONFIG_SPARSE_IRQ case, it is
 	 * already marked, and this call is harmless.
 	 */
+	// irq: 16, irq_reserve_irq(16): -17 (EEXIST)
 	irq_reserve_irq(irq);
+
 	return 0;
+	// return 0
 }
 EXPORT_SYMBOL(irq_set_chip);
 
@@ -131,16 +152,34 @@ int irq_set_msi_desc(unsigned int irq, struct msi_desc *entry)
  *
  *	Set the hardware irq chip data for an irq
  */
+// ARM10C 20141122
+// irq: 16, d->host_data: (kmem_cache#25-o0)->host_data: &gic_data[0]
 int irq_set_chip_data(unsigned int irq, void *data)
 {
 	unsigned long flags;
+	// irq: 16, irq_get_desc_lock(16, &flags, 0): kmem_cache#28-oX (irq 16)
 	struct irq_desc *desc = irq_get_desc_lock(irq, &flags, 0);
+	// desc: kmem_cache#28-oX (irq 16)
 
+	// irq_get_desc_lock(16)에서 한일:
+	// irq 16의 desc: kmem_cache#28-oX (irq 16) 값을 가져옴
+	// &(kmem_cache#28-oX (irq 16))->lock을 사용하여 spinlock을 설정하고 cpsr을 flags에 저장
+
+	// desc: kmem_cache#28-oX (irq 16)
 	if (!desc)
 		return -EINVAL;
+
+	// desc->irq_data.chip_data: (kmem_cache#28-oX (irq 16))->irq_data.chip_data,
+	// data: &gic_data[0]
 	desc->irq_data.chip_data = data;
+	// desc->irq_data.chip_data: (kmem_cache#28-oX (irq 16))->irq_data.chip_data: &gic_data[0]
+
 	irq_put_desc_unlock(desc, flags);
+	// irq_put_desc_unlock에서 한일:
+	// &(kmem_cache#28-oX (irq 16))->lock을 사용한 spinlock 해재하고 flags에 저장된 cpsr을 복원
+
 	return 0;
+	// return 0
 }
 EXPORT_SYMBOL(irq_set_chip_data);
 
@@ -641,6 +680,7 @@ handle_percpu_irq(unsigned int irq, struct irq_desc *desc)
  * contain the real device id for the cpu on which this handler is
  * called
  */
+// ARM10C 20141122
 void handle_percpu_devid_irq(unsigned int irq, struct irq_desc *desc)
 {
 	struct irq_chip *chip = irq_desc_get_chip(desc);
@@ -661,33 +701,54 @@ void handle_percpu_devid_irq(unsigned int irq, struct irq_desc *desc)
 		chip->irq_eoi(&desc->irq_data);
 }
 
+// ARM10C 20141122
+// irq: 16, handle: handle_percpu_devid_irq, 0, name: NULL
 void
 __irq_set_handler(unsigned int irq, irq_flow_handler_t handle, int is_chained,
 		  const char *name)
 {
 	unsigned long flags;
-	struct irq_desc *desc = irq_get_desc_buslock(irq, &flags, 0);
 
+	// irq: 16
+	// irq_get_desc_buslock(16, &flags, 0): kmem_cache#28-oX (irq 16)
+	struct irq_desc *desc = irq_get_desc_buslock(irq, &flags, 0);
+	// desc: kmem_cache#28-oX (irq 16)
+
+	// irq_get_desc_buslock에서 한일:
+	// irq 16의 desc: kmem_cache#28-oX (irq 16) 값을 가져옴
+	// &(kmem_cache#28-oX (irq 16))->lock을 사용하여 spinlock을 설정하고 cpsr을 flags에 저장
+
+	// desc: kmem_cache#28-oX (irq 16)
 	if (!desc)
 		return;
 
+	// handle: handle_percpu_devid_irq
 	if (!handle) {
 		handle = handle_bad_irq;
 	} else {
+		// desc->irq_data.chip: (kmem_cache#28-oX (irq 16))->irq_data.chip: &gic_chip
 		if (WARN_ON(desc->irq_data.chip == &no_irq_chip))
 			goto out;
 	}
 
 	/* Uninstall? */
+	// handle: handle_percpu_devid_irq
 	if (handle == handle_bad_irq) {
 		if (desc->irq_data.chip != &no_irq_chip)
 			mask_ack_irq(desc);
 		irq_state_set_disabled(desc);
 		desc->depth = 1;
 	}
+	// desc->handle_irq: (kmem_cache#28-oX (irq 16))->handle_irq,
+	// handle: handle_percpu_devid_irq
 	desc->handle_irq = handle;
-	desc->name = name;
+	// desc->handle_irq: (kmem_cache#28-oX (irq 16))->handle_irq: handle_percpu_devid_irq
 
+	// desc->name: (kmem_cache#28-oX (irq 16))->name, name: NULL
+	desc->name = name;
+	// desc->name: (kmem_cache#28-oX (irq 16))->name: NULL
+
+	// handle: handle_percpu_devid_irq, is_chained: 0
 	if (handle != handle_bad_irq && is_chained) {
 		irq_settings_set_noprobe(desc);
 		irq_settings_set_norequest(desc);
@@ -696,41 +757,132 @@ __irq_set_handler(unsigned int irq, irq_flow_handler_t handle, int is_chained,
 	}
 out:
 	irq_put_desc_busunlock(desc, flags);
+	// irq_put_desc_busunlock에서 한일:
+	// &(kmem_cache#28-oX (irq 16))->lock을 사용한 spinlock 해재하고 flags에 저장된 cpsr을 복원
 }
 EXPORT_SYMBOL_GPL(__irq_set_handler);
 
+// ARM10C 20141122
+// irq: 16, chip: &gic_chip, handle: handle_percpu_devid_irq, NULL
 void
 irq_set_chip_and_handler_name(unsigned int irq, struct irq_chip *chip,
 			      irq_flow_handler_t handle, const char *name)
 {
+	// irq: 16, chip: &gic_chip
 	irq_set_chip(irq, chip);
+	// irq_set_chip에서 한일:
+	// (kmem_cache#28-oX (irq 16))->irq_data.chip: &gic_chip
+
+	// irq: 16, handle: handle_percpu_devid_irq
 	__irq_set_handler(irq, handle, 0, name);
+	// __irq_set_handler에서 한일:
+	// (kmem_cache#28-oX (irq 16))->handle_irq: handle_percpu_devid_irq
+	// (kmem_cache#28-oX (irq 16))->name: NULL
 }
 EXPORT_SYMBOL_GPL(irq_set_chip_and_handler_name);
 
+// ARM10C 20141122
+// irq: 16, 0, set: 0x31600
+// ARM10C 20141122
+// irq: 16, clr: 0x800, 0x1400
+// ARM10C 20141122
+// irq: 16, clr: 0x800, 0
 void irq_modify_status(unsigned int irq, unsigned long clr, unsigned long set)
 {
 	unsigned long flags;
-	struct irq_desc *desc = irq_get_desc_lock(irq, &flags, 0);
 
+	// irq: 16, irq_get_desc_lock(16, &flags, 0): kmem_cache#28-oX (irq 16)
+	// irq: 16, irq_get_desc_lock(16, &flags, 0): kmem_cache#28-oX (irq 16)
+	struct irq_desc *desc = irq_get_desc_lock(irq, &flags, 0);
+	// desc: kmem_cache#28-oX (irq 16)
+	// desc: kmem_cache#28-oX (irq 16)
+
+	// irq_get_desc_lock(16)에서 한일:
+	// irq 16의 desc: kmem_cache#28-oX (irq 16) 값을 가져옴
+	// &(kmem_cache#28-oX (irq 16))->lock을 사용하여 spinlock을 설정하고 cpsr을 flags에 저장
+	// irq_get_desc_lock(16)에서 한일:
+	// irq 16의 desc: kmem_cache#28-oX (irq 16) 값을 가져옴
+	// &(kmem_cache#28-oX (irq 16))->lock을 사용하여 spinlock을 설정하고 cpsr을 flags에 저장
+
+	// desc: kmem_cache#28-oX (irq 16)
+	// desc: kmem_cache#28-oX (irq 16)
 	if (!desc)
 		return;
-	irq_settings_clr_and_set(desc, clr, set);
 
+	// desc: kmem_cache#28-oX (irq 16), clr: 0, set: 0x31600
+	// desc: kmem_cache#28-oX (irq 16), clr: 0x800, set: 0x1400
+	irq_settings_clr_and_set(desc, clr, set);
+	// irq_settings_clr_and_set에서 한일:
+	// (kmem_cache#28-oX (irq 16))->status_use_accessors: 0x31600
+	// irq_settings_clr_and_set에서 한일:
+	// (kmem_cache#28-oX (irq 16))->status_use_accessors: 0x31600
+
+	// &desc->irq_data: &(kmem_cache#28-oX (irq 16))->irq_data
+	// IRQD_NO_BALANCING: 0x400, IRQD_PER_CPU: 0x800, IRQD_TRIGGER_MASK: 0xf
+	// IRQD_LEVEL: 0x2000, IRQD_MOVE_PCNTXT: 0x8000
+	// &desc->irq_data: &(kmem_cache#28-oX (irq 16))->irq_data
+	// IRQD_NO_BALANCING: 0x400, IRQD_PER_CPU: 0x800, IRQD_TRIGGER_MASK: 0xf
+	// IRQD_LEVEL: 0x2000, IRQD_MOVE_PCNTXT: 0x8000
 	irqd_clear(&desc->irq_data, IRQD_NO_BALANCING | IRQD_PER_CPU |
 		   IRQD_TRIGGER_MASK | IRQD_LEVEL | IRQD_MOVE_PCNTXT);
+	// irqd_clear에서한일:
+	// (&(kmem_cache#28-oX (irq 16))->irq_data)->state_use_accessors: 0x10000
+	// irqd_clear에서한일:
+	// (&(kmem_cache#28-oX (irq 16))->irq_data)->state_use_accessors: 0x10000
+
+	// desc: kmem_cache#28-oX (irq 16)
+	// irq_settings_has_no_balance_set(kmem_cache#28-oX (irq 16)): 0
+	// desc: kmem_cache#28-oX (irq 16)
+	// irq_settings_has_no_balance_set(kmem_cache#28-oX (irq 16)): 0
 	if (irq_settings_has_no_balance_set(desc))
 		irqd_set(&desc->irq_data, IRQD_NO_BALANCING);
+
+	// desc: kmem_cache#28-oX (irq 16)
+	// irq_settings_is_per_cpu(kmem_cache#28-oX (irq 16)): 0x200
+	// desc: kmem_cache#28-oX (irq 16)
+	// irq_settings_is_per_cpu(kmem_cache#28-oX (irq 16)): 0x200
 	if (irq_settings_is_per_cpu(desc))
+		// &desc->irq_data: &(kmem_cache#28-oX (irq 16))->irq_data, IRQD_PER_CPU: 0x800
+		// &desc->irq_data: &(kmem_cache#28-oX (irq 16))->irq_data, IRQD_PER_CPU: 0x800
 		irqd_set(&desc->irq_data, IRQD_PER_CPU);
+		// irqd_set에서 한일:
+		// (&(kmem_cache#28-oX (irq 16))->irq_data)->state_use_accessors: 0x10800
+		// irqd_set에서 한일:
+		// (&(kmem_cache#28-oX (irq 16))->irq_data)->state_use_accessors: 0x10800
+
+	// desc: kmem_cache#28-oX (irq 16)
+	// irq_settings_can_move_pcntxt(kmem_cache#28-oX (irq 16)): 0
+	// desc: kmem_cache#28-oX (irq 16)
+	// irq_settings_can_move_pcntxt(kmem_cache#28-oX (irq 16)): 0
 	if (irq_settings_can_move_pcntxt(desc))
 		irqd_set(&desc->irq_data, IRQD_MOVE_PCNTXT);
+
+	// desc: kmem_cache#28-oX (irq 16)
+	// irq_settings_is_level(kmem_cache#28-oX (irq 16)): 0
+	// desc: kmem_cache#28-oX (irq 16)
+	// irq_settings_is_level(kmem_cache#28-oX (irq 16)): 0
 	if (irq_settings_is_level(desc))
 		irqd_set(&desc->irq_data, IRQD_LEVEL);
 
+	// &desc->irq_data: &(kmem_cache#28-oX (irq 16))->irq_data
+	// desc: kmem_cache#28-oX (irq 16)
+	// irq_settings_get_trigger_mask(kmem_cache#28-oX (irq 16)): 0
+	// &desc->irq_data: &(kmem_cache#28-oX (irq 16))->irq_data
+	// desc: kmem_cache#28-oX (irq 16)
+	// irq_settings_get_trigger_mask(kmem_cache#28-oX (irq 16)): 0
 	irqd_set(&desc->irq_data, irq_settings_get_trigger_mask(desc));
+	// irqd_set에서 한일:
+	// (&(kmem_cache#28-oX (irq 16))->irq_data)->state_use_accessors: 0x10800
+	// irqd_set에서 한일:
+	// (&(kmem_cache#28-oX (irq 16))->irq_data)->state_use_accessors: 0x10800
 
+	// desc: kmem_cache#28-oX (irq 16)
+	// desc: kmem_cache#28-oX (irq 16)
 	irq_put_desc_unlock(desc, flags);
+	// irq_put_desc_unlock에서 한일:
+	// &(kmem_cache#28-oX (irq 16))->lock을 사용한 spinlock 해재하고 flags에 저장된 cpsr을 복원
+	// irq_put_desc_unlock에서 한일:
+	// &(kmem_cache#28-oX (irq 16))->lock을 사용한 spinlock 해재하고 flags에 저장된 cpsr을 복원
 }
 EXPORT_SYMBOL_GPL(irq_modify_status);
 
