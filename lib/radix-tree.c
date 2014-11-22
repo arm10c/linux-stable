@@ -37,6 +37,7 @@
 
 #ifdef __KERNEL__
 // ARM10C 20141004
+// ARM10C 20141122
 // CONFIG_BASE_SMALL: 0
 // RADIX_TREE_MAP_SHIFT: 6
 #define RADIX_TREE_MAP_SHIFT	(CONFIG_BASE_SMALL ? 4 : 6)
@@ -49,6 +50,7 @@
 // RADIX_TREE_MAP_SIZE: 64
 #define RADIX_TREE_MAP_SIZE	(1UL << RADIX_TREE_MAP_SHIFT)
 // ARM10C 20141004
+// ARM10C 20141122
 // RADIX_TREE_MAP_SIZE: 64
 // RADIX_TREE_MAP_MASK: 0x3f
 #define RADIX_TREE_MAP_MASK	(RADIX_TREE_MAP_SIZE-1)
@@ -62,6 +64,7 @@
 
 // ARM10C 20141004
 // ARM10C 20141115
+// ARM10C 20141122
 // sizeof(struct radix_tree_node): 296 bytes
 struct radix_tree_node {
 	unsigned int	height;		/* Height from the bottom */
@@ -144,6 +147,8 @@ static inline void *ptr_to_indirect(void *ptr)
 // slot: kmem_cache#20-o0 (radix height 1 관리 주소)
 // ARM10C 20141115
 // root->rnode: (&irq_desc_tree)->rnode: kmem_cache#20-o1 (RADIX_LSB: 1)
+// ARM10C 20141122
+// node: kmem_cache#20-o1 (RADIX_LSB: 1)
 static inline void *indirect_to_ptr(void *ptr)
 {
 	// ptr: NULL, RADIX_TREE_INDIRECT_PTR: 1
@@ -424,13 +429,17 @@ EXPORT_SYMBOL(radix_tree_maybe_preload);
 // height: 1
 // ARM10C 20141115
 // height: 1
+// ARM10C 20141122
+// height: 2
 static inline unsigned long radix_tree_maxindex(unsigned int height)
 {
 	// height: 0, height_to_maxindex[0]: 0
 	// height: 1, height_to_maxindex[1]: 63
+	// height: 2, height_to_maxindex[2]: 4095
 	return height_to_maxindex[height];
 	// return 0
 	// return 63
+	// return 4095
 }
 
 /*
@@ -814,41 +823,89 @@ EXPORT_SYMBOL(radix_tree_insert);
  * is_slot == 1 : search for the slot.
  * is_slot == 0 : search for the node.
  */
+// ARM10C 20141122
+// root: &irq_desc_tree, index: 16, 0
 static void *radix_tree_lookup_element(struct radix_tree_root *root,
 				unsigned long index, int is_slot)
 {
 	unsigned int height, shift;
 	struct radix_tree_node *node, **slot;
 
+	// root->rnode: (&irq_desc_tree)->rnode: kmem_cache#20-o1 (RADIX_LSB: 1)
+	// rcu_dereference_raw((&irq_desc_tree)->rnode): kmem_cache#20-o1 (RADIX_LSB: 1)
 	node = rcu_dereference_raw(root->rnode);
+	// node: kmem_cache#20-o1 (RADIX_LSB: 1)
+
+	// node: kmem_cache#20-o1 (RADIX_LSB: 1)
 	if (node == NULL)
 		return NULL;
 
+	// node: kmem_cache#20-o1 (RADIX_LSB: 1)
+	// radix_tree_is_indirect_ptr(kmem_cache#20-o1 (RADIX_LSB: 1)): 1
 	if (!radix_tree_is_indirect_ptr(node)) {
 		if (index > 0)
 			return NULL;
 		return is_slot ? (void *)&root->rnode : node;
 	}
-	node = indirect_to_ptr(node);
 
+	// node: kmem_cache#20-o1 (RADIX_LSB: 1)
+	// indirect_to_ptr(kmem_cache#20-o1 (RADIX_LSB: 1)): kmem_cache#20-o1 (RADIX_LSB: 0)
+	node = indirect_to_ptr(node);
+	// node: kmem_cache#20-o1 (RADIX_LSB: 0)
+
+	// node->height: (kmem_cache#20-o1)->height: 2
 	height = node->height;
+	// height: 2
+
+	// index: 16, height: 2, radix_tree_maxindex(2): 4095
 	if (index > radix_tree_maxindex(height))
 		return NULL;
 
+	// height: 2, RADIX_TREE_MAP_SHIFT: 6
 	shift = (height-1) * RADIX_TREE_MAP_SHIFT;
+	// shift: 6
 
 	do {
+		// node->slots: (kmem_cache#20-o1)->slots, index: 16, shift: 6, RADIX_TREE_MAP_MASK: 0x3f
+		// node->slots: (kmem_cache#20-o0)->slots, index: 16, shift: 0, RADIX_TREE_MAP_MASK: 0x3f
 		slot = (struct radix_tree_node **)
 			(node->slots + ((index>>shift) & RADIX_TREE_MAP_MASK));
+		// slot: &(kmem_cache#20-o1)->slots[0]
+		// slot: &(kmem_cache#20-o0)->slots[16]
+
+		// *slot: (kmem_cache#20-o1)->slots[0]
+		// rcu_dereference_raw((kmem_cache#20-o1)->slots[0]): kmem_cache#20-o0
+		// *slot: (kmem_cache#20-o0)->slots[16]
+		// rcu_dereference_raw((kmem_cache#20-o0)->slots[16]): kmem_cache#28-oX (irq 16)
 		node = rcu_dereference_raw(*slot);
+		// node: kmem_cache#20-o0
+		// node: kmem_cache#28-oX (irq 16)
+
+		// node: kmem_cache#20-o0
+		// node: kmem_cache#28-oX (irq 16)
 		if (node == NULL)
 			return NULL;
 
+		// shift: 6, RADIX_TREE_MAP_SHIFT: 6
+		// shift: 0, RADIX_TREE_MAP_SHIFT: 6
 		shift -= RADIX_TREE_MAP_SHIFT;
+		// shift: 0
+		// shift: 0xfffffffa
+
+		// height: 2
+		// height: 1
 		height--;
+		// height: 1
+		// height: 0
+
+		// height: 1
+		// height: 0
 	} while (height > 0);
 
+	// is_slot: 0, node: kmem_cache#28-oX (irq 16)
+	// indirect_to_ptr(kmem_cache#28-oX (irq 16)): kmem_cache#28-oX (irq 16)
 	return is_slot ? (void *)slot : indirect_to_ptr(node);
+	// return kmem_cache#28-oX (irq 16)
 }
 
 /**
@@ -882,9 +939,14 @@ EXPORT_SYMBOL(radix_tree_lookup_slot);
  *	them safely). No RCU barriers are required to access or modify the
  *	returned item, however.
  */
+// ARM10C 20141122
+// &irq_desc_tree, irq: 16
 void *radix_tree_lookup(struct radix_tree_root *root, unsigned long index)
 {
+	// root: &irq_desc_tree, index: 16
+	// radix_tree_lookup_element(&irq_desc_tree, 16, 0): kmem_cache#28-oX (irq 16)
 	return radix_tree_lookup_element(root, index, 0);
+	// return kmem_cache#28-oX (irq 16)
 }
 EXPORT_SYMBOL(radix_tree_lookup);
 

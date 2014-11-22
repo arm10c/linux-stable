@@ -169,6 +169,7 @@ struct irq_domain;
  * irq_data.
  */
 // ARM10C 20141004
+// ARM10C 20141122
 // sizeof(struct irq_data): 44 bytes
 struct irq_data {
 	u32			mask;

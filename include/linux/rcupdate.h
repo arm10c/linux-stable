@@ -426,6 +426,7 @@ static inline int rcu_read_lock_sched_held(void)
 // ARM10C 20140913
 # define rcu_lock_release(a)		do { } while (0)
 
+// ARM10C 20141122
 static inline int rcu_read_lock_held(void)
 {
 	return 1;
@@ -494,6 +495,7 @@ static inline void rcu_preempt_sleep_check(void)
 #else /* #ifdef CONFIG_PROVE_RCU */
 
 // ARM10C 20140913
+// ARM10C 20141122
 #define rcu_lockdep_assert(c, s) do { } while (0)
 #define rcu_sleep_check() do { } while (0)
 
@@ -512,6 +514,7 @@ static inline void rcu_preempt_sleep_check(void)
 #define rcu_dereference_sparse(p, space) \
 	((void)(((typeof(*p) space *)p) == p))
 #else /* #ifdef __CHECKER__ */
+// ARM10C 20141122
 #define rcu_dereference_sparse(p, space)
 #endif /* #else #ifdef __CHECKER__ */
 
@@ -521,6 +524,30 @@ static inline void rcu_preempt_sleep_check(void)
 		rcu_dereference_sparse(p, space); \
 		((typeof(*p) __force __kernel *)(_________p1)); \
 	})
+
+// ARM10C 20141122
+// root->rnode: (&irq_desc_tree)->rnode: kmem_cache#20-o1 (RADIX_LSB: 1), 1, __rcu
+//
+// #define __rcu_dereference_check((&irq_desc_tree)->rnode, c, __rcu):
+// ({
+// 	typeof(*(&irq_desc_tree)->rnode) *_________p1 = (typeof(*(&irq_desc_tree)->rnode)*__force )ACCESS_ONCE((&irq_desc_tree)->rnode);
+// 	rcu_lockdep_assert(1, "suspicious rcu_dereference_check()" " usage"); // null function
+// 	rcu_dereference_sparse((&irq_desc_tree)->rnode, __rcu); // null function
+// 	smp_read_barrier_depends(); // null function
+// 	((typeof(*(&irq_desc_tree)->rnode) __force __kernel *)(_________p1));
+// })
+//
+// ARM10C 20141122
+// *slot: (kmem_cache#20-o1)->slots[0], 1, __rcu
+//
+// #define __rcu_dereference_check((kmem_cache#20-o1)->slots[0], 1, __rcu):
+// ({
+// 	typeof(*(kmem_cache#20-o1)->slots[0]) *_________p1 = (typeof(*(kmem_cache#20-o1)->slots[0])*__force )ACCESS_ONCE((kmem_cache#20-o1)->slots[0]);
+// 	rcu_lockdep_assert(1, "suspicious rcu_dereference_check()" " usage");
+// 	rcu_dereference_sparse((kmem_cache#20-o1)->slots[0], __rcu);
+// 	smp_read_barrier_depends();
+// 	((typeof(*(kmem_cache#20-o1)->slots[0]) __force __kernel *)(_________p1));
+// })
 #define __rcu_dereference_check(p, c, space) \
 	({ \
 		typeof(*p) *_________p1 = (typeof(*p)*__force )ACCESS_ONCE(p); \
@@ -643,6 +670,11 @@ static inline void rcu_preempt_sleep_check(void)
  * which pointers are protected by RCU and checks that the pointer is
  * annotated as __rcu.
  */
+// ARM10C 20141122
+// rcu_read_lock_held(): 1
+// root->rnode: (&irq_desc_tree)->rnode: kmem_cache#20-o1 (RADIX_LSB: 1), 1
+// ARM10C 20141122
+// *slot: (kmem_cache#20-o1)->slots[0], 1
 #define rcu_dereference_check(p, c) \
 	__rcu_dereference_check((p), rcu_read_lock_held() || (c), __rcu)
 
@@ -667,6 +699,10 @@ static inline void rcu_preempt_sleep_check(void)
 	__rcu_dereference_check((p), rcu_read_lock_sched_held() || (c), \
 				__rcu)
 
+// ARM10C 20141122
+// root->rnode: (&irq_desc_tree)->rnode: kmem_cache#20-o1 (RADIX_LSB: 1)
+// ARM10C 20141122
+// *slot: (kmem_cache#20-o1)->slots[0]
 #define rcu_dereference_raw(p) rcu_dereference_check(p, 1) /*@@@ needed? @@@*/
 
 /*

@@ -16,7 +16,9 @@
 #include <linux/smp.h>
 #include <linux/fs.h>
 
+// ARM10C 20141122
 static LIST_HEAD(irq_domain_list);
+// ARM10C 20141122
 static DEFINE_MUTEX(irq_domain_mutex);
 
 static DEFINE_MUTEX(revmap_trees_mutex);
@@ -35,6 +37,9 @@ static struct irq_domain *irq_default_domain;
  * register allocated irq_domain with irq_domain_register().  Returns pointer
  * to IRQ domain, or NULL on failure.
  */
+// ARM10C 20141122
+// of_node: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소,
+// 160, 160, 0, ops: &gic_irq_domain_ops, host_data: &gic_data[0]
 struct irq_domain *__irq_domain_add(struct device_node *of_node, int size,
 				    irq_hw_number_t hwirq_max, int direct_max,
 				    const struct irq_domain_ops *ops,
@@ -42,26 +47,72 @@ struct irq_domain *__irq_domain_add(struct device_node *of_node, int size,
 {
 	struct irq_domain *domain;
 
+	// sizeof(struct irq_domain): 52, sizeof(unsigned int): 4, size: 160, GFP_KERNEL: 0xD0
+	// of_node: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소
+	// of_node_to_nid(devtree에서 allnext로 순회 하면서 찾은 gic node의 주소): 0
+	// kzalloc_node(692, GFP_KERNEL: 0xD0, 0): kmem_cache#25-o0
 	domain = kzalloc_node(sizeof(*domain) + (sizeof(unsigned int) * size),
 			      GFP_KERNEL, of_node_to_nid(of_node));
+	// domain: kmem_cache#25-o0
+
+	// domain: kmem_cache#25-o0
 	if (WARN_ON(!domain))
 		return NULL;
 
 	/* Fill structure */
+	// &domain->revmap_tree: &(kmem_cache#25-o0)->revmap_tree, GFP_KERNEL: 0xD0
 	INIT_RADIX_TREE(&domain->revmap_tree, GFP_KERNEL);
+	// INIT_RADIX_TREE(&(kmem_cache#25-o0)->revmap_tree, GFP_KERNEL: 0xD0):
+	// do {
+	// 	(&(kmem_cache#25-o0)->revmap_tree)->height = 0;
+	// 	(&(kmem_cache#25-o0)->revmap_tree)->gfp_mask = (GFP_KERNEL: 0xD0);
+	// 	(&(kmem_cache#25-o0)->revmap_tree)->rnode = NULL;
+	// } while (0)
+
+	// domain->ops: (kmem_cache#25-o0)->ops, ops: &gic_irq_domain_ops
 	domain->ops = ops;
+	// domain->ops: (kmem_cache#25-o0)->ops: &gic_irq_domain_ops
+
+	// domain->host_data: (kmem_cache#25-o0)->host_data, host_data: &gic_data[0]
 	domain->host_data = host_data;
+	// domain->host_data: (kmem_cache#25-o0)->host_data: &gic_data[0]
+
+	// domain->of_node: (kmem_cache#25-o0)->of_node,
+	// of_node: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소
+	// of_node_get(devtree에서 allnext로 순회 하면서 찾은 gic node의 주소):
+	// devtree에서 allnext로 순회 하면서 찾은 gic node의 주소
 	domain->of_node = of_node_get(of_node);
+	// domain->of_node: (kmem_cache#25-o0)->of_node:
+	// devtree에서 allnext로 순회 하면서 찾은 gic node의 주소
+
+	// domain->hwirq_max: (kmem_cache#25-o0)->hwirq_max, hwirq_max: 160
 	domain->hwirq_max = hwirq_max;
+	// domain->hwirq_max: (kmem_cache#25-o0)->hwirq_max: 160
+
+	// domain->revmap_size: (kmem_cache#25-o0)->revmap_size, size: 160
 	domain->revmap_size = size;
+	// domain->revmap_size: (kmem_cache#25-o0)->revmap_size: 160
+
+	// domain->revmap_direct_max_irq: (kmem_cache#25-o0)->revmap_direct_max_irq, direct_max: 0
 	domain->revmap_direct_max_irq = direct_max;
+	// domain->revmap_direct_max_irq: (kmem_cache#25-o0)->revmap_direct_max_irq: 0
 
 	mutex_lock(&irq_domain_mutex);
-	list_add(&domain->link, &irq_domain_list);
-	mutex_unlock(&irq_domain_mutex);
+	// irq_domain_mutex을 사용한 mutex lock 설정
 
+	// domain->link: (kmem_cache#25-o0)->link
+	list_add(&domain->link, &irq_domain_list);
+	// irq_domain_list에 (kmem_cache#25-o0)->link를 추가
+
+	mutex_unlock(&irq_domain_mutex);
+	// irq_domain_mutex을 사용한 mutex lock 해재
+
+	// domain->name: (kmem_cache#25-o0)->name: NULL
 	pr_debug("Added domain %s\n", domain->name);
+
+	// domain: kmem_cache#25-o0
 	return domain;
+	// return kmem_cache#25-o0
 }
 EXPORT_SYMBOL_GPL(__irq_domain_add);
 
@@ -162,6 +213,9 @@ EXPORT_SYMBOL_GPL(irq_domain_add_simple);
  * for all legacy interrupts except 0 (which is always the invalid irq for
  * a legacy controller).
  */
+// ARM10C 20141122
+// node: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소,
+// gic_irqs: 144, irq_base: 16, hwirq_base: 16, &gic_irq_domain_ops, gic: &gic_data[0]
 struct irq_domain *irq_domain_add_legacy(struct device_node *of_node,
 					 unsigned int size,
 					 unsigned int first_irq,
@@ -171,11 +225,32 @@ struct irq_domain *irq_domain_add_legacy(struct device_node *of_node,
 {
 	struct irq_domain *domain;
 
+	// of_node: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소,
+	// first_hwirq: 16, size: 144, ops: &gic_irq_domain_ops, host_data: &gic_data[0]
+	// __irq_domain_add(devtree에서 allnext로 순회 하면서 찾은 gic node의 주소, 160, 160, 0,
+	// &gic_irq_domain_ops, &gic_data[0]): kmem_cache#25-o0
 	domain = __irq_domain_add(of_node, first_hwirq + size,
 				  first_hwirq + size, 0, ops, host_data);
+	// domain: kmem_cache#25-o0
+
+	// __irq_domain_add에서 한일:
+	// (&(kmem_cache#25-o0)->revmap_tree)->height = 0;
+	// (&(kmem_cache#25-o0)->revmap_tree)->gfp_mask = (GFP_KERNEL: 0xD0);
+	// (&(kmem_cache#25-o0)->revmap_tree)->rnode = NULL;
+	// (kmem_cache#25-o0)->ops: &gic_irq_domain_ops
+	// (kmem_cache#25-o0)->host_data: &gic_data[0]
+	// (kmem_cache#25-o0)->of_node: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소
+	// (kmem_cache#25-o0)->hwirq_max: 160
+	// (kmem_cache#25-o0)->revmap_size: 160
+	// (kmem_cache#25-o0)->revmap_direct_max_irq: 0
+	//
+	// irq_domain_list에 (kmem_cache#25-o0)->link를 추가
+
+	// domain: kmem_cache#25-o0
 	if (!domain)
 		return NULL;
 
+	// domain: kmem_cache#25-o0, first_irq: 16, first_hwirq: 16, size: 144
 	irq_domain_associate_many(domain, first_irq, first_hwirq, size);
 
 	return domain;
@@ -266,24 +341,46 @@ static void irq_domain_disassociate(struct irq_domain *domain, unsigned int irq)
 	}
 }
 
+// ARM10C 20141122
+// domain: kmem_cache#25-o0, irq_base: 16, hwirq_base: 16
 int irq_domain_associate(struct irq_domain *domain, unsigned int virq,
 			 irq_hw_number_t hwirq)
 {
+	// virq: 16, irq_get_irq_data(16): &(kmem_cache#28-oX (irq 16))->irq_data
 	struct irq_data *irq_data = irq_get_irq_data(virq);
+	// irq_data: &(kmem_cache#28-oX (irq 16))->irq_data
+
 	int ret;
 
+	// hwirq: 16, domain->hwirq_max: (kmem_cache#25-o0)->hwirq_max: 160
 	if (WARN(hwirq >= domain->hwirq_max,
 		 "error: hwirq 0x%x is too large for %s\n", (int)hwirq, domain->name))
 		return -EINVAL;
+
+	// irq_data: &(kmem_cache#28-oX (irq 16))->irq_data, virq: 16
 	if (WARN(!irq_data, "error: virq%i is not allocated", virq))
 		return -EINVAL;
+
+	// irq_data->domain: (&(kmem_cache#28-oX (irq 16))->irq_data)->domain: NULL
 	if (WARN(irq_data->domain, "error: virq%i is already associated", virq))
 		return -EINVAL;
 
 	mutex_lock(&irq_domain_mutex);
+	// irq_domain_mutex을 사용한 mutex lock 설정
+
+	// irq_data->hwirq: (&(kmem_cache#28-oX (irq 16))->irq_data)->hwirq, hwirq: 16
 	irq_data->hwirq = hwirq;
+	// irq_data->hwirq: (&(kmem_cache#28-oX (irq 16))->irq_data)->hwirq: 16
+
+	// irq_data->domain: (&(kmem_cache#28-oX (irq 16))->irq_data)->domain, domain: kmem_cache#25-o0
 	irq_data->domain = domain;
+	// irq_data->domain: (&(kmem_cache#28-oX (irq 16))->irq_data)->domain: kmem_cache#25-o0
+
+	// domain->ops->map: (kmem_cache#25-o0)->ops->map: gic_irq_domain_map
 	if (domain->ops->map) {
+		// domain->ops->map: (kmem_cache#25-o0)->ops->map: gic_irq_domain_map
+		// domain: domain: kmem_cache#25-o0, virq: 16, hwirq: 16
+		// gic_irq_domain_map(kmem_cache#25-o0, 16, 16): 
 		ret = domain->ops->map(domain, virq, hwirq);
 		if (ret != 0) {
 			/*
@@ -321,15 +418,23 @@ int irq_domain_associate(struct irq_domain *domain, unsigned int virq,
 }
 EXPORT_SYMBOL_GPL(irq_domain_associate);
 
+// ARM10C 20141122
+// domain: kmem_cache#25-o0, first_irq: 16, first_hwirq: 16, size: 144
 void irq_domain_associate_many(struct irq_domain *domain, unsigned int irq_base,
 			       irq_hw_number_t hwirq_base, int count)
 {
 	int i;
 
+	// domain->of_node: (kmem_cache#25-o0)->of_node: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소
+	// of_node_full_name(devtree에서 allnext로 순회 하면서 찾은 gic node의 주소): "/interrupt-controller@10481000"
+	// irq_base: 16, hwirq_base: 16, count: 144
 	pr_debug("%s(%s, irqbase=%i, hwbase=%i, count=%i)\n", __func__,
 		of_node_full_name(domain->of_node), irq_base, (int)hwirq_base, count);
+	// "irq_domain_associate_many(/interrupt-controller@10481000, irqbase=16, hwbase=16, count=144)\n"
 
+	// count: 144
 	for (i = 0; i < count; i++) {
+		// domain: kmem_cache#25-o0, irq_base: 16, i: 0, hwirq_base: 16
 		irq_domain_associate(domain, irq_base + i, hwirq_base + i);
 	}
 }

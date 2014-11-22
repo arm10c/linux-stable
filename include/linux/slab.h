@@ -927,15 +927,20 @@ static inline void *kzalloc(size_t size, gfp_t flags)
 // sizeof(*area): 32, gfp_mask: GFP_KERNEL: 0xD0, node: -1
 // ARM10C 20141101
 // sizeof(*area): 32, gfp_mask: GFP_KERNEL: 0xD0, node: -1
+// ARM10C 20141122
+// 692, GFP_KERNEL: 0xD0, 0
 static inline void *kzalloc_node(size_t size, gfp_t flags, int node)
 {
 	// size: 156, flags: GFP_KERNEL: 0xD0, __GFP_ZERO: 0x8000u, node: 0
 	// kmalloc_node(156, 0x80D0, 0): kmem_cache#28-o0
 	// size: 32, flags: GFP_KERNEL: 0xD0, __GFP_ZERO: 0x8000u, node: -1
 	// kmalloc_node(32, 0x80D0, -1): kmem_cache#30-oX
+	// size: 692, flags: GFP_KERNEL: 0xD0, __GFP_ZERO: 0x8000u, node: 0
+	// kmalloc_node(692, 0x80D0, 0): kmem_cache#25-o0
 	return kmalloc_node(size, flags | __GFP_ZERO, node);
 	// return kmem_cache#28-o0
 	// return kmem_cache#30-oX
+	// return kmem_cache#25-o0
 }
 
 /*

@@ -90,6 +90,7 @@ extern void of_node_put(struct device_node *node);
 // ARM10C 20141004
 // ARM10C 20141011
 // ARM10C 20141018
+// ARM10C 20141122
 static inline struct device_node *of_node_get(struct device_node *node)
 {
 	return node;
@@ -190,6 +191,8 @@ static inline unsigned long of_read_ulong(const __be32 *cell, int size)
 
 // ARM10C 20141018
 // dev: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소
+// ARM10C 20141122
+// domain->of_node: (kmem_cache#25-o0)->of_node: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소
 static inline const char *of_node_full_name(const struct device_node *np)
 {
 	// np: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소
@@ -614,9 +617,10 @@ static inline const char *of_prop_next_string(struct property *prop,
 #define of_match_node(_matches, _node)	NULL
 #endif /* CONFIG_OF */
 
-#if defined(CONFIG_OF) && defined(CONFIG_NUMA)
+#if defined(CONFIG_OF) && defined(CONFIG_NUMA) // CONFIG_OF=y, CONFIG_NUMA=n
 extern int of_node_to_nid(struct device_node *np);
 #else
+// ARM10C 20141122
 static inline int of_node_to_nid(struct device_node *device) { return 0; }
 #endif
 

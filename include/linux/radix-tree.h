@@ -59,6 +59,8 @@
 // ret: kmem_cache#20-o0
 // ARM10C 20141115
 // item: kmem_cache#28-oX (irq 64)
+// ARM10C 20141122
+// node: kmem_cache#20-o1 (RADIX_LSB: 1)
 static inline int radix_tree_is_indirect_ptr(void *ptr)
 {
 	// ptr: kmem_cache#28-o0, RADIX_TREE_INDIRECT_PTR: 1
@@ -74,6 +76,8 @@ static inline int radix_tree_is_indirect_ptr(void *ptr)
 
 /* root tags are stored in gfp_mask, shifted by __GFP_BITS_SHIFT */
 // ARM10C 20141004
+// ARM10C 20141122
+// sizeof(struct radix_tree_root): 12 bytes
 struct radix_tree_root {
 	unsigned int		height;
 	gfp_t			gfp_mask;
@@ -111,6 +115,15 @@ struct radix_tree_root {
 #define RADIX_TREE(name, mask) \
 	struct radix_tree_root name = RADIX_TREE_INIT(mask)
 
+// ARM10C 20141122
+// &domain->revmap_tree: &(kmem_cache#25-o0)->revmap_tree, GFP_KERNEL: 0xD0
+//
+// #define INIT_RADIX_TREE(&(kmem_cache#25-o0)->revmap_tree, GFP_KERNEL: 0xD0):
+// do {
+// 	(&(kmem_cache#25-o0)->revmap_tree)->height = 0;
+// 	(&(kmem_cache#25-o0)->revmap_tree)->gfp_mask = (GFP_KERNEL: 0xD0);
+// 	(&(kmem_cache#25-o0)->revmap_tree)->rnode = NULL;
+// } while (0)
 #define INIT_RADIX_TREE(root, mask)					\
 do {									\
 	(root)->height = 0;						\

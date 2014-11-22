@@ -57,6 +57,7 @@ struct of_device_id;
  * whatever internal data structures management is required. It also needs
  * to setup the irq_desc when returning from map().
  */
+// ARM10C 20141122
 struct irq_domain_ops {
 	int (*match)(struct irq_domain *d, struct device_node *node);
 	int (*map)(struct irq_domain *d, unsigned int virq, irq_hw_number_t hw);
@@ -92,6 +93,8 @@ struct irq_domain_chip_generic;
  * @revmap_tree: Radix map tree for hwirqs that don't fit in the linear map
  * @linear_revmap: Linear table of hwirq->virq reverse mappings
  */
+// ARM10C 20141122
+// sizeof(struct irq_domain): 52 bytes
 struct irq_domain {
 	struct list_head link;
 	const char *name;

@@ -56,6 +56,7 @@ extern void __chk_io_ptr(const volatile void __iomem *);
 // ARM10C 20140322
 // ARM10C 20141004
 // ARM10C 20141108
+// ARM10C 20141122
 # define __rcu
 #endif
 
@@ -373,6 +374,7 @@ void ftrace_likely_update(struct ftrace_branch_data *f, int val, int expect);
 */
 /*
 // ARM10C 20140412
+// ARM10C 20141122
 */
 #define ACCESS_ONCE(x) (*(volatile typeof(x) *)&(x))
 
