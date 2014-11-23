@@ -234,9 +234,9 @@ struct irq_domain *irq_domain_add_legacy(struct device_node *of_node,
 	// domain: kmem_cache#25-o0
 
 	// __irq_domain_add에서 한일:
-	// (&(kmem_cache#25-o0)->revmap_tree)->height = 0;
-	// (&(kmem_cache#25-o0)->revmap_tree)->gfp_mask = (GFP_KERNEL: 0xD0);
-	// (&(kmem_cache#25-o0)->revmap_tree)->rnode = NULL;
+	// (&(kmem_cache#25-o0)->revmap_tree)->height: 0
+	// (&(kmem_cache#25-o0)->revmap_tree)->gfp_mask: GFP_KERNEL: 0xD0
+	// (&(kmem_cache#25-o0)->revmap_tree)->rnode: NULL
 	// (kmem_cache#25-o0)->ops: &gic_irq_domain_ops
 	// (kmem_cache#25-o0)->host_data: &gic_data[0]
 	// (kmem_cache#25-o0)->of_node: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소
