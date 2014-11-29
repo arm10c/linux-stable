@@ -90,6 +90,7 @@ static u8 gic_cpu_map[NR_GIC_CPU_IF] __read_mostly;
  * Supported arch specific GIC irq extension.
  * Default make them NULL.
  */
+// ARM10C 20141129
 struct irq_chip gic_arch_extn = {
 	.irq_eoi	= NULL,
 	.irq_mask	= NULL,
@@ -137,6 +138,9 @@ static inline void gic_set_base_accessor(struct gic_chip_data *data,
 }
 #else
 // ARM10C 20141108
+// ARM10C 20141129
+// gic: &gic_data[0]
+// gic_data_dist_base(&gic_data[0]): 0xf0000000
 #define gic_data_dist_base(d)	((d)->dist_base.common_base)
 #define gic_data_cpu_base(d)	((d)->cpu_base.common_base)
 // ARM10C 20141108
@@ -291,6 +295,8 @@ static int gic_set_wake(struct irq_data *d, unsigned int on)
 #define gic_set_wake	NULL
 #endif
 
+// ARM10C 20141129
+// __exception_irq_entry: __attribute__((section(".exception.text")))
 static asmlinkage void __exception_irq_entry gic_handle_irq(struct pt_regs *regs)
 {
 	u32 irqstat, irqnr;
@@ -367,63 +373,162 @@ void __init gic_cascade_irq(unsigned int gic_nr, unsigned int irq)
 	irq_set_chained_handler(irq, gic_handle_cascade_irq);
 }
 
+// ARM10C 20141129
+// gic: &gic_data[0]
 static u8 gic_get_cpumask(struct gic_chip_data *gic)
 {
+	// gic: &gic_data[0], gic_data_dist_base(&gic_data[0]): 0xf0000000
 	void __iomem *base = gic_data_dist_base(gic);
+	// base: 0xf0000000
+
 	u32 mask, i;
 
 	for (i = mask = 0; i < 32; i += 4) {
+		// G.A.S: 4.3.12 Interrupt Processor Targets Registers, GICD_ITARGETSRn
+		//
+		// base: 0xf0000000, GIC_DIST_TARGET: 0x800, i: 0
+		// readl_relaxed(0xf0000800): 0x01010101 (reset 값)
 		mask = readl_relaxed(base + GIC_DIST_TARGET + i);
+		// mask: 0x01010101 (reset 값)
+		//
+		// mask 0x01010101의 의미:
+		// CPU targets, byte offset 0 ~ 4까지의 interrupt target을 "CPU interface 0"으로 설정
+
+		// mask: 0x01010101
 		mask |= mask >> 16;
+		// mask: 0x01010101
+
+		// mask: 0x01010101
 		mask |= mask >> 8;
+		// mask: 0x01010101
+
+		// mask: 0x01010101
 		if (mask)
 			break;
+			// break 수행
 	}
 
+	// mask: 0x01010101
 	if (!mask)
 		pr_crit("GIC CPU mask not found - kernel will fail to boot.\n");
 
+	// mask: 0x01010101
 	return mask;
+	// return 0x01010101
 }
 
+// ARM10C 20141129
+// gic: &gic_data[0]
 static void __init gic_dist_init(struct gic_chip_data *gic)
 {
 	unsigned int i;
 	u32 cpumask;
-	unsigned int gic_irqs = gic->gic_irqs;
-	void __iomem *base = gic_data_dist_base(gic);
 
+	// gic->gic_irqs: (&gic_data[0])->gic_irqs: 160
+	unsigned int gic_irqs = gic->gic_irqs;
+	// gic_irqs: 160
+
+	// gic: &gic_data[0], gic_data_dist_base(&gic_data[0]): 0xf0000000
+	void __iomem *base = gic_data_dist_base(gic);
+	// base: 0xf0000000
+
+	// Note:
+	// G.A.S: gic architecture specification 의 약자로 정의
+
+	// G.A.S: 4.3.1 Distributor Control Register, GICD_CTLR
+	//
+	// base: 0xf0000000, GIC_DIST_CTRL: 0x000
 	writel_relaxed(0, base + GIC_DIST_CTRL);
+	// register GIC_DIST_CTRL을 0으로 초기화
+
+	// 0 값의 의미:
+	// Disable the forwarding of pending interrupts from the Distributor to the CPU interfaces.
 
 	/*
 	 * Set all global interrupts to be level triggered, active low.
 	 */
+	// gic_irqs: 160
 	for (i = 32; i < gic_irqs; i += 16)
+		// G.A.S: 4.3.13 Interrupt Configuration Registers, GICD_ICFGRn
+		//
+		// base: 0xf0000000, GIC_DIST_CONFIG: 0xc00, i: 32
 		writel_relaxed(0, base + GIC_DIST_CONFIG + i * 4 / 16);
+		// register GICD_ICFGR2 의 값을 0으로 초기화
+		//
+		// i: 48...144까지 loop를 8번 수행 GICD_ICFGR2 ~ GICD_ICFGR9 까지의 값을 0으로 초기화 수행
+
+	// Interrupt Configuration Register의 bit 들의 의미:
+	// Softwared Generated Interrupts (SGIs[15:0], ID[15:0])
+	// Private Peripheral Interrupts (PPIs[15:0], ID[31:16])
+	// Shared Peripheral Interrupts (SPIs[127:0], ID[159:32])
 
 	/*
 	 * Set all global interrupts to this CPU only.
 	 */
+	// gic: &gic_data[0], gic_get_cpumask(&gic_data[0]): 0x01010101
 	cpumask = gic_get_cpumask(gic);
+	// cpumask: 0x01010101
+
+	// cpumask: 0x01010101
 	cpumask |= cpumask << 8;
+	// cpumask: 0x01010101
+
+	// cpumask: 0x01010101
 	cpumask |= cpumask << 16;
+	// cpumask: 0x01010101
+
+	// gic_irqs: 160
 	for (i = 32; i < gic_irqs; i += 4)
+		// G.A.S: 4.3.12 Interrupt Processor Targets Registers, GICD_ITARGETSRn
+		//
+		// cpumask: 0x01010101, base: 0xf0000000, GIC_DIST_TARGET: 0x800, i: 32
 		writel_relaxed(cpumask, base + GIC_DIST_TARGET + i * 4 / 4);
+		// register GICD_ITARGETSR8 값을 0x01010101으로 세팅
+		//
+		// i: 32...156 까지 수행 되어 register GICD_ITARGETSR9 ~ GICD_ITARGETSR39 값을 0x01010101으로 세팅
+
+	// cpumask 0x01010101의 의미:
+	// CPU targets, byte offset 0 ~ 4까지의 interrupt target을 "CPU interface 0"으로 설정
 
 	/*
 	 * Set priority on all global interrupts.
 	 */
+	// gic_irqs: 160
 	for (i = 32; i < gic_irqs; i += 4)
+		// G.A.S: 4.3.11 Interrupt Priority Registers, GICD_IPRIORITYRn
+		//
+		// base: 0xf0000000, GIC_DIST_PRI: 0x400, i: 32
 		writel_relaxed(0xa0a0a0a0, base + GIC_DIST_PRI + i * 4 / 4);
+		// register GICD_IPRIORITYR8 값을 0xa0a0a0a0으로 세팅
+		//
+		// i: 32...156 까지 수행 되어 register GICD_IPRIORITYR9 ~ GICD_ITARGETSR39 값을 0xa0a0a0a0으로 세팅
+
+	// 0xa0a0a0a0의 의미:
+	// Priority, byte offset 0 ~ 4까지의 interrupt priority value을 160 (0xa0)로 설정
 
 	/*
 	 * Disable all interrupts.  Leave the PPI and SGIs alone
 	 * as these enables are banked registers.
 	 */
+	// gic_irqs: 160
 	for (i = 32; i < gic_irqs; i += 32)
+		// G.A.S: 4.3.6 Interrupt Clear-Enable Registers, GICD_ICENABLERn
+		//
+		// base: 0xf0000000, GIC_DIST_ENABLE_CLEAR: 0x180, i: 32
 		writel_relaxed(0xffffffff, base + GIC_DIST_ENABLE_CLEAR + i * 4 / 32);
+		// register GICD_ICENABLER1 값을 0xffffffff으로 세팅
+		//
+		// i: 32...128 까지 수행 되어 register GICD_ICENABLER2 ~ GICD_ICENABLER4 값을 0xffffffff으로 세팅
 
+	// 0xffffffff의 의미:
+	// 각각의 For SPIs and PPIs 값을 interrupt disable로 설정
+
+	// base: 0xf0000000, GIC_DIST_CTRL: 0x000
 	writel_relaxed(1, base + GIC_DIST_CTRL);
+	// register GICD_CTLR 값을 1로 세팅
+
+	// 1 값의 의미:
+	// Enables the forwarding of pending interrupts from the Distributor to the CPU interfaces.
 }
 
 static void gic_cpu_init(struct gic_chip_data *gic)
@@ -660,7 +765,8 @@ static void __init gic_pm_init(struct gic_chip_data *gic)
 }
 #endif
 
-#ifdef CONFIG_SMP
+#ifdef CONFIG_SMP // CONFIG_SMP=y
+// ARM10C 20141129
 void gic_raise_softirq(const struct cpumask *mask, unsigned int irq)
 {
 	int cpu;
@@ -887,7 +993,8 @@ static int gic_irq_domain_xlate(struct irq_domain *d,
 	return 0;
 }
 
-#ifdef CONFIG_SMP
+#ifdef CONFIG_SMP // CONFIG_SMP=y
+// ARM10C 20141129
 static int gic_secondary_init(struct notifier_block *nfb, unsigned long action,
 			      void *hcpu)
 {
@@ -900,6 +1007,7 @@ static int gic_secondary_init(struct notifier_block *nfb, unsigned long action,
  * Notifier for enabling the GIC CPU interface. Set an arbitrarily high
  * priority because the GIC needs to be up before the ARM generic timers.
  */
+// ARM10C 20141129
 static struct notifier_block gic_cpu_notifier = {
 	.notifier_call = gic_secondary_init,
 	.priority = 100,
@@ -1095,20 +1203,65 @@ void __init gic_init_bases(unsigned int gic_nr, int irq_start,
 	// gic->domain: (&gic_data[0])->domain
 	// node: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소,
 	// gic_irqs: 144, irq_base: 16, hwirq_base: 16, gic: &gic_data[0]
+	// irq_domain_add_legacy(devtree에서 allnext로 순회 하면서 찾은 gic node의 주소, 144, 16, 16,
+	// &gic_irq_domain_ops, &gic_data[0]): kmem_cache#25-o0
 	gic->domain = irq_domain_add_legacy(node, gic_irqs, irq_base,
 				    hwirq_base, &gic_irq_domain_ops, gic);
+	// gic->domain: (&gic_data[0])->domain: kmem_cache#25-o0
+
+	// irq_domain_add_legacy에서 한일:
+	// (&(kmem_cache#25-o0)->revmap_tree)->height: 0
+	// (&(kmem_cache#25-o0)->revmap_tree)->gfp_mask: GFP_KERNEL: 0xD0
+	// (&(kmem_cache#25-o0)->revmap_tree)->rnode: NULL
+	// (kmem_cache#25-o0)->ops: &gic_irq_domain_ops
+	// (kmem_cache#25-o0)->host_data: &gic_data[0]
+	// (kmem_cache#25-o0)->of_node: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소
+	// (kmem_cache#25-o0)->hwirq_max: 160
+	// (kmem_cache#25-o0)->revmap_size: 160
+	// (kmem_cache#25-o0)->revmap_direct_max_irq: 0
+	// irq_domain_list에 (kmem_cache#25-o0)->link를 추가
+	//
+	// irq 16...160까지의 struct irq_data에 값을 설정
+	// (&(kmem_cache#28-oX (irq 16...160))->irq_data)->hwirq: 16...160
+	// (&(kmem_cache#28-oX (irq 16...160))->irq_data)->domain: kmem_cache#25-o0
+	// (&(kmem_cache#28-oX (irq 16...160))->irq_data)->state_use_accessors: 0x10800
+	// (kmem_cache#28-oX (irq 16...160))->percpu_enabled: kmem_cache#30-oX
+	// (kmem_cache#28-oX (irq 16...160))->status_use_accessors: 0x31600
+	// (kmem_cache#28-oX (irq 16...160))->irq_data.chip: &gic_chip
+	// (kmem_cache#28-oX (irq 16...160))->handle_irq: handle_percpu_devid_irq
+	// (kmem_cache#28-oX (irq 16...160))->name: NULL
+	// (kmem_cache#28-oX (irq 16...160))->irq_data.chip_data: &gic_data[0]
+	// (kmem_cache#28-oX (irq 16...160))->status_use_accessors: 0x31600
+	//
+	// (kmem_cache#25-o0)->name: "GIC"
+	// (kmem_cache#25-o0)->linear_revmap[16...160]: 16...160
+
+	// gic->domain: (&gic_data[0])->domain: kmem_cache#25-o0
 	if (WARN_ON(!gic->domain))
 		return;
 
+	// gic_nr: 0
 	if (gic_nr == 0) {
-#ifdef CONFIG_SMP
+#ifdef CONFIG_SMP // CONFIG_SMP=y
 		set_smp_cross_call(gic_raise_softirq);
+		// set_smp_cross_call에서 한일:
+		// smp_cross_call: gic_raise_softirq
+
 		register_cpu_notifier(&gic_cpu_notifier);
+		// register_cpu_notifier에서 한일:
+		// (&cpu_chain)->head: gic_cpu_notifier 포인터 대입
+		// (&gic_cpu_notifier)->next은 (&radix_tree_callback_nb)->next로 대입
 #endif
 		set_handle_irq(gic_handle_irq);
+		// set_handle_irq에서 한일:
+		// handle_arch_irq: gic_handle_irq
 	}
 
+	// gic_chip.flags: 0, gic_arch_extn.flags: 0
 	gic_chip.flags |= gic_arch_extn.flags;
+	// gic_chip.flags: 0
+
+	// gic: &gic_data[0]
 	gic_dist_init(gic);
 	gic_cpu_init(gic);
 	gic_pm_init(gic);

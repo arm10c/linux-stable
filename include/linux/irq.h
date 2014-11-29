@@ -343,6 +343,7 @@ static inline irq_hw_number_t irqd_to_hwirq(struct irq_data *d)
  * @flags:		chip specific flags
  */
 // ARM10C 20141122
+// ARM10C 20141129
 struct irq_chip {
 	const char	*name;
 	unsigned int	(*irq_startup)(struct irq_data *data);

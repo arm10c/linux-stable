@@ -1155,6 +1155,7 @@ cr_no_alignment:
 
 #ifdef CONFIG_MULTI_IRQ_HANDLER
 	.globl	handle_arch_irq
+// ARM10C 20141129
 handle_arch_irq:
 	.space	4
 #endif

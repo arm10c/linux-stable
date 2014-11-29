@@ -140,13 +140,18 @@ void __init init_IRQ(void)
 		machine_desc->init_irq();
 }
 
-#ifdef CONFIG_MULTI_IRQ_HANDLER
+#ifdef CONFIG_MULTI_IRQ_HANDLER // CONFIG_MULTI_IRQ_HANDLER=y
+// ARM10C 20141129
+// gic_handle_irq
 void __init set_handle_irq(void (*handle_irq)(struct pt_regs *))
 {
+	// handle_arch_irq: NULL
 	if (handle_arch_irq)
 		return;
 
+	// handle_irq: gic_handle_irq
 	handle_arch_irq = handle_irq;
+	// handle_arch_irq: gic_handle_irq
 }
 #endif
 

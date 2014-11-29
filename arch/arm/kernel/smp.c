@@ -437,12 +437,18 @@ void __init smp_prepare_cpus(unsigned int max_cpus)
 	}
 }
 
+// ARM10C 20141129
 static void (*smp_cross_call)(const struct cpumask *, unsigned int);
 
+// ARM10C 20141129
+// gic_raise_softirq
 void __init set_smp_cross_call(void (*fn)(const struct cpumask *, unsigned int))
 {
+	// smp_cross_call: NULL
 	if (!smp_cross_call)
+		// fn: gic_raise_softirq
 		smp_cross_call = fn;
+		// smp_cross_call: gic_raise_softirq
 }
 
 void arch_send_call_function_ipi_mask(const struct cpumask *mask)

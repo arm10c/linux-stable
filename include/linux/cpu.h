@@ -167,6 +167,7 @@ extern void unregister_cpu_notifier(struct notifier_block *nb);
 #ifndef MODULE // MODULE: undefined
 // ARM10C 20140315
 // ARM10C 20140726
+// ARM10C 20141129
 extern int register_cpu_notifier(struct notifier_block *nb);
 #else
 static inline int register_cpu_notifier(struct notifier_block *nb)

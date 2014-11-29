@@ -252,8 +252,27 @@ struct irq_domain *irq_domain_add_legacy(struct device_node *of_node,
 
 	// domain: kmem_cache#25-o0, first_irq: 16, first_hwirq: 16, size: 144
 	irq_domain_associate_many(domain, first_irq, first_hwirq, size);
+	// irq_domain_associate_many에서 한일:
+	// irq 16...160까지의 struct irq_data에 값을 설정
+	//
+	// (&(kmem_cache#28-oX (irq 16...160))->irq_data)->hwirq: 16...160
+	// (&(kmem_cache#28-oX (irq 16...160))->irq_data)->domain: kmem_cache#25-o0
+	// (&(kmem_cache#28-oX (irq 16...160))->irq_data)->state_use_accessors: 0x10800
+	//
+	// (kmem_cache#28-oX (irq 16...160))->percpu_enabled: kmem_cache#30-oX
+	// (kmem_cache#28-oX (irq 16...160))->status_use_accessors: 0x31600
+	// (kmem_cache#28-oX (irq 16...160))->irq_data.chip: &gic_chip
+	// (kmem_cache#28-oX (irq 16...160))->handle_irq: handle_percpu_devid_irq
+	// (kmem_cache#28-oX (irq 16...160))->name: NULL
+	// (kmem_cache#28-oX (irq 16...160))->irq_data.chip_data: &gic_data[0]
+	// (kmem_cache#28-oX (irq 16...160))->status_use_accessors: 0x31600
+	//
+	// (kmem_cache#25-o0)->name: "GIC"
+	// (kmem_cache#25-o0)->linear_revmap[16...160]: 16...160
 
+	// domain: kmem_cache#25-o0
 	return domain;
+	// return kmem_cache#25-o0
 }
 EXPORT_SYMBOL_GPL(irq_domain_add_legacy);
 
@@ -463,7 +482,26 @@ void irq_domain_associate_many(struct irq_domain *domain, unsigned int irq_base,
 		// irq_domain_associate(kmem_cache#25-o0, 16, 16): 0
 		irq_domain_associate(domain, irq_base + i, hwirq_base + i);
 
+		// irq_domain_associate(16) 에서 한일:
+		// (&(kmem_cache#28-oX (irq 16))->irq_data)->hwirq: 16
+		// (&(kmem_cache#28-oX (irq 16))->irq_data)->domain: kmem_cache#25-o0
+		// (&(kmem_cache#28-oX (irq 16))->irq_data)->state_use_accessors: 0x10800
+		//
+		// (kmem_cache#28-oX (irq 16))->percpu_enabled: kmem_cache#30-oX
+		// (kmem_cache#28-oX (irq 16))->status_use_accessors: 0x31600
+		// (kmem_cache#28-oX (irq 16))->irq_data.chip: &gic_chip
+		// (kmem_cache#28-oX (irq 16))->handle_irq: handle_percpu_devid_irq
+		// (kmem_cache#28-oX (irq 16))->name: NULL
+		// (kmem_cache#28-oX (irq 16))->irq_data.chip_data: &gic_data[0]
+		// (kmem_cache#28-oX (irq 16))->status_use_accessors: 0x31600
+		//
+		// (kmem_cache#25-o0)->name: "GIC"
+		// (kmem_cache#25-o0)->linear_revmap[16]: 16
+
 // 2014/11/22 종료
+// 2014/11/29 시작
+
+		// i: 1...144 까지 수행, irq 17...160 까지 수행
 	}
 }
 EXPORT_SYMBOL_GPL(irq_domain_associate_many);

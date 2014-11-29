@@ -9,10 +9,13 @@
 
 #include <linux/ftrace.h>
 
+// ARM10C 20141129
 #define __exception	__attribute__((section(".exception.text")))
 #ifdef CONFIG_FUNCTION_GRAPH_TRACER
 #define __exception_irq_entry	__irq_entry
 #else
+// ARM10C 20141129
+// __exception: __attribute__((section(".exception.text")))
 #define __exception_irq_entry	__exception
 #endif
 

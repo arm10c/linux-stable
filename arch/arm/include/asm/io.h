@@ -87,6 +87,7 @@ static inline void __raw_writeb(u8 val, volatile void __iomem *addr)
 		     : "r" (val));
 }
 
+// ARM10C 20141129
 static inline void __raw_writel(u32 val, volatile void __iomem *addr)
 {
 	asm volatile("str %1, %0"
@@ -310,6 +311,7 @@ extern void _memset_io(volatile void __iomem *, int, size_t);
 
 #define writeb_relaxed(v,c)	__raw_writeb(v,c)
 #define writew_relaxed(v,c)	__raw_writew((__force u16) cpu_to_le16(v),c)
+// ARM10C 20141129
 #define writel_relaxed(v,c)	__raw_writel((__force u32) cpu_to_le32(v),c)
 
 #define readb(c)		({ u8  __v = readb_relaxed(c); __iormb(); __v; })
