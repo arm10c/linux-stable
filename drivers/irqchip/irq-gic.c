@@ -79,10 +79,12 @@ static DEFINE_RAW_SPINLOCK(irq_controller_lock);
  * by the GIC itself.
  */
 // ARM10C 20141108
+// ARM10C 20141129
 // NR_GIC_CPU_IF: 8
 #define NR_GIC_CPU_IF 8
 
 // ARM10C 20141108
+// ARM10C 20141129
 // NR_GIC_CPU_IF: 8
 static u8 gic_cpu_map[NR_GIC_CPU_IF] __read_mostly;
 
@@ -142,6 +144,9 @@ static inline void gic_set_base_accessor(struct gic_chip_data *data,
 // gic: &gic_data[0]
 // gic_data_dist_base(&gic_data[0]): 0xf0000000
 #define gic_data_dist_base(d)	((d)->dist_base.common_base)
+// ARM10C 20141129
+// gic: &gic_data[0]
+// gic_data_cpu_base(&gic_data[0]): 0xf0002000
 #define gic_data_cpu_base(d)	((d)->cpu_base.common_base)
 // ARM10C 20141108
 #define gic_set_base_accessor(d, f)
@@ -374,6 +379,7 @@ void __init gic_cascade_irq(unsigned int gic_nr, unsigned int irq)
 }
 
 // ARM10C 20141129
+// ARM10C 20141129
 // gic: &gic_data[0]
 static u8 gic_get_cpumask(struct gic_chip_data *gic)
 {
@@ -439,7 +445,7 @@ static void __init gic_dist_init(struct gic_chip_data *gic)
 	//
 	// base: 0xf0000000, GIC_DIST_CTRL: 0x000
 	writel_relaxed(0, base + GIC_DIST_CTRL);
-	// register GIC_DIST_CTRL을 0으로 초기화
+	// register GICD_CTLR을 0으로 초기화
 
 	// 0 값의 의미:
 	// Disable the forwarding of pending interrupts from the Distributor to the CPU interfaces.
@@ -531,43 +537,101 @@ static void __init gic_dist_init(struct gic_chip_data *gic)
 	// Enables the forwarding of pending interrupts from the Distributor to the CPU interfaces.
 }
 
+// ARM10C 20141129
+// gic: &gic_data[0]
 static void gic_cpu_init(struct gic_chip_data *gic)
 {
+	// gic: &gic_data[0], gic_data_dist_base(&gic_data[0]): 0xf0000000
 	void __iomem *dist_base = gic_data_dist_base(gic);
+	// dist_base: 0xf0000000
+
+	// gic: &gic_data[0], gic_data_cpu_base(&gic_data[0]): 0xf0002000
 	void __iomem *base = gic_data_cpu_base(gic);
+	// base: 0xf0002000
+
+	// smp_processor_id(): 0
 	unsigned int cpu_mask, cpu = smp_processor_id();
+	// cpu: 0
+
 	int i;
 
 	/*
 	 * Get what the GIC says our CPU mask is.
 	 */
+	// cpu: 0, NR_GIC_CPU_IF: 8
 	BUG_ON(cpu >= NR_GIC_CPU_IF);
+
+	// gic: &gic_data[0], gic_get_cpumask(&gic_data[0]): 0x01010101
 	cpu_mask = gic_get_cpumask(gic);
+	// cpu_mask: 0x01010101
+
+	// cpu: 0, cpu_mask: 0x01010101
 	gic_cpu_map[cpu] = cpu_mask;
+	// gic_cpu_map[0]: 0x01
 
 	/*
 	 * Clear our mask from the other map entries in case they're
 	 * still undefined.
 	 */
+	// NR_GIC_CPU_IF: 8
 	for (i = 0; i < NR_GIC_CPU_IF; i++)
+		// i: 0, cpu: 0
+		// i: 1, cpu: 0
 		if (i != cpu)
+			// i: 1, gic_cpu_map[1]: 0xff, cpu_mask: 0x01010101
 			gic_cpu_map[i] &= ~cpu_mask;
+			// gic_cpu_map[1]: 0xfe
+
+	// loop 수행 결과
+	// gic_cpu_map[1...7]: 0xfe
 
 	/*
 	 * Deal with the banked PPI and SGI interrupts - disable all
 	 * PPI interrupts, ensure all SGI interrupts are enabled.
 	 */
+	// dist_base: 0xf0000000, GIC_DIST_ENABLE_CLEAR 0x180
 	writel_relaxed(0xffff0000, dist_base + GIC_DIST_ENABLE_CLEAR);
+	// register GICD_ICENABLER0 값을 0xffff0000으로 세팅
+
+	// 0xffff0000 값의 의미:
+	// 0~15 bit는 SGI, 16~31 PPI를 컨트롤함, PPI를 전부 disable
+
+	// G.A.S: 4.3.5 Interrupt Set-Enable Registers, GICD_ISENABLERn
+	//
+	// dist_base: 0xf0000000, GIC_DIST_ENABLE_SET: 0x100
 	writel_relaxed(0x0000ffff, dist_base + GIC_DIST_ENABLE_SET);
+	// register GICD_ISENABLER0 값을 0x0000ffff으로 세팅
+
+	// 0x0000ffff 값의 의미:
+	// 0~15 bit는 SGI, 16~31 PPI를 컨트롤함, SGI를 전부 enable 함
 
 	/*
 	 * Set priority on PPI and SGI interrupts
 	 */
 	for (i = 0; i < 32; i += 4)
+		// dist_base: 0xf0000000, GIC_DIST_PRI: 0x400, i: 0
 		writel_relaxed(0xa0a0a0a0, dist_base + GIC_DIST_PRI + i * 4 / 4);
+		// register GICD_IPRIORITYR0 값을 0xa0a0a0a0으로 세팅
+		//
+		// i: 4...28 까지 수행 되어 register GICD_IPRIORITYR1 ~ GICD_ITARGETSR8 값을 0xa0a0a0a0으로 세팅
 
+	// G.A.S: 4.4.2 Interrupt Priority Mask Register, GICC_PMR
+	//
+	// base: 0xf0002000, GIC_CPU_PRIMASK: 0x04
 	writel_relaxed(0xf0, base + GIC_CPU_PRIMASK);
+	// register GICC_PMR 값을 0xf0으로 세팅
+	//
+	// 0xf0 값의 의미:
+	// interrupt priority가 240(0xf0) 이상인 interrupt만 cpu에 interrupt를 전달
+
+	// G.A.S: 4.4.1 CPU Interface Control Register, GICC_CTLR
+	//
+	// base: 0xf0002000, GIC_CPU_CTRL: 0x00
 	writel_relaxed(1, base + GIC_CPU_CTRL);
+	// register GICC_CTLR에 값을 1로 세팅
+	//
+	// 1 값의 의미:
+	// cpu에 전달되는 interrupt를 enable 함
 }
 
 void gic_cpu_if_down(void)
@@ -576,7 +640,7 @@ void gic_cpu_if_down(void)
 	writel_relaxed(0, cpu_base + GIC_CPU_CTRL);
 }
 
-#ifdef CONFIG_CPU_PM
+#ifdef CONFIG_CPU_PM // CONFIG_CPU_PM=y
 /*
  * Saves the GIC distributor registers during suspend or idle.  Must be called
  * with interrupts disabled but before powering down the GIC.  After calling
@@ -742,22 +806,41 @@ static int gic_notifier(struct notifier_block *self, unsigned long cmd,	void *v)
 	return NOTIFY_OK;
 }
 
+// ARM10C 20141129
 static struct notifier_block gic_notifier_block = {
 	.notifier_call = gic_notifier,
 };
 
+// ARM10C 20141129
+// gic: &gic_data[0]
 static void __init gic_pm_init(struct gic_chip_data *gic)
 {
+	// gic->saved_ppi_enable: (&gic_data[0])->saved_ppi_enable
+	// DIV_ROUND_UP(32, 32): 1, sizeof(u32): 4
+	// __alloc_percpu(4, 4): kmem_cache#26-o0 에서의 4 byte 할당된 주소
 	gic->saved_ppi_enable = __alloc_percpu(DIV_ROUND_UP(32, 32) * 4,
 		sizeof(u32));
+	// gic->saved_ppi_enable: (&gic_data[0])->saved_ppi_enable: kmem_cache#26-o0 에서의 4 byte 할당된 주소
+
+	// gic->saved_ppi_enable: (&gic_data[0])->saved_ppi_enable: kmem_cache#26-o0 에서의 4 byte 할당된 주소
 	BUG_ON(!gic->saved_ppi_enable);
 
+	// gic->saved_ppi_conf: (&gic_data[0])->saved_ppi_conf
+	// DIV_ROUND_UP(32, 16): 2, sizeof(u32): 4
+	// __alloc_percpu(8, 4): kmem_cache#26-o0 에서의 8 byte 할당된 주소
 	gic->saved_ppi_conf = __alloc_percpu(DIV_ROUND_UP(32, 16) * 4,
 		sizeof(u32));
+	// gic->saved_ppi_conf: (&gic_data[0])->saved_ppi_conf: kmem_cache#26-o0 에서의 8 byte 할당된 주소
+
+	// gic->saved_ppi_conf: (&gic_data[0])->saved_ppi_conf: kmem_cache#26-o0 에서의 8 byte 할당된 주소
 	BUG_ON(!gic->saved_ppi_conf);
 
+	// gic: &gic_data[0]
 	if (gic == &gic_data[0])
 		cpu_pm_register_notifier(&gic_notifier_block);
+		// cpu_pm_register_notifier에서 한일:
+		// (&cpu_pm_notifier_chain)->head: &gic_notifier_block
+		// &nh->head에 n의 포인터를 대입함
 }
 #else
 static void __init gic_pm_init(struct gic_chip_data *gic)
@@ -791,7 +874,7 @@ void gic_raise_softirq(const struct cpumask *mask, unsigned int irq)
 }
 #endif
 
-#ifdef CONFIG_BL_SWITCHER
+#ifdef CONFIG_BL_SWITCHER // CONFIG_BL_SWITCHER=n
 /*
  * gic_send_sgi - send a SGI directly to given CPU interface number
  *
@@ -928,6 +1011,7 @@ void __init gic_init_physaddr(struct device_node *node)
 }
 
 #else
+// ARM10C 20141129
 #define gic_init_physaddr(node)  do { } while (0)
 #endif
 
@@ -1263,8 +1347,54 @@ void __init gic_init_bases(unsigned int gic_nr, int irq_start,
 
 	// gic: &gic_data[0]
 	gic_dist_init(gic);
+	// gic_dist_init에서 한일:
+	//
+	// register GICD_CTLR을 0으로 초기화
+	// 0 값의 의미: Disable the forwarding of pending interrupts from the Distributor to the CPU interfaces.
+	//
+	// register GICD_ICFGR2 ~ GICD_ICFGR9 까지의 값을 0으로 초기화 수행
+	//
+	// register GICD_ITARGETSR8 ~ GICD_ITARGETSR39 값을 0x01010101으로 세팅
+	// 0x01010101의 의미: CPU targets, byte offset 0 ~ 4까지의 interrupt target을 "CPU interface 0"으로 설정
+	//
+	// register GICD_IPRIORITYR8 ~ GICD_ITARGETSR39 값을 0xa0a0a0a0으로 세팅
+	// 0xa0a0a0a0의 의미: Priority, byte offset 0 ~ 4까지의 interrupt priority value을 160 (0xa0)로 설정
+	//
+	// register GICD_ICENABLER1 ~ GICD_ICENABLER4 값을 0xffffffff으로 세팅
+	// 0xffffffff의 의미: 각각의 For SPIs and PPIs 값을 interrupt disable로 설정
+	//
+	// register GICD_CTLR 값을 1로 세팅
+	// 1 값의 의미: Enables the forwarding of pending interrupts from the Distributor to the CPU interfaces.
+
+	// gic: &gic_data[0]
 	gic_cpu_init(gic);
+	// gic_cpu_init에서 한일:
+	//
+	// gic_cpu_map[0]: 0x01
+	// gic_cpu_map[1...7]: 0xfe
+	//
+	// register GICD_ICENABLER0 값을 0xffff0000으로 세팅
+	// 0xffff0000 값의 의미: 0~15 bit는 SGI, 16~31 PPI를 컨트롤함, PPI를 전부 disable
+	//
+	// register GICD_ISENABLER0 값을 0x0000ffff으로 세팅
+	// 0x0000ffff 값의 의미: 0~15 bit는 SGI, 16~31 PPI를 컨트롤함, SGI를 전부 enable 함
+	//
+	// register GICD_IPRIORITYR1 ~ GICD_ITARGETSR8 값을 0xa0a0a0a0으로 세팅
+	// 0xa0a0a0a0의 의미: Priority, byte offset 0 ~ 4까지의 interrupt priority value을 160 (0xa0)로 설정
+	//
+	// register GICC_PMR 값을 0xf0으로 세팅
+	// 0xf0 값의 의미: interrupt priority가 240(0xf0) 이상인 interrupt만 cpu에 interrupt를 전달
+	//
+	// register GICC_CTLR에 값을 1로 세팅
+	// 1 값의 의미: cpu에 전달되는 interrupt를 enable 함
+
+	// gic: &gic_data[0]
 	gic_pm_init(gic);
+	// gic_pm_init에서 한일:
+	//
+	// (&gic_data[0])->saved_ppi_enable: kmem_cache#26-o0 에서의 4 byte 할당된 주소 (pcp)
+	// (&gic_data[0])->saved_ppi_conf: kmem_cache#26-o0 에서의 8 byte 할당된 주소 (pcp)
+	// (&cpu_pm_notifier_chain)->head: &gic_notifier_block
 }
 
 #ifdef CONFIG_OF // CONFIG_OF=y
@@ -1423,15 +1553,144 @@ int __init gic_of_init(struct device_node *node, struct device_node *parent)
 	// gic_cnt: 0, dist_base: 0xf0000000, cpu_base: 0xf0002000, percpu_offset: 0,
 	// node: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소
 	gic_init_bases(gic_cnt, -1, dist_base, cpu_base, percpu_offset, node);
-	if (!gic_cnt)
-		gic_init_physaddr(node);
+	// gic_init_bases에서 한일:
+	//
+	// (&gic_data[0])->dist_base.common_base: 0xf0000000
+	// (&gic_data[0])->cpu_base.common_base: 0xf0002000
+	// (&gic_data[0])->gic_irqs: 160
+	//
+	/*
+	 * struct irq_desc의 자료 구조크기 만큼 160개의 메모리를 할당 받아
+	 * radix tree 구조로 구성
+	 *
+	 * radix tree의 root node: &irq_desc_tree 값을 변경
+	 * (&irq_desc_tree)->rnode: kmem_cache#20-o1 (RADIX_LSB: 1)
+	 * (&irq_desc_tree)->height: 2
+	 *
+	 * (kmem_cache#20-o1)->height: 2
+	 * (kmem_cache#20-o1)->count: 3
+	 * (kmem_cache#20-o1)->parent: NULL
+	 * (kmem_cache#20-o1)->slots[0]: kmem_cache#20-o0 (radix height 1 관리 주소)
+	 * (kmem_cache#20-o1)->slots[1]: kmem_cache#20-o2 (radix height 1 관리 주소)
+	 * (kmem_cache#20-o1)->slots[2]: kmem_cache#20-o3 (radix height 1 관리 주소)
+	 *
+	 * (kmem_cache#20-o0)->height: 1
+	 * (kmem_cache#20-o0)->count: 63
+	 * (kmem_cache#20-o0)->parent: kmem_cache#20-o1 (RADIX_LSB: 1)
+	 * (kmem_cache#20-o0)->slots[0...63]: kmem_cache#28-oX (irq 0...63)
+	 *
+	 * (kmem_cache#20-o2)->height: 1
+	 * (kmem_cache#20-o2)->count: 63
+	 * (kmem_cache#20-o2)->parent: kmem_cache#20-o1 (RADIX_LSB: 1)
+	 * (kmem_cache#20-o2)->slots[0...63]: kmem_cache#28-oX (irq 63...127)
+	 *
+	 * (kmem_cache#20-o3)->height: 1
+	 * (kmem_cache#20-o3)->count: 32
+	 * (kmem_cache#20-o3)->parent: kmem_cache#20-o1 (RADIX_LSB: 1)
+	 * (kmem_cache#20-o3)->slots[0...32]: kmem_cache#28-oX (irq 127...160)
+	 *
+	 * (&irq_desc_tree)->rnode --> +-----------------------+
+	 *                             |    radix_tree_node    |
+	 *                             |   (kmem_cache#20-o1)  |
+	 *                             +-----------------------+
+	 *                             | height: 2 | count: 3  |
+	 *                             +-----------------------+
+	 *                             | radix_tree_node 0 ~ 2 |
+	 *                             +-----------------------+
+	 *                            /            |             \
+	 *    slot: 0                /   slot: 1   |              \ slot: 2
+	 *    +-----------------------+  +-----------------------+  +-----------------------+
+	 *    |    radix_tree_node    |  |    radix_tree_node    |  |    radix_tree_node    |
+	 *    |   (kmem_cache#20-o0)  |  |   (kmem_cache#20-o2)  |  |   (kmem_cache#20-o3)  |
+	 *    +-----------------------+  +-----------------------+  +-----------------------+
+	 *    | height: 1 | count: 64 |  | height: 1 | count: 64 |  | height: 1 | count: 32 |
+	 *    +-----------------------+  +-----------------------+  +-----------------------+
+	 *    |    irq  0 ~ 63        |  |    irq 64 ~ 127       |  |    irq 128 ~ 160      |
+	 *    +-----------------------+  +-----------------------+  +-----------------------+
+	 */
+	// (&gic_data[0])->domain: kmem_cache#25-o0
+	// (&(kmem_cache#25-o0)->revmap_tree)->height: 0
+	// (&(kmem_cache#25-o0)->revmap_tree)->gfp_mask: GFP_KERNEL: 0xD0
+	// (&(kmem_cache#25-o0)->revmap_tree)->rnode: NULL
+	// (kmem_cache#25-o0)->ops: &gic_irq_domain_ops
+	// (kmem_cache#25-o0)->host_data: &gic_data[0]
+	// (kmem_cache#25-o0)->of_node: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소
+	// (kmem_cache#25-o0)->hwirq_max: 160
+	// (kmem_cache#25-o0)->revmap_size: 160
+	// (kmem_cache#25-o0)->revmap_direct_max_irq: 0
+	// (kmem_cache#25-o0)->name: "GIC"
+	// (kmem_cache#25-o0)->linear_revmap[16...160]: 16...160
+	//
+	// irq_domain_list에 (kmem_cache#25-o0)->link를 추가
+	//
+	// irq 16...160까지의 struct irq_data에 값을 설정
+	// (&(kmem_cache#28-oX (irq 16...160))->irq_data)->hwirq: 16...160
+	// (&(kmem_cache#28-oX (irq 16...160))->irq_data)->domain: kmem_cache#25-o0
+	// (&(kmem_cache#28-oX (irq 16...160))->irq_data)->state_use_accessors: 0x10800
+	// (kmem_cache#28-oX (irq 16...160))->percpu_enabled: kmem_cache#30-oX
+	// (kmem_cache#28-oX (irq 16...160))->status_use_accessors: 0x31600
+	// (kmem_cache#28-oX (irq 16...160))->irq_data.chip: &gic_chip
+	// (kmem_cache#28-oX (irq 16...160))->handle_irq: handle_percpu_devid_irq
+	// (kmem_cache#28-oX (irq 16...160))->name: NULL
+	// (kmem_cache#28-oX (irq 16...160))->irq_data.chip_data: &gic_data[0]
+	// (kmem_cache#28-oX (irq 16...160))->status_use_accessors: 0x31600
+	//
+	// smp_cross_call: gic_raise_softirq
+	//
+	// (&cpu_chain)->head: gic_cpu_notifier 포인터 대입
+	// (&gic_cpu_notifier)->next은 (&radix_tree_callback_nb)->next로 대입
+	//
+	// handle_arch_irq: gic_handle_irq
+	//
+	// gic_chip.flags: 0
+	//
+	// register GICD_CTLR을 0으로 초기화
+	// 0 값의 의미: Disable the forwarding of pending interrupts from the Distributor to the CPU interfaces.
+	// register GICD_ICFGR2 ~ GICD_ICFGR9 까지의 값을 0으로 초기화 수행
+	// register GICD_ITARGETSR8 ~ GICD_ITARGETSR39 값을 0x01010101으로 세팅
+	// 0x01010101의 의미: CPU targets, byte offset 0 ~ 4까지의 interrupt target을 "CPU interface 0"으로 설정
+	// register GICD_IPRIORITYR8 ~ GICD_ITARGETSR39 값을 0xa0a0a0a0으로 세팅
+	// 0xa0a0a0a0의 의미: Priority, byte offset 0 ~ 4까지의 interrupt priority value을 160 (0xa0)로 설정
+	// register GICD_ICENABLER1 ~ GICD_ICENABLER4 값을 0xffffffff으로 세팅
+	// 0xffffffff의 의미: 각각의 For SPIs and PPIs 값을 interrupt disable로 설정
+	// register GICD_CTLR 값을 1로 세팅
+	// 1 값의 의미: Enables the forwarding of pending interrupts from the Distributor to the CPU interfaces.
+	//
+	// gic_cpu_map[0]: 0x01
+	// gic_cpu_map[1...7]: 0xfe
+	//
+	// register GICD_ICENABLER0 값을 0xffff0000으로 세팅
+	// 0xffff0000 값의 의미: 0~15 bit는 SGI, 16~31 PPI를 컨트롤함, PPI를 전부 disable
+	// register GICD_ISENABLER0 값을 0x0000ffff으로 세팅
+	// 0x0000ffff 값의 의미: 0~15 bit는 SGI, 16~31 PPI를 컨트롤함, SGI를 전부 enable 함
+	// register GICD_IPRIORITYR1 ~ GICD_ITARGETSR8 값을 0xa0a0a0a0으로 세팅
+	// 0xa0a0a0a0의 의미: Priority, byte offset 0 ~ 4까지의 interrupt priority value을 160 (0xa0)로 설정
+	// register GICC_PMR 값을 0xf0으로 세팅
+	// 0xf0 값의 의미: interrupt priority가 240(0xf0) 이상인 interrupt만 cpu에 interrupt를 전달
+	// register GICC_CTLR에 값을 1로 세팅
+	// 1 값의 의미: cpu에 전달되는 interrupt를 enable 함
+	//
+	// (&gic_data[0])->saved_ppi_enable: kmem_cache#26-o0 에서의 4 byte 할당된 주소 (pcp)
+	// (&gic_data[0])->saved_ppi_conf: kmem_cache#26-o0 에서의 8 byte 할당된 주소 (pcp)
+	// (&cpu_pm_notifier_chain)->head: &gic_notifier_block
 
+	// gic_cnt: 0
+	if (!gic_cnt)
+		// node: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소
+		gic_init_physaddr(node); // null function
+
+	// parent: NULL
 	if (parent) {
 		irq = irq_of_parse_and_map(node, 0);
 		gic_cascade_irq(gic_cnt, irq);
 	}
+
+	// gic_cnt: 0
 	gic_cnt++;
+	// gic_cnt: 1
+
 	return 0;
+	// return 0
 }
 
 // ARM10C 20141011

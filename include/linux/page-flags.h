@@ -143,6 +143,7 @@ enum pageflags {
 // PageCompound(const struct page *page)
 // { return test_bit(PG_compound, &page->flags); }
 // ARM10C 20140621
+// ARM10C 20141129
 // PG_slab: 7
 // TESTPAGEFLAG(Slab, slab):
 // static inline int PageSlab(const struct page *page)
@@ -227,6 +228,7 @@ static inline int __TestClearPage##uname(struct page *page)		\
 
 // ARM10C 20140531
 // ARM10C 20140621
+// ARM10C 20141129
 // __PAGEFLAG(Slab, slab):
 // TESTPAGEFLAG(Slab, slab)
 // __SETPAGEFLAG(Slab, slab)
@@ -271,6 +273,8 @@ PAGEFLAG(Active, active) __CLEARPAGEFLAG(Active, active)
 // page: migratetype이 MIGRATE_UNMOVABLE인 page
 // ARM10C 20140628
 // page: migratetype이 MIGRATE_UNMOVABLE인 page (boot_kmem_cache)
+// ARM10C 20141129
+// page: kmem_cache#30-o11의 page 주소
 __PAGEFLAG(Slab, slab)
 PAGEFLAG(Checked, checked)		/* Used by some filesystems */
 PAGEFLAG(Pinned, pinned) TESTSCFLAG(Pinned, pinned)	/* Xen */
@@ -466,6 +470,8 @@ static inline int PageHead(struct page *page)
 
 // ARM10C 20140329
 // page: 0x20000의 해당하는 struct page의 주소
+// ARM10C 20141129
+// page: kmem_cache#30-o11의 page 주소
 static inline int PageTail(struct page *page)
 {
 	// PG_head_tail_mask: 0x24000

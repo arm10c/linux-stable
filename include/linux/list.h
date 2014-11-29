@@ -469,6 +469,9 @@ static inline void list_splice_tail_init(struct list_head *list,
  *
  * Note that if the list is empty, it returns NULL.
  */
+// ARM10C 20141129
+// #define list_first_entry_or_null(&intc_parent_list, struct intc_desc, list):
+// (!list_empty(&intc_parent_list) ? list_first_entry(&intc_parent_list, struct intc_desc, list) : NULL)
 #define list_first_entry_or_null(ptr, type, member) \
 	(!list_empty(ptr) ? list_first_entry(ptr, type, member) : NULL)
 

@@ -22,7 +22,9 @@
 #include <linux/spinlock.h>
 #include <linux/syscore_ops.h>
 
+// ARM10C 20141129
 static DEFINE_RWLOCK(cpu_pm_notifier_lock);
+// ARM10C 20141129
 static RAW_NOTIFIER_HEAD(cpu_pm_notifier_chain);
 
 static int cpu_pm_notify(enum cpu_pm_event event, int nr_to_call, int *nr_calls)
@@ -45,14 +47,24 @@ static int cpu_pm_notify(enum cpu_pm_event event, int nr_to_call, int *nr_calls)
  * This function may sleep, and has the same return conditions as
  * raw_notifier_chain_register.
  */
+// ARM10C 20141129
+// &gic_notifier_block
 int cpu_pm_register_notifier(struct notifier_block *nb)
 {
 	unsigned long flags;
 	int ret;
 
 	write_lock_irqsave(&cpu_pm_notifier_lock, flags);
+	// cpu_pm_notifier_lock를 이용한 lock 설정 후 cpsr을 flags에 저장
+
+	// nb: &gic_notifier_block
 	ret = raw_notifier_chain_register(&cpu_pm_notifier_chain, nb);
+	// raw_notifier_chain_register에서 한일:
+	// (&cpu_pm_notifier_chain)->head: &gic_notifier_block
+	// &nh->head에 n의 포인터를 대입함
+
 	write_unlock_irqrestore(&cpu_pm_notifier_lock, flags);
+	// cpu_pm_notifier_lock를 이용한 lock 해재 후 flags에 저장된 cpsr를 복원
 
 	return ret;
 }

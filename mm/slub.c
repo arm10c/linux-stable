@@ -6816,23 +6816,39 @@ size_t ksize(const void *object)
 }
 EXPORT_SYMBOL(ksize);
 
+// ARM10C 20141129
+// desc: kmem_cache#30-o11 (cortex_a15_gic)
 void kfree(const void *x)
 {
 	struct page *page;
-	void *object = (void *)x;
 
+	// x: kmem_cache#30-o11
+	void *object = (void *)x;
+	// object: kmem_cache#30-o11
+
+	// _RET_IP_: __builtin_return_address(0), object: kmem_cache#30-o11
 	trace_kfree(_RET_IP_, x);
 
+	// x: kmem_cache#30-o11, ZERO_OR_NULL_PTR(kmem_cache#30-o11): 0
 	if (unlikely(ZERO_OR_NULL_PTR(x)))
 		return;
 
+	// x: kmem_cache#30-o11
+	// virt_to_head_page(kmem_cache#30-o11): kmem_cache#30-o11의 page 주소
 	page = virt_to_head_page(x);
+	// page: kmem_cache#30-o11의 page 주소
+
+	// page: kmem_cache#30-o11의 page 주소
+	// PageSlab(kmem_cache#30-o11의 page 주소): 1
 	if (unlikely(!PageSlab(page))) {
 		BUG_ON(!PageCompound(page));
 		kfree_hook(x);
 		__free_memcg_kmem_pages(page, compound_order(page));
 		return;
 	}
+
+// 2014/11/29 종료
+
 	slab_free(page->slab_cache, page, object, _RET_IP_);
 }
 EXPORT_SYMBOL(kfree);

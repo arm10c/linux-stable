@@ -130,6 +130,7 @@ extern void srcu_init_notifier_head(struct srcu_notifier_head *nh);
 		BLOCKING_NOTIFIER_INIT(name)
 
 // ARM10C 20140322
+// ARM10C 20141129
 // RAW_NOTIFIER_INIT(cpu_chain): { .head = NULL }
 //
 // #define RAW_NOTIFIER_HEAD(cpu_chain):

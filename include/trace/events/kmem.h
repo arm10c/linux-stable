@@ -142,6 +142,8 @@ DECLARE_EVENT_CLASS(kmem_free,
 	TP_printk("call_site=%lx ptr=%p", __entry->call_site, __entry->ptr)
 );
 
+// ARM10C 20141129
+// _RET_IP_: __builtin_return_address(0), object: kmem_cache#30-o11
 DEFINE_EVENT(kmem_free, kfree,
 
 	TP_PROTO(unsigned long call_site, const void *ptr),

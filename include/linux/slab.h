@@ -156,6 +156,8 @@
 // ARM10C 20140726
 // ZERO_SIZE_PTR: 16
 // s: kmem_cache#30
+// ARM10C 20141129
+// x: kmem_cache#30-o11
 #define ZERO_OR_NULL_PTR(x) ((unsigned long)(x) <= \
 				(unsigned long)ZERO_SIZE_PTR)
 
