@@ -72,7 +72,7 @@ __rb_rotate_set_parents(struct rb_node *old, struct rb_node *new,
 // ARM10C 20140809
 // node: &(kmem_cache#30-o9)->rb_node, root: &vmap_area_root, dummy_rotate
 // ARM10C 20141025
-// node: &(kmem_cache#30-oX (GIC))->rb_node, root: &vmap_area_root
+// node: &(kmem_cache#30-oX (GIC#0))->rb_node, root: &vmap_area_root
 static __always_inline void
 __rb_insert(struct rb_node *node, struct rb_root *root,
 	    void (*augment_rotate)(struct rb_node *old, struct rb_node *new))
@@ -105,7 +105,7 @@ __rb_insert(struct rb_node *node, struct rb_root *root,
 				 *      / \          / \
 				 *     p   u  -->   P   U
 				 *    /            /
-				 *   n            N
+				 *   n            n
 				 *
 				 * However, since g's parent might be red, and
 				 * 4) does not allow this, we need to recurse
@@ -170,7 +170,7 @@ __rb_insert(struct rb_node *node, struct rb_root *root,
 				 *      / \          / \
 				 *     u   p  -->   U   P
 				 *          \            \
-				 *           n            N
+				 *           n            n
 				 *
 				 * However, since g's parent might be red, and
 				 * 4) does not allow this, we need to recurse
@@ -466,11 +466,13 @@ static const struct rb_augment_callbacks dummy_callbacks = {
 // ARM10C 20140809
 // &va->rb_node: &(kmem_cache#30-o9)->rb_node, &vmap_area_root
 // ARM10C 20141025
-// va->rb_node: (kmem_cache#30-oX (GIC))->rb_node
+// va->rb_node: (kmem_cache#30-oX (GIC#0))->rb_node
+// ARM10C 20141206
+// va->rb_node: (kmem_cache#30-oX (COMB))->rb_node
 void rb_insert_color(struct rb_node *node, struct rb_root *root)
 {
 	// node: &(kmem_cache#30-o9)->rb_node, root: &vmap_area_root
-	// node: &(kmem_cache#30-oX (GIC))->rb_node, root: &vmap_area_root
+	// node: &(kmem_cache#30-oX (GIC#0))->rb_node, root: &vmap_area_root
 	__rb_insert(node, root, dummy_rotate);
 }
 EXPORT_SYMBOL(rb_insert_color);

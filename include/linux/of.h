@@ -91,6 +91,7 @@ extern void of_node_put(struct device_node *node);
 // ARM10C 20141011
 // ARM10C 20141018
 // ARM10C 20141122
+// ARM10C 20141206
 static inline struct device_node *of_node_get(struct device_node *node)
 {
 	return node;
@@ -621,6 +622,7 @@ static inline const char *of_prop_next_string(struct property *prop,
 extern int of_node_to_nid(struct device_node *np);
 #else
 // ARM10C 20141122
+// ARM10C 20141206
 static inline int of_node_to_nid(struct device_node *device) { return 0; }
 #endif
 
@@ -658,6 +660,8 @@ static inline int of_property_read_u16(const struct device_node *np,
 // [0] cpu: cpu0의 node의 주소값, "reg", &hwid
 // ARM10C 20141108
 // node: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소
+// ARM10C 20141206
+// np: devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소, &max_nr
 static inline int of_property_read_u32(const struct device_node *np,
 				       const char *propname,
 				       u32 *out_value)

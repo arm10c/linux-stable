@@ -761,12 +761,15 @@ static inline int size_index_elem(size_t bytes)
 // size: 12, gfpflags: GFP_NOWAIT: 0
 // ARM10C 20140920
 // size: 16, gfpflags: GFP_KERNEL: 0xD0
+// ARM10C 20141206
+// size: 512, flags: 0x80D0
 struct kmem_cache *kmalloc_slab(size_t size, gfp_t flags)
 {
 	int index;
 
 	// size: 12, KMALLOC_MAX_SIZE: 0x40000000
 	// size: 16, KMALLOC_MAX_SIZE: 0x40000000
+	// size: 512, KMALLOC_MAX_SIZE: 0x40000000
 	if (unlikely(size > KMALLOC_MAX_SIZE)) {
 		WARN_ON_ONCE(!(flags & __GFP_NOWARN));
 		return NULL;
@@ -774,6 +777,7 @@ struct kmem_cache *kmalloc_slab(size_t size, gfp_t flags)
 
 	// size: 12
 	// size: 16
+	// size: 512
 	if (size <= 192) {
 		// size: 12
 		// size: 16
@@ -786,7 +790,10 @@ struct kmem_cache *kmalloc_slab(size_t size, gfp_t flags)
 		// index: 6
 		// index: 6
 	} else
+		// size: 512
+		// fls(511): 9
 		index = fls(size - 1);
+		// index: 9
 
 #ifdef CONFIG_ZONE_DMA // CONFIG_ZONE_DMA=n
 	if (unlikely((flags & GFP_DMA)))
@@ -795,9 +802,11 @@ struct kmem_cache *kmalloc_slab(size_t size, gfp_t flags)
 #endif
 	// index: 6, kmalloc_caches[6]: kmem_cache#30
 	// index: 6, kmalloc_caches[6]: kmem_cache#30
+	// index: 9, kmalloc_caches[9]: kmem_cache#26
 	return kmalloc_caches[index];
 	// return kmem_cache#30
 	// return kmem_cache#30
+	// return kmem_cache#26
 }
 
 /*

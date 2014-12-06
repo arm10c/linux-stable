@@ -101,6 +101,8 @@ extern void __list_add_rcu(struct list_head *new,
 // &va->list: &(kmem_cache#30-oX (GIC#0))->list, &vmap_area_list
 // ARM10C 20141108
 // &va->list: &(kmem_cache#30-oX (GIC#1))->list, &prev->list: &(GIC#0)->list
+// ARM10C 20141206
+// &va->list: &(kmem_cache#30-oX (COMB))->list, &prev->list: &(GIC#1)->list
 static inline void list_add_rcu(struct list_head *new, struct list_head *head)
 {
 	// new: &(kmem_cache#30-oX (GIC#0))->list, head: &vmap_area_list,

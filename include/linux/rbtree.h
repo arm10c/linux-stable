@@ -59,6 +59,7 @@ struct rb_root {
 #define RB_ROOT	(struct rb_root) { NULL, }
 
 // ARM10C 20141025
+// ARM10C 20141206
 #define	rb_entry(ptr, type, member) container_of(ptr, type, member)
 
 #define RB_EMPTY_ROOT(root)  ((root)->rb_node == NULL)
@@ -101,27 +102,29 @@ extern void rb_replace_node(struct rb_node *victim, struct rb_node *new,
 // ARM10C 20140809
 // &va->rb_node: &(kmem_cache#30-o9)->rb_node, parent: NULL, p: &vmap_area_root.rb_node
 // ARM10C 20141025
-// va->rb_node: (kmem_cache#30-oX (GIC))->rb_node, parent: SYSC node, p: (SYSC node)->rb_left
+// va->rb_node: (kmem_cache#30-oX (GIC#0))->rb_node, parent: SYSC node, p: (SYSC node)->rb_left
+// ARM10C 20141206
+// va->rb_node: (kmem_cache#30-oX (COMB))->rb_node, parent: SYSC node, p: (SYSC node)->rb_left
 static inline void rb_link_node(struct rb_node * node, struct rb_node * parent,
 				struct rb_node ** rb_link)
 {
 	// node->__rb_parent_color: (kmem_cache#30-o9)->rb_node.__rb_parent_color, parent: NULL
-	// ((GIC)->rb_node)->__rb_parent_color, parent: (SYSC)->rb_node
+	// ((GIC#0)->rb_node)->__rb_parent_color, parent: (SYSC)->rb_node
 	node->__rb_parent_color = (unsigned long)parent;
 	// node->__rb_parent_color: (kmem_cache#30-o9)->rb_node.__rb_parent_color: NULL
-	// ((GIC)->rb_node)->__rb_parent_color: (SYSC)->rb_node
+	// ((GIC#0)->rb_node)->__rb_parent_color: (SYSC)->rb_node
 
 	node->rb_left = node->rb_right = NULL;
 	// node->rb_left: (kmem_cache#30-o9)->rb_node.rb_left: NULL
 	// node->rb_right: (kmem_cache#30-o9)->rb_node.rb_right: NULL
-	// ((GIC)->rb_node)->rb_left: ((GIC)->rb_node).rb_left: NULL
-	// ((GIC)->rb_node)->rb_right: ((GIC)->rb_node).rb_right: NULL
+	// ((GIC#0)->rb_node)->rb_left: ((GIC#0)->rb_node).rb_left: NULL
+	// ((GIC#0)->rb_node)->rb_right: ((GIC#0)->rb_node).rb_right: NULL
 
 	// *rb_link: vmap_area_root.rb_node, node: &(kmem_cache#30-o9)->rb_node
-	// *rb_link: (SYSC node)->rb_left, node: &(GIC)->rb_node
+	// *rb_link: (SYSC node)->rb_left, node: &(GIC#0)->rb_node
 	*rb_link = node;
 	// vmap_area_root.rb_node: &(kmem_cache#30-o9)->rb_node
-	// (SYSC node)->rb_left: &(GIC)->rb_node
+	// (SYSC node)->rb_left: &(GIC#0)->rb_node
 }
 
 #define rb_entry_safe(ptr, type, member) \

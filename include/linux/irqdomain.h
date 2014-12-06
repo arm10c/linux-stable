@@ -94,6 +94,7 @@ struct irq_domain_chip_generic;
  * @linear_revmap: Linear table of hwirq->virq reverse mappings
  */
 // ARM10C 20141122
+// ARM10C 20141206
 // sizeof(struct irq_domain): 52 bytes
 struct irq_domain {
 	struct list_head link;

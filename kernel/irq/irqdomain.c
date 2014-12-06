@@ -40,6 +40,9 @@ static struct irq_domain *irq_default_domain;
 // ARM10C 20141122
 // of_node: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소,
 // 160, 160, 0, ops: &gic_irq_domain_ops, host_data: &gic_data[0]
+// ARM10C 20141206
+// of_node: devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소,
+// size: 256, size: 256, 0, ops: &combiner_irq_domain_ops, host_data: kmem_cache#26-oX
 struct irq_domain *__irq_domain_add(struct device_node *of_node, int size,
 				    irq_hw_number_t hwirq_max, int direct_max,
 				    const struct irq_domain_ops *ops,
@@ -51,16 +54,23 @@ struct irq_domain *__irq_domain_add(struct device_node *of_node, int size,
 	// of_node: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소
 	// of_node_to_nid(devtree에서 allnext로 순회 하면서 찾은 gic node의 주소): 0
 	// kzalloc_node(692, GFP_KERNEL: 0xD0, 0): kmem_cache#25-o0
+	// sizeof(struct irq_domain): 52, sizeof(unsigned int): 4, size: 256, GFP_KERNEL: 0xD0
+	// of_node: devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소
+	// of_node_to_nid(devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소): 0
+	// kzalloc_node(1076, GFP_KERNEL: 0xD0, 0): kmem_cache#24-o0
 	domain = kzalloc_node(sizeof(*domain) + (sizeof(unsigned int) * size),
 			      GFP_KERNEL, of_node_to_nid(of_node));
 	// domain: kmem_cache#25-o0
+	// domain: kmem_cache#24-o0
 
 	// domain: kmem_cache#25-o0
+	// domain: kmem_cache#24-o0
 	if (WARN_ON(!domain))
 		return NULL;
 
 	/* Fill structure */
 	// &domain->revmap_tree: &(kmem_cache#25-o0)->revmap_tree, GFP_KERNEL: 0xD0
+	// &domain->revmap_tree: &(kmem_cache#24-o0)->revmap_tree, GFP_KERNEL: 0xD0
 	INIT_RADIX_TREE(&domain->revmap_tree, GFP_KERNEL);
 	// INIT_RADIX_TREE(&(kmem_cache#25-o0)->revmap_tree, GFP_KERNEL: 0xD0):
 	// do {
@@ -68,51 +78,80 @@ struct irq_domain *__irq_domain_add(struct device_node *of_node, int size,
 	// 	(&(kmem_cache#25-o0)->revmap_tree)->gfp_mask = (GFP_KERNEL: 0xD0);
 	// 	(&(kmem_cache#25-o0)->revmap_tree)->rnode = NULL;
 	// } while (0)
+	// INIT_RADIX_TREE(&(kmem_cache#24-o0)->revmap_tree, GFP_KERNEL: 0xD0):
+	// do {
+	// 	(&(kmem_cache#24-o0)->revmap_tree)->height = 0;
+	// 	(&(kmem_cache#24-o0)->revmap_tree)->gfp_mask = (GFP_KERNEL: 0xD0);
+	// 	(&(kmem_cache#24-o0)->revmap_tree)->rnode = NULL;
+	// } while (0)
 
 	// domain->ops: (kmem_cache#25-o0)->ops, ops: &gic_irq_domain_ops
+	// domain->ops: (kmem_cache#24-o0)->ops, ops: &combiner_irq_domain_ops
 	domain->ops = ops;
 	// domain->ops: (kmem_cache#25-o0)->ops: &gic_irq_domain_ops
+	// domain->ops: (kmem_cache#24-o0)->ops: &combiner_irq_domain_ops
 
 	// domain->host_data: (kmem_cache#25-o0)->host_data, host_data: &gic_data[0]
+	// domain->host_data: (kmem_cache#24-o0)->host_data, host_data: kmem_cache#26-oX (combiner_data)
 	domain->host_data = host_data;
 	// domain->host_data: (kmem_cache#25-o0)->host_data: &gic_data[0]
+	// domain->host_data: (kmem_cache#24-o0)->host_data: kmem_cache#26-oX (combiner_data)
 
 	// domain->of_node: (kmem_cache#25-o0)->of_node,
 	// of_node: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소
 	// of_node_get(devtree에서 allnext로 순회 하면서 찾은 gic node의 주소):
 	// devtree에서 allnext로 순회 하면서 찾은 gic node의 주소
+	// domain->of_node: (kmem_cache#24-o0)->of_node,
+	// of_node: devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소
+	// of_node_get(devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소):
+	// devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소
 	domain->of_node = of_node_get(of_node);
 	// domain->of_node: (kmem_cache#25-o0)->of_node:
 	// devtree에서 allnext로 순회 하면서 찾은 gic node의 주소
+	// domain->of_node: (kmem_cache#24-o0)->of_node:
+	// devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소
 
 	// domain->hwirq_max: (kmem_cache#25-o0)->hwirq_max, hwirq_max: 160
+	// domain->hwirq_max: (kmem_cache#24-o0)->hwirq_max, hwirq_max: 256
 	domain->hwirq_max = hwirq_max;
 	// domain->hwirq_max: (kmem_cache#25-o0)->hwirq_max: 160
+	// domain->hwirq_max: (kmem_cache#24-o0)->hwirq_max: 256
 
 	// domain->revmap_size: (kmem_cache#25-o0)->revmap_size, size: 160
+	// domain->revmap_size: (kmem_cache#24-o0)->revmap_size, size: 256
 	domain->revmap_size = size;
 	// domain->revmap_size: (kmem_cache#25-o0)->revmap_size: 160
+	// domain->revmap_size: (kmem_cache#24-o0)->revmap_size: 256
 
 	// domain->revmap_direct_max_irq: (kmem_cache#25-o0)->revmap_direct_max_irq, direct_max: 0
+	// domain->revmap_direct_max_irq: (kmem_cache#24-o0)->revmap_direct_max_irq, direct_max: 0
 	domain->revmap_direct_max_irq = direct_max;
 	// domain->revmap_direct_max_irq: (kmem_cache#25-o0)->revmap_direct_max_irq: 0
+	// domain->revmap_direct_max_irq: (kmem_cache#24-o0)->revmap_direct_max_irq: 0
 
 	mutex_lock(&irq_domain_mutex);
 	// irq_domain_mutex을 사용한 mutex lock 설정
+	// irq_domain_mutex을 사용한 mutex lock 설정
 
 	// domain->link: (kmem_cache#25-o0)->link
+	// domain->link: (kmem_cache#24-o0)->link
 	list_add(&domain->link, &irq_domain_list);
 	// irq_domain_list에 (kmem_cache#25-o0)->link를 추가
+	// irq_domain_list에 (kmem_cache#24-o0)->link를 추가
 
 	mutex_unlock(&irq_domain_mutex);
 	// irq_domain_mutex을 사용한 mutex lock 해재
+	// irq_domain_mutex을 사용한 mutex lock 해재
 
 	// domain->name: (kmem_cache#25-o0)->name: NULL
+	// domain->name: (kmem_cache#24-o0)->name: NULL
 	pr_debug("Added domain %s\n", domain->name);
 
 	// domain: kmem_cache#25-o0
+	// domain: kmem_cache#24-o0
 	return domain;
 	// return kmem_cache#25-o0
+	// return kmem_cache#24-o0
 }
 EXPORT_SYMBOL_GPL(__irq_domain_add);
 
@@ -170,6 +209,9 @@ EXPORT_SYMBOL_GPL(irq_domain_remove);
  * irqs get mapped dynamically on the fly. However, if the controller requires
  * static virq assignments (non-DT boot) then it will set that up correctly.
  */
+// ARM10C 20141206
+// np: devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소,
+// nr_irq: 256, irq_base: 160, &combiner_irq_domain_ops, combiner_data: kmem_cache#26-oX
 struct irq_domain *irq_domain_add_simple(struct device_node *of_node,
 					 unsigned int size,
 					 unsigned int first_irq,
@@ -178,7 +220,29 @@ struct irq_domain *irq_domain_add_simple(struct device_node *of_node,
 {
 	struct irq_domain *domain;
 
+	// of_node: devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소,
+	// size: 256, ops: &combiner_irq_domain_ops, host_data: kmem_cache#26-oX
+	// __irq_domain_add(devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소,
+	// 256, 256, 0, &combiner_irq_domain_ops, kmem_cache#26-oX (combiner_data)): kmem_cache#24-o0
 	domain = __irq_domain_add(of_node, size, size, 0, ops, host_data);
+	// domain: kmem_cache#24-o0
+
+	// __irq_domain_add에서 한일:
+	// struct irq_domain를 위한 메모리 할당: kmem_cache#24-o0
+	// (&(kmem_cache#24-o0)->revmap_tree)->height: 0
+	// (&(kmem_cache#24-o0)->revmap_tree)->gfp_mask: (GFP_KERNEL: 0xD0)
+	// (&(kmem_cache#24-o0)->revmap_tree)->rnode: NULL
+	// (kmem_cache#24-o0)->ops: &combiner_irq_domain_ops
+	// (kmem_cache#24-o0)->host_data: kmem_cache#26-oX (combiner_data)
+	// (kmem_cache#24-o0)->of_node: devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소
+	// (kmem_cache#24-o0)->hwirq_max: 256
+	// (kmem_cache#24-o0)->revmap_size: 256
+	// (kmem_cache#24-o0)->revmap_direct_max_irq: 0
+	//
+	// irq_domain_list에 (kmem_cache#24-o0)->link를 추가
+
+// 2014/12/06 종료
+
 	if (!domain)
 		return NULL;
 

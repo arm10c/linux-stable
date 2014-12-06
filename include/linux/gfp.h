@@ -166,6 +166,7 @@ struct vm_area_struct;
 // ARM10C 20140726
 // ARM10C 20141004
 // ARM10C 20141101
+// ARM10C 20141206
 // ___GFP_ZERO: 0x8000u
 // __GFP_ZERO: 0x8000u
 #define __GFP_ZERO	((__force gfp_t)___GFP_ZERO)	/* Return zeroed page on success */
@@ -248,6 +249,7 @@ struct vm_area_struct;
 // ARM10C 20141025
 // ARM10C 20141101
 // ARM10C 20141122
+// ARM10C 20141206
 // __GFP_WAIT: 0x10
 // __GFP_IO: 0x40
 // __GFP_FS: 0x80

@@ -25,10 +25,14 @@
 #define COMBINER_ENABLE_CLEAR	0x4
 #define COMBINER_INT_STATUS	0xC
 
+// ARM10C 20141206
+// IRQ_IN_COMBINER: 8
 #define IRQ_IN_COMBINER		8
 
 static DEFINE_SPINLOCK(irq_controller_lock);
 
+// ARM10C 20141206
+// sizeof(struct combiner_chip_data): 16 bytes
 struct combiner_chip_data {
 	unsigned int hwirq_offset;
 	unsigned int irq_mask;
@@ -36,6 +40,7 @@ struct combiner_chip_data {
 	unsigned int parent_irq;
 };
 
+// ARM10C 20141206
 static struct irq_domain *combiner_irq_domain;
 
 static inline void __iomem *combiner_base(struct irq_data *data)
@@ -164,11 +169,15 @@ static int combiner_irq_domain_map(struct irq_domain *d, unsigned int irq,
 	return 0;
 }
 
+// ARM10C 20141206
 static struct irq_domain_ops combiner_irq_domain_ops = {
 	.xlate	= combiner_irq_domain_xlate,
 	.map	= combiner_irq_domain_map,
 };
 
+// ARM10C 20141206
+// combiner_base: 0xf0004000, np: devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소,
+// max_nr: 32, irq_base: 160
 static void __init combiner_init(void __iomem *combiner_base,
 				 struct device_node *np,
 				 unsigned int max_nr,
@@ -178,14 +187,23 @@ static void __init combiner_init(void __iomem *combiner_base,
 	unsigned int nr_irq;
 	struct combiner_chip_data *combiner_data;
 
+	// max_nr: 32, IRQ_IN_COMBINER: 8
 	nr_irq = max_nr * IRQ_IN_COMBINER;
+	// nr_irq: 256
 
+	// max_nr: 32, sizeof(struct combiner_chip_data): 16 bytes, GFP_KERNEL: 0xD0
+	// kcalloc(32, 16, GFP_KERNEL: 0xD0): kmem_cache#26-oX
 	combiner_data = kcalloc(max_nr, sizeof (*combiner_data), GFP_KERNEL);
+	// combiner_data: kmem_cache#26-oX
+
+	// combiner_data: kmem_cache#26-oX
 	if (!combiner_data) {
 		pr_warning("%s: could not allocate combiner data\n", __func__);
 		return;
 	}
 
+	// np: devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소,
+	// nr_irq: 256, irq_base: 160, combiner_data: kmem_cache#26-oX
 	combiner_irq_domain = irq_domain_add_simple(np, nr_irq, irq_base,
 				&combiner_irq_domain_ops, combiner_data);
 	if (WARN_ON(!combiner_irq_domain)) {
@@ -210,27 +228,46 @@ static int __init combiner_of_init(struct device_node *np,
 {
 	void __iomem *combiner_base;
 	unsigned int max_nr = 20;
-	int irq_base = -1;
+	// max_nr: 20
 
+	int irq_base = -1;
+	// irq_base: -1
+
+	// np: devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소
+	// of_iomap(devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소, 0): 0xf0004000
 	combiner_base = of_iomap(np, 0);
+	// combiner_base: 0xf0004000
+
+	// combiner_base: 0xf0004000
 	if (!combiner_base) {
 		pr_err("%s: failed to map combiner registers\n", __func__);
 		return -ENXIO;
 	}
 
+	// np: devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소, max_nr: 20
+	// of_property_read_u32(devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소, &max_nr): 0
 	if (of_property_read_u32(np, "samsung,combiner-nr", &max_nr)) {
 		pr_info("%s: number of combiners not specified, "
 			"setting default as %d.\n",
 			__func__, max_nr);
 	}
+	// of_property_read_u32에서 한일:
+	// devtree에서 allnext로 순회 하면서 찾은 combiner node의 property "samsung,combiner-nr"
+	// 값을 max_nr에 가져옴
+	// max_nr: 32 (exynos5.dtsi 참고)
 
-	/* 
+
+	/*
 	 * FIXME: This is a hardwired COMBINER_IRQ(0,0). Once all devices
 	 * get their IRQ from DT, remove this in order to get dynamic
 	 * allocation.
 	 */
+	// irq_base: -1
 	irq_base = 160;
+	// irq_base: 160;
 
+	// combiner_base: 0xf0004000, np: devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소,
+	// max_nr: 32, irq_base: 160;
 	combiner_init(combiner_base, np, max_nr, irq_base);
 
 	return 0;

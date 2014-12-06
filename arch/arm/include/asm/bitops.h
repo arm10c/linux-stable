@@ -296,6 +296,8 @@ static inline int constant_fls(int x)
 // fls(0x4): 3
 // ARM10C 20141025
 // fls(0x1000): 13
+// ARM10C 20141206
+// fls(511): 9
 static inline int fls(int x)
 {
 	int ret;

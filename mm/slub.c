@@ -4853,6 +4853,8 @@ redo:
 // s: kmem_cache#30, gfpflags: GFP_NOWAIT: 0, _RET_IP_
 // ARM10C 20140920
 // s: kmem_cache#30, gfpflags: GFP_KERNEL: 0xD0, _RET_IP_
+// ARM10C 20141206
+// s: kmem_cache#26, flags: 0x80D0, _RET_IP_
 static __always_inline void *slab_alloc(struct kmem_cache *s,
 		gfp_t gfpflags, unsigned long addr)
 {
@@ -6787,24 +6789,37 @@ static int __init setup_slub_nomerge(char *str)
 
 __setup("slub_nomerge", setup_slub_nomerge);
 
+// ARM10C 20141206
+// 512, flags: 0x80D0
 void *__kmalloc(size_t size, gfp_t flags)
 {
 	struct kmem_cache *s;
 	void *ret;
 
+	// size: 512, KMALLOC_MAX_CACHE_SIZE: 0x2000
 	if (unlikely(size > KMALLOC_MAX_CACHE_SIZE))
 		return kmalloc_large(size, flags);
 
+	// size: 512, flags: 0x80D0
+	// kmalloc_slab(512, 0x80D0): kmem_cache#26
 	s = kmalloc_slab(size, flags);
+	// s: kmem_cache#26
 
+	// s: kmem_cache#26
 	if (unlikely(ZERO_OR_NULL_PTR(s)))
 		return s;
 
+	// s: kmem_cache#26, flags: 0x80D0
+	// slab_alloc(kmem_cache#26, 0x80D0): kmem_cache#26-oX
 	ret = slab_alloc(s, flags, _RET_IP_);
+	// ret: kmem_cache#26-oX
 
+	// ret: kmem_cache#26-oX, size: 512, s->size: (kmem_cache#26)->size: 512, flags: 0x80D0
 	trace_kmalloc(_RET_IP_, ret, size, s->size, flags);
 
+	// ret: kmem_cache#26-oX
 	return ret;
+	// return kmem_cache#26-oX
 }
 EXPORT_SYMBOL(__kmalloc);
 
@@ -6902,7 +6917,7 @@ void kfree(const void *x)
 	}
 
 // 2014/11/29 종료
-// 2014/12/06 종료
+// 2014/12/06 시작
 
 	// page->slab_cache: (kmem_cache#30-o11의 page 주소)->slab_cache,
 	// page: kmem_cache#30-o11의 page 주소, object: kmem_cache#30-o11
