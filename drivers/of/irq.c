@@ -572,31 +572,44 @@ void __init of_irq_init(const struct of_device_id *matches)
 		//      &desc->list != (&intc_desc_list);
 		//      desc = temp_desc, temp_desc = list_next_entry(temp_desc, list))
 
-			// desc: kmem_cache#30-o10 (exynos4210_combiner), temp_desc: kmem_cache#30-o11 (cortex_a15_gic)
-			// desc: kmem_cache#30-o11 (cortex_a15_gic), temp_desc: NULL
+			// [1] desc: kmem_cache#30-o10 (exynos4210_combiner), temp_desc: kmem_cache#30-o11 (cortex_a15_gic), parent: NULL
+			// [1] desc: kmem_cache#30-o11 (cortex_a15_gic), &temp_desc->list: &intc_desc_list, parent: NULL
+
+			// [2] desc: kmem_cache#30-o10 (exynos4210_combiner), &temp_desc->list: &intc_desc_list,
+			// [2] parent: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소
 
 			const struct of_device_id *match;
 			int ret;
 			of_irq_init_cb_t irq_init_cb;
 
-			// desc->interrupt_parent: (kmem_cache#30-o10)->interrupt_parent: gic node 주소, parent: NULL
-			// desc->interrupt_parent: (kmem_cache#30-o11)->interrupt_parent: NULL, parent: NULL
+			// [1] desc->interrupt_parent: (kmem_cache#30-o10)->interrupt_parent: gic node 주소, parent: NULL
+			// [1] desc->interrupt_parent: (kmem_cache#30-o11)->interrupt_parent: NULL, parent: NULL
+			// [2] desc->interrupt_parent: (kmem_cache#30-o10)->interrupt_parent: gic node 주소,
+			// [2] parent: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소
 			if (desc->interrupt_parent != parent)
 				continue;
 				// continue 수행 (exynos4210_combiner)
 
-			// &desc->list: (kmem_cache#30-o11)->list
+			// [1] &desc->list: (kmem_cache#30-o11)->list
+			// [2] &desc->list: (kmem_cache#30-o10)->list
 			list_del(&desc->list);
-			// intc_desc_list에서 (kmem_cache#30-o11)->list를 삭제
+			// [1] intc_desc_list에서 (kmem_cache#30-o11)->list를 삭제
+			// [2] intc_desc_list에서 (kmem_cache#30-o10)->list를 삭제
 
-			// matches: irqchip_of_match_cortex_a15_gic,
-			// desc->dev: (kmem_cache#30-o11)->dev: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소
-			// of_match_node(cortex_a15_gic, devtree에서 allnext로 순회 하면서 찾은 gic node의 주소):
-			// irqchip_of_match_cortex_a15_gic
+			// [1] matches: irqchip_of_match_cortex_a15_gic,
+			// [1] desc->dev: (kmem_cache#30-o11)->dev: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소
+			// [1] of_match_node(cortex_a15_gic, devtree에서 allnext로 순회 하면서 찾은 gic node의 주소):
+			// [1] irqchip_of_match_cortex_a15_gic
+			// [2] matches: irqchip_of_match_cortex_a15_gic,
+			// [2] desc->dev: (kmem_cache#30-o10)->dev: devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소
+			// [2] of_match_node(cortex_a15_gic, devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소):
+			// [2] irqchip_of_match_cortex_a15_gic
 			match = of_match_node(matches, desc->dev);
-			// match: irqchip_of_match_cortex_a15_gic
+			// [1] match: irqchip_of_match_cortex_a15_gic
+			// [2] match: irqchip_of_match_exynos4210_combiner
 
-			// match->data; irqchip_of_match_cortex_a15_gic.data: gic_of_init
+			// [1] match->data; irqchip_of_match_cortex_a15_gic.data: gic_of_init
+			// [2] match->data; irqchip_of_match_exynos4210_combiner.data: combiner_of_init
 			if (WARN(!match->data,
 			    "of_irq_init: no init function for %s\n",
 			    match->compatible)) {
@@ -604,26 +617,35 @@ void __init of_irq_init(const struct of_device_id *matches)
 				continue;
 			}
 
-			// match->compatible: irqchip_of_match_cortex_a15_gic.compatible: "arm,cortex-a15-gic",
-			// desc->dev: (kmem_cache#30-o11)->dev: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소
-			// desc->interrupt_parent: (kmem_cache#30-o11)->interrupt_parent: NULL
+			// [1] match->compatible: irqchip_of_match_cortex_a15_gic.compatible: "arm,cortex-a15-gic",
+			// [1] desc->dev: (kmem_cache#30-o11)->dev: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소
+			// [1] desc->interrupt_parent: (kmem_cache#30-o11)->interrupt_parent: NULL
+			// [2] match->compatible: irqchip_of_match_exynos4210_combiner.compatible: "samsung,exynos4210-combiner",
+			// [2] desc->dev: (kmem_cache#30-o10)->dev: devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소
+			// [2] desc->interrupt_parent: (kmem_cache#30-o10)->interrupt_parent: NULL
 			pr_debug("of_irq_init: init %s @ %p, parent %p\n",
 				 match->compatible,
 				 desc->dev, desc->interrupt_parent);
 			// "of_irq_init: init arm,cortex-a15-gic @ 0x(gic node의 주소), parent 0\n"
+			// "of_irq_init: init samsung,exynos4210-combiner @ 0x(combiner node의 주소), parent 0\n"
 
 // 2014/10/11 종료
 // 2014/10/18 시작
 
-			// match->data; irqchip_of_match_cortex_a15_gic.data: gic_of_init
+			// [1] match->data; irqchip_of_match_cortex_a15_gic.data: gic_of_init
+			// [2] match->data; irqchip_of_match_exynos4210_combiner.data: combiner_of_init
 			irq_init_cb = (of_irq_init_cb_t)match->data;
-			// irq_init_cb: gic_of_init
+			// [1] irq_init_cb: gic_of_init
+			// [2] irq_init_cb: combiner_of_init
 
-			// desc->dev: (kmem_cache#30-o11)->dev: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소,
-			// desc->interrupt_parent: (kmem_cache#30-o11)->interrupt_parent: NULL
-			// gic_of_init(devtree에서 allnext로 순회 하면서 찾은 gic node의 주소, NULL): 0
+			// [1] desc->dev: (kmem_cache#30-o11)->dev: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소,
+			// [1] desc->interrupt_parent: (kmem_cache#30-o11)->interrupt_parent: NULL
+			// [1] gic_of_init(devtree에서 allnext로 순회 하면서 찾은 gic node의 주소, NULL): 0
+			// [2] desc->dev: (kmem_cache#30-o10)->dev: devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소,
+			// [2] desc->interrupt_parent: (kmem_cache#30-o10)->interrupt_parent: NULL
+			// [2] combiner_of_init(devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소, NULL): 0
 			ret = irq_init_cb(desc->dev, desc->interrupt_parent);
-			// ret: 0
+			// [1] ret: 0
 
 			// gic_of_init에서 한일:
 			//
@@ -871,7 +893,7 @@ void __init of_irq_init(const struct of_device_id *matches)
 			list_add_tail(&desc->list, &intc_parent_list);
 			// intc_parent_list에 tail로 &(kmem_cache#30-o11)->list를 추가
 		}
-		// desc: NULL, intc_desc_list: NULL 로 loop 탈출
+		// &desc->list: &intc_desc_list 이므로  loop 탈출
 
 		/* Get the next pending parent that might have children */
 		// typeof(*desc): struct intc_desc
@@ -899,6 +921,15 @@ void __init of_irq_init(const struct of_device_id *matches)
 
 		// desc: kmem_cache#30-o11 (cortex_a15_gic)
 		kfree(desc);
+
+		// kfree에서 한일:
+		// (kmem_cache#30)->cpu_slab: struct kmem_cache_cpu 자료구조를 사용하기 위해 할당받은 pcp 16 byte 메모리 공간을 구하여
+		// kmem_cache#30-o11의 freepointer의 값을
+		// ((kmem_cache#30)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋)->freelist 값으로 세팅
+		// 값 s->cpu_slab->freelist와 c->freelist를 비교, 값 s->cpu_slab->tid와 tid을 비교 하여
+		// 같을 경우에 s->cpu_slab->freelist와 s->cpu_slab->tid을 각각 object, next_tid(tid) 값으로 갱신하여
+		// freelist와 tid 값을 변경함
+		// kmem_cache_cpu의 freelist, tid 의 값을 변경함
 	}
 
 	list_for_each_entry_safe(desc, temp_desc, &intc_parent_list, list) {

@@ -955,6 +955,11 @@ do {									\
 // 	}
 // 	pdcrb_ret__;
 // })
+// ARM10C 20141206
+// s->cpu_slab->freelist: (kmem_cache#30)->cpu_slab->freelist,
+// s->cpu_slab->tid: (kmem_cache#30)->cpu_slab->tid,
+// c->freelist: ((kmem_cache#30)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋)->freelist,
+// tid: XX (추적불가), object: kmem_cache#30-o11, next_tid(tid): XX
 # define this_cpu_cmpxchg_double(pcp1, pcp2, oval1, oval2, nval1, nval2)	\
 	__pcpu_double_call_return_bool(this_cpu_cmpxchg_double_, (pcp1), (pcp2), (oval1), (oval2), (nval1), (nval2))
 #endif

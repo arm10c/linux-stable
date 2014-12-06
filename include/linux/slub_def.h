@@ -16,6 +16,7 @@ enum stat_item {
 	// ALLOC_FASTPATH: 0
 	ALLOC_FASTPATH,		/* Allocation from cpu slab */
 	ALLOC_SLOWPATH,		/* Allocation by getting a new cpu slab */
+	// FREE_FASTPATH: 2
 	FREE_FASTPATH,		/* Free to cpu slab */
 	FREE_SLOWPATH,		/* Freeing not to cpu slab */
 	FREE_FROZEN,		/* Freeing to frozen slab */
@@ -50,6 +51,7 @@ enum stat_item {
 
 // ARM10C 20140531
 // ARM10C 20140614
+// ARM10C 20141206
 // sizeof(struct kmem_cache_cpu): 16 bytes
 struct kmem_cache_cpu {
 	void **freelist;	/* Pointer to next available object */

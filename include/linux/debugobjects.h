@@ -100,10 +100,11 @@ static inline void debug_objects_early_init(void) { }
 static inline void debug_objects_mem_init(void) { }
 #endif
 
-#ifdef CONFIG_DEBUG_OBJECTS_FREE
+#ifdef CONFIG_DEBUG_OBJECTS_FREE // CONFIG_DEBUG_OBJECTS_FREE=n
 extern void debug_check_no_obj_freed(const void *address, unsigned long size);
 #else
 // ARM10C 20140405
+// ARM10C 20141206
 static inline void
 debug_check_no_obj_freed(const void *address, unsigned long size) { }
 #endif

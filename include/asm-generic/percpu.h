@@ -250,6 +250,7 @@ extern unsigned long __per_cpu_offset[NR_CPUS];
 //  	} while (0)
 //  	&(hrtimer_bases) + __my_cpu_offset;
 // })
+// ARM10C 20141206
 #define __this_cpu_ptr(ptr) SHIFT_PERCPU_PTR(ptr, __my_cpu_offset)
 #endif
 #ifdef CONFIG_DEBUG_PREEMPT // CONFIG_DEBUG_PREEMPT=y

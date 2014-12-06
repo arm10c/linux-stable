@@ -293,6 +293,8 @@ static inline void memcg_propagate_slab_attrs(struct kmem_cache *s) { }
 // CPUSLAB_FLUSH: 13
 // ARM10C 20140719
 // s: UNMOVABLE인 page (boot_kmem_cache)의 object의 시작 virtual address, ALLOC_FASTPATH: 0
+// ARM10C 20141206
+// s: kmem_cache#30, FREE_FASTPATH: 2
 static inline void stat(const struct kmem_cache *s, enum stat_item si)
 {
 #ifdef CONFIG_SLUB_STATS // CONFIG_SLUB_STATS=n
@@ -426,6 +428,9 @@ static inline void *get_freepointer_safe(struct kmem_cache *s, void *object)
 // s: UNMOVABLE인 page (boot_kmem_cache)의 시작 virtual address + 3968,
 // freelist: UNMOVABLE인 page (boot_kmem_cache)의 object의 시작 virtual address + 3712,
 // prior: UNMOVABLE인 page (boot_kmem_cache)의 시작 virtual address + 3840
+// ARM10C 20141206
+// s: kmem_cache#30, object: kmem_cache#30-o11,
+// c->freelist: ((kmem_cache#30)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋)->freelist
 static inline void set_freepointer(struct kmem_cache *s, void *object, void *fp)
 {
 	// object: UNMOVABLE인 page 의 virtual address
@@ -1494,16 +1499,19 @@ static inline void slab_post_alloc_hook(struct kmem_cache *s,
 	kmemleak_alloc_recursive(object, s->object_size, 1, s->flags, flags); // null function
 }
 
+// ARM10C 20141206
+// s: kmem_cache#30, x: kmem_cache#30-o11
 static inline void slab_free_hook(struct kmem_cache *s, void *x)
 {
-	kmemleak_free_recursive(x, s->flags);
+	// x: kmem_cache#30-o11, s->flags: (kmem_cache#30)->flags
+	kmemleak_free_recursive(x, s->flags); // null function
 
 	/*
 	 * Trouble is that we may no longer disable interrupts in the fast path
 	 * So in order to make the debug calls that expect irqs to be
 	 * disabled we need to disable interrupts temporarily.
 	 */
-#if defined(CONFIG_KMEMCHECK) || defined(CONFIG_LOCKDEP)
+#if defined(CONFIG_KMEMCHECK) || defined(CONFIG_LOCKDEP) // CONFIG_KMEMCHECK=n, CONFIG_LOCKDEP=n
 	{
 		unsigned long flags;
 
@@ -1513,8 +1521,10 @@ static inline void slab_free_hook(struct kmem_cache *s, void *x)
 		local_irq_restore(flags);
 	}
 #endif
+	// s->flags: (kmem_cache#30)->flags: 0, SLAB_DEBUG_OBJECTS: 0x00000000UL
 	if (!(s->flags & SLAB_DEBUG_OBJECTS))
-		debug_check_no_obj_freed(x, s->object_size);
+		// x: kmem_cache#30-o11, s->object_size: (kmem_cache#30)->object_size
+		debug_check_no_obj_freed(x, s->object_size); // null function
 }
 
 /*
@@ -5129,13 +5139,20 @@ slab_empty:
  * If fastpath is not possible then fall back to __slab_free where we deal
  * with all sorts of special processing.
  */
+// ARM10C 20141206
+// page->slab_cache: (kmem_cache#30-o11의 page 주소)->slab_cache,
+// page: kmem_cache#30-o11의 page 주소, object: kmem_cache#30-o11, _RET_IP_
 static __always_inline void slab_free(struct kmem_cache *s,
 			struct page *page, void *x, unsigned long addr)
 {
+	// x: kmem_cache#30-o11
 	void **object = (void *)x;
+	// object: kmem_cache#30-o11
+
 	struct kmem_cache_cpu *c;
 	unsigned long tid;
 
+	// s: kmem_cache#30, x: kmem_cache#30-o11
 	slab_free_hook(s, x);
 
 redo:
@@ -5146,14 +5163,45 @@ redo:
 	 * during the cmpxchg then the free will succedd.
 	 */
 	preempt_disable();
+	// 선점 비활성화 수행
+
+	// NOTE:
+	// s->cpu_slab: (kmem_cache#30)->cpu_slab:
+	// struct kmem_cache_cpu 자료구조를 사용하기 위해 할당받은 pcp 16 byte 메모리 공간
+
+	// s->cpu_slab: (kmem_cache#30)->cpu_slab
+	// __this_cpu_ptr((kmem_cache#30)->cpu_slab):
+	// (kmem_cache#30)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋
 	c = __this_cpu_ptr(s->cpu_slab);
+	// c: (kmem_cache#30)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋
 
+	// c->tid: ((kmem_cache#30)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋)->tid
 	tid = c->tid;
+	// tid: XX (추적불가)
+
 	preempt_enable();
+	// 선점 활성화 수행
 
+	// NOTE:
+	// likely(page == c->page)는 likely로 싸여 있는 것으로 보아
+	// page == c->page 가 같을 확율이 높다고 판단됨. page, c->page 값이 같다고 보고 코드 분석 진행
+
+	// page: kmem_cache#30-o11의 page 주소,
+	// c->page: ((kmem_cache#30)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋)->page
 	if (likely(page == c->page)) {
+		// s: kmem_cache#30, object: kmem_cache#30-o11,
+		// c->freelist: ((kmem_cache#30)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋)->freelist
 		set_freepointer(s, object, c->freelist);
+		// kmem_cache#30-o11의 freepointer의 값을
+		// ((kmem_cache#30)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋)->freelist 값으로 세팅
 
+		// s->cpu_slab->freelist: (kmem_cache#30)->cpu_slab->freelist,
+		// s->cpu_slab->tid: (kmem_cache#30)->cpu_slab->tid,
+		// c->freelist: ((kmem_cache#30)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋)->freelist,
+		// tid: XX, object: kmem_cache#30-o11, next_tid(tid): XX
+		// this_cpu_cmpxchg_double((kmem_cache#30)->cpu_slab->freelist, (kmem_cache#30)->cpu_slab->tid,
+		// ((kmem_cache#30)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋)->freelist,
+		// XX, kmem_cache#30-o11, XX): 1
 		if (unlikely(!this_cpu_cmpxchg_double(
 				s->cpu_slab->freelist, s->cpu_slab->tid,
 				c->freelist, tid,
@@ -5162,7 +5210,13 @@ redo:
 			note_cmpxchg_failure("slab_free", s, tid);
 			goto redo;
 		}
-		stat(s, FREE_FASTPATH);
+		// this_cpu_cmpxchg_double에서 한일:
+		// 값 s->cpu_slab->freelist와 c->freelist를 비교, 값 s->cpu_slab->tid와 tid을 비교 하여
+		// 같을 경우에 s->cpu_slab->freelist와 s->cpu_slab->tid을 각각 object, next_tid(tid) 값으로 갱신하여
+		// freelist와 tid 값을 변경함
+
+		// s: kmem_cache#30, FREE_FASTPATH: 2
+		stat(s, FREE_FASTPATH); // null function
 	} else
 		__slab_free(s, page, x, addr);
 
@@ -6848,8 +6902,20 @@ void kfree(const void *x)
 	}
 
 // 2014/11/29 종료
+// 2014/12/06 종료
 
+	// page->slab_cache: (kmem_cache#30-o11의 page 주소)->slab_cache,
+	// page: kmem_cache#30-o11의 page 주소, object: kmem_cache#30-o11
 	slab_free(page->slab_cache, page, object, _RET_IP_);
+
+	// slab_free에서 한일:
+	// (kmem_cache#30)->cpu_slab: struct kmem_cache_cpu 자료구조를 사용하기 위해 할당받은 pcp 16 byte 메모리 공간을 구하여
+	// kmem_cache#30-o11의 freepointer의 값을
+	// ((kmem_cache#30)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋)->freelist 값으로 세팅
+	// 값 s->cpu_slab->freelist와 c->freelist를 비교, 값 s->cpu_slab->tid와 tid을 비교 하여
+	// 같을 경우에 s->cpu_slab->freelist와 s->cpu_slab->tid을 각각 object, next_tid(tid) 값으로 갱신하여
+	// freelist와 tid 값을 변경함
+	// kmem_cache_cpu의 freelist, tid 의 값을 변경함
 }
 EXPORT_SYMBOL(kfree);
 

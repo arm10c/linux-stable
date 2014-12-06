@@ -202,6 +202,9 @@ static void __init combiner_init(void __iomem *combiner_base,
 	}
 }
 
+// ARM10C 20141206
+// [2] desc->dev: (kmem_cache#30-o10)->dev: devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소,
+// [2] desc->interrupt_parent: (kmem_cache#30-o10)->interrupt_parent: NULL
 static int __init combiner_of_init(struct device_node *np,
 				   struct device_node *parent)
 {

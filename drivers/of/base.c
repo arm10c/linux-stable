@@ -877,6 +877,8 @@ EXPORT_SYMBOL(of_find_node_with_property);
 // matches: irqchip_of_match_cortex_a15_gic, np: gic node의 주소
 // ARM10C 20141011
 // matches: irqchip_of_match_exynos4210_combiner, node: devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소
+// ARM10C 20141206
+// matches: irqchip_of_match_cortex_a15_gic, node: devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소
 static
 const struct of_device_id *__of_match_node(const struct of_device_id *matches,
 					   const struct device_node *node)
@@ -947,6 +949,9 @@ const struct of_device_id *__of_match_node(const struct of_device_id *matches,
 // ARM10C 20141011
 // matches: irqchip_of_match_cortex_a15_gic,
 // desc->dev: (kmem_cache#30-o11)->dev: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소
+// ARM10C 20141206
+// [2] matches: irqchip_of_match_cortex_a15_gic,
+// [2] desc->dev: (kmem_cache#30-o10)->dev: devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소
 const struct of_device_id *of_match_node(const struct of_device_id *matches,
 					 const struct device_node *node)
 {
@@ -955,19 +960,27 @@ const struct of_device_id *of_match_node(const struct of_device_id *matches,
 
 	raw_spin_lock_irqsave(&devtree_lock, flags);
 	// devtree_lock을 사용한 spin lock 수행하고 cpsr을 flags에 저장
+	// devtree_lock을 사용한 spin lock 수행하고 cpsr을 flags에 저장
 
 	// matches: irqchip_of_match_cortex_a15_gic, node: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소
 	// __of_match_node(irqchip_of_match_cortex_a15_gic, devtree에서 allnext로 순회 하면서 찾은 gic node의 주소):
 	// irqchip_of_match_cortex_a15_gic
+	// matches: irqchip_of_match_cortex_a15_gic, node: devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소
+	// __of_match_node(irqchip_of_match_cortex_a15_gic, devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소):
+	// irqchip_of_match_exynos4210_combiner
 	match = __of_match_node(matches, node);
 	// match: irqchip_of_match_cortex_a15_gic
+	// match: irqchip_of_match_exynos4210_combiner
 
 	raw_spin_unlock_irqrestore(&devtree_lock, flags);
 	// devtree_lock을 사용한 spin lock 해재하고 flags에 저장된 cpsr을 복원
+	// devtree_lock을 사용한 spin lock 해재하고 flags에 저장된 cpsr을 복원
 
 	// match: irqchip_of_match_cortex_a15_gic
+	// match: irqchip_of_match_exynos4210_combiner
 	return match;
 	// return irqchip_of_match_cortex_a15_gic
+	// return irqchip_of_match_exynos4210_combiner
 }
 EXPORT_SYMBOL(of_match_node);
 
