@@ -950,8 +950,8 @@ const struct of_device_id *__of_match_node(const struct of_device_id *matches,
 // matches: irqchip_of_match_cortex_a15_gic,
 // desc->dev: (kmem_cache#30-o11)->dev: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소
 // ARM10C 20141206
-// [2] matches: irqchip_of_match_cortex_a15_gic,
-// [2] desc->dev: (kmem_cache#30-o10)->dev: devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소
+// matches: irqchip_of_match_cortex_a15_gic,
+// desc->dev: (kmem_cache#30-o10)->dev: devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소
 const struct of_device_id *of_match_node(const struct of_device_id *matches,
 					 const struct device_node *node)
 {

@@ -221,8 +221,8 @@ static void __init combiner_init(void __iomem *combiner_base,
 }
 
 // ARM10C 20141206
-// [2] desc->dev: (kmem_cache#30-o10)->dev: devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소,
-// [2] desc->interrupt_parent: (kmem_cache#30-o10)->interrupt_parent: NULL
+// desc->dev: (kmem_cache#30-o10)->dev: devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소,
+// desc->interrupt_parent: (kmem_cache#30-o10)->interrupt_parent: NULL
 static int __init combiner_of_init(struct device_node *np,
 				   struct device_node *parent)
 {
@@ -237,6 +237,65 @@ static int __init combiner_of_init(struct device_node *np,
 	// of_iomap(devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소, 0): 0xf0004000
 	combiner_base = of_iomap(np, 0);
 	// combiner_base: 0xf0004000
+
+	// of_iomap에서 한일:
+	// device tree 있는  combiner node에서 node의 resource 값을 가져옴
+	// (&res)->start: 0x10440000
+	// (&res)->end: 0x10440fff
+	// (&res)->flags: IORESOURCE_MEM: 0x00000200
+	// (&res)->name: "/interrupt-controller@10440000"
+	/*
+	// alloc area (COMB) 를 만들고 rb tree에 alloc area 를 추가
+	// 가상주소 va_start 기준으로 COMB 를 RB Tree 추가한 결과
+	//
+	//                                  CHID-b
+	//                               (0xF8000000)
+	//                              /            \
+	//                         TMR-b               PMU-b
+	//                    (0xF6300000)             (0xF8180000)
+	//                      /      \               /           \
+	//                GIC#1-r      WDT-b         CMU-b         SRAM-b
+	//            (0xF0002000)   (0xF6400000)  (0xF8100000)   (0xF8400000)
+	//             /       \                                          \
+	//        GIC#0-b     SYSC-b                                       ROMC-r
+	//    (0xF0000000)   (0xF6100000)                                 (0xF84C0000)
+	//                   /
+	//               COMB-r
+	//          (0xF0004000)
+	//
+	// vmap_area_list에 GIC#0 - GIC#1 - COMB - SYSC -TMR - WDT - CHID - CMU - PMU - SRAM - ROMC
+	// 순서로 리스트에 연결이 됨
+	//
+	// (kmem_cache#30-oX (vm_struct))->flags: GFP_KERNEL: 0xD0
+	// (kmem_cache#30-oX (vm_struct))->addr: 0xf0004000
+	// (kmem_cache#30-oX (vm_struct))->size: 0x2000
+	// (kmem_cache#30-oX (vm_struct))->caller: __builtin_return_address(0)
+	//
+	// (kmem_cache#30-oX (vmap_area COMB))->vm: kmem_cache#30-oX (vm_struct)
+	// (kmem_cache#30-oX (vmap_area COMB))->flags: 0x04
+	*/
+	// device tree 있는 combiner node에서 node의 resource 값을 pgtable에 매핑함
+	// 0xc0004780이 가리키는 pte의 시작주소에 0x10440653 값을 갱신
+	// (linux pgtable과 hardware pgtable의 값 같이 갱신)
+	//
+	//  pgd                   pte
+	// |              |
+	// +--------------+
+	// |              |       +--------------+ +0
+	// |              |       |  0xXXXXXXXX  | ---> 0x10440653 에 매칭되는 linux pgtable 값
+	// +- - - - - - - +       |  Linux pt 0  |
+	// |              |       +--------------+ +1024
+	// |              |       |              |
+	// +--------------+ +0    |  Linux pt 1  |
+	// | *(c0004780)  |-----> +--------------+ +2048
+	// |              |       |  0x10440653  | ---> 2068
+	// +- - - - - - - + +4    |   h/w pt 0   |
+	// | *(c0004784)  |-----> +--------------+ +3072
+	// |              |       +              +
+	// +--------------+ +8    |   h/w pt 1   |
+	// |              |       +--------------+ +4096
+	//
+	// cache의 값을 전부 메모리에 반영
 
 	// combiner_base: 0xf0004000
 	if (!combiner_base) {
@@ -272,6 +331,7 @@ static int __init combiner_of_init(struct device_node *np,
 
 	return 0;
 }
+
 // ARM10C 20141004
 // #define IRQCHIP_DECLARE(exynos4210_combiner, "samsung,exynos4210-combiner", combiner_of_init):
 // 	static const struct of_device_id irqchip_of_match_exynos4210_combiner
