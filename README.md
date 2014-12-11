@@ -1,7 +1,19 @@
 #IAMROOT.ORG Kernel스터디10차(ARM)
 
 #HISTORY
-* 76th (2014/11/01) week: [76차](https://github.com/arm10c/linux-stable/blob/master/Reference/88_Review/a10c_76.md)
+- 81th (2014/12/06) week: [81차](https://github.com/hephaex/kernel_review/blob/master/a10c_81.md)
+ - init_IRQ()->...->kfree()
+- 80th (2014/11/29) week: [80차](https://github.com/hephaex/kernel_review/blob/master/a10c_80.md)
+ - init_IRQ()->...->gic_of_init()->gic_of_bases()
+ - irqchip_init()
+- 79th (2014/11/22) week: [79차](https://github.com/hephaex/kernel_review/blob/master/a10c_79.md)
+ - init_IRQ()->...->gic_of_init()->gic_of_bases()
+- 78th (2014/11/15) week: [78차](https://github.com/hephaex/kernel_review/blob/master/a10c_78.md)
+ - init_IRQ()->...->gic_of_init()
+ - Radix-tree
+- 77th (2014/11/08) week: [77차](https://github.com/hephaex/kernel_review/blob/master/a10c_77.md)
+ - init_IRQ()->...->gic_of_init()
+- 76th (2014/11/01) week: [76차](https://github.com/arm10c/linux-stable/blob/master/Reference/88_Review/a10c_76.md)
  - init_IRQ()
 - 75th (2014/10/25) week: [75차](https://github.com/arm10c/linux-stable/blob/master/Reference/88_Review/a10c_75.md)
  - init_IRQ()
