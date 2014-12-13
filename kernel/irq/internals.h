@@ -139,6 +139,8 @@ void __irq_put_desc_unlock(struct irq_desc *desc, unsigned long flags, bool bus)
 
 // ARM10C 20141122
 // irq: 16, &flags, 0
+// ARM10C 20141213
+// irq: 160, &flags, 0
 static inline struct irq_desc *
 irq_get_desc_buslock(unsigned int irq, unsigned long *flags, unsigned int check)
 {
@@ -148,6 +150,10 @@ irq_get_desc_buslock(unsigned int irq, unsigned long *flags, unsigned int check)
 	// return kmem_cache#28-oX (irq 16)
 }
 
+// ARM10C 20141122
+// desc: kmem_cache#28-oX (irq 16)
+// ARM10C 20141213
+// desc: kmem_cache#28-oX (irq 160)
 static inline void
 irq_put_desc_busunlock(struct irq_desc *desc, unsigned long flags)
 {
@@ -156,6 +162,8 @@ irq_put_desc_busunlock(struct irq_desc *desc, unsigned long flags)
 
 // ARM10C 20141122
 // irq: 16, &flags, 0
+// ARM10C 20141213
+// irq: 160, &flags, 0
 static inline struct irq_desc *
 irq_get_desc_lock(unsigned int irq, unsigned long *flags, unsigned int check)
 {
@@ -167,6 +175,8 @@ irq_get_desc_lock(unsigned int irq, unsigned long *flags, unsigned int check)
 
 // ARM10C 20141122
 // desc: kmem_cache#28-oX (irq 16), flags
+// ARM10C 20141213
+// desc: kmem_cache#28-oX (irq 160), flags
 static inline void
 irq_put_desc_unlock(struct irq_desc *desc, unsigned long flags)
 {

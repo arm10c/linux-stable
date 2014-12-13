@@ -32,6 +32,7 @@
 static DEFINE_SPINLOCK(irq_controller_lock);
 
 // ARM10C 20141206
+// ARM10C 20141213
 // sizeof(struct combiner_chip_data): 16 bytes
 struct combiner_chip_data {
 	unsigned int hwirq_offset;
@@ -109,11 +110,12 @@ static int combiner_set_affinity(struct irq_data *d,
 }
 #endif
 
+// ARM10C 20141213
 static struct irq_chip combiner_chip = {
 	.name			= "COMBINER",
 	.irq_mask		= combiner_mask_irq,
 	.irq_unmask		= combiner_unmask_irq,
-#ifdef CONFIG_SMP
+#ifdef CONFIG_SMP // CONFIG_SMP=y
 	.irq_set_affinity	= combiner_set_affinity,
 #endif
 };
@@ -157,16 +159,38 @@ static int combiner_irq_domain_xlate(struct irq_domain *d,
 	return 0;
 }
 
+// ARM10C 20141213
+// kmem_cache#24-o0, 160, 0
 static int combiner_irq_domain_map(struct irq_domain *d, unsigned int irq,
 				   irq_hw_number_t hw)
 {
+	// d->host_data: (kmem_cache#24-o0)->host_data: kmem_cache#26-oX (combiner_data)
 	struct combiner_chip_data *combiner_data = d->host_data;
+	// combiner_data: kmem_cache#26-oX (combiner_data)
 
+	// irq: 160
 	irq_set_chip_and_handler(irq, &combiner_chip, handle_level_irq);
+
+	// irq_set_chip_and_handler(160)에서 한일:
+	// (kmem_cache#28-oX (irq 160))->irq_data.chip: &combiner_chip
+	// (kmem_cache#28-oX (irq 160))->handle_irq: handle_level_irq
+	// (kmem_cache#28-oX (irq 160))->name: NULL
+
+	// irq: 160, hw: 0, &combiner_data[0]: &(kmem_cache#26-oX)[0]
 	irq_set_chip_data(irq, &combiner_data[hw >> 3]);
+
+	// irq_set_chip_data(160)에서 한일:
+	// (kmem_cache#28-oX (irq 160))->irq_data.chip_data: &(kmem_cache#26-oX)[0] (combiner_data)
+
+	// irq: 160, IRQF_VALID: 1, IRQF_PROBE: 0x2
 	set_irq_flags(irq, IRQF_VALID | IRQF_PROBE);
 
+	// set_irq_flags(160)에서 한일:
+	// (kmem_cache#28-oX (irq 160))->status_use_accessors: 0x31600
+	// (&(kmem_cache#28-oX (irq 160))->irq_data)->state_use_accessors: 0x10800
+
 	return 0;
+	// return 0
 }
 
 // ARM10C 20141206
@@ -204,8 +228,78 @@ static void __init combiner_init(void __iomem *combiner_base,
 
 	// np: devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소,
 	// nr_irq: 256, irq_base: 160, combiner_data: kmem_cache#26-oX
+	// irq_domain_add_simple(devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소, 256
+	// 160, &combiner_irq_domain_ops, kmem_cache#26-oX (combiner_data): kmem_cache#24-o0
 	combiner_irq_domain = irq_domain_add_simple(np, nr_irq, irq_base,
 				&combiner_irq_domain_ops, combiner_data);
+	// combiner_irq_domain: kmem_cache#24-o0
+
+	// irq_domain_add_simple에서 한일:
+	// struct irq_domain를 위한 메모리 할당: kmem_cache#24-o0
+	// (&(kmem_cache#24-o0)->revmap_tree)->height: 0
+	// (&(kmem_cache#24-o0)->revmap_tree)->gfp_mask: (GFP_KERNEL: 0xD0)
+	// (&(kmem_cache#24-o0)->revmap_tree)->rnode: NULL
+	// (kmem_cache#24-o0)->ops: &combiner_irq_domain_ops
+	// (kmem_cache#24-o0)->host_data: kmem_cache#26-oX (combiner_data)
+	// (kmem_cache#24-o0)->of_node: devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소
+	// (kmem_cache#24-o0)->hwirq_max: 256
+	// (kmem_cache#24-o0)->revmap_size: 256
+	// (kmem_cache#24-o0)->revmap_direct_max_irq: 0
+	//
+	// irq_domain_list에 (kmem_cache#24-o0)->link를 추가
+	/*
+	// struct irq_desc의 자료 구조크기 만큼 160개의 메모리를 할당 받아
+	// radix tree 구조로 구성
+	//
+	//   (&irq_desc_tree)->rnode -->  +-----------------------+
+	//                                |    radix_tree_node    |
+	//                                |   (kmem_cache#20-o1)  |
+	//                                +-----------------------+
+	//                                | height: 2 | count: 7  |
+	//                                +-----------------------+
+	//                                | radix_tree_node 0 ~ 6 | \
+	//                              / +-----------------------+ \ \
+	//                            /  /           |  |          \  \ \ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
+	//    slot: 0               /   | slot: 1    |  |           |   \              slot: 2    |
+	//    +-----------------------+ | +-----------------------+ | +-----------------------+   |
+	//    |    radix_tree_node    | | |    radix_tree_node    | | |    radix_tree_node    |   |
+	//    |   (kmem_cache#20-o0)  | | |   (kmem_cache#20-o2)  | | |   (kmem_cache#20-o3)  |   |
+	//    +-----------------------+ | +-----------------------+ | +-----------------------+   |
+	//    | height: 1 | count: 64 | | | height: 1 | count: 64 | | | height: 1 | count: 64 |   |
+	//    +-----------------------+ | +-----------------------+ | +-----------------------+   |
+	//    |    irq  0 ~ 63        | | |    irq 64 ~ 127       | | |    irq 128 ~ 191      |   |
+	//    +-----------------------+ | +-----------------------+ | +-----------------------+   |
+	//                             /                |            \                            |
+	//    slot: 3                /    slot: 4       |              \                slot: 5    \                slot: 6
+	//    +-----------------------+   +-----------------------+   +-----------------------+   +-----------------------+
+	//    |    radix_tree_node    |   |    radix_tree_node    |   |    radix_tree_node    |   |    radix_tree_node    |
+	//    |   (kmem_cache#20-o4)  |   |   (kmem_cache#20-o5)  |   |   (kmem_cache#20-o6)  |   |   (kmem_cache#20-o7)  |
+	//    +-----------------------+   +-----------------------+   +-----------------------+   +-----------------------+
+	//    | height: 1 | count: 64 |   | height: 1 | count: 64 |   | height: 1 | count: 64 |   | height: 1 | count: 32 |
+	//    +-----------------------+   +-----------------------+   +-----------------------+   +-----------------------+
+	//    |    irq  192 ~ 255     |   |    irq 256 ~ 319      |   |    irq 320 ~ 383      |   |    irq 384 ~ 415      |
+	//    +-----------------------+   +-----------------------+   +-----------------------+   +-----------------------+
+	*/
+	// irq 160...415까지의 struct irq_data에 값을 설정
+	//
+	// (&(kmem_cache#28-oX (irq 160...415))->irq_data)->hwirq: 0...255
+	// (&(kmem_cache#28-oX (irq 160...415))->irq_data)->domain: kmem_cache#24-o0
+	//
+	// combiner_irq_domain_map에서 한일:
+	// (kmem_cache#28-oX (irq 160...415))->irq_data.chip: &combiner_chip
+	// (kmem_cache#28-oX (irq 160...415))->handle_irq: handle_level_irq
+	// (kmem_cache#28-oX (irq 160...415))->name: NULL
+	//
+	// (kmem_cache#28-oX (irq 160...167))->irq_data.chip_data: &(kmem_cache#26-oX)[0] (combiner_data)
+	// (kmem_cache#28-oX (irq 168...175))->irq_data.chip_data: &(kmem_cache#26-oX)[1] (combiner_data)
+	// ......
+	// (kmem_cache#28-oX (irq 408...415))->irq_data.chip_data: &(kmem_cache#26-oX)[31] (combiner_data)
+	//
+	// (kmem_cache#28-oX (irq 160...415))->status_use_accessors: 0x31600
+	//
+	// (kmem_cache#24-o0)->name: "COMBINER"
+	// (kmem_cache#24-o0)->linear_revmap[0...255]: 160...415
+
 	if (WARN_ON(!combiner_irq_domain)) {
 		pr_warning("%s: irq domain init failed\n", __func__);
 		return;

@@ -275,6 +275,8 @@ EXPORT_SYMBOL(__bitmap_weight);
 
 // ARM10C 20141115
 // allocated_irqs, start: 16, cnt: 144
+// ARM10C 20141213
+// allocated_irqs, start: 160, cnt: 256
 void bitmap_set(unsigned long *map, int start, int nr)
 {
 	// map: allocated_irqs, start: 16, BIT_WORD(16): 0
@@ -362,6 +364,10 @@ EXPORT_SYMBOL(bitmap_clear);
 // allocated_irqs, IRQ_BITMAP_BITS: 8212, from: 16, cnt: 144, 0
 // ARM10C 20141122
 // allocated_irqs, nr_irqs: 160, from: 16, cnt: 1, 0
+// ARM10C 20141213
+// allocated_irqs, 8212, 160, 256, 0
+// ARM10C 20141213
+// allocated_irqs, nr_irqs: 416, from: 160, cnt: 1, 0
 unsigned long bitmap_find_next_zero_area(unsigned long *map,
 					 unsigned long size,
 					 unsigned long start,
@@ -374,46 +380,72 @@ again:
 	// find_next_zero_bit(allocated_irqs, 8212, 16): 16
 	// map: allocated_irqs, size: 160, start: 16
 	// find_next_zero_bit(allocated_irqs, 160, 16): 160
+	// map: allocated_irqs, size: 8212, start: 160
+	// find_next_zero_bit(allocated_irqs, 8212, 16): 160
+	// map: allocated_irqs, size: 416, start: 160
+	// find_next_zero_bit(allocated_irqs, 416, 160): 416
 	index = find_next_zero_bit(map, size, start);
 	// index: 16
 	// index: 160
+	// index: 160
+	// index: 416
 
 	/* Align allocation */
 	// index: 16, align_mask: 0
 	// __ALIGN_MASK(16, 0): 16
 	// index: 160, align_mask: 0
 	// __ALIGN_MASK(16, 0): 160
+	// index: 160, align_mask: 0
+	// __ALIGN_MASK(16, 0): 160
+	// index: 416, align_mask: 0
+	// __ALIGN_MASK(416, 0): 416
 	index = __ALIGN_MASK(index, align_mask);
 	// index: 16
 	// index: 160
+	// index: 160
+	// index: 416
 
 	// index: 16, nr: 144
 	// index: 160, nr: 1
+	// index: 160, nr: 256
+	// index: 416, nr: 1
 	end = index + nr;
 	// end: 160
 	// end: 161
+	// end: 416
+	// end: 417
 
 	// end: 160, size: 8212
 	// end: 161, size: 160
+	// end: 416, size: 8212
+	// end: 417, size: 416
 	if (end > size)
 		// end: 161
+		// end: 417
 		return end;
 		// return 161
+		// return 417
 
 	// map: allocated_irqs, end: 160, index: 16
 	// find_next_bit(allocated_irqs, 160, 16): 160
+	// map: allocated_irqs, end: 416, index: 160
+	// find_next_bit(allocated_irqs, 416, 160): 160
 	i = find_next_bit(map, end, index);
 	// i: 160
+	// i: 416
 
 	// i: 160, end: 160
+	// i: 416, end: 416
 	if (i < end) {
 		start = i + 1;
 		goto again;
 	}
 
 	// index: 16
+	// index: 160
 	return index;
 	// return 16
+	// return 160
 }
 EXPORT_SYMBOL(bitmap_find_next_zero_area);
 

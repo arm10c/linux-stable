@@ -75,6 +75,7 @@ typedef	void (*irq_preflow_handler_t)(struct irq_data *data);
  *				  mechanism and from core side polling.
  */
 // ARM10C 20141122
+// ARM10C 20141213
 enum {
 	IRQ_TYPE_NONE		= 0x00000000,
 	IRQ_TYPE_EDGE_RISING	= 0x00000001,
@@ -483,10 +484,13 @@ irq_set_chip_and_handler_name(unsigned int irq, struct irq_chip *chip,
 
 // ARM10C 20141122
 // irq: 16, &gic_chip, handle_percpu_devid_irq
+// ARM10C 20141213
+// irq: 160, &combiner_chip, handle_level_irq
 static inline void irq_set_chip_and_handler(unsigned int irq, struct irq_chip *chip,
 					    irq_flow_handler_t handle)
 {
 	// irq: 16, chip: &gic_chip, handle: handle_percpu_devid_irq
+	// irq: 160, chip: &combiner_chip, handle: handle_level_irq
 	irq_set_chip_and_handler_name(irq, chip, handle, NULL);
 }
 
@@ -525,6 +529,8 @@ static inline void irq_set_status_flags(unsigned int irq, unsigned long set)
 
 // ARM10C 20141122
 // virq: 16, IRQ_NOREQUEST: 0x800
+// ARM10C 20141213
+// virq: 160, IRQ_NOREQUEST: 0x800
 static inline void irq_clear_status_flags(unsigned int irq, unsigned long clr)
 {
 	// irq: 16, clr: 0x800
@@ -655,6 +661,8 @@ int __irq_alloc_descs(int irq, unsigned int from, unsigned int cnt, int node,
 // ARM10C 20141115
 // THIS_MODULE: ((struct module *)0)
 // irq_start: -1, 16, gic_irqs: 144, numa_node_id(): 0
+// ARM10C 20141213
+// first_irq: 160, 160, size: 256, 0
 #define irq_alloc_descs(irq, from, cnt, node)	\
 	__irq_alloc_descs(irq, from, cnt, node, THIS_MODULE)
 
@@ -680,10 +688,14 @@ static inline void irq_free_desc(unsigned int irq)
 
 // ARM10C 20141122
 // irq: 16
+// ARM10C 20141213
+// irq: 160
 static inline int irq_reserve_irq(unsigned int irq)
 {
 	// irq: 16, irq_reserve_irqs(16, 1): -17 (EEXIST)
+	// irq: 160, irq_reserve_irqs(160, 1): -17 (EEXIST)
 	return irq_reserve_irqs(irq, 1);
+	// return -17 (EEXIST)
 	// return -17 (EEXIST)
 }
 

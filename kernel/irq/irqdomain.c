@@ -242,23 +242,93 @@ struct irq_domain *irq_domain_add_simple(struct device_node *of_node,
 	// irq_domain_list에 (kmem_cache#24-o0)->link를 추가
 
 // 2014/12/06 종료
+// 2014/12/13 시작
 
+	// domain: kmem_cache#24-o0
 	if (!domain)
 		return NULL;
 
+	// first_irq: 160
 	if (first_irq > 0) {
+		// CONFIG_SPARSE_IRQ=y, IS_ENABLED(CONFIG_SPARSE_IRQ): 1
 		if (IS_ENABLED(CONFIG_SPARSE_IRQ)) {
 			/* attempt to allocated irq_descs */
+			// first_irq: 160, size: 256a, of_node: devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소
+			// of_node_to_nid(devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소): 0
 			int rc = irq_alloc_descs(first_irq, first_irq, size,
 						 of_node_to_nid(of_node));
+			// rc: 160
+
+			/*
+			// irq_alloc_descs에서 한일:
+			// struct irq_desc의 자료 구조크기 만큼 160개의 메모리를 할당 받아
+			// radix tree 구조로 구성
+			//
+			//   (&irq_desc_tree)->rnode -->  +-----------------------+
+			//                                |    radix_tree_node    |
+			//                                |   (kmem_cache#20-o1)  |
+			//                                +-----------------------+
+			//                                | height: 2 | count: 7  |
+			//                                +-----------------------+
+			//                                | radix_tree_node 0 ~ 6 | \
+			//                              / +-----------------------+ \ \
+			//                            /  /           |  |          \  \ \ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
+			//    slot: 0               /   | slot: 1    |  |           |   \              slot: 2    |
+			//    +-----------------------+ | +-----------------------+ | +-----------------------+   |
+			//    |    radix_tree_node    | | |    radix_tree_node    | | |    radix_tree_node    |   |
+			//    |   (kmem_cache#20-o0)  | | |   (kmem_cache#20-o2)  | | |   (kmem_cache#20-o3)  |   |
+			//    +-----------------------+ | +-----------------------+ | +-----------------------+   |
+			//    | height: 1 | count: 64 | | | height: 1 | count: 64 | | | height: 1 | count: 64 |   |
+			//    +-----------------------+ | +-----------------------+ | +-----------------------+   |
+			//    |    irq  0 ~ 63        | | |    irq 64 ~ 127       | | |    irq 128 ~ 191      |   |
+			//    +-----------------------+ | +-----------------------+ | +-----------------------+   |
+			//                             /                |            \                            |
+			//    slot: 3                /    slot: 4       |              \                slot: 5    \                slot: 6
+			//    +-----------------------+   +-----------------------+   +-----------------------+   +-----------------------+
+			//    |    radix_tree_node    |   |    radix_tree_node    |   |    radix_tree_node    |   |    radix_tree_node    |
+			//    |   (kmem_cache#20-o4)  |   |   (kmem_cache#20-o5)  |   |   (kmem_cache#20-o6)  |   |   (kmem_cache#20-o7)  |
+			//    +-----------------------+   +-----------------------+   +-----------------------+   +-----------------------+
+			//    | height: 1 | count: 64 |   | height: 1 | count: 64 |   | height: 1 | count: 64 |   | height: 1 | count: 32 |
+			//    +-----------------------+   +-----------------------+   +-----------------------+   +-----------------------+
+			//    |    irq  192 ~ 255     |   |    irq 256 ~ 319      |   |    irq 320 ~ 383      |   |    irq 384 ~ 415      |
+			//    +-----------------------+   +-----------------------+   +-----------------------+   +-----------------------+
+			*/
+
+			// rc: 160
 			if (rc < 0)
 				pr_info("Cannot allocate irq_descs @ IRQ%d, assuming pre-allocated\n",
 					first_irq);
 		}
+
+		// domain: kmem_cache#24-o0, first_irq: 160, 256
+		// irq_domain_associate_many(kmem_cache#24-o0, 160, 0, 256):
 		irq_domain_associate_many(domain, first_irq, 0, size);
+
+		// irq_domain_associate_many 에서 한일:
+		// irq 160...415까지의 struct irq_data에 값을 설정
+		//
+		// (&(kmem_cache#28-oX (irq 160...415))->irq_data)->hwirq: 0...255
+		// (&(kmem_cache#28-oX (irq 160...415))->irq_data)->domain: kmem_cache#24-o0
+		//
+		// combiner_irq_domain_map에서 한일:
+		// (kmem_cache#28-oX (irq 160...415))->irq_data.chip: &combiner_chip
+		// (kmem_cache#28-oX (irq 160...415))->handle_irq: handle_level_irq
+		// (kmem_cache#28-oX (irq 160...415))->name: NULL
+		//
+		// (kmem_cache#28-oX (irq 160...167))->irq_data.chip_data: &(kmem_cache#26-oX)[0] (combiner_data)
+		// (kmem_cache#28-oX (irq 168...175))->irq_data.chip_data: &(kmem_cache#26-oX)[1] (combiner_data)
+		// ......
+		// (kmem_cache#28-oX (irq 408...415))->irq_data.chip_data: &(kmem_cache#26-oX)[31] (combiner_data)
+		//
+		// (kmem_cache#28-oX (irq 160...415))->status_use_accessors: 0x31600
+		//
+		// (kmem_cache#24-o0)->name: "COMBINER"
+		// (kmem_cache#24-o0)->linear_revmap[0...255]: 160...415
 	}
 
+	// domain: kmem_cache#24-o0
 	return domain;
+	// return kmem_cache#24-o0
 }
 EXPORT_SYMBOL_GPL(irq_domain_add_simple);
 
@@ -316,23 +386,24 @@ struct irq_domain *irq_domain_add_legacy(struct device_node *of_node,
 
 	// domain: kmem_cache#25-o0, first_irq: 16, first_hwirq: 16, size: 144
 	irq_domain_associate_many(domain, first_irq, first_hwirq, size);
+
 	// irq_domain_associate_many에서 한일:
-	// irq 16...160까지의 struct irq_data에 값을 설정
+	// irq 16...159까지의 struct irq_data에 값을 설정
 	//
-	// (&(kmem_cache#28-oX (irq 16...160))->irq_data)->hwirq: 16...160
-	// (&(kmem_cache#28-oX (irq 16...160))->irq_data)->domain: kmem_cache#25-o0
-	// (&(kmem_cache#28-oX (irq 16...160))->irq_data)->state_use_accessors: 0x10800
+	// (&(kmem_cache#28-oX (irq 16...159))->irq_data)->hwirq: 16...159
+	// (&(kmem_cache#28-oX (irq 16...159))->irq_data)->domain: kmem_cache#25-o0
+	// (&(kmem_cache#28-oX (irq 16...159))->irq_data)->state_use_accessors: 0x10800
 	//
-	// (kmem_cache#28-oX (irq 16...160))->percpu_enabled: kmem_cache#30-oX
-	// (kmem_cache#28-oX (irq 16...160))->status_use_accessors: 0x31600
-	// (kmem_cache#28-oX (irq 16...160))->irq_data.chip: &gic_chip
-	// (kmem_cache#28-oX (irq 16...160))->handle_irq: handle_percpu_devid_irq
-	// (kmem_cache#28-oX (irq 16...160))->name: NULL
-	// (kmem_cache#28-oX (irq 16...160))->irq_data.chip_data: &gic_data[0]
-	// (kmem_cache#28-oX (irq 16...160))->status_use_accessors: 0x31600
+	// (kmem_cache#28-oX (irq 16...159))->percpu_enabled: kmem_cache#30-oX
+	// (kmem_cache#28-oX (irq 16...159))->status_use_accessors: 0x31600
+	// (kmem_cache#28-oX (irq 16...159))->irq_data.chip: &gic_chip
+	// (kmem_cache#28-oX (irq 16...159))->handle_irq: handle_percpu_devid_irq
+	// (kmem_cache#28-oX (irq 16...159))->name: NULL
+	// (kmem_cache#28-oX (irq 16...159))->irq_data.chip_data: &gic_data[0]
+	// (kmem_cache#28-oX (irq 16...159))->status_use_accessors: 0x31600
 	//
 	// (kmem_cache#25-o0)->name: "GIC"
-	// (kmem_cache#25-o0)->linear_revmap[16...160]: 16...160
+	// (kmem_cache#25-o0)->linear_revmap[16...159]: 16...159
 
 	// domain: kmem_cache#25-o0
 	return domain;
@@ -426,45 +497,62 @@ static void irq_domain_disassociate(struct irq_domain *domain, unsigned int irq)
 
 // ARM10C 20141122
 // domain: kmem_cache#25-o0, irq_base: 16, hwirq_base: 16
+// ARM10C 20141213
+// domain: kmem_cache#24-o0, irq_base: 160, hwirq_base: 0
 int irq_domain_associate(struct irq_domain *domain, unsigned int virq,
 			 irq_hw_number_t hwirq)
 {
 	// virq: 16, irq_get_irq_data(16): &(kmem_cache#28-oX (irq 16))->irq_data
+	// virq: 160, irq_get_irq_data(160): &(kmem_cache#28-oX (irq 160))->irq_data
 	struct irq_data *irq_data = irq_get_irq_data(virq);
 	// irq_data: &(kmem_cache#28-oX (irq 16))->irq_data
+	// irq_data: &(kmem_cache#28-oX (irq 160))->irq_data
 
 	int ret;
 
 	// hwirq: 16, domain->hwirq_max: (kmem_cache#25-o0)->hwirq_max: 160
+	// hwirq: 0, domain->hwirq_max: (kmem_cache#24-o0)->hwirq_max: 256
 	if (WARN(hwirq >= domain->hwirq_max,
 		 "error: hwirq 0x%x is too large for %s\n", (int)hwirq, domain->name))
 		return -EINVAL;
 
 	// irq_data: &(kmem_cache#28-oX (irq 16))->irq_data, virq: 16
+	// irq_data: &(kmem_cache#28-oX (irq 160))->irq_data, virq: 160
 	if (WARN(!irq_data, "error: virq%i is not allocated", virq))
 		return -EINVAL;
 
 	// irq_data->domain: (&(kmem_cache#28-oX (irq 16))->irq_data)->domain: NULL
+	// irq_data->domain: (&(kmem_cache#28-oX (irq 160))->irq_data)->domain: NULL
 	if (WARN(irq_data->domain, "error: virq%i is already associated", virq))
 		return -EINVAL;
 
 	mutex_lock(&irq_domain_mutex);
 	// irq_domain_mutex을 사용한 mutex lock 설정
+	// irq_domain_mutex을 사용한 mutex lock 설정
 
 	// irq_data->hwirq: (&(kmem_cache#28-oX (irq 16))->irq_data)->hwirq, hwirq: 16
+	// irq_data->hwirq: (&(kmem_cache#28-oX (irq 160))->irq_data)->hwirq, hwirq: 0
 	irq_data->hwirq = hwirq;
 	// irq_data->hwirq: (&(kmem_cache#28-oX (irq 16))->irq_data)->hwirq: 16
+	// irq_data->hwirq: (&(kmem_cache#28-oX (irq 160))->irq_data)->hwirq: 0
 
 	// irq_data->domain: (&(kmem_cache#28-oX (irq 16))->irq_data)->domain, domain: kmem_cache#25-o0
+	// irq_data->domain: (&(kmem_cache#28-oX (irq 160))->irq_data)->domain, domain: kmem_cache#24-o0
 	irq_data->domain = domain;
 	// irq_data->domain: (&(kmem_cache#28-oX (irq 16))->irq_data)->domain: kmem_cache#25-o0
+	// irq_data->domain: (&(kmem_cache#28-oX (irq 160))->irq_data)->domain: kmem_cache#24-o0
 
 	// domain->ops->map: (kmem_cache#25-o0)->ops->map: gic_irq_domain_map
+	// domain->ops->map: (kmem_cache#24-o0)->ops->map: combiner_irq_domain_map
 	if (domain->ops->map) {
 		// domain->ops->map: (kmem_cache#25-o0)->ops->map: gic_irq_domain_map
 		// domain: kmem_cache#25-o0, virq: 16, hwirq: 16
 		// gic_irq_domain_map(kmem_cache#25-o0, 16, 16): 0
+		// domain->ops->map: (kmem_cache#24-o0)->ops->map: combiner_irq_domain_map
+		// domain: kmem_cache#24-o0, virq: 160, hwirq: 0
+		// combiner_irq_domain_map(kmem_cache#24-o0, 160, 0): 0
 		ret = domain->ops->map(domain, virq, hwirq);
+		// ret: 0
 		// ret: 0
 
 		// gic_irq_domain_map에서 한일:
@@ -476,6 +564,15 @@ int irq_domain_associate(struct irq_domain *domain, unsigned int virq,
 		// (kmem_cache#28-oX (irq 16))->name: NULL
 		// (kmem_cache#28-oX (irq 16))->irq_data.chip_data: &gic_data[0]
 
+		// combiner_irq_domain_map에서 한일:
+		// (kmem_cache#28-oX (irq 160))->irq_data.chip: &combiner_chip
+		// (kmem_cache#28-oX (irq 160))->handle_irq: handle_level_irq
+		// (kmem_cache#28-oX (irq 160))->name: NULL
+		// (kmem_cache#28-oX (irq 160))->irq_data.chip_data: &(kmem_cache#26-oX)[0] (combiner_data)
+		// (kmem_cache#28-oX (irq 160))->status_use_accessors: 0x31600
+		// (&(kmem_cache#28-oX (irq 160))->irq_data)->state_use_accessors: 0x10800
+
+		// ret: 0
 		// ret: 0
 		if (ret != 0) {
 			/*
@@ -496,18 +593,26 @@ int irq_domain_associate(struct irq_domain *domain, unsigned int virq,
 		/* If not already assigned, give the domain the chip's name */
 		// domain->name: (kmem_cache#25-o0)->name: NULL,
 		// irq_data->chip: (&(kmem_cache#28-oX (irq 16))->irq_data)->chip: &gic_chip
+		// domain->name: (kmem_cache#24-o0)->name: NULL,
+		// irq_data->chip: (&(kmem_cache#28-oX (irq 160))->irq_data)->chip: &combiner_chip
 		if (!domain->name && irq_data->chip)
 			// domain->name: (kmem_cache#25-o0)->name: NULL,
 			// irq_data->chip->name: ((&(kmem_cache#28-oX (irq 16))->irq_data)->chip)->name: "GIC"
+			// domain->name: (kmem_cache#24-o0)->name: NULL,
+			// irq_data->chip->name: ((&(kmem_cache#28-oX (irq 160))->irq_data)->chip)->name: "COMBINER"
 			domain->name = irq_data->chip->name;
 			// domain->name: (kmem_cache#25-o0)->name: "GIC"
+			// domain->name: (kmem_cache#24-o0)->name: "COMBINER"
 	}
 
 	// hwirq: 16, domain->revmap_size: (kmem_cache#25-o0)->revmap_size: 160
+	// hwirq: 0, domain->revmap_size: (kmem_cache#24-o0)->revmap_size: 256
 	if (hwirq < domain->revmap_size) {
 		// hwirq: 16, domain->linear_revmap[16]: (kmem_cache#25-o0)->linear_revmap[16], virq: 16
+		// hwirq: 0, domain->linear_revmap[0]: (kmem_cache#24-o0)->linear_revmap[0], virq: 160
 		domain->linear_revmap[hwirq] = virq;
 		// domain->linear_revmap[16]: (kmem_cache#25-o0)->linear_revmap[16]: 16
+		// domain->linear_revmap[0]: (kmem_cache#24-o0)->linear_revmap[0]: 160
 	} else {
 		mutex_lock(&revmap_trees_mutex);
 		radix_tree_insert(&domain->revmap_tree, hwirq, irq_data);
@@ -515,19 +620,27 @@ int irq_domain_associate(struct irq_domain *domain, unsigned int virq,
 	}
 	mutex_unlock(&irq_domain_mutex);
 	// irq_domain_mutex을 사용한 mutex lock 해재
+	// irq_domain_mutex을 사용한 mutex lock 해재
 
 	// virq: 16, IRQ_NOREQUEST: 0x800
+	// virq: 160, IRQ_NOREQUEST: 0x800
 	irq_clear_status_flags(virq, IRQ_NOREQUEST);
-	// irq_clear_status_flags에서 한일:
+	// irq_clear_status_flags(16)에서 한일:
 	// (kmem_cache#28-oX (irq 16))->status_use_accessors: 0x31600
 
+	// irq_clear_status_flags(160)에서 한일:
+	// (kmem_cache#28-oX (irq 160))->status_use_accessors: 0x31600
+
 	return 0;
+	// return 0
 	// return 0
 }
 EXPORT_SYMBOL_GPL(irq_domain_associate);
 
 // ARM10C 20141122
 // domain: kmem_cache#25-o0, first_irq: 16, first_hwirq: 16, size: 144
+// ARM10C 20141213
+// domain: kmem_cache#24-o0, first_irq: 160, 0, 256
 void irq_domain_associate_many(struct irq_domain *domain, unsigned int irq_base,
 			       irq_hw_number_t hwirq_base, int count)
 {
@@ -536,14 +649,21 @@ void irq_domain_associate_many(struct irq_domain *domain, unsigned int irq_base,
 	// domain->of_node: (kmem_cache#25-o0)->of_node: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소
 	// of_node_full_name(devtree에서 allnext로 순회 하면서 찾은 gic node의 주소): "/interrupt-controller@10481000"
 	// irq_base: 16, hwirq_base: 16, count: 144
+	// domain->of_node: (kmem_cache#24-o0)->of_node: devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소
+	// of_node_full_name(ddevtree에서 allnext로 순회 하면서 찾은 combiner node의 주소): "interrupt-controller@10440000"
+	// irq_base: 160, hwirq_base: 0, count: 256
 	pr_debug("%s(%s, irqbase=%i, hwbase=%i, count=%i)\n", __func__,
 		of_node_full_name(domain->of_node), irq_base, (int)hwirq_base, count);
 	// "irq_domain_associate_many(/interrupt-controller@10481000, irqbase=16, hwbase=16, count=144)\n"
+	// "irq_domain_associate_many(/interrupt-controller@10440000, irqbase=160, hwbase=0, count=256)\n"
 
 	// count: 144
+	// count: 256
 	for (i = 0; i < count; i++) {
 		// domain: kmem_cache#25-o0, irq_base: 16, i: 0, hwirq_base: 16
 		// irq_domain_associate(kmem_cache#25-o0, 16, 16): 0
+		// domain: kmem_cache#24-o0, irq_base: 160, i: 0, hwirq_base: 0
+		// irq_domain_associate(kmem_cache#24-o0, 160, 0): 0
 		irq_domain_associate(domain, irq_base + i, hwirq_base + i);
 
 		// irq_domain_associate(16) 에서 한일:
@@ -562,10 +682,25 @@ void irq_domain_associate_many(struct irq_domain *domain, unsigned int irq_base,
 		// (kmem_cache#25-o0)->name: "GIC"
 		// (kmem_cache#25-o0)->linear_revmap[16]: 16
 
+		// irq_domain_associate(160) 에서 한일:
+		// (&(kmem_cache#28-oX (irq 160))->irq_data)->hwirq: 0
+		// (&(kmem_cache#28-oX (irq 160))->irq_data)->domain: kmem_cache#24-o0
+		//
+		// combiner_irq_domain_map에서 한일:
+		// (kmem_cache#28-oX (irq 160))->irq_data.chip: &combiner_chip
+		// (kmem_cache#28-oX (irq 160))->handle_irq: handle_level_irq
+		// (kmem_cache#28-oX (irq 160))->name: NULL
+		// (kmem_cache#28-oX (irq 160))->irq_data.chip_data: &(kmem_cache#26-oX)[0] (combiner_data)
+		// (kmem_cache#28-oX (irq 160))->status_use_accessors: 0x31600
+		//
+		// (kmem_cache#24-o0)->name: "COMBINER"
+		// (kmem_cache#24-o0)->linear_revmap[0]: 160
+
 // 2014/11/22 종료
 // 2014/11/29 시작
 
-		// i: 1...144 까지 수행, irq 17...160 까지 수행
+		// i: 1...144 까지 수행, irq 17...159 까지 수행
+		// i: 1...255 까지 수행, irq 160...415 까지 수행
 	}
 }
 EXPORT_SYMBOL_GPL(irq_domain_associate_many);

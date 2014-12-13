@@ -623,6 +623,7 @@ extern int of_node_to_nid(struct device_node *np);
 #else
 // ARM10C 20141122
 // ARM10C 20141206
+// ARM10C 20141213
 static inline int of_node_to_nid(struct device_node *device) { return 0; }
 #endif
 
