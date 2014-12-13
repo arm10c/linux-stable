@@ -74,7 +74,12 @@ struct device_node {
 #endif
 };
 
+// ARM10C 20141213
+// MAX_PHANDLE_ARGS: 8
 #define MAX_PHANDLE_ARGS 8
+
+// ARM10C 20141213
+// MAX_PHANDLE_ARGS: 8
 struct of_phandle_args {
 	struct device_node *np;
 	int args_count;
@@ -92,6 +97,7 @@ extern void of_node_put(struct device_node *node);
 // ARM10C 20141018
 // ARM10C 20141122
 // ARM10C 20141206
+// ARM10C 20141213
 static inline struct device_node *of_node_get(struct device_node *node)
 {
 	return node;
@@ -100,6 +106,7 @@ static inline struct device_node *of_node_get(struct device_node *node)
 // ARM10C 20141004
 // ARM10C 20141018
 // ARM10C 20141101
+// ARM10C 20141213
 static inline void of_node_put(struct device_node *node) { }
 #endif /* !CONFIG_OF_DYNAMIC */
 
@@ -194,6 +201,8 @@ static inline unsigned long of_read_ulong(const __be32 *cell, int size)
 // dev: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소
 // ARM10C 20141122
 // domain->of_node: (kmem_cache#25-o0)->of_node: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소
+// ARM10C 20141213
+// device: devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소
 static inline const char *of_node_full_name(const struct device_node *np)
 {
 	// np: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소

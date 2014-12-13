@@ -186,6 +186,7 @@ typedef phys_addr_t resource_size_t;
  * big enough to enclose whatever representation is used by a given platform.
  */
 // ARM10C 20141108
+// ARM10C 20141213
 typedef unsigned long irq_hw_number_t;
 
 // ARM10C 20140329

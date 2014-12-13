@@ -77,6 +77,7 @@ typedef	void (*irq_preflow_handler_t)(struct irq_data *data);
 // ARM10C 20141122
 // ARM10C 20141213
 enum {
+	// IRQ_TYPE_NONE: 0x00000000
 	IRQ_TYPE_NONE		= 0x00000000,
 	IRQ_TYPE_EDGE_RISING	= 0x00000001,
 	IRQ_TYPE_EDGE_FALLING	= 0x00000002,
@@ -172,6 +173,7 @@ struct irq_domain;
  */
 // ARM10C 20141004
 // ARM10C 20141122
+// ARM10C 20141213
 // sizeof(struct irq_data): 44 bytes
 struct irq_data {
 	u32			mask;
@@ -251,9 +253,14 @@ static inline void irqd_mark_affinity_was_set(struct irq_data *d)
 	d->state_use_accessors |= IRQD_AFFINITY_SET;
 }
 
+// ARM10C 20141213
+// d: &(kmem_cache#28-oX (irq 32))->irq_data
 static inline u32 irqd_get_trigger_type(struct irq_data *d)
 {
+	// d->state_use_accessors: (&(kmem_cache#28-oX (irq 32))->irq_data)->state_use_accessors: 0x10800
+	// IRQD_TRIGGER_MASK: 0xf
 	return d->state_use_accessors & IRQD_TRIGGER_MASK;
+	// return 0
 }
 
 /*
@@ -648,10 +655,18 @@ static inline struct msi_desc *irq_data_get_msi(struct irq_data *d)
 	return d->msi_desc;
 }
 
+// ARM10C 20141213
+// virq: 32
 static inline u32 irq_get_trigger_type(unsigned int irq)
 {
+	// irq: 32, irq_get_irq_data(32): &(kmem_cache#28-oX (irq 32))->irq_data
 	struct irq_data *d = irq_get_irq_data(irq);
+	// d: &(kmem_cache#28-oX (irq 32))->irq_data
+
+	// d: &(kmem_cache#28-oX (irq 32))->irq_data
+	// irqd_get_trigger_type(&(kmem_cache#28-oX (irq 32))->irq_data): 0
 	return d ? irqd_get_trigger_type(d) : 0;
+	// return 0
 }
 
 int __irq_alloc_descs(int irq, unsigned int from, unsigned int cnt, int node,

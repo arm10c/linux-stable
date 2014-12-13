@@ -34,14 +34,27 @@
  * This function is a wrapper that chains of_irq_parse_one() and
  * irq_create_of_mapping() to make things easier to callers
  */
+// ARM10C 20141213
+// np: devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소, i: 0
 unsigned int irq_of_parse_and_map(struct device_node *dev, int index)
 {
 	struct of_phandle_args oirq;
 
+	// dev: devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소, index: 0
+	// of_irq_parse_one(devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소, 0, &oirq): 0
 	if (of_irq_parse_one(dev, index, &oirq))
 		return 0;
 
+	// of_irq_parse_one(0)에서 한일:
+	// (&oirq)->np: gic node의 주소
+	// (&oirq)->args_count: 3
+	// (&oirq)->args[0]: 0
+	// (&oirq)->args[1]: 0
+	// (&oirq)->args[2]: 0
+
+	// irq_create_of_mapping(&oriq): 32
 	return irq_create_of_mapping(&oirq);
+	// return 32
 }
 EXPORT_SYMBOL_GPL(irq_of_parse_and_map);
 
@@ -56,6 +69,8 @@ EXPORT_SYMBOL_GPL(irq_of_parse_and_map);
 // ARM10C 20141011
 // np: devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소
 // np: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소
+// ARM10C 20141213
+// device: devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소
 struct device_node *of_irq_find_parent(struct device_node *child)
 {
 	struct device_node *p;
@@ -138,80 +153,169 @@ struct device_node *of_irq_find_parent(struct device_node *child)
  * input, walks the tree looking for any interrupt-map properties, translates
  * the specifier for each map, and then returns the translated map.
  */
+// ARM10C 20141213
+// addr: reg의 property의 값의 주소, out_irq: &oirq
 int of_irq_parse_raw(const __be32 *addr, struct of_phandle_args *out_irq)
 {
 	struct device_node *ipar, *tnode, *old = NULL, *newpar = NULL;
+	// old: NULL, newpar: NULL
+
+	// MAX_PHANDLE_ARGS: 8
 	__be32 initial_match_array[MAX_PHANDLE_ARGS];
 	const __be32 *match_array = initial_match_array;
+	// match_array: initial_match_array
+
+	// MAX_PHANDLE_ARGS: 8
 	const __be32 *tmp, *imap, *imask, dummy_imask[] = { [0 ... MAX_PHANDLE_ARGS] = ~0 };
+	// dummy_imask[0...7]: 0xffffffff
+
 	u32 intsize = 1, addrsize, newintsize = 0, newaddrsize = 0;
+	// intsize: 1, newintsize: 0, newaddrsize: 0
+
 	int imaplen, match, i;
 
-#ifdef DEBUG
+#ifdef DEBUG // undefined
 	of_print_phandle_args("of_irq_parse_raw: ", out_irq);
 #endif
 
+	// out_irq->np: (&oirq)->np: gic node의 주소
+	// of_node_get((&oirq)->np): gic node의 주소
 	ipar = of_node_get(out_irq->np);
+	// ipar: gic node의 주소
 
 	/* First get the #interrupt-cells property of the current cursor
 	 * that tells us how to interpret the passed-in intspec. If there
 	 * is none, we are nice and just walk up the tree
 	 */
 	do {
+		// ipar: gic node의 주소
+		// of_get_property(gic node의 주소, "#interrupt-cells", NULL):
+		// #interrupt-cells의 property 값의 주소
 		tmp = of_get_property(ipar, "#interrupt-cells", NULL);
+		// tmp: #interrupt-cells의 property 값의 주소
+
+		// tmp: #interrupt-cells의 property 값의 주소
 		if (tmp != NULL) {
+			// tmp: #interrupt-cells의 property 값의 주소
+			// be32_to_cpu(*(#interrupt-cells의 property 값의 주소)): 3
 			intsize = be32_to_cpu(*tmp);
+			// intsize: 3
 			break;
+			// break 수행
 		}
 		tnode = ipar;
 		ipar = of_irq_find_parent(ipar);
 		of_node_put(tnode);
 	} while (ipar);
+
+	// ipar: gic node의 주소
 	if (ipar == NULL) {
 		pr_debug(" -> no parent found !\n");
 		goto fail;
 	}
 
+	// ipar: gic node의 주소,
+	// of_node_full_name(gic node의 주소): "interrupt-controller@10481000", intsize: 3
 	pr_debug("of_irq_parse_raw: ipar=%s, size=%d\n", of_node_full_name(ipar), intsize);
+	// "of_irq_parse_raw: ipar=interrupt-controller@10481000, size=3\n"
 
+	// out_irq->args_count: (&oirq)->args_count: 3, intsize: 3
 	if (out_irq->args_count != intsize)
 		return -EINVAL;
 
 	/* Look for this #address-cells. We have to implement the old linux
 	 * trick of looking for the parent here as some device-trees rely on it
 	 */
+	// ipar: gic node의 주소, of_node_get(gic node의 주소): gic node의 주소
 	old = of_node_get(ipar);
-	do {
-		tmp = of_get_property(old, "#address-cells", NULL);
-		tnode = of_get_parent(old);
-		of_node_put(old);
-		old = tnode;
-	} while (old && tmp == NULL);
-	of_node_put(old);
-	old = NULL;
-	addrsize = (tmp == NULL) ? 2 : be32_to_cpu(*tmp);
+	// old: gic node의 주소
 
+	do {
+		// old: gic node의 주소,
+		// of_get_property(gic node의 주소, "#address-cells", NULL): NULL
+		// old: root node의 주소,
+		// of_get_property(root node의 주소, "#address-cells", NULL): #address-cells의 property 값의 주소
+		tmp = of_get_property(old, "#address-cells", NULL);
+		// tmp: NULL
+		// tmp: #address-cells의 property 값의 주소
+
+		// old: gic node의 주소, of_get_parent(gic node의 주소): root node의 주소
+		// old: root node의 주소, of_get_parent(root node의 주소): NULL
+		tnode = of_get_parent(old);
+		// tnode: root node의 주소
+		// tnode: NULL
+
+		// old: gic node의 주소
+		// old: root node의 주소
+		of_node_put(old); // null function
+
+		// tnode: root node의 주소
+		// tnode: NULL
+		old = tnode;
+		// old: root node의 주소
+		// old: NULL
+
+		// old: root node의 주소, tmp: NULL
+		// old: NULL, tmp: #address-cells의 property 값의 주소
+	} while (old && tmp == NULL);
+
+	// old: NULL
+	of_node_put(old); // null function
+
+	// old: NULL
+	old = NULL;
+	// old: NULL
+
+	// tmp: #address-cells의 property 값의 주소
+	// be32_to_cpu(*(#address-cells의 property 값의 주소)): 1
+	addrsize = (tmp == NULL) ? 2 : be32_to_cpu(*tmp);
+	// addrsize: 1
+
+	// addrsize: 1
 	pr_debug(" -> addrsize=%d\n", addrsize);
+	// " -> addrsize=1\n"
 
 	/* Range check so that the temporary buffer doesn't overflow */
+	// addrsize: 1, intsize: 3, MAX_PHANDLE_ARGS: 8
 	if (WARN_ON(addrsize + intsize > MAX_PHANDLE_ARGS))
 		goto fail;
 
 	/* Precalculate the match array - this simplifies match loop */
+	// addrsize: 1
 	for (i = 0; i < addrsize; i++)
+		// i: 0, initial_match_array[0], addr: reg의 property의 값의 주소
+		// addr[0]: (reg의 property의 값의 주소)[0]: 0x10440000
 		initial_match_array[i] = addr ? addr[i] : 0;
+		// initial_match_array[0]: 0x10440000
+
+	// intsize: 3
 	for (i = 0; i < intsize; i++)
+		// i: 0, addrsize: 1, initial_match_array[1],
+		// out_irq->args[0], (&oirq)->args[0], cpu_to_be32((&oirq)->args[0]): 0
+		// i: 1, addrsize: 1, initial_match_array[2],
+		// out_irq->args[1], (&oirq)->args[1], cpu_to_be32((&oirq)->args[1]): 0
+		// i: 2, addrsize: 1, initial_match_array[3],
+		// out_irq->args[2], (&oirq)->args[2], cpu_to_be32((&oirq)->args[2]): 0
 		initial_match_array[addrsize + i] = cpu_to_be32(out_irq->args[i]);
+		// initial_match_array[1]: 0
+		// initial_match_array[2]: 0
+		// initial_match_array[3]: 0
 
 	/* Now start the actual "proper" walk of the interrupt tree */
+	// ipar: gic node의 주소
 	while (ipar != NULL) {
 		/* Now check if cursor is an interrupt-controller and if it is
 		 * then we are done
 		 */
+		// ipar: gic node의 주소,
+		// of_get_property(gic node의 주소, "interrupt-controller", NULL): NULL 아닌값
 		if (of_get_property(ipar, "interrupt-controller", NULL) !=
 				NULL) {
 			pr_debug(" -> got it !\n");
+			// " -> got it !\n"
+
 			return 0;
+			// return 0
 		}
 
 		/*
@@ -328,24 +432,44 @@ EXPORT_SYMBOL_GPL(of_irq_parse_raw);
  * finding which interrupt controller node it is attached to, and returning the
  * interrupt specifier that can be used to retrieve a Linux IRQ number.
  */
+// ARM10C 20141213
+// dev: devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소, index: 0, &oirq
 int of_irq_parse_one(struct device_node *device, int index, struct of_phandle_args *out_irq)
 {
 	struct device_node *p;
 	const __be32 *intspec, *tmp, *addr;
 	u32 intsize, intlen;
-	int i, res = -EINVAL;
 
+	// EINVAL: 23
+	int i, res = -EINVAL;
+	// res: -23
+
+	// device: devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소
+	// of_node_full_name(devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소):
+	// "interrupt-controller@10440000", index: 0
 	pr_debug("of_irq_parse_one: dev=%s, index=%d\n", of_node_full_name(device), index);
+	// "of_irq_parse_one: dev=interrupt-controller@10440000, index=0\n"
 
 	/* OldWorld mac stuff is "special", handle out of line */
+	// of_irq_workarounds: 0, OF_IMAP_OLDWORLD_MAC: 0x00000001
 	if (of_irq_workarounds & OF_IMAP_OLDWORLD_MAC)
 		return of_irq_parse_oldworld(device, index, out_irq);
 
 	/* Get the reg property (if any) */
+	// device: devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소
+	// of_get_property(devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소, "reg", NULL):
+	// reg의 property의 값의 주소
 	addr = of_get_property(device, "reg", NULL);
+	// addr: reg의 property의 값의 주소
 
 	/* Get the interrupts property */
+	// device: devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소
+	// of_get_property(devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소, "interrups", &intlen):
+	// interrupts의 property의 값의 주소
 	intspec = of_get_property(device, "interrupts", &intlen);
+	// intspec: interrupts의 property의 값의 주소, intlen: 384
+
+	// intspec: interrupts의 property의 값의 주소
 	if (intspec == NULL) {
 		/* Try the new-style interrupts-extended */
 		res = of_parse_phandle_with_args(device, "interrupts-extended",
@@ -354,39 +478,91 @@ int of_irq_parse_one(struct device_node *device, int index, struct of_phandle_ar
 			return -EINVAL;
 		return of_irq_parse_raw(addr, out_irq);
 	}
-	intlen /= sizeof(*intspec);
 
+	// intspec: interrupts의 property의 값의 주소
+	// intlen: 384, sizeof(*interrupts의 property의 값의 주소): 4
+	intlen /= sizeof(*intspec);
+	// intlen: 96
+
+	// intspec: interrupts의 property의 값의 주소
+	// be32_to_cpup(interrupts의 property의 값의 주소): 0, intlen: 96
 	pr_debug(" intspec=%d intlen=%d\n", be32_to_cpup(intspec), intlen);
+	// " intspec=0 intlen=96\n"
 
 	/* Look for the interrupt parent. */
+	// device: devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소
+	// of_irq_find_parent(devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소)
+	// gic node의 주소
 	p = of_irq_find_parent(device);
+	// p: gic node의 주소
+
+	// p: gic node의 주소
 	if (p == NULL)
 		return -EINVAL;
 
 	/* Get size of interrupt specifier */
+	// p: gic node의 주소
+	// of_get_property(gic node의 주소 "#interrupt-cells", NULL):
+	// #interrupt-cells의 property의 값의 주소
 	tmp = of_get_property(p, "#interrupt-cells", NULL);
+	// tmp: #interrupt-cells의 property의 값의 주소
+
+	// tmp: #interrupt-cells의 property의 값의 주소
 	if (tmp == NULL)
 		goto out;
-	intsize = be32_to_cpu(*tmp);
 
+	// tmp: #interrupt-cells의 property의 값의 주소
+	// be32_to_cpu(*(#interrupt-cells의 property의 값의 주소)): 3
+	intsize = be32_to_cpu(*tmp);
+	// intsize: 3
+
+	// intsize: 3, intlen: 96
 	pr_debug(" intsize=%d intlen=%d\n", intsize, intlen);
+	// " intsize=3 intlen=96\n"
 
 	/* Check index */
+	// index: 0, intsize: 3, intlen: 96
 	if ((index + 1) * intsize > intlen)
 		goto out;
 
 	/* Copy intspec into irq structure */
+	// intspec: interrupts의 property의 값의 주소, index: 0, intsize: 3
 	intspec += index * intsize;
+	// intspec: interrupts의 property의 값의 주소
+
+	// out_irq->np: (&oirq)->np, p: gic node의 주소
 	out_irq->np = p;
+	// out_irq->np: (&oirq)->np: gic node의 주소
+
+	// out_irq->args_count: (&oirq)->args_count, intsize: 3
 	out_irq->args_count = intsize;
+	// out_irq->args_count: (&oirq)->args_count: 3
+
+	// intsize: 3
 	for (i = 0; i < intsize; i++)
+		// i: 0, out_irq->args[0]: (&oirq)->args[0], intspec: interrupts의 property의 값의 주소
+		// be32_to_cpup(interrupts의 property의 값의 주소): 0
+		// i: 1, out_irq->args[1]: (&oirq)->args[1], intspec: interrupts의 property의 값의 주소 + 1
+		// be32_to_cpup(interrupts의 property의 값의 주소 + 1): 0
+		// i: 2, out_irq->args[2]: (&oirq)->args[2], intspec: interrupts의 property의 값의 주소 + 2
+		// be32_to_cpup(interrupts의 property의 값의 주소 + 2): 0
 		out_irq->args[i] = be32_to_cpup(intspec++);
+		// out_irq->args[0]: (&oirq)->args[0]: 0, intspec: interrupts의 property의 값의 주소 + 1
+		// out_irq->args[1]: (&oirq)->args[1]: 0, intspec: interrupts의 property의 값의 주소 + 2
+		// out_irq->args[2]: (&oirq)->args[2]: 0, intspec: interrupts의 property의 값의 주소 + 3
 
 	/* Check if there are any interrupt-map translations to process */
+	// addr: reg의 property의 값의 주소, out_irq: &oirq
+	// of_irq_parse_raw(reg의 property의 값의 주소, &oirq): 0
 	res = of_irq_parse_raw(addr, out_irq);
+	// res: 0
  out:
-	of_node_put(p);
+	// p: gic node의 주소
+	of_node_put(p); // null function
+
+	// res: 0
 	return res;
+	// return 0
 }
 EXPORT_SYMBOL_GPL(of_irq_parse_one);
 

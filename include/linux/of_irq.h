@@ -14,6 +14,8 @@ typedef int (*of_irq_init_cb_t)(struct device_node *, struct device_node *);
 /*
  * Workarounds only applied to 32bit powermac machines
  */
+// ARM10C 20141213
+// OF_IMAP_OLDWORLD_MAC: 0x00000001
 #define OF_IMAP_OLDWORLD_MAC	0x00000001
 // ARM10C 20141011
 // OF_IMAP_NO_PHANDLE: 0x00000002
@@ -26,6 +28,8 @@ extern int of_irq_parse_oldworld(struct device_node *device, int index,
 			       struct of_phandle_args *out_irq);
 #else /* CONFIG_PPC32 && CONFIG_PPC_PMAC */
 // ARM10C 20141011
+// ARM10C 20141213
+// of_irq_workarounds: 0
 #define of_irq_workarounds (0)
 #define of_irq_dflt_pic (NULL)
 static inline int of_irq_parse_oldworld(struct device_node *device, int index,
@@ -55,12 +59,13 @@ static inline int of_irq_count(struct device_node *dev)
 }
 #endif
 
-#if defined(CONFIG_OF)
+#if defined(CONFIG_OF) // CONFIG_OF=y
 /*
  * irq_of_parse_and_map() is used by all OF enabled platforms; but SPARC
  * implements it differently.  However, the prototype is the same for all,
  * so declare it here regardless of the CONFIG_OF_IRQ setting.
  */
+// ARM10C 20141213
 extern unsigned int irq_of_parse_and_map(struct device_node *node, int index);
 extern struct device_node *of_irq_find_parent(struct device_node *child);
 

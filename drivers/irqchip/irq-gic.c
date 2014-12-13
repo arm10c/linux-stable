@@ -1056,25 +1056,40 @@ static int gic_irq_domain_map(struct irq_domain *d, unsigned int irq,
 	// return 0
 }
 
+// ARM10C 20141213
+// kmem_cache#25-o0 (gic), gic node의 주소, (&oirq)->args, 3, &hwirq, &type
 static int gic_irq_domain_xlate(struct irq_domain *d,
 				struct device_node *controller,
 				const u32 *intspec, unsigned int intsize,
 				unsigned long *out_hwirq, unsigned int *out_type)
 {
+	// d->of_node: (kmem_cache#25-o0 (gic))->of_node:
+	// devtree에서 allnext로 순회 하면서 찾은 gic node의 주소, controller: gic node의 주소
 	if (d->of_node != controller)
 		return -EINVAL;
+
+	// intsize: 3
 	if (intsize < 3)
 		return -EINVAL;
 
 	/* Get the interrupt number and add 16 to skip over SGIs */
+	// *out_hwirq: *(&hwirq), intspec[1]: (&oirq)->args[1]: 0
 	*out_hwirq = intspec[1] + 16;
+	// *out_hwirq: *(&hwirq): 16
 
 	/* For SPIs, we need to add 16 more to get the GIC irq ID number */
+	// intspec[0]: (&oirq)->args[0]: 0
 	if (!intspec[0])
+		// *out_hwirq: *(&hwirq): 16
 		*out_hwirq += 16;
+		// *out_hwirq: *(&hwirq): 32
 
+	// *out_type: *(&type), intspec[2]: (&oirq)->args[2]: 0, IRQ_TYPE_SENSE_MASK: 0x0000000f
 	*out_type = intspec[2] & IRQ_TYPE_SENSE_MASK;
+	// *out_type: *(&type): 0
+
 	return 0;
+	// return 0
 }
 
 #ifdef CONFIG_SMP // CONFIG_SMP=y

@@ -17,6 +17,7 @@
 #include <linux/fs.h>
 
 // ARM10C 20141122
+// ARM10C 20141213
 static LIST_HEAD(irq_domain_list);
 // ARM10C 20141122
 static DEFINE_MUTEX(irq_domain_mutex);
@@ -415,9 +416,13 @@ EXPORT_SYMBOL_GPL(irq_domain_add_legacy);
  * irq_find_host() - Locates a domain for a given device node
  * @node: device-tree node of the interrupt controller
  */
+// ARM10C 20141213
+// gic node의 주소
 struct irq_domain *irq_find_host(struct device_node *node)
 {
 	struct irq_domain *h, *found = NULL;
+	// found: NULL
+
 	int rc;
 
 	/* We might want to match the legacy controller last since
@@ -426,19 +431,40 @@ struct irq_domain *irq_find_host(struct device_node *node)
 	 * yet though...
 	 */
 	mutex_lock(&irq_domain_mutex);
+	// irq_domain_mutex을 사용한 mutex lock 설정
+
 	list_for_each_entry(h, &irq_domain_list, link) {
+	// for (h = list_first_entry(&irq_domain_list, typeof(*h), link);
+	//     &h->link != (&irq_domain_list); h = list_next_entry(h, link))
+
+		// h: kmem_cache#25-o0 (gic)
+
+		// h->ops->match: (kmem_cache#25-o0 (gic))->ops->match: NULL
 		if (h->ops->match)
 			rc = h->ops->match(h, node);
 		else
+			// h->of_node: (kmem_cache#25-o0 (gic))->of_node:
+			// devtree에서 allnext로 순회 하면서 찾은 gic node의 주소, node: gic node의 주소
 			rc = (h->of_node != NULL) && (h->of_node == node);
+			// rc: 1
 
+		// rc: 1
 		if (rc) {
+			// found: NULL, h: kmem_cache#25-o0 (gic)
 			found = h;
+			// found: kmem_cache#25-o0 (gic)
+
 			break;
+			// break 수행
 		}
 	}
+
 	mutex_unlock(&irq_domain_mutex);
+	// irq_domain_mutex을 사용한 mutex lock 해재
+
+	// found: kmem_cache#25-o0 (gic)
 	return found;
+	// return kmem_cache#25-o0 (gic)
 }
 EXPORT_SYMBOL_GPL(irq_find_host);
 
@@ -754,28 +780,48 @@ EXPORT_SYMBOL_GPL(irq_create_direct_mapping);
  * If the sense/trigger is to be specified, set_irq_type() should be called
  * on the number returned from that call.
  */
+// ARM10C 20141213
+// domain: kmem_cache#25-o0 (gic), hwirq: 32
 unsigned int irq_create_mapping(struct irq_domain *domain,
 				irq_hw_number_t hwirq)
 {
 	unsigned int hint;
 	int virq;
 
+	// domain: kmem_cache#25-o0 (gic), hwirq: 32
 	pr_debug("irq_create_mapping(0x%p, 0x%lx)\n", domain, hwirq);
+	// "irq_create_mapping(0x(gic doamain의 메모리주소), 0x%00000020)\n"
 
 	/* Look for default domain if nececssary */
+	// domain: kmem_cache#25-o0 (gic)
 	if (domain == NULL)
 		domain = irq_default_domain;
+
+	// domain: kmem_cache#25-o0 (gic)
 	if (domain == NULL) {
 		WARN(1, "%s(, %lx) called with NULL domain\n", __func__, hwirq);
 		return 0;
 	}
+
+	// domain: kmem_cache#25-o0 (gic)
 	pr_debug("-> using domain @%p\n", domain);
+	// "-> using domain @0x(gic doamain의 메모리주소)\n"
 
 	/* Check if mapping already exists */
+	// domain: kmem_cache#25-o0 (gic), hwirq: 32
+	// irq_find_mapping(kmem_cache#25-o0 (gic), 32): 32
 	virq = irq_find_mapping(domain, hwirq);
+	// virq: 32
+
+	// virq: 32
 	if (virq) {
+		// virq: 32
 		pr_debug("-> existing mapping on virq %d\n", virq);
+		// "-> existing mapping on virq 32\n"
+
+		// virq: 32
 		return virq;
+		// return 32
 	}
 
 	/* Allocate a virtual interrupt number */
@@ -835,14 +881,24 @@ int irq_create_strict_mappings(struct irq_domain *domain, unsigned int irq_base,
 }
 EXPORT_SYMBOL_GPL(irq_create_strict_mappings);
 
+// ARM10C 20141213
+// &oirq
 unsigned int irq_create_of_mapping(struct of_phandle_args *irq_data)
 {
 	struct irq_domain *domain;
 	irq_hw_number_t hwirq;
+
+	// IRQ_TYPE_NONE: 0x00000000
 	unsigned int type = IRQ_TYPE_NONE;
+	// type: 0
+
 	unsigned int virq;
 
+	// irq_data->np: (&oirq)->np: gic node의 주소, irq_find_host(gic node의 주소): kmem_cache#25-o0 (gic)
 	domain = irq_data->np ? irq_find_host(irq_data->np) : irq_default_domain;
+	// domain: kmem_cache#25-o0 (gic)
+
+	// domain: kmem_cache#25-o0 (gic)
 	if (!domain) {
 		pr_warn("no irq domain found for %s !\n",
 			of_node_full_name(irq_data->np));
@@ -850,24 +906,42 @@ unsigned int irq_create_of_mapping(struct of_phandle_args *irq_data)
 	}
 
 	/* If domain has no translation, then we assume interrupt line */
+	// domain->ops->xlate: (kmem_cache#25-o0 (gic))->ops->xlate: gic_irq_domain_xlate
 	if (domain->ops->xlate == NULL)
 		hwirq = irq_data->args[0];
 	else {
+		// domain->ops->xlate: (kmem_cache#25-o0 (gic))->ops->xlate: gic_irq_domain_xlate
+		// domain: kmem_cache#25-o0 (gic), irq_data->np: (&oirq)->np: gic node의 주소
+		// irq_data->args: (&oirq)->args, irq_data->args_count: (&oirq)->args_count: 3
+		// gic_irq_domain_xlate(kmem_cache#25-o0 (gic), gic node의 주소, (&oirq)->args, 3, &hwirq, &type): 0
 		if (domain->ops->xlate(domain, irq_data->np, irq_data->args,
 					irq_data->args_count, &hwirq, &type))
 			return 0;
+
+		// gic_irq_domain_xlate에서 한일:
+		// *(&hwirq): 32
+		// *(&type): 0
 	}
 
 	/* Create mapping */
+	// domain: kmem_cache#25-o0 (gic), hwirq: 32
+	// irq_create_mapping(kmem_cache#25-o0 (gic), 32): 32
 	virq = irq_create_mapping(domain, hwirq);
+	// virq: 32
+
+	// virq: 32
 	if (!virq)
 		return virq;
 
 	/* Set type if specified and different than the current one */
+	// type: 0, IRQ_TYPE_NONE: 0x00000000, virq: 32, irq_get_trigger_type(32): 0
 	if (type != IRQ_TYPE_NONE &&
 	    type != irq_get_trigger_type(virq))
 		irq_set_irq_type(virq, type);
+
+	// virq: 32
 	return virq;
+	// return 32
 }
 EXPORT_SYMBOL_GPL(irq_create_of_mapping);
 
@@ -897,17 +971,23 @@ EXPORT_SYMBOL_GPL(irq_dispose_mapping);
  * @domain: domain owning this hardware interrupt
  * @hwirq: hardware irq number in that domain space
  */
+// ARM10C 20141213
+// domain: kmem_cache#25-o0 (gic), hwirq: 32
 unsigned int irq_find_mapping(struct irq_domain *domain,
 			      irq_hw_number_t hwirq)
 {
 	struct irq_data *data;
 
 	/* Look for default domain if nececssary */
+	// domain: kmem_cache#25-o0 (gic)
 	if (domain == NULL)
 		domain = irq_default_domain;
+
+	// domain: kmem_cache#25-o0 (gic)
 	if (domain == NULL)
 		return 0;
 
+	// hwirq: 32, domain->revmap_direct_max_irq: (kmem_cache#25-o0 (gic))->revmap_direct_max_irq: 0
 	if (hwirq < domain->revmap_direct_max_irq) {
 		data = irq_get_irq_data(hwirq);
 		if (data && (data->domain == domain) && (data->hwirq == hwirq))
@@ -915,8 +995,11 @@ unsigned int irq_find_mapping(struct irq_domain *domain,
 	}
 
 	/* Check if the hwirq is in the linear revmap. */
+	// hwirq: 32, domain->revmap_size: (kmem_cache#25-o0 (gic))->revmap_size: 160
 	if (hwirq < domain->revmap_size)
+		// hwirq: 32, domain->linear_revmap: (kmem_cache#25-o0 (gic))->linear_revmap[32]: 32
 		return domain->linear_revmap[hwirq];
+		// return 32
 
 	rcu_read_lock();
 	data = radix_tree_lookup(&domain->revmap_tree, hwirq);

@@ -95,6 +95,7 @@ struct irq_domain_chip_generic;
  */
 // ARM10C 20141122
 // ARM10C 20141206
+// ARM10C 20141213
 // sizeof(struct irq_domain): 52 bytes
 struct irq_domain {
 	struct list_head link;

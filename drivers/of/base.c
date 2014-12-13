@@ -323,6 +323,7 @@ static const void *__of_get_property(const struct device_node *np,
 // ARM10C 20141011
 // ARM10C 20141018
 // ARM10C 20141101
+// ARM10C 20141213
 const void *of_get_property(const struct device_node *np, const char *name,
 			    int *lenp)
 {

@@ -22,10 +22,13 @@
 #include "irqchip.h"
 
 #define COMBINER_ENABLE_SET	0x0
+// ARM10C 20141213
+// COMBINER_ENABLE_CLEAR: 0x4
 #define COMBINER_ENABLE_CLEAR	0x4
 #define COMBINER_INT_STATUS	0xC
 
 // ARM10C 20141206
+// ARM10C 20141213
 // IRQ_IN_COMBINER: 8
 #define IRQ_IN_COMBINER		8
 
@@ -128,17 +131,41 @@ static void __init combiner_cascade_irq(struct combiner_chip_data *combiner_data
 	irq_set_chained_handler(irq, combiner_handle_cascade_irq);
 }
 
+// ARM10C 20141213
+// &combiner_data[0], i: 0, combiner_base: 0xf0004000, irq: 32
 static void __init combiner_init_one(struct combiner_chip_data *combiner_data,
 				     unsigned int combiner_nr,
 				     void __iomem *base, unsigned int irq)
 {
+	// combiner_data->base: (&combiner_data[0])->base, base: 0xf0004000
 	combiner_data->base = base;
+	// combiner_data->base: (&combiner_data[0])->base: 0xf0004000
+
+	// combiner_data->hwirq_offset: (&combiner_data[0])->hwirq_offset,
+	// combiner_nr: 0, IRQ_IN_COMBINER: 8
 	combiner_data->hwirq_offset = (combiner_nr & ~3) * IRQ_IN_COMBINER;
+	// combiner_data->hwirq_offset: (&combiner_data[0])->hwirq_offset: 0
+
+	// combiner_data->irq_mask: (&combiner_data[0])->irq_mask, combiner_nr: 0
 	combiner_data->irq_mask = 0xff << ((combiner_nr % 4) << 3);
+	// combiner_data->irq_mask: (&combiner_data[0])->irq_mask: 0xff
+
+	// combiner_data->parent_irq: (&combiner_data[0])->parent_irq, irq: 32
 	combiner_data->parent_irq = irq;
+	// combiner_data->parent_irq: (&combiner_data[0])->parent_irq: 32
+
+	// NOTE:
+	// E.R.M: exynos5 reference manual의 약자로 정의함
 
 	/* Disable all interrupts */
+	// E.R.M: 7.5.1.2 IECR0
+	// Interrupt enable clear register for group 0 to 3
+
+	// combiner_data->irq_mask: (&combiner_data[0])->irq_mask: 0xff
+	// base: 0xf0004000, COMBINER_ENABLE_CLEAR: 0x4
 	__raw_writel(combiner_data->irq_mask, base + COMBINER_ENABLE_CLEAR);
+
+// 2014/12/13 종료
 }
 
 static int combiner_irq_domain_xlate(struct irq_domain *d,
@@ -300,14 +327,20 @@ static void __init combiner_init(void __iomem *combiner_base,
 	// (kmem_cache#24-o0)->name: "COMBINER"
 	// (kmem_cache#24-o0)->linear_revmap[0...255]: 160...415
 
+	// combiner_irq_domain: kmem_cache#24-o0
 	if (WARN_ON(!combiner_irq_domain)) {
 		pr_warning("%s: irq domain init failed\n", __func__);
 		return;
 	}
 
+	// max_nr: 32
 	for (i = 0; i < max_nr; i++) {
+		// np: devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소, i: 0
+		// irq_of_parse_and_map(devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소, 0): 32
 		irq = irq_of_parse_and_map(np, i);
+		// irq: 32
 
+		// i: 0, &combiner_data[0], combiner_base: 0xf0004000, irq: 32
 		combiner_init_one(&combiner_data[i], i,
 				  combiner_base + (i >> 2) * 0x10, irq);
 		combiner_cascade_irq(&combiner_data[i], irq);
