@@ -309,17 +309,17 @@ static void __init combiner_init(void __iomem *combiner_base,
 	// (kmem_cache#20-o3)->slots[0...63]: kmem_cache#28-oX (irq 127...191)
 	//
 	// (kmem_cache#20-o4)->height: 1
-	// (kmem_cache#20-o4)->count: 63
+	// (kmem_cache#20-o4)->count: 64
 	// (kmem_cache#20-o4)->parent: kmem_cache#20-o1 (RADIX_LSB: 1)
 	// (kmem_cache#20-o4)->slots[0...63]: kmem_cache#28-oX (irq 192...255)
 	//
 	// (kmem_cache#20-o5)->height: 1
-	// (kmem_cache#20-o5)->count: 63
+	// (kmem_cache#20-o5)->count: 64
 	// (kmem_cache#20-o5)->parent: kmem_cache#20-o1 (RADIX_LSB: 1)
 	// (kmem_cache#20-o5)->slots[0...63]: kmem_cache#28-oX (irq 256...319)
 	//
 	// (kmem_cache#20-o6)->height: 1
-	// (kmem_cache#20-o6)->count: 63
+	// (kmem_cache#20-o6)->count: 64
 	// (kmem_cache#20-o6)->parent: kmem_cache#20-o1 (RADIX_LSB: 1)
 	// (kmem_cache#20-o6)->slots[0...63]: kmem_cache#28-oX (irq 320...383)
 	//
