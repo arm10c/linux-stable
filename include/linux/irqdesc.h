@@ -40,6 +40,7 @@ struct irq_desc;
 // ARM10C 20141004
 // ARM10C 20141115
 // ARM10C 20141122
+// ARM10C 20141220
 // sizeof(struct irq_desc): 156 bytes
 struct irq_desc {
 	struct irq_data		irq_data;

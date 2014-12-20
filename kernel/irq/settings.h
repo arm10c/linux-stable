@@ -4,6 +4,7 @@
  */
 // ARM10C 20141004
 // ARM10C 20141122
+// ARM10C 20141220
 enum {
 	// IRQ_DEFAULT_INIT_FLAGS: 0xc00
 	// _IRQ_DEFAULT_INIT_FLAGS: 0xc00
@@ -14,8 +15,11 @@ enum {
 	// IRQ_LEVEL: 0x100
 	// _IRQ_LEVEL: 0x100
 	_IRQ_LEVEL		= IRQ_LEVEL,
+	// _IRQ_NOPROBE: 0x400
 	_IRQ_NOPROBE		= IRQ_NOPROBE,
+	// _IRQ_NOREQUEST: 0x800
 	_IRQ_NOREQUEST		= IRQ_NOREQUEST,
+	// _IRQ_NOTHREAD: 0x10000
 	_IRQ_NOTHREAD		= IRQ_NOTHREAD,
 	_IRQ_NOAUTOEN		= IRQ_NOAUTOEN,
 	// IRQ_MOVE_PCNTXT: 0x4000
@@ -131,6 +135,8 @@ irq_settings_set_trigger_mask(struct irq_desc *desc, u32 mask)
 
 // ARM10C 20141122
 // desc: kmem_cache#28-oX (irq 16)
+// ARM10C 20141220
+// desc: kmem_cache#28-oX (irq 32)
 static inline bool irq_settings_is_level(struct irq_desc *desc)
 {
 	// desc->status_use_accessors:
@@ -160,9 +166,14 @@ static inline void irq_settings_clr_norequest(struct irq_desc *desc)
 	desc->status_use_accessors &= ~_IRQ_NOREQUEST;
 }
 
+// ARM10C 20141220
+// desc: kmem_cache#28-oX (irq 32)
 static inline void irq_settings_set_norequest(struct irq_desc *desc)
 {
+	// desc->status_use_accessors: (kmem_cache#28-oX (irq 32))->status_use_accessors: 0x31600
+	// _IRQ_NOREQUEST: 0x800
 	desc->status_use_accessors |= _IRQ_NOREQUEST;
+	// desc->status_use_accessors: (kmem_cache#28-oX (irq 32))->status_use_accessors: 0x31e00
 }
 
 static inline bool irq_settings_can_thread(struct irq_desc *desc)
@@ -175,9 +186,14 @@ static inline void irq_settings_clr_nothread(struct irq_desc *desc)
 	desc->status_use_accessors &= ~_IRQ_NOTHREAD;
 }
 
+// ARM10C 20141220
+// desc: kmem_cache#28-oX (irq 32)
 static inline void irq_settings_set_nothread(struct irq_desc *desc)
 {
+	// desc->status_use_accessors: (kmem_cache#28-oX (irq 32))->status_use_accessors: 0x31e00,
+	// _IRQ_NOTHREAD: 0x10000
 	desc->status_use_accessors |= _IRQ_NOTHREAD;
+	// desc->status_use_accessors: (kmem_cache#28-oX (irq 32))->status_use_accessors: 0x31e00
 }
 
 static inline bool irq_settings_can_probe(struct irq_desc *desc)
@@ -190,9 +206,14 @@ static inline void irq_settings_clr_noprobe(struct irq_desc *desc)
 	desc->status_use_accessors &= ~_IRQ_NOPROBE;
 }
 
+// ARM10C 20141220
+// desc: kmem_cache#28-oX (irq 32)
 static inline void irq_settings_set_noprobe(struct irq_desc *desc)
 {
+	// desc->status_use_accessors: (kmem_cache#28-oX (irq 32))->status_use_accessors: 0x31600
+	// _IRQ_NOPROBE: 0x400
 	desc->status_use_accessors |= _IRQ_NOPROBE;
+	// desc->status_use_accessors: (kmem_cache#28-oX (irq 32))->status_use_accessors: 0x31600
 }
 
 // ARM10C 20141122

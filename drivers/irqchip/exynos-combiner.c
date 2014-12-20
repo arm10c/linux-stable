@@ -69,6 +69,7 @@ static void combiner_unmask_irq(struct irq_data *data)
 	__raw_writel(mask, combiner_base(data) + COMBINER_ENABLE_SET);
 }
 
+// ARM10C 20141220
 static void combiner_handle_cascade_irq(unsigned int irq, struct irq_desc *desc)
 {
 	struct combiner_chip_data *chip_data = irq_get_handler_data(irq);
@@ -123,12 +124,28 @@ static struct irq_chip combiner_chip = {
 #endif
 };
 
+// ARM10C 20141220
+// &combiner_data[0], irq: 32
 static void __init combiner_cascade_irq(struct combiner_chip_data *combiner_data,
 					unsigned int irq)
 {
+	// irq: 32, combiner_data: &combiner_data[0]
 	if (irq_set_handler_data(irq, combiner_data) != 0)
 		BUG();
+
+	// irq_set_handler_data(32) 에서 한일:
+	// (kmem_cache#28-oX (irq 32))->irq_data.handler_data: &combiner_data[0]
+
+	// irq: 32
 	irq_set_chained_handler(irq, combiner_handle_cascade_irq);
+
+	// irq_set_chained_handler에서 한일:
+	// (kmem_cache#28-oX (irq 32))->handle_irq: combiner_handle_cascade_irq
+	// (kmem_cache#28-oX (irq 32))->status_use_accessors: 0x31e00
+	// (kmem_cache#28-oX (irq 32))->depth: 0
+	// (&(kmem_cache#28-oX (irq 32))->irq_data)->state_use_accessors: 0x800
+	//
+	// register GICD_ISENABLER1 의 값을 세팅 하여 irq 32의 interrupt를 enable 시킴
 }
 
 // ARM10C 20141213
@@ -164,8 +181,10 @@ static void __init combiner_init_one(struct combiner_chip_data *combiner_data,
 	// combiner_data->irq_mask: (&combiner_data[0])->irq_mask: 0xff
 	// base: 0xf0004000, COMBINER_ENABLE_CLEAR: 0x4
 	__raw_writel(combiner_data->irq_mask, base + COMBINER_ENABLE_CLEAR);
+	// 0xff 값의 의미: group 0 의 interrupt disable 설정
 
 // 2014/12/13 종료
+// 2014/12/20 시작
 }
 
 static int combiner_irq_domain_xlate(struct irq_domain *d,
@@ -393,7 +412,25 @@ static void __init combiner_init(void __iomem *combiner_base,
 		// i: 0, &combiner_data[0], combiner_base: 0xf0004000, irq: 32
 		combiner_init_one(&combiner_data[i], i,
 				  combiner_base + (i >> 2) * 0x10, irq);
+
+		// combiner_init_one에서 한일:
+		// (&combiner_data[0])->base: 0xf0004000
+		// (&combiner_data[0])->hwirq_offset: 0
+		// (&combiner_data[0])->irq_mask: 0xff
+		// (&combiner_data[0])->parent_irq: 32
+		// group 0 의 interrupt disable 설정
+
+		// i: 0, &combiner_data[0], irq: 32
 		combiner_cascade_irq(&combiner_data[i], irq);
+
+		// combiner_cascade_irq에서 한일:
+		// (kmem_cache#28-oX (irq 32))->irq_data.handler_data: &combiner_data[0]
+		// (kmem_cache#28-oX (irq 32))->handle_irq: combiner_handle_cascade_irq
+		// (kmem_cache#28-oX (irq 32))->status_use_accessors: 0x31e00
+		// (kmem_cache#28-oX (irq 32))->depth: 0
+		// (&(kmem_cache#28-oX (irq 32))->irq_data)->state_use_accessors: 0x800
+		//
+		// register GICD_ISENABLER1 의 값을 세팅 하여 irq 32의 interrupt를 enable 시킴
 	}
 }
 

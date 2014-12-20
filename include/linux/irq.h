@@ -29,6 +29,8 @@ struct seq_file;
 struct module;
 struct irq_desc;
 struct irq_data;
+
+// ARM10C 20141220
 typedef	void (*irq_flow_handler_t)(unsigned int irq,
 					    struct irq_desc *desc);
 typedef	void (*irq_preflow_handler_t)(struct irq_data *data);
@@ -76,6 +78,7 @@ typedef	void (*irq_preflow_handler_t)(struct irq_data *data);
  */
 // ARM10C 20141122
 // ARM10C 20141213
+// ARM10C 20141220
 enum {
 	// IRQ_TYPE_NONE: 0x00000000
 	IRQ_TYPE_NONE		= 0x00000000,
@@ -208,6 +211,7 @@ struct irq_data {
  */
 // ARM10C 20141004
 // ARM10C 20141122
+// ARM10C 20141220
 enum {
 	// IRQD_TRIGGER_MASK: 0xf
 	IRQD_TRIGGER_MASK		= 0xf,
@@ -224,6 +228,7 @@ enum {
 	IRQD_MOVE_PCNTXT		= (1 << 15),
 	// IRQD_IRQ_DISABLED: 0x10000
 	IRQD_IRQ_DISABLED		= (1 << 16),
+	// IRQD_IRQ_MASKED: 0x20000
 	IRQD_IRQ_MASKED			= (1 << 17),
 	IRQD_IRQ_INPROGRESS		= (1 << 18),
 };
@@ -518,10 +523,21 @@ irq_set_handler(unsigned int irq, irq_flow_handler_t handle)
  * (a chained handler is automatically enabled and set to
  *  IRQ_NOREQUEST, IRQ_NOPROBE, and IRQ_NOTHREAD)
  */
+// ARM10C 20141220
+// irq: 32, combiner_handle_cascade_irq
 static inline void
 irq_set_chained_handler(unsigned int irq, irq_flow_handler_t handle)
 {
+	// irq: 32, handle: combiner_handle_cascade_irq
 	__irq_set_handler(irq, handle, 1, NULL);
+
+	// __irq_set_handler에서 한일:
+	// (kmem_cache#28-oX (irq 32))->handle_irq: combiner_handle_cascade_irq
+	// (kmem_cache#28-oX (irq 32))->status_use_accessors: 0x31e00
+	// (kmem_cache#28-oX (irq 32))->depth: 0
+	// (&(kmem_cache#28-oX (irq 32))->irq_data)->state_use_accessors: 0x800
+	//
+	// register GICD_ISENABLER1 의 값을 세팅 하여 irq 32의 interrupt를 enable 시킴
 }
 
 void irq_modify_status(unsigned int irq, unsigned long clr, unsigned long set);
@@ -628,9 +644,13 @@ static inline void *irq_get_chip_data(unsigned int irq)
 	return d ? d->chip_data : NULL;
 }
 
+// ARM10C 20141220
+// d: &(kmem_cache#28-oX (irq 32))->irq_data
 static inline void *irq_data_get_irq_chip_data(struct irq_data *d)
 {
+	// d->chip_data: (&(kmem_cache#28-oX (irq 32))->irq_data)->chip_data: &gic_data[0]
 	return d->chip_data;
+	// return &gic_data[0]
 }
 
 static inline void *irq_get_handler_data(unsigned int irq)

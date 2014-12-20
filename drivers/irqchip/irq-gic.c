@@ -54,6 +54,7 @@ union gic_base {
 };
 
 // ARM10C 20141108
+// ARM10C 20141220
 struct gic_chip_data {
 	union gic_base dist_base;
 	union gic_base cpu_base;
@@ -71,6 +72,7 @@ struct gic_chip_data {
 #endif
 };
 
+// ARM10C 20141220
 static DEFINE_RAW_SPINLOCK(irq_controller_lock);
 
 /*
@@ -93,6 +95,7 @@ static u8 gic_cpu_map[NR_GIC_CPU_IF] __read_mostly;
  * Default make them NULL.
  */
 // ARM10C 20141129
+// ARM10C 20141220
 struct irq_chip gic_arch_extn = {
 	.irq_eoi	= NULL,
 	.irq_mask	= NULL,
@@ -141,6 +144,7 @@ static inline void gic_set_base_accessor(struct gic_chip_data *data,
 #else
 // ARM10C 20141108
 // ARM10C 20141129
+// ARM10C 20141220
 // gic: &gic_data[0]
 // gic_data_dist_base(&gic_data[0]): 0xf0000000
 #define gic_data_dist_base(d)	((d)->dist_base.common_base)
@@ -152,10 +156,19 @@ static inline void gic_set_base_accessor(struct gic_chip_data *data,
 #define gic_set_base_accessor(d, f)
 #endif
 
+// ARM10C 20141220
+// d: &(kmem_cache#28-oX (irq 32))->irq_data
 static inline void __iomem *gic_dist_base(struct irq_data *d)
 {
+	// d: &(kmem_cache#28-oX (irq 32))->irq_data
+	// irq_data_get_irq_chip_data(&(kmem_cache#28-oX (irq 32))->irq_data): &gic_data[0]
 	struct gic_chip_data *gic_data = irq_data_get_irq_chip_data(d);
+	// gic_data: &gic_data[0]
+
+	// gic_data: &gic_data[0]
+	// gic_data_dist_base(&gic_data[0]): 0xf0000000
 	return gic_data_dist_base(gic_data);
+	// return 0xf0000000
 }
 
 static inline void __iomem *gic_cpu_base(struct irq_data *d)
@@ -164,9 +177,13 @@ static inline void __iomem *gic_cpu_base(struct irq_data *d)
 	return gic_data_cpu_base(gic_data);
 }
 
+// ARM10C 20141220
+// d: &(kmem_cache#28-oX (irq 32))->irq_data
 static inline unsigned int gic_irq(struct irq_data *d)
 {
+	// d->hwirq: (&(kmem_cache#28-oX (irq 32))->irq_data)->hwirq: 32
 	return d->hwirq;
+	// return 32
 }
 
 /*
@@ -183,15 +200,35 @@ static void gic_mask_irq(struct irq_data *d)
 	raw_spin_unlock(&irq_controller_lock);
 }
 
+// ARM10C 20141220
+// &(kmem_cache#28-oX (irq 32))->irq_data
 static void gic_unmask_irq(struct irq_data *d)
 {
+	// d: &(kmem_cache#28-oX (irq 32))->irq_data
+	// gic_irq(&(kmem_cache#28-oX (irq 32))->irq_data): 32
 	u32 mask = 1 << (gic_irq(d) % 32);
+	// mask: 1
 
 	raw_spin_lock(&irq_controller_lock);
+	// irq_controller_lock을 사용하여 spinlock 설정
+
+	// gic_arch_extn.irq_unmask: NULL
 	if (gic_arch_extn.irq_unmask)
 		gic_arch_extn.irq_unmask(d);
+
+	// G.A.S: 4.3.5 Interrupt Set-Enable Registers, GICD_ISENABLERn
+
+	// mask: 1, d: &(kmem_cache#28-oX (irq 32))->irq_data,
+	// gic_dist_base(&(kmem_cache#28-oX (irq 32))->irq_data): 0xf0000000
+	// GIC_DIST_ENABLE_SET: 0x100, gic_irq(&(kmem_cache#28-oX (irq 32))->irq_data): 32
+	// writel_relaxed(1, 0xf0000000 + 0x100 + 4):
 	writel_relaxed(mask, gic_dist_base(d) + GIC_DIST_ENABLE_SET + (gic_irq(d) / 32) * 4);
+
+	// mask 0x1의 의미:
+	// register GICD_ISENABLER1 의 값을 세팅 하여 mask값에 맞는 interrupt를 enable 시킴
+
 	raw_spin_unlock(&irq_controller_lock);
+	// irq_controller_lock을 사용하여 spinlock 해제
 }
 
 static void gic_eoi_irq(struct irq_data *d)

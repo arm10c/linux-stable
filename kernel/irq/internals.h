@@ -17,6 +17,7 @@
 # define IRQ_BITMAP_BITS	NR_IRQS
 #endif
 
+// ARM10C 20141220
 #define istate core_internal_state__do_not_mess_with_it
 
 extern bool noirqdebug;
@@ -48,13 +49,16 @@ enum {
  * IRQS_PENDING			- irq is pending and replayed later
  * IRQS_SUSPENDED		- irq is suspended
  */
+// ARM10C 20141220
 enum {
 	IRQS_AUTODETECT		= 0x00000001,
 	IRQS_SPURIOUS_DISABLED	= 0x00000002,
 	IRQS_POLL_INPROGRESS	= 0x00000008,
 	IRQS_ONESHOT		= 0x00000020,
+	// IRQS_REPLAY: 0x00000040
 	IRQS_REPLAY		= 0x00000040,
 	IRQS_WAITING		= 0x00000080,
+	// IRQS_PENDING: 0x00000200
 	IRQS_PENDING		= 0x00000200,
 	IRQS_SUSPENDED		= 0x00000800,
 };
@@ -141,6 +145,8 @@ void __irq_put_desc_unlock(struct irq_desc *desc, unsigned long flags, bool bus)
 // irq: 16, &flags, 0
 // ARM10C 20141213
 // irq: 160, &flags, 0
+// ARM10C 20141220
+// irq: 32, &flags, 0
 static inline struct irq_desc *
 irq_get_desc_buslock(unsigned int irq, unsigned long *flags, unsigned int check)
 {
@@ -164,6 +170,8 @@ irq_put_desc_busunlock(struct irq_desc *desc, unsigned long flags)
 // irq: 16, &flags, 0
 // ARM10C 20141213
 // irq: 160, &flags, 0
+// ARM10C 20141220
+// irq: 32, &flags, 0
 static inline struct irq_desc *
 irq_get_desc_lock(unsigned int irq, unsigned long *flags, unsigned int check)
 {
@@ -177,6 +185,8 @@ irq_get_desc_lock(unsigned int irq, unsigned long *flags, unsigned int check)
 // desc: kmem_cache#28-oX (irq 16), flags
 // ARM10C 20141213
 // desc: kmem_cache#28-oX (irq 160), flags
+// ARM10C 20141220
+// desc: kmem_cache#28-oX (irq 32), flags
 static inline void
 irq_put_desc_unlock(struct irq_desc *desc, unsigned long flags)
 {
@@ -199,13 +209,21 @@ static inline void irqd_clr_move_pending(struct irq_data *d)
 
 // ARM10C 20141122
 // &desc->irq_data: &(kmem_cache#28-oX (irq 16))->irq_data, 0xac0f
+// ARM10C 20141220
+// &desc->irq_data: &(kmem_cache#28-oX (irq 32))->irq_data, IRQD_IRQ_DISABLED: 0x10000
+// ARM10C 20141220
+// &desc->irq_data: &(kmem_cache#28-oX (irq 32))->irq_data, IRQD_IRQ_MASKED: 0x20000
 static inline void irqd_clear(struct irq_data *d, unsigned int mask)
 {
 	// d->state_use_accessors:
 	// (&(kmem_cache#28-oX (irq 16))->irq_data)->state_use_accessors: 0x10000, mask: 0xac0f
+	// d->state_use_accessors:
+	// (&(kmem_cache#28-oX (irq 32))->irq_data)->state_use_accessors: 0x10800, mask: 0x10000
 	d->state_use_accessors &= ~mask;
 	// d->state_use_accessors:
 	// (&(kmem_cache#28-oX (irq 16))->irq_data)->state_use_accessors: 0x10000
+	// d->state_use_accessors:
+	// (&(kmem_cache#28-oX (irq 32))->irq_data)->state_use_accessors: 0x800
 }
 
 // ARM10C 20141004
