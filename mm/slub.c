@@ -6887,6 +6887,8 @@ EXPORT_SYMBOL(ksize);
 
 // ARM10C 20141129
 // desc: kmem_cache#30-o11 (cortex_a15_gic)
+// ARM10C 20141220
+// desc: kmem_cache#30-o10 (exynos4210_combiner)
 void kfree(const void *x)
 {
 	struct page *page;

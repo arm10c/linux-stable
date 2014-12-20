@@ -1002,6 +1002,7 @@ ENDPROC(vector_\name)
 
 	.section .stubs, "ax", %progbits
 // ARM10C 20131109
+// ARM10C 20141220
 __stubs_start:
 	@ This must be the first word
 	.word	vector_swi
@@ -1015,7 +1016,44 @@ vector_rst:
 /*
  * Interrupt dispatcher
  */
+	// ARM10C 20141220
 	vector_stub	irq, IRQ_MODE, 4
+/*
+	vector_stub	irq, IRQ_MODE, 4 macro 확장 결과:
+
+	.macro	vector_stub, irq, IRQ_MODE, correction=4
+	.align	5
+
+// 2014/12/20 종료
+vector_irq:
+	.if 4
+	sub	lr, lr, #4
+	.endif
+
+	@
+	@ Save r0, lr_<exception> (parent PC) and spsr_<exception>
+	@ (parent CPSR)
+	@
+	stmia	sp, {r0, lr}		@ save r0, lr
+	mrs	lr, spsr
+	str	lr, [sp, #8]		@ save spsr
+
+	@
+	@ Prepare for SVC32 mode.  IRQs remain disabled.
+	@
+	mrs	r0, cpsr
+	eor	r0, r0, #(IRQ_MODE ^ SVC_MODE | PSR_ISETSTATE)
+	msr	spsr_cxsf, r0
+
+	@
+	@ the branch table must immediately follow this code
+	@
+	and	lr, lr, #0x0f
+	mov	r0, sp
+ 	ldr	lr, [pc, lr, lsl #2]
+	movs	pc, lr			@ branch to handler in SVC mode
+ENDPROC(vector_irq)
+*/
 
 	.long	__irq_usr			@  0  (USR_26 / USR_32)
 	.long	__irq_invalid			@  1  (FIQ_26 / FIQ_32)
@@ -1133,6 +1171,7 @@ vector_fiq:
 
 	.section .vectors, "ax", %progbits
 // ARM10C 20131109
+// ARM10C 20141220
 __vectors_start:
 	W(b)	vector_rst
 	W(b)	vector_und
@@ -1156,6 +1195,7 @@ cr_no_alignment:
 #ifdef CONFIG_MULTI_IRQ_HANDLER
 	.globl	handle_arch_irq
 // ARM10C 20141129
+// ARM10C 20141220
 handle_arch_irq:
 	.space	4
 #endif

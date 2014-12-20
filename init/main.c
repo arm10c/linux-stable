@@ -717,6 +717,9 @@ asmlinkage void __init start_kernel(void)
 	// allocated_irqs에 bit를 1로 세팅하고 radix tree에 각 irq_desc를 노트로 추가
 
 	init_IRQ();
+	// gic, combiner이 사용할 메모리 할당과 자료 구조 설정,
+	// gic irq (0~15), combiner irq (32~63) interrupt 를 enable 시킴
+
 	tick_init();
 	init_timers();
 	hrtimers_init();

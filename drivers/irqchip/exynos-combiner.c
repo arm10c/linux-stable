@@ -431,7 +431,210 @@ static void __init combiner_init(void __iomem *combiner_base,
 		// (&(kmem_cache#28-oX (irq 32))->irq_data)->state_use_accessors: 0x800
 		//
 		// register GICD_ISENABLER1 의 값을 세팅 하여 irq 32의 interrupt를 enable 시킴
+		
+		// i: 1 ... 31 수행
 	}
+
+	// 위 loop의 수행결과:
+	// (&combiner_data[0])->base: 0xf0004000
+	// (&combiner_data[0])->hwirq_offset: 0
+	// (&combiner_data[0])->irq_mask: 0xff
+	// (&combiner_data[0])->parent_irq: 32
+	// group 0 의 interrupt disable 설정
+	//
+	// (&combiner_data[1])->base: 0xf0004000
+	// (&combiner_data[1])->hwirq_offset: 0
+	// (&combiner_data[1])->irq_mask: 0xff00
+	// (&combiner_data[1])->parent_irq: 33
+	// group 1 의 interrupt disable 설정
+	//
+	// (&combiner_data[2])->base: 0xf0004000
+	// (&combiner_data[2])->hwirq_offset: 0
+	// (&combiner_data[2])->irq_mask: 0xff0000
+	// (&combiner_data[2])->parent_irq: 34
+	// group 2 의 interrupt disable 설정
+	//
+	// (&combiner_data[3])->base: 0xf0004000
+	// (&combiner_data[3])->hwirq_offset: 0
+	// (&combiner_data[3])->irq_mask: 0xff000000
+	// (&combiner_data[3])->parent_irq: 35
+	// group 3 의 interrupt disable 설정
+	//
+	// (&combiner_data[4])->base: 0xf0004010
+	// (&combiner_data[4])->hwirq_offset: 32
+	// (&combiner_data[4])->irq_mask: 0xff
+	// (&combiner_data[4])->parent_irq: 36
+	// group 4 의 interrupt disable 설정
+	//
+	// (&combiner_data[5])->base: 0xf0004010
+	// (&combiner_data[5])->hwirq_offset: 32
+	// (&combiner_data[5])->irq_mask: 0xff00
+	// (&combiner_data[5])->parent_irq: 37
+	// group 5 의 interrupt disable 설정
+	//
+	// (&combiner_data[6])->base: 0xf0004010
+	// (&combiner_data[6])->hwirq_offset: 32
+	// (&combiner_data[6])->irq_mask: 0xff0000
+	// (&combiner_data[6])->parent_irq: 38
+	// group 6 의 interrupt disable 설정
+	//
+	// (&combiner_data[7])->base: 0xf0004010
+	// (&combiner_data[7])->hwirq_offset: 32
+	// (&combiner_data[7])->irq_mask: 0xff000000
+	// (&combiner_data[7])->parent_irq: 39
+	// group 7 의 interrupt disable 설정
+	//
+	// (&combiner_data[8])->base: 0xf0004020
+	// (&combiner_data[8])->hwirq_offset: 64
+	// (&combiner_data[8])->irq_mask: 0xff
+	// (&combiner_data[8])->parent_irq: 40
+	// group 8 의 interrupt disable 설정
+	//
+	// (&combiner_data[9])->base: 0xf0004020
+	// (&combiner_data[9])->hwirq_offset: 64
+	// (&combiner_data[9])->irq_mask: 0xff00
+	// (&combiner_data[9])->parent_irq: 41
+	// group 9 의 interrupt disable 설정
+	//
+	// (&combiner_data[10])->base: 0xf0004020
+	// (&combiner_data[10])->hwirq_offset: 64
+	// (&combiner_data[10])->irq_mask: 0xff0000
+	// (&combiner_data[10])->parent_irq: 42
+	// group 10 의 interrupt disable 설정
+	//
+	// (&combiner_data[11])->base: 0xf0004020
+	// (&combiner_data[11])->hwirq_offset: 64
+	// (&combiner_data[11])->irq_mask: 0xff000000
+	// (&combiner_data[11])->parent_irq: 43
+	// group 11 의 interrupt disable 설정
+	//
+	// (&combiner_data[12])->base: 0xf0004030
+	// (&combiner_data[12])->hwirq_offset: 96
+	// (&combiner_data[12])->irq_mask: 0xff
+	// (&combiner_data[12])->parent_irq: 44
+	// group 12 의 interrupt disable 설정
+	//
+	// (&combiner_data[13])->base: 0xf0004030
+	// (&combiner_data[13])->hwirq_offset: 96
+	// (&combiner_data[13])->irq_mask: 0xff00
+	// (&combiner_data[13])->parent_irq: 45
+	// group 13 의 interrupt disable 설정
+	//
+	// (&combiner_data[14])->base: 0xf0004030
+	// (&combiner_data[14])->hwirq_offset: 96
+	// (&combiner_data[14])->irq_mask: 0xff0000
+	// (&combiner_data[14])->parent_irq: 46
+	// group 14 의 interrupt disable 설정
+	//
+	// (&combiner_data[15])->base: 0xf0004030
+	// (&combiner_data[15])->hwirq_offset: 96
+	// (&combiner_data[15])->irq_mask: 0xff000000
+	// (&combiner_data[15])->parent_irq: 47
+	// group 15 의 interrupt disable 설정
+	//
+	// (&combiner_data[16])->base: 0xf0004040
+	// (&combiner_data[16])->hwirq_offset: 128
+	// (&combiner_data[16])->irq_mask: 0xff
+	// (&combiner_data[16])->parent_irq: 48
+	// group 16 의 interrupt disable 설정
+	//
+	// (&combiner_data[17])->base: 0xf0004040
+	// (&combiner_data[17])->hwirq_offset: 128
+	// (&combiner_data[17])->irq_mask: 0xff00
+	// (&combiner_data[17])->parent_irq: 49
+	// group 17 의 interrupt disable 설정
+	//
+	// (&combiner_data[18])->base: 0xf0004040
+	// (&combiner_data[18])->hwirq_offset: 128
+	// (&combiner_data[18])->irq_mask: 0xff0000
+	// (&combiner_data[18])->parent_irq: 50
+	// group 18 의 interrupt disable 설정
+	//
+	// (&combiner_data[19])->base: 0xf0004040
+	// (&combiner_data[19])->hwirq_offset: 128
+	// (&combiner_data[19])->irq_mask: 0xff000000
+	// (&combiner_data[19])->parent_irq: 51
+	// group 19 의 interrupt disable 설정
+	//
+	// (&combiner_data[20])->base: 0xf0004050
+	// (&combiner_data[20])->hwirq_offset: 160
+	// (&combiner_data[20])->irq_mask: 0xff
+	// (&combiner_data[20])->parent_irq: 52
+	// group 20 의 interrupt disable 설정
+	//
+	// (&combiner_data[21])->base: 0xf0004050
+	// (&combiner_data[21])->hwirq_offset: 160
+	// (&combiner_data[21])->irq_mask: 0xff00
+	// (&combiner_data[21])->parent_irq: 53
+	// group 21 의 interrupt disable 설정
+	//
+	// (&combiner_data[22])->base: 0xf0004050
+	// (&combiner_data[22])->hwirq_offset: 160
+	// (&combiner_data[22])->irq_mask: 0xff0000
+	// (&combiner_data[22])->parent_irq: 54
+	// group 22 의 interrupt disable 설정
+	//
+	// (&combiner_data[23])->base: 0xf0004050
+	// (&combiner_data[23])->hwirq_offset: 160
+	// (&combiner_data[23])->irq_mask: 0xff000000
+	// (&combiner_data[23])->parent_irq: 55
+	// group 23 의 interrupt disable 설정
+	//
+	// (&combiner_data[24])->base: 0xf0004060
+	// (&combiner_data[24])->hwirq_offset: 192
+	// (&combiner_data[24])->irq_mask: 0xff
+	// (&combiner_data[24])->parent_irq: 56
+	// group 24 의 interrupt disable 설정
+	//
+	// (&combiner_data[25])->base: 0xf0004060
+	// (&combiner_data[25])->hwirq_offset: 192
+	// (&combiner_data[25])->irq_mask: 0xff00
+	// (&combiner_data[25])->parent_irq: 57
+	// group 25 의 interrupt disable 설정
+	//
+	// (&combiner_data[26])->base: 0xf0004060
+	// (&combiner_data[26])->hwirq_offset: 192
+	// (&combiner_data[26])->irq_mask: 0xff0000
+	// (&combiner_data[26])->parent_irq: 58
+	// group 26 의 interrupt disable 설정
+	//
+	// (&combiner_data[27])->base: 0xf0004060
+	// (&combiner_data[27])->hwirq_offset: 192
+	// (&combiner_data[27])->irq_mask: 0xff000000
+	// (&combiner_data[27])->parent_irq: 59
+	// group 27 의 interrupt disable 설정
+	//
+	// (&combiner_data[28])->base: 0xf0004070
+	// (&combiner_data[28])->hwirq_offset: 224
+	// (&combiner_data[28])->irq_mask: 0xff
+	// (&combiner_data[28])->parent_irq: 60
+	// group 28 의 interrupt disable 설정
+	//
+	// (&combiner_data[29])->base: 0xf0004070
+	// (&combiner_data[29])->hwirq_offset: 224
+	// (&combiner_data[29])->irq_mask: 0xff00
+	// (&combiner_data[29])->parent_irq: 61
+	// group 29 의 interrupt disable 설정
+	//
+	// (&combiner_data[30])->base: 0xf0004070
+	// (&combiner_data[30])->hwirq_offset: 224
+	// (&combiner_data[30])->irq_mask: 0xff0000
+	// (&combiner_data[30])->parent_irq: 62
+	// group 30 의 interrupt disable 설정
+	//
+	// (&combiner_data[31])->base: 0xf0004070
+	// (&combiner_data[31])->hwirq_offset: 224
+	// (&combiner_data[31])->irq_mask: 0xff000000
+	// (&combiner_data[31])->parent_irq: 63
+	// group 31 의 interrupt disable 설정
+	//
+	// (kmem_cache#28-oX (irq 32...63))->irq_data.handler_data: &combiner_data[0...31]
+	// (kmem_cache#28-oX (irq 32...63))->handle_irq: combiner_handle_cascade_irq
+	// (kmem_cache#28-oX (irq 32...63))->status_use_accessors: 0x31e00
+	// (kmem_cache#28-oX (irq 32...63))->depth: 0
+	// (&(kmem_cache#28-oX (irq 32...63))->irq_data)->state_use_accessors: 0x800
+	//
+	// register GICD_ISENABLER1 의 값을 세팅 하여 irq 32의 interrupt를 enable 시킴
 }
 
 // ARM10C 20141206
@@ -542,6 +745,170 @@ static int __init combiner_of_init(struct device_node *np,
 	// combiner_base: 0xf0004000, np: devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소,
 	// max_nr: 32, irq_base: 160;
 	combiner_init(combiner_base, np, max_nr, irq_base);
+
+	// combiner_init에서 한일:
+	// struct irq_domain를 위한 메모리 할당: kmem_cache#24-o0
+	// combiner_irq_domain: kmem_cache#24-o0
+	//
+	// (&(kmem_cache#24-o0)->revmap_tree)->height: 0
+	// (&(kmem_cache#24-o0)->revmap_tree)->gfp_mask: (GFP_KERNEL: 0xD0)
+	// (&(kmem_cache#24-o0)->revmap_tree)->rnode: NULL
+	// (kmem_cache#24-o0)->ops: &combiner_irq_domain_ops
+	// (kmem_cache#24-o0)->host_data: kmem_cache#26-oX (combiner_data)
+	// (kmem_cache#24-o0)->of_node: devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소
+	// (kmem_cache#24-o0)->hwirq_max: 256
+	// (kmem_cache#24-o0)->revmap_size: 256
+	// (kmem_cache#24-o0)->revmap_direct_max_irq: 0
+	//
+	// irq_domain_list에 (kmem_cache#24-o0)->link를 추가
+	/*
+	// struct irq_desc의 자료 구조크기 만큼 256개의 메모리를 할당 받아
+	// radix tree 구조로 구성
+	//
+	// radix tree의 root node: &irq_desc_tree 값을 변경
+	// (&irq_desc_tree)->rnode: kmem_cache#20-o1 (RADIX_LSB: 1)
+	// (&irq_desc_tree)->height: 2
+	//
+	// (kmem_cache#20-o1)->height: 2
+	// (kmem_cache#20-o1)->count: 7
+	// (kmem_cache#20-o1)->parent: NULL
+	// (kmem_cache#20-o1)->slots[0]: kmem_cache#20-o0 (radix height 1 관리 주소)
+	// (kmem_cache#20-o1)->slots[1]: kmem_cache#20-o2 (radix height 1 관리 주소)
+	// (kmem_cache#20-o1)->slots[2]: kmem_cache#20-o3 (radix height 1 관리 주소)
+	// (kmem_cache#20-o1)->slots[3]: kmem_cache#20-o4 (radix height 1 관리 주소)
+	// (kmem_cache#20-o1)->slots[4]: kmem_cache#20-o5 (radix height 1 관리 주소)
+	// (kmem_cache#20-o1)->slots[5]: kmem_cache#20-o6 (radix height 1 관리 주소)
+	// (kmem_cache#20-o1)->slots[6]: kmem_cache#20-o7 (radix height 1 관리 주소)
+	//
+	// (kmem_cache#20-o0)->height: 1
+	// (kmem_cache#20-o0)->count: 64
+	// (kmem_cache#20-o0)->parent: kmem_cache#20-o1 (RADIX_LSB: 1)
+	// (kmem_cache#20-o0)->slots[0...63]: kmem_cache#28-oX (irq 0...63)
+	//
+	// (kmem_cache#20-o2)->height: 1
+	// (kmem_cache#20-o2)->count: 64
+	// (kmem_cache#20-o2)->parent: kmem_cache#20-o1 (RADIX_LSB: 1)
+	// (kmem_cache#20-o2)->slots[0...63]: kmem_cache#28-oX (irq 63...127)
+	//
+	// (kmem_cache#20-o3)->height: 1
+	// (kmem_cache#20-o3)->count: 64
+	// (kmem_cache#20-o3)->parent: kmem_cache#20-o1 (RADIX_LSB: 1)
+	// (kmem_cache#20-o3)->slots[0...63]: kmem_cache#28-oX (irq 127...191)
+	//
+	// (kmem_cache#20-o4)->height: 1
+	// (kmem_cache#20-o4)->count: 64
+	// (kmem_cache#20-o4)->parent: kmem_cache#20-o1 (RADIX_LSB: 1)
+	// (kmem_cache#20-o4)->slots[0...63]: kmem_cache#28-oX (irq 192...255)
+	//
+	// (kmem_cache#20-o5)->height: 1
+	// (kmem_cache#20-o5)->count: 64
+	// (kmem_cache#20-o5)->parent: kmem_cache#20-o1 (RADIX_LSB: 1)
+	// (kmem_cache#20-o5)->slots[0...63]: kmem_cache#28-oX (irq 256...319)
+	//
+	// (kmem_cache#20-o6)->height: 1
+	// (kmem_cache#20-o6)->count: 64
+	// (kmem_cache#20-o6)->parent: kmem_cache#20-o1 (RADIX_LSB: 1)
+	// (kmem_cache#20-o6)->slots[0...63]: kmem_cache#28-oX (irq 320...383)
+	//
+	// (kmem_cache#20-o7)->height: 1
+	// (kmem_cache#20-o7)->count: 32
+	// (kmem_cache#20-o7)->parent: kmem_cache#20-o1 (RADIX_LSB: 1)
+	// (kmem_cache#20-o7)->slots[0...31]: kmem_cache#28-oX (irq 384...415)
+	//
+	// (&irq_desc_tree)->rnode -->  +-----------------------+
+	//                              |    radix_tree_node    |
+	//                              |   (kmem_cache#20-o1)  |
+	//                              +-----------------------+
+	//                              | height: 2 | count: 7  |
+	//                              +-----------------------+
+	//                              | radix_tree_node 0 ~ 6 | \
+	//                            / +-----------------------+ \ \
+	//                          /  /           |  |          \  \ \ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ
+	//  slot: 0               /   | slot: 1    |  |           |   \              slot: 2    |
+	//  +-----------------------+ | +-----------------------+ | +-----------------------+   |
+	//  |    radix_tree_node    | | |    radix_tree_node    | | |    radix_tree_node    |   |
+	//  |   (kmem_cache#20-o0)  | | |   (kmem_cache#20-o2)  | | |   (kmem_cache#20-o3)  |   |
+	//  +-----------------------+ | +-----------------------+ | +-----------------------+   |
+	//  | height: 1 | count: 64 | | | height: 1 | count: 64 | | | height: 1 | count: 64 |   |
+	//  +-----------------------+ | +-----------------------+ | +-----------------------+   |
+	//  |    irq  0 ~ 63        | | |    irq 64 ~ 127       | | |    irq 128 ~ 191      |   |
+	//  +-----------------------+ | +-----------------------+ | +-----------------------+   |
+	//                           /                |            \                            |
+	//  slot: 3                /    slot: 4       |              \                slot: 5    \                slot: 6
+	//  +-----------------------+   +-----------------------+   +-----------------------+   +-----------------------+
+	//  |    radix_tree_node    |   |    radix_tree_node    |   |    radix_tree_node    |   |    radix_tree_node    |
+	//  |   (kmem_cache#20-o4)  |   |   (kmem_cache#20-o5)  |   |   (kmem_cache#20-o6)  |   |   (kmem_cache#20-o7)  |
+	//  +-----------------------+   +-----------------------+   +-----------------------+   +-----------------------+
+	//  | height: 1 | count: 64 |   | height: 1 | count: 64 |   | height: 1 | count: 64 |   | height: 1 | count: 32 |
+	//  +-----------------------+   +-----------------------+   +-----------------------+   +-----------------------+
+	//  |    irq  192 ~ 255     |   |    irq 256 ~ 319      |   |    irq 320 ~ 383      |   |    irq 384 ~ 415      |
+	//  +-----------------------+   +-----------------------+   +-----------------------+   +-----------------------+
+	*/
+	// irq 160...415까지의 struct irq_data에 값을 설정
+	//
+	// (&(kmem_cache#28-oX (irq 160...415))->irq_data)->hwirq: 0...255
+	// (&(kmem_cache#28-oX (irq 160...415))->irq_data)->domain: kmem_cache#24-o0
+	// (&(kmem_cache#28-oX (irq 160...415))->irq_data)->state_use_accessors: 0x10800
+	//
+	// (kmem_cache#28-oX (irq 160...415))->irq_data.chip: &combiner_chip
+	// (kmem_cache#28-oX (irq 160...415))->handle_irq: handle_level_irq
+	// (kmem_cache#28-oX (irq 160...415))->name: NULL
+	//
+	// (kmem_cache#28-oX (irq 160...167))->irq_data.chip_data: &(kmem_cache#26-oX)[0] (combiner_data)
+	// (kmem_cache#28-oX (irq 168...175))->irq_data.chip_data: &(kmem_cache#26-oX)[1] (combiner_data)
+	// ......
+	// (kmem_cache#28-oX (irq 408...415))->irq_data.chip_data: &(kmem_cache#26-oX)[31] (combiner_data)
+	//
+	// (kmem_cache#28-oX (irq 160...415))->status_use_accessors: 0x31600
+	//
+	// (kmem_cache#24-o0)->name: "COMBINER"
+	// (kmem_cache#24-o0)->linear_revmap[0...255]: 160...415
+	//
+	// (&combiner_data[0])->base: 0xf0004000
+	// (&combiner_data[0])->hwirq_offset: 0
+	// (&combiner_data[0])->irq_mask: 0xff
+	// (&combiner_data[0])->parent_irq: 32
+	// group 0 의 interrupt disable 설정
+	//
+	// (&combiner_data[1])->base: 0xf0004000
+	// (&combiner_data[1])->hwirq_offset: 0
+	// (&combiner_data[1])->irq_mask: 0xff00
+	// (&combiner_data[1])->parent_irq: 33
+	// group 1 의 interrupt disable 설정
+	//
+	// (&combiner_data[2])->base: 0xf0004000
+	// (&combiner_data[2])->hwirq_offset: 0
+	// (&combiner_data[2])->irq_mask: 0xff0000
+	// (&combiner_data[2])->parent_irq: 34
+	// group 2 의 interrupt disable 설정
+	//
+	// (&combiner_data[3])->base: 0xf0004000
+	// (&combiner_data[3])->hwirq_offset: 0
+	// (&combiner_data[3])->irq_mask: 0xff000000
+	// (&combiner_data[3])->parent_irq: 35
+	// group 3 의 interrupt disable 설정
+	//
+	// (&combiner_data[4])->base: 0xf0004010
+	// (&combiner_data[4])->hwirq_offset: 32
+	// (&combiner_data[4])->irq_mask: 0xff
+	// (&combiner_data[4])->parent_irq: 36
+	// group 4 의 interrupt disable 설정
+	//
+	// .....
+	//
+	// (&combiner_data[31])->base: 0xf0004070
+	// (&combiner_data[31])->hwirq_offset: 224
+	// (&combiner_data[31])->irq_mask: 0xff000000
+	// (&combiner_data[31])->parent_irq: 63
+	// group 31 의 interrupt disable 설정
+	//
+	// (kmem_cache#28-oX (irq 32...63))->irq_data.handler_data: &combiner_data[0...31]
+	// (kmem_cache#28-oX (irq 32...63))->handle_irq: combiner_handle_cascade_irq
+	// (kmem_cache#28-oX (irq 32...63))->status_use_accessors: 0x31e00
+	// (kmem_cache#28-oX (irq 32...63))->depth: 0
+	// (&(kmem_cache#28-oX (irq 32...63))->irq_data)->state_use_accessors: 0x800
+	//
+	// register GICD_ISENABLER1 의 값을 세팅 하여 irq 32의 interrupt를 enable 시킴
 
 	return 0;
 }

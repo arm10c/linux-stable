@@ -166,6 +166,7 @@ SECTIONS
 	 */
 	/*
 	// ARM10C 20131109
+	// ARM10C 20141220
 	*/
 	__vectors_start = .;
 	.vectors 0 : AT(__vectors_start) {
@@ -179,6 +180,7 @@ SECTIONS
 
 	/*
 	// ARM10C 20131109
+	// ARM10C 20141220
 	*/
 	__stubs_start = .;
 	.stubs 0x1000 : AT(__stubs_start) {
@@ -254,6 +256,9 @@ SECTIONS
 	__data_loc = .;
 #endif
 
+	/*
+	// ARM10C 20141220
+	*/
 	.data : AT(__data_loc) {
 		_data = .;		/* address in memory */
 		_sdata = .;
