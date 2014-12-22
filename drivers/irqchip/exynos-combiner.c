@@ -634,7 +634,7 @@ static void __init combiner_init(void __iomem *combiner_base,
 	// (kmem_cache#28-oX (irq 32...63))->depth: 0
 	// (&(kmem_cache#28-oX (irq 32...63))->irq_data)->state_use_accessors: 0x800
 	//
-	// register GICD_ISENABLER1 의 값을 세팅 하여 irq 32의 interrupt를 enable 시킴
+	// register GICD_ISENABLER1 의 값을 세팅 하여 irq 32~63의 interrupt를 enable 시킴
 }
 
 // ARM10C 20141206
@@ -727,11 +727,11 @@ static int __init combiner_of_init(struct device_node *np,
 			"setting default as %d.\n",
 			__func__, max_nr);
 	}
+
 	// of_property_read_u32에서 한일:
 	// devtree에서 allnext로 순회 하면서 찾은 combiner node의 property "samsung,combiner-nr"
 	// 값을 max_nr에 가져옴
 	// max_nr: 32 (exynos5.dtsi 참고)
-
 
 	/*
 	 * FIXME: This is a hardwired COMBINER_IRQ(0,0). Once all devices
@@ -908,7 +908,7 @@ static int __init combiner_of_init(struct device_node *np,
 	// (kmem_cache#28-oX (irq 32...63))->depth: 0
 	// (&(kmem_cache#28-oX (irq 32...63))->irq_data)->state_use_accessors: 0x800
 	//
-	// register GICD_ISENABLER1 의 값을 세팅 하여 irq 32의 interrupt를 enable 시킴
+	// register GICD_ISENABLER1 의 값을 세팅 하여 irq 32~63의 interrupt를 enable 시킴
 
 	return 0;
 }

@@ -786,7 +786,7 @@ void __init of_irq_init(const struct of_device_id *matches)
 			// [w2][f1] matches: irqchip_of_match_cortex_a15_gic,
 			// [w2][f1] desc->dev: (kmem_cache#30-o10)->dev: devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소
 			// [w2][f1] of_match_node(cortex_a15_gic, devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소):
-			// [w2][f1] irqchip_of_match_cortex_a15_gic
+			// [w2][f1] irqchip_of_match_exynos4210_combiner
 			match = of_match_node(matches, desc->dev);
 			// [w1][f2] match: irqchip_of_match_cortex_a15_gic
 			// [w2][f1] match: irqchip_of_match_exynos4210_combiner
@@ -829,6 +829,7 @@ void __init of_irq_init(const struct of_device_id *matches)
 			// [w2][f1] combiner_of_init(devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소, NULL): 0
 			ret = irq_init_cb(desc->dev, desc->interrupt_parent);
 			// [w1][f2] ret: 0
+			// [w2][f1] ret: 0
 
 			// [w1][f2] gic_of_init에서 한일:
 			//
@@ -1284,7 +1285,7 @@ void __init of_irq_init(const struct of_device_id *matches)
 			// (kmem_cache#28-oX (irq 32...63))->depth: 0
 			// (&(kmem_cache#28-oX (irq 32...63))->irq_data)->state_use_accessors: 0x800
 			//
-			// register GICD_ISENABLER1 의 값을 세팅 하여 irq 32의 interrupt를 enable 시킴
+			// register GICD_ISENABLER1 의 값을 세팅 하여 irq 32~63의 interrupt를 enable 시킴
 
 			// [w1][f2] ret: 0
 			// [w2][f1] ret: 0
@@ -1314,7 +1315,7 @@ void __init of_irq_init(const struct of_device_id *matches)
 		// [w2] typeof(*desc): struct intc_desc
 		// [w2] list_first_entry_or_null(&intc_parent_list, struct intc_desc, list):
 		// [w2] (!list_empty(&intc_parent_list) ? list_first_entry(&intc_parent_list, struct intc_desc, list) : NULL)
-		// [w2] list_first_entry(&intc_parent_list, struct intc_desc, list): kmem_cache#30-o11 (cortex_a15_gic)
+		// [w2] list_first_entry(&intc_parent_list, struct intc_desc, list): kmem_cache#30-o11 (exynos4210_combiner)
 		desc = list_first_entry_or_null(&intc_parent_list,
 						typeof(*desc), list);
 		// [w1] desc: kmem_cache#30-o11 (cortex_a15_gic)

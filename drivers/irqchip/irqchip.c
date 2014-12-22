@@ -485,5 +485,5 @@ void __init irqchip_init(void)
 	// (kmem_cache#28-oX (irq 32...63))->depth: 0
 	// (&(kmem_cache#28-oX (irq 32...63))->irq_data)->state_use_accessors: 0x800
 	//
-	// register GICD_ISENABLER1 의 값을 세팅 하여 irq 32의 interrupt를 enable 시킴
+	// register GICD_ISENABLER1 의 값을 세팅 하여 irq 32~63의 interrupt를 enable 시킴
 }
