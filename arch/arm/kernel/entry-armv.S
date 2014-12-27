@@ -140,23 +140,41 @@ ENDPROC(__und_invalid)
  * SVC mode handlers
  */
 
-#if defined(CONFIG_AEABI) && (__LINUX_ARM_ARCH__ >= 5)
+#if defined(CONFIG_AEABI) && (__LINUX_ARM_ARCH__ >= 5) // CONFIG_AEABI=y, __LINUX_ARM_ARCH__=7
+// ARM10C 20141227
 #define SPFIX(code...) code
 #else
 #define SPFIX(code...)
 #endif
 
+// ARM10C 20141227
 	.macro	svc_entry, stack_hole=0
+
+// NOTE:
+// G.A: The GNU Assembler manual의 약자임
+
+// G.A: 9.3.4 ARM Machine Directives
+// .fnstart: Marks the start of a function with an unwind table entry.
+// .save reglist: Generate unwinder annotations to restore the registers in reglist.
+// The format of reglist is the same as the corresponding store-multiple instruction.
  UNWIND(.fnstart		)
  UNWIND(.save {r0 - pc}		)
+	// stack에 r0 ~ r15(pc) 까지 저장
+	// sp: sp 처음위치 - 64
+
+	// S_FRAME_SIZE: 72, stack_hole: 0
 	sub	sp, sp, #(S_FRAME_SIZE + \stack_hole - 4)
-#ifdef CONFIG_THUMB2_KERNEL
+	// sp: sp 처음위치 - 132
+
+#ifdef CONFIG_THUMB2_KERNEL // CONFIG_THUMB2_KERNEL=n
  SPFIX(	str	r0, [sp]	)	@ temporarily saved
  SPFIX(	mov	r0, sp		)
  SPFIX(	tst	r0, #4		)	@ test original stack alignment
  SPFIX(	ldr	r0, [sp]	)	@ restored
 #else
+	// sp: sp 처음위치 - 132
  SPFIX(	tst	sp, #4		)
+	// Z bit: 0
 #endif
  SPFIX(	subeq	sp, sp, #4	)
 	stmia	sp, {r1 - r12}
@@ -198,6 +216,7 @@ __dabt_svc:
 ENDPROC(__dabt_svc)
 
 	.align	5
+// ARM10C 20141227
 __irq_svc:
 	svc_entry
 	irq_handler
@@ -1017,41 +1036,97 @@ vector_rst:
  * Interrupt dispatcher
  */
 	// ARM10C 20141220
+	// ARM10C 20141227
 	vector_stub	irq, IRQ_MODE, 4
 /*
+	// NOTE: irq 발생시 arm processor가 자동으로 해주는 일
+	// 1. PC를 R14_irq(LR) 에 저장
+	// 2. CPSR를 SPSR_irq 에 저장
+	// 3. CPSR의 mode bit를 irq mode로 변경
+	// 4. PC값을 0xFFFF0018로 변경
+
+	// NOTE: irq, abt, und의 stack 의 설정
+	// cpu_init 에서 irq, abt, und 3개의 모드의 stack을 설정한 상태임
+
+	// NOTE: correction 의 의미
+	// interrupt가 발생한 이후에 interrupt handling 수행 후 복귀 시 실행해야할 명령어의 실행 주소를 계산
+	// http://www.iamroot.org/xe/index.php?mid=Kernel_10_ARM&search_target=nick_name&search_keyword=%EB%A6%AC%EB%88%84%EC%A6%88%EB%B0%95&document_srl=158657
+
 	vector_stub	irq, IRQ_MODE, 4 macro 확장 결과:
 
 	.macro	vector_stub, irq, IRQ_MODE, correction=4
 	.align	5
 
 // 2014/12/20 종료
+// 2014/12/27 시작
 vector_irq:
 	.if 4
+	// lr: irq 발생시 PC 값
 	sub	lr, lr, #4
+	// lr: irq가 발생시 irq handler (vector_irq) 수행 후 실행 되어야할 명령어 주소
 	.endif
 
 	@
 	@ Save r0, lr_<exception> (parent PC) and spsr_<exception>
 	@ (parent CPSR)
 	@
+	// sp: R13_irq (stack pointer): &(stk->irq[0]), r0: 임시 사용 변수, lr: R14_irq: 복귀 주소
 	stmia	sp, {r0, lr}		@ save r0, lr
+	// R13_irq(sp) stack에 r0, lr 저장, r0를 저장하는 이유: 밑에서 사용하기 하기 때문
+	// stk->irq[0]: r0: 임시 사용 변수, stk->irq[1]: lr: R14_irq: 복귀 주소
+
+	// lr: R14_irq, spsr: SPSR_irq: interrupt 발생시 cpsr 값
 	mrs	lr, spsr
+	// lr: R14_irq: interrupt 발생시 cpsr 값
+
+	// lr: R14_irq: interrupt 발생시 cpsr 값, [sp, #8]: stk->irq[2]
 	str	lr, [sp, #8]		@ save spsr
+	// stk->irq[2]: lr: R14_irq: interrupt 발생시 cpsr 값
 
 	@
 	@ Prepare for SVC32 mode.  IRQs remain disabled.
 	@
+	// cpsr: irq 모드로 변경된 cpsr 값
 	mrs	r0, cpsr
+	// r0: irq 모드로 변경된 cpsr 값 (MODE BIT: 0x12)
+
+	// r0: irq 모드로 변경된 cpsr 값 (MODE BIT: 0x12 - IRQ mode),
+	// IRQ_MODE: 0x00000012, SVC_MODE: 0x00000013, PSR_ISETSTATE: 0
 	eor	r0, r0, #(IRQ_MODE ^ SVC_MODE | PSR_ISETSTATE)
+	// r0: irq 모드로 변경된 cpsr 값 (MODE BIT: 0x13)
+
+	// spsr_cxsf: SPSR_irq, r0: irq 모드로 변경된 cpsr 값 (MODE BIT: 0x13)
 	msr	spsr_cxsf, r0
+	// spsr_cxsf: SPSR_irq: irq 모드로 변경된 cpsr 값 (MODE BIT: 0x13 - SVC mode)
 
 	@
 	@ the branch table must immediately follow this code
 	@
+	// lr: R14_irq: interrupt 발생시 cpsr 값
 	and	lr, lr, #0x0f
+	// lr: R14_irq: interrupt 발생시 cpsr 값 하위 4bit 값
+
+	// sp: R13_irq (stack pointer): &(stk->irq[0]), r0: 임시 사용 변수
 	mov	r0, sp
+	// r0: &(stk->irq[0])
+
+	// NOTE:
+	// lr: 3 (svc mode)라고 가정하고 분석
+
+	// NOTE:
+	// ARM의 PC 는 현재 실행 중인 명령어 보다 +8 한 위치를 가리킴
+
+	// lr: R14_irq: interrupt 발생시 cpsr 값 하위 4bit 값 (usr: 0, svc: 3)
  	ldr	lr, [pc, lr, lsl #2]
+	// lr: pc + 12
+
+	// NOTE:
+	// movs 명령을 pc에 사용할때 arm의 모드를 변경함 (exception return 기능)
+	// SPSR_irq에 저장된 값을 cpsr 로드함
+
+	// lr: pc + 12: __irq_svc의 주소
 	movs	pc, lr			@ branch to handler in SVC mode
+	// pc: __irq_svc의 주소
 ENDPROC(vector_irq)
 */
 

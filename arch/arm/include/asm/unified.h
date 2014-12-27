@@ -24,7 +24,7 @@
 	.syntax unified
 #endif
 
-#ifdef CONFIG_THUMB2_KERNEL
+#ifdef CONFIG_THUMB2_KERNEL // CONFIG_THUMB2_KERNEL=n
 
 #if __GNUC__ < 4
 #error Thumb-2 kernel requires gcc >= 4
@@ -46,6 +46,8 @@
 #else	/* !CONFIG_THUMB2_KERNEL */
 
 /* The CPSR bit describing the instruction set (ARM) */
+// ARM10C 20141227
+// PSR_ISETSTATE: 0
 #define PSR_ISETSTATE	0
 
 #define ARM(x...)	x

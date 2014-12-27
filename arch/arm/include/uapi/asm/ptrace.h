@@ -40,7 +40,7 @@
 #define FIQ26_MODE	0x00000001
 #define IRQ26_MODE	0x00000002
 #define SVC26_MODE	0x00000003
-#if defined(__KERNEL__) && defined(CONFIG_CPU_V7M)
+#if defined(__KERNEL__) && defined(CONFIG_CPU_V7M) // CONFIG_CPU_V7M=n
 /*
  * Use 0 here to get code right that creates a userspace
  * or kernel space thread.
@@ -49,9 +49,13 @@
 #define SVC_MODE	0x00000000
 #else
 #define USR_MODE	0x00000010
+// ARM10C 20141227
+// SVC_MODE: 0x00000013
 #define SVC_MODE	0x00000013
 #endif
 #define FIQ_MODE	0x00000011
+// ARM10C 20141227
+// IRQ_MODE: 0x00000012
 #define IRQ_MODE	0x00000012
 #define ABT_MODE	0x00000017
 #define HYP_MODE	0x0000001a

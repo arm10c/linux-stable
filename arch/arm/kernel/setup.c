@@ -134,6 +134,7 @@ EXPORT_SYMBOL(outer_cache);
 int __cpu_architecture __read_mostly = CPU_ARCH_UNKNOWN;
 
 // ARM10C 20130928
+// ARM10C 20141227
 struct stack {
 	u32 irq[3];
 	u32 abt[3];
@@ -142,6 +143,7 @@ struct stack {
 
 #ifndef CONFIG_CPU_V7M
 // ARM10C 20130928
+// ARM10C 20141227
 static struct stack stacks[NR_CPUS];
 #endif
 
@@ -450,6 +452,7 @@ static void __init feat_v6_fixup(void)
  * cpu_init sets up the per-CPU stacks.
  */
 // ARM10C 20130928
+// ARM10C 20141227
 void notrace cpu_init(void)
 {
 #ifndef CONFIG_CPU_V7M	// not defined
