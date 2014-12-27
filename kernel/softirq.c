@@ -91,7 +91,7 @@ static void wakeup_softirqd(void)
  * This one is for softirq.c-internal use,
  * where hardirqs are disabled legitimately:
  */
-#ifdef CONFIG_TRACE_IRQFLAGS
+#ifdef CONFIG_TRACE_IRQFLAGS // CONFIG_TRACE_IRQFLAGS=n
 static void __local_bh_disable(unsigned long ip, unsigned int cnt)
 {
 	unsigned long flags;
@@ -118,16 +118,29 @@ static void __local_bh_disable(unsigned long ip, unsigned int cnt)
 		trace_preempt_off(CALLER_ADDR0, get_parent_ip(CALLER_ADDR1));
 }
 #else /* !CONFIG_TRACE_IRQFLAGS */
+// ARM10C 20141227
+// _RET_IP_, SOFTIRQ_DISABLE_OFFSET: 0x200
 static inline void __local_bh_disable(unsigned long ip, unsigned int cnt)
 {
+	// cnt: 0x200
 	preempt_count_add(cnt);
+	// preempt_count_add에서 한일:
+	// current_thread_info()->preempt_count: 0x40000201
+
 	barrier();
+	// memory 갱신
 }
 #endif /* CONFIG_TRACE_IRQFLAGS */
 
+// ARM10C 20141227
 void local_bh_disable(void)
 {
+	// SOFTIRQ_DISABLE_OFFSET: 0x200
 	__local_bh_disable(_RET_IP_, SOFTIRQ_DISABLE_OFFSET);
+
+	// __local_bh_disable에서 한일:
+	// current_thread_info()->preempt_count: 0x40000201
+	// memory 갱신
 }
 
 EXPORT_SYMBOL(local_bh_disable);
@@ -312,17 +325,30 @@ asmlinkage void do_softirq(void)
 /*
  * Enter an interrupt context.
  */
+// ARM10C 20141227
 void irq_enter(void)
 {
+	// smp_processor_id(): 0
 	int cpu = smp_processor_id();
+	// cpu: 0
 
 	rcu_irq_enter();
+	// rcu_irq_enter에서 한일:
+	// [pcp0] (&rcu_dynticks)->dynticks_nesting: 0x140000000000001
+
+	// current: &init_task, is_idle_task(&init_task): 1, in_interrupt(): 0
 	if (is_idle_task(current) && !in_interrupt()) {
 		/*
 		 * Prevent raise_softirq from needlessly waking up ksoftirqd
 		 * here, as softirq will be serviced on return from interrupt.
 		 */
 		local_bh_disable();
+		// local_bh_disable에서 한일:
+		// current_thread_info()->preempt_count: 0x40000201
+		// memory 갱신
+
+// 2014/12/27 종료
+
 		tick_check_idle(cpu);
 		_local_bh_enable();
 	}

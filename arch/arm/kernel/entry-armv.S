@@ -35,12 +35,24 @@
 /*
  * Interrupt handling.
  */
+ // ARM10C 20141227
 	.macro	irq_handler
-#ifdef CONFIG_MULTI_IRQ_HANDLER
+#ifdef CONFIG_MULTI_IRQ_HANDLER // CONFIG_MULTI_IRQ_HANDLER=y
+	// handle_arch_irq: gic_handle_irq
 	ldr	r1, =handle_arch_irq
+	// r1: gic_handle_irq
+
+	// sp: sp 처음위치 - 140
 	mov	r0, sp
+	// r0: sp 처음위치 - 140
+
 	adr	lr, BSYM(9997f)
+	// lr: symbol 9997의 상대주소값
+
+	// r1: gic_handle_irq
 	ldr	pc, [r1]
+	// pc: gic_handle_irq
+	// gic_handle_irq symbol로 jump
 #else
 	arch_irq_handler_default
 #endif
@@ -148,6 +160,7 @@ ENDPROC(__und_invalid)
 #endif
 
 // ARM10C 20141227
+// r0: &(stk->irq[0])
 	.macro	svc_entry, stack_hole=0
 
 // NOTE:
@@ -174,20 +187,45 @@ ENDPROC(__und_invalid)
 #else
 	// sp: sp 처음위치 - 132
  SPFIX(	tst	sp, #4		)
-	// Z bit: 0
+	// Z bit: 1
 #endif
+	// sp: sp 처음위치 - 132
  SPFIX(	subeq	sp, sp, #4	)
-	stmia	sp, {r1 - r12}
+	// sp: sp 처음위치 - 136
 
+	// sp: sp 처음위치 - 136
+	stmia	sp, {r1 - r12}
+	// sp: sp 처음위치 - 136 (r1 - r12 까지 순차로 저장, sp는 갱신 안함)
+
+	// r0: &(stk->irq[0])
+	// stk->irq[0]: r0: interrupt 발생시의 r0, stk->irq[1]: lr: R14_irq: 복귀 주소
+	// stk->irq[2]: lr: R14_irq: interrupt 발생시 cpsr 값
 	ldmia	r0, {r3 - r5}
+	// r3: interrupt 발생시의 r0, r4: R14_irq: 복귀 주소, r5: interrupt 발생시 cpsr 값
+
+	// sp: sp 처음위치 - 136, S_SP: 52
 	add	r7, sp, #S_SP - 4	@ here for interlock avoidance
+	// r7: sp 처음위치 - 88
+
 	mov	r6, #-1			@  ""  ""      ""       ""
+	// r6: -1
+
+	// sp: sp 처음위치 - 136, S_FRAME_SIZE: 72, stack_hole: 0
 	add	r2, sp, #(S_FRAME_SIZE + \stack_hole - 4)
+	// r2: sp 처음위치 - 68
+
+	// r2: sp 처음위치 - 68
  SPFIX(	addeq	r2, r2, #4	)
+	// r2: sp 처음위치 - 64
+
+	// r3: interrupt 발생시의 r0, sp: sp 처음위치 - 136
 	str	r3, [sp, #-4]!		@ save the "real" r0 copied
 					@ from the exception stack
+	// sp: sp 처음위치 - 140, *(sp 처음위치 - 136): interrupt 발생시의 r0
 
+	// lr: R14_svc 
 	mov	r3, lr
+	// r3: R14_svc
 
 	@
 	@ We are now ready to fill in the remaining blanks on the stack:
@@ -198,9 +236,17 @@ ENDPROC(__und_invalid)
 	@  r5 - spsr_<exception>
 	@  r6 - orig_r0 (see pt_regs definition in ptrace.h)
 	@
+	// r7: sp 처음위치 - 88,
+	// r2: sp 처음위치 - 64, r3: R14_svc, r4: R14_irq: 복귀 주소, r5: interrupt 발생시 cpsr 값, r6: -1
 	stmia	r7, {r2 - r6}
+	// *(sp 처음위치 - 88): sp 처음위치 - 64,
+	// *(sp 처음위치 - 84): R14_svc
+	// *(sp 처음위치 - 80): R14_irq: 복귀 주소
+	// *(sp 처음위치 - 76): interrupt 발생시 cpsr 값
+	// *(sp 처음위치 - 72): -1
 
-#ifdef CONFIG_TRACE_IRQFLAGS
+
+#ifdef CONFIG_TRACE_IRQFLAGS // CONFIG_TRACE_IRQFLAGS=n
 	bl	trace_hardirqs_off
 #endif
 	.endm
@@ -217,8 +263,46 @@ ENDPROC(__dabt_svc)
 
 	.align	5
 // ARM10C 20141227
+// r0: &(stk->irq[0])
 __irq_svc:
 	svc_entry
+	/*
+	//  svc_entry가 한일:
+	//  irq_handler 에서 사용하기 위한 stack frame을 아래의 그림과 같이 구성함
+	//
+	//  +--------------------------+
+	//  |            PC            |
+	//  +--------------------------+
+	//  |            LR            |
+	//  +--------------------------+
+	//  |            ...           |
+	//  +--------------------------+
+	//  |            R1            |
+	//  +--------------------------+
+	//  |            R0            |
+	//  +--------------------------+
+	//  |                          |
+	//  +--------------------------+
+	//  |            -1            |
+	//  +--------------------------+
+	//  | interrupt 발생시 cpsr 값 |
+	//  +--------------------------+
+	//  |    R14_irq: 복귀 주소    |
+	//  +--------------------------+
+	//  | interrupt 발생시 R14_svc |
+	//  +--------------------------+
+	//  |      sp 처음위치 - 64    |
+	//  +--------------------------+
+	//  |   interrupt 발생시 R12   |
+	//  +--------------------------+
+	//  |           ...            |
+	//  +--------------------------+
+	//  |   interrupt 발생시 R1    |
+	//  +--------------------------+
+	//  |   interrupt 발생시 R0    |
+	//  +--------------------------+ <-- SP
+	*/
+
 	irq_handler
 
 #ifdef CONFIG_PREEMPT
@@ -1070,10 +1154,10 @@ vector_irq:
 	@ Save r0, lr_<exception> (parent PC) and spsr_<exception>
 	@ (parent CPSR)
 	@
-	// sp: R13_irq (stack pointer): &(stk->irq[0]), r0: 임시 사용 변수, lr: R14_irq: 복귀 주소
+	// sp: R13_irq (stack pointer): &(stk->irq[0]), r0: interrupt 발생시의 r0, lr: R14_irq: 복귀 주소
 	stmia	sp, {r0, lr}		@ save r0, lr
 	// R13_irq(sp) stack에 r0, lr 저장, r0를 저장하는 이유: 밑에서 사용하기 하기 때문
-	// stk->irq[0]: r0: 임시 사용 변수, stk->irq[1]: lr: R14_irq: 복귀 주소
+	// stk->irq[0]: r0: interrupt 발생시의 r0, stk->irq[1]: lr: R14_irq: 복귀 주소
 
 	// lr: R14_irq, spsr: SPSR_irq: interrupt 발생시 cpsr 값
 	mrs	lr, spsr
@@ -1106,7 +1190,7 @@ vector_irq:
 	and	lr, lr, #0x0f
 	// lr: R14_irq: interrupt 발생시 cpsr 값 하위 4bit 값
 
-	// sp: R13_irq (stack pointer): &(stk->irq[0]), r0: 임시 사용 변수
+	// sp: R13_irq (stack pointer): &(stk->irq[0]), r0: interrupt 발생시의 r0
 	mov	r0, sp
 	// r0: &(stk->irq[0])
 

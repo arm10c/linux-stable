@@ -2906,6 +2906,7 @@ static void rcu_sysidle_enter(struct rcu_dynticks *rdtp, int irq)
 {
 }
 
+// ARM10C 20141227
 static void rcu_sysidle_exit(struct rcu_dynticks *rdtp, int irq)
 {
 }

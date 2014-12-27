@@ -36,7 +36,6 @@
 #define ARM(x...)
 #define THUMB(x...)	x
 #ifdef __ASSEMBLY__
-// instr.w의 의미는? Thumb2모드의 32bit (wide) instruction임을 가르켜 줌
 #define W(instr)	instr.w
 #define BSYM(sym)	sym + 1
 #else
@@ -53,7 +52,9 @@
 #define ARM(x...)	x
 #define THUMB(x...)
 #ifdef __ASSEMBLY__
+// instr.w의 의미는? Thumb2모드의 32bit (wide) instruction임을 가르켜 줌
 #define W(instr)	instr
+// ARM10C 20141227
 #define BSYM(sym)	sym
 #else
 #define WASM(instr)	#instr

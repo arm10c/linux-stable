@@ -55,6 +55,7 @@ union gic_base {
 
 // ARM10C 20141108
 // ARM10C 20141220
+// ARM10C 20141227
 struct gic_chip_data {
 	union gic_base dist_base;
 	union gic_base cpu_base;
@@ -112,6 +113,7 @@ struct irq_chip gic_arch_extn = {
 #endif
 
 // ARM10C 20141108
+// ARM10C 20141227
 // MAX_GIC_NR: 1
 static struct gic_chip_data gic_data[MAX_GIC_NR] __read_mostly;
 
@@ -149,6 +151,7 @@ static inline void gic_set_base_accessor(struct gic_chip_data *data,
 // gic_data_dist_base(&gic_data[0]): 0xf0000000
 #define gic_data_dist_base(d)	((d)->dist_base.common_base)
 // ARM10C 20141129
+// ARM10C 20141227
 // gic: &gic_data[0]
 // gic_data_cpu_base(&gic_data[0]): 0xf0002000
 #define gic_data_cpu_base(d)	((d)->cpu_base.common_base)
@@ -339,18 +342,41 @@ static int gic_set_wake(struct irq_data *d, unsigned int on)
 
 // ARM10C 20141129
 // __exception_irq_entry: __attribute__((section(".exception.text")))
+// ARM10C 20141227
+// regs: svc_entry에서 만든 struct pt_regs의 시작 주소
+// NOTE:
+// exynos EINT[15] interrupt가 발생하여 exception이 수행되었다고 가정함
 static asmlinkage void __exception_irq_entry gic_handle_irq(struct pt_regs *regs)
 {
 	u32 irqstat, irqnr;
 	struct gic_chip_data *gic = &gic_data[0];
+	// gic: &gic_data[0]
+
+	// gic: &gic_data[0], gic_data_cpu_base(&gic_data[0]): 0xf0002000
 	void __iomem *cpu_base = gic_data_cpu_base(gic);
+	// cpu_base: 0xf0002000
 
 	do {
-		irqstat = readl_relaxed(cpu_base + GIC_CPU_INTACK);
-		irqnr = irqstat & ~0x1c00;
+		// G.A.S: 4.4.4 Interrupt Acknowledge Register, GICC_IAR
+		// [9:0] Interrupt ID
 
+		// cpu_base: 0xf0002000, GIC_CPU_INTACK: 0x0c
+		// readl_relaxed(0xf000200c): 0x3f
+		irqstat = readl_relaxed(cpu_base + GIC_CPU_INTACK);
+		// irqstat: 0x3f
+
+		// irqstat: 0x3f
+		irqnr = irqstat & ~0x1c00;
+		// irqnr: 63
+
+		// irqnr: 63
 		if (likely(irqnr > 15 && irqnr < 1021)) {
+			// gic->domain: (&gic_data[0])->domain: kmem_cache#25-o0, irqnr: 63
+			// irq_find_mapping((&gic_data[0])->domain, 63): 63
 			irqnr = irq_find_mapping(gic->domain, irqnr);
+			// irqnr: 63
+
+			// irqnr: 63, regs: svc_entry에서 만든 struct pt_regs의 시작 주소
 			handle_IRQ(irqnr, regs);
 			continue;
 		}

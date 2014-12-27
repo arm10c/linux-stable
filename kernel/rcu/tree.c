@@ -279,6 +279,7 @@ void rcu_note_context_switch(int cpu)
 EXPORT_SYMBOL_GPL(rcu_note_context_switch);
 
 // ARM10C 20140927
+// ARM10C 20141227
 static DEFINE_PER_CPU(struct rcu_dynticks, rcu_dynticks) = {
 	// DYNTICK_TASK_EXIT_IDLE: 0x140000000000000
 	.dynticks_nesting = DYNTICK_TASK_EXIT_IDLE,
@@ -663,6 +664,7 @@ void rcu_user_exit(void)
  *
  * You have been warned.
  */
+// ARM10C 20141227
 void rcu_irq_enter(void)
 {
 	unsigned long flags;
@@ -670,16 +672,35 @@ void rcu_irq_enter(void)
 	long long oldval;
 
 	local_irq_save(flags);
+	// flags에 CPSR값을 저장함
+
+	// this_cpu_ptr(&rcu_dynticks): [pcp0] &rcu_dynticks
 	rdtp = this_cpu_ptr(&rcu_dynticks);
+	// rdtp: [pcp0] &rcu_dynticks
+
+	// rdtp->dynticks_nesting: [pcp0] (&rcu_dynticks)->dynticks_nesting: 0x140000000000000
 	oldval = rdtp->dynticks_nesting;
+	// oldval: 0x140000000000000
+
+	// rdtp->dynticks_nesting: [pcp0] (&rcu_dynticks)->dynticks_nesting: 0x140000000000000
 	rdtp->dynticks_nesting++;
+	// rdtp->dynticks_nesting: [pcp0] (&rcu_dynticks)->dynticks_nesting: 0x140000000000001
+
+	// rdtp->dynticks_nesting: [pcp0] (&rcu_dynticks)->dynticks_nesting: 0x140000000000001
 	WARN_ON_ONCE(rdtp->dynticks_nesting == 0);
+
+	// oldval: 0x140000000000000
 	if (oldval)
-		trace_rcu_dyntick(TPS("++="), oldval, rdtp->dynticks_nesting);
+		// oldval: 0x140000000000000, rdtp->dynticks_nesting: [pcp0] (&rcu_dynticks)->dynticks_nesting: 0x140000000000001
+		trace_rcu_dyntick(TPS("++="), oldval, rdtp->dynticks_nesting); // null function
 	else
 		rcu_eqs_exit_common(rdtp, oldval, true);
-	rcu_sysidle_exit(rdtp, 1);
+
+	// rdtp: [pcp0] &rcu_dynticks
+	rcu_sysidle_exit(rdtp, 1); // null function
+
 	local_irq_restore(flags);
+	// flags에 저장된 CPSR값을 복원함
 }
 
 /**

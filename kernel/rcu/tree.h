@@ -103,12 +103,13 @@ extern int rcu_num_nodes;
 /*
  * Dynticks per-CPU state.
  */
+// ARM10C 20141227
 struct rcu_dynticks {
 	long long dynticks_nesting; /* Track irq/process nesting level. */
 				    /* Process level is worth LLONG_MAX/2. */
 	int dynticks_nmi_nesting;   /* Track NMI nesting level. */
 	atomic_t dynticks;	    /* Even value for idle, else odd. */
-#ifdef CONFIG_NO_HZ_FULL_SYSIDLE
+#ifdef CONFIG_NO_HZ_FULL_SYSIDLE // CONFIG_NO_HZ_FULL_SYSIDLE=n
 	long long dynticks_idle_nesting;
 				    /* irq/process nesting level from idle. */
 	atomic_t dynticks_idle;	    /* Even value for idle, else odd. */
@@ -116,7 +117,7 @@ struct rcu_dynticks {
 	unsigned long dynticks_idle_jiffies;
 				    /* End of last non-NMI non-idle period. */
 #endif /* #ifdef CONFIG_NO_HZ_FULL_SYSIDLE */
-#ifdef CONFIG_RCU_FAST_NO_HZ
+#ifdef CONFIG_RCU_FAST_NO_HZ // CONFIG_RCU_FAST_NO_HZ=n
 	bool all_lazy;		    /* Are all CPU's CBs lazy? */
 	unsigned long nonlazy_posted;
 				    /* # times non-lazy CBs posted to CPU. */

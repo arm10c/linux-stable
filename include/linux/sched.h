@@ -1993,9 +1993,13 @@ extern struct task_struct *idle_task(int cpu);
  *
  * Return: 1 if @p is an idle task. 0 otherwise.
  */
+// ARM10C 20141227
+// current: &init_task
 static inline bool is_idle_task(const struct task_struct *p)
 {
+	// p->pid: (&init_task)->pid: 0
 	return p->pid == 0;
+	// return 1
 }
 extern struct task_struct *curr_task(int cpu);
 extern void set_curr_task(int cpu, struct task_struct *p);

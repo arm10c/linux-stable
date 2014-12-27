@@ -92,11 +92,15 @@ int main(void)
   DEFINE(S_R10,			offsetof(struct pt_regs, ARM_r10));
   DEFINE(S_FP,			offsetof(struct pt_regs, ARM_fp));
   DEFINE(S_IP,			offsetof(struct pt_regs, ARM_ip));
+  // ARM10C 20141227
+  // S_SP: 52
   DEFINE(S_SP,			offsetof(struct pt_regs, ARM_sp));
   DEFINE(S_LR,			offsetof(struct pt_regs, ARM_lr));
   DEFINE(S_PC,			offsetof(struct pt_regs, ARM_pc));
   DEFINE(S_PSR,			offsetof(struct pt_regs, ARM_cpsr));
   DEFINE(S_OLD_R0,		offsetof(struct pt_regs, ARM_ORIG_r0));
+  // ARM10C 20141227
+  // S_FRAME_SIZE: 72
   DEFINE(S_FRAME_SIZE,		sizeof(struct pt_regs));
   BLANK();
 #ifdef CONFIG_CACHE_L2X0

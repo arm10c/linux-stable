@@ -13,6 +13,7 @@
 #include <uapi/asm/ptrace.h>
 
 #ifndef __ASSEMBLY__
+// ARM10C 20141227
 struct pt_regs {
 	unsigned long uregs[18];
 };

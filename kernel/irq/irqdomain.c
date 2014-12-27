@@ -1023,6 +1023,8 @@ EXPORT_SYMBOL_GPL(irq_dispose_mapping);
  */
 // ARM10C 20141213
 // domain: kmem_cache#25-o0 (gic), hwirq: 32
+// ARM10C 20141227
+// gic->domain: (&gic_data[0])->domain: kmem_cache#25-o0, irqnr: 63
 unsigned int irq_find_mapping(struct irq_domain *domain,
 			      irq_hw_number_t hwirq)
 {

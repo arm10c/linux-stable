@@ -716,6 +716,7 @@ TRACE_EVENT(rcu_barrier,
 					 grplo, grphi, gp_tasks) do { } \
 	while (0)
 #define trace_rcu_fqs(rcuname, gpnum, cpu, qsevent) do { } while (0)
+// ARM10C 20141227
 #define trace_rcu_dyntick(polarity, oldnesting, newnesting) do { } while (0)
 #define trace_rcu_prep_idle(reason) do { } while (0)
 #define trace_rcu_callback(rcuname, rhp, qlen_lazy, qlen) do { } while (0)

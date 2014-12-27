@@ -9,11 +9,13 @@
 
 // ARM10C 20130824
 // ARM10C 20140315
+// ARM10C 20141227
 static __always_inline int preempt_count(void)
 {
 	return current_thread_info()->preempt_count;
 }
 
+// ARM10C 20141227
 static __always_inline int *preempt_count_ptr(void)
 {
 	return &current_thread_info()->preempt_count;
@@ -63,9 +65,13 @@ static __always_inline bool test_preempt_need_resched(void)
  * The various preempt_count add/sub methods
  */
 
+// ARM10C 20141227
+// val: 0x200
 static __always_inline void __preempt_count_add(int val)
 {
+	// *preempt_count_ptr(): current_thread_info()->preempt_count: 0x40000001, val: 0x200
 	*preempt_count_ptr() += val;
+	// current_thread_info()->preempt_count: 0x40000201
 }
 
 static __always_inline void __preempt_count_sub(int val)

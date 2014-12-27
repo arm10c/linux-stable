@@ -21,6 +21,7 @@
 #if defined(CONFIG_DEBUG_PREEMPT) || defined(CONFIG_PREEMPT_TRACER)
 // ARM10C 20140315
 // ARM10C 20140920
+// ARM10C 20141227
 extern void preempt_count_add(int val);
 extern void preempt_count_sub(int val);
 // ARM10C 20140614
