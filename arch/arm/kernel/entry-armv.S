@@ -160,7 +160,7 @@ ENDPROC(__und_invalid)
 #endif
 
 // ARM10C 20141227
-// r0: &(stk->irq[0])
+// r0: &(stacks[0].irq[0])
 	.macro	svc_entry, stack_hole=0
 
 // NOTE:
@@ -197,9 +197,9 @@ ENDPROC(__und_invalid)
 	stmia	sp, {r1 - r12}
 	// sp: sp 처음위치 - 136 (r1 - r12 까지 순차로 저장, sp는 갱신 안함)
 
-	// r0: &(stk->irq[0])
-	// stk->irq[0]: r0: interrupt 발생시의 r0, stk->irq[1]: lr: R14_irq: 복귀 주소
-	// stk->irq[2]: lr: R14_irq: interrupt 발생시 cpsr 값
+	// r0: &(stacks[0].irq[0])
+	// stacks[0].irq[0]: r0: interrupt 발생시의 r0, stacks[0].irq[1]: lr: R14_irq: 복귀 주소
+	// stacks[0].irq[2]: lr: R14_irq: interrupt 발생시 cpsr 값
 	ldmia	r0, {r3 - r5}
 	// r3: interrupt 발생시의 r0, r4: R14_irq: 복귀 주소, r5: interrupt 발생시 cpsr 값
 
@@ -263,7 +263,7 @@ ENDPROC(__dabt_svc)
 
 	.align	5
 // ARM10C 20141227
-// r0: &(stk->irq[0])
+// r0: &(stacks[0].irq[0])
 __irq_svc:
 	svc_entry
 	/*
@@ -1154,18 +1154,18 @@ vector_irq:
 	@ Save r0, lr_<exception> (parent PC) and spsr_<exception>
 	@ (parent CPSR)
 	@
-	// sp: R13_irq (stack pointer): &(stk->irq[0]), r0: interrupt 발생시의 r0, lr: R14_irq: 복귀 주소
+	// sp: R13_irq (stack pointer): &(stacks[0].irq[0]), r0: interrupt 발생시의 r0, lr: R14_irq: 복귀 주소
 	stmia	sp, {r0, lr}		@ save r0, lr
 	// R13_irq(sp) stack에 r0, lr 저장, r0를 저장하는 이유: 밑에서 사용하기 하기 때문
-	// stk->irq[0]: r0: interrupt 발생시의 r0, stk->irq[1]: lr: R14_irq: 복귀 주소
+	// stacks[0].irq[0]: r0: interrupt 발생시의 r0, stacks[0].irq[1]: lr: R14_irq: 복귀 주소
 
 	// lr: R14_irq, spsr: SPSR_irq: interrupt 발생시 cpsr 값
 	mrs	lr, spsr
 	// lr: R14_irq: interrupt 발생시 cpsr 값
 
-	// lr: R14_irq: interrupt 발생시 cpsr 값, [sp, #8]: stk->irq[2]
+	// lr: R14_irq: interrupt 발생시 cpsr 값, [sp, #8]: stacks[0].irq[2]
 	str	lr, [sp, #8]		@ save spsr
-	// stk->irq[2]: lr: R14_irq: interrupt 발생시 cpsr 값
+	// stacks[0].irq[2]: lr: R14_irq: interrupt 발생시 cpsr 값
 
 	@
 	@ Prepare for SVC32 mode.  IRQs remain disabled.
@@ -1190,9 +1190,9 @@ vector_irq:
 	and	lr, lr, #0x0f
 	// lr: R14_irq: interrupt 발생시 cpsr 값 하위 4bit 값
 
-	// sp: R13_irq (stack pointer): &(stk->irq[0]), r0: interrupt 발생시의 r0
+	// sp: R13_irq (stack pointer): &(stacks[0].irq[0]), r0: interrupt 발생시의 r0
 	mov	r0, sp
-	// r0: &(stk->irq[0])
+	// r0: &(stacks[0].irq[0])
 
 	// NOTE:
 	// lr: 3 (svc mode)라고 가정하고 분석
