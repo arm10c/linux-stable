@@ -124,6 +124,7 @@ static inline void __local_bh_disable(unsigned long ip, unsigned int cnt)
 {
 	// cnt: 0x200
 	preempt_count_add(cnt);
+
 	// preempt_count_add에서 한일:
 	// current_thread_info()->preempt_count: 0x40000201
 
@@ -333,6 +334,7 @@ void irq_enter(void)
 	// cpu: 0
 
 	rcu_irq_enter();
+
 	// rcu_irq_enter에서 한일:
 	// [pcp0] (&rcu_dynticks)->dynticks_nesting: 0x140000000000001
 
@@ -343,6 +345,7 @@ void irq_enter(void)
 		 * here, as softirq will be serviced on return from interrupt.
 		 */
 		local_bh_disable();
+
 		// local_bh_disable에서 한일:
 		// current_thread_info()->preempt_count: 0x40000201
 		// memory 갱신

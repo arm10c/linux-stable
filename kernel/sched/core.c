@@ -2459,6 +2459,8 @@ void __kprobes preempt_count_add(int val)
 	// val: 0x200
 	__preempt_count_add(val);
 	// preempt_count(): 0x40000001 + 1(val)
+	
+	// __preempt_count_add에서 한일:
 	// current_thread_info()->preempt_count: 0x40000201
 
 #ifdef CONFIG_DEBUG_PREEMPT // CONFIG_DEBUG_PREEMPT=y
