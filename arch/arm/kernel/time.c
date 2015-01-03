@@ -143,12 +143,14 @@ int __init register_persistent_clock(clock_access_fn read_boot,
 	return -EINVAL;
 }
 
+// ARM10C 20150103
 void __init time_init(void)
 {
+	// machine_desc->init_time: __mach_desc_EXYNOS5_DT.init_time: NULL
 	if (machine_desc->init_time) {
 		machine_desc->init_time();
 	} else {
-#ifdef CONFIG_COMMON_CLK
+#ifdef CONFIG_COMMON_CLK // CONFIG_COMMON_CLK=y
 		of_clk_init(NULL);
 #endif
 		clocksource_of_init();

@@ -37,6 +37,7 @@ static struct timekeeper timekeeper;
 static DEFINE_RAW_SPINLOCK(timekeeper_lock);
 // ARM10C 20150103
 static seqcount_t timekeeper_seq;
+// ARM10C 20150103
 static struct timekeeper shadow_timekeeper;
 
 /* flag for if timekeeping is suspended */
@@ -53,10 +54,18 @@ static inline void tk_normalize_xtime(struct timekeeper *tk)
 	}
 }
 
+// ARM10C 20150103
+// tk: &timekeeper, &now
 static void tk_set_xtime(struct timekeeper *tk, const struct timespec *ts)
 {
+	// tk->xtime_sec: (&timekeeper)->xtime_sec, ts->tv_sec: (&now)->tv_sec: 0
 	tk->xtime_sec = ts->tv_sec;
+	// tk->xtime_sec: (&timekeeper)->xtime_sec: 0
+
+	// tk->xtime_nsec: (&timekeeper)->xtime_nsec, ts->tv_nsec: (&now)->tv_nsec: 0,
+	// tk->shift: (&timekeeper)->shift: 8
 	tk->xtime_nsec = (u64)ts->tv_nsec << tk->shift;
+	// tk->xtime_nsec: (&timekeeper)->xtime_nsec: 0
 }
 
 static void tk_xtime_add(struct timekeeper *tk, const struct timespec *ts)
@@ -66,6 +75,8 @@ static void tk_xtime_add(struct timekeeper *tk, const struct timespec *ts)
 	tk_normalize_xtime(tk);
 }
 
+// ARM10C 20150103
+// tk: &timekeeper, tmp
 static void tk_set_wall_to_mono(struct timekeeper *tk, struct timespec wtm)
 {
 	struct timespec tmp;
@@ -74,22 +85,62 @@ static void tk_set_wall_to_mono(struct timekeeper *tk, struct timespec wtm)
 	 * Verify consistency of: offset_real = -wall_to_monotonic
 	 * before modifying anything
 	 */
+	// -tk->wall_to_monotonic.tv_sec: -(&timekeeper)->wall_to_monotonic.tv_sec: 0,
+	// -tk->wall_to_monotonic.tv_nsec: -(&timekeeper)->wall_to_monotonic.tv_nsec: 0
 	set_normalized_timespec(&tmp, -tk->wall_to_monotonic.tv_sec,
 					-tk->wall_to_monotonic.tv_nsec);
+
+	// set_normalized_timespec 에서 한일:
+	// (&tmp)->tv_sec: 0
+	// (&tmp)->tv_nsec: 0
+
+	// tk->offs_real.tv64: (&timekeeper)->offs_real.tv64: 0
+	// timespec_to_ktime(tmp): { .tv64 = 0}, timespec_to_ktime(tmp).tv64: 0
 	WARN_ON_ONCE(tk->offs_real.tv64 != timespec_to_ktime(tmp).tv64);
+
+	// tk->wall_to_monotonic: (&timekeeper)->wall_to_monotonic, wtm: tmp, tmp.tv_sec: 0, tmp.tv_nsec: 0
 	tk->wall_to_monotonic = wtm;
+	// tk->wall_to_monotonic: (&timekeeper)->wall_to_monotonic.tv_sec: 0,
+	// tk->wall_to_monotonic: (&timekeeper)->wall_to_monotonic.tv_nsec: 0
+
+	// -wtm.tv_sec: tmp.tv_sec: 0, -wtm.tv_nsec: tmp.tv_nsec: 0
 	set_normalized_timespec(&tmp, -wtm.tv_sec, -wtm.tv_nsec);
+
+	// set_normalized_timespec 에서 한일:
+	// (&tmp)->tv_sec: 0
+	// (&tmp)->tv_nsec: 0
+
+	// tk->offs_real: (&timekeeper)->offs_real, timespec_to_ktime(tmp): { .tv64 = 0}
 	tk->offs_real = timespec_to_ktime(tmp);
+	// tk->offs_real: (&timekeeper)->offs_real.tv64: 0
+
+	// tk->offs_tai: (&timekeeper)->offs_tai, tk->offs_real: (&timekeeper)->offs_real.tv64: 0
+	// tk->tai_offset: (&timekeeper)->tai_offset: 0, ktime_set(0, 0): (ktime_t) { .tv64 = 0}
+	// ktime_add((&timekeeper)->offs_real, (ktime_t) { .tv64 = 0}): (ktime_t) { .tv64 = 0}
 	tk->offs_tai = ktime_add(tk->offs_real, ktime_set(tk->tai_offset, 0));
+	// tk->offs_tai: (&timekeeper)->offs_tai.tv64: 0
 }
 
+// ARM10C 20150103
+// tk: &timekeeper, tmp
 static void tk_set_sleep_time(struct timekeeper *tk, struct timespec t)
 {
 	/* Verify consistency before modifying */
+	// tk->offs_boot.tv64: (&timekeeper)->offs_boot.tv64: 0,
+	// tk->total_sleep_time: (&timekeeper)->total_sleep_time
+	// timespec_to_ktime((&timekeeper)->total_sleep_time): (ktime_t) { .tv64 = 0};
+	// timespec_to_ktime((&timekeeper)->total_sleep_time).tv64: 0
 	WARN_ON_ONCE(tk->offs_boot.tv64 != timespec_to_ktime(tk->total_sleep_time).tv64);
 
+	// tk->total_sleep_time: (&timekeeper)->total_sleep_time, t: tmp, tmp.tv_sec: 0, tmp.tv_nsec: 0
 	tk->total_sleep_time	= t;
+	// tk->total_sleep_time: (&timekeeper)->total_sleep_time.tv_sec: 0
+	// tk->total_sleep_time: (&timekeeper)->total_sleep_time.tv_nsec: 0
+
+	// tk->offs_boot: (&timekeeper)->offs_boot, t: tmp,
+	// timespec_to_ktime(tmp): (ktime_t) { .tv64 = 0}
 	tk->offs_boot		= timespec_to_ktime(t);
+	// tk->offs_boot: (&timekeeper)->offs_boot.tv64: 0
 }
 
 /**
@@ -102,35 +153,82 @@ static void tk_set_sleep_time(struct timekeeper *tk, struct timespec t)
  *
  * Unless you're the timekeeping code, you should not be using this!
  */
+// ARM10C 20150103
+// tk: &timekeeper, clock: &clocksource_jiffies
 static void tk_setup_internals(struct timekeeper *tk, struct clocksource *clock)
 {
 	cycle_t interval;
 	u64 tmp, ntpinterval;
 	struct clocksource *old_clock;
 
+	// tk->clock: (&timekeeper)->clock: NULL
 	old_clock = tk->clock;
+	// old_clock: (&timekeeper)->clock: NULL
+
+	// tk->clock: (&timekeeper)->clock: NULL, clock: &clocksource_jiffies
 	tk->clock = clock;
+	// tk->clock: (&timekeeper)->clock: &clocksource_jiffies
+
+	// tk->cycle_last: (&timekeeper)->cycle_last, clock->cycle_last: (&clocksource_jiffies)->cycle_last
+	// clock->read: (&clocksource_jiffies)->read: jiffies_read, clock: &clocksource_jiffies
+	// jiffies_read(&clocksource_jiffies): 0xFFFFFFFFFFFF8AD0
 	tk->cycle_last = clock->cycle_last = clock->read(clock);
+	// tk->cycle_last: (&timekeeper)->cycle_last: 0xFFFFFFFFFFFF8AD0,
+	// clock->cycle_last: (&clocksource_jiffies)->cycle_last: 0xFFFFFFFFFFFF8AD0
 
 	/* Do the ns -> cycle conversion first, using original mult */
+	// NTP_INTERVAL_LENGTH: 10000000
 	tmp = NTP_INTERVAL_LENGTH;
+	// tmp: 10000000
+
+	// tmp: 10000000, clock->shift: (&clocksource_jiffies)->shift: 8
 	tmp <<= clock->shift;
+	// tmp: 2560000000
+
+	// tmp: 2560000000
 	ntpinterval = tmp;
+	// ntpinterval: 2560000000
+
+	// tmp: 2560000000, clock->mult: (&clocksource_jiffies)->mult: 2560000000
 	tmp += clock->mult/2;
+	// tmp: 3840000000
+
+	// tmp: 3840000000, clock->mult: (&clocksource_jiffies)->mult: 2560000000
 	do_div(tmp, clock->mult);
+	// tmp: 1
+
+	// tmp: 1
 	if (tmp == 0)
 		tmp = 1;
 
+	// tmp: 1
 	interval = (cycle_t) tmp;
+	// interval: 1
+
+	// tk->cycle_interval: (&timekeeper)->cycle_interval, interval: 1
 	tk->cycle_interval = interval;
+	// tk->cycle_interval: (&timekeeper)->cycle_interval: 1
 
 	/* Go back from cycles -> shifted ns */
+	// tk->xtime_interval: (&timekeeper)->xtime_interval,
+	// interval: 1, clock->mult: (&clocksource_jiffies)->mult: 2560000000
 	tk->xtime_interval = (u64) interval * clock->mult;
+	// tk->xtime_interval: (&timekeeper)->xtime_interval: 2560000000
+
+	// tk->xtime_remainder: (&timekeeper)->xtime_remainder, ntpinterval: 2560000000,
+	// tk->xtime_interval: (&timekeeper)->xtime_interval: 2560000000
 	tk->xtime_remainder = ntpinterval - tk->xtime_interval;
+	// tk->xtime_remainder: (&timekeeper)->xtime_remainder: 0
+
+	// tk->raw_interval: (&timekeeper)->raw_interval, interval: 1
+	// clock->mult: (&clocksource_jiffies)->mult: 2560000000,
+	// clock->shift: (&clocksource_jiffies)->shift: 8
 	tk->raw_interval =
 		((u64) interval * clock->mult) >> clock->shift;
+	// tk->raw_interval: (&timekeeper)->raw_interval: 10000000
 
 	 /* if changing clocks, convert xtime_nsec shift units */
+	// old_clock: (&timekeeper)->clock: NULL
 	if (old_clock) {
 		int shift_change = clock->shift - old_clock->shift;
 		if (shift_change < 0)
@@ -138,17 +236,28 @@ static void tk_setup_internals(struct timekeeper *tk, struct clocksource *clock)
 		else
 			tk->xtime_nsec <<= shift_change;
 	}
-	tk->shift = clock->shift;
 
+	// tk->shift: (&timekeeper)->shift, clock->shift: (&clocksource_jiffies)->shift: 8
+	tk->shift = clock->shift;
+	// tk->shift: (&timekeeper)->shift: 8
+
+	// tk->ntp_error: (&timekeeper)->ntp_error
 	tk->ntp_error = 0;
+	// tk->ntp_error: (&timekeeper)->ntp_error: 0
+
+	// tk->ntp_error_shift: (&timekeeper)->ntp_error_shift, NTP_SCALE_SHIFT: 32,
+	// clock->shift: (&clocksource_jiffies)->shift: 8
 	tk->ntp_error_shift = NTP_SCALE_SHIFT - clock->shift;
+	// tk->ntp_error_shift: (&timekeeper)->ntp_error_shift: 24
 
 	/*
 	 * The timekeeper keeps its own mult values for the currently
 	 * active clocksource. These value will be adjusted via NTP
 	 * to counteract clock drifting.
 	 */
+	// tk->mult: (&timekeeper)->mult, clock->mult: (&clocksource_jiffies)->mult: 2560000000
 	tk->mult = clock->mult;
+	// tk->mult: (&timekeeper)->mult: 2560000000
 }
 
 /* Timekeeper helper functions. */
@@ -846,28 +955,116 @@ void __init timekeeping_init(void)
 	// tick_length_base: 42949672960000000
 	// time_offset: 0
 
+	// clocksource_default_clock(): &clocksource_jiffies
 	clock = clocksource_default_clock();
+	// clock: &clocksource_jiffies
+
+	// clock->enable: (&clocksource_jiffies)->enable: NULL
 	if (clock->enable)
 		clock->enable(clock);
+
+	// tk: &timekeeper, clock: &clocksource_jiffies
 	tk_setup_internals(tk, clock);
+	
+	// tk_setup_internals에서 한일:
+	// (&timekeeper)->clock: &clocksource_jiffies
+	// (&timekeeper)->cycle_last: 0xFFFFFFFFFFFF8AD0
+	// (&timekeeper)->cycle_interval: 1
+	// (&timekeeper)->xtime_interval: 2560000000
+	// (&timekeeper)->xtime_remainder: 0
+	// (&timekeeper)->raw_interval: 10000000
+	// (&timekeeper)->shift: 8
+	// (&timekeeper)->ntp_error: 0
+	// (&timekeeper)->ntp_error_shift: 24
+	// (&timekeeper)->mult: 2560000000
+	//
+	// (&clocksource_jiffies)->cycle_last: 0xFFFFFFFFFFFF8AD0
 
+	// tk: &timekeeper
 	tk_set_xtime(tk, &now);
-	tk->raw_time.tv_sec = 0;
-	tk->raw_time.tv_nsec = 0;
-	if (boot.tv_sec == 0 && boot.tv_nsec == 0)
-		boot = tk_xtime(tk);
 
+	// tk_set_xtime에서 한일:
+	// (&timekeeper)->xtime_sec: 0
+	// (&timekeeper)->xtime_nsec: 0
+
+	// tk->raw_time.tv_sec: (&timekeeper)->raw_time.tv_sec
+	tk->raw_time.tv_sec = 0;
+	// tk->raw_time.tv_sec: (&timekeeper)->raw_time.tv_sec: 0
+
+	// tk->raw_time.tv_nsec: (&timekeeper)->raw_time.tv_nsec
+	tk->raw_time.tv_nsec = 0;
+	// tk->raw_time.tv_nsec: (&timekeeper)->raw_time.tv_nsec: 0
+
+	// boot.tv_sec: 0, boot.tv_nsec: 0
+	if (boot.tv_sec == 0 && boot.tv_nsec == 0)
+		// tk: &timekeeper
+		// tk_xtime(&timekeeper): ts.tv_sec: 0, ts.tv_nsec: 0
+		boot = tk_xtime(tk);
+		// boot.tv_sec: 0, boot.tv_nsec: 0
+
+	// boot.tv_sec: 0, boot.tv_nsec: 0
 	set_normalized_timespec(&tmp, -boot.tv_sec, -boot.tv_nsec);
+
+	// set_normalized_timespec 에서 한일:
+	// (&tmp)->tv_sec: 0
+	// (&tmp)->tv_nsec: 0
+
+	// tk: &timekeeper
 	tk_set_wall_to_mono(tk, tmp);
 
+	// tk_set_wall_to_mono에서 한일:
+	// (&timekeeper)->wall_to_monotonic.tv_sec: 0
+	// (&timekeeper)->wall_to_monotonic.tv_nsec: 0
+	// (&timekeeper)->offs_real.tv64: 0
+	// (&timekeeper)->offs_tai.tv64: 0
+
 	tmp.tv_sec = 0;
+	// tmp.tv_sec: 0
+
 	tmp.tv_nsec = 0;
+	// tmp.tv_nsec: 0
+
+	// tk: &timekeeper
 	tk_set_sleep_time(tk, tmp);
 
+	// tk_set_sleep_time에서 한일:
+	// (&timekeeper)->total_sleep_time.tv_sec: 0
+	// (&timekeeper)->total_sleep_time.tv_nsec: 0
+	// (&timekeeper)->offs_boot.tv64: 0
+
+	// sizeof(struct timekeeper): 128 bytes
 	memcpy(&shadow_timekeeper, &timekeeper, sizeof(timekeeper));
+	// shadow_timekeeper에 timekeeper에 값을 복사
+
+	// (&shadow_timekeeper)->clock: &clocksource_jiffies
+	// (&shadow_timekeeper)->cycle_last: 0xFFFFFFFFFFFF8AD0
+	// (&shadow_timekeeper)->cycle_interval: 1
+	// (&shadow_timekeeper)->xtime_interval: 2560000000
+	// (&shadow_timekeeper)->xtime_remainder: 0
+	// (&shadow_timekeeper)->raw_interval: 10000000
+	// (&shadow_timekeeper)->shift: 8
+	// (&shadow_timekeeper)->ntp_error: 0
+	// (&shadow_timekeeper)->ntp_error_shift: 24
+	// (&shadow_timekeeper)->mult: 2560000000
+	// (&shadow_timekeeper)->xtime_sec: 0
+	// (&shadow_timekeeper)->xtime_nsec: 0
+	// (&shadow_timekeeper)->raw_time.tv_sec: 0
+	// (&shadow_timekeeper)->raw_time.tv_nsec: 0
+	// (&shadow_timekeeper)->wall_to_monotonic.tv_sec: 0
+	// (&shadow_timekeeper)->wall_to_monotonic.tv_nsec: 0
+	// (&shadow_timekeeper)->offs_real.tv64: 0
+	// (&shadow_timekeeper)->offs_tai.tv64: 0
+	// (&shadow_timekeeper)->total_sleep_time.tv_sec: 0
+	// (&shadow_timekeeper)->total_sleep_time.tv_nsec: 0
+	// (&shadow_timekeeper)->offs_boot.tv64: 0
 
 	write_seqcount_end(&timekeeper_seq);
+
+	// write_seqcount_end에서 한일:
+	// (&timekeeper_seq)->sequence: 2
+
 	raw_spin_unlock_irqrestore(&timekeeper_lock, flags);
+	// timekeeper_lock을 사용하여 spinlock을 해제하고 flags에 저장된 cpsr을 복원
 }
 
 /* time in seconds when suspend began */

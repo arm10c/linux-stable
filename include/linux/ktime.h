@@ -44,9 +44,10 @@
  * config switch CONFIG_KTIME_SCALAR.
  */
 // ARM10C 20140830
+// ARM10C 20150103
 union ktime {
 	s64	tv64;
-#if BITS_PER_LONG != 64 && !defined(CONFIG_KTIME_SCALAR)
+#if BITS_PER_LONG != 64 && !defined(CONFIG_KTIME_SCALAR) // CONFIG_KTIME_SCALAR=y
 	struct {
 # ifdef __BIG_ENDIAN
 	s32	sec, nsec;
@@ -58,13 +59,14 @@ union ktime {
 };
 
 // ARM10C 20140830
+// ARM10C 20150103
 typedef union ktime ktime_t;		/* Kill this */
 
 /*
  * ktime_t definitions when using the 64-bit scalar representation:
  */
 
-#if (BITS_PER_LONG == 64) || defined(CONFIG_KTIME_SCALAR)
+#if (BITS_PER_LONG == 64) || defined(CONFIG_KTIME_SCALAR) // BITS_PER_LONG: 32, CONFIG_KTIME_SCALAR=y
 
 /**
  * ktime_set - Set a ktime_t variable from a seconds/nanoseconds value
@@ -73,13 +75,19 @@ typedef union ktime ktime_t;		/* Kill this */
  *
  * Return: The ktime_t representation of the value.
  */
+// ARM10C 20150103
+// ts.tv_sec: tmp.tv_sec: 0, ts.tv_nsec, tmp.tv_nsec: 0
+// ARM10C 20150103
+// tk->tai_offset: (&timekeeper)->tai_offset: 0, 0
 static inline ktime_t ktime_set(const long secs, const unsigned long nsecs)
 {
-#if (BITS_PER_LONG == 64)
+#if (BITS_PER_LONG == 64) // BITS_PER_LONG: 32
 	if (unlikely(secs >= KTIME_SEC_MAX))
 		return (ktime_t){ .tv64 = KTIME_MAX };
 #endif
+	// secs: 0, nsecs: 0, NSEC_PER_SEC: 1000000000L
 	return (ktime_t) { .tv64 = (s64)secs * NSEC_PER_SEC + (s64)nsecs };
+	// return (ktime_t) { .tv64 = 0}
 }
 
 /* Subtract two ktime_t variables. rem = lhs -rhs: */
@@ -87,6 +95,8 @@ static inline ktime_t ktime_set(const long secs, const unsigned long nsecs)
 		({ (ktime_t){ .tv64 = (lhs).tv64 - (rhs).tv64 }; })
 
 /* Add two ktime_t variables. res = lhs + rhs: */
+// ARM10C 20150103
+// tk->offs_real: (&timekeeper)->offs_real.tv64: 0, ktime_set(0, 0): (ktime_t) { .tv64 = 0}
 #define ktime_add(lhs, rhs) \
 		({ (ktime_t){ .tv64 = (lhs).tv64 + (rhs).tv64 }; })
 
@@ -110,9 +120,18 @@ static inline ktime_t ktime_set(const long secs, const unsigned long nsecs)
 		({ (ktime_t){ .tv64 = (kt).tv64 - (nsval) }; })
 
 /* convert a timespec to ktime_t format: */
+// ARM10C 20150103
+// tmp
+// ARM10C 20150103
+// tk->total_sleep_time: (&timekeeper)->total_sleep_time
+// ARM10C 20150103
+// t: tmp
 static inline ktime_t timespec_to_ktime(struct timespec ts)
 {
+	// ts.tv_sec: tmp.tv_sec: 0, ts.tv_nsec, tmp.tv_nsec: 0
+	// ktime_set(0, 0): (ktime_t) { .tv64 = 0};
 	return ktime_set(ts.tv_sec, ts.tv_nsec);
+	// return (ktime_t) { .tv64 = 0};
 }
 
 /* convert a timeval to ktime_t format: */

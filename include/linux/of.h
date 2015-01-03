@@ -49,6 +49,7 @@ struct of_irq_controller;
 // ARM10C 20140208
 // ARM10C 20141004
 // ARM10C 20141018
+// ARM10C 20150103
 // size : 60 byte
 struct device_node {
 	const char *name;
@@ -259,6 +260,10 @@ static inline struct device_node *of_find_matching_node(
 #define for_each_matching_node(dn, matches) \
 	for (dn = of_find_matching_node(NULL, matches); dn; \
 	     dn = of_find_matching_node(dn, matches))
+// ARM10C 20150103
+// for_each_matching_node_and_match(np, matches, &match):
+//     for (np = of_find_matching_node_and_match(NULL, matches, &match);
+//          np; np = of_find_matching_node_and_match(np, matches, &match))
 #define for_each_matching_node_and_match(dn, matches, match) \
 	for (dn = of_find_matching_node_and_match(NULL, matches, match); \
 	     dn; dn = of_find_matching_node_and_match(dn, matches, match))

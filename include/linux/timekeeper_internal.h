@@ -12,6 +12,7 @@
 
 /* Structure holding internal timekeeping values. */
 // ARM10C 20150103
+// sizeof(struct timekeeper): 128 bytes
 struct timekeeper {
 	/* Current clocksource used for timekeeping. */
 	struct clocksource	*clock;
@@ -72,13 +73,22 @@ struct timekeeper {
 
 };
 
+// ARM10C 20150103
+// tk: &timekeeper
 static inline struct timespec tk_xtime(struct timekeeper *tk)
 {
 	struct timespec ts;
 
+	// tk->xtime_sec: (&timekeeper)->xtime_sec: 0
 	ts.tv_sec = tk->xtime_sec;
+	// ts.tv_sec: 0
+
+	// tk->xtime_nsec: (&timekeeper)->xtime_nsec: 0, tk->shift: (&timekeeper)->shift: 8
 	ts.tv_nsec = (long)(tk->xtime_nsec >> tk->shift);
+	// ts.tv_nsec: 0
+
 	return ts;
+	// return ts
 }
 
 

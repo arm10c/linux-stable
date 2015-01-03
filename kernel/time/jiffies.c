@@ -37,6 +37,9 @@
  * requested HZ value. It is also not recommended
  * for "tick-less" systems.
  */
+// ARM10C 20150103
+// NSEC_PER_SEC: 1000000000L, HZ: 100
+// NSEC_PER_JIFFY: 10000000
 #define NSEC_PER_JIFFY	((NSEC_PER_SEC+HZ/2)/HZ)
 
 /* Since jiffies uses a simple NSEC_PER_JIFFY multiplier
@@ -51,25 +54,35 @@
  * HZ shrinks, so values greater than 8 overflow 32bits when
  * HZ=100.
  */
-#if HZ < 34
+#if HZ < 34 // HZ: 100
 #define JIFFIES_SHIFT	6
 #elif HZ < 67
 #define JIFFIES_SHIFT	7
 #else
+// ARM10C 20150103
+// JIFFIES_SHIFT: 8
 #define JIFFIES_SHIFT	8
 #endif
 
+// ARM10C 20150103
+// &clocksource_jiffies
 static cycle_t jiffies_read(struct clocksource *cs)
 {
+	// jiffies: -30000 (0xFFFFFFFFFFFF8AD0)
 	return (cycle_t) jiffies;
+	// return 0xFFFFFFFFFFFF8AD0
 }
 
+// ARM10C 20150103
 static struct clocksource clocksource_jiffies = {
 	.name		= "jiffies",
 	.rating		= 1, /* lowest valid rating*/
 	.read		= jiffies_read,
 	.mask		= 0xffffffff, /*32bits*/
+	// NSEC_PER_JIFFY: 10000000, JIFFIES_SHIFT: 8
+	// 10000000 << 8: 2560000000
 	.mult		= NSEC_PER_JIFFY << JIFFIES_SHIFT, /* details above */
+	// JIFFIES_SHIFT: 8
 	.shift		= JIFFIES_SHIFT,
 };
 
@@ -99,6 +112,7 @@ static int __init init_jiffies_clocksource(void)
 
 core_initcall(init_jiffies_clocksource);
 
+// ARM10C 20150103
 struct clocksource * __init __weak clocksource_default_clock(void)
 {
 	return &clocksource_jiffies;

@@ -1003,6 +1003,15 @@ EXPORT_SYMBOL(of_match_node);
 // ARM10C 20141011
 // devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소,
 // irqchip_of_match_exynos4210_combiner, NULL
+// ARM10C 20150103
+// from: NULL
+// matches:
+// __clk_of_table_fixed_factor_clk
+// __clk_of_table_fixed_clk
+// __clk_of_table_exynos4210_audss_clk
+// __clk_of_table_exynos5250_audss_clk
+// __clk_of_table_exynos5420_clk
+// &match
 struct device_node *of_find_matching_node_and_match(struct device_node *from,
 					const struct of_device_id *matches,
 					const struct of_device_id **match)

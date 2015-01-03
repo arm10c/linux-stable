@@ -159,6 +159,10 @@ extern unsigned long tick_nsec;		/* SHIFTED_HZ period (nsec) */
 // HZ: 100
 // NTP_INTERVAL_FREQ: 100
 #define NTP_INTERVAL_FREQ  (HZ)
+// ARM10C 20150103
+// NSEC_PER_SEC: 1000000000L
+// NTP_INTERVAL_FREQ: 100
+// NTP_INTERVAL_LENGTH: 10000000
 #define NTP_INTERVAL_LENGTH (NSEC_PER_SEC/NTP_INTERVAL_FREQ)
 
 extern int do_adjtimex(struct timex *);

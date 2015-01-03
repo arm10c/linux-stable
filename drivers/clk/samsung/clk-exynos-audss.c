@@ -129,7 +129,15 @@ static void __init exynos_audss_clk_init(struct device_node *np)
 
 	pr_info("Exynos: Audss: clock setup completed\n");
 }
+
+// #define CLK_OF_DECLARE(exynos4210_audss_clk, "samsung,exynos4210-audss-clock", exynos_audss_clk_init):
+// static const struct of_device_id __clk_of_table_exynos4210_audss_clk __used __section(__clk_of_table)
+// = { .compatible = "samsung,exynos4210-audss-clock", .data = exynos_audss_clk_init };
 CLK_OF_DECLARE(exynos4210_audss_clk, "samsung,exynos4210-audss-clock",
 		exynos_audss_clk_init);
+
+// #define CLK_OF_DECLARE(exynos5250_audss_clk, "samsung,exynos5250-audss-clock", exynos_audss_clk_init):
+// static const struct of_device_id __clk_of_table_exynos5250_audss_clk __used __section(__clk_of_table)
+// = { .compatible = "samsung,exynos5250-audss-clock", .data = exynos_audss_clk_init };
 CLK_OF_DECLARE(exynos5250_audss_clk, "samsung,exynos5250-audss-clock",
 		exynos_audss_clk_init);

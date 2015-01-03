@@ -19,6 +19,7 @@
 #include <asm/io.h>
 
 /* clocksource cycle base type */
+// ARM10C 20150103
 typedef u64 cycle_t;
 struct clocksource;
 struct module;

@@ -161,7 +161,7 @@
 #define IRQCHIP_OF_MATCH_TABLE()
 #endif
 
-#ifdef CONFIG_COMMON_CLK
+#ifdef CONFIG_COMMON_CLK // CONFIG_COMMON_CLK=y
 #define CLK_OF_TABLES() . = ALIGN(8);				\
 			VMLINUX_SYMBOL(__clk_of_table) = .;	\
 			*(__clk_of_table)			\
@@ -486,6 +486,7 @@
 /* init and exit section handling */
 /*
 // ARM10C 20141004
+// ARM10C 20150103
 */
 #define INIT_DATA							\
 	*(.init.data)							\

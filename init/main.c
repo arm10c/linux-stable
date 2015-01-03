@@ -599,7 +599,7 @@ asmlinkage void __init start_kernel(void)
 	pr_notice("%s", linux_banner);
 	// 배너:
 	//	Linux version 2.6.37_DM385_IPNC_3.50.00
-	// 	(a0875405@bangvideoapps01) (gcc version 4.5.3 20110311 
+	// 	(a0875405@bangvideoapps01) (gcc version 4.5.3 20110311
 	// 	(prerelease) (GCC) ) #1 Fri Dec 21 17:27:08 IST 2012
 
 	setup_arch(&command_line);
@@ -736,6 +736,8 @@ asmlinkage void __init start_kernel(void)
 	// softirq_vec[6]에 tasklet_action, softirq_vec[0]에 tasklet_hi_action 등록하여 초기화 수행
 
 	timekeeping_init();
+	// ntp 관련 전역변수 초기화, timekeeper, shadow_timekeeper의 맴버값 초기화 수행
+
 	time_init();
 	sched_clock_postinit();
 	perf_event_init();

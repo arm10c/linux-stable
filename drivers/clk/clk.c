@@ -2087,7 +2087,7 @@ int clk_notifier_unregister(struct clk *clk, struct notifier_block *nb)
 }
 EXPORT_SYMBOL_GPL(clk_notifier_unregister);
 
-#ifdef CONFIG_OF
+#ifdef CONFIG_OF // CONFIG_OF=y
 /**
  * struct of_clk_provider - Clock provider registration structure
  * @link: Entry in global list of clock providers
@@ -2104,6 +2104,13 @@ struct of_clk_provider {
 	void *data;
 };
 
+// ARM10C 20150103
+// __clk_of_table:
+// __clk_of_table_fixed_factor_clk
+// __clk_of_table_fixed_clk
+// __clk_of_table_exynos4210_audss_clk
+// __clk_of_table_exynos5250_audss_clk
+// __clk_of_table_exynos5420_clk
 extern struct of_device_id __clk_of_table[];
 
 static const struct of_device_id __clk_of_table_sentinel
@@ -2239,16 +2246,42 @@ EXPORT_SYMBOL_GPL(of_clk_get_parent_name);
  * This function scans the device tree for matching clock providers and
  * calls their initialization functions
  */
+// ARM10C 20150103
+// NULL
 void __init of_clk_init(const struct of_device_id *matches)
 {
 	const struct of_device_id *match;
 	struct device_node *np;
 
+	// matches: NULL
 	if (!matches)
+		// __clk_of_table:
+		// __clk_of_table_fixed_factor_clk
+		// __clk_of_table_fixed_clk
+		// __clk_of_table_exynos4210_audss_clk
+		// __clk_of_table_exynos5250_audss_clk
+		// __clk_of_table_exynos5420_clk
 		matches = __clk_of_table;
+		// matches:
+		// __clk_of_table_fixed_factor_clk
+		// __clk_of_table_fixed_clk
+		// __clk_of_table_exynos4210_audss_clk
+		// __clk_of_table_exynos5250_audss_clk
+		// __clk_of_table_exynos5420_clk
 
 	for_each_matching_node_and_match(np, matches, &match) {
+	// for (np = of_find_matching_node_and_match(NULL, matches, &match);
+	//      np; np = of_find_matching_node_and_match(np, matches, &match))
+
+		// np: devtree에서 allnext로 순회 하면서 찾은 clock node의 주소, match: __clk_of_table_exynos5420_clk
+
+		// match->data: __clk_of_table_exynos5420_clk.data: exynos5420_clk_init
 		of_clk_init_cb_t clk_init_cb = match->data;
+		// clk_init_cb: exynos5420_clk_init
+
+		// clk_init_cb: exynos5420_clk_init,
+		// np: devtree에서 allnext로 순회 하면서 찾은 clock node의 주소
+		// exynos5420_clk_init(devtree에서 allnext로 순회 하면서 찾은 clock node의 주소)
 		clk_init_cb(np);
 	}
 }

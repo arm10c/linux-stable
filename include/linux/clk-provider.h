@@ -451,6 +451,7 @@ unsigned long __clk_round_rate(struct clk *clk, unsigned long rate);
 
 struct of_device_id;
 
+// ARM10C 20150103
 typedef void (*of_clk_init_cb_t)(struct device_node *);
 
 struct clk_onecell_data {
@@ -458,6 +459,7 @@ struct clk_onecell_data {
 	unsigned int clk_num;
 };
 
+// ARM10C 20150103
 #define CLK_OF_DECLARE(name, compat, fn)			\
 	static const struct of_device_id __clk_of_table_##name	\
 		__used __section(__clk_of_table)		\

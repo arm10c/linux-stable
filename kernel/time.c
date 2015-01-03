@@ -355,8 +355,17 @@ EXPORT_SYMBOL(mktime);
  *	0 <= tv_nsec < NSEC_PER_SEC
  * For negative values only the tv_sec field is negative !
  */
+// ARM10C 20150103
+// &tmp, -boot.tv_sec: 0, -boot.tv_nsec: 0
+// ARM10C 20150103
+// &tmp,
+// -tk->wall_to_monotonic.tv_sec: -(&timekeeper)->wall_to_monotonic.tv_sec: 0,
+// -tk->wall_to_monotonic.tv_nsec: -(&timekeeper)->wall_to_monotonic.tv_nsec: 0
+// ARM10C 20150103
+// &tmp, -wtm.tv_sec: tmp.tv_sec: 0, -wtm.tv_nsec: tmp.tv_nsec: 0
 void set_normalized_timespec(struct timespec *ts, time_t sec, s64 nsec)
 {
+	// nsec: 0, NSEC_PER_SEC: 1000000000L
 	while (nsec >= NSEC_PER_SEC) {
 		/*
 		 * The following asm() prevents the compiler from
@@ -367,13 +376,21 @@ void set_normalized_timespec(struct timespec *ts, time_t sec, s64 nsec)
 		nsec -= NSEC_PER_SEC;
 		++sec;
 	}
+
+	// nsec: 0
 	while (nsec < 0) {
 		asm("" : "+rm"(nsec));
 		nsec += NSEC_PER_SEC;
 		--sec;
 	}
+
+	// ts->tv_sec: (&tmp)->tv_sec, sec: 0
 	ts->tv_sec = sec;
+	// ts->tv_sec: (&tmp)->tv_sec: 0
+
+	// ts->tv_nsec: (&tmp)->tv_nsec, nsec: 0
 	ts->tv_nsec = nsec;
+	// ts->tv_nsec: (&tmp)->tv_nsec: 0
 }
 EXPORT_SYMBOL(set_normalized_timespec);
 

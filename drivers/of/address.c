@@ -1008,6 +1008,8 @@ struct device_node *of_find_matching_node_by_address(struct device_node *from,
 // node: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소, 1
 // ARM10C 20141206
 // np: devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소, 0
+// ARM10C 20150103
+// np: devtree에서 allnext로 순회 하면서 찾은 clock node의 주소, 0
 void __iomem *of_iomap(struct device_node *np, int index)
 {
 	struct resource res;

@@ -765,11 +765,17 @@ static struct of_device_id ext_clk_match[] __initdata = {
 };
 
 /* register exynos5420 clocks */
+// ARM10C 20150103
+// devtree에서 allnext로 순회 하면서 찾은 clock node의 주소
 static void __init exynos5420_clk_init(struct device_node *np)
 {
 	void __iomem *reg_base;
 
+// 2015/01/03 종료
+
+	// np: devtree에서 allnext로 순회 하면서 찾은 clock node의 주소
 	if (np) {
+		// np: devtree에서 allnext로 순회 하면서 찾은 clock node의 주소
 		reg_base = of_iomap(np, 0);
 		if (!reg_base)
 			panic("%s: failed to map registers\n", __func__);
@@ -796,4 +802,9 @@ static void __init exynos5420_clk_init(struct device_node *np)
 	samsung_clk_register_gate(exynos5420_gate_clks,
 			ARRAY_SIZE(exynos5420_gate_clks));
 }
+
+// ARM10C 20150103
+// #define CLK_OF_DECLARE(exynos5420_clk, "samsung,exynos5420-clock", exynos5420_clk_init):
+// static const struct of_device_id __clk_of_table_exynos5420_clk _used __section(__clk_of_table)
+// = { .compatible = "samsung,exynos5420-clock", .data = exynos5420_clk_init };
 CLK_OF_DECLARE(exynos5420_clk, "samsung,exynos5420-clock", exynos5420_clk_init);

@@ -248,10 +248,16 @@ static inline void raw_write_seqcount_begin(seqcount_t *s)
 	// 공유자원을 다른 cpu core가 사용할수 있게 메모리 적용
 }
 
+// ARM10C 20150103
+// s: &timekeeper_seq
 static inline void raw_write_seqcount_end(seqcount_t *s)
 {
 	smp_wmb();
+	// 공유자원을 다른 cpu core가 사용할수 있게 메모리 적용
+
+	// s->sequence: (&timekeeper_seq)->sequence: 1
 	s->sequence++;
+	// s->sequence: (&timekeeper_seq)->sequence: 2
 }
 
 /*
@@ -285,10 +291,18 @@ static inline void write_seqcount_begin(seqcount_t *s)
 	// 공유자원을 다른 cpu core가 사용할수 있게 메모리 적용
 }
 
+// ARM10C 20150103
+// &timekeeper_seq
 static inline void write_seqcount_end(seqcount_t *s)
 {
-	seqcount_release(&s->dep_map, 1, _RET_IP_);
+	// &s->dep_map: &(&timekeeper_seq)->dep_map
+	seqcount_release(&s->dep_map, 1, _RET_IP_); // null function
+
+	// s: &timekeeper_seq
 	raw_write_seqcount_end(s);
+
+	// raw_write_seqcount_end에서 한일:
+	// (&timekeeper_seq)->sequence: 2
 }
 
 /**

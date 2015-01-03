@@ -73,6 +73,7 @@ static void __init exynos5_reserve(void)
 
 // ARM10C 20131005
 // ARM10C 20131012
+// ARM10C 20150103
 /*
 //static const struct machine_desc __mach_desc_EXYNOS5_DT	\
 // __used							\
@@ -83,7 +84,6 @@ static void __init exynos5_reserve(void)
 //	.map_io		= exynos_init_io,
 //	.init_machine	= exynos5_dt_machine_init,
 //	.init_late	= exynos_init_late,
-//	.init_time	= exynos_init_time,
 //	.dt_compat	= exynos5_dt_compat,
 //	.restart        = exynos5_restart,
 //	.reserve	= exynos5_reserve,

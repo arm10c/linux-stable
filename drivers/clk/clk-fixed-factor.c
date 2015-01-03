@@ -131,6 +131,11 @@ void __init of_fixed_factor_clk_setup(struct device_node *node)
 		of_clk_add_provider(node, of_clk_src_simple_get, clk);
 }
 EXPORT_SYMBOL_GPL(of_fixed_factor_clk_setup);
+
+// ARM10C 20150103
+// #define CLK_OF_DECLARE(fixed_factor_clk, "fixed-factor-clock", of_fixed_factor_clk_setup):
+// static const struct of_device_id __clk_of_table_fixed_factor_clk __used __section(__clk_of_table)
+// = { .compatible = "fixed-factor-clock", .data = of_fixed_factor_clk_setup };
 CLK_OF_DECLARE(fixed_factor_clk, "fixed-factor-clock",
 		of_fixed_factor_clk_setup);
 #endif
