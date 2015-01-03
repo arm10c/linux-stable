@@ -6,12 +6,14 @@
 
 
 // ARM10C 20140830
+// ARM10C 20150103
 // sizeof(struct timerqueue_node): 20 bytes
 struct timerqueue_node {
 	struct rb_node node;
 	ktime_t expires;
 };
 
+// ARM10C 20150103
 struct timerqueue_head {
 	struct rb_root head;
 	struct timerqueue_node *next;
@@ -56,9 +58,17 @@ static inline void timerqueue_init(struct timerqueue_node *node)
 	RB_CLEAR_NODE(&node->node);
 }
 
+// ARM10C 20150103
+// &cpu_base->clock_base[i].active: [pcp0] &(&hrtimer_bases)->clock_base[0].active
 static inline void timerqueue_init_head(struct timerqueue_head *head)
 {
+	// head->head: [pcp0] (&(&hrtimer_bases)->clock_base[0].active)->head,
+	// RB_ROOT: (struct rb_root) { NULL, }
 	head->head = RB_ROOT;
+	// head->head: [pcp0] (&(&hrtimer_bases)->clock_base[0].active)->head: NULL
+
+	// head->next: [pcp0] (&(&hrtimer_bases)->clock_base[0].active)->next
 	head->next = NULL;
+	// head->next: [pcp0] (&(&hrtimer_bases)->clock_base[0].active)->next: NULL
 }
 #endif /* _LINUX_TIMERQUEUE_H */

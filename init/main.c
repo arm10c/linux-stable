@@ -721,9 +721,20 @@ asmlinkage void __init start_kernel(void)
 	// gic irq (0~15), combiner irq (32~63) interrupt 를 enable 시킴
 
 	tick_init();
+	// tick 관련 mask 변수를 0으로 초기화 수행
+
 	init_timers();
+	// boot_tvec_bases의 맴버 값을 초기화하고 timers_nb를 cpu_notifier 에 등록,
+	// softirq_vec[1] 에 run_timer_softirq 등록하여 초기화 수행
+
 	hrtimers_init();
+	// hrtimer_bases의 맴버 값을 초기화하고 hrtimers_nb를 cpu_notifier 에 등록,
+	// softirq_vec[8] 에 run_hrtimer_softirq 등록하여 초기화 수행
+
 	softirq_init();
+	// tasklet_vec, tasklet_hi_vec 맵버 값을 초기화하고,
+	// softirq_vec[6]에 tasklet_action, softirq_vec[0]에 tasklet_hi_action 등록하여 초기화 수행
+
 	timekeeping_init();
 	time_init();
 	sched_clock_postinit();

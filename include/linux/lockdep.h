@@ -377,6 +377,7 @@ static inline void lockdep_on(void)
 {
 }
 
+// ARM10C 20150103
 # define lock_acquire(l, s, t, r, c, n, i)	do { } while (0)
 # define lock_release(l, n, i)			do { } while (0)
 # define lock_set_class(l, n, k, s, i)		do { } while (0)
@@ -498,11 +499,12 @@ static inline void print_irqtrace_events(struct task_struct *curr)
  * on the per lock-class debug mode:
  */
 
-#ifdef CONFIG_PROVE_LOCKING
+#ifdef CONFIG_PROVE_LOCKING // CONFIG_PROVE_LOCKING=n
  #define lock_acquire_exclusive(l, s, t, n, i)		lock_acquire(l, s, t, 0, 2, n, i)
  #define lock_acquire_shared(l, s, t, n, i)		lock_acquire(l, s, t, 1, 2, n, i)
  #define lock_acquire_shared_recursive(l, s, t, n, i)	lock_acquire(l, s, t, 2, 2, n, i)
 #else
+// ARM10C 20150103
  #define lock_acquire_exclusive(l, s, t, n, i)		lock_acquire(l, s, t, 0, 1, n, i)
  #define lock_acquire_shared(l, s, t, n, i)		lock_acquire(l, s, t, 1, 1, n, i)
  #define lock_acquire_shared_recursive(l, s, t, n, i)	lock_acquire(l, s, t, 2, 1, n, i)
@@ -521,6 +523,7 @@ static inline void print_irqtrace_events(struct task_struct *curr)
 // ARM10C 20140125
 #define rwlock_release(l, n, i)			lock_release(l, n, i)
 
+// ARM10C 20150103
 #define seqcount_acquire(l, s, t, i)		lock_acquire_exclusive(l, s, t, NULL, i)
 #define seqcount_acquire_read(l, s, t, i)	lock_acquire_shared_recursive(l, s, t, NULL, i)
 #define seqcount_release(l, n, i)		lock_release(l, n, i)

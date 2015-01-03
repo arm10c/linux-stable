@@ -13,6 +13,7 @@
 
 // ARM10C 20130831
 // ARM10C 20140830
+// ARM10C 20150103
 // struct cpumask { bits[1]; }
 typedef struct cpumask { DECLARE_BITMAP(bits, NR_CPUS); } cpumask_t;
 
@@ -753,6 +754,7 @@ void free_bootmem_cpumask_var(cpumask_var_t mask);
 
 #else
 // ARM10C 20140830
+// ARM10C 20150103
 typedef struct cpumask cpumask_var_t[1];
 
 // ARM10C 20140830
@@ -782,6 +784,8 @@ static inline bool alloc_cpumask_var_node(cpumask_var_t *mask, gfp_t flags,
 // cpu_isolated_map: NULL, GFP_NOWAIT: 0
 // ARM10C 20140920
 // &nohz.idle_cpus_mask, GFP_NOWAIT: 0
+// ARM10C 20150103
+// &tick_broadcast_mask, GFP_NOWAIT
 static inline bool zalloc_cpumask_var(cpumask_var_t *mask, gfp_t flags)
 {
 	// *mask: (&(&(&def_root_domain)->cpupri)->pri_to_cpu[0])->mask
@@ -836,6 +840,7 @@ extern const DECLARE_BITMAP(cpu_all_bits, NR_CPUS);
 // ARM10C 20140830
 // ARM10C 20140927
 // ARM10C 20141004
+// ARM10C 20150103
 // #define for_each_cpu(i, cpu_possible_mask)
 //	for ((i) = -1; (i) = cpumask_next((i), (cpu_possible_mask)), (i) < nr_cpu_ids; )
 #define for_each_possible_cpu(cpu) for_each_cpu((cpu), cpu_possible_mask)

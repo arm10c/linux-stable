@@ -376,6 +376,14 @@ static asmlinkage void __exception_irq_entry gic_handle_irq(struct pt_regs *regs
 			irqnr = irq_find_mapping(gic->domain, irqnr);
 			// irqnr: 63
 
+// 2014/12/27 종료
+// 2015/01/03 시작
+
+			// NOTE:
+			// handle_IRQ는 irq 관련 초기화가 완전히 끝난 상태에서 분석해야함
+			// start_kernel->local_irq_enable 까지 분석한 이후에 분석 시작할 예정
+			// start_kernel->tick_init 부터 다시 분석 시작
+
 			// irqnr: 63, regs: svc_entry에서 만든 struct pt_regs의 시작 주소
 			handle_IRQ(irqnr, regs);
 			continue;

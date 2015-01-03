@@ -396,7 +396,16 @@ void tick_resume(void)
 /**
  * tick_init - initialize the tick control
  */
+// ARM10C 20150103
 void __init tick_init(void)
 {
 	tick_broadcast_init();
+	
+	// tick_broadcast_init에서 한일:
+	// tick_broadcast_mask.bits[0]: 0
+	// tick_broadcast_on.bits[0]: 0
+	// tmpmask.bits[0]: 0
+	// tick_broadcast_oneshot_mask.bits[0]: 0
+	// tick_broadcast_pending_mask.bits[0]: 0
+	// tick_broadcast_force_mask.bits[0]: 0
 }

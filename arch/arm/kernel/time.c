@@ -79,23 +79,51 @@ void timer_tick(void)
 }
 #endif
 
+// ARM10C 20150103
+// ts: &now
+// ARM10C 20150103
+// ts: &boot
 static void dummy_clock_access(struct timespec *ts)
 {
+	// ts->tv_sec: (&now)->tv_sec
 	ts->tv_sec = 0;
+	// ts->tv_sec: (&now)->tv_sec: 0
+
+	// ts->tv_nsec: (&now)->tv_nsec
 	ts->tv_nsec = 0;
+	// ts->tv_nsec: (&now)->tv_nsec: 0
 }
 
+// ARM10C 20150103
 static clock_access_fn __read_persistent_clock = dummy_clock_access;
+// ARM10C 20150103
 static clock_access_fn __read_boot_clock = dummy_clock_access;;
 
+// ARM10C 20150103
+// &now
 void read_persistent_clock(struct timespec *ts)
 {
+	// ts: &now
+	// __read_persistent_clock: dummy_clock_access
+	// dummy_clock_access(&now)
 	__read_persistent_clock(ts);
+
+	// dummy_clock_access에서 한일:
+	// ts->tv_sec: (&now)->tv_sec: 0
+	// ts->tv_nsec: (&now)->tv_nsec: 0
 }
 
+// ARM10C 20150103
+// &boot
 void read_boot_clock(struct timespec *ts)
 {
+	// ts: &boot
+	// dummy_clock_access(&boot)
 	__read_boot_clock(ts);
+
+	// dummy_clock_access에서 한일:
+	// ts->tv_sec: (&boot)->tv_sec: 0
+	// ts->tv_nsec: (&boot)->tv_nsec: 0
 }
 
 int __init register_persistent_clock(clock_access_fn read_boot,

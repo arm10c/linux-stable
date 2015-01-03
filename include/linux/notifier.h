@@ -57,6 +57,7 @@ typedef	int (*notifier_fn_t)(struct notifier_block *nb,
 // ARM10C 20140607
 // ARM10C 20140726
 // ARM10C 20140927
+// ARM10C 20150103
 struct notifier_block {
 	notifier_fn_t notifier_call;
 	struct notifier_block __rcu *next;
@@ -182,6 +183,7 @@ extern int __srcu_notifier_call_chain(struct srcu_notifier_head *nh,
 
 #define NOTIFY_DONE		0x0000		/* Don't care */
 // ARM10C 20140927
+// ARM10C 20150103
 // NOTIFY_OK: 0x0001
 #define NOTIFY_OK		0x0001		/* Suits me */
 #define NOTIFY_STOP_MASK	0x8000		/* Don't call further */

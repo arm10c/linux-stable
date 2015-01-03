@@ -165,6 +165,7 @@ extern u64 timecounter_cyc2time(struct timecounter *tc,
  * @cycle_last:		most recent cycle counter value seen by ::read()
  * @owner:		module reference, must be set by clocksource in modules
  */
+// ARM10C 20150103
 struct clocksource {
 	/*
 	 * Hotpath data, fits in a single cache line when the
@@ -177,7 +178,7 @@ struct clocksource {
 	u32 shift;
 	u64 max_idle_ns;
 	u32 maxadj;
-#ifdef CONFIG_ARCH_CLOCKSOURCE_DATA
+#ifdef CONFIG_ARCH_CLOCKSOURCE_DATA // CONFIG_ARCH_CLOCKSOURCE_DATA=n
 	struct arch_clocksource_data archdata;
 #endif
 
@@ -191,7 +192,7 @@ struct clocksource {
 	void (*resume)(struct clocksource *cs);
 
 	/* private: */
-#ifdef CONFIG_CLOCKSOURCE_WATCHDOG
+#ifdef CONFIG_CLOCKSOURCE_WATCHDOG // CONFIG_CLOCKSOURCE_WATCHDOG=n
 	/* Watchdog related data, used by the framework */
 	struct list_head wd_list;
 	cycle_t cs_last;

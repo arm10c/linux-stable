@@ -68,6 +68,8 @@ extern struct tvec_base boot_tvec_bases;
 #define TIMER_DEFERRABLE		0x1LU
 #define TIMER_IRQSAFE			0x2LU
 
+// ARM10C 20150103
+// TIMER_FLAG_MASK: 0x3LU
 #define TIMER_FLAG_MASK			0x3LU
 
 #define __TIMER_INITIALIZER(_function, _expires, _data, _flags) { \
@@ -197,7 +199,7 @@ extern unsigned long get_next_timer_interrupt(unsigned long now);
 /*
  * Timer-statistics info:
  */
-#ifdef CONFIG_TIMER_STATS
+#ifdef CONFIG_TIMER_STATS // CONFIG_TIMER_STATS=n
 
 extern int timer_stats_active;
 
@@ -224,6 +226,7 @@ static inline void timer_stats_timer_clear_start_info(struct timer_list *timer)
 	timer->start_site = NULL;
 }
 #else
+// ARM10C 20150103
 static inline void init_timer_stats(void)
 {
 }

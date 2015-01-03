@@ -13,6 +13,7 @@
 extern void timer_tick(void);
 
 struct timespec;
+// ARM10C 20150103
 typedef void (*clock_access_fn)(struct timespec *);
 extern int register_persistent_clock(clock_access_fn read_boot,
 				     clock_access_fn read_persistent);

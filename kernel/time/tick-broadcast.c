@@ -29,8 +29,11 @@
  */
 
 static struct tick_device tick_broadcast_device;
+// ARM10C 20150103
 static cpumask_var_t tick_broadcast_mask;
+// ARM10C 20150103
 static cpumask_var_t tick_broadcast_on;
+// ARM10C 20150103
 static cpumask_var_t tmpmask;
 static DEFINE_RAW_SPINLOCK(tick_broadcast_lock);
 static int tick_broadcast_force;
@@ -140,6 +143,7 @@ static void tick_device_setup_broadcast_func(struct clock_event_device *dev)
  * Check, if the device is disfunctional and a place holder, which
  * needs to be handled by the broadcast device.
  */
+// ARM10C 20150103
 int tick_device_uses_broadcast(struct clock_event_device *dev, int cpu)
 {
 	struct clock_event_device *bc = tick_broadcast_device.evtdev;
@@ -472,10 +476,13 @@ int tick_resume_broadcast(void)
 }
 
 
-#ifdef CONFIG_TICK_ONESHOT
+#ifdef CONFIG_TICK_ONESHOT // CONFIG_TICK_ONESHOT=y
 
+// ARM10C 20150103
 static cpumask_var_t tick_broadcast_oneshot_mask;
+// ARM10C 20150103
 static cpumask_var_t tick_broadcast_pending_mask;
+// ARM10C 20150103
 static cpumask_var_t tick_broadcast_force_mask;
 
 /*
@@ -875,14 +882,32 @@ bool tick_broadcast_oneshot_available(void)
 
 #endif
 
+// ARM10C 20150103
 void __init tick_broadcast_init(void)
 {
+	// GFP_NOWAIT: 0
 	zalloc_cpumask_var(&tick_broadcast_mask, GFP_NOWAIT);
+	// tick_broadcast_mask.bits[0]: 0
+
+	// GFP_NOWAIT: 0
 	zalloc_cpumask_var(&tick_broadcast_on, GFP_NOWAIT);
+	// tick_broadcast_on.bits[0]: 0
+
+	// GFP_NOWAIT: 0
 	zalloc_cpumask_var(&tmpmask, GFP_NOWAIT);
-#ifdef CONFIG_TICK_ONESHOT
+	// tmpmask.bits[0]: 0
+
+#ifdef CONFIG_TICK_ONESHOT // CONFIG_TICK_ONESHOT=y
+	// GFP_NOWAIT: 0
 	zalloc_cpumask_var(&tick_broadcast_oneshot_mask, GFP_NOWAIT);
+	// tick_broadcast_oneshot_mask.bits[0]: 0
+
+	// GFP_NOWAIT: 0
 	zalloc_cpumask_var(&tick_broadcast_pending_mask, GFP_NOWAIT);
+	// tick_broadcast_pending_mask.bits[0]: 0
+
+	// GFP_NOWAIT: 0
 	zalloc_cpumask_var(&tick_broadcast_force_mask, GFP_NOWAIT);
+	// tick_broadcast_force_mask.bits[0]: 0
 #endif
 }

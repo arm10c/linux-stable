@@ -350,8 +350,6 @@ void irq_enter(void)
 		// current_thread_info()->preempt_count: 0x40000201
 		// memory 갱신
 
-// 2014/12/27 종료
-
 		tick_check_idle(cpu);
 		_local_bh_enable();
 	}
@@ -455,25 +453,44 @@ void __raise_softirq_irqoff(unsigned int nr)
 // SCHED_SOFTIRQ: 7, run_rebalance_domains
 // ARM10C 20140927
 // RCU_SOFTIRQ: 9, rcu_process_callbacks
+// ARM10C 20150103
+// TIMER_SOFTIRQ: 1, run_timer_softirq
+// ARM10C 20150103
+// HRTIMER_SOFTIRQ: 8, run_hrtimer_softirq
+// ARM10C 20150103
+// TASKLET_SOFTIRQ: 6, tasklet_action
+// ARM10C 20150103
+// HI_SOFTIRQ: 0, tasklet_hi_action
 void open_softirq(int nr, void (*action)(struct softirq_action *))
 {
 	// nr: 7, action: run_rebalance_domains
 	// nr: 9, action: rcu_process_callbacks
+	// nr: 1, action: run_timer_softirq
+	// nr: 8, action: run_hrtimer_softirq
+	// nr: 6, action: tasklet_action
+	// nr: 0, action: tasklet_hi_action
 	softirq_vec[nr].action = action;
 	// softirq_vec[7].action: run_rebalance_domains
 	// softirq_vec[9].action: rcu_process_callbacks
+	// softirq_vec[1].action: run_timer_softirq
+	// softirq_vec[8].action: run_hrtimer_softirq
+	// softirq_vec[6].action: tasklet_action
+	// softirq_vec[0].action: tasklet_hi_action
 }
 
 /*
  * Tasklets
  */
+// ARM10C 20150103
 struct tasklet_head
 {
 	struct tasklet_struct *head;
 	struct tasklet_struct **tail;
 };
 
+// ARM10C 20150103
 static DEFINE_PER_CPU(struct tasklet_head, tasklet_vec);
+// ARM10C 20150103
 static DEFINE_PER_CPU(struct tasklet_head, tasklet_hi_vec);
 
 void __tasklet_schedule(struct tasklet_struct *t)
@@ -515,6 +532,7 @@ void __tasklet_hi_schedule_first(struct tasklet_struct *t)
 
 EXPORT_SYMBOL(__tasklet_hi_schedule_first);
 
+// ARM10C 20150103
 static void tasklet_action(struct softirq_action *a)
 {
 	struct tasklet_struct *list;
@@ -550,6 +568,7 @@ static void tasklet_action(struct softirq_action *a)
 	}
 }
 
+// ARM10C 20150103
 static void tasklet_hi_action(struct softirq_action *a)
 {
 	struct tasklet_struct *list;
@@ -665,19 +684,43 @@ void tasklet_hrtimer_init(struct tasklet_hrtimer *ttimer,
 }
 EXPORT_SYMBOL_GPL(tasklet_hrtimer_init);
 
+// ARM10C 20150103
 void __init softirq_init(void)
 {
 	int cpu;
 
 	for_each_possible_cpu(cpu) {
+	// for ((cpu) = -1; (cpu) = cpumask_next((cpu), (cpu_possible_mask)), (cpu) < nr_cpu_ids;)
+
+		// cpu: 0, per_cpu(tasklet_vec, 0).tail: [pcp0] tasklet_vec.tail,
+		// &per_cpu(tasklet_vec, 0).head: [pcp0] &tasklet_vec.head
 		per_cpu(tasklet_vec, cpu).tail =
 			&per_cpu(tasklet_vec, cpu).head;
+		// per_cpu(tasklet_vec, 0).tail: [pcp0] tasklet_vec.tail: [pcp0] &tasklet_vec.head
+
+		// cpu: 0, per_cpu(tasklet_hi_vec, 0).tail: [pcp0] tasklet_hi_vec.tail,
+		// &per_cpu(tasklet_hi_vec, 0).head: [pcp0] &tasklet_hi_vec.head
 		per_cpu(tasklet_hi_vec, cpu).tail =
 			&per_cpu(tasklet_hi_vec, cpu).head;
-	}
+		// per_cpu(tasklet_hi_vec, 0).tail: [pcp0] tasklet_hi_vec.tail: [pcp0] &tasklet_hi_vec.head
 
+		// cpu: 1...3 수행
+	}
+	// 위 loop에서 한일:
+	// [pcp0...3] tasklet_vec.tail: [pcp0...3] &tasklet_vec.head
+	// [pcp0...3] tasklet_hi_vec.tail: [pcp0...3] &tasklet_hi_vec.head
+
+	// TASKLET_SOFTIRQ: 6
 	open_softirq(TASKLET_SOFTIRQ, tasklet_action);
+	
+	// open_softirq에서 한일:
+	// softirq_vec[6].action: tasklet_action
+
+	// HI_SOFTIRQ: 0
 	open_softirq(HI_SOFTIRQ, tasklet_hi_action);
+
+	// open_softirq에서 한일:
+	// softirq_vec[0].action: tasklet_hi_action
 }
 
 static int ksoftirqd_should_run(unsigned int cpu)

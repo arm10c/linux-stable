@@ -7,9 +7,12 @@
 // ARM10C 20140830
 // ARM10C 20140913
 // ARM10C 20140920
+// ARM10C 20150103
 // CONFIG_HZ: 100
 // HZ: 100
 # define HZ		CONFIG_HZ	/* Internal kernel timer frequency */
+// ARM10C 20150103
+// USER_HZ: 100
 # define USER_HZ	100		/* some user interfaces are */
 # define CLOCKS_PER_SEC	(USER_HZ)       /* in "ticks" like times() */
 #endif /* __ASM_GENERIC_PARAM_H */

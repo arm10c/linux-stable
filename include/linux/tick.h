@@ -13,7 +13,7 @@
 #include <linux/context_tracking_state.h>
 #include <linux/cpumask.h>
 
-#ifdef CONFIG_GENERIC_CLOCKEVENTS
+#ifdef CONFIG_GENERIC_CLOCKEVENTS // CONFIG_GENERIC_CLOCKEVENTS=y
 
 enum tick_device_mode {
 	TICKDEV_MODE_PERIODIC,
@@ -74,6 +74,7 @@ struct tick_sched {
 	int				do_timer_last;
 };
 
+// ARM10C 20150103
 extern void __init tick_init(void);
 extern int tick_is_oneshot_available(void);
 extern struct tick_device *tick_get_device(int cpu);

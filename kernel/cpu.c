@@ -213,10 +213,16 @@ void cpu_hotplug_enable(void)
 // &radix_tree_callback_nb
 // ARM10C 20141129
 // &gic_cpu_notifier
+// ARM10C 20150103
+// &timers_nb
+// ARM10C 20150103
+// &hrtimers_nb
 int __ref register_cpu_notifier(struct notifier_block *nb)
 {
 	int ret;
 	cpu_maps_update_begin();
+	// waiter를 만들어 mutex를 lock을 시도하며 기다리다 가능할 때 mutex lock한다.
+	// waiter를 만들어 mutex를 lock을 시도하며 기다리다 가능할 때 mutex lock한다.
 	// waiter를 만들어 mutex를 lock을 시도하며 기다리다 가능할 때 mutex lock한다.
 	// waiter를 만들어 mutex를 lock을 시도하며 기다리다 가능할 때 mutex lock한다.
 	// waiter를 만들어 mutex를 lock을 시도하며 기다리다 가능할 때 mutex lock한다.
@@ -230,6 +236,8 @@ int __ref register_cpu_notifier(struct notifier_block *nb)
 	// &cpu_chain, nb: &rcu_cpu_notify_nb
 	// &cpu_chain, nb: &radix_tree_callback_nb
 	// &cpu_chain, nb: &gic_cpu_notifier
+	// &cpu_chain, nb: &timers_nb
+	// &cpu_chain, nb: &hrtimers_nb
 	ret = raw_notifier_chain_register(&cpu_chain, nb);
 	// (&cpu_chain)->head: page_alloc_cpu_notify_nb 포인터 대입
 	// (&page_alloc_cpu_notify_nb)->next은 NULL로 대입
@@ -243,8 +251,14 @@ int __ref register_cpu_notifier(struct notifier_block *nb)
 	// (&radix_tree_callback_nb)->next은 (&rcu_cpu_notify_nb)->next로 대입
 	// (&cpu_chain)->head: gic_cpu_notifier 포인터 대입
 	// (&gic_cpu_notifier)->next은 (&radix_tree_callback_nb)->next로 대입
+	// (&cpu_chain)->head: timers_nb 포인터 대입
+	// (&timers_nb)->next은 (&gic_cpu_notifier)->next로 대입
+	// (&cpu_chain)->head: &hrtimers_nb 포인터 대입
+	// (&hrtimers_nb)->next은 (&timers_nb)->next로 대입
 
 	cpu_maps_update_done();
+	// mutex를 기다리는(waiter)가 있으면 깨우고 아니면 mutex unlock한다.
+	// mutex를 기다리는(waiter)가 있으면 깨우고 아니면 mutex unlock한다.
 	// mutex를 기다리는(waiter)가 있으면 깨우고 아니면 mutex unlock한다.
 	// mutex를 기다리는(waiter)가 있으면 깨우고 아니면 mutex unlock한다.
 	// mutex를 기다리는(waiter)가 있으면 깨우고 아니면 mutex unlock한다.

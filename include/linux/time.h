@@ -12,10 +12,13 @@ extern struct timezone sys_tz;
 #define MSEC_PER_SEC	1000L
 #define USEC_PER_MSEC	1000L
 // ARM10C 20140830
+// ARM10C 20150103
+// NSEC_PER_USEC: 1000L
 #define NSEC_PER_USEC	1000L
 #define NSEC_PER_MSEC	1000000L
 #define USEC_PER_SEC	1000000L
 // ARM10C 20140913
+// ARM10C 20150103
 // NSEC_PER_SEC: 1000000000L
 #define NSEC_PER_SEC	1000000000L
 #define FSEC_PER_SEC	1000000000000000LL
@@ -87,35 +90,56 @@ static inline struct timespec timespec_sub(struct timespec lhs,
 	return ts_delta;
 }
 
+// ARM10C 20150103
+// KTIME_MAX: 0x7FFFFFFFFFFFFFFF
 #define KTIME_MAX			((s64)~((u64)1 << 63))
 #if (BITS_PER_LONG == 64)
 # define KTIME_SEC_MAX			(KTIME_MAX / NSEC_PER_SEC)
 #else
+// ARM10C 20150103
+// LONG_MAX: 0x7FFFFFFF
+// KTIME_SEC_MAX: 0x7FFFFFFF
 # define KTIME_SEC_MAX			LONG_MAX
 #endif
 
 /*
  * Returns true if the timespec is norm, false if denorm:
  */
+// ARM10C 20150103
+// ts: &now
 static inline bool timespec_valid(const struct timespec *ts)
 {
 	/* Dates before 1970 are bogus */
+	// ts->tv_sec: (&now)->tv_sec: 0
 	if (ts->tv_sec < 0)
 		return false;
+
 	/* Can't have more nanoseconds then a second */
+	// ts->tv_nsec: (&now)->tv_nsec: 0, NSEC_PER_SEC: 1000000000L
 	if ((unsigned long)ts->tv_nsec >= NSEC_PER_SEC)
 		return false;
+
 	return true;
+	// return true
 }
 
+// ARM10C 20150103
+// &now
+// ARM10C 20150103
+// &boot
 static inline bool timespec_valid_strict(const struct timespec *ts)
 {
+	// ts: &now, timespec_valid(&now): true
 	if (!timespec_valid(ts))
 		return false;
+
 	/* Disallow values that could overflow ktime_t */
+	// ts->tv_sec: (&now)->tv_sec: 0, KTIME_SEC_MAX: 0x7FFFFFFF
 	if ((unsigned long long)ts->tv_sec >= KTIME_SEC_MAX)
 		return false;
+
 	return true;
+	// return true
 }
 
 extern bool persistent_clock_exist;

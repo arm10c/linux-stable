@@ -148,6 +148,7 @@ struct hrtimer_sleeper {
  * @softirq_time:	the time when running the hrtimer queue in the softirq
  * @offset:		offset of this clock to the monotonic base
  */
+// ARM10C 20150103
 struct hrtimer_clock_base {
 	struct hrtimer_cpu_base	*cpu_base;
 	int			index;
@@ -160,12 +161,14 @@ struct hrtimer_clock_base {
 };
 
 // ARM10C 20140830
+// ARM10C 20150103
 enum  hrtimer_base_type {
 	// HRTIMER_BASE_MONOTONIC: 0
 	HRTIMER_BASE_MONOTONIC,
 	HRTIMER_BASE_REALTIME,
 	HRTIMER_BASE_BOOTTIME,
 	HRTIMER_BASE_TAI,
+	// HRTIMER_MAX_CLOCK_BASES: 4
 	HRTIMER_MAX_CLOCK_BASES,
 };
 
@@ -186,6 +189,7 @@ enum  hrtimer_base_type {
  * @clock_base:		array of clock bases for this cpu
  */
 // ARM10C 20140830
+// ARM10C 20150103
 struct hrtimer_cpu_base {
 	raw_spinlock_t			lock;
 	unsigned int			active_bases;

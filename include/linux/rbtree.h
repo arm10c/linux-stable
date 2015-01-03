@@ -44,6 +44,7 @@ struct rb_node {
 
 // ARM10C 20140809
 // ARM10C 20141025
+// ARM10C 20150103
 struct rb_root {
 	struct rb_node *rb_node;
 };
@@ -55,6 +56,7 @@ struct rb_root {
 
 // ARM10C 20140809
 // ARM10C 20140830
+// ARM10C 20150103
 // RB_ROOT: (struct rb_root) { NULL, }
 #define RB_ROOT	(struct rb_root) { NULL, }
 

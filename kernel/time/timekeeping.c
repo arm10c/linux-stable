@@ -31,8 +31,11 @@
 #define TK_MIRROR		(1 << 1)
 #define TK_CLOCK_WAS_SET	(1 << 2)
 
+// ARM10C 20150103
 static struct timekeeper timekeeper;
+// ARM10C 20150103
 static DEFINE_RAW_SPINLOCK(timekeeper_lock);
+// ARM10C 20150103
 static seqcount_t timekeeper_seq;
 static struct timekeeper shadow_timekeeper;
 
@@ -783,15 +786,23 @@ void __attribute__((weak)) read_boot_clock(struct timespec *ts)
 /*
  * timekeeping_init - Initializes the clocksource and common timekeeping values
  */
+// ARM10C 20150103
 void __init timekeeping_init(void)
 {
 	struct timekeeper *tk = &timekeeper;
+	// tk: &timekeeper
+
 	struct clocksource *clock;
 	unsigned long flags;
 	struct timespec now, boot, tmp;
 
 	read_persistent_clock(&now);
 
+	// read_persistent_clock에서 한일:
+	// (&now)->tv_sec: 0
+	// (&now)->tv_nsec: 0
+
+	// timespec_valid_strict(&now): true, ts->tv_sec: (&now)->tv_sec: 0, ts->tv_nsec: (&now)->tv_nsec: 0
 	if (!timespec_valid_strict(&now)) {
 		pr_warn("WARNING: Persistent clock returned invalid value!\n"
 			"         Check your CMOS/BIOS settings.\n");
@@ -801,6 +812,12 @@ void __init timekeeping_init(void)
 		persistent_clock_exist = true;
 
 	read_boot_clock(&boot);
+
+	// read_boot_clock에서 한일:
+	// (&boot)->tv_sec: 0
+	// (&boot)->tv_nsec: 0
+
+	// timespec_valid_strict(&boot): true
 	if (!timespec_valid_strict(&boot)) {
 		pr_warn("WARNING: Boot clock returned invalid value!\n"
 			"         Check your CMOS/BIOS settings.\n");
@@ -809,8 +826,25 @@ void __init timekeeping_init(void)
 	}
 
 	raw_spin_lock_irqsave(&timekeeper_lock, flags);
+	// timekeeper_lock을 사용하여 spinlock을 걸고 cpsr을 flags에 저장
+
 	write_seqcount_begin(&timekeeper_seq);
+
+	// write_seqcount_begin에서 한일:
+	// (&timekeeper_seq)->sequence: 1
+	// 공유자원을 다른 cpu core가 사용할수 있게 메모리 적용
+
 	ntp_init();
+
+	// ntp_init에서 한일:
+	// time_adjust: 0
+	// time_status: 0x0040
+	// time_maxerror: 16000000
+	// time_esterror: 16000000
+	// tick_nsec: 10000000
+	// tick_length: 42949672960000000
+	// tick_length_base: 42949672960000000
+	// time_offset: 0
 
 	clock = clocksource_default_clock();
 	if (clock->enable)

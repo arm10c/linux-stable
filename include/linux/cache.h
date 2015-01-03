@@ -23,6 +23,7 @@
 
 // ARM10C 20130914
 // ARM10C 20140830
+// ARM10C 20150103
 // SMP_CACHE_BYTES: 64
 // 64 byte align (Coretex-A15)
 // ____cacheline_aligned: __attribute__((__aligned__(64)))

@@ -60,6 +60,9 @@ extern int register_refined_jiffies(long clock_tick_rate);
 #define TICK_NSEC ((NSEC_PER_SEC+HZ/2)/HZ)
 
 /* TICK_USEC is the time between ticks in usec assuming fake USER_HZ */
+// ARM10C 20150103
+// USER_HZ: 100
+// TICK_USEC: 10000
 #define TICK_USEC ((1000000UL + USER_HZ/2) / USER_HZ)
 
 /* some arch's have a small-data section that can be accessed register-relative

@@ -11,6 +11,7 @@
 #include <linux/time.h>
 
 /* Structure holding internal timekeeping values. */
+// ARM10C 20150103
 struct timekeeper {
 	/* Current clocksource used for timekeeping. */
 	struct clocksource	*clock;

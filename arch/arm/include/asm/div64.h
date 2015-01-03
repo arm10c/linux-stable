@@ -72,6 +72,8 @@
  */
 // ARM10C 20140322
 // max: 0x7EA0000, bucketsize: 4
+// ARM10C 20150103
+// dividend: 4294967296000000000, divisor: 100
 #define do_div(n, base)							\
 ({									\
 	unsigned int __r, __b = (base);					\

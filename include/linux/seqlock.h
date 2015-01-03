@@ -44,6 +44,7 @@
  * after the write_seqcount_end().
  */
 // ARM10C 20140913
+// ARM10C 20150103
 typedef struct seqcount {
 	unsigned sequence;
 #ifdef CONFIG_DEBUG_LOCK_ALLOC // CONFIG_DEBUG_LOCK_ALLOC=n
@@ -235,10 +236,16 @@ static inline int read_seqcount_retry(const seqcount_t *s, unsigned start)
 
 
 
+// ARM10C 20150103
+// s: &timekeeper_seq
 static inline void raw_write_seqcount_begin(seqcount_t *s)
 {
+	// s->sequence: (&timekeeper_seq)->sequence: 0
 	s->sequence++;
+	// s->sequence: (&timekeeper_seq)->sequence: 1
+
 	smp_wmb();
+	// 공유자원을 다른 cpu core가 사용할수 있게 메모리 적용
 }
 
 static inline void raw_write_seqcount_end(seqcount_t *s)
@@ -251,15 +258,31 @@ static inline void raw_write_seqcount_end(seqcount_t *s)
  * Sequence counter only version assumes that callers are using their
  * own mutexing.
  */
+// ARM10C 20150103
+// s: &timekeeper_seq, 0
 static inline void write_seqcount_begin_nested(seqcount_t *s, int subclass)
 {
+	// s: &timekeeper_seq
 	raw_write_seqcount_begin(s);
-	seqcount_acquire(&s->dep_map, subclass, 0, _RET_IP_);
+
+	// raw_write_seqcount_begin에서 한일:
+	// (&timekeeper_seq)->sequence: 1
+	// 공유자원을 다른 cpu core가 사용할수 있게 메모리 적용
+
+	// &s->dep_map: (&timekeeper_seq)->dep_map, subclass: 0
+	seqcount_acquire(&s->dep_map, subclass, 0, _RET_IP_); // null function
 }
 
+// ARM10C 20150103
+// &timekeeper_seq
 static inline void write_seqcount_begin(seqcount_t *s)
 {
+	// s: &timekeeper_seq
 	write_seqcount_begin_nested(s, 0);
+
+	// write_seqcount_begin_nested에서 한일:
+	// (&timekeeper_seq)->sequence: 1
+	// 공유자원을 다른 cpu core가 사용할수 있게 메모리 적용
 }
 
 static inline void write_seqcount_end(seqcount_t *s)

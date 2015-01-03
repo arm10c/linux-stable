@@ -83,6 +83,7 @@ enum {
 
 #define CPU_ONLINE		0x0002 /* CPU (unsigned)v is up */
 // ARM10C 20140927
+// ARM10C 20150103
 // CPU_UP_PREPARE: 0x0003
 #define CPU_UP_PREPARE		0x0003 /* CPU (unsigned)v coming up */
 #define CPU_UP_CANCELED		0x0004 /* CPU (unsigned)v NOT coming up */
@@ -168,6 +169,7 @@ extern void unregister_cpu_notifier(struct notifier_block *nb);
 // ARM10C 20140315
 // ARM10C 20140726
 // ARM10C 20141129
+// ARM10C 20150103
 extern int register_cpu_notifier(struct notifier_block *nb);
 #else
 static inline int register_cpu_notifier(struct notifier_block *nb)

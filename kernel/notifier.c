@@ -25,6 +25,7 @@ BLOCKING_NOTIFIER_HEAD(reboot_notifier_list);
 // ARM10C 20140927
 // &nh->head: (&pm_chain_head)->head: NULL, n: &rcu_pm_notify_nb
 // ARM10C 20141129
+// ARM10C 20150103
 static int notifier_chain_register(struct notifier_block **nl,
 		struct notifier_block *n)
 {
@@ -393,6 +394,10 @@ EXPORT_SYMBOL_GPL(blocking_notifier_call_chain);
 // &cpu_chain, nb: &gic_cpu_notifier
 // ARM10C 20141129
 // &cpu_pm_notifier_chain, nb: &gic_notifier_block
+// ARM10C 20150103
+// &cpu_chain, nb: &timers_nb
+// ARM10C 20150103
+// &cpu_chain, nb: &hrtimers_nb
 int raw_notifier_chain_register(struct raw_notifier_head *nh,
 		struct notifier_block *n)
 {
@@ -403,6 +408,8 @@ int raw_notifier_chain_register(struct raw_notifier_head *nh,
 	// nh->head: (&cpu_chain)->head: &rcu_cpu_notify_nb, n: &radix_tree_callback_nb
 	// nh->head: (&cpu_chain)->head: &radix_tree_callback_nb, n: &gic_cpu_notifier
 	// nh->head: (&cpu_pm_notifier_chain)->head: NULL, n: &gic_notifier_block
+	// nh->head: (&cpu_chain)->head: &gic_cpu_notifier, n: &timers_nb
+	// nh->head: (&cpu_chain)->head: &timers_nb, n: &hrtimers_nb
 	return notifier_chain_register(&nh->head, n);
 	// (&cpu_chain)->head: &page_alloc_cpu_notify_nb
 	// &nh->head에 n의 포인터를 대입함
@@ -417,6 +424,10 @@ int raw_notifier_chain_register(struct raw_notifier_head *nh,
 	// (&cpu_chain)->head: &gic_cpu_notifier
 	// &nh->head에 n의 포인터를 대입함
 	// (&cpu_pm_notifier_chain)->head: &gic_notifier_block
+	// &nh->head에 n의 포인터를 대입함
+	// (&cpu_chain)->head: &timers_nb
+	// &nh->head에 n의 포인터를 대입함
+	// (&cpu_chain)->head: &hrtimers_nb
 	// &nh->head에 n의 포인터를 대입함
 }
 EXPORT_SYMBOL_GPL(raw_notifier_chain_register);

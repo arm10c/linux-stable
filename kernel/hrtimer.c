@@ -62,6 +62,7 @@
  * is used to convert from clockid to the proper hrtimer_base_type.
  */
 // ARM10C 20140830
+// ARM10C 20150103
 // DEFINE_PER_CPU(struct hrtimer_cpu_base, hrtimer_bases):
 //	__attribute__((section(".data..percpu" "")))
 //	__typeof__(struct hrtimer_cpu_base) hrtimer_bases
@@ -529,7 +530,7 @@ static inline void debug_deactivate(struct hrtimer *timer)
 }
 
 /* High resolution timer related functions */
-#ifdef CONFIG_HIGH_RES_TIMERS
+#ifdef CONFIG_HIGH_RES_TIMERS // CONFIG_HIGH_RES_TIMERS=y
 
 /*
  * High resolution timer enabled ?
@@ -673,10 +674,18 @@ static int hrtimer_reprogram(struct hrtimer *timer,
 /*
  * Initialize the high resolution related parts of cpu_base
  */
+// ARM10C 20150103
+// cpu_base: [pcp0] &hrtimer_bases
 static inline void hrtimer_init_hres(struct hrtimer_cpu_base *base)
 {
+	// base->expires_next.tv64: [pcp0] (&hrtimer_bases)->expires_next.tv64,
+	// KTIME_MAX: 0x7FFFFFFFFFFFFFFF
 	base->expires_next.tv64 = KTIME_MAX;
+	// base->expires_next.tv64: [pcp0] (&hrtimer_bases)->expires_next.tv64: 0x7FFFFFFFFFFFFFFF
+
+	// base->hres_active: [pcp0] (&hrtimer_bases)->hres_active
 	base->hres_active = 0;
+	// base->hres_active: [pcp0] (&hrtimer_bases)->hres_active: 0
 }
 
 /*
@@ -1526,6 +1535,7 @@ void hrtimer_peek_ahead_timers(void)
 	local_irq_restore(flags);
 }
 
+// ARM10C 20150103
 static void run_hrtimer_softirq(struct softirq_action *h)
 {
 	hrtimer_peek_ahead_timers();
@@ -1747,17 +1757,39 @@ SYSCALL_DEFINE2(nanosleep, struct timespec __user *, rqtp,
 /*
  * Functions related to boot-time initialization:
  */
+// ARM10C 20150103
+// scpu: 0
 static void init_hrtimers_cpu(int cpu)
 {
+	// cpu: 0, &per_cpu(hrtimer_bases, 0): [pcp0] &hrtimer_bases
 	struct hrtimer_cpu_base *cpu_base = &per_cpu(hrtimer_bases, cpu);
+	// cpu_base: [pcp0] &hrtimer_bases
+
 	int i;
 
+	// HRTIMER_MAX_CLOCK_BASES: 4
 	for (i = 0; i < HRTIMER_MAX_CLOCK_BASES; i++) {
+		// i: 0, cpu_base->clock_base[0].cpu_base: [pcp0] (&hrtimer_bases)->clock_base[0].cpu_base
+		// cpu_base: [pcp0] &hrtimer_bases
 		cpu_base->clock_base[i].cpu_base = cpu_base;
+		// cpu_base->clock_base[0].cpu_base: [pcp0] (&hrtimer_bases)->clock_base[0].cpu_base: [pcp0] &hrtimer_bases
+
+		// &cpu_base->clock_base[i].active: [pcp0] &(&hrtimer_bases)->clock_base[0].active
 		timerqueue_init_head(&cpu_base->clock_base[i].active);
+
+		// timerqueue_init_head에서 한일:
+		// [pcp0] (&(&hrtimer_bases)->clock_base[0].active)->head: NULL
+		// [pcp0] (&(&hrtimer_bases)->clock_base[0].active)->next: NULL
+		
+		// i: 1...3 루프 수행
 	}
 
+	// cpu_base: [pcp0] &hrtimer_bases
 	hrtimer_init_hres(cpu_base);
+
+	// hrtimer_init_hres에서 한일:
+	// [pcp0] (&hrtimer_bases)->expires_next.tv64: 0x7FFFFFFFFFFFFFFF
+	// [pcp0] (&hrtimer_bases)->hres_active: 0
 }
 
 #ifdef CONFIG_HOTPLUG_CPU
@@ -1828,16 +1860,30 @@ static void migrate_hrtimers(int scpu)
 
 #endif /* CONFIG_HOTPLUG_CPU */
 
+// ARM10C 20150103
+// &hrtimers_nb, CPU_UP_PREPARE: 0x0003, smp_processor_id(): 0
 static int hrtimer_cpu_notify(struct notifier_block *self,
 					unsigned long action, void *hcpu)
 {
+	// hcpu: 0
 	int scpu = (long)hcpu;
+	// scpu: 0
 
+	// action: CPU_UP_PREPARE: 0x0003
 	switch (action) {
 
 	case CPU_UP_PREPARE:
 	case CPU_UP_PREPARE_FROZEN:
+		// scpu: 0
 		init_hrtimers_cpu(scpu);
+
+		// init_hrtimers_cpu에서 한일:
+		// [pcp0] (&hrtimer_bases)->clock_base[0...3].cpu_base: [pcp0] &hrtimer_bases
+		// [pcp0] (&(&hrtimer_bases)->clock_base[0...3].active)->head: NULL
+		// [pcp0] (&(&hrtimer_bases)->clock_base[0...3].active)->next: NULL
+		// [pcp0] (&hrtimer_bases)->expires_next.tv64: 0x7FFFFFFFFFFFFFFF
+		// [pcp0] (&hrtimer_bases)->hres_active: 0
+
 		break;
 
 #ifdef CONFIG_HOTPLUG_CPU
@@ -1861,17 +1907,37 @@ static int hrtimer_cpu_notify(struct notifier_block *self,
 	return NOTIFY_OK;
 }
 
+// ARM10C 20150103
 static struct notifier_block hrtimers_nb = {
 	.notifier_call = hrtimer_cpu_notify,
 };
 
+// ARM10C 20150103
 void __init hrtimers_init(void)
 {
+	// CPU_UP_PREPARE: 0x0003, smp_processor_id(): 0
 	hrtimer_cpu_notify(&hrtimers_nb, (unsigned long)CPU_UP_PREPARE,
 			  (void *)(long)smp_processor_id());
+
+	// hrtimer_cpu_notify에서 한일:
+	// [pcp0] (&hrtimer_bases)->clock_base[0...3].cpu_base: [pcp0] &hrtimer_bases
+	// [pcp0] (&(&hrtimer_bases)->clock_base[0...3].active)->head: NULL
+	// [pcp0] (&(&hrtimer_bases)->clock_base[0...3].active)->next: NULL
+	// [pcp0] (&hrtimer_bases)->expires_next.tv64: 0x7FFFFFFFFFFFFFFF
+	// [pcp0] (&hrtimer_bases)->hres_active: 0
+
 	register_cpu_notifier(&hrtimers_nb);
-#ifdef CONFIG_HIGH_RES_TIMERS
+
+	// register_cpu_notifier에서 한일:
+	// (&cpu_chain)->head: &hrtimers_nb 포인터 대입
+	// (&hrtimers_nb)->next은 (&timers_nb)->next로 대입
+
+#ifdef CONFIG_HIGH_RES_TIMERS // CONFIG_HIGH_RES_TIMERS=y
+	// HRTIMER_SOFTIRQ: 8
 	open_softirq(HRTIMER_SOFTIRQ, run_hrtimer_softirq);
+
+	// open_softirq에서 한일:
+	// softirq_vec[8].action: run_hrtimer_softirq
 #endif
 }
 

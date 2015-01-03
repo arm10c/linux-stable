@@ -64,15 +64,28 @@ EXPORT_SYMBOL(jiffies_64);
 /*
  * per-CPU timer vector definitions:
  */
+// ARM10C 20150103
+// CONFIG_BASE_SMALL: 0
+// TVN_BITS: 6
 #define TVN_BITS (CONFIG_BASE_SMALL ? 4 : 6)
+// ARM10C 20150103
+// CONFIG_BASE_SMALL: 0
+// TVR_BITS: 8
 #define TVR_BITS (CONFIG_BASE_SMALL ? 6 : 8)
+// ARM10C 20150103
+// TVN_SIZE: 64
 #define TVN_SIZE (1 << TVN_BITS)
+// ARM10C 20150103
+// TVR_BITS: 8
+// TVR_SIZE: 256
 #define TVR_SIZE (1 << TVR_BITS)
 #define TVN_MASK (TVN_SIZE - 1)
 #define TVR_MASK (TVR_SIZE - 1)
 #define MAX_TVAL ((unsigned long)((1ULL << (TVR_BITS + 4*TVN_BITS)) - 1))
 
+// ARM10C 20150103
 struct tvec {
+	// TVN_SIZE: 64
 	struct list_head vec[TVN_SIZE];
 };
 
@@ -80,6 +93,7 @@ struct tvec_root {
 	struct list_head vec[TVR_SIZE];
 };
 
+// ARM10C 20150103
 struct tvec_base {
 	spinlock_t lock;
 	struct timer_list *running_timer;
@@ -93,6 +107,7 @@ struct tvec_base {
 	struct tvec tv5;
 } ____cacheline_aligned;
 
+// ARM10C 20150103
 struct tvec_base boot_tvec_bases;
 EXPORT_SYMBOL(boot_tvec_bases);
 static DEFINE_PER_CPU(struct tvec_base *, tvec_bases) = &boot_tvec_bases;
@@ -1371,6 +1386,7 @@ void update_process_times(int user_tick)
 /*
  * This function runs timers and the timer-tq in bottom half context.
  */
+// ARM10C 20150103
 static void run_timer_softirq(struct softirq_action *h)
 {
 	struct tvec_base *base = __this_cpu_read(tvec_bases);
@@ -1510,15 +1526,21 @@ signed long __sched schedule_timeout_uninterruptible(signed long timeout)
 }
 EXPORT_SYMBOL(schedule_timeout_uninterruptible);
 
+// ARM10C 20150103
+// cpu: 0
 static int init_timers_cpu(int cpu)
 {
 	int j;
 	struct tvec_base *base;
+
+	// NR_CPUS: 4
 	static char tvec_base_done[NR_CPUS];
 
+	// cpu: 0, tvec_base_done[0]: 0
 	if (!tvec_base_done[cpu]) {
 		static char boot_done;
 
+		// boot_done: 0
 		if (boot_done) {
 			/*
 			 * The APs use this path later in boot
@@ -1542,28 +1564,69 @@ static int init_timers_cpu(int cpu)
 			 * ready yet and because the memory allocators are not
 			 * initialised either.
 			 */
+			// boot_done: 0
 			boot_done = 1;
+			// boot_done: 1
+
 			base = &boot_tvec_bases;
+			// base: &boot_tvec_bases
 		}
+
+		// &base->lock: &(&boot_tvec_bases)->lock
 		spin_lock_init(&base->lock);
+		// &(&boot_tvec_bases)->lock을 이용한 spinlock 초기화 수행
+
+		// tvec_base_done[0]: 0
 		tvec_base_done[cpu] = 1;
+		// tvec_base_done[0]: 1
 	} else {
 		base = per_cpu(tvec_bases, cpu);
 	}
 
 
+	// TVN_SIZE: 64
 	for (j = 0; j < TVN_SIZE; j++) {
+		// base->tv5.vec: (&boot_tvec_bases)->tv5.vec, j: 0
 		INIT_LIST_HEAD(base->tv5.vec + j);
-		INIT_LIST_HEAD(base->tv4.vec + j);
-		INIT_LIST_HEAD(base->tv3.vec + j);
-		INIT_LIST_HEAD(base->tv2.vec + j);
-	}
-	for (j = 0; j < TVR_SIZE; j++)
-		INIT_LIST_HEAD(base->tv1.vec + j);
+		// (&boot_tvec_bases)->tv5.vec[0]의 list를 초기화
 
+		// base->tv4.vec: (&boot_tvec_bases)->tv4.vec, j: 0
+		INIT_LIST_HEAD(base->tv4.vec + j);
+		// (&boot_tvec_bases)->tv4.vec[0]의 list를 초기화
+
+		// base->tv3.vec: (&boot_tvec_bases)->tv3.vec, j: 0
+		INIT_LIST_HEAD(base->tv3.vec + j);
+		// (&boot_tvec_bases)->tv3.vec[0]의 list를 초기화
+
+		// base->tv2.vec: (&boot_tvec_bases)->tv2.vec, j: 0
+		INIT_LIST_HEAD(base->tv2.vec + j);
+		// (&boot_tvec_bases)->tv2.vec[0]의 list를 초기화
+		
+		// j: 1...63 까지 루프 수행
+	}
+
+	// TVR_SIZE: 256
+	for (j = 0; j < TVR_SIZE; j++)
+		// base->tv1.vec: (&boot_tvec_bases)->tv1.vec, j: 0
+		INIT_LIST_HEAD(base->tv1.vec + j);
+		// (&boot_tvec_bases)->tv1.vec[0]의 list를 초기화
+		//
+		// j: 1...255 까지 루프 수행
+
+	// base->timer_jiffies: (&boot_tvec_bases)->timer_jiffies,
+	// jiffies: -30000 (0xFFFFFFFFFFFF8AD0): vmlinux.lds.S 에 있음
 	base->timer_jiffies = jiffies;
+	// base->timer_jiffies: (&boot_tvec_bases)->timer_jiffies: -30000 (0xFFFFFFFFFFFF8AD0)
+
+	// base->next_timer: (&boot_tvec_bases)->next_timer,
+	// base->timer_jiffies: (&boot_tvec_bases)->timer_jiffies: -30000 (0xFFFFFFFFFFFF8AD0)
 	base->next_timer = base->timer_jiffies;
+	// base->next_timer: (&boot_tvec_bases)->next_timer: -30000 (0xFFFFFFFFFFFF8AD0)
+
+	// base->active_timers: (&boot_tvec_bases)->active_timers
 	base->active_timers = 0;
+	// base->active_timers: (&boot_tvec_bases)->active_timers: 0
+
 	return 0;
 }
 
@@ -1614,16 +1677,39 @@ static void migrate_timers(int cpu)
 }
 #endif /* CONFIG_HOTPLUG_CPU */
 
+// ARM10C 20150103
+// &timers_nb, CPU_UP_PREPARE: 0x0003, smp_processor_id(): 0
 static int timer_cpu_notify(struct notifier_block *self,
 				unsigned long action, void *hcpu)
 {
+	// hcpu: 0
 	long cpu = (long)hcpu;
+	// cpu: 0
+
 	int err;
 
+	// action: CPU_UP_PREPARE: 0x0003
 	switch(action) {
 	case CPU_UP_PREPARE:
 	case CPU_UP_PREPARE_FROZEN:
+		// cpu: 0, init_timers_cpu(0): 0
 		err = init_timers_cpu(cpu);
+		// err: 0
+
+		// init_timers_cpu에서 한일:
+		// boot_done: 1
+		// tvec_base_done[0]: 1
+		// &(&boot_tvec_bases)->lock을 이용한 spinlock 초기화 수행
+		// (&boot_tvec_bases)->tv5.vec[0...63]의 list를 초기화
+		// (&boot_tvec_bases)->tv4.vec[0...63]의 list를 초기화
+		// (&boot_tvec_bases)->tv3.vec[0...63]의 list를 초기화
+		// (&boot_tvec_bases)->tv2.vec[0...63]의 list를 초기화
+		// (&boot_tvec_bases)->tv1.vec[0...255]의 list를 초기화
+		// (&boot_tvec_bases)->timer_jiffies: -30000 (0xFFFFFFFFFFFF8AD0)
+		// (&boot_tvec_bases)->next_timer: -30000 (0xFFFFFFFFFFFF8AD0)
+		// (&boot_tvec_bases)->active_timers: 0
+
+		// err: 0
 		if (err < 0)
 			return notifier_from_errno(err);
 		break;
@@ -1636,28 +1722,62 @@ static int timer_cpu_notify(struct notifier_block *self,
 	default:
 		break;
 	}
+
+	// NOTIFY_OK: 0x0001
 	return NOTIFY_OK;
+	// return 1
 }
 
+// ARM10C 20150103
 static struct notifier_block timers_nb = {
 	.notifier_call	= timer_cpu_notify,
 };
 
 
+// ARM10C 20150103
 void __init init_timers(void)
 {
 	int err;
 
 	/* ensure there are enough low bits for flags in timer->base pointer */
+	// __alignof__(struct tvec_base): 64, TIMER_FLAG_MASK: 0x3LU
 	BUILD_BUG_ON(__alignof__(struct tvec_base) & TIMER_FLAG_MASK);
 
+	// CPU_UP_PREPARE: 0x0003, smp_processor_id(): 0
+	// timer_cpu_notify(&timers_nb, 0x0003, 0): 1
 	err = timer_cpu_notify(&timers_nb, (unsigned long)CPU_UP_PREPARE,
 			       (void *)(long)smp_processor_id());
-	init_timer_stats();
+	// err: 1
 
+	// timer_cpu_notify에서 한일:
+	// boot_done: 1
+	// tvec_base_done[0]: 1
+	// &(&boot_tvec_bases)->lock을 이용한 spinlock 초기화 수행
+	// (&boot_tvec_bases)->tv5.vec[0...63]의 list를 초기화
+	// (&boot_tvec_bases)->tv4.vec[0...63]의 list를 초기화
+	// (&boot_tvec_bases)->tv3.vec[0...63]의 list를 초기화
+	// (&boot_tvec_bases)->tv2.vec[0...63]의 list를 초기화
+	// (&boot_tvec_bases)->tv1.vec[0...255]의 list를 초기화
+	// (&boot_tvec_bases)->timer_jiffies: -30000 (0xFFFFFFFFFFFF8AD0)
+	// (&boot_tvec_bases)->next_timer: -30000 (0xFFFFFFFFFFFF8AD0)
+	// (&boot_tvec_bases)->active_timers: 0
+
+	init_timer_stats(); // null function
+
+	// err: 1, NOTIFY_OK: 0x0001
 	BUG_ON(err != NOTIFY_OK);
+
 	register_cpu_notifier(&timers_nb);
+
+	// register_cpu_notifier에서 한일:
+	// (&cpu_chain)->head: timers_nb 포인터 대입
+	// (&timers_nb)->next은 (&gic_cpu_notifier)->next로 대입
+
+	// TIMER_SOFTIRQ: 1
 	open_softirq(TIMER_SOFTIRQ, run_timer_softirq);
+
+	// open_softirq에서 한일:
+	// softirq_vec[1].action: run_timer_softirq
 }
 
 /**

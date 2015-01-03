@@ -4,7 +4,7 @@
 #include <linux/types.h>
 #include <asm/div64.h>
 
-#if BITS_PER_LONG == 64
+#if BITS_PER_LONG == 64 // BITS_PER_LONG: 32
 
 #define div64_long(x, y) div64_s64((x), (y))
 #define div64_ul(x, y)   div64_u64((x), (y))
@@ -61,10 +61,17 @@ static inline s64 div64_s64(s64 dividend, s64 divisor)
 #define div64_ul(x, y)   div_u64((x), (y))
 
 #ifndef div_u64_rem
+// ARM10C 20150103
+// dividend: 4294967296000000000, divisor: 100, &remainder
 static inline u64 div_u64_rem(u64 dividend, u32 divisor, u32 *remainder)
 {
+	// dividend: 4294967296000000000, divisor: 100, *remainder: remainder
 	*remainder = do_div(dividend, divisor);
+	// dividend: 42949672960000000, *remainder: 0
+
+	// dividend: 42949672960000000
 	return dividend;
+	// return 42949672960000000
 }
 #endif
 
@@ -94,10 +101,16 @@ extern s64 div64_s64(s64 dividend, s64 divisor);
  * divide.
  */
 #ifndef div_u64
+// ARM10C 20150103
+// second_length: 4294967296000000000, HZ: 100
 static inline u64 div_u64(u64 dividend, u32 divisor)
 {
 	u32 remainder;
+
+	// dividend: 4294967296000000000, divisor: 100
+	// div_u64_rem(4294967296000000000, 100, &remainder): 42949672960000000
 	return div_u64_rem(dividend, divisor, &remainder);
+	// return 42949672960000000
 }
 #endif
 

@@ -124,11 +124,16 @@
 #define PPM_SCALE_INV ((1LL << (PPM_SCALE_INV_SHIFT + NTP_SCALE_SHIFT)) / \
 		       PPM_SCALE + 1)
 
+// ARM10C 20150103
+// MAXPHASE: 500000000L
 #define MAXPHASE 500000000L	/* max phase error (ns) */
 #define MAXFREQ 500000		/* max frequency error (ns/s) */
 #define MAXFREQ_SCALED ((s64)MAXFREQ << NTP_SCALE_SHIFT)
 #define MINSEC 256		/* min interval between updates (s) */
 #define MAXSEC 2048		/* max interval between updates (s) */
+// ARM10C 20150103
+// MAXPHASE: 500000000L, NSEC_PER_USEC: 1000L
+// NTP_PHASE_LIMIT: 16000000
 #define NTP_PHASE_LIMIT ((MAXPHASE / NSEC_PER_USEC) << 5) /* beyond max. dispersion */
 
 /*
@@ -146,8 +151,13 @@ extern unsigned long tick_nsec;		/* SHIFTED_HZ period (nsec) */
 	__x < 0 ? -(-__x >> __s) : __x >> __s;	\
 })
 
+// ARM10C 20150103
+// NTP_SCALE_SHIFT: 32
 #define NTP_SCALE_SHIFT		32
 
+// ARM10C 20150103
+// HZ: 100
+// NTP_INTERVAL_FREQ: 100
 #define NTP_INTERVAL_FREQ  (HZ)
 #define NTP_INTERVAL_LENGTH (NSEC_PER_SEC/NTP_INTERVAL_FREQ)
 

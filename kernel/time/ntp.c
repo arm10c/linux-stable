@@ -28,12 +28,18 @@
 
 
 /* USER_HZ period (usecs): */
+// ARM10C 20150103
+// TICK_USEC: 10000
+// tick_usec: 10000
 unsigned long			tick_usec = TICK_USEC;
 
 /* SHIFTED_HZ period (nsecs): */
+// ARM10C 20150103
 unsigned long			tick_nsec;
 
+// ARM10C 20150103
 static u64			tick_length;
+// ARM10C 20150103
 static u64			tick_length_base;
 
 #define MAX_TICKADJ		500LL		/* usecs */
@@ -52,32 +58,45 @@ static u64			tick_length_base;
 static int			time_state = TIME_OK;
 
 /* clock status bits:							*/
+// ARM10C 20150103
+// STA_UNSYNC: 0x0040
+// time_status: 0x0040
 static int			time_status = STA_UNSYNC;
 
 /* time adjustment (nsecs):						*/
+// ARM10C 20150103
 static s64			time_offset;
 
 /* pll time constant:							*/
 static long			time_constant = 2;
 
 /* maximum error (usecs):						*/
+// ARM10C 20150103
+// NTP_PHASE_LIMIT: 16000000
+// time_maxerror: 16000000
 static long			time_maxerror = NTP_PHASE_LIMIT;
 
 /* estimated error (usecs):						*/
+// ARM10C 20150103
+// NTP_PHASE_LIMIT: 16000000
+// time_esterror: 16000000
 static long			time_esterror = NTP_PHASE_LIMIT;
 
 /* frequency offset (scaled nsecs/secs):				*/
+// ARM10C 20150103
 static s64			time_freq;
 
 /* time at last adjustment (secs):					*/
 static long			time_reftime;
 
+// ARM10C 20150103
 static long			time_adjust;
 
 /* constant (boot-param configurable) NTP tick adjustment (upscaled)	*/
+// ARM10C 20150103
 static s64			ntp_tick_adj;
 
-#ifdef CONFIG_NTP_PPS
+#ifdef CONFIG_NTP_PPS // CONFIG_NTP_PPS=n
 
 /*
  * The following variables are used when a pulse-per-second (PPS) signal
@@ -205,6 +224,7 @@ static inline s64 ntp_offset_chunk(s64 offset)
 }
 
 static inline void pps_reset_freq_interval(void) {}
+// ARM10C 20150103
 static inline void pps_clear(void) {}
 static inline void pps_dec_valid(void) {}
 static inline void pps_set_freq(s64 freq) {}
@@ -248,26 +268,46 @@ static inline int ntp_synced(void)
  * Update (tick_length, tick_length_base, tick_nsec), based
  * on (tick_usec, ntp_tick_adj, time_freq):
  */
+// ARM10C 20150103
 static void ntp_update_frequency(void)
 {
 	u64 second_length;
 	u64 new_base;
 
+	// tick_usec: 10000, NSEC_PER_USEC: 1000L, USER_HZ: 100, NTP_SCALE_SHIFT: 32
 	second_length		 = (u64)(tick_usec * NSEC_PER_USEC * USER_HZ)
 						<< NTP_SCALE_SHIFT;
+	// second_length: 4294967296000000000 (0x3B9ACA0000000000)
 
+	// second_length: 4294967296000000000, ntp_tick_adj: 0
 	second_length		+= ntp_tick_adj;
-	second_length		+= time_freq;
+	// second_length: 4294967296000000000
 
+	// second_length: 4294967296000000000, time_freq: 0
+	second_length		+= time_freq;
+	// second_length: 4294967296000000000
+
+	// second_length: 4294967296000000000, HZ: 100, NTP_SCALE_SHIFT: 32
+	// div_u64(4294967296000000000, 100): 42949672960000000
 	tick_nsec		 = div_u64(second_length, HZ) >> NTP_SCALE_SHIFT;
+	// tick_nsec: 10000000
+
+	// second_length: 4294967296000000000, NTP_INTERVAL_FREQ: 100
+	// div_u64(4294967296000000000, 100): 42949672960000000
 	new_base		 = div_u64(second_length, NTP_INTERVAL_FREQ);
+	// new_base: 42949672960000000
 
 	/*
 	 * Don't wait for the next second_overflow, apply
 	 * the change to the tick length immediately:
 	 */
+	// new_base: 42949672960000000, tick_length_base: 0
 	tick_length		+= new_base - tick_length_base;
+	// tick_length: 42949672960000000
+
+	// new_base: 42949672960000000
 	tick_length_base	 = new_base;
+	// tick_length_base: 42949672960000000
 }
 
 static inline s64 ntp_update_offset_fll(s64 offset64, long secs)
@@ -338,20 +378,40 @@ static void ntp_update_offset(long offset)
 /**
  * ntp_clear - Clears the NTP state variables
  */
+// ARM10C 20150103
 void ntp_clear(void)
 {
 	time_adjust	= 0;		/* stop active adjtime() */
+	// time_adjust: 0
+
+	// time_status: 0x0040, STA_UNSYNC: 0x0040
 	time_status	|= STA_UNSYNC;
+	// time_status: 0x0040
+
+	// time_maxerror: 16000000, NTP_PHASE_LIMIT: 16000000
 	time_maxerror	= NTP_PHASE_LIMIT;
+	// time_maxerror: 16000000
+
+	// time_esterror: 16000000, NTP_PHASE_LIMIT: 16000000
 	time_esterror	= NTP_PHASE_LIMIT;
+	// time_esterror: 16000000
 
 	ntp_update_frequency();
 
+	// ntp_update_frequency에서 한일:
+	// tick_nsec: 10000000
+	// tick_length: 42949672960000000
+	// tick_length_base: 42949672960000000
+
+	// tick_length: 42949672960000000, tick_length_base: 42949672960000000
 	tick_length	= tick_length_base;
+	// tick_length: 42949672960000000
+
 	time_offset	= 0;
+	// time_offset: 0
 
 	/* Clear PPS state variables */
-	pps_clear();
+	pps_clear(); // null function
 }
 
 
@@ -930,7 +990,18 @@ static int __init ntp_tick_adj_setup(char *str)
 
 __setup("ntp_tick_adj=", ntp_tick_adj_setup);
 
+// ARM10C 20150103
 void __init ntp_init(void)
 {
 	ntp_clear();
+
+	// ntp_clear에서 한일:
+	// time_adjust: 0
+	// time_status: 0x0040
+	// time_maxerror: 16000000
+	// time_esterror: 16000000
+	// tick_nsec: 10000000
+	// tick_length: 42949672960000000
+	// tick_length_base: 42949672960000000
+	// time_offset: 0
 }

@@ -341,17 +341,22 @@ extern bool force_irqthreads;
 
 // ARM10C 20140920
 // ARM10C 20140927
+// ARM10C 20150103
 enum
 {
+	// HI_SOFTIRQ: 0
 	HI_SOFTIRQ=0,
+	// TIMER_SOFTIRQ: 1
 	TIMER_SOFTIRQ,
 	NET_TX_SOFTIRQ,
 	NET_RX_SOFTIRQ,
 	BLOCK_SOFTIRQ,
 	BLOCK_IOPOLL_SOFTIRQ,
+	// TASKLET_SOFTIRQ: 6
 	TASKLET_SOFTIRQ,
 	// SCHED_SOFTIRQ: 7
 	SCHED_SOFTIRQ,
+	// HRTIMER_SOFTIRQ: 8
 	HRTIMER_SOFTIRQ,
 	// RCU_SOFTIRQ: 9
 	RCU_SOFTIRQ,    /* Preferable RCU should always be the last softirq */
@@ -424,6 +429,7 @@ static inline struct task_struct *this_cpu_ksoftirqd(void)
      he makes it with spinlocks.
  */
 
+// ARM10C 20150103
 struct tasklet_struct
 {
 	struct tasklet_struct *next;
