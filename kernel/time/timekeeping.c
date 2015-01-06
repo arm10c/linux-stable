@@ -911,7 +911,7 @@ void __init timekeeping_init(void)
 	// (&now)->tv_sec: 0
 	// (&now)->tv_nsec: 0
 
-	// timespec_valid_strict(&now): true, ts->tv_sec: (&now)->tv_sec: 0, ts->tv_nsec: (&now)->tv_nsec: 0
+	// timespec_valid_strict(&now): true, (&now)->tv_sec: 0, (&now)->tv_nsec: 0
 	if (!timespec_valid_strict(&now)) {
 		pr_warn("WARNING: Persistent clock returned invalid value!\n"
 			"         Check your CMOS/BIOS settings.\n");

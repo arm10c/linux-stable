@@ -732,7 +732,7 @@ asmlinkage void __init start_kernel(void)
 	// softirq_vec[8] 에 run_hrtimer_softirq 등록하여 초기화 수행
 
 	softirq_init();
-	// tasklet_vec, tasklet_hi_vec 맵버 값을 초기화하고,
+	// tasklet_vec, tasklet_hi_vec 맴버 값을 초기화하고,
 	// softirq_vec[6]에 tasklet_action, softirq_vec[0]에 tasklet_hi_action 등록하여 초기화 수행
 
 	timekeeping_init();
