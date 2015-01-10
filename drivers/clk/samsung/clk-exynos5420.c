@@ -795,6 +795,66 @@ static void __init exynos5420_clk_init(struct device_node *np)
 		reg_base = of_iomap(np, 0);
 		// reg_base: 0xf0040000
 
+		// of_iomap에서 한일:
+		// device tree 있는 clock node에서 node의 resource 값을 가져옴
+		// of_address_to_resource에서 한일(index: 0):
+		// (&res)->start: 0x10010000
+		// (&res)->end: 0x1003ffff
+		// (&res)->flags: IORESOURCE_MEM: 0x00000200
+		// (&res)->name: "/clock-controller@10010000"
+		/*
+		// alloc area (CLK) 를 만들고 rb tree에 alloc area 를 추가
+		// 가상주소 va_start 기준으로 CLK 를 RB Tree 추가한 결과
+		//
+		//                                  CHID-b
+		//                               (0xF8000000)
+		//                              /            \
+		//                         TMR-b               PMU-b
+		//                    (0xF6300000)             (0xF8180000)
+		//                      /      \               /           \
+		//                GIC#1-r      WDT-b         CMU-b         SRAM-b
+		//            (0xF0002000)   (0xF6400000)  (0xF8100000)   (0xF8400000)
+		//             /       \                                          \
+		//        GIC#0-b     CLK-b                                        ROMC-r
+		//    (0xF0000000)   (0xF0040000)                                 (0xF84C0000)
+		//                   /      \
+		//               COMB-r     SYSC-r
+		//          (0xF0004000)   (0xF6100000)
+		//
+		// vmap_area_list에 GIC#0 - GIC#1 - COMB - CLK - SYSC -TMR - WDT - CHID - CMU - PMU - SRAM - ROMC
+		// 순서로 리스트에 연결이 됨
+		//
+		// (kmem_cache#30-oX (vm_struct))->flags: GFP_KERNEL: 0xD0
+		// (kmem_cache#30-oX (vm_struct))->addr: 0xf0040000
+		// (kmem_cache#30-oX (vm_struct))->size: 0x31000
+		// (kmem_cache#30-oX (vm_struct))->caller: __builtin_return_address(0)
+		//
+		// (kmem_cache#30-oX (vmap_area CLK))->vm: kmem_cache#30-oX (vm_struct)
+		// (kmem_cache#30-oX (vmap_area CLK))->flags: 0x04
+		*/
+		// device tree 있는  clock node에서 node의 resource 값을 pgtable에 매핑함
+		// 0xc0004780이 가리키는 pte의 시작주소에 0x10010000 값을 갱신
+		// (linux pgtable과 hardware pgtable의 값 같이 갱신)
+		//
+		//  pgd                   pte
+		// |              |
+		// +--------------+
+		// |              |       +--------------+ +0
+		// |              |       |  0xXXXXXXXX  | ---> 0x10010653 에 매칭되는 linux pgtable 값
+		// +- - - - - - - +       |  Linux pt 0  |
+		// |              |       +--------------+ +1024
+		// |              |       |              |
+		// +--------------+ +0    |  Linux pt 1  |
+		// | *(c0004780)  |-----> +--------------+ +2048
+		// |              |       |  0x10010653  | ---> 2308
+		// +- - - - - - - + +4    |   h/w pt 0   |
+		// | *(c0004784)  |-----> +--------------+ +3072
+		// |              |       +              +
+		// +--------------+ +8    |   h/w pt 1   |
+		// |              |       +--------------+ +4096
+		//
+		// cache의 값을 전부 메모리에 반영
+
 		// reg_base: 0xf0040000
 		if (!reg_base)
 			panic("%s: failed to map registers\n", __func__);

@@ -688,7 +688,7 @@ void __iomem * __arm_ioremap_pfn_caller(unsigned long pfn,
 		// |              |       +--------------+ +4096
 
 		// ioremap_page_range에서 한일:
-		// 0xc0004780이 가리키는 pte의 시작주소에 0x10010000 값을 갱신
+		// 0xc0004780이 가리키는 pte의 시작주소에 0x10010653 값을 갱신
 		// (linux pgtable과 hardware pgtable의 값 같이 갱신)
 		//
 		//  pgd                   pte
@@ -701,7 +701,7 @@ void __iomem * __arm_ioremap_pfn_caller(unsigned long pfn,
 		// |              |       |              |
 		// +--------------+ +0    |  Linux pt 1  |
 		// | *(c0004780)  |-----> +--------------+ +2048
-		// |              |       |  0x10010653  | ---> 2076
+		// |              |       |  0x10010653  | ---> 2308
 		// +- - - - - - - + +4    |   h/w pt 0   |
 		// | *(c0004784)  |-----> +--------------+ +3072
 		// |              |       +              +

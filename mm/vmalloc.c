@@ -384,6 +384,7 @@ static void __insert_vmap_area(struct vmap_area *va)
 		// COMB node를 추가 할때 까지 루프 수행
 		// CLK node를 추가 할때 까지 루프 수행
 	}
+
 	// while 수행 결과 rbtree를 순회 하여 GIC#0 node를 rbtree에 추가함
 	/*
 	// 가상주소 va_start 기준으로 GIC#0 를 RB Tree 추가한 결과
@@ -444,7 +445,7 @@ static void __insert_vmap_area(struct vmap_area *va)
 
 	// while 수행 결과 rbtree를 순회 하여 CLK node를 rbtree에 추가함
 	/*
-	// 가상주소 va_start 기준으로 COMB 를 RB Tree 추가한 결과
+	// 가상주소 va_start 기준으로 CLK 를 RB Tree 추가한 결과
 	//
 	//                                  CHID-b
 	//                               (0xF8000000)
@@ -570,7 +571,6 @@ static void __insert_vmap_area(struct vmap_area *va)
 	// rb_prev((kmem_cache#30-oX (GIC#1))->rb_node): (GIC#0)->rb_node
 	// va->rb_node: (kmem_cache#30-oX (COMB))->rb_node
 	// rb_prev((kmem_cache#30-oX (COMB))->rb_node): (GIC#1)->rb_node
-	//
 	// va->rb_node: (kmem_cache#30-oX (CLK))->rb_node
 	// rb_prev((kmem_cache#30-oX (CLK))->rb_node): (COMB)->rb_node
 	tmp = rb_prev(&va->rb_node);
@@ -996,6 +996,7 @@ found:
 	// va: kmem_cache#30-oX (COMB)
 	// va: kmem_cache#30-oX (CLK)
 	__insert_vmap_area(va);
+
 	/*
 	// 가상주소 va_start 기준으로 GIC#0 를 RB Tree 추가한 결과
 	//
@@ -1072,6 +1073,7 @@ found:
 	//          (0xF0004000)   (0xF6100000)
 	//
 	// vmap_area_list에 GIC#0 - GIC#1 - COMB - CLK - SYSC -TMR - WDT - CHID - CMU - PMU - SRAM - ROMC
+	// 순서로 리스트에 연결이 됨
 	*/
 
 	// &va->rb_node: &(kmem_cache#30-oX)->rb_node (GIC#0)
@@ -2116,16 +2118,16 @@ static void clear_vm_uninitialized_flag(struct vm_struct *vm)
 }
 
 // ARM10C 20141025
-// size: 0x1000, 1, VM_IOREMAP: 0x00000001, VMALLOC_START: 0xf0000000,VMALLOC_END: 0xff000000UL,
+// size: 0x1000, 1, VM_IOREMAP: 0x00000001, VMALLOC_START: 0xf0000000, VMALLOC_END: 0xff000000UL,
 // NUMA_NO_NODE: -1, GFP_KERNEL: 0xD0, caller: __builtin_return_address(0)
 // ARM10C 20141101
-// size: 0x1000, 1, VM_IOREMAP: 0x00000001, VMALLOC_START: 0xf0000000,VMALLOC_END: 0xff000000UL,
+// size: 0x1000, 1, VM_IOREMAP: 0x00000001, VMALLOC_START: 0xf0000000, VMALLOC_END: 0xff000000UL,
 // NUMA_NO_NODE: -1, GFP_KERNEL: 0xD0, caller: __builtin_return_address(0)
 // ARM10C 20141206
-// size: 0x1000, 1, VM_IOREMAP: 0x00000001, VMALLOC_START: 0xf0000000,VMALLOC_END: 0xff000000UL,
+// size: 0x1000, 1, VM_IOREMAP: 0x00000001, VMALLOC_START: 0xf0000000, VMALLOC_END: 0xff000000UL,
 // NUMA_NO_NODE: -1, GFP_KERNEL: 0xD0, caller: __builtin_return_address(0)
 // ARM10C 20150110
-// size: 0x30000, 1, VM_IOREMAP: 0x00000001, VMALLOC_START: 0xf0000000,VMALLOC_END: 0xff000000UL,
+// size: 0x30000, 1, VM_IOREMAP: 0x00000001, VMALLOC_START: 0xf0000000, VMALLOC_END: 0xff000000UL,
 // NUMA_NO_NODE: -1, GFP_KERNEL: 0xD0, caller: __builtin_return_address(0)
 static struct vm_struct *__get_vm_area_node(unsigned long size,
 		unsigned long align, unsigned long flags, unsigned long start,
@@ -2216,11 +2218,11 @@ static struct vm_struct *__get_vm_area_node(unsigned long size,
 	// size: 0x2000, align: 0x2000, start: 0xf0000000, end: 0xff000000, node: -1, gfp_mask: GFP_KERNEL: 0xD0
 	// alloc_vmap_area(0x2000, 0x2000, 0xf0000000, 0xff000000, -1, GFP_KERNEL: 0xD0): kmem_cache#30-oX (vmap_area GIC#0)
 	// size: 0x2000, align: 0x2000, start: 0xf0000000, end: 0xff000000, node: -1, gfp_mask: GFP_KERNEL: 0xD0
-	// alloc_vmap_area(0x2000, 0x2000, 0xf0002000, 0xff000000, -1, GFP_KERNEL: 0xD0): kmem_cache#30-oX (vmap_area GIC#1)
+	// alloc_vmap_area(0x2000, 0x2000, 0xf0000000, 0xff000000, -1, GFP_KERNEL: 0xD0): kmem_cache#30-oX (vmap_area GIC#1)
 	// size: 0x2000, align: 0x2000, start: 0xf0000000, end: 0xff000000, node: -1, gfp_mask: GFP_KERNEL: 0xD0
-	// alloc_vmap_area(0x2000, 0x2000, 0xf0002000, 0xff000000, -1, GFP_KERNEL: 0xD0): kmem_cache#30-oX (vmap_area COMB)
+	// alloc_vmap_area(0x2000, 0x2000, 0xf0000000, 0xff000000, -1, GFP_KERNEL: 0xD0): kmem_cache#30-oX (vmap_area COMB)
 	// size: 0x31000, align: 0x40000, start: 0xf0000000, end: 0xff000000, node: -1, gfp_mask: GFP_KERNEL: 0xD0
-	// alloc_vmap_area(0x31000, 0x40000, 0xf0002000, 0xff000000, -1, GFP_KERNEL: 0xD0): kmem_cache#30-oX (vmap_area CLK)
+	// alloc_vmap_area(0x31000, 0x40000, 0xf0000000, 0xff000000, -1, GFP_KERNEL: 0xD0): kmem_cache#30-oX (vmap_area CLK)
 	va = alloc_vmap_area(size, align, start, end, node, gfp_mask);
 	// va: kmem_cache#30-oX (vmap_area GIC#0)
 	// va: kmem_cache#30-oX (vmap_area GIC#1)
