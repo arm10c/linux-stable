@@ -350,6 +350,8 @@ extern void _memset_io(volatile void __iomem *, int, size_t);
 // res.start: 0x10482000, resource_size(&res): 0x1000
 // ARM10C 20141206
 // res.start: 0x10440000, resource_size(&res): 0x1000
+// ARM10C 20150110
+// res.start: 0x10010000, resource_size(&res): 0x30000
 #define ioremap(cookie,size)		__arm_ioremap((cookie), (size), MT_DEVICE)
 #define ioremap_nocache(cookie,size)	__arm_ioremap((cookie), (size), MT_DEVICE)
 #define ioremap_cache(cookie,size)	__arm_ioremap((cookie), (size), MT_DEVICE_CACHED)

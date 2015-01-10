@@ -332,9 +332,12 @@ static struct vmap_area *__find_vmap_area(unsigned long addr)
 // va: kmem_cache#30-oX (GIC#1)
 // ARM10C 20141206
 // va: kmem_cache#30-oX (COMB)
+// ARM10C 20150110
+// va: kmem_cache#30-oX (CLK)
 static void __insert_vmap_area(struct vmap_area *va)
 {
 	struct rb_node **p = &vmap_area_root.rb_node;
+	// p: &vmap_area_root.rb_node
 	// p: &vmap_area_root.rb_node
 	// p: &vmap_area_root.rb_node
 	// p: &vmap_area_root.rb_node
@@ -344,9 +347,11 @@ static void __insert_vmap_area(struct vmap_area *va)
 	// parent: NULL
 	// parent: NULL
 	// parent: NULL
+	// parent: NULL
 	struct rb_node *tmp;
 
 	// *p: vmap_area_root.rb_node: NULL
+	// *p: vmap_area_root.rb_node: CHID node
 	// *p: vmap_area_root.rb_node: CHID node
 	// *p: vmap_area_root.rb_node: CHID node
 	// *p: vmap_area_root.rb_node: CHID node
@@ -377,6 +382,7 @@ static void __insert_vmap_area(struct vmap_area *va)
 		// GIC#0 node를 추가 할때 까지 루프 수행
 		// GIC#1 node를 추가 할때 까지 루프 수행
 		// COMB node를 추가 할때 까지 루프 수행
+		// CLK node를 추가 할때 까지 루프 수행
 	}
 	// while 수행 결과 rbtree를 순회 하여 GIC#0 node를 rbtree에 추가함
 	/*
@@ -436,10 +442,34 @@ static void __insert_vmap_area(struct vmap_area *va)
 	//          (0xF0004000)
 	*/
 
+	// while 수행 결과 rbtree를 순회 하여 CLK node를 rbtree에 추가함
+	/*
+	// 가상주소 va_start 기준으로 CLK 를 RB Tree 추가한 결과
+	//
+	//                                  CHID-b
+	//                               (0xF8000000)
+	//                              /            \
+	//                         TMR-r               PMU-r
+	//                    (0xF6300000)             (0xF8180000)
+	//                      /      \               /           \
+	//                GIC#1-b      WDT-b         CMU-b         SRAM-b
+	//            (0xF0002000)   (0xF6400000)  (0xF8100000)   (0xF8400000)
+	//             /       \                                          \
+	//        GIC#0-r     SYSC-b                                       ROMC-r
+	//    (0xF0000000)   (0xF6100000)                                 (0xF84C0000)
+	//                   /
+	//               COMB-r
+	//          (0xF0004000)
+	//                    \
+	//                    CLK-r
+	//                    (0xF0040000)
+	*/
+
 	// va->rb_node: (kmem_cache#30-o9)->rb_node, parent: NULL, p: &vmap_area_root.rb_node
 	// va->rb_node: (kmem_cache#30-oX (GIC#0))->rb_node, parent: SYSC node, p: (SYSC node)->rb_left
 	// va->rb_node: (kmem_cache#30-oX (GIC#1))->rb_node, parent: GIG#0 node, p: (GIG#0 node)->rb_right
 	// va->rb_node: (kmem_cache#30-oX (COMB))->rb_node, parent: SYSC node, p: (SYSC node)->rb_left
+	// va->rb_node: (kmem_cache#30-oX (CLK))->rb_node, parent: COMB node, p: (COMB node)->rb_right
 	rb_link_node(&va->rb_node, parent, p);
 	// vmap_area_root.rb_node: &(kmem_cache#30-o9)->rb_node
 	// (SYSC node)->rb_left: &(GIC#0)->rb_node
@@ -447,11 +477,14 @@ static void __insert_vmap_area(struct vmap_area *va)
 	// (GIG#0 node)->rb_right: &(GIC#1)->rb_node
 	// vmap_area_root.rb_node: &(kmem_cache#30-o9)->rb_node
 	// (SYSC node)->rb_left: &(COMB)->rb_node
+	// vmap_area_root.rb_node: &(kmem_cache#30-o9)->rb_node
+	// (COMB node)->rb_right: &(CLK)->rb_node
 
 	// va->rb_node: (kmem_cache#30-o9)->rb_node
 	// va->rb_node: (kmem_cache#30-oX (GIC#0))->rb_node
 	// va->rb_node: (kmem_cache#30-oX (GIC#1))->rb_node
 	// va->rb_node: (kmem_cache#30-oX (COMB))->rb_node
+	// va->rb_node: (kmem_cache#30-oX (CLK))->rb_node
 	rb_insert_color(&va->rb_node, &vmap_area_root);
 
 	// rbtree 조건에 맞게 tree 구성 및 안정화 작업 수행
@@ -508,6 +541,26 @@ static void __insert_vmap_area(struct vmap_area *va)
 	//                   /
 	//               COMB-r
 	//          (0xF0004000)
+	*/
+
+	// rbtree 조건에 맞게 tree 구성 및 안정화 작업 수행
+	/*
+	// 가상주소 va_start 기준으로 CLK 를 RB Tree 추가한 결과
+	//
+	//                                  CHID-b
+	//                               (0xF8000000)
+	//                              /            \
+	//                         TMR-r               PMU-r
+	//                    (0xF6300000)             (0xF8180000)
+	//                      /      \               /           \
+	//                GIC#1-b      WDT-b         CMU-b         SRAM-b
+	//            (0xF0002000)   (0xF6400000)  (0xF8100000)   (0xF8400000)
+	//             /       \                                          \
+	//        GIC#0-r     CLK-b                                        ROMC-r
+	//    (0xF0000000)   (0xF0040000)                                 (0xF84C0000)
+	//                   /      \
+	//               COMB-r     SYSC-r
+	//          (0xF0004000)   (0xF6100000)
 	*/
 
 	/* address-sort this list */
@@ -578,6 +631,8 @@ static void purge_vmap_area_lazy(void);
 // size: 0x2000, align: 0x2000, start: 0xf0000000, end: 0xff000000, node: -1, gfp_mask: GFP_KERNEL: 0xD0
 // ARM10C 20141206
 // size: 0x2000, align: 0x2000, start: 0xf0000000, end: 0xff000000, node: -1, gfp_mask: GFP_KERNEL: 0xD0
+// ARM10C 20150110
+// size: 0x31000, align: 0x40000, start: 0xf0000000, end: 0xff000000, node: -1, gfp_mask: GFP_KERNEL: 0xD0
 static struct vmap_area *alloc_vmap_area(unsigned long size,
 				unsigned long align,
 				unsigned long vstart, unsigned long vend,
@@ -590,23 +645,29 @@ static struct vmap_area *alloc_vmap_area(unsigned long size,
 	// purged: 0
 	// purged: 0
 	// purged: 0
+	// purged: 0
 	struct vmap_area *first;
 
 	// size: 0x2000
 	// size: 0x2000
 	// size: 0x2000
+	// size: 0x31000
 	BUG_ON(!size);
 
 	// size: 0x2000, PAGE_MASK: 0xFFFFF000
 	// size: 0x2000, PAGE_MASK: 0xFFFFF000
 	// size: 0x2000, PAGE_MASK: 0xFFFFF000
+	// size: 0x31000, PAGE_MASK: 0xFFFFF000
 	BUG_ON(size & ~PAGE_MASK);
 
 	// align: 0x2000, is_power_of_2(0x2000): 1
 	// align: 0x2000, is_power_of_2(0x2000): 1
 	// align: 0x2000, is_power_of_2(0x2000): 1
+	// align: 0x40000, is_power_of_2(0x40000): 1
 	BUG_ON(!is_power_of_2(align));
 
+	// sizeof(struct vmap_area): 52 bytes, gfp_mask: GFP_KERNEL: 0xD0, GFP_RECLAIM_MASK: 0x13ef0, node: -1
+	// kmalloc_node(52, GFP_KERNEL: 0xD0, -1): kmem_cache#30-oX
 	// sizeof(struct vmap_area): 52 bytes, gfp_mask: GFP_KERNEL: 0xD0, GFP_RECLAIM_MASK: 0x13ef0, node: -1
 	// kmalloc_node(52, GFP_KERNEL: 0xD0, -1): kmem_cache#30-oX
 	// sizeof(struct vmap_area): 52 bytes, gfp_mask: GFP_KERNEL: 0xD0, GFP_RECLAIM_MASK: 0x13ef0, node: -1
@@ -618,7 +679,9 @@ static struct vmap_area *alloc_vmap_area(unsigned long size,
 	// va: kmem_cache#30-oX
 	// va: kmem_cache#30-oX
 	// va: kmem_cache#30-oX
+	// va: kmem_cache#30-oX
 
+	// va: kmem_cache#30-oX
 	// va: kmem_cache#30-oX
 	// va: kmem_cache#30-oX
 	// va: kmem_cache#30-oX
@@ -632,10 +695,12 @@ static struct vmap_area *alloc_vmap_area(unsigned long size,
 	// &va->rb_node: &(kmem_cache#30-oX)->rb_node, SIZE_MAX: 0xFFFFFFFF, gfp_mask: GFP_KERNEL: 0xD0, GFP_RECLAIM_MASK: 0x13ef0
 	// &va->rb_node: &(kmem_cache#30-oX)->rb_node, SIZE_MAX: 0xFFFFFFFF, gfp_mask: GFP_KERNEL: 0xD0, GFP_RECLAIM_MASK: 0x13ef0
 	// &va->rb_node: &(kmem_cache#30-oX)->rb_node, SIZE_MAX: 0xFFFFFFFF, gfp_mask: GFP_KERNEL: 0xD0, GFP_RECLAIM_MASK: 0x13ef0
+	// &va->rb_node: &(kmem_cache#30-oX)->rb_node, SIZE_MAX: 0xFFFFFFFF, gfp_mask: GFP_KERNEL: 0xD0, GFP_RECLAIM_MASK: 0x13ef0
 	kmemleak_scan_area(&va->rb_node, SIZE_MAX, gfp_mask & GFP_RECLAIM_MASK); // null function
 
 retry:
 	spin_lock(&vmap_area_lock);
+	// vmap_area_lock을 이용한 spinlock 설정 수행
 	// vmap_area_lock을 이용한 spinlock 설정 수행
 	// vmap_area_lock을 이용한 spinlock 설정 수행
 	// vmap_area_lock을 이용한 spinlock 설정 수행
@@ -655,6 +720,8 @@ retry:
 	// vstart: 0xf0000000, cached_vstart: 0xf0000000, align: 0x2000, cached_align: 0x2000
 	// free_vmap_cache: &(kmem_cache#30-oX)->rb_node (GIC#1), size: 0x2000, cached_hole_size: 0
 	// vstart: 0xf0000000, cached_vstart: 0xf0000000, align: 0x2000, cached_align: 0x2000
+	// free_vmap_cache: &(kmem_cache#30-oX)->rb_node (COMB), size: 0x31000, cached_hole_size: 0
+	// vstart: 0xf0000000, cached_vstart: 0xf0000000, align: 0x40000, cached_align: 0x2000
 	if (!free_vmap_cache ||
 			size < cached_hole_size ||
 			vstart < cached_vstart ||
@@ -673,7 +740,9 @@ nocache:
 	// cached_vstart: 0, vstart: 0xf0000000
 	// cached_vstart: 0xf0000000, vstart: 0xf0000000
 	// cached_vstart: 0xf0000000, vstart: 0xf0000000
+	// cached_vstart: 0xf0000000, vstart: 0xf0000000
 	cached_vstart = vstart;
+	// cached_vstart: 0xf0000000
 	// cached_vstart: 0xf0000000
 	// cached_vstart: 0xf0000000
 	// cached_vstart: 0xf0000000
@@ -681,15 +750,18 @@ nocache:
 	// cached_align: 0, align: 0x2000
 	// cached_align: 0x2000, align: 0x2000
 	// cached_align: 0x2000, align: 0x2000
+	// cached_align: 0x2000, align: 0x40000
 	cached_align = align;
 	// cached_align: 0x2000
 	// cached_align: 0x2000
 	// cached_align: 0x2000
+	// cached_align: 0x40000
 
 	/* find starting point for our search */
 	// free_vmap_cache: NULL
 	// free_vmap_cache: &(kmem_cache#30-oX)->rb_node (GIC#0)
 	// free_vmap_cache: &(kmem_cache#30-oX)->rb_node (GIC#1)
+	// free_vmap_cache: &(kmem_cache#30-oX)->rb_node (COMB)
 	if (free_vmap_cache) {
 		// free_vmap_cache: &(kmem_cache#30-oX)->rb_node (GIC#0)
 		// rb_entry(&(kmem_cache#30-oX)->rb_node (GIC#0), struct vmap_area, rb_node):
@@ -697,25 +769,34 @@ nocache:
 		// free_vmap_cache: &(kmem_cache#30-oX)->rb_node (GIC#1)
 		// rb_entry(&(kmem_cache#30-oX)->rb_node (GIC#1), struct vmap_area, rb_node):
 		// kmem_cache#30-oX (GIC#1)
+		// free_vmap_cache: &(kmem_cache#30-oX)->rb_node (COMB)
+		// rb_entry(&(kmem_cache#30-oX)->rb_node (COMB), struct vmap_area, rb_node):
+		// kmem_cache#30-oX (COMB)
 		first = rb_entry(free_vmap_cache, struct vmap_area, rb_node);
 		// first: kmem_cache#30-oX (GIC#0)
 		// first: kmem_cache#30-oX (GIC#1)
+		// first: kmem_cache#30-oX (COMB)
 
 		// first->va_end: (kmem_cache#30-oX (GIC#0))->va_end: 0xf0002000, align: 0x2000
 		// ALIGN(0xf0002000, 0x2000): 0xf0002000
 		// first->va_end: (kmem_cache#30-oX (GIC#1))->va_end: 0xf0004000, align: 0x2000
 		// ALIGN(0xf0004000, 0x2000): 0xf0004000
+		// first->va_end: (kmem_cache#30-oX (COMB))->va_end: 0xf0006000, align: 0x40000
+		// ALIGN(0xf0006000, 0x40000): 0xf0040000
 		addr = ALIGN(first->va_end, align);
 		// addr: 0xf0002000
 		// addr: 0xf0004000
+		// addr: 0xf0040000
 
 		// addr: 0xf0002000, vstart: 0xf0000000
 		// addr: 0xf0004000, vstart: 0xf0000000
+		// addr: 0xf0040000, vstart: 0xf0000000
 		if (addr < vstart)
 			goto nocache;
 
 		// addr: 0xf0002000, size: 0x2000
 		// addr: 0xf0004000, size: 0x2000
+		// addr: 0xf0040000, size: 0x31000
 		if (addr + size < addr)
 			goto overflow;
 
@@ -811,20 +892,25 @@ nocache:
 	// addr: 0xf0000000, size: 0x2000, first->va_start: (SYSC)->va_start: 0xf6100000, vend: 0xff000000
 	// addr: 0xf0002000, size: 0x2000, first->va_start: (GIC#0)->va_start: 0xf0000000, vend: 0xff000000
 	// addr: 0xf0004000, size: 0x2000, first->va_start: (GIC#1)->va_start: 0xf0002000, vend: 0xff000000
+	// addr: 0xf0040000, size: 0x31000, first->va_start: (COMB)->va_start: 0xf0004000, vend: 0xff000000
 	while (addr + size > first->va_start && addr + size <= vend) {
 		// addr: 0xf0002000, cached_hole_size: 0, first->va_start: (GIC#0)->va_start: 0xf0000000
 		// addr: 0xf0004000, cached_hole_size: 0, first->va_start: (GIC#1)->va_start: 0xf0002000
+		// addr: 0xf0040000, cached_hole_size: 0, first->va_start: (COMB)->va_start: 0xf0004000
 		if (addr + cached_hole_size < first->va_start)
 			cached_hole_size = first->va_start - addr;
 
 		// first->va_end: (GIC#0)->va_end: 0xf0002000, align: 0x2000
 		// first->va_end: (GIC#1)->va_end: 0xf0004000, align: 0x2000
+		// first->va_end: (COMB)->va_end: 0xf0006000, align: 0x40000
 		addr = ALIGN(first->va_end, align);
 		// addr: 0xf0002000
 		// addr: 0xf0004000
+		// addr: 0xf0040000
 
 		// addr: 0xf0002000, size: 0x2000
 		// addr: 0xf0004000, size: 0x2000
+		// addr: 0xf0040000, size: 0x31000
 		if (addr + size < addr)
 			goto overflow;
 
@@ -832,6 +918,8 @@ nocache:
 		// list_is_last(&(GIC#0)->list, &vmap_area_list): 0
 		// &first->list: &(GIC#1)->list
 		// list_is_last(&(GIC#1)->list, &vmap_area_list): 0
+		// &first->list: &(COMB)->list
+		// list_is_last(&(COMB)->list, &vmap_area_list): 0
 		if (list_is_last(&first->list, &vmap_area_list))
 			goto found;
 
@@ -839,8 +927,11 @@ nocache:
 		// list_entry((SYSC)->list, struct vmap_area, list): SYSC의 vmap_area 시작주소
 		// first->list.next: (GIC#1)->list.next: (SYSC)->list
 		// list_entry((SYSC)->list, struct vmap_area, list): SYSC의 vmap_area 시작주소
+		// first->list.next: (COMB)->list.next: (SYSC)->list
+		// list_entry((SYSC)->list, struct vmap_area, list): SYSC의 vmap_area 시작주소
 		first = list_entry(first->list.next,
 				struct vmap_area, list);
+		// first: SYSC의 vmap_area 시작주소
 		// first: SYSC의 vmap_area 시작주소
 		// first: SYSC의 vmap_area 시작주소
 	}
@@ -849,25 +940,31 @@ found:
 	// addr: 0xf0000000, size: 0x2000, vend: 0xff000000
 	// addr: 0xf0002000, size: 0x2000, vend: 0xff000000
 	// addr: 0xf0004000, size: 0x2000, vend: 0xff000000
+	// addr: 0xf0040000, size: 0x31000, vend: 0xff000000
 	if (addr + size > vend)
 		goto overflow;
 
 	// va->va_start: (kmem_cache#30-oX)->va_start, addr: 0xf0000000
 	// va->va_start: (kmem_cache#30-oX)->va_start, addr: 0xf0002000
 	// va->va_start: (kmem_cache#30-oX)->va_start, addr: 0xf0004000
+	// va->va_start: (kmem_cache#30-oX)->va_start, addr: 0xf0040000
 	va->va_start = addr;
 	// va->va_start: (kmem_cache#30-oX)->va_start: 0xf0000000
 	// va->va_start: (kmem_cache#30-oX)->va_start: 0xf0002000
 	// va->va_start: (kmem_cache#30-oX)->va_start: 0xf0004000
+	// va->va_start: (kmem_cache#30-oX)->va_start: 0xf0040000
 
 	// va->va_end: (kmem_cache#30-oX)->va_end, addr: 0xf0000000, size: 0x2000
 	// va->va_end: (kmem_cache#30-oX)->va_end, addr: 0xf0002000, size: 0x2000
 	// va->va_end: (kmem_cache#30-oX)->va_end, addr: 0xf0004000, size: 0x2000
+	// va->va_end: (kmem_cache#30-oX)->va_end, addr: 0xf0040000, size: 0x31000
 	va->va_end = addr + size;
 	// va->va_end: (kmem_cache#30-oX)->va_end: 0xf0002000
 	// va->va_end: (kmem_cache#30-oX)->va_end: 0xf0004000
 	// va->va_end: (kmem_cache#30-oX)->va_end: 0xf0006000
+	// va->va_end: (kmem_cache#30-oX)->va_end: 0xf0071000
 
+	// va->flags: (kmem_cache#30-oX)->flags
 	// va->flags: (kmem_cache#30-oX)->flags
 	// va->flags: (kmem_cache#30-oX)->flags
 	// va->flags: (kmem_cache#30-oX)->flags
@@ -875,10 +972,12 @@ found:
 	// va->flags: (kmem_cache#30-oX)->flags: 0
 	// va->flags: (kmem_cache#30-oX)->flags: 0
 	// va->flags: (kmem_cache#30-oX)->flags: 0
+	// va->flags: (kmem_cache#30-oX)->flags: 0
 
 	// va: kmem_cache#30-oX (GIC#0)
 	// va: kmem_cache#30-oX (GIC#1)
 	// va: kmem_cache#30-oX (COMB)
+	// va: kmem_cache#30-oX (CLK)
 	__insert_vmap_area(va);
 	/*
 	// 가상주소 va_start 기준으로 GIC#0 를 RB Tree 추가한 결과
@@ -1977,6 +2076,9 @@ static void clear_vm_uninitialized_flag(struct vm_struct *vm)
 // ARM10C 20141206
 // size: 0x1000, 1, VM_IOREMAP: 0x00000001, VMALLOC_START: 0xf0000000,VMALLOC_END: 0xff000000UL,
 // NUMA_NO_NODE: -1, GFP_KERNEL: 0xD0, caller: __builtin_return_address(0)
+// ARM10C 20150110
+// size: 0x30000, 1, VM_IOREMAP: 0x00000001, VMALLOC_START: 0xf0000000,VMALLOC_END: 0xff000000UL,
+// NUMA_NO_NODE: -1, GFP_KERNEL: 0xD0, caller: __builtin_return_address(0)
 static struct vm_struct *__get_vm_area_node(unsigned long size,
 		unsigned long align, unsigned long flags, unsigned long start,
 		unsigned long end, int node, gfp_t gfp_mask, const void *caller)
@@ -1987,8 +2089,10 @@ static struct vm_struct *__get_vm_area_node(unsigned long size,
 	// in_interrupt(): 0
 	// in_interrupt(): 0
 	// in_interrupt(): 0
+	// in_interrupt(): 0
 	BUG_ON(in_interrupt());
 
+	// flags: VM_IOREMAP: 0x00000001
 	// flags: VM_IOREMAP: 0x00000001
 	// flags: VM_IOREMAP: 0x00000001
 	// flags: VM_IOREMAP: 0x00000001
@@ -1999,22 +2103,28 @@ static struct vm_struct *__get_vm_area_node(unsigned long size,
 		// clamp(13, 12, 24): 13
 		// size: 0x1000, fls(0x1000): 13, PAGE_SHIFT: 12, IOREMAP_MAX_ORDER: 24
 		// clamp(13, 12, 24): 13
+		// size: 0x30000, fls(0x30000): 18, PAGE_SHIFT: 12, IOREMAP_MAX_ORDER: 24
+		// clamp(18, 12, 24): 18
 		align = 1ul << clamp(fls(size), PAGE_SHIFT, IOREMAP_MAX_ORDER);
 		// align: 0x2000
 		// align: 0x2000
 		// align: 0x2000
+		// align: 0x40000
 
 	// size: 0x1000
 	// size: 0x1000
 	// size: 0x1000
+	// size: 0x30000
 	size = PAGE_ALIGN(size);
 	// size: 0x1000
 	// size: 0x1000
 	// size: 0x1000
+	// size: 0x30000
 
 	// size: 0x1000
 	// size: 0x1000
 	// size: 0x1000
+	// size: 0x30000
 	if (unlikely(!size))
 		return NULL;
 
@@ -2024,14 +2134,18 @@ static struct vm_struct *__get_vm_area_node(unsigned long size,
 	// kzalloc_node(32, GFP_KERNEL: 0xD0, -1): kmem_cache#30-oX (vm_struct)-2
 	// sizeof(*area): 32, gfp_mask: GFP_KERNEL: 0xD0, GFP_RECLAIM_MASK: 0x13ef0, node: -1
 	// kzalloc_node(32, GFP_KERNEL: 0xD0, -1): kmem_cache#30-oX (vm_struct)-3
+	// sizeof(*area): 32, gfp_mask: GFP_KERNEL: 0xD0, GFP_RECLAIM_MASK: 0x13ef0, node: -1
+	// kzalloc_node(32, GFP_KERNEL: 0xD0, -1): kmem_cache#30-oX (vm_struct)-4
 	area = kzalloc_node(sizeof(*area), gfp_mask & GFP_RECLAIM_MASK, node);
 	// area: kmem_cache#30-oX (vm_struct)
 	// area: kmem_cache#30-oX (vm_struct)-2
 	// area: kmem_cache#30-oX (vm_struct)-3
+	// area: kmem_cache#30-oX (vm_struct)-4
 
 	// area: kmem_cache#30-oX (vm_struct)
 	// area: kmem_cache#30-oX (vm_struct)-2
 	// area: kmem_cache#30-oX (vm_struct)-3
+	// area: kmem_cache#30-oX (vm_struct)-4
 	if (unlikely(!area))
 		return NULL;
 
@@ -2041,10 +2155,12 @@ static struct vm_struct *__get_vm_area_node(unsigned long size,
 	// size: 0x1000, PAGE_SIZE: 0x1000
 	// size: 0x1000, PAGE_SIZE: 0x1000
 	// size: 0x1000, PAGE_SIZE: 0x1000
+	// size: 0x30000, PAGE_SIZE: 0x1000
 	size += PAGE_SIZE;
 	// size: 0x2000
 	// size: 0x2000
 	// size: 0x2000
+	// size: 0x31000
 
 // 2014/11/01 종료
 // 2014/11/08 시작
@@ -2055,6 +2171,8 @@ static struct vm_struct *__get_vm_area_node(unsigned long size,
 	// alloc_vmap_area(0x2000, 0x2000, 0xf0002000, 0xff000000, -1, GFP_KERNEL: 0xD0): kmem_cache#30-oX (vmap_area GIC#1)
 	// size: 0x2000, align: 0x2000, start: 0xf0000000, end: 0xff000000, node: -1, gfp_mask: GFP_KERNEL: 0xD0
 	// alloc_vmap_area(0x2000, 0x2000, 0xf0002000, 0xff000000, -1, GFP_KERNEL: 0xD0): kmem_cache#30-oX (vmap_area COMB)
+	// size: 0x31000, align: 0x40000, start: 0xf0000000, end: 0xff000000, node: -1, gfp_mask: GFP_KERNEL: 0xD0
+	// alloc_vmap_area(0x31000, 0x40000, 0xf0002000, 0xff000000, -1, GFP_KERNEL: 0xD0):
 	va = alloc_vmap_area(size, align, start, end, node, gfp_mask);
 	// va: kmem_cache#30-oX (vmap_area GIC#0)
 	// va: kmem_cache#30-oX (vmap_area GIC#1)
@@ -2216,6 +2334,8 @@ struct vm_struct *get_vm_area(unsigned long size, unsigned long flags)
 // size: 0x1000, VM_IOREMAP: 0x00000001, caller: __builtin_return_address(0)
 // ARM10C 20141206
 // size: 0x1000, VM_IOREMAP: 0x00000001, caller: __builtin_return_address(0)
+// ARM10C 20150110
+// size: 0x30000, VM_IOREMAP: 0x00000001, caller: __builtin_return_address(0)
 struct vm_struct *get_vm_area_caller(unsigned long size, unsigned long flags,
 				const void *caller)
 {
@@ -2231,6 +2351,9 @@ struct vm_struct *get_vm_area_caller(unsigned long size, unsigned long flags,
 	// NUMA_NO_NODE: -1, GFP_KERNEL: 0xD0, caller: __builtin_return_address(0)
 	// __get_vm_area_node(0x1000, VM_IOREMAP: 0x00000001, 0xf0000000, 0xff000000UL, -1, GFP_KERNEL: 0xD0, __builtin_return_address(0)):
 	// kmem_cache#30-oX (vm_struct)
+	// size: 0x30000, 1, VM_IOREMAP: 0x00000001, VMALLOC_START: 0xf0000000, VMALLOC_END: 0xff000000UL,
+	// NUMA_NO_NODE: -1, GFP_KERNEL: 0xD0, caller: __builtin_return_address(0)
+	// __get_vm_area_node(0x30000, VM_IOREMAP: 0x00000001, 0xf0000000, 0xff000000UL, -1, GFP_KERNEL: 0xD0, __builtin_return_address(0)):
 	return __get_vm_area_node(size, 1, flags, VMALLOC_START, VMALLOC_END,
 				  NUMA_NO_NODE, GFP_KERNEL, caller);
 	// return kmem_cache#30-oX (vm_struct)

@@ -107,6 +107,8 @@ extern void rb_replace_node(struct rb_node *victim, struct rb_node *new,
 // va->rb_node: (kmem_cache#30-oX (GIC#0))->rb_node, parent: SYSC node, p: (SYSC node)->rb_left
 // ARM10C 20141206
 // va->rb_node: (kmem_cache#30-oX (COMB))->rb_node, parent: SYSC node, p: (SYSC node)->rb_left
+// ARM10C 20150110
+// va->rb_node: (kmem_cache#30-oX (CLK))->rb_node, parent: COMB node, p: (COMB node)->rb_right
 static inline void rb_link_node(struct rb_node * node, struct rb_node * parent,
 				struct rb_node ** rb_link)
 {

@@ -932,6 +932,8 @@ static int __of_address_to_resource(struct device_node *dev,
 // np: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소, index: 1, &res
 // ARM10C 20141206
 // np: devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소, index: 0, &res
+// ARM10C 20150110
+// np: devtree에서 allnext로 순회 하면서 찾은 clock node의 주소, index: 0
 int of_address_to_resource(struct device_node *dev, int index,
 			   struct resource *r)
 {
@@ -1009,6 +1011,7 @@ struct device_node *of_find_matching_node_by_address(struct device_node *from,
 // ARM10C 20141206
 // np: devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소, 0
 // ARM10C 20150103
+// ARM10C 20150110
 // np: devtree에서 allnext로 순회 하면서 찾은 clock node의 주소, 0
 void __iomem *of_iomap(struct device_node *np, int index)
 {
@@ -1019,6 +1022,9 @@ void __iomem *of_iomap(struct device_node *np, int index)
 	// np: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소, index: 1
 	// of_address_to_resource(devtree에서 allnext로 순회 하면서 찾은 gic node의 주소, 1, &res): 0
 	// np: devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소, index: 0
+	// of_address_to_resource(devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소, 0, &res): 0
+	// np: devtree에서 allnext로 순회 하면서 찾은 clock node의 주소, index: 0
+	// of_address_to_resource(devtree에서 allnext로 순회 하면서 찾은 clock node의 주소, 0, &res): 0
 	if (of_address_to_resource(np, index, &res))
 		return NULL;
 
@@ -1042,12 +1048,21 @@ void __iomem *of_iomap(struct device_node *np, int index)
 	// (&res)->flags: IORESOURCE_MEM: 0x00000200
 	// (&res)->name: "/interrupt-controller@10440000"
 
+	// np: devtree에서 allnext로 순회 하면서 찾은 clock node의 주소
+	// of_address_to_resource에서 한일(index: 0):
+	// (&res)->start: 0x10010000
+	// (&res)->end: 0x1003ffff
+	// (&res)->flags: IORESOURCE_MEM: 0x00000200
+	// (&res)->name: "/clock-controller@10010000"
+
 	// res.start: 0x10481000, resource_size(&res): 0x1000
 	// ioremap(0x10481000, 0x1000): 0xf0000000
 	// res.start: 0x10482000, resource_size(&res): 0x1000
 	// ioremap(0x10482000, 0x1000): 0xf0002000
 	// res.start: 0x10440000, resource_size(&res): 0x1000
 	// ioremap(0x10440000, 0x1000): 0xf0004000
+	// res.start: 0x10010000, resource_size(&res): 0x30000
+	// ioremap(0x10010000, 0x30000):
 	return ioremap(res.start, resource_size(&res));
 	// return 0xf0000000
 	// return 0xf0002000

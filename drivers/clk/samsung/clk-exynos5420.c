@@ -772,6 +772,7 @@ static void __init exynos5420_clk_init(struct device_node *np)
 	void __iomem *reg_base;
 
 // 2015/01/03 종료
+// 2015/01/10 시작
 
 	// np: devtree에서 allnext로 순회 하면서 찾은 clock node의 주소
 	if (np) {
