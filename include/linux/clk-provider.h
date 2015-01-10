@@ -25,7 +25,11 @@
 #define CLK_SET_PARENT_GATE	BIT(1) /* must be gated across re-parent */
 #define CLK_SET_RATE_PARENT	BIT(2) /* propagate rate change up one level */
 #define CLK_IGNORE_UNUSED	BIT(3) /* do not gate even if unused */
+// ARM10C 20150110
+// CLK_IS_ROOT: 0x10
 #define CLK_IS_ROOT		BIT(4) /* root clk, has no parent */
+// ARM10C 20150110
+// CLK_IS_BASIC: 0x20
 #define CLK_IS_BASIC		BIT(5) /* Basic clk, can't do a to_clk_foo() */
 #define CLK_GET_RATE_NOCACHE	BIT(6) /* do not use the cached clk rate */
 #define CLK_SET_RATE_NO_REPARENT BIT(7) /* don't re-parent on rate change */
@@ -152,6 +156,7 @@ struct clk_ops {
  * @num_parents: number of possible parents
  * @flags: framework-level hints and quirks
  */
+// ARM10C 20150110
 struct clk_init_data {
 	const char		*name;
 	const struct clk_ops	*ops;
@@ -172,6 +177,8 @@ struct clk_init_data {
  * @init: pointer to struct clk_init_data that contains the init data shared
  * with the common clock framework.
  */
+// ARM10C 20150110
+// sizeof(struct clk_hw): 8 bytes
 struct clk_hw {
 	struct clk *clk;
 	const struct clk_init_data *init;
@@ -191,6 +198,8 @@ struct clk_hw {
  * @hw:		handle between common and hardware-specific interfaces
  * @fixed_rate:	constant frequency of clock
  */
+// ARM10C 20150110
+// sizeof(struct clk_fixed_rate): 13 bytes
 struct clk_fixed_rate {
 	struct		clk_hw hw;
 	unsigned long	fixed_rate;
@@ -454,6 +463,7 @@ struct of_device_id;
 // ARM10C 20150103
 typedef void (*of_clk_init_cb_t)(struct device_node *);
 
+// ARM10C 20150110
 struct clk_onecell_data {
 	struct clk **clks;
 	unsigned int clk_num;
@@ -465,7 +475,7 @@ struct clk_onecell_data {
 		__used __section(__clk_of_table)		\
 		= { .compatible = compat, .data = fn };
 
-#ifdef CONFIG_OF
+#ifdef CONFIG_OF // CONFIG_OF=y
 int of_clk_add_provider(struct device_node *np,
 			struct clk *(*clk_src_get)(struct of_phandle_args *args,
 						   void *data),

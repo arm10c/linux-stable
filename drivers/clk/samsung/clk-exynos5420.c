@@ -107,6 +107,7 @@ enum exynos5420_plls {
 	nr_plls			/* number of PLLs */
 };
 
+// ARM10C 20150110
 enum exynos5420_clks {
 	none,
 
@@ -146,6 +147,7 @@ enum exynos5420_clks {
 	/* divider clocks */
 	dout_pixel = 768,
 
+	// nr_clks: 769
 	nr_clks,
 };
 
@@ -153,6 +155,7 @@ enum exynos5420_clks {
  * list of controller registers to be saved and restored during a
  * suspend/resume cycle.
  */
+// ARM10C 20150110
 static unsigned long exynos5420_clk_regs[] __initdata = {
 	SRC_CPU,
 	DIV_CPU0,
@@ -297,7 +300,17 @@ PNAME(maudio0_p)	= { "fin_pll", "maudio_clk", "sclk_dpll", "sclk_mpll",
 			  "sclk_spll", "sclk_ipll", "sclk_epll", "sclk_rpll" };
 
 /* fixed rate clocks generated outside the soc */
+// ARM10C 20150110
 static struct samsung_fixed_rate_clock exynos5420_fixed_rate_ext_clks[] __initdata = {
+
+	// FRATE(fin_pll, "fin_pll", NULL, CLK_IS_ROOT, 0):
+	// {
+	// 	.id		= fin_pll,
+	// 	.name		= "fin_pll",
+	// 	.parent_name	= NULL,
+	// 	.flags		= CLK_IS_ROOT,
+	// 	.fixed_rate	= 0,
+	// }
 	FRATE(fin_pll, "fin_pll", NULL, CLK_IS_ROOT, 0),
 };
 
@@ -759,6 +772,7 @@ static struct samsung_pll_clock exynos5420_plls[nr_plls] __initdata = {
 		KPLL_CON0, NULL),
 };
 
+// ARM10C 20150110
 static struct of_device_id ext_clk_match[] __initdata = {
 	{ .compatible = "samsung,exynos5420-oscclk", .data = (void *)0, },
 	{ },
@@ -777,16 +791,45 @@ static void __init exynos5420_clk_init(struct device_node *np)
 	// np: devtree에서 allnext로 순회 하면서 찾은 clock node의 주소
 	if (np) {
 		// np: devtree에서 allnext로 순회 하면서 찾은 clock node의 주소
+		// of_iomap(devtree에서 allnext로 순회 하면서 찾은 clock node의 주소, 0): 0xf0040000
 		reg_base = of_iomap(np, 0);
+		// reg_base: 0xf0040000
+
+		// reg_base: 0xf0040000
 		if (!reg_base)
 			panic("%s: failed to map registers\n", __func__);
 	} else {
 		panic("%s: unable to determine soc\n", __func__);
 	}
 
+	// np: devtree에서 allnext로 순회 하면서 찾은 clock node의 주소, reg_base: 0xf0040000, nr_clks: 769
+	// ARRAY_SIZE(exynos5420_clk_regs): 59
 	samsung_clk_init(np, reg_base, nr_clks,
 			exynos5420_clk_regs, ARRAY_SIZE(exynos5420_clk_regs),
 			NULL, 0);
+
+	// samsung_clk_init 에서 한일:
+	// struct samsung_clk_reg_dump를 59개 만큼 메모리를 할당 받아
+	// exynos5420_clk_regs의 값으로 맴버값 세팅
+	// (kmem_cache#26-oX)[0...58].offset: exynos5420_clk_regs[0...58]
+	//
+	// syscore_ops_list의 tail에 (&samsung_clk_syscore_ops)->node 를 추가
+	//
+	// struct clk * 를 769개 만큼 메모리를 clk_table에 할당 받음
+	// clk_table: kmem_cache#23-o0
+	//
+	// clk_data.clks: kmem_cache#23-o0 (clk_table)
+	// clk_data.clk_num: 769
+	//
+	// struct of_clk_provider 의 메모리(kmem_cache#30-oX)를 할당 받고 맴버값 초기화 수행
+	//
+	// (kmem_cache#30-oX)->node: devtree에서 allnext로 순회 하면서 찾은 clock node의 주소
+	// (kmem_cache#30-oX)->data: &clk_data
+	// (kmem_cache#30-oX)->get: of_clk_src_onecell_get
+	//
+	// list인 of_clk_providers의 head에 (kmem_cache#30-oX)->link를 추가
+
+	// ARRAY_SIZE(exynos5420_fixed_rate_ext_clks): 1
 	samsung_clk_of_register_fixed_ext(exynos5420_fixed_rate_ext_clks,
 			ARRAY_SIZE(exynos5420_fixed_rate_ext_clks),
 			ext_clk_match);

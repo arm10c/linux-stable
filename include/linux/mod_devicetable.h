@@ -223,6 +223,7 @@ struct serio_device_id {
 // ARM10C 20141004
 // ARM10C 20141011
 // ARM10C 20150103
+// ARM10C 20150110
 struct of_device_id
 {
 	char	name[32];

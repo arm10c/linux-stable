@@ -50,6 +50,7 @@ struct of_irq_controller;
 // ARM10C 20141004
 // ARM10C 20141018
 // ARM10C 20150103
+// ARM10C 20150110
 // size : 60 byte
 struct device_node {
 	const char *name;
@@ -99,6 +100,7 @@ extern void of_node_put(struct device_node *node);
 // ARM10C 20141122
 // ARM10C 20141206
 // ARM10C 20141213
+// ARM10C 20150110
 static inline struct device_node *of_node_get(struct device_node *node)
 {
 	return node;
@@ -264,6 +266,10 @@ static inline struct device_node *of_find_matching_node(
 // for_each_matching_node_and_match(np, matches, &match):
 //     for (np = of_find_matching_node_and_match(NULL, matches, &match);
 //          np; np = of_find_matching_node_and_match(np, matches, &match))
+// ARM10C 20150110
+// for_each_matching_node_and_match(np, clk_matches, &match):
+//     for (np = of_find_matching_node_and_match(NULL, clk_matches, &match);
+//          np; np = of_find_matching_node_and_match(np, clk_matches, &match))
 #define for_each_matching_node_and_match(dn, matches, match) \
 	for (dn = of_find_matching_node_and_match(NULL, matches, match); \
 	     dn; dn = of_find_matching_node_and_match(dn, matches, match))
@@ -677,6 +683,8 @@ static inline int of_property_read_u16(const struct device_node *np,
 // node: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소
 // ARM10C 20141206
 // np: devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소, &max_nr
+// ARM10C 20150110
+// np: devtree에서 allnext로 순회 하면서 찾은 fixed-rate-clocks node의 주소, &freq
 static inline int of_property_read_u32(const struct device_node *np,
 				       const char *propname,
 				       u32 *out_value)

@@ -34,6 +34,7 @@ static unsigned long clk_fixed_rate_recalc_rate(struct clk_hw *hw,
 	return to_clk_fixed_rate(hw)->fixed_rate;
 }
 
+// ARM10C 20150110
 const struct clk_ops clk_fixed_rate_ops = {
 	.recalc_rate = clk_fixed_rate_recalc_rate,
 };
@@ -47,6 +48,12 @@ EXPORT_SYMBOL_GPL(clk_fixed_rate_ops);
  * @flags: framework-specific flags
  * @fixed_rate: non-adjustable clock rate
  */
+// ARM10C 20150110
+// NULL,
+// list->name: exynos5420_fixed_rate_ext_clks.name: "fin_pll",
+// list->parent_name: exynos5420_fixed_rate_ext_clks.parent_name: NULL,
+// list->flags: exynos5420_fixed_rate_ext_clks.flags: CLK_IS_ROOT,
+// list->fixed_rate: exynos5420_fixed_rate_ext_clks.fixed_rate: 24000000
 struct clk *clk_register_fixed_rate(struct device *dev, const char *name,
 		const char *parent_name, unsigned long flags,
 		unsigned long fixed_rate)
@@ -56,23 +63,49 @@ struct clk *clk_register_fixed_rate(struct device *dev, const char *name,
 	struct clk_init_data init;
 
 	/* allocate fixed-rate clock */
+	// sizeof(struct clk_fixed_rate): 13 bytes, GFP_KERNEL: 0xD0
+	// kzalloc(13, GFP_KERNEL: 0xD0): kmem_cache#30-oX
 	fixed = kzalloc(sizeof(struct clk_fixed_rate), GFP_KERNEL);
+	// fixed: kmem_cache#30-oX
+
+	// fixed: kmem_cache#30-oX
 	if (!fixed) {
 		pr_err("%s: could not allocate fixed clk\n", __func__);
 		return ERR_PTR(-ENOMEM);
 	}
 
+	// name: "fin_pll"
 	init.name = name;
+	// init.name: "fin_pll"
+
 	init.ops = &clk_fixed_rate_ops;
+	// init.ops: &clk_fixed_rate_ops
+
+	// flags: CLK_IS_ROOT: 0x10, CLK_IS_BASIC: 0x20
 	init.flags = flags | CLK_IS_BASIC;
+	// init.flags: 0x30
+
+	// parent_name: NULL
 	init.parent_names = (parent_name ? &parent_name: NULL);
+	// init.parent_names: NULL
+
+	// parent_name: NULL
 	init.num_parents = (parent_name ? 1 : 0);
+	// init.num_parents: 0
 
 	/* struct clk_fixed_rate assignments */
+	// fixed->fixed_rate: (kmem_cache#30-oX)->fixed_rate, fixed_rate: 24000000
 	fixed->fixed_rate = fixed_rate;
+	// fixed->fixed_rate: (kmem_cache#30-oX)->fixed_rate: 24000000
+
+	// fixed->hw.init: (kmem_cache#30-oX)->hw.init
 	fixed->hw.init = &init;
+	// fixed->hw.init: (kmem_cache#30-oX)->hw.init: &init
+
+// 2015/01/10 종료
 
 	/* register the clock */
+	// dev: NULL, fixed->hw: (kmem_cache#30-oX)->hw
 	clk = clk_register(dev, &fixed->hw);
 
 	if (IS_ERR(clk))

@@ -50,6 +50,7 @@ struct samsung_clock_alias {
  * @flags: optional fixed-rate clock flags.
  * @fixed-rate: fixed clock rate of this clock.
  */
+// ARM10C 20150110
 struct samsung_fixed_rate_clock {
 	unsigned int		id;
 	char			*name;
@@ -58,6 +59,7 @@ struct samsung_fixed_rate_clock {
 	unsigned long		fixed_rate;
 };
 
+// ARM10C 20150110
 #define FRATE(_id, cname, pname, f, frate)		\
 	{						\
 		.id		= _id,			\
@@ -259,6 +261,8 @@ struct samsung_gate_clock {
  * @offset: clock register offset from the controller base address.
  * @value: the value to be register at offset.
  */
+// ARM10C 20150110
+// sizeof(struct samsung_clk_reg_dump): 8 bytes
 struct samsung_clk_reg_dump {
 	u32	offset;
 	u32	value;

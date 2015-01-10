@@ -39,6 +39,7 @@ struct clk_ops {
 	int		    (*set_parent)(struct clk *c, struct clk *parent);
 };
 
+// ARM10C 20150110
 struct clk {
 	struct list_head      list;
 	struct module        *owner;
@@ -53,7 +54,7 @@ struct clk {
 	struct clk_ops		*ops;
 	int		    (*enable)(struct clk *, int enable);
 	struct clk_lookup	lookup;
-#if defined(CONFIG_PM_DEBUG) && defined(CONFIG_DEBUG_FS)
+#if defined(CONFIG_PM_DEBUG) && defined(CONFIG_DEBUG_FS) // CONFIG_PM_DEBUG=n, CONFIG_DEBUG_FS=n
 	struct dentry		*dent;	/* For visible tree hierarchy */
 #endif
 };

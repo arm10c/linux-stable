@@ -2096,6 +2096,8 @@ EXPORT_SYMBOL_GPL(clk_notifier_unregister);
  *       given clock specifier
  * @data: context pointer to be passed into @get callback
  */
+// ARM10C 20150110
+// sizeof(struct of_clk_provider): 20 bytes
 struct of_clk_provider {
 	struct list_head link;
 
@@ -2116,7 +2118,9 @@ extern struct of_device_id __clk_of_table[];
 static const struct of_device_id __clk_of_table_sentinel
 	__used __section(__clk_of_table_end);
 
+// ARM10C 20150110
 static LIST_HEAD(of_clk_providers);
+// ARM10C 20150110
 static DEFINE_MUTEX(of_clk_lock);
 
 struct clk *of_clk_src_simple_get(struct of_phandle_args *clkspec,
@@ -2126,6 +2130,7 @@ struct clk *of_clk_src_simple_get(struct of_phandle_args *clkspec,
 }
 EXPORT_SYMBOL_GPL(of_clk_src_simple_get);
 
+// ARM10C 20150110
 struct clk *of_clk_src_onecell_get(struct of_phandle_args *clkspec, void *data)
 {
 	struct clk_onecell_data *clk_data = data;
@@ -2146,6 +2151,8 @@ EXPORT_SYMBOL_GPL(of_clk_src_onecell_get);
  * @clk_src_get: callback for decoding clock
  * @data: context pointer for @clk_src_get callback.
  */
+// ARM10C 20150110
+// np: devtree에서 allnext로 순회 하면서 찾은 clock node의 주소, of_clk_src_onecell_get, &clk_data
 int of_clk_add_provider(struct device_node *np,
 			struct clk *(*clk_src_get)(struct of_phandle_args *clkspec,
 						   void *data),
@@ -2153,18 +2160,44 @@ int of_clk_add_provider(struct device_node *np,
 {
 	struct of_clk_provider *cp;
 
+	// sizeof(struct of_clk_provider): 20 bytes, GFP_KERNEL: 0xD0
+	// kzalloc(20, GFP_KERNEL: 0xD0): kmem_cache#30-oX
 	cp = kzalloc(sizeof(struct of_clk_provider), GFP_KERNEL);
+	// cp: kmem_cache#30-oX
+
+	// cp: kmem_cache#30-oX
 	if (!cp)
 		return -ENOMEM;
 
+	// cp->node: (kmem_cache#30-oX)->node,
+	// np: devtree에서 allnext로 순회 하면서 찾은 clock node의 주소
+	// of_node_get(devtree에서 allnext로 순회 하면서 찾은 clock node의 주소):
+	// devtree에서 allnext로 순회 하면서 찾은 clock node의 주소
 	cp->node = of_node_get(np);
+	// cp->node: (kmem_cache#30-oX)->node: devtree에서 allnext로 순회 하면서 찾은 clock node의 주소
+
+	// cp->data: (kmem_cache#30-oX)->data, data: &clk_data
 	cp->data = data;
+	// cp->data: (kmem_cache#30-oX)->data: &clk_data
+
+	// cp->get: (kmem_cache#30-oX)->get, clk_src_get: of_clk_src_onecell_get
 	cp->get = clk_src_get;
+	// cp->get: (kmem_cache#30-oX)->get: of_clk_src_onecell_get
 
 	mutex_lock(&of_clk_lock);
+	// of_clk_lock을 사용하여 mutex lock 수행
+
+	// &cp->link: (kmem_cache#30-oX)->link
 	list_add(&cp->link, &of_clk_providers);
+	// list인 of_clk_providers의 head에 (kmem_cache#30-oX)->link를 추가
+
 	mutex_unlock(&of_clk_lock);
+	// of_clk_lock을 사용하여 mutex unlock 수행
+
+	// np->full_name: (devtree에서 allnext로 순회 하면서 찾은 clock node의 주소)->full_name:
+	// "/clock-controller@10010000"
 	pr_debug("Added clock from %s\n", np->full_name);
+	// "Added clock from /clock-controller@10010000\n"
 
 	return 0;
 }

@@ -4,6 +4,7 @@
 
 // ARM10C 20140118
 #ifdef	__KERNEL__
+// ARM10C 20150110
 #define BIT(nr)			(1UL << (nr))
 #define BIT_ULL(nr)		(1ULL << (nr))
 // ARM10C 20140118

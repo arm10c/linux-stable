@@ -11,6 +11,7 @@
 
 #include <linux/list.h>
 
+// ARM10C 20150110
 struct syscore_ops {
 	struct list_head node;
 	int (*suspend)(void);

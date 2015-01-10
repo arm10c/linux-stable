@@ -11,18 +11,30 @@
 #include <linux/module.h>
 #include <linux/interrupt.h>
 
+// ARM10C 20150110
 static LIST_HEAD(syscore_ops_list);
+// ARM10C 20150110
 static DEFINE_MUTEX(syscore_ops_lock);
 
 /**
  * register_syscore_ops - Register a set of system core operations.
  * @ops: System core operations to register.
  */
+// ARM10C 20150110
+// &samsung_clk_syscore_ops
 void register_syscore_ops(struct syscore_ops *ops)
 {
 	mutex_lock(&syscore_ops_lock);
+	// syscore_ops_lock을 사용하여 mutex lock 수행
+
+	// &ops->node: &(&samsung_clk_syscore_ops)->node
 	list_add_tail(&ops->node, &syscore_ops_list);
+
+	// list_add_tail에서 한일
+	// syscore_ops_list의 tail에 (&samsung_clk_syscore_ops)->node 를 추가
+
 	mutex_unlock(&syscore_ops_lock);
+	// syscore_ops_lock을 사용하여 mutex unlock 수행
 }
 EXPORT_SYMBOL_GPL(register_syscore_ops);
 
