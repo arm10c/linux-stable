@@ -833,7 +833,7 @@ static void __init exynos5420_clk_init(struct device_node *np)
 		// (kmem_cache#30-oX (vmap_area CLK))->flags: 0x04
 		*/
 		// device tree 있는  clock node에서 node의 resource 값을 pgtable에 매핑함
-		// 0xc0004780이 가리키는 pte의 시작주소에 0x10010000 값을 갱신
+		// 0xc0004780이 가리키는 pte의 시작주소에 0x10010653 값을 갱신
 		// (linux pgtable과 hardware pgtable의 값 같이 갱신)
 		//
 		//  pgd                   pte
