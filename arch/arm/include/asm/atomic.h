@@ -37,6 +37,8 @@
 // ARM10C 20140118
 // ARM10C 20140322
 // atomic_set(&(&cpu_add_remove_lock)->count, 1): (((&(&cpu_add_remove_lock)->count)->counter) = (1))
+// ARM10C 20150117
+// &(&prepare_lock)->count: -1
 #define atomic_set(v,i)	(((v)->counter) = (i))
 
 #if __LINUX_ARM_ARCH__ >= 6
@@ -212,6 +214,8 @@ static inline int atomic_cmpxchg(atomic_t *v, int old, int new)
 // &lock->count: &(&cpu_add_remove_lock)->count
 // atomic_xchg(&(&cpu_add_remove_lock)->count, -1):
 // xchg(&((&(&cpu_add_remove_lock)->count)->counter), -1)
+// ARM10C 20150117
+// &lock->count: &(&prepare_lock)->count, -1
 #define atomic_xchg(v, new) (xchg(&((v)->counter), new))
 
 static inline int __atomic_add_unless(atomic_t *v, int a, int u)

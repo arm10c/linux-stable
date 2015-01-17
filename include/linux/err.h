@@ -35,6 +35,8 @@ static inline long __must_check PTR_ERR(__force const void *ptr)
 
 // ARM10C 20140222
 // ARM10C 20141025
+// ARM10C 20150117
+// clk: kmem_cache#29-oX
 static inline long __must_check IS_ERR(__force const void *ptr)
 {
 	return IS_ERR_VALUE((unsigned long)ptr);

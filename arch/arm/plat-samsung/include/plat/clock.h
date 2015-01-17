@@ -40,6 +40,7 @@ struct clk_ops {
 };
 
 // ARM10C 20150110
+// ARM10C 20150117
 struct clk {
 	struct list_head      list;
 	struct module        *owner;

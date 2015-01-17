@@ -123,6 +123,7 @@ struct clk_hw;
  * required (eg. from an interrupt). Note that clk_prepare MUST have been
  * called before clk_enable.
  */
+ // ARM10C 20150117
 struct clk_ops {
 	int		(*prepare)(struct clk_hw *hw);
 	void		(*unprepare)(struct clk_hw *hw);

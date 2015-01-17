@@ -6791,23 +6791,33 @@ __setup("slub_nomerge", setup_slub_nomerge);
 
 // ARM10C 20141206
 // 512, flags: 0x80D0
+// ARM10C 20150117
+// 0, flags: 0x80D0
 void *__kmalloc(size_t size, gfp_t flags)
 {
 	struct kmem_cache *s;
 	void *ret;
 
 	// size: 512, KMALLOC_MAX_CACHE_SIZE: 0x2000
+	// size: 0, KMALLOC_MAX_CACHE_SIZE: 0x2000
 	if (unlikely(size > KMALLOC_MAX_CACHE_SIZE))
 		return kmalloc_large(size, flags);
 
 	// size: 512, flags: 0x80D0
 	// kmalloc_slab(512, 0x80D0): kmem_cache#26
+	// size: 0, flags: 0x80D0
+	// kmalloc_slab(0, 0x80D0): ((void *)16)
 	s = kmalloc_slab(size, flags);
 	// s: kmem_cache#26
+	// s: ((void *)16)
 
 	// s: kmem_cache#26
+	// s: ((void *)16)
+	// ZERO_OR_NULL_PTR(((void *)16)): 1
 	if (unlikely(ZERO_OR_NULL_PTR(s)))
+		// s: ((void *)16)
 		return s;
+		// return ((void *)16)
 
 	// s: kmem_cache#26, flags: 0x80D0
 	// slab_alloc(kmem_cache#26, 0x80D0): kmem_cache#26-oX

@@ -198,12 +198,40 @@ void __init samsung_clk_register_fixed_rate(
 	// nr_clk: 1
 	for (idx = 0; idx < nr_clk; idx++, list++) {
 
-		// list->name: exynos5420_fixed_rate_ext_clks.name: "fin_pll,
+		// list->name: exynos5420_fixed_rate_ext_clks.name: "fin_pll",
 		// list->parent_name: exynos5420_fixed_rate_ext_clks.parent_name: NULL,
 		// list->flags: exynos5420_fixed_rate_ext_clks.flags: CLK_IS_ROOT,
 		// list->fixed_rate: exynos5420_fixed_rate_ext_clks.fixed_rate: 24000000
+		// clk_register_fixed_rate(NULL, "fin_pll", NULL, CLK_IS_ROOT: 0x10, 24000000): kmem_cache#29-oX
 		clk = clk_register_fixed_rate(NULL, list->name,
 			list->parent_name, list->flags, list->fixed_rate);
+		// clk: kmem_cache#29-oX
+
+		// clk_register_fixed_rate 에서 한일:
+		// struct clk_fixed_rate 만큼 메모리를 kmem_cache#30-oX 할당 받고 struct clk_fixed_rate 의 멤버 값을 아래와 같이 초기화 수행
+		//
+		// (kmem_cache#30-oX)->fixed_rate: 24000000
+		// (kmem_cache#30-oX)->hw.init: &init
+		// (&(kmem_cache#30-oX)->hw)->clk: kmem_cache#29-oX
+		//
+		// struct clk 만큼 메모리를 kmem_cache#29-oX 할당 받고 struct clk 의 멤버 값을 아래와 같이 초기화 수행
+		//
+		// (kmem_cache#29-oX)->name: kmem_cache#30-oX ("fin_pll")
+		// (kmem_cache#29-oX)->ops: &clk_fixed_rate_ops
+		// (kmem_cache#29-oX)->hw: &(kmem_cache#30-oX)->hw
+		// (kmem_cache#29-oX)->flags: 0x30
+		// (kmem_cache#29-oX)->num_parents: 0
+		// (kmem_cache#29-oX)->parent_names: ((void *)16)
+		// (kmem_cache#29-oX)->parent: NULL
+		// (kmem_cache#29-oX)->rate: 24000000
+		//
+		// (&(kmem_cache#29-oX)->child_node)->next: NULL
+		// (&(kmem_cache#29-oX)->child_node)->pprev: &(&(kmem_cache#29-oX)->child_node)
+		//
+		// (&clk_root_list)->first: &(kmem_cache#29-oX)->child_node
+
+		// clk: kmem_cache#29-oX
+		// IS_ERR(kmem_cache#29-oX): 0
 		if (IS_ERR(clk)) {
 			pr_err("%s: failed to register clock %s\n", __func__,
 				list->name);

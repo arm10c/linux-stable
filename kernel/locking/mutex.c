@@ -964,27 +964,63 @@ __ww_mutex_lock_interruptible_slowpath(struct ww_mutex *lock,
  * Spinlock based trylock, we take the spinlock and check whether we
  * can get the lock:
  */
+// ARM10C 20150117
+// (&prepare_lock)->count
 static inline int __mutex_trylock_slowpath(atomic_t *lock_count)
 {
+	// lock_count: (&prepare_lock)->count
+	// container_of((&prepare_lock)->count, struct mutex, count): &prepare_lock
 	struct mutex *lock = container_of(lock_count, struct mutex, count);
+	// lock: &prepare_lock
+
 	unsigned long flags;
 	int prev;
 
+	// &lock->wait_lock: &(&prepare_lock)->wait_lock
 	spin_lock_mutex(&lock->wait_lock, flags);
 
+	// spin_lock_mutex에서 한일:
+	// flags에 CPSR을 저장했고 &(&prepare_lock)->wait_lock.rlock.raw_lock에 spinlock 설정
+
+	// &lock->count: &(&prepare_lock)->count
+	// atomic_xchg(&(&prepare_lock)->count, -1): 1
 	prev = atomic_xchg(&lock->count, -1);
+	// prev: 1
+
+	// atomic_xchg에서 한일:
+	// &(&prepare_lock)->count: -1
+
+	// prev: 1
 	if (likely(prev == 1)) {
+		// lock: &prepare_lock
 		mutex_set_owner(lock);
-		mutex_acquire(&lock->dep_map, 0, 1, _RET_IP_);
+
+		// mutex_set_owner에서 한일:
+		// (&prepare_lock)->owner: init_task
+
+		// &lock->dep_map: &(&prepare_lock)->dep_map
+		mutex_acquire(&lock->dep_map, 0, 1, _RET_IP_); // null function
 	}
 
 	/* Set it back to 0 if there are no waiters: */
+	// &lock->wait_list: &(&prepare_lock)->wait_list
+	// list_empty(&(&prepare_lock)->wait_list): 1
 	if (likely(list_empty(&lock->wait_list)))
+		// &(&prepare_lock)->count: -1
 		atomic_set(&lock->count, 0);
 
+		// atomic_set에서 한일:
+		// &(&prepare_lock)->count: 0
+
+	// &lock->wait_lock: &(&prepare_lock)->wait_lock
 	spin_unlock_mutex(&lock->wait_lock, flags);
 
+	// spin_lock_mutex에서 한일:
+	// flags에 저장된 CPSR을 복원하고 &(&prepare_lock)->wait_lock.rlock.raw_lock에 spin unlock 설정
+
+	// prev: 1
 	return prev == 1;
+	// return 1
 }
 
 /**
@@ -1001,15 +1037,28 @@ static inline int __mutex_trylock_slowpath(atomic_t *lock_count)
  * This function must not be used in interrupt context. The
  * mutex must be released by the same task that acquired it.
  */
+// ARM10C 20150117
+// &prepare_lock
 int __sched mutex_trylock(struct mutex *lock)
 {
 	int ret;
 
+	// &lock->count: (&prepare_lock)->count
+	// __mutex_fastpath_trylock((&prepare_lock)->count, __mutex_trylock_slowpath): 1
 	ret = __mutex_fastpath_trylock(&lock->count, __mutex_trylock_slowpath);
+	// ret: 1
+
+	// ret: 1
 	if (ret)
+		// &prepare_lock
 		mutex_set_owner(lock);
 
+		// mutex_set_owner에서 한일:
+		// (&prepare_lock)->owner: init_task
+
+	// ret: 1
 	return ret;
+	// return 1
 }
 EXPORT_SYMBOL(mutex_trylock);
 

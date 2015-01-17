@@ -152,6 +152,8 @@
  * Both make kfree a no-op.
  */
 // ARM10C 20140726
+// ARM10C 20150117
+// ZERO_SIZE_PTR: ((void *)16)
 #define ZERO_SIZE_PTR ((void *)16)
 
 // ARM10C 20140726
@@ -161,6 +163,8 @@
 // x: kmem_cache#30-o11
 // ARM10C 20141206
 // s: kmem_cache#26
+// ARM10C 20150117
+// s: ((void *)16)
 #define ZERO_OR_NULL_PTR(x) ((unsigned long)(x) <= \
 				(unsigned long)ZERO_SIZE_PTR)
 
@@ -839,16 +843,22 @@ void print_slabinfo_header(struct seq_file *m);
  */
 // ARM10C 20141206
 // n: 32, size: 16, 0x80D0
+// ARM10C 20150117
+// n: 0, size: 4, flags: GFP_KERNEL: 0xD0, __GFP_ZERO: 0x8000u
 static inline void *kmalloc_array(size_t n, size_t size, gfp_t flags)
 {
 	// size: 16, n: 32, SIZE_MAX: 0xFFFFFFFF
+	// size: 4, n: 0, SIZE_MAX: 0xFFFFFFFF
 	if (size != 0 && n > SIZE_MAX / size)
 		return NULL;
 
 	// n: 32, size: 16, flags: 0x80D0
 	// __kmalloc(512, 0x80D0): kmem_cache#26-oX
+	// n: 0, size: 4, flags: 0x80D0
+	// __kmalloc(0, 0x80D0): ((void *)16)
 	return __kmalloc(n * size, flags);
 	// return kmem_cache#26-oX
+	// return ((void *)16)
 }
 
 /**
@@ -859,12 +869,17 @@ static inline void *kmalloc_array(size_t n, size_t size, gfp_t flags)
  */
 // ARM10C 20141206
 // max_nr: 32, sizeof(struct combiner_chip_data): 16 bytes, GFP_KERNEL: 0xD0
+// ARM10C 20150117
+// clk->num_parents: (kmem_cache#29-oX)->num_parents: 0, sizeof(char *): 4, GFP_KERNEL: 0xD0
 static inline void *kcalloc(size_t n, size_t size, gfp_t flags)
 {
 	// n: 32, size: 16, flags: GFP_KERNEL: 0xD0, __GFP_ZERO: 0x8000u
 	// kmalloc_array(32, 16,  0x80D0): kmem_cache#26-oX
+	// n: 0, size: 4, flags: GFP_KERNEL: 0xD0, __GFP_ZERO: 0x8000u
+	// kmalloc_array(0, 4,  0x80D0): ((void *)16)
 	return kmalloc_array(n, size, flags | __GFP_ZERO);
 	// return kmem_cache#26-oX
+	// return ((void *)16)
 }
 
 /*
@@ -974,17 +989,21 @@ static inline void *kmem_cache_zalloc(struct kmem_cache *k, gfp_t flags)
 // sizeof(struct of_clk_provider): 20 bytes, GFP_KERNEL: 0xD0
 // ARM10C 20150110
 // sizeof(struct clk_fixed_rate): 13 bytes, GFP_KERNEL: 0xD0
+// ARM10C 20150117
+// sizeof(struct clk): 66 bytes, GFP_KERNEL: 0xD0
 static inline void *kzalloc(size_t size, gfp_t flags)
 {
 	// size: 512, GFP_KERNEL: 0xD0, __GFP_ZERO: 0x8000u
 	// size: 52, GFP_NOWAIT: 0x0, __GFP_ZERO: 0x8000u
 	// size: 16, GFP_KERNEL: 0xD0, __GFP_ZERO: 0x8000u
 	// size: 3076, GFP_KERNEL: 0xD0, __GFP_ZERO: 0x8000u
+	// size: 66, GFP_KERNEL: 0xD0, __GFP_ZERO: 0x8000u
 	return kmalloc(size, flags | __GFP_ZERO);
 	// return kmem_cache#26-o0
 	// return kmem_cache#30-o9
 	// return kmem_cache#30-o10
 	// return kmem_cache#23-o0
+	// return kmem_cache#29-o0
 }
 
 /**

@@ -19,6 +19,9 @@
 // __mutex_fastpath_unlock(&(&cpu_add_remove_lock)->count, __mutex_unlock_slowpath);
 // __mutex_unlock_slowpath(&(&cpu_add_remove_lock)->count)
 #define __mutex_fastpath_unlock(count, fail_fn)		fail_fn(count)
+// ARM10C 20150117
+// &lock->count: (&prepare_lock)->count, __mutex_trylock_slowpath
+// __mutex_trylock_slowpath((&prepare_lock)->count)
 #define __mutex_fastpath_trylock(count, fail_fn)	fail_fn(count)
 // ARM10C 20140322
 #define __mutex_slowpath_needs_to_unlock()		1

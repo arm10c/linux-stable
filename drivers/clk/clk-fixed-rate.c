@@ -26,12 +26,20 @@
  * parent - fixed parent.  No clk_set_parent support
  */
 
+// ARM10C 20150117
+// hw: &(kmem_cache#30-oX)->hw
 #define to_clk_fixed_rate(_hw) container_of(_hw, struct clk_fixed_rate, hw)
 
+// ARM10C 20150117
+// &(kmem_cache#30-oX)->hw, 0
 static unsigned long clk_fixed_rate_recalc_rate(struct clk_hw *hw,
 		unsigned long parent_rate)
 {
+	// hw: &(kmem_cache#30-oX)->hw
+	// to_clk_fixed_rate(&(kmem_cache#30-oX)->hw): kmem_cache#30-oX
+	// (kmem_cache#30-oX)->fixed_rate: 24000000
 	return to_clk_fixed_rate(hw)->fixed_rate;
+	// return 24000000
 }
 
 // ARM10C 20150110
@@ -103,15 +111,41 @@ struct clk *clk_register_fixed_rate(struct device *dev, const char *name,
 	// fixed->hw.init: (kmem_cache#30-oX)->hw.init: &init
 
 // 2015/01/10 종료
+// 2015/01/17 시작
 
 	/* register the clock */
-	// dev: NULL, fixed->hw: (kmem_cache#30-oX)->hw
+	// dev: NULL, &fixed->hw: &(kmem_cache#30-oX)->hw
+	// clk_register(NULL, &(kmem_cache#30-oX)->hw): kmem_cache#29-oX
 	clk = clk_register(dev, &fixed->hw);
+	// clk: kmem_cache#29-oX
 
+	// clk_register에서 한일:
+	// struct clk 만큼 메모리를 kmem_cache#29-oX 할당 받고 struct clk 의 멤버 값을 아래와 같이 초기화 수행
+	//
+	// (kmem_cache#29-oX)->name: kmem_cache#30-oX ("fin_pll")
+	// (kmem_cache#29-oX)->ops: &clk_fixed_rate_ops
+	// (kmem_cache#29-oX)->hw: &(kmem_cache#30-oX)->hw
+	// (kmem_cache#29-oX)->flags: 0x30
+	// (kmem_cache#29-oX)->num_parents: 0
+	// (kmem_cache#29-oX)->parent_names: ((void *)16)
+	// (kmem_cache#29-oX)->parent: NULL
+	// (kmem_cache#29-oX)->rate: 24000000
+	//
+	// (&(kmem_cache#29-oX)->child_node)->next: NULL
+	// (&(kmem_cache#29-oX)->child_node)->pprev: &(&(kmem_cache#29-oX)->child_node)
+	//
+	// (&clk_root_list)->first: &(kmem_cache#29-oX)->child_node
+	//
+	// (&(kmem_cache#30-oX)->hw)->clk: kmem_cache#29-oX
+
+	// clk: kmem_cache#29-oX
+	// IS_ERR(kmem_cache#29-oX): 0
 	if (IS_ERR(clk))
 		kfree(fixed);
 
+	// clk: kmem_cache#29-oX
 	return clk;
+	// return kmem_cache#29-oX
 }
 EXPORT_SYMBOL_GPL(clk_register_fixed_rate);
 

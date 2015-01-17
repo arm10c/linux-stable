@@ -47,6 +47,7 @@
  *   locks and tasks (and only those tasks)
  */
 // ARM10C 20140315
+// ARM10C 20150117
 struct mutex {
 	/* 1: unlocked, 0: locked, negative: locked, possible waiters */
 	atomic_t		count;

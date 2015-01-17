@@ -17,6 +17,8 @@
 struct clk;
 struct device;
 
+// ARM10C 20150117
+// sizeof(struct clk_lookup): 20 bytes
 struct clk_lookup {
 	struct list_head	node;
 	const char		*dev_id;

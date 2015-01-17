@@ -217,6 +217,7 @@ struct hlist_head {
 };
 
 // ARM10C 20140322
+// ARM10C 20150117
 // sizeof : 8
 struct hlist_node {
 	struct hlist_node *next, **pprev;

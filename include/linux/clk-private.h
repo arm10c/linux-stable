@@ -23,8 +23,10 @@
  * implements the clock operations for that same data.
  */
 
-#ifdef CONFIG_COMMON_CLK
+#ifdef CONFIG_COMMON_CLK // CONFIG_COMMON_CLK=y
 
+// ARM10C 20150117
+// sizeof(struct clk): 66 bytes
 struct clk {
 	const char		*name;
 	const struct clk_ops	*ops;
@@ -44,7 +46,7 @@ struct clk {
 	struct hlist_head	children;
 	struct hlist_node	child_node;
 	unsigned int		notifier_count;
-#ifdef CONFIG_COMMON_CLK_DEBUG
+#ifdef CONFIG_COMMON_CLK_DEBUG // CONFIG_COMMON_CLK_DEBUG=n
 	struct dentry		*dentry;
 #endif
 };
