@@ -42,6 +42,8 @@ static inline long __must_check IS_ERR(__force const void *ptr)
 	return IS_ERR_VALUE((unsigned long)ptr);
 }
 
+// ARM10C 20150117
+// clk->parent: (kmem_cache#29-oX (apll))->parent: NULL
 static inline long __must_check IS_ERR_OR_NULL(__force const void *ptr)
 {
 	return !ptr || IS_ERR_VALUE((unsigned long)ptr);

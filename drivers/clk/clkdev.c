@@ -21,7 +21,9 @@
 #include <linux/clkdev.h>
 #include <linux/of.h>
 
+// ARM10C 20150117
 static LIST_HEAD(clocks);
+// ARM10C 20150117
 static DEFINE_MUTEX(clocks_mutex);
 
 #if defined(CONFIG_OF) && defined(CONFIG_COMMON_CLK)
@@ -171,11 +173,21 @@ void clk_put(struct clk *clk)
 }
 EXPORT_SYMBOL(clk_put);
 
+// ARM10C 20150117
+// cl: &(kmem_cache#30-oX)->cl
 void clkdev_add(struct clk_lookup *cl)
 {
 	mutex_lock(&clocks_mutex);
+	// clocks_mutex를 이용한 mutex lock 수행
+
+	// &cl->node: &(&(kmem_cache#30-oX)->cl)->nade
 	list_add_tail(&cl->node, &clocks);
+
+	// list_add_tail 에서 한일:
+	// list clocks에 &(&(kmem_cache#30-oX)->cl)->nade를 tail로 추가
+
 	mutex_unlock(&clocks_mutex);
+	// clocks_mutex를 이용한 mutex unlock 수행
 }
 EXPORT_SYMBOL(clkdev_add);
 
@@ -189,37 +201,66 @@ void __init clkdev_add_table(struct clk_lookup *cl, size_t num)
 	mutex_unlock(&clocks_mutex);
 }
 
+// ARM10C 20150117
+// MAX_DEV_ID: 20
 #define MAX_DEV_ID	20
+// ARM10C 20150117
+// MAX_CON_ID: 16
 #define MAX_CON_ID	16
 
+// ARM10C 20150117
+// sizeof(struct clk_lookup_alloc): 56 bytes
 struct clk_lookup_alloc {
 	struct clk_lookup cl;
+	// MAX_DEV_ID: 20
 	char	dev_id[MAX_DEV_ID];
+	// MAX_CON_ID: 16
 	char	con_id[MAX_CON_ID];
 };
 
+// ARM10C 20150117
+// clk: kmem_cache#29-oX, con_id: "fin_pll", dev_fmt: NULL, ap
 static struct clk_lookup * __init_refok
 vclkdev_alloc(struct clk *clk, const char *con_id, const char *dev_fmt,
 	va_list ap)
 {
 	struct clk_lookup_alloc *cla;
 
+	// sizeof(struct clk_lookup_alloc): 56 bytes
+	// __clkdev_alloc(56): kmem_cache#30-oX
 	cla = __clkdev_alloc(sizeof(*cla));
+	// cla: kmem_cache#30-oX
+
+	// cla: kmem_cache#30-oX
 	if (!cla)
 		return NULL;
 
+	// cla->cl.clk: (kmem_cache#30-oX)->cl.clk, clk: kmem_cache#29-oX
 	cla->cl.clk = clk;
+	// cla->cl.clk: (kmem_cache#30-oX)->cl.clk: kmem_cache#29-oX
+
+	// con_id: "fin_pll"
 	if (con_id) {
+		// cla->con_id: (kmem_cache#30-oX)->con_id, con_id: "fin_pll",
+		// sizeof((kmem_cache#30-oX)->con_id): 16
 		strlcpy(cla->con_id, con_id, sizeof(cla->con_id));
+		// cla->con_id: (kmem_cache#30-oX)->con_id: "fin_pll"
+
+		// cla->cl.con_id: (kmem_cache#30-oX)->cl.con_id,
+		// cla->con_id: (kmem_cache#30-oX)->con_id: "fin_pll"
 		cla->cl.con_id = cla->con_id;
+		// cla->cl.con_id: (kmem_cache#30-oX)->cl.con_id: (kmem_cache#30-oX)->con_id: "fin_pll"
 	}
 
+	// dev_fmt: NULL
 	if (dev_fmt) {
 		vscnprintf(cla->dev_id, sizeof(cla->dev_id), dev_fmt, ap);
 		cla->cl.dev_id = cla->dev_id;
 	}
 
+	// cla: &(kmem_cache#30-oX)->cl
 	return &cla->cl;
+	// return &(kmem_cache#30-oX)->cl
 }
 
 struct clk_lookup * __init_refok
@@ -280,25 +321,48 @@ EXPORT_SYMBOL(clkdev_drop);
  * those.  This is to permit this function to be called immediately
  * after clk_register().
  */
+// ARM10C 20150117
+// clk: kmem_cache#29-oX, list->name: exynos5420_fixed_rate_ext_clks.name: "fin_pll", NULL
 int clk_register_clkdev(struct clk *clk, const char *con_id,
 	const char *dev_fmt, ...)
 {
 	struct clk_lookup *cl;
 	va_list ap;
 
+	// clk: kmem_cache#29-oX, IS_ERR(kmem_cache#29-oX): 0
 	if (IS_ERR(clk))
 		return PTR_ERR(clk);
 
+	// dev_fmt: NULL
 	va_start(ap, dev_fmt);
+
+	// clk: kmem_cache#29-oX, con_id: "fin_pll", dev_fmt: NULL
+	// vclkdev_alloc(kmem_cache#29-oX, "fin_pll", NULL, ap): &(kmem_cache#30-oX)->cl
 	cl = vclkdev_alloc(clk, con_id, dev_fmt, ap);
+	// cl: &(kmem_cache#30-oX)->cl
+
+	// vclkdev_alloc에서 한일:
+	// struct clk_lookup_alloc 의 메모리를 kmem_cache#30-oX 할당 받고
+	// struct clk_lookup_alloc 맴버값 초기화 수행
+	//
+	// (kmem_cache#30-oX)->cl.clk: kmem_cache#29-oX
+	// (kmem_cache#30-oX)->con_id: "fin_pll"
+	// (kmem_cache#30-oX)->cl.con_id: (kmem_cache#30-oX)->con_id: "fin_pll"
+
 	va_end(ap);
 
+	// cl: &(kmem_cache#30-oX)->cl
 	if (!cl)
 		return -ENOMEM;
 
+	// cl: &(kmem_cache#30-oX)->cl
 	clkdev_add(cl);
 
+	// clkdev_add 에서 한일:
+	// list clocks에 &(&(kmem_cache#30-oX)->cl)->nade를 tail로 추가
+
 	return 0;
+	// return 0
 }
 
 /**

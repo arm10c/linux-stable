@@ -357,6 +357,7 @@
 
 #ifndef _VALIST
 #define _VALIST
+// ARM10C 20150117
 typedef char *va_list;
 #endif				/* _VALIST */
 
@@ -370,6 +371,8 @@ typedef char *va_list;
 #define _bnd(X, bnd)            (((sizeof (X)) + (bnd)) & (~(bnd)))
 #define va_arg(ap, T)           (*(T *)(((ap) += (_bnd (T, _AUPBND))) - (_bnd (T,_ADNBND))))
 #define va_end(ap)              (ap = (va_list) NULL)
+// ARM10C 20150117
+// ap, dev_fmt: NULL
 #define va_start(ap, A)         (void) ((ap) = (((char *) &(A)) + (_bnd (A,_AUPBND))))
 
 #endif				/* va_arg */

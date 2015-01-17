@@ -26,6 +26,8 @@
 // name: "idr_layer_cache", GFP_KERNEL: 0xD0
 // ARM10C 20150117
 // hw->init->name: (&(kmem_cache#30-oX)->hw)->init->name: "fin_pll", GFP_KERNEL: 0xD0
+// ARM10C 20150117
+// hw->init->parent_names[0]: (&(kmem_cache#30-oX (apll))->hw)->init->parent_names[0]: "fin_pll", GFP_KERNEL: 0xD0
 char *kstrdup(const char *s, gfp_t gfp)
 {
 	size_t len;

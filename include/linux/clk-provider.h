@@ -26,11 +26,14 @@
 #define CLK_SET_RATE_PARENT	BIT(2) /* propagate rate change up one level */
 #define CLK_IGNORE_UNUSED	BIT(3) /* do not gate even if unused */
 // ARM10C 20150110
+// ARM10C 20150117
 // CLK_IS_ROOT: 0x10
 #define CLK_IS_ROOT		BIT(4) /* root clk, has no parent */
 // ARM10C 20150110
 // CLK_IS_BASIC: 0x20
 #define CLK_IS_BASIC		BIT(5) /* Basic clk, can't do a to_clk_foo() */
+// ARM10C 20150117
+// CLK_GET_RATE_NOCACHE: 0x40
 #define CLK_GET_RATE_NOCACHE	BIT(6) /* do not use the cached clk rate */
 #define CLK_SET_RATE_NO_REPARENT BIT(7) /* don't re-parent on rate change */
 
@@ -158,6 +161,7 @@ struct clk_ops {
  * @flags: framework-level hints and quirks
  */
 // ARM10C 20150110
+// ARM10C 20150117
 struct clk_init_data {
 	const char		*name;
 	const struct clk_ops	*ops;
@@ -179,6 +183,7 @@ struct clk_init_data {
  * with the common clock framework.
  */
 // ARM10C 20150110
+// ARM10C 20150117
 // sizeof(struct clk_hw): 8 bytes
 struct clk_hw {
 	struct clk *clk;

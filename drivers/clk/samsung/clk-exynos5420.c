@@ -18,7 +18,11 @@
 
 #include "clk.h"
 
+// ARM10C 20150117
+// APLL_LOCK: 0
 #define APLL_LOCK		0x0
+// ARM10C 20150117
+// APLL_CON0: 0x100
 #define APLL_CON0		0x100
 #define SRC_CPU			0x200
 #define DIV_CPU0		0x500
@@ -101,6 +105,7 @@
 #define DIV_KFC0		0x28500
 
 /* list of PLLs */
+// ARM10C 20150117
 enum exynos5420_plls {
 	apll, cpll, dpll, epll, rpll, ipll, spll, vpll, mpll,
 	bpll, kpll,
@@ -747,7 +752,21 @@ static struct samsung_gate_clock exynos5420_gate_clks[] __initdata = {
 	GATE(smmu_mixer, "smmu_mixer", "aclk200_disp1", GATE_IP_DISP1, 9, 0, 0),
 };
 
+// ARM10C 20150117
 static struct samsung_pll_clock exynos5420_plls[nr_plls] __initdata = {
+	// #define PLL(pll_2550, fout_apll, "fout_apll", "fin_pll", APLL_LOCK, APLL_CON0, NULL):
+	// {
+	// 	.id		= fout_apll,
+	// 	.type		= pll_2550,
+	// 	.dev_name	= NULL,
+	// 	.name		= "fout_apll",
+	// 	.parent_name	= "fin_pll",
+	// 	.flags		= CLK_GET_RATE_NOCACHE,
+	// 	.con_offset	= APLL_CON0,
+	// 	.lock_offset	= APLL_LOCK,
+	// 	.rate_table	= NULL,
+	// 	.alias		= "fout_apll",
+	// }
 	[apll] = PLL(pll_2550, fout_apll, "fout_apll", "fin_pll", APLL_LOCK,
 		APLL_CON0, NULL),
 	[cpll] = PLL(pll_2550, fout_mpll, "fout_mpll", "fin_pll", MPLL_LOCK,
@@ -893,6 +912,48 @@ static void __init exynos5420_clk_init(struct device_node *np)
 	samsung_clk_of_register_fixed_ext(exynos5420_fixed_rate_ext_clks,
 			ARRAY_SIZE(exynos5420_fixed_rate_ext_clks),
 			ext_clk_match);
+
+	// samsung_clk_of_register_fixed_ext 에서 한일:
+	//
+	// devtree에서 allnext로 순회 하면서 찾은 fixed-rate-clocks node 에서
+	// fixed-rate-clocks node에서 "clock-frequency" property값을 freq에 읽어옴
+	// freq: 24000000
+	// exynos5420_fixed_rate_ext_clks[0].fixed_rate: 24000000
+	//
+	// struct clk_fixed_rate 만큼 메모리를 kmem_cache#30-oX 할당 받고 struct clk_fixed_rate 의 멤버 값을 아래와 같이 초기화 수행
+	//
+	// (kmem_cache#30-oX)->fixed_rate: 24000000
+	// (kmem_cache#30-oX)->hw.init: &init
+	// (&(kmem_cache#30-oX)->hw)->clk: kmem_cache#29-oX
+	//
+	// struct clk 만큼 메모리를 kmem_cache#29-oX 할당 받고 struct clk 의 멤버 값을 아래와 같이 초기화 수행
+	//
+	// (kmem_cache#29-oX)->name: kmem_cache#30-oX ("fin_pll")
+	// (kmem_cache#29-oX)->ops: &clk_fixed_rate_ops
+	// (kmem_cache#29-oX)->hw: &(kmem_cache#30-oX)->hw
+	// (kmem_cache#29-oX)->flags: 0x30
+	// (kmem_cache#29-oX)->num_parents: 0
+	// (kmem_cache#29-oX)->parent_names: ((void *)16)
+	// (kmem_cache#29-oX)->parent: NULL
+	// (kmem_cache#29-oX)->rate: 24000000
+	//
+	// (&(kmem_cache#29-oX)->child_node)->next: NULL
+	// (&(kmem_cache#29-oX)->child_node)->pprev: &(&(kmem_cache#29-oX)->child_node)
+	//
+	// (&clk_root_list)->first: &(kmem_cache#29-oX)->child_node
+	//
+	// clk_table[1]: (kmem_cache#23-o0)[1]: kmem_cache#29-oX
+	//
+	// struct clk_lookup_alloc 의 메모리를 kmem_cache#30-oX 할당 받고
+	// struct clk_lookup_alloc 맴버값 초기화 수행
+	//
+	// (kmem_cache#30-oX)->cl.clk: kmem_cache#29-oX
+	// (kmem_cache#30-oX)->con_id: "fin_pll"
+	// (kmem_cache#30-oX)->cl.con_id: (kmem_cache#30-oX)->con_id: "fin_pll"
+	//
+	// list clocks에 &(&(kmem_cache#30-oX)->cl)->nade를 tail로 추가
+
+	// ARRAY_SIZE(exynos5420_plls): 11, reg_base: 0xf0040000
 	samsung_clk_register_pll(exynos5420_plls, ARRAY_SIZE(exynos5420_plls),
 					reg_base);
 	samsung_clk_register_fixed_rate(exynos5420_fixed_rate_clks,

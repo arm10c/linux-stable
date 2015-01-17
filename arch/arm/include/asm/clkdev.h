@@ -21,9 +21,14 @@
 #define __clk_put(clk)	do { } while (0)
 #endif
 
+// ARM10C 20150117
+// sizeof(struct clk_lookup_alloc): 56 bytes
 static inline struct clk_lookup_alloc *__clkdev_alloc(size_t size)
 {
+	// size: 56, GFP_KERNEL: 0xD0
+	// kzalloc(56, GFP_KERNEL: 0xD0): kmem_cache#30-oX
 	return kzalloc(size, GFP_KERNEL);
+	// return kmem_cache#30-oX
 }
 
 #endif

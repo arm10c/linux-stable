@@ -783,28 +783,40 @@ static inline void hlist_del_init(struct hlist_node *n)
 
 // ARM10C 20150117
 // &clk->child_node: &(kmem_cache#29-oX)->child_node, &clk_root_list
+// ARM10C 20150117
+// &clk->child_node: &(kmem_cache#29-oX (apll))->child_node, &clk->parent->children: (&kmem_cache#29-oX (fin_pll))->children
 static inline void hlist_add_head(struct hlist_node *n, struct hlist_head *h)
 {
 	// h->first: (&clk_root_list)->first: NULL
+	// h->first: (&(kmem_cache#29-oX (fin_pll))->children)->first: NULL
 	struct hlist_node *first = h->first;
+	// first: NULL
 	// first: NULL
 
 	// n->next: (&(kmem_cache#29-oX)->child_node)->next, first: NULL
+	// n->next: (&(kmem_cache#29-oX (apll))->child_node)->next, first: NULL
 	n->next = first;
 	// n->next: (&(kmem_cache#29-oX)->child_node)->next: NULL
+	// n->next: (&(kmem_cache#29-oX (apll))->child_node)->next: NULL
 
+	// first: NULL
 	// first: NULL
 	if (first)
 		first->pprev = &n->next;
 
 	// h->first: (&clk_root_list)->first: NULL, n: &(kmem_cache#29-oX)->child_node
+	// h->first: (&(kmem_cache#29-oX (fin_pll))->children)->first: NULL, n: &(kmem_cache#29-oX (apll))->child_node
 	h->first = n;
 	// h->first: (&clk_root_list)->first: &(kmem_cache#29-oX)->child_node
+	// h->first: (&(kmem_cache#29-oX (fin_pll))->children)->first: &(kmem_cache#29-oX (apll))->child_node
 
 	// n->pprev: (&(kmem_cache#29-oX)->child_node)->pprev,
 	// &h->first: &(&clk_root_list)->first: &(&(kmem_cache#29-oX)->child_node)
+	// n->pprev: (&(kmem_cache#29-oX (apll))->child_node)->pprev,
+	// &h->first: &(&(kmem_cache#29-oX (fin_pll))->children)->first: &(&(kmem_cache#29-oX (apll))->child_node)
 	n->pprev = &h->first;
 	// n->pprev: (&(kmem_cache#29-oX)->child_node)->pprev: &(&(kmem_cache#29-oX)->child_node)
+	// n->pprev: (&(kmem_cache#29-oX (apll))->child_node)->pprev: &(&(kmem_cache#29-oX (apll))->child_node)
 }
 
 /* next must be != NULL */
@@ -847,6 +859,7 @@ static inline void hlist_move_list(struct hlist_head *old,
 	old->first = NULL;
 }
 
+// ARM10C 20150117
 #define hlist_entry(ptr, type, member) container_of(ptr,type,member)
 
 #define hlist_for_each(pos, head) \
@@ -879,6 +892,10 @@ static inline void hlist_move_list(struct hlist_head *old,
 // #define hlist_for_each_entry(root_clk, &clk_orphan_list, child_node):
 // for (root_clk = hlist_entry_safe((&clk_orphan_list)->first, typeof(*(root_clk)), child_node);
 //      root_clk; root_clk = hlist_entry_safe((root_clk)->child_node.next, typeof(*(root_clk)), child_node))
+// ARM10C 20150117
+// hlist_for_each_entry(child, &clk->children, child_node):
+// for (child = hlist_entry_safe((&clk->children)->first, typeof(*(child)), child_node);
+//      child; child = hlist_entry_safe((child)->child_node.next, typeof(*(child)), child_node))
 #define hlist_for_each_entry(pos, head, member)				\
 	for (pos = hlist_entry_safe((head)->first, typeof(*(pos)), member);\
 	     pos;							\

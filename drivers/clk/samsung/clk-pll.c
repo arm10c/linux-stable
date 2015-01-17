@@ -16,6 +16,8 @@
 
 #define PLL_TIMEOUT_MS		10
 
+// ARM10C 20150117
+// sizeof(struct samsung_clk_pll): 28 bytes
 struct samsung_clk_pll {
 	struct clk_hw		hw;
 	void __iomem		*lock_reg;
@@ -73,6 +75,8 @@ static long samsung_pll_round_rate(struct clk_hw *hw,
 #define PLL35XX_SDIV_SHIFT      (0)
 #define PLL35XX_LOCK_STAT_SHIFT	(29)
 
+// ARM10C 20150117
+// &(kmem_cache#30-oX (apll))->hw, 24000000
 static unsigned long samsung_pll35xx_recalc_rate(struct clk_hw *hw,
 				unsigned long parent_rate)
 {
@@ -156,6 +160,7 @@ static const struct clk_ops samsung_pll35xx_clk_ops = {
 	.set_rate = samsung_pll35xx_set_rate,
 };
 
+// ARM10C 20150117
 static const struct clk_ops samsung_pll35xx_clk_min_ops = {
 	.recalc_rate = samsung_pll35xx_recalc_rate,
 };
@@ -710,6 +715,8 @@ struct clk * __init samsung_clk_register_pll2550x(const char *name,
 	return clk;
 }
 
+// ARM10C 20150117
+// &pll_list[0]: &exynos5420_plls[0], base: 0xf0040000
 static void __init _samsung_clk_register_pll(struct samsung_pll_clock *pll_clk,
 						void __iomem *base)
 {
@@ -718,18 +725,34 @@ static void __init _samsung_clk_register_pll(struct samsung_pll_clock *pll_clk,
 	struct clk_init_data init;
 	int ret, len;
 
+	// sizeof(struct samsung_clk_pll): 28 bytes, GFP_KERNEL: 0xD0
+	// kzalloc(28, GFP_KERNEL: 0xD0): kmem_cache#30-oX
 	pll = kzalloc(sizeof(*pll), GFP_KERNEL);
+	// pll: kmem_cache#30-oX
+
+	// pll: kmem_cache#30-oX
 	if (!pll) {
 		pr_err("%s: could not allocate pll clk %s\n",
 			__func__, pll_clk->name);
 		return;
 	}
 
+	// pll_clk->name: (&exynos5420_plls[0])->name: "fout_apll"
 	init.name = pll_clk->name;
-	init.flags = pll_clk->flags;
-	init.parent_names = &pll_clk->parent_name;
-	init.num_parents = 1;
+	// init.name: "fout_apll"
 
+	// pll_clk->flags: (&exynos5420_plls[0])->flags: CLK_GET_RATE_NOCACHE: 0x40
+	init.flags = pll_clk->flags;
+	// init.flags: CLK_GET_RATE_NOCACHE: 0x40
+
+	// pll_clk->parent_name: (&exynos5420_plls[0])->parent_name: "fin_pll"
+	init.parent_names = &pll_clk->parent_name;
+	// init.parent_names: "fin_pll"
+
+	init.num_parents = 1;
+	// init.num_parents: 1
+
+	// pll_clk->rate_table: (&exynos5420_plls[0])->rate_table: NULL
 	if (pll_clk->rate_table) {
 		/* find count of rates in rate_table */
 		for (len = 0; pll_clk->rate_table[len].rate != 0; )
@@ -745,15 +768,20 @@ static void __init _samsung_clk_register_pll(struct samsung_pll_clock *pll_clk,
 			__func__, pll_clk->name);
 	}
 
+	// pll_clk->type: (&exynos5420_plls[0])->type: pll_2550: 2
 	switch (pll_clk->type) {
 	/* clk_ops for 35xx and 2550 are similar */
 	case pll_35xx:
 	case pll_2550:
+		// pll->rate_table: (kmem_cache#30-oX)->rate_table: NULL
 		if (!pll->rate_table)
 			init.ops = &samsung_pll35xx_clk_min_ops;
+			// init.ops: &samsung_pll35xx_clk_min_ops
 		else
 			init.ops = &samsung_pll35xx_clk_ops;
 		break;
+		// break
+
 	case pll_4500:
 		init.ops = &samsung_pll45xx_clk_min_ops;
 		break;
@@ -791,11 +819,25 @@ static void __init _samsung_clk_register_pll(struct samsung_pll_clock *pll_clk,
 			__func__, pll_clk->name);
 	}
 
+	// pll->hw.init: (kmem_cache#30-oX)->hw.init
 	pll->hw.init = &init;
-	pll->type = pll_clk->type;
-	pll->lock_reg = base + pll_clk->lock_offset;
-	pll->con_reg = base + pll_clk->con_offset;
+	// pll->hw.init: (kmem_cache#30-oX)->hw.init: &init
 
+	// pll->type: (kmem_cache#30-oX)->type, pll_clk->type: (&exynos5420_plls[0])->type: pll_2550: 2
+	pll->type = pll_clk->type;
+	// pll->type: (kmem_cache#30-oX)->type: pll_2550: 2
+
+	// pll->lock_reg: (kmem_cache#30-oX)->lock_reg, base: 0xf0040000,
+	// pll_clk->lock_offset: (&exynos5420_plls[0])->lock_offset: APLL_LOCK: 0
+	pll->lock_reg = base + pll_clk->lock_offset;
+	// pll->lock_reg: (kmem_cache#30-oX)->lock_reg: 0xf0040000
+
+	// pll->con_reg: (kmem_cache#30-oX)->con_reg, base: 0xf0040000,
+	// pll_clk->con_offset: (&exynos5420_plls[0])->con_offset: APLL_CON0: 0x100
+	pll->con_reg = base + pll_clk->con_offset;
+	// pll->con_reg: (kmem_cache#30-oX)->con_reg: 0xf0040100
+
+	// &pll->hw: &(kmem_cache#30-oX (apll))->hw
 	clk = clk_register(NULL, &pll->hw);
 	if (IS_ERR(clk)) {
 		pr_err("%s: failed to register pll clock %s : %ld\n",
@@ -815,11 +857,15 @@ static void __init _samsung_clk_register_pll(struct samsung_pll_clock *pll_clk,
 			__func__, pll_clk->name, ret);
 }
 
+// ARM10C 20150117
+// exynos5420_plls, ARRAY_SIZE(exynos5420_plls): 11, reg_base: 0xf0040000
 void __init samsung_clk_register_pll(struct samsung_pll_clock *pll_list,
 				unsigned int nr_pll, void __iomem *base)
 {
 	int cnt;
 
+	// nr_pll: 11
 	for (cnt = 0; cnt < nr_pll; cnt++)
+		// cnt: 0, &pll_list[0]: &exynos5420_plls[0], base: 0xf0040000
 		_samsung_clk_register_pll(&pll_list[cnt], base);
 }
