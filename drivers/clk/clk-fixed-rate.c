@@ -138,8 +138,7 @@ struct clk *clk_register_fixed_rate(struct device *dev, const char *name,
 	//
 	// (&(kmem_cache#30-oX)->hw)->clk: kmem_cache#29-oX
 
-	// clk: kmem_cache#29-oX
-	// IS_ERR(kmem_cache#29-oX): 0
+	// clk: kmem_cache#29-oX, IS_ERR(kmem_cache#29-oX): 0
 	if (IS_ERR(clk))
 		kfree(fixed);
 

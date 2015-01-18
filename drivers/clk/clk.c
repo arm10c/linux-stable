@@ -1856,7 +1856,7 @@ int __clk_init(struct device *dev, struct clk *clk)
 
 	/* throw a WARN if any entries in parent_names are NULL */
 	// clk->num_parents: (kmem_cache#29-oX)->num_parents: 0
-	// clk->num_parents: (kmem_cache#29-oX (apll))->num_parents: 0
+	// clk->num_parents: (kmem_cache#29-oX (apll))->num_parents: 1
 	for (i = 0; i < clk->num_parents; i++)
 		// i: 0, clk->parent_names[0]: (kmem_cache#29-oX (apll))->parent_names[0]: (kmem_cache#30-oX)[0]: kmem_cache#30-oX: "fin_pll"
 		WARN(!clk->parent_names[i],
@@ -2163,13 +2163,6 @@ static int _clk_register(struct device *dev, struct clk_hw *hw, struct clk *clk)
 	ret = __clk_init(dev, clk);
 	// ret: NULL
 
-	// clk->name: (kmem_cache#29-oX)->name: kmem_cache#30-oX ("fin_pll")
-	// clk->ops: (kmem_cache#29-oX)->ops: &clk_fixed_rate_ops
-	// clk->hw: (kmem_cache#29-oX)->hw: &(kmem_cache#30-oX)->hw
-	// clk->flags: (kmem_cache#29-oX)->flags: 0x30
-	// clk->num_parents: (kmem_cache#29-oX)->num_parents: 0
-	// hw->clk: (&(kmem_cache#30-oX)->hw)->clk: kmem_cache#29-oX
-	// clk->parent_names: (kmem_cache#29-oX)->parent_names: ((void *)16)
 	// __clk_init에서 한일:
 	// (kmem_cache#29-oX)->parent: NULL
 	// (kmem_cache#29-oX)->rate: 24000000

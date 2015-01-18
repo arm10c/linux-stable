@@ -237,8 +237,7 @@ void __init samsung_clk_register_fixed_rate(
 		//
 		// (&clk_root_list)->first: &(kmem_cache#29-oX)->child_node
 
-		// clk: kmem_cache#29-oX
-		// IS_ERR(kmem_cache#29-oX): 0
+		// clk: kmem_cache#29-oX, IS_ERR(kmem_cache#29-oX): 0
 		if (IS_ERR(clk)) {
 			pr_err("%s: failed to register clock %s\n", __func__,
 				list->name);
