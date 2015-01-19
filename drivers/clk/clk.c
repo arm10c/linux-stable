@@ -780,7 +780,7 @@ struct clk *__clk_lookup(const char *name)
 		if (ret)
 			// [3] ret: kmem_cache#29-oX (fin_pll)
 			return ret;
-			// return kmem_cache#29-oX (fin_pll)
+			// [3] return kmem_cache#29-oX (fin_pll)
 	}
 
 	/* if not found, then search the orphan tree */
@@ -1955,7 +1955,7 @@ int __clk_init(struct device *dev, struct clk *clk)
 		// clk_fixed_rate_recalc_rate(&(kmem_cache#30-oX)->hw, 0): 24000000
 		//
 		// clk->rate: (kmem_cache#29-oX (apll))->rate,
-		// clk->ops->recalc_rate: (kmem_cache#29-oX (apll))->ops->recalc_rate: clk_fixed_rate_recalc_rate
+		// clk->ops->recalc_rate: (kmem_cache#29-oX (apll))->ops->recalc_rate: samsung_pll35xx_recalc_rate
 		// clk->hw: (kmem_cache#29-oX (apll))->hw: &(kmem_cache#30-oX (apll))->hw,
 		// clk->parent: (kmem_cache#29-oX (apll))->parent: kmem_cache#29-oX (fin_pll),
 		// __clk_get_rate(kmem_cache#29-oX (fin_pll)): 24000000
