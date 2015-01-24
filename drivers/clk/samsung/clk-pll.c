@@ -17,6 +17,7 @@
 #define PLL_TIMEOUT_MS		10
 
 // ARM10C 20150117
+// ARM10C 20150124
 // sizeof(struct samsung_clk_pll): 28 bytes
 struct samsung_clk_pll {
 	struct clk_hw		hw;
@@ -27,6 +28,8 @@ struct samsung_clk_pll {
 	const struct samsung_pll_rate_table *rate_table;
 };
 
+// ARM10C 20150124
+// hw: &(kmem_cache#30-oX (apll))->hw
 #define to_clk_pll(_hw) container_of(_hw, struct samsung_clk_pll, hw)
 
 static const struct samsung_pll_rate_table *samsung_get_pll_settings(
@@ -66,33 +69,81 @@ static long samsung_pll_round_rate(struct clk_hw *hw,
 /* Maximum lock time can be 270 * PDIV cycles */
 #define PLL35XX_LOCK_FACTOR	(270)
 
+// ARM10C 20150124
+// PLL35XX_MDIV_MASK: 0x3FF
 #define PLL35XX_MDIV_MASK       (0x3FF)
+// ARM10C 20150124
+// PLL35XX_PDIV_MASK: 3F
 #define PLL35XX_PDIV_MASK       (0x3F)
+// ARM10C 20150124
+// PLL35XX_SDIV_MASK: 0x7
 #define PLL35XX_SDIV_MASK       (0x7)
 #define PLL35XX_LOCK_STAT_MASK	(0x1)
+// ARM10C 20150124
+// PLL35XX_MDIV_SHIFT: 16
 #define PLL35XX_MDIV_SHIFT      (16)
+// ARM10C 20150124
+// PLL35XX_PDIV_SHIFT: 8
 #define PLL35XX_PDIV_SHIFT      (8)
+// ARM10C 20150124
+// PLL35XX_SDIV_SHIFT: 0
 #define PLL35XX_SDIV_SHIFT      (0)
 #define PLL35XX_LOCK_STAT_SHIFT	(29)
 
 // ARM10C 20150117
+// ARM10C 20150124
 // &(kmem_cache#30-oX (apll))->hw, 24000000
 static unsigned long samsung_pll35xx_recalc_rate(struct clk_hw *hw,
 				unsigned long parent_rate)
 {
+	// hw: &(kmem_cache#30-oX (apll))->hw,
+	// to_clk_pll(&(kmem_cache#30-oX (apll))->hw): kmem_cache#30-oX (apll)
 	struct samsung_clk_pll *pll = to_clk_pll(hw);
+	// pll: kmem_cache#30-oX (apll)
+
 	u32 mdiv, pdiv, sdiv, pll_con;
+
+	// parent_rate: 24000000
 	u64 fvco = parent_rate;
+	// fvco: 24000000
 
+	// E.R.M: 5.9.1.2 APLL_CON0
+	// Control PLL output frequency for APLL
+	// exynos 5250 manual 에 나온fout을 1000Mhz 값으로 세팅하는 APLL_CON0 값 (0x007D0300) 으로
+	// 읽히는 것으로 가정하고 분석 진행
+
+	// pll->con_reg: (kmem_cache#30-oX (apll))->con_reg: 0xf0040100
+	// __raw_readl(0xf0040100): 0x007D0300
 	pll_con = __raw_readl(pll->con_reg);
+	// pll_con: 0x007D0300
+
+	// pll_con: 0x007D0300, PLL35XX_MDIV_SHIFT: 16, PLL35XX_MDIV_MASK: 0x3FF
 	mdiv = (pll_con >> PLL35XX_MDIV_SHIFT) & PLL35XX_MDIV_MASK;
+	// mdiv: 0x7D
+
+	// pll_con: 0x007D0300, PLL35XX_PDIV_SHIFT: 8, PLL35XX_PDIV_MASK: 0x3F
 	pdiv = (pll_con >> PLL35XX_PDIV_SHIFT) & PLL35XX_PDIV_MASK;
+	// pdiv: 0x3
+
+	// pll_con: 0x007D0300, PLL35XX_SDIV_SHIFT: 0, PLL35XX_SDIV_MASK: 0x7
 	sdiv = (pll_con >> PLL35XX_SDIV_SHIFT) & PLL35XX_SDIV_MASK;
+	// sdiv: 0x0
 
+	// E.R.M: 5.4 Clock Generation
+	// PLL 설정 관련 그림 참조
+
+	// fvco: 24000000, mdiv: 0x7D
 	fvco *= mdiv;
-	do_div(fvco, (pdiv << sdiv));
+	// fvco: 3000000000
 
+	// fvco: 3000000000, pdiv: 0x3, sdiv: 0x0
+	// do_div(3000000000, 3): 1000000000
+	do_div(fvco, (pdiv << sdiv));
+	// fvco: 1000000000
+
+	// fvco: 1000000000
 	return (unsigned long)fvco;
+	// return 1000000000
 }
 
 static inline bool samsung_pll35xx_mp_change(
@@ -838,7 +889,31 @@ static void __init _samsung_clk_register_pll(struct samsung_pll_clock *pll_clk,
 	// pll->con_reg: (kmem_cache#30-oX)->con_reg: 0xf0040100
 
 	// &pll->hw: &(kmem_cache#30-oX (apll))->hw
+	// clk_register(&(kmem_cache#30-oX (apll))->hw): kmem_cache#29-oX (apll)
 	clk = clk_register(NULL, &pll->hw);
+	// clk: kmem_cache#29-oX (apll)
+
+	// clk_register에서 한일:
+	// struct clk 만큼 메모리를 kmem_cache#29-oX (apll) 할당 받고 struct clk 의 멤버 값을 아래와 같이 초기화 수행
+	//
+	// (kmem_cache#29-oX (apll))->name: kmem_cache#30-oX ("fout_apll")
+	// (kmem_cache#29-oX (apll))->ops: &samsung_pll35xx_clk_min_ops
+	// (kmem_cache#29-oX (apll))->hw: &(kmem_cache#30-oX (apll))->hw
+	// (kmem_cache#29-oX (apll))->flags: 0x40
+	// (kmem_cache#29-oX (apll))->num_parents: 1
+	// (kmem_cache#29-oX (apll))->parent_names: kmem_cache#30-oX
+	// (kmem_cache#29-oX (apll))->parent_names[0]: (kmem_cache#30-oX)[0]: kmem_cache#30-oX: "fin_pll"
+	// (kmem_cache#29-oX (apll))->parent: kmem_cache#29-oX (fin_pll)
+	// (kmem_cache#29-oX (apll))->rate: 1000000000 (1 Ghz)
+	//
+	// (&(kmem_cache#29-oX (apll))->child_node)->next: NULL
+	// (&(kmem_cache#29-oX (apll))->child_node)->pprev: &(&(kmem_cache#29-oX (apll))->child_node)
+	//
+	// (&(kmem_cache#29-oX (fin_pll))->children)->first: &(kmem_cache#29-oX (apll))->child_node
+	//
+	// (&(kmem_cache#30-oX (apll))->hw)->clk: kmem_cache#29-oX (apll)
+
+	// clk: kmem_cache#29-oX (apll), IS_ERR(kmem_cache#29-oX (apll)): 0
 	if (IS_ERR(clk)) {
 		pr_err("%s: failed to register pll clock %s : %ld\n",
 			__func__, pll_clk->name, PTR_ERR(clk));
@@ -846,12 +921,34 @@ static void __init _samsung_clk_register_pll(struct samsung_pll_clock *pll_clk,
 		return;
 	}
 
+	// clk: kmem_cache#29-oX (apll), pll_clk->id: (&exynos5420_plls[0])->id: fout_apll: 2
 	samsung_clk_add_lookup(clk, pll_clk->id);
 
+	// samsung_clk_add_lookup에서 한일:
+	// clk_table[2]: (kmem_cache#23-o0)[2]: kmem_cache#29-oX (apll)
+
+	// pll_clk->alias: (&exynos5420_plls[0])->alias: "fout_apll"
 	if (!pll_clk->alias)
 		return;
 
+	// clk: kmem_cache#29-oX (apll),
+	// pll_clk->alias: (&exynos5420_plls[0])->alias: "fout_apll",
+	// pll_clk->dev_name: (&exynos5420_plls[0])->dev_name: NULL
+	// clk_register_clkdev(kmem_cache#29-oX (apll), "fout_apll", NULL): 0
 	ret = clk_register_clkdev(clk, pll_clk->alias, pll_clk->dev_name);
+	// ret: 0
+
+	// clk_register_clkdev에서 한일:
+	// struct clk_lookup_alloc 의 메모리를 kmem_cache#30-oX (apll) 할당 받고
+	// struct clk_lookup_alloc 맴버값 초기화 수행
+	//
+	// (kmem_cache#30-oX)->cl.clk: kmem_cache#29-oX (apll)
+	// (kmem_cache#30-oX)->con_id: "fout_apll"
+	// (kmem_cache#30-oX)->cl.con_id: (kmem_cache#30-oX)->con_id: "fout_apll"
+	//
+	// list clocks에 &(&(kmem_cache#30-oX (apll))->cl)->nade를 tail로 추가
+
+	// ret: 0
 	if (ret)
 		pr_err("%s: failed to register lookup for %s : %d",
 			__func__, pll_clk->name, ret);
@@ -868,4 +965,44 @@ void __init samsung_clk_register_pll(struct samsung_pll_clock *pll_list,
 	for (cnt = 0; cnt < nr_pll; cnt++)
 		// cnt: 0, &pll_list[0]: &exynos5420_plls[0], base: 0xf0040000
 		_samsung_clk_register_pll(&pll_list[cnt], base);
+
+		// _samsung_clk_register_pll (&exynos5420_plls[0]) 에서 한일:
+		//
+		// struct clk_fixed_rate 만큼 메모리를 kmem_cache#30-oX (apll) 할당 받고 struct clk_fixed_rate 의 멤버 값을 아래와 같이 초기화 수행
+		// pll: kmem_cache#30-oX (apll)
+		//
+		// (kmem_cache#30-oX (apll))->hw.init: &init
+		// (kmem_cache#30-oX (apll))->type: pll_2550: 2
+		// (kmem_cache#30-oX (apll))->lock_reg: 0xf0040000
+		// (kmem_cache#30-oX (apll))->con_reg: 0xf0040100
+		//
+		// struct clk 만큼 메모리를 kmem_cache#29-oX (apll) 할당 받고 struct clk 의 멤버 값을 아래와 같이 초기화 수행
+		//
+		// (kmem_cache#29-oX (apll))->name: kmem_cache#30-oX ("fout_apll")
+		// (kmem_cache#29-oX (apll))->ops: &samsung_pll35xx_clk_min_ops
+		// (kmem_cache#29-oX (apll))->hw: &(kmem_cache#30-oX (apll))->hw
+		// (kmem_cache#29-oX (apll))->flags: 0x40
+		// (kmem_cache#29-oX (apll))->num_parents: 1
+		// (kmem_cache#29-oX (apll))->parent_names: kmem_cache#30-oX
+		// (kmem_cache#29-oX (apll))->parent_names[0]: (kmem_cache#30-oX)[0]: kmem_cache#30-oX: "fin_pll"
+		// (kmem_cache#29-oX (apll))->parent: kmem_cache#29-oX (fin_pll)
+		// (kmem_cache#29-oX (apll))->rate: 1000000000 (1 Ghz)
+		//
+		// (&(kmem_cache#29-oX (apll))->child_node)->next: NULL
+		// (&(kmem_cache#29-oX (apll))->child_node)->pprev: &(&(kmem_cache#29-oX (apll))->child_node)
+		//
+		// (&(kmem_cache#29-oX (fin_pll))->children)->first: &(kmem_cache#29-oX (apll))->child_node
+		//
+		// (&(kmem_cache#30-oX (apll))->hw)->clk: kmem_cache#29-oX (apll)
+		//
+		// clk_table[2]: (kmem_cache#23-o0)[2]: kmem_cache#29-oX (apll)
+		//
+		// struct clk_lookup_alloc 의 메모리를 kmem_cache#30-oX (apll) 할당 받고
+		// struct clk_lookup_alloc 맴버값 초기화 수행
+		//
+		// (kmem_cache#30-oX)->cl.clk: kmem_cache#29-oX (apll)
+		// (kmem_cache#30-oX)->con_id: "fout_apll"
+		// (kmem_cache#30-oX)->cl.con_id: (kmem_cache#30-oX)->con_id: "fout_apll"
+		//
+		// list clocks에 &(&(kmem_cache#30-oX (apll))->cl)->nade를 tail로 추가
 }

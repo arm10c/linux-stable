@@ -76,6 +76,8 @@
 // dividend: 4294967296000000000, divisor: 100
 // ARM10C 20150103
 // tmp: 3840000000, clock->mult: (&clocksource_jiffies)->mult: 2560000000
+// ARM10C 20150124
+// fvco: 505032704, 12
 #define do_div(n, base)							\
 ({									\
 	unsigned int __r, __b = (base);					\

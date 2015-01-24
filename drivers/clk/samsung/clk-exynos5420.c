@@ -117,6 +117,7 @@ enum exynos5420_clks {
 	none,
 
 	/* core clocks */
+	// fin_pll: 1, fout_apll: 2
 	fin_pll,  fout_apll, fout_cpll, fout_dpll, fout_epll, fout_rpll,
 	fout_ipll, fout_spll, fout_vpll, fout_mpll, fout_bpll, fout_kpll,
 
@@ -753,6 +754,7 @@ static struct samsung_gate_clock exynos5420_gate_clks[] __initdata = {
 };
 
 // ARM10C 20150117
+// ARM10C 20150124
 static struct samsung_pll_clock exynos5420_plls[nr_plls] __initdata = {
 	// #define PLL(pll_2550, fout_apll, "fout_apll", "fin_pll", APLL_LOCK, APLL_CON0, NULL):
 	// {

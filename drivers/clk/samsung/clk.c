@@ -150,14 +150,20 @@ void __init samsung_clk_init(struct device_node *np, void __iomem *base,
 /* add a clock instance to the clock lookup table used for dt based lookup */
 // ARM10C 20150117
 // clk: kmem_cache#29-oX, list->id: exynos5420_fixed_rate_ext_clks.id: 1
+// ARM10C 20150124
+// clk: kmem_cache#29-oX (apll), pll_clk->id: (&exynos5420_plls[0])->id: fout_apll: 2
 void samsung_clk_add_lookup(struct clk *clk, unsigned int id)
 {
 	// clk_table: kmem_cache#23-o0, id: 1
+	// clk_table: kmem_cache#23-o0, id: 2
 	if (clk_table && id)
 		// clk_table: kmem_cache#23-o0, id: 1, clk_table[1]: (kmem_cache#23-o0)[1],
 		// clk: kmem_cache#29-oX
+		// clk_table: kmem_cache#23-o0, id: 2, clk_table[2]: (kmem_cache#23-o0)[2],
+		// clk: kmem_cache#29-oX (apll)
 		clk_table[id] = clk;
 		// clk_table[1]: (kmem_cache#23-o0)[1]: kmem_cache#29-oX
+		// clk_table[2]: (kmem_cache#23-o0)[2]: kmem_cache#29-oX (apll)
 }
 
 /* register a list of aliases */
