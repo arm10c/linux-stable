@@ -152,18 +152,24 @@ void __init samsung_clk_init(struct device_node *np, void __iomem *base,
 // clk: kmem_cache#29-oX, list->id: exynos5420_fixed_rate_ext_clks.id: 1
 // ARM10C 20150124
 // clk: kmem_cache#29-oX (apll), pll_clk->id: (&exynos5420_plls[0])->id: fout_apll: 2
+// ARM10C 20150124
+// clk: kmem_cache#29-oX (epll), pll_clk->id: (&exynos5420_plls[3])->id: fout_epll: 5
 void samsung_clk_add_lookup(struct clk *clk, unsigned int id)
 {
 	// clk_table: kmem_cache#23-o0, id: 1
 	// clk_table: kmem_cache#23-o0, id: 2
+	// clk_table: kmem_cache#23-o0, id: 5
 	if (clk_table && id)
 		// clk_table: kmem_cache#23-o0, id: 1, clk_table[1]: (kmem_cache#23-o0)[1],
 		// clk: kmem_cache#29-oX
 		// clk_table: kmem_cache#23-o0, id: 2, clk_table[2]: (kmem_cache#23-o0)[2],
 		// clk: kmem_cache#29-oX (apll)
+		// clk_table: kmem_cache#23-o0, id: 2, clk_table[5]: (kmem_cache#23-o0)[2],
+		// clk: kmem_cache#29-oX (epll)
 		clk_table[id] = clk;
-		// clk_table[1]: (kmem_cache#23-o0)[1]: kmem_cache#29-oX
+		// clk_table[1]: (kmem_cache#23-o0)[1]: kmem_cache#29-oX (fin)
 		// clk_table[2]: (kmem_cache#23-o0)[2]: kmem_cache#29-oX (apll)
+		// clk_table[5]: (kmem_cache#23-o0)[5]: kmem_cache#29-oX (epll)
 }
 
 /* register a list of aliases */
@@ -202,6 +208,8 @@ void __init samsung_clk_register_alias(struct samsung_clock_alias *list,
 /* register a list of fixed clocks */
 // ARM10C 20150110
 // fixed_rate_clk: exynos5420_fixed_rate_ext_clks, nr_fixed_rate_clk: 1
+// ARM10C 20150124
+// exynos5420_fixed_rate_clks, ARRAY_SIZE(exynos5420_fixed_rate_clks): 5
 void __init samsung_clk_register_fixed_rate(
 		struct samsung_fixed_rate_clock *list, unsigned int nr_clk)
 {
@@ -283,22 +291,64 @@ void __init samsung_clk_register_fixed_rate(
 }
 
 /* register a list of fixed factor clocks */
+// ARM10C 20150124
+// exynos5420_fixed_factor_clks, ARRAY_SIZE(exynos5420_fixed_factor_clks): 1
 void __init samsung_clk_register_fixed_factor(
 		struct samsung_fixed_factor_clock *list, unsigned int nr_clk)
 {
 	struct clk *clk;
 	unsigned int idx;
 
+	// nr_clk: 1
 	for (idx = 0; idx < nr_clk; idx++, list++) {
+		// list->name: exynos5420_fixed_factor_clks[0].name: "sclk_hsic_12m",
+		// list->parent_name: exynos5420_fixed_factor_clks[0].parent_name: "fin_pll",
+		// list->flags: exynos5420_fixed_factor_clks[0].flags: 0,
+		// list->multi: exynos5420_fixed_factor_clks[0].mult: 1,
+		// list->div: exynos5420_fixed_factor_clks[0].div: 2
+		// clk_register_fixed_factor(NULL, "sclk_hsic_12m", "fin_pll", 0, 1, 2): kmem_cache#29-oX (sclk_hsic_12m)
 		clk = clk_register_fixed_factor(NULL, list->name,
 			list->parent_name, list->flags, list->mult, list->div);
+		// clk: kmem_cache#29-oX (sclk_hsic_12m)
+
+		// clk_register_fixed_factor에서 한일:
+		// struct clk_fixed_factor 만큼 메모리를 kmem_cache#30-oX 할당 받고 struct clk_fixed_factor 의 멤버 값을 아래와 같이 초기화 수행
+		//
+		// (kmem_cache#30-oX)->mult: 1
+		// (kmem_cache#30-oX)->div: 2
+		// (kmem_cache#30-oX)->hw.init: &init
+		//
+		// struct clk 만큼 메모리를 kmem_cache#29-oX (sclk_hsic_12m) 할당 받고 struct clk 의 멤버 값을 아래와 같이 초기화 수행
+		//
+		// (kmem_cache#29-oX (sclk_hsic_12m))->name: kmem_cache#30-oX ("sclk_hsic_12m")
+		// (kmem_cache#29-oX (sclk_hsic_12m))->ops: &clk_fixed_factor_ops
+		// (kmem_cache#29-oX (sclk_hsic_12m))->hw: &(kmem_cache#30-oX (sclk_hsic_12m))->hw
+		// (kmem_cache#29-oX (sclk_hsic_12m))->flags: 0x20
+		// (kmem_cache#29-oX (sclk_hsic_12m))->num_parents: 1
+		// (kmem_cache#29-oX (sclk_hsic_12m))->parent_names: kmem_cache#30-oX
+		// (kmem_cache#29-oX (sclk_hsic_12m))->parent_names[0]: (kmem_cache#30-oX)[0]: kmem_cache#30-oX: "fin_pll"
+		// (kmem_cache#29-oX (sclk_hsic_12m))->parent: kmem_cache#29-oX (fin_pll)
+		// (kmem_cache#29-oX (sclk_hsic_12m))->rate: 12000000
+		//
+		// (&(kmem_cache#29-oX (sclk_hsic_12m))->child_node)->next: NULL
+		// (&(kmem_cache#29-oX (sclk_hsic_12m))->child_node)->pprev: &(&(kmem_cache#29-oX (sclk_hsic_12m))->child_node)
+		//
+		// (&(kmem_cache#29-oX (fin_pll))->children)->first: &(kmem_cache#29-oX (sclk_hsic_12m))->child_node
+		//
+		// (&(kmem_cache#30-oX (sclk_hsic_12m))->hw)->clk: kmem_cache#29-oX (sclk_hsic_12m)
+
+		// clk: kmem_cache#29-oX (sclk_hsic_12m), IS_ERR(kmem_cache#29-oX (sclk_hsic_12m)): 0
 		if (IS_ERR(clk)) {
 			pr_err("%s: failed to register clock %s\n", __func__,
 				list->name);
 			continue;
 		}
 
+		// clk: kmem_cache#29-oX (sclk_hsic_12m), list->id: exynos5420_fixed_factor_clks[0].id: none: 0
 		samsung_clk_add_lookup(clk, list->id);
+
+		// samsung_clk_add_lookup에서 한일:
+		// clk_table[0]: (kmem_cache#23-o0)[0]: kmem_cache#29-oX (sclk_hsic_12m)
 	}
 }
 

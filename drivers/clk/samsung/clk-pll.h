@@ -13,11 +13,13 @@
 #define __SAMSUNG_CLK_PLL_H
 
 // ARM10C 20150117
+// ARM10C 20150124
 enum samsung_pll_type {
 	pll_35xx,
 	pll_36xx,
 	// pll_2550: 2
 	pll_2550,
+	// pll_2650: 3
 	pll_2650,
 	pll_4500,
 	pll_4502,

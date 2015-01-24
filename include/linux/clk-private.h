@@ -26,6 +26,7 @@
 #ifdef CONFIG_COMMON_CLK // CONFIG_COMMON_CLK=y
 
 // ARM10C 20150117
+// ARM10C 20150124
 // sizeof(struct clk): 66 bytes
 struct clk {
 	const char		*name;

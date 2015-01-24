@@ -30,6 +30,7 @@
 // CLK_IS_ROOT: 0x10
 #define CLK_IS_ROOT		BIT(4) /* root clk, has no parent */
 // ARM10C 20150110
+// ARM10C 20150124
 // CLK_IS_BASIC: 0x20
 #define CLK_IS_BASIC		BIT(5) /* Basic clk, can't do a to_clk_foo() */
 // ARM10C 20150117
@@ -162,6 +163,7 @@ struct clk_ops {
  */
 // ARM10C 20150110
 // ARM10C 20150117
+// ARM10C 20150124
 struct clk_init_data {
 	const char		*name;
 	const struct clk_ops	*ops;
@@ -184,6 +186,7 @@ struct clk_init_data {
  */
 // ARM10C 20150110
 // ARM10C 20150117
+// ARM10C 20150124
 // sizeof(struct clk_hw): 8 bytes
 struct clk_hw {
 	struct clk *clk;
@@ -380,6 +383,8 @@ void of_fixed_factor_clk_setup(struct device_node *node);
  * Implements .recalc_rate, .set_rate and .round_rate
  */
 
+// ARM10C 20150124
+// sizeof(struct clk_fixed_factor): 16 bytes
 struct clk_fixed_factor {
 	struct clk_hw	hw;
 	unsigned int	mult;

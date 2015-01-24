@@ -347,6 +347,10 @@ EXPORT_SYMBOL(clkdev_drop);
 // clk: kmem_cache#29-oX (apll),
 // pll_clk->alias: (&exynos5420_plls[0])->alias: "fout_apll"
 // pll_clk->dev_name: (&exynos5420_plls[0])->dev_name: NULL
+// ARM10C 20150124
+// clk: kmem_cache#29-oX (epll),
+// pll_clk->alias: (&exynos5420_plls[3])->alias: "fout_epll",
+// pll_clk->dev_name: (&exynos5420_plls[3])->dev_name: NULL
 int clk_register_clkdev(struct clk *clk, const char *con_id,
 	const char *dev_fmt, ...)
 {

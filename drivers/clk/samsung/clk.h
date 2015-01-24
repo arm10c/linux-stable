@@ -60,6 +60,7 @@ struct samsung_fixed_rate_clock {
 };
 
 // ARM10C 20150110
+// ARM10C 20150124
 #define FRATE(_id, cname, pname, f, frate)		\
 	{						\
 		.id		= _id,			\
@@ -87,6 +88,7 @@ struct samsung_fixed_factor_clock {
 	unsigned long		flags;
 };
 
+// ARM10C 20150124
 #define FFACTOR(_id, cname, pname, m, d, f)		\
 	{						\
 		.id		= _id,			\
