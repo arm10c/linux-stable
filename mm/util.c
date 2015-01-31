@@ -32,6 +32,8 @@
 // hw->init->name: (&(kmem_cache#30-oX (epll))->hw)->init->name: "fout_epll", GFP_KERNEL: 0xD0
 // ARM10C 20150131
 // hw->init->name: (&(kmem_cache#30-oX (mout_mspll_kfc))->hw)->init->name: "mout_mspll_kfc", GFP_KERNEL: 0xD0
+// ARM10C 20150131
+// hw->init->name: (&(kmem_cache#30-oX (sclk_cpll))->hw)->init->name: "sclk_cpll", GFP_KERNEL: 0xD0
 char *kstrdup(const char *s, gfp_t gfp)
 {
 	size_t len;

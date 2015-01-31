@@ -757,20 +757,45 @@ static inline int hlist_empty(const struct hlist_head *h)
 	return !h->first;
 }
 
+// ARM10C 20150131
+// n: &(kmem_cache#29-oX (mout_mspll_kfc))->child_node
 static inline void __hlist_del(struct hlist_node *n)
 {
+	// n->next: (&(kmem_cache#29-oX (mout_mspll_kfc))->child_node)->next
 	struct hlist_node *next = n->next;
+	// next: (&(kmem_cache#29-oX (mout_mspll_kfc))->child_node)->next
+
+	// n->pprev: (&(kmem_cache#29-oX (mout_mspll_kfc))->child_node)->pprev
 	struct hlist_node **pprev = n->pprev;
+	// pprev: (&(kmem_cache#29-oX (mout_mspll_kfc))->child_node)->pprev
+
+	// *pprev: *((&(kmem_cache#29-oX (mout_mspll_kfc))->child_node)->pprev),
+	// next: (&(kmem_cache#29-oX (mout_mspll_kfc))->child_node)->next
 	*pprev = next;
+	// *pprev: *((&(kmem_cache#29-oX (mout_mspll_kfc))->child_node)->pprev): (&(kmem_cache#29-oX (mout_mspll_kfc))->child_node)->next
+
+	// next: (&(kmem_cache#29-oX (mout_mspll_kfc))->child_node)->next
 	if (next)
 		next->pprev = pprev;
 }
 
+// ARM10C 20150131
+// &clk->child_node: &(kmem_cache#29-oX (mout_mspll_kfc))->child_node
 static inline void hlist_del(struct hlist_node *n)
 {
+	// n: &(kmem_cache#29-oX (mout_mspll_kfc))->child_node
 	__hlist_del(n);
+
+	// __hlist_del 에서 한일:
+	// next list에 pprev의 값을 연결함
+
+	// n->next: (&(kmem_cache#29-oX (mout_mspll_kfc))->child_node)->next, LIST_POISON1: ((void *) 0x00100100)
 	n->next = LIST_POISON1;
+	// n->next: (&(kmem_cache#29-oX (mout_mspll_kfc))->child_node)->next: ((void *) 0x00100100)
+
+	// n->pprev: (&(kmem_cache#29-oX (mout_mspll_kfc))->child_node)->pprev, LIST_POISON2: ((void *) 0x00200200)
 	n->pprev = LIST_POISON2;
+	// n->pprev: (&(kmem_cache#29-oX (mout_mspll_kfc))->child_node)->pprev: ((void *) 0x00200200)
 }
 
 static inline void hlist_del_init(struct hlist_node *n)
@@ -787,6 +812,10 @@ static inline void hlist_del_init(struct hlist_node *n)
 // &clk->child_node: &(kmem_cache#29-oX (apll))->child_node, &clk->parent->children: (&kmem_cache#29-oX (fin_pll))->children
 // ARM10C 20150131
 // &clk->child_node: &(kmem_cache#29-oX (mout_mspll_kfc))->child_node, &clk_orphan_list
+// ARM10C 20150131
+// &clk->child_node: &(kmem_cache#29-oX (sclk_dpll))->child_node, &clk->parent->children: (&kmem_cache#29-oX (fout_dpll))->children
+// ARM10C 20150131
+// clk->child_node: (kmem_cache#29-oX (mout_mspll_kfc))->child_node, new_parent->children: (kmem_cache#29-oX (sclk_dpll))->children
 static inline void hlist_add_head(struct hlist_node *n, struct hlist_head *h)
 {
 	// h->first: (&clk_root_list)->first: NULL

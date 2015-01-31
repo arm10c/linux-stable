@@ -55,6 +55,8 @@
 #define SRC_TOP3		0x1020c
 #define SRC_TOP4		0x10210
 #define SRC_TOP5		0x10214
+// ARM10C 20150131
+// SRC_TOP6: 0x10218
 #define SRC_TOP6		0x10218
 // ARM10C 20150131
 // SRC_TOP7: 0x1021c
@@ -241,7 +243,13 @@ PNAME(cpu_p)		= { "mout_apll" , "mout_mspll_cpu" };
 PNAME(kfc_p)		= { "mout_kpll" , "mout_mspll_kfc" };
 PNAME(apll_p)		= { "fin_pll", "fout_apll", };
 PNAME(bpll_p)		= { "fin_pll", "fout_bpll", };
+// ARM10C 20150131
+// #define PNAME(cpll_p):
+// static const char *cpll_p[] __initdata = { "fin_pll", "fout_cpll", };
 PNAME(cpll_p)		= { "fin_pll", "fout_cpll", };
+// ARM10C 20150131
+// #define PNAME(dpll_p):
+// static const char *dpll_p[] __initdata = { "fin_pll", "fout_dpll", };
 PNAME(dpll_p)		= { "fin_pll", "fout_dpll", };
 PNAME(epll_p)		= { "fin_pll", "fout_epll", };
 PNAME(ipll_p)		= { "fin_pll", "fout_ipll", };
@@ -454,7 +462,37 @@ static struct samsung_mux_clock exynos5420_mux_clks[] __initdata = {
 	MUX(none, "sclk_ipll", ipll_p, SRC_TOP6, 12, 1),
 	MUX(none, "sclk_rpll", rpll_p, SRC_TOP6, 16, 1),
 	MUX(none, "sclk_epll", epll_p, SRC_TOP6, 20, 1),
+
+	// #define MUX(none, "sclk_dpll", cpll_p, SRC_TOP6, 28, 1):
+	// {
+	// 	.id		= none,
+	// 	.dev_name	= NULL,
+	// 	.name		= "sclk_dpll",
+	// 	.parent_names	= dpll_p,
+	// 	.num_parents	= ARRAY_SIZE(dpll_p),
+	// 	.flags		= (0) | CLK_SET_RATE_NO_REPARENT,
+	// 	.offset		= SRC_TOP6,
+	// 	.shift		= 24,
+	// 	.width		= 1,
+	// 	.mux_flags	= 0,
+	// 	.alias		= NULL,
+	// }
 	MUX(none, "sclk_dpll", dpll_p, SRC_TOP6, 24, 1),
+
+	// #define MUX(none, "sclk_cpll", cpll_p, SRC_TOP6, 28, 1):
+	// {
+	// 	.id		= none,
+	// 	.dev_name	= NULL,
+	// 	.name		= "sclk_cpll",
+	// 	.parent_names	= cpll_p,
+	// 	.num_parents	= ARRAY_SIZE(cpll_p),
+	// 	.flags		= (0) | CLK_SET_RATE_NO_REPARENT,
+	// 	.offset		= SRC_TOP6,
+	// 	.shift		= 28,
+	// 	.width		= 1,
+	// 	.mux_flags	= 0,
+	// 	.alias		= NULL,
+	// }
 	MUX(none, "sclk_cpll", cpll_p, SRC_TOP6, 28, 1),
 
 	MUX(none, "mout_sw_aclk400_mscl", sw_aclk400_mscl_p, SRC_TOP10, 4, 1),
