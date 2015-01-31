@@ -113,6 +113,7 @@ struct samsung_fixed_factor_clock {
  * @mux_flags: flags for mux-type clock.
  * @alias: optional clock alias name to be assigned to this clock.
  */
+// ARM10C 20150131
 struct samsung_mux_clock {
 	unsigned int		id;
 	const char		*dev_name;
@@ -127,6 +128,36 @@ struct samsung_mux_clock {
 	const char		*alias;
 };
 
+// ARM10C 20150131
+// #define __MUX(none, NULL, "mout_mspll_kfc", mspll_cpu_p, SRC_TOP7, 8, 2, 0, 0, NULL):
+// {
+// 	.id		= none,
+// 	.dev_name	= NULL,
+// 	.name		= "mout_mspll_kfc",
+// 	.parent_names	= mspll_cpu_p,
+// 	.num_parents	= ARRAY_SIZE(mspll_cpu_p),
+// 	.flags		= (0) | CLK_SET_RATE_NO_REPARENT,
+// 	.offset		= SRC_TOP7,
+// 	.shift		= 8,
+// 	.width		= 2,
+// 	.mux_flags	= 0,
+// 	.alias		= NULL,
+// }
+// ARM10C 20150131
+// __MUX(none, NULL, "mout_aclk400_mscl", group1_p, SRC_TOP0, 4, 2, 0, 0, "aclk400_mscl"):
+// {
+// 	.id		= none,
+// 	.dev_name	= NULL,
+// 	.name		= "mout_aclk400_mscl",
+// 	.parent_names	= group1_p,
+// 	.num_parents	= ARRAY_SIZE(group1_p),
+// 	.flags		= (0) | CLK_SET_RATE_NO_REPARENT,
+// 	.offset		= SRC_TOP0,
+// 	.shift		= 4,
+// 	.width		= 2,
+// 	.mux_flags	= 0,
+// 	.alias		= "aclk400_mscl",
+// }
 #define __MUX(_id, dname, cname, pnames, o, s, w, f, mf, a)	\
 	{							\
 		.id		= _id,				\
@@ -142,9 +173,69 @@ struct samsung_mux_clock {
 		.alias		= a,				\
 	}
 
+// ARM10C 20150131
+// #define __MUX(none, NULL, "mout_mspll_kfc", mspll_cpu_p, SRC_TOP7, 8, 2, 0, 0, NULL):
+// {
+// 	.id		= none,
+// 	.dev_name	= NULL,
+// 	.name		= "mout_mspll_kfc",
+// 	.parent_names	= mspll_cpu_p,
+// 	.num_parents	= ARRAY_SIZE(mspll_cpu_p),
+// 	.flags		= (0) | CLK_SET_RATE_NO_REPARENT,
+// 	.offset		= SRC_TOP7,
+// 	.shift		= 8,
+// 	.width		= 2,
+// 	.mux_flags	= 0,
+// 	.alias		= NULL,
+// }
+//
+// #define MUX(none, "mout_mspll_kfc", mspll_cpu_p, SRC_TOP7, 8, 2):
+// {
+// 	.id		= none,
+// 	.dev_name	= NULL,
+// 	.name		= "mout_mspll_kfc",
+// 	.parent_names	= mspll_cpu_p,
+// 	.num_parents	= ARRAY_SIZE(mspll_cpu_p),
+// 	.flags		= (0) | CLK_SET_RATE_NO_REPARENT,
+// 	.offset		= SRC_TOP7,
+// 	.shift		= 8,
+// 	.width		= 2,
+// 	.mux_flags	= 0,
+// 	.alias		= NULL,
+// }
 #define MUX(_id, cname, pnames, o, s, w)			\
 	__MUX(_id, NULL, cname, pnames, o, s, w, 0, 0, NULL)
 
+// ARM10C 20150131
+// #define __MUX(none, NULL, "mout_aclk400_mscl", group1_p, SRC_TOP0, 4, 2, 0, 0, "aclk400_mscl"):
+// {
+// 	.id		= none,
+// 	.dev_name	= NULL,
+// 	.name		= "mout_aclk400_mscl",
+// 	.parent_names	= group1_p,
+// 	.num_parents	= ARRAY_SIZE(group1_p),
+// 	.flags		= (0) | CLK_SET_RATE_NO_REPARENT,
+// 	.offset		= SRC_TOP0,
+// 	.shift		= 4,
+// 	.width		= 2,
+// 	.mux_flags	= 0,
+// 	.alias		= "aclk400_mscl",
+// }
+//
+// #define MUX_A(none, "mout_aclk400_mscl", group1_p, SRC_TOP0, 4, 2, "aclk400_mscl"):
+// {
+// 	.id		= none,
+// 	.dev_name	= NULL,
+// 	.name		= "mout_aclk400_mscl",
+// 	.parent_names	= group1_p,
+// 	.num_parents	= ARRAY_SIZE(group1_p),
+// 	.flags		= (0) | CLK_SET_RATE_NO_REPARENT,
+// 	.offset		= SRC_TOP0,
+// 	.shift		= 4,
+// 	.width		= 2,
+// 	.mux_flags	= 0,
+// 	.alias		= "aclk400_mscl",
+// }
 #define MUX_A(_id, cname, pnames, o, s, w, a)			\
 	__MUX(_id, NULL, cname, pnames, o, s, w, 0, 0, a)
 
@@ -256,6 +347,9 @@ struct samsung_gate_clock {
 #define GATE_DA(_id, dname, cname, pname, o, b, f, gf, a)	\
 	__GATE(_id, dname, cname, pname, o, b, f, gf, a)
 
+// ARM10C 20150131
+// #define PNAME(mspll_cpu_p):
+// static const char *mspll_cpu_p[] __initdata
 #define PNAME(x) static const char *x[] __initdata
 
 /**

@@ -31,11 +31,14 @@
 #define CLK_IS_ROOT		BIT(4) /* root clk, has no parent */
 // ARM10C 20150110
 // ARM10C 20150124
+// ARM10C 20150131
 // CLK_IS_BASIC: 0x20
 #define CLK_IS_BASIC		BIT(5) /* Basic clk, can't do a to_clk_foo() */
 // ARM10C 20150117
 // CLK_GET_RATE_NOCACHE: 0x40
 #define CLK_GET_RATE_NOCACHE	BIT(6) /* do not use the cached clk rate */
+// ARM10C 20150131
+// CLK_SET_RATE_NO_REPARENT: 0x80
 #define CLK_SET_RATE_NO_REPARENT BIT(7) /* don't re-parent on rate change */
 
 struct clk_hw;
@@ -341,6 +344,8 @@ struct clk *clk_register_divider_table(struct device *dev, const char *name,
  *   While setting the mux bits, higher 16-bit should also be updated to
  *   indicate changing mux bits.
  */
+// ARM10C 20150131
+// sizeof(struct clk_mux): 26 bytes
 struct clk_mux {
 	struct clk_hw	hw;
 	void __iomem	*reg;
@@ -351,9 +356,17 @@ struct clk_mux {
 	spinlock_t	*lock;
 };
 
+// ARM10C 20150131
+// CLK_MUX_INDEX_ONE: 0x1
 #define CLK_MUX_INDEX_ONE		BIT(0)
+// ARM10C 20150131
+// CLK_MUX_INDEX_BIT: 0x2
 #define CLK_MUX_INDEX_BIT		BIT(1)
+// ARM10C 20150131
+// CLK_MUX_HIWORD_MASK: 0x4
 #define CLK_MUX_HIWORD_MASK		BIT(2)
+// ARM10C 20150131
+// CLK_MUX_READ_ONLY: 0x8
 #define CLK_MUX_READ_ONLY	BIT(3) /* mux setting cannot be changed */
 
 extern const struct clk_ops clk_mux_ops;

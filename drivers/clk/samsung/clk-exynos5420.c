@@ -56,6 +56,8 @@
 #define SRC_TOP4		0x10210
 #define SRC_TOP5		0x10214
 #define SRC_TOP6		0x10218
+// ARM10C 20150131
+// SRC_TOP7: 0x1021c
 #define SRC_TOP7		0x1021c
 #define SRC_DISP10		0x1022c
 #define SRC_MAU			0x10240
@@ -230,6 +232,9 @@ static unsigned long exynos5420_clk_regs[] __initdata = {
 };
 
 /* list of all parent clocks */
+// ARM10C 20150131
+// #define PNAME(mspll_cpu_p):
+// static const char *mspll_cpu_p[] __initdata = { "sclk_cpll", "sclk_dpll", "sclk_mpll", "sclk_spll" };
 PNAME(mspll_cpu_p)	= { "sclk_cpll", "sclk_dpll",
 				"sclk_mpll", "sclk_spll" };
 PNAME(cpu_p)		= { "mout_apll" , "mout_mspll_cpu" };
@@ -357,7 +362,22 @@ static struct samsung_fixed_factor_clock exynos5420_fixed_factor_clks[] __initda
 	FFACTOR(none, "sclk_hsic_12m", "fin_pll", 1, 2, 0),
 };
 
+// ARM10C 20150131
 static struct samsung_mux_clock exynos5420_mux_clks[] __initdata = {
+	// #define MUX(none, "mout_mspll_kfc", mspll_cpu_p, SRC_TOP7, 8, 2):
+	// {
+	// 	.id		= none,
+	// 	.dev_name	= NULL,
+	// 	.name		= "mout_mspll_kfc",
+	// 	.parent_names	= mspll_cpu_p,
+	// 	.num_parents	= ARRAY_SIZE(mspll_cpu_p),
+	// 	.flags		= (0) | CLK_SET_RATE_NO_REPARENT,
+	// 	.offset		= SRC_TOP7,
+	// 	.shift		= 8,
+	// 	.width		= 2,
+	// 	.mux_flags	= 0,
+	// 	.alias		= NULL,
+	// }
 	MUX(none, "mout_mspll_kfc", mspll_cpu_p, SRC_TOP7, 8, 2),
 	MUX(none, "mout_mspll_cpu", mspll_cpu_p, SRC_TOP7, 12, 2),
 	MUX(none, "mout_apll", apll_p, SRC_CPU, 0, 1),
@@ -367,6 +387,20 @@ static struct samsung_mux_clock exynos5420_mux_clks[] __initdata = {
 
 	MUX(none, "sclk_bpll", bpll_p, SRC_CDREX, 0, 1),
 
+	// #define MUX_A(none, "mout_aclk400_mscl", group1_p, SRC_TOP0, 4, 2, "aclk400_mscl"):
+	// {
+	// 	.id		= none,
+	// 	.dev_name	= NULL,
+	// 	.name		= "mout_aclk400_mscl",
+	// 	.parent_names	= group1_p,
+	// 	.num_parents	= ARRAY_SIZE(group1_p),
+	// 	.flags		= (0) | CLK_SET_RATE_NO_REPARENT,
+	// 	.offset		= SRC_TOP0,
+	// 	.shift		= 4,
+	// 	.width		= 2,
+	// 	.mux_flags	= 0,
+	// 	.alias		= "aclk400_mscl",
+	// }
 	MUX_A(none, "mout_aclk400_mscl", group1_p,
 			SRC_TOP0, 4, 2, "aclk400_mscl"),
 	MUX(none, "mout_aclk200", group1_p, SRC_TOP0, 8, 2),
@@ -1116,7 +1150,9 @@ static void __init exynos5420_clk_init(struct device_node *np)
 	// clk_table[0]: (kmem_cache#23-o0)[0]: kmem_cache#29-oX (sclk_hsic_12m)
 
 // 2015/01/24 종료
+// 2015/01/31 시작
 
+	// ARRAY_SIZE(exynos5420_mux_clks): 85
 	samsung_clk_register_mux(exynos5420_mux_clks,
 			ARRAY_SIZE(exynos5420_mux_clks));
 	samsung_clk_register_div(exynos5420_div_clks,

@@ -27,13 +27,31 @@
  * parent - parent is adjustable through clk_set_parent
  */
 
+// ARM10C 20150131
 #define to_clk_mux(_hw) container_of(_hw, struct clk_mux, hw)
 
+// ARM10C 20150131
+// clk->hw: (kmem_cache#29-oX (mout_mspll_kfc))->hw
 static u8 clk_mux_get_parent(struct clk_hw *hw)
 {
+	// hw: (kmem_cache#29-oX (mout_mspll_kfc))->hw
+	// to_clk_mux((kmem_cache#29-oX (mout_mspll_kfc))->hw): kmem_cache#29-oX (mout_mspll_kfc)
 	struct clk_mux *mux = to_clk_mux(hw);
+	// mux: kmem_cache#29-oX (mout_mspll_kfc)
+
+	// hw->clk: ((kmem_cache#29-oX (mout_mspll_kfc))->hw)->clk
+	// __clk_get_num_parents(((kmem_cache#29-oX (mout_mspll_kfc))->hw)->clk): 
 	int num_parents = __clk_get_num_parents(hw->clk);
+	// num_parents: 4
+
 	u32 val;
+
+	// NOTE:
+	// E.R.M: 5.9.1.92 CLK_SRC_TOP3
+	// 현재 5420 code 상에서는 0x1002_021c가 CLK_SRC_TOP7으로 되어 있는 상태임
+	// exynos 5250 manual 상에서는 0x1002_021c 주소가 CLK_SRC_TOP3으로 되어 있음
+	// exynos 5420 manual이 없으므로 관련 5250 manual 내용으로 분석진행
+	// reset value: 0x0000_0000 으로 진행
 
 	/*
 	 * FIXME need a mux-specific flag to determine if val is bitwise or numeric
@@ -42,9 +60,17 @@ static u8 clk_mux_get_parent(struct clk_hw *hw)
 	 * OTOH, pmd_trace_clk_mux_ck uses a separate bit for each clock, so
 	 * val = 0x4 really means "bit 2, index starts at bit 0"
 	 */
+	// mux->reg: (kmem_cache#29-oX (mout_mspll_kfc))->reg: 0xf005021c,
+	// mux->shift: (kmem_cache#29-oX (mout_mspll_kfc))->shift: 8
+	// clk_readl(0xf005021c): 0x0
 	val = clk_readl(mux->reg) >> mux->shift;
-	val &= mux->mask;
+	// val: 0
 
+	// val: 0, mux->mask: (kmem_cache#29-oX (mout_mspll_kfc))->mask: 0x3
+	val &= mux->mask;
+	// val: 0
+
+	// mux->table: (kmem_cache#29-oX (mout_mspll_kfc))->table: NULL
 	if (mux->table) {
 		int i;
 
@@ -54,16 +80,21 @@ static u8 clk_mux_get_parent(struct clk_hw *hw)
 		return -EINVAL;
 	}
 
+	// val: 0, mux->flags: (kmem_cache#29-oX (mout_mspll_kfc))->flags: 0, CLK_MUX_INDEX_BIT: 0x2
 	if (val && (mux->flags & CLK_MUX_INDEX_BIT))
 		val = ffs(val) - 1;
 
+	// val: 0, mux->flags: (kmem_cache#29-oX (mout_mspll_kfc))->flags: 0, CLK_MUX_INDEX_ONE: 0x1
 	if (val && (mux->flags & CLK_MUX_INDEX_ONE))
 		val--;
 
+	// val: 0, num_parents: 4
 	if (val >= num_parents)
 		return -EINVAL;
 
+	// val: 0
 	return val;
+	// return 0
 }
 
 static int clk_mux_set_parent(struct clk_hw *hw, u8 index)
@@ -101,6 +132,7 @@ static int clk_mux_set_parent(struct clk_hw *hw, u8 index)
 	return 0;
 }
 
+// ARM10C 20150131
 const struct clk_ops clk_mux_ops = {
 	.get_parent = clk_mux_get_parent,
 	.set_parent = clk_mux_set_parent,
@@ -113,6 +145,9 @@ const struct clk_ops clk_mux_ro_ops = {
 };
 EXPORT_SYMBOL_GPL(clk_mux_ro_ops);
 
+// ARM10C 20150131
+// dev: NULL, name: "mout_mspll_kfc", parent_names: mspll_cpu_p, num_parents: 4,
+// flags: 0x80, reg: 0xf005021c, shift: 8, mask: 0x3, clk_mux_flags: 0, NULL, lock: &lock
 struct clk *clk_register_mux_table(struct device *dev, const char *name,
 		const char **parent_names, u8 num_parents, unsigned long flags,
 		void __iomem *reg, u8 shift, u32 mask,
@@ -122,7 +157,9 @@ struct clk *clk_register_mux_table(struct device *dev, const char *name,
 	struct clk *clk;
 	struct clk_init_data init;
 	u8 width = 0;
+	// width: 0
 
+	// clk_mux_flags: 0, CLK_MUX_HIWORD_MASK: 0x4
 	if (clk_mux_flags & CLK_MUX_HIWORD_MASK) {
 		width = fls(mask) - ffs(mask) + 1;
 		if (width + shift > 16) {
@@ -132,48 +169,136 @@ struct clk *clk_register_mux_table(struct device *dev, const char *name,
 	}
 
 	/* allocate the mux */
+	// sizeof(struct clk_mux): 26 bytes, GFP_KERNEL: 0xD0
+	// kzalloc(26, GFP_KERNEL: 0xD0): kmem_cache#30-oX
 	mux = kzalloc(sizeof(struct clk_mux), GFP_KERNEL);
+	// mux: kmem_cache#30-oX
+
+	// mux: kmem_cache#30-oX
 	if (!mux) {
 		pr_err("%s: could not allocate mux clk\n", __func__);
 		return ERR_PTR(-ENOMEM);
 	}
 
+	// name: "mout_mspll_kfc"
 	init.name = name;
+	// init.name: "mout_mspll_kfc"
+
+	// clk_mux_flags: 0, CLK_MUX_READ_ONLY: 0x8
 	if (clk_mux_flags & CLK_MUX_READ_ONLY)
 		init.ops = &clk_mux_ro_ops;
 	else
 		init.ops = &clk_mux_ops;
+		// init.ops: &clk_mux_ops
+
+	// flags: 0x80, CLK_IS_BASIC: 0x20
 	init.flags = flags | CLK_IS_BASIC;
+	// init.flags: 0xa0
+
+	// parent_names: mspll_cpu_p
 	init.parent_names = parent_names;
+	// init.parent_names: mspll_cpu_p
+
+	// num_parents: 4
 	init.num_parents = num_parents;
+	// init.num_parents: 4
 
 	/* struct clk_mux assignments */
+	// mux->reg: (kmem_cache#30-oX)->reg, reg: 0xf005021c
 	mux->reg = reg;
-	mux->shift = shift;
-	mux->mask = mask;
-	mux->flags = clk_mux_flags;
-	mux->lock = lock;
-	mux->table = table;
-	mux->hw.init = &init;
+	// mux->reg: (kmem_cache#30-oX)->rreg: 0xf005021c
 
+	// mux->reg: (kmem_cache#30-oX)->shift, shift: 8
+	mux->shift = shift;
+	// mux->reg: (kmem_cache#30-oX)->shift: 8
+
+	// mux->mask: (kmem_cache#30-oX)->mask, mask: 0x3
+	mux->mask = mask;
+	// mux->mask: (kmem_cache#30-oX)->mask: 0x3
+
+	// mux->flags: (kmem_cache#30-oX)->flags, clk_mux_flags: 0
+	mux->flags = clk_mux_flags;
+	// mux->flags: (kmem_cache#30-oX)->flags: 0
+
+	// mux->lock: (kmem_cache#30-oX)->lock, lock: &lock
+	mux->lock = lock;
+	// mux->lock: (kmem_cache#30-oX)->lock: &lock
+
+	// mux->table: (kmem_cache#30-oX)->table, table: NULL
+	mux->table = table;
+	// mux->table: (kmem_cache#30-oX)->table: NULL
+
+	// mux->hw.init: (kmem_cache#30-oX)->hw.init
+	mux->hw.init = &init;
+	// mux->hw.init: (kmem_cache#30-oX)->hw.init: &init
+
+	// dev: NULL, &mux->hw: &(kmem_cache#30-oX (mout_mspll_kfc))->hw
+	// clk_register(NULL, &(kmem_cache#30-oX (mout_mspll_kfc))->hw): kmem_cache#29-oX (mout_mspll_kfc)
 	clk = clk_register(dev, &mux->hw);
+	// clk: kmem_cache#29-oX (mout_mspll_kfc)
+
+	// clk_register에서 한일:
+	// struct clk 만큼 메모리를 kmem_cache#29-oX (mout_mspll_kfc) 할당 받고 struct clk 의 멤버 값을 아래와 같이 초기화 수행
+	//
+	// (kmem_cache#29-oX (mout_mspll_kfc))->name: kmem_cache#30-oX ("mout_mspll_kfc")
+	// (kmem_cache#29-oX (mout_mspll_kfc))->ops: &clk_mux_ops
+	// (kmem_cache#29-oX (mout_mspll_kfc))->hw: &(kmem_cache#30-oX (mout_mspll_kfc))->hw
+	// (kmem_cache#29-oX (mout_mspll_kfc))->flags: 0xa0
+	// (kmem_cache#29-oX (mout_mspll_kfc))->num_parents 4
+	// (kmem_cache#29-oX (mout_mspll_kfc))->parent_names: kmem_cache#30-oX
+	// (kmem_cache#29-oX (mout_mspll_kfc))->parent_names[0]: (kmem_cache#30-oX)[0]: kmem_cache#30-oX: "sclk_cpll"
+	// (kmem_cache#29-oX (mout_mspll_kfc))->parent_names[1]: (kmem_cache#30-oX)[1]: kmem_cache#30-oX: "sclk_dpll"
+	// (kmem_cache#29-oX (mout_mspll_kfc))->parent_names[2]: (kmem_cache#30-oX)[2]: kmem_cache#30-oX: "sclk_mpll"
+	// (kmem_cache#29-oX (mout_mspll_kfc))->parent_names[3]: (kmem_cache#30-oX)[3]: kmem_cache#30-oX: "sclk_spll"
+	// (kmem_cache#29-oX (mout_mspll_kfc))->parent: NULL
+	// (kmem_cache#29-oX (mout_mspll_kfc))->rate: 0
+	//
+	// (kmem_cache#29-oX (mout_mspll_kfc))->parents: kmem_cache#30-oX
+	// (kmem_cache#29-oX (mout_mspll_kfc))->parents[0...3]: (kmem_cache#30-oX)[0...3]: NULL
+	//
+	// (&(kmem_cache#29-oX (mout_mspll_kfc))->child_node)->next: NULL
+	// (&(kmem_cache#29-oX (mout_mspll_kfc))->child_node)->pprev: &(&(kmem_cache#29-oX (mout_mspll_kfc))->child_node)
+	//
+	// (&clk_orphan_list)->first: &(kmem_cache#29-oX (mout_mspll_kfc))->child_node
+	//
+	// (&(kmem_cache#30-oX (mout_mspll_kfc))->hw)->clk: kmem_cache#29-oX (mout_mspll_kfc)
 
 	if (IS_ERR(clk))
 		kfree(mux);
 
+	// clk: kmem_cache#29-oX (mout_mspll_kfc)
 	return clk;
+	// return kmem_cache#29-oX (mout_mspll_kfc)
 }
 EXPORT_SYMBOL_GPL(clk_register_mux_table);
 
+// ARM10C 20150131
+// NULL,
+// list->name: exynos5420_mux_clks[0].name: "mout_mspll_kfc",
+// list->parent_names: exynos5420_mux_clks[0].parent_names: mspll_cpu_p,
+// list->num_parents: exynos5420_mux_clks[0].num_parents: 4,
+// list->flags: exynos5420_mux_clks[0].flags: 0x80,
+// 0xf005021c,
+// list->shift: exynos5420_mux_clks[0].shift: 8,
+// list->width: exynos5420_mux_clks[0].width: 2,
+// list->mux_flags: exynos5420_mux_clks[0].mux_flags: 0,
+// &lock
 struct clk *clk_register_mux(struct device *dev, const char *name,
 		const char **parent_names, u8 num_parents, unsigned long flags,
 		void __iomem *reg, u8 shift, u8 width,
 		u8 clk_mux_flags, spinlock_t *lock)
 {
+	// width: 2, BIT(2): 0x4
 	u32 mask = BIT(width) - 1;
+	// mask: 0x3
 
+	// dev: NULL, name: "mout_mspll_kfc", parent_names: mspll_cpu_p, num_parents: 4,
+	// flags: 0x80, reg: 0xf005021c, shift: 8, mask: 0x3, clk_mux_flags: 0, lock: &lock
+	// clk_register_mux_table(NULL, "mout_mspll_kfc", mspll_cpu_p, 4, 0x80, 0xf005021c, 8, 0x3, 0, NULL, &lock):
+	// kmem_cache#29-oX (mout_mspll_kfc)
 	return clk_register_mux_table(dev, name, parent_names, num_parents,
 				      flags, reg, shift, mask, clk_mux_flags,
 				      NULL, lock);
+	// return kmem_cache#29-oX (mout_mspll_kfc)
 }
 EXPORT_SYMBOL_GPL(clk_register_mux);

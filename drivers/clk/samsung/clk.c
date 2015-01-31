@@ -14,6 +14,7 @@
 #include <linux/syscore_ops.h>
 #include "clk.h"
 
+// ARM10C 20150131
 static DEFINE_SPINLOCK(lock);
 // ARM10C 20150110
 // ARM10C 20150117
@@ -353,13 +354,24 @@ void __init samsung_clk_register_fixed_factor(
 }
 
 /* register a list of mux clocks */
+// ARM10C 20150131
+// exynos5420_mux_clks, ARRAY_SIZE(exynos5420_mux_clks): 85
 void __init samsung_clk_register_mux(struct samsung_mux_clock *list,
 					unsigned int nr_clk)
 {
 	struct clk *clk;
 	unsigned int idx, ret;
 
+	// nr_clk: 85
 	for (idx = 0; idx < nr_clk; idx++, list++) {
+		// idx: 0, list->name: exynos5420_mux_clks[0].name: "mout_mspll_kfc",
+		// list->parent_names: exynos5420_mux_clks[0].parent_names: mspll_cpu_p,
+		// list->num_parents: exynos5420_mux_clks[0].num_parents: 4,
+		// list->flags: exynos5420_mux_clks[0].flags: 0x80, reg_base: 0xf0040000,
+		// list->offset: exynos5420_mux_clks[0].offset: 0x1021c,
+		// list->shift: exynos5420_mux_clks[0].shift: 8,
+		// list->width: exynos5420_mux_clks[0].width: 2,
+		// list->mux_flags: exynos5420_mux_clks[0].mux_flags: 0
 		clk = clk_register_mux(NULL, list->name, list->parent_names,
 			list->num_parents, list->flags, reg_base + list->offset,
 			list->shift, list->width, list->mux_flags, &lock);

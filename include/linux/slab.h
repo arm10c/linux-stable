@@ -873,6 +873,8 @@ static inline void *kmalloc_array(size_t n, size_t size, gfp_t flags)
 // clk->num_parents: (kmem_cache#29-oX)->num_parents: 0, sizeof(char *): 4, GFP_KERNEL: 0xD0
 // ARM10C 20150117
 // clk->num_parents: (kmem_cache#29-oX (apll))->num_parents: 1, sizeof(char *): 4, GFP_KERNEL: 0xD0
+// ARM10C 20150131
+// clk->num_parents: (kmem_cache#29-oX (mout_mspll_kfc))->num_parents: 4, sizeof(struct clk *): 4, GFP_KERNEL: 0xD0
 static inline void *kcalloc(size_t n, size_t size, gfp_t flags)
 {
 	// n: 32, size: 16, flags: GFP_KERNEL: 0xD0, __GFP_ZERO: 0x8000u
@@ -997,6 +999,8 @@ static inline void *kmem_cache_zalloc(struct kmem_cache *k, gfp_t flags)
 // size: 56, GFP_KERNEL: 0xD0
 // ARM10C 20150117
 // sizeof(struct samsung_clk_pll): 28 bytes, GFP_KERNEL: 0xD0
+// ARM10C 20150131
+// sizeof(struct clk_mux): 26 bytes, GFP_KERNEL: 0xD0
 static inline void *kzalloc(size_t size, gfp_t flags)
 {
 	// size: 512, GFP_KERNEL: 0xD0, __GFP_ZERO: 0x8000u

@@ -785,20 +785,27 @@ static inline void hlist_del_init(struct hlist_node *n)
 // &clk->child_node: &(kmem_cache#29-oX)->child_node, &clk_root_list
 // ARM10C 20150117
 // &clk->child_node: &(kmem_cache#29-oX (apll))->child_node, &clk->parent->children: (&kmem_cache#29-oX (fin_pll))->children
+// ARM10C 20150131
+// &clk->child_node: &(kmem_cache#29-oX (mout_mspll_kfc))->child_node, &clk_orphan_list
 static inline void hlist_add_head(struct hlist_node *n, struct hlist_head *h)
 {
 	// h->first: (&clk_root_list)->first: NULL
 	// h->first: (&(kmem_cache#29-oX (fin_pll))->children)->first: NULL
+	// h->first: (&clk_orphan_list)->first: NULL
 	struct hlist_node *first = h->first;
+	// first: NULL
 	// first: NULL
 	// first: NULL
 
 	// n->next: (&(kmem_cache#29-oX)->child_node)->next, first: NULL
 	// n->next: (&(kmem_cache#29-oX (apll))->child_node)->next, first: NULL
+	// n->next: (&(kmem_cache#29-oX (mout_mspll_kfc))->child_node)->next, first: NULL
 	n->next = first;
 	// n->next: (&(kmem_cache#29-oX)->child_node)->next: NULL
 	// n->next: (&(kmem_cache#29-oX (apll))->child_node)->next: NULL
+	// n->next: (&(kmem_cache#29-oX (mout_mspll_kfc))->child_node)->next: NULL
 
+	// first: NULL
 	// first: NULL
 	// first: NULL
 	if (first)
@@ -806,17 +813,22 @@ static inline void hlist_add_head(struct hlist_node *n, struct hlist_head *h)
 
 	// h->first: (&clk_root_list)->first: NULL, n: &(kmem_cache#29-oX)->child_node
 	// h->first: (&(kmem_cache#29-oX (fin_pll))->children)->first: NULL, n: &(kmem_cache#29-oX (apll))->child_node
+	// h->first: (&clk_orphan_list)->first: NULL, n: &(kmem_cache#29-oX (mout_mspll_kfc))->child_node
 	h->first = n;
 	// h->first: (&clk_root_list)->first: &(kmem_cache#29-oX)->child_node
 	// h->first: (&(kmem_cache#29-oX (fin_pll))->children)->first: &(kmem_cache#29-oX (apll))->child_node
+	// h->first: (&clk_orphan_list)->first: &(kmem_cache#29-oX (mout_mspll_kfc))->child_node
 
 	// n->pprev: (&(kmem_cache#29-oX)->child_node)->pprev,
 	// &h->first: &(&clk_root_list)->first: &(&(kmem_cache#29-oX)->child_node)
 	// n->pprev: (&(kmem_cache#29-oX (apll))->child_node)->pprev,
 	// &h->first: &(&(kmem_cache#29-oX (fin_pll))->children)->first: &(&(kmem_cache#29-oX (apll))->child_node)
+	// n->pprev: (&(kmem_cache#29-oX (mout_mspll_kfc))->child_node)->pprev,
+	// &h->first: (&clk_orphan_list)->first: &(&(kmem_cache#29-oX (mout_mspll_kfc))->child_node)
 	n->pprev = &h->first;
 	// n->pprev: (&(kmem_cache#29-oX)->child_node)->pprev: &(&(kmem_cache#29-oX)->child_node)
 	// n->pprev: (&(kmem_cache#29-oX (apll))->child_node)->pprev: &(&(kmem_cache#29-oX (apll))->child_node)
+	// n->pprev: (&(kmem_cache#29-oX (mout_mspll_kfc))->child_node)->pprev: &(&(kmem_cache#29-oX (mout_mspll_kfc))->child_node)
 }
 
 /* next must be != NULL */
