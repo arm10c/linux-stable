@@ -1,6 +1,8 @@
 #IAMROOT.ORG Kernel스터디10차(ARM)
 
 #HISTORY
+* 90th (2015/02/07) week: [90차](https://github.com/hephaex/kernel_review/blob/master/a10c_90.md)
+* 89th (2015/01/31) week: [89차](https://github.com/hephaex/kernel_review/blob/master/a10c_89.md)
 * 88th (2015/01/24) week: [88차](https://github.com/hephaex/kernel_review/blob/master/a10c_88.md)
 * 87th (2015/01/17) week: [87차](https://github.com/hephaex/kernel_review/blob/master/a10c_87.md)
 * 86th (2015/01/10) week: [86차](https://github.com/hephaex/kernel_review/blob/master/a10c_86.md)
