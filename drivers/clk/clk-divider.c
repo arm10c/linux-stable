@@ -28,8 +28,13 @@
  * parent - fixed parent.  No clk_set_parent support
  */
 
+// ARM10C 20150228
 #define to_clk_divider(_hw) container_of(_hw, struct clk_divider, hw)
 
+// ARM10C 20150228
+// divider: kmem_cache#30-oX (sclk_apll)
+// divider->width: (kmem_cache#30-oX (sclk_apll))->width: 3
+// div_mask(kmem_cache#30-oX (sclk_apll)): 0x4
 #define div_mask(d)	((1 << ((d)->width)) - 1)
 
 static unsigned int _get_table_maxdiv(const struct clk_div_table *table)
@@ -65,15 +70,25 @@ static unsigned int _get_table_div(const struct clk_div_table *table,
 	return 0;
 }
 
+// ARM10C 20150228
+// divider: kmem_cache#30-oX (sclk_apll), val: 0
 static unsigned int _get_div(struct clk_divider *divider, unsigned int val)
 {
+	// divider->flags: (kmem_cache#30-oX (sclk_apll))->flags: 0, CLK_DIVIDER_ONE_BASED: 0x1
 	if (divider->flags & CLK_DIVIDER_ONE_BASED)
 		return val;
+
+	// divider->flags: (kmem_cache#30-oX (sclk_apll))->flags: 0, CLK_DIVIDER_POWER_OF_TWO: 0x2
 	if (divider->flags & CLK_DIVIDER_POWER_OF_TWO)
 		return 1 << val;
+
+	// divider->table: (kmem_cache#30-oX (sclk_apll))->table: NULL
 	if (divider->table)
 		return _get_table_div(divider->table, val);
+
+	// val: 0
 	return val + 1;
+	// return 1
 }
 
 static unsigned int _get_table_val(const struct clk_div_table *table,
@@ -98,16 +113,42 @@ static unsigned int _get_val(struct clk_divider *divider, unsigned int div)
 	return div - 1;
 }
 
+// ARM10C 20150228
+// &(kmem_cache#30-oX (sclk_apll))->hw, 800000000
 static unsigned long clk_divider_recalc_rate(struct clk_hw *hw,
 		unsigned long parent_rate)
 {
+	// hw: &(kmem_cache#30-oX (sclk_apll))->hw,
+	// to_clk_divider(&(kmem_cache#30-oX (sclk_apll))->hw): kmem_cache#30-oX (sclk_apll)
 	struct clk_divider *divider = to_clk_divider(hw);
+	// divider: kmem_cache#30-oX (sclk_apll)
+
 	unsigned int div, val;
 
-	val = clk_readl(divider->reg) >> divider->shift;
-	val &= div_mask(divider);
+	// E.R.M: 7.9.1.6 CLK_DIV_CPU0
+	// APLL_RATIO[26:24]: CLKDIV_APLL clock divider ratio
+	// SCLK_APLL = MOUT_APLL/(APLL_RATIO + 1)
 
+	// NOTE:
+	// register CLK_DIV_CPU0 의 값을 알수 없음.
+	// APLL_RATIO[26:24]의 값을 0이라 가정하고 분석 진행
+
+	// divider->reg: (kmem_cache#30-oX (sclk_apll))->reg: 0xf0040500
+	// divider->shift: (kmem_cache#30-oX (sclk_apll))->shift: 24
+	// clk_readl(0xf0040500): 0x0
+	val = clk_readl(divider->reg) >> divider->shift;
+	// val: 0
+
+	// divider: kmem_cache#30-oX (sclk_apll), div_mask(kmem_cache#30-oX (sclk_apll)): 0x4
+	val &= div_mask(divider);
+	// val: 0
+
+	// divider: kmem_cache#30-oX (sclk_apll), val: 0
+	// _get_div(kmem_cache#30-oX (sclk_apll), 0): 1
 	div = _get_div(divider, val);
+	// div: 1
+
+	// div: 1
 	if (!div) {
 		WARN(!(divider->flags & CLK_DIVIDER_ALLOW_ZERO),
 			"%s: Zero divisor and CLK_DIVIDER_ALLOW_ZERO not set\n",
@@ -115,7 +156,9 @@ static unsigned long clk_divider_recalc_rate(struct clk_hw *hw,
 		return parent_rate;
 	}
 
+	// parent_rate: 800000000, div: 1
 	return parent_rate / div;
+	// return 800000000
 }
 
 /*
@@ -242,6 +285,7 @@ static int clk_divider_set_rate(struct clk_hw *hw, unsigned long rate,
 	return 0;
 }
 
+// ARM10C 20150228
 const struct clk_ops clk_divider_ops = {
 	.recalc_rate = clk_divider_recalc_rate,
 	.round_rate = clk_divider_round_rate,
@@ -249,6 +293,9 @@ const struct clk_ops clk_divider_ops = {
 };
 EXPORT_SYMBOL_GPL(clk_divider_ops);
 
+// ARM10C 20150228
+// dev: NULL, name: "sclk_apll", parent_name: "mout_apll", flags: 0x0, reg: 0xf0040500,
+// shift: 24, width: 3, clk_divider_flags: 0, NULL, lock: &lock
 static struct clk *_register_divider(struct device *dev, const char *name,
 		const char *parent_name, unsigned long flags,
 		void __iomem *reg, u8 shift, u8 width,
@@ -259,6 +306,7 @@ static struct clk *_register_divider(struct device *dev, const char *name,
 	struct clk *clk;
 	struct clk_init_data init;
 
+	// clk_divider_flags: 0, CLK_DIVIDER_HIWORD_MASK: 0x8
 	if (clk_divider_flags & CLK_DIVIDER_HIWORD_MASK) {
 		if (width + shift > 16) {
 			pr_warn("divider value exceeds LOWORD field\n");
@@ -267,28 +315,67 @@ static struct clk *_register_divider(struct device *dev, const char *name,
 	}
 
 	/* allocate the divider */
+	// sizeof(struct clk_divider): 23 bytes, GFP_KERNEL: 0xD0
+	// kzalloc(23, GFP_KERNEL: 0xD0): kmem_cache#30-oX (sclk_apll)
 	div = kzalloc(sizeof(struct clk_divider), GFP_KERNEL);
+	// div: kmem_cache#30-oX (sclk_apll)
+
+	// div: kmem_cache#30-oX (sclk_apll)
 	if (!div) {
 		pr_err("%s: could not allocate divider clk\n", __func__);
 		return ERR_PTR(-ENOMEM);
 	}
 
+	// name: "sclk_apll"
 	init.name = name;
+	// init.name: "sclk_apll"
+
 	init.ops = &clk_divider_ops;
+	// init.ops: &clk_divider_ops;
+
+	// flags: 0, CLK_IS_BASIC: 0x20
 	init.flags = flags | CLK_IS_BASIC;
+	// init.flags: 0x20
+
+	// parent_name: "mout_apll"
 	init.parent_names = (parent_name ? &parent_name: NULL);
+	// init.parent_names: "mout_apll"
+
+	// parent_name: "mout_apll"
 	init.num_parents = (parent_name ? 1 : 0);
+	// init.num_parents: 1
 
 	/* struct clk_divider assignments */
+	// div->reg: (kmem_cache#30-oX (sclk_apll))->reg, reg: 0xf0040500
 	div->reg = reg;
+	// div->reg: (kmem_cache#30-oX (sclk_apll))->reg: 0xf0040500
+
+	// div->shift: (kmem_cache#30-oX (sclk_apll))->shift, shift: 24
 	div->shift = shift;
+	// div->shift: (kmem_cache#30-oX (sclk_apll))->shift: 24
+
+	// div->width: (kmem_cache#30-oX (sclk_apll))->width, width: 3
 	div->width = width;
+	// div->width: (kmem_cache#30-oX (sclk_apll))->width: 3
+
+	// div->flags: (kmem_cache#30-oX (sclk_apll))->flags, clk_divider_flags: 0
 	div->flags = clk_divider_flags;
+	// div->flags: (kmem_cache#30-oX (sclk_apll))->flags: 0
+
+	// div->lock: (kmem_cache#30-oX (sclk_apll))->lock, lock: &lock
 	div->lock = lock;
+	// div->lock: (kmem_cache#30-oX (sclk_apll))->lock: &lock
+
+	// div->hw.init: (kmem_cache#30-oX (sclk_apll))->hw.init
 	div->hw.init = &init;
+	// div->hw.init: (kmem_cache#30-oX (sclk_apll))->hw.init: &init
+
+	// div->table: (kmem_cache#30-oX (sclk_apll))->table, table: NULL
 	div->table = table;
+	// div->table: (kmem_cache#30-oX (sclk_apll))->table: NULL
 
 	/* register the clock */
+	// dev: NULL, &div->hw: &(kmem_cache#30-oX (sclk_apll))->hw
 	clk = clk_register(dev, &div->hw);
 
 	if (IS_ERR(clk))
@@ -309,11 +396,23 @@ static struct clk *_register_divider(struct device *dev, const char *name,
  * @clk_divider_flags: divider-specific flags for this clock
  * @lock: shared register lock for this clock
  */
+// ARM10C 20150228
+// NULL,
+// list->name: exynos5420_div_clks[1].name: "sclk_apll",
+// list->parent_name: exynos5420_div_clks[1].parent_name: "mout_apll",
+// list->flags: exynos5420_div_clks[1].flags: 0,
+// 0xf0040000 + 0x500,
+// list->shift: exynos5420_div_clks[1].shift: 24,
+// list->width: exynos5420_div_clks[1].width: 3,
+// list->div_flags: exynos5420_div_clks[1].div_flags: 0,
+// &lock
 struct clk *clk_register_divider(struct device *dev, const char *name,
 		const char *parent_name, unsigned long flags,
 		void __iomem *reg, u8 shift, u8 width,
 		u8 clk_divider_flags, spinlock_t *lock)
 {
+	// dev: NULL, name: "sclk_apll", parent_name: "mout_apll", flags: 0x0, reg: 0xf0040500,
+	// shift: 24, width: 3, clk_divider_flags: 0, lock: &lock
 	return _register_divider(dev, name, parent_name, flags, reg, shift,
 			width, clk_divider_flags, NULL, lock);
 }

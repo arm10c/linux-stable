@@ -32,6 +32,7 @@
 // ARM10C 20150110
 // ARM10C 20150124
 // ARM10C 20150131
+// ARM10C 20150228
 // CLK_IS_BASIC: 0x20
 #define CLK_IS_BASIC		BIT(5) /* Basic clk, can't do a to_clk_foo() */
 // ARM10C 20150117
@@ -167,6 +168,7 @@ struct clk_ops {
 // ARM10C 20150110
 // ARM10C 20150117
 // ARM10C 20150124
+// ARM10C 20150228
 struct clk_init_data {
 	const char		*name;
 	const struct clk_ops	*ops;
@@ -297,6 +299,8 @@ struct clk_div_table {
  *   register.  While setting the divider bits, higher 16-bit should also be
  *   updated to indicate changing divider bits.
  */
+// ARM10C 20150228
+// sizeof(struct clk_divider): 23 bytes
 struct clk_divider {
 	struct clk_hw	hw;
 	void __iomem	*reg;
@@ -307,9 +311,15 @@ struct clk_divider {
 	spinlock_t	*lock;
 };
 
+// ARM10C 20150228
+// CLK_DIVIDER_ONE_BASED: 0x1
 #define CLK_DIVIDER_ONE_BASED		BIT(0)
+// ARM10C 20150228
+// CLK_DIVIDER_POWER_OF_TWO: 0x2
 #define CLK_DIVIDER_POWER_OF_TWO	BIT(1)
 #define CLK_DIVIDER_ALLOW_ZERO		BIT(2)
+// ARM10C 20150228
+// CLK_DIVIDER_HIWORD_MASK: 0x8
 #define CLK_DIVIDER_HIWORD_MASK		BIT(3)
 
 extern const struct clk_ops clk_divider_ops;

@@ -271,6 +271,21 @@ struct samsung_div_clock {
 	struct clk_div_table	*table;
 };
 
+// ARM10C 20150228
+// #define __DIV(none, NULL, "sclk_apll", "mout_apll", DIV_CPU0, 24, 3, 0, 0, NULL, NULL):
+// {
+//     .id		= none,
+//     .dev_name	= NULL,
+//     .name		= "sclk_apll",
+//     .parent_name	= "mout_apll",
+//     .flags		= 0,
+//     .offset		= DIV_CPU0,
+//     .shift		= 24,
+//     .width		= 3,
+//     .div_flags	= 0,
+//     .alias		= NULL,
+//     .table		= NULL,
+// }
 #define __DIV(_id, dname, cname, pname, o, s, w, f, df, a, t)	\
 	{							\
 		.id		= _id,				\
@@ -286,6 +301,36 @@ struct samsung_div_clock {
 		.table		= t,				\
 	}
 
+// ARM10C 20150228
+// __DIV(none, NULL, "sclk_apll", "mout_apll", DIV_CPU0, 24, 3, 0, 0, NULL, NULL):
+// {
+//     .id		= none,
+//     .dev_name	= NULL,
+//     .name		= "sclk_apll",
+//     .parent_name	= "mout_apll",
+//     .flags		= 0,
+//     .offset		= DIV_CPU0,
+//     .shift		= 24,
+//     .width		= 3,
+//     .div_flags	= 0,
+//     .alias		= NULL,
+//     .table		= NULL,
+// }
+//
+// #define DIV(none, "sclk_apll", "mout_apll", DIV_CPU0, 24, 3):
+// {
+//     .id		= none,
+//     .dev_name	= NULL,
+//     .name		= "sclk_apll",
+//     .parent_name	= "mout_apll",
+//     .flags		= 0,
+//     .offset		= DIV_CPU0,
+//     .shift		= 24,
+//     .width		= 3,
+//     .div_flags	= 0,
+//     .alias		= NULL,
+//     .table		= NULL,
+// }
 #define DIV(_id, cname, pname, o, s, w)				\
 	__DIV(_id, NULL, cname, pname, o, s, w, 0, 0, NULL, NULL)
 

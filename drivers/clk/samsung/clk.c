@@ -15,11 +15,13 @@
 #include "clk.h"
 
 // ARM10C 20150131
+// ARM10C 20150228
 static DEFINE_SPINLOCK(lock);
 // ARM10C 20150110
 // ARM10C 20150117
 static struct clk **clk_table;
 // ARM10C 20150110
+// ARM10C 20150228
 static void __iomem *reg_base;
 #ifdef CONFIG_OF // CONFIG_OF=y
 // ARM10C 20150110
@@ -157,11 +159,14 @@ void __init samsung_clk_init(struct device_node *np, void __iomem *base,
 // clk: kmem_cache#29-oX (epll), pll_clk->id: (&exynos5420_plls[3])->id: fout_epll: 5
 // ARM10C 20150131
 // clk: kmem_cache#29-oX (mout_mspll_kfc), list->id: exynos5420_mux_clks[0].id: 0
+// ARM10C 20150228
+// clk: kmem_cache#29-oX (sclk_dpll), list->id: exynos5420_mux_clks[44].id: 0
 void samsung_clk_add_lookup(struct clk *clk, unsigned int id)
 {
 	// clk_table: kmem_cache#23-o0, id: 1
 	// clk_table: kmem_cache#23-o0, id: 2
 	// clk_table: kmem_cache#23-o0, id: 5
+	// clk_table: kmem_cache#23-o0, id: 0
 	// clk_table: kmem_cache#23-o0, id: 0
 	if (clk_table && id)
 		// clk_table: kmem_cache#23-o0, id: 1, clk_table[1]: (kmem_cache#23-o0)[1],
@@ -170,13 +175,10 @@ void samsung_clk_add_lookup(struct clk *clk, unsigned int id)
 		// clk: kmem_cache#29-oX (apll)
 		// clk_table: kmem_cache#23-o0, id: 5, clk_table[5]: (kmem_cache#23-o0)[5],
 		// clk: kmem_cache#29-oX (epll)
-		// clk_table: kmem_cache#23-o0, id: 0, clk_table[5]: (kmem_cache#23-o0)[0],
-		// clk: kmem_cache#29-oX (mout_mspll_kfc)
 		clk_table[id] = clk;
 		// clk_table[1]: (kmem_cache#23-o0)[1]: kmem_cache#29-oX (fin)
 		// clk_table[2]: (kmem_cache#23-o0)[2]: kmem_cache#29-oX (apll)
 		// clk_table[5]: (kmem_cache#23-o0)[5]: kmem_cache#29-oX (epll)
-		// clk_table[0]: (kmem_cache#23-o0)[0]: kmem_cache#29-oX (mout_mspll_kfc)
 }
 
 /* register a list of aliases */
@@ -482,6 +484,7 @@ void __init samsung_clk_register_mux(struct samsung_mux_clock *list,
 		// (kmem_cache#29-oX (mout_mspll_kfc))->rate: 600000000
 
 		// clk: kmem_cache#29-oX (mout_mspll_kfc)
+		// clk: kmem_cache#29-oX (sclk_dpll)
 		if (IS_ERR(clk)) {
 			pr_err("%s: failed to register clock %s\n", __func__,
 				list->name);
@@ -489,13 +492,12 @@ void __init samsung_clk_register_mux(struct samsung_mux_clock *list,
 		}
 
 		// clk: kmem_cache#29-oX (mout_mspll_kfc), list->id: exynos5420_mux_clks[0].id: 0
+		// clk: kmem_cache#29-oX (sclk_dpll), list->id: exynos5420_mux_clks[44].id: 0
 		samsung_clk_add_lookup(clk, list->id);
-
-		// samsung_clk_add_lookup(mout_mspll_kfc)에서 한일:
-		// clk_table[0]: (kmem_cache#23-o0)[0]: kmem_cache#29-oX (mout_mspll_kfc)
 
 		/* register a clock lookup only if a clock alias is specified */
 		// list->alias: exynos5420_mux_clks[0].alias: NULL
+		// list->alias: exynos5420_mux_clks[44].alias: NULL
 		if (list->alias) {
 			ret = clk_register_clkdev(clk, list->alias,
 						list->dev_name);
@@ -503,17 +505,27 @@ void __init samsung_clk_register_mux(struct samsung_mux_clock *list,
 				pr_err("%s: failed to register lookup %s\n",
 						__func__, list->alias);
 		}
+
+		// idx: 1...43...84 loop 수행
 	}
 }
 
 /* register a list of div clocks */
+// ARM10C 20150228
+// exynos5420_div_clks, ARRAY_SIZE(exynos5420_div_clks): 53
 void __init samsung_clk_register_div(struct samsung_div_clock *list,
 					unsigned int nr_clk)
 {
 	struct clk *clk;
 	unsigned int idx, ret;
 
+	// NOTE:
+	// exynos5420_div_clks의 div 들 중에 array index 1번의
+	// DIV(none, "sclk_apll", "mout_apll", DIV_CPU0, 24, 3) 을 가지고 분석 진행
+
+	// nr_clk: 53
 	for (idx = 0; idx < nr_clk; idx++, list++) {
+		// idx: 1, list->table: exynos5420_div_clks[1].table: NULL
 		if (list->table)
 			clk = clk_register_divider_table(NULL, list->name,
 					list->parent_name, list->flags,
@@ -521,6 +533,14 @@ void __init samsung_clk_register_div(struct samsung_div_clock *list,
 					list->width, list->div_flags,
 					list->table, &lock);
 		else
+			// list->name: exynos5420_div_clks[1].name: "sclk_apll",
+			// list->parent_name: exynos5420_div_clks[1].parent_name: "mout_apll",
+			// list->flags: exynos5420_div_clks[1].flags: 0,
+			// list->offset: exynos5420_div_clks[1].offset: DIV_CPU0: 0x500,
+			// list->shift: exynos5420_div_clks[1].shift: 24,
+			// list->width: exynos5420_div_clks[1].width: 3,
+			// list->div_flags: exynos5420_div_clks[1].div_flags: 0,
+			// reg_base: 0xf0040000
 			clk = clk_register_divider(NULL, list->name,
 					list->parent_name, list->flags,
 					reg_base + list->offset, list->shift,
