@@ -1177,30 +1177,53 @@ static int __clk_notify(struct clk *clk, unsigned long msg,
  *
  * Caller must hold prepare_lock.
  */
+// ARM10C 20150228
+// clk: kmem_cache#29-oX (mout_mspll_kfc), POST_RATE_CHANGE: 0x2
 static void __clk_recalc_rates(struct clk *clk, unsigned long msg)
 {
 	unsigned long old_rate;
 	unsigned long parent_rate = 0;
+	// parent_rate: 0
+
 	struct clk *child;
 
+	// clk->rate: (kmem_cache#29-oX (mout_mspll_kfc))->rate: 0
 	old_rate = clk->rate;
+	// old_rate: 0
 
+	// clk->parent: (kmem_cache#29-oX (mout_mspll_kfc))->parent: kmem_cache#29-oX (sclk_dpll)
 	if (clk->parent)
+		// parent_rate: 0, clk->parent->rate: (kmem_cache#29-oX (sclk_dpll))->rate: 600000000
 		parent_rate = clk->parent->rate;
+		// parent_rate: 600000000
 
+	// clk->ops->recalc_rate: (kmem_cache#29-oX (mout_mspll_kfc))->ops->recalc_rate: NULL
 	if (clk->ops->recalc_rate)
 		clk->rate = clk->ops->recalc_rate(clk->hw, parent_rate);
 	else
+		// clk->rate: (kmem_cache#29-oX (mout_mspll_kfc))->rate: 0, parent_rate: 600000000
 		clk->rate = parent_rate;
+		// clk->rate: (kmem_cache#29-oX (mout_mspll_kfc))->rate: 600000000
 
 	/*
 	 * ignore NOTIFY_STOP and NOTIFY_BAD return values for POST_RATE_CHANGE
 	 * & ABORT_RATE_CHANGE notifiers
 	 */
+	// clk->notifier_count: (kmem_cache#29-oX (mout_mspll_kfc))->notifier_count: 0, msg: 0x2
 	if (clk->notifier_count && msg)
 		__clk_notify(clk, msg, old_rate, clk->rate);
 
+	// clk->children: (kmem_cache#29-oX (mout_mspll_kfc))->children
 	hlist_for_each_entry(child, &clk->children, child_node)
+	// for (child = hlist_entry_safe((&clk->children)->first, typeof(*(child)), child_node);
+	//      child; child = hlist_entry_safe((child)->child_node.next, typeof(*(child)), child_node))
+
+		// NOTE:
+		// mout_mspll_kfc 에 등록된 children이 없을 것이라 가정하고 분석
+
+		// hlist_entry_safe((&(kmem_cache#29-oX (mout_mspll_kfc))->children)->first, typeof(*(child)), child_node): NULL
+		// child: NULL
+
 		__clk_recalc_rates(child, msg);
 }
 
@@ -1814,8 +1837,14 @@ void __clk_reparent(struct clk *clk, struct clk *new_parent)
 	clk_debug_reparent(clk, new_parent); // null function
 
 // 2015/01/31 종료
+// 2015/02/28 시작
 
+	// clk: kmem_cache#29-oX (mout_mspll_kfc), POST_RATE_CHANGE: 0x2
 	__clk_recalc_rates(clk, POST_RATE_CHANGE);
+
+	// __clk_recalc_rates에서 한일:
+	// parent가 있는지 확인후 parent의 clock rate 값으로 clock rate 값을 세팅
+	// clk->rate: (kmem_cache#29-oX (mout_mspll_kfc))->rate: 600000000
 }
 
 /**
@@ -2119,7 +2148,6 @@ int __clk_init(struct device *dev, struct clk *clk)
 	// __clk_init_parent(kmem_cache#29-oX (epll)): kmem_cache#29-oX (fin_pll)
 	// clk->parent: (kmem_cache#29-oX (mout_mspll_kfc))->parent, clk: kmem_cache#29-oX (mout_mspll_kfc)
 	// __clk_init_parent(kmem_cache#29-oX (mout_mspll_kfc)): NULL
-	//
 	// clk->parent: (kmem_cache#29-oX (sclk_dpll))->parent, clk: kmem_cache#29-oX (sclk_dpll)
 	// __clk_init_parent(kmem_cache#29-oX (sclk_dpll)): kmem_cache#29-oX (fout_dpll)
 	clk->parent = __clk_init_parent(clk);
@@ -2128,6 +2156,18 @@ int __clk_init(struct device *dev, struct clk *clk)
 	// clk->parent: (kmem_cache#29-oX (epll))->parent: kmem_cache#29-oX (fin_pll)
 	// clk->parent: (kmem_cache#29-oX (mout_mspll_kfc))->parent: NULL
 	// clk->parent: (kmem_cache#29-oX (sclk_dpll))->parent: kmem_cache#29-oX (fout_dpll)
+
+	// __clk_init_parent(mout_mspll_kfc) 에서 한일:
+	// parents 인 "sclk_cpll", "sclk_dpll", "sclk_mpll", "sclk_spll" 값들 중에
+	// register CLK_SRC_TOP7 의 값을 읽어서 mux 할 parent clock 을 선택함
+	// return된 값이 선택된 parent clock의 index 값임
+	// parent clock 중에 선택된 parent clock의 이름으로 등록된 clk struct를 반환함
+
+	// __clk_init_parent(sclk_dpll) 에서 한일:
+	// parents 인 "fin_pll", "fout_dpll" 값들 중에
+	// register CLK_SRC_TOP6 의 값을 읽어서 mux 할 parent clock 을 선택함
+	// return된 값이 선택된 parent clock의 index 값임
+	// parent clock 중에 선택된 parent clock의 이름으로 등록된 clk struct를 반환함
 
 	/*
 	 * Populate clk->parent if parent has already been __clk_init'd.  If
@@ -2237,13 +2277,12 @@ int __clk_init(struct device *dev, struct clk *clk)
 
 	else if (clk->parent)
 		// NOTE:
-		// fout_dpll의 값을 현재 알수 없는 상태임
-		// fout_dpll의 값을 1Ghz 라 가정하고 분석
+		// fout_dpll의 값을 600 Mhz 가정하고 분석 (5420 arndale board 로그 참고)
 
 		// clk->rate: (kmem_cache#29-oX (sclk_dpll))->rate,
 		// clk->parent->rate: ((kmem_cache#29-oX (sclk_dpll))->parent)->rate: (kmem_cache#29-oX (fout_dpll))->rate: 1000000000
 		clk->rate = clk->parent->rate;
-		// clk->rate: (kmem_cache#29-oX (sclk_dpll))->rate: 1000000000
+		// clk->rate: (kmem_cache#29-oX (sclk_dpll))->rate: 600000000
 	else
 		// clk->rate: (kmem_cache#29-oX (mout_mspll_kfc))->rate
 		clk->rate = 0;
@@ -2302,7 +2341,23 @@ int __clk_init(struct device *dev, struct clk *clk)
 			if (!strcmp(clk->name, orphan->parent_names[i])) {
 				// orphan: kmem_cache#29-oX (mout_mspll_kfc), clk: kmem_cache#29-oX (sclk_dpll)
 				__clk_reparent(orphan, clk);
+
+				// __clk_reparent 에서 한일:
+				// &(kmem_cache#29-oX (mout_mspll_kfc))->child_node의 next list에 pprev의 값을 연결함
+				// &(kmem_cache#29-oX (mout_mspll_kfc))->child_node를 제거
+				//
+				// (&(kmem_cache#29-oX (mout_mspll_kfc))->child_node)->next: NULL
+				// (&(kmem_cache#29-oX (mout_mspll_kfc))->child_node)->pprev: &(&(kmem_cache#29-oX (mout_mspll_kfc))->child_node)
+				//
+				// (&(kmem_cache#29-oX (sclk_dpll))->children)->first: &(kmem_cache#29-oX (mout_mspll_kfc))->child_node
+				//
+				// (kmem_cache#29-oX (mout_mspll_kfc))->parent: kmem_cache#29-oX (sclk_dpll)
+				//
+				// parent가 있는지 확인후 parent의 clock rate 값으로 clock rate 값을 세팅
+				// clk->rate: (kmem_cache#29-oX (mout_mspll_kfc))->rate: 600000000
+
 				break;
+				// break 수행
 			}
 			// i: 1...3 루프 수행
 	 }
@@ -2319,6 +2374,7 @@ int __clk_init(struct device *dev, struct clk *clk)
 	// clk->ops->init: (kmem_cache#29-oX (apll))->ops->init: NULL
 	// clk->ops->init: (kmem_cache#29-oX (epll))->ops->init: NULL
 	// clk->ops->init: (kmem_cache#29-oX (mout_mspll_kfc))->ops->init: NULL
+	// clk->ops->init: (kmem_cache#29-oX (sclk_dpll))->ops->init: NULL
 	if (clk->ops->init)
 		clk->ops->init(clk->hw);
 
@@ -2326,6 +2382,7 @@ int __clk_init(struct device *dev, struct clk *clk)
 	// clk: kmem_cache#29-oX (apll)
 	// clk: kmem_cache#29-oX (epll)
 	// clk: kmem_cache#29-oX (mout_mspll_kfc)
+	// clk: kmem_cache#29-oX (sclk_dpll)
 	clk_debug_register(clk); // null function
 
 out:
@@ -2351,11 +2408,18 @@ out:
 	// prepare_owner: NULL
 	// &prepare_lock을 이용한 mutex unlock 수행
 
+	// clk_prepare_unlock에서 한일:
+	// prepare_refcnt: 0
+	// prepare_owner: NULL
+	// &prepare_lock을 이용한 mutex unlock 수행
+
+	// ret: 0
 	// ret: 0
 	// ret: 0
 	// ret: 0
 	// ret: 0
 	return ret;
+	// return 0
 	// return 0
 	// return 0
 	// return 0
@@ -2598,6 +2662,7 @@ static int _clk_register(struct device *dev, struct clk_hw *hw, struct clk *clk)
 	// ret: NULL
 	// ret: NULL
 	// ret: NULL
+	// ret: NULL
 
 	// __clk_init에서 한일:
 	// (kmem_cache#29-oX)->parent: NULL
@@ -2637,13 +2702,52 @@ static int _clk_register(struct device *dev, struct clk_hw *hw, struct clk *clk)
 	// (&(kmem_cache#29-oX (mout_mspll_kfc))->child_node)->pprev: &(&(kmem_cache#29-oX (mout_mspll_kfc))->child_node)
 	//
 	// (&clk_orphan_list)->first: &(kmem_cache#29-oX (mout_mspll_kfc))->child_node
+	//
+	// parents 인 "sclk_cpll", "sclk_dpll", "sclk_mpll", "sclk_spll" 값들 중에
+	// register CLK_SRC_TOP7 의 값을 읽어서 mux 할 parent clock 을 선택함
+	// return된 값이 선택된 parent clock의 index 값임
+	// parent clock 중에 선택된 parent clock의 이름으로 등록된 clk struct를 반환함
 
+	// __clk_init(sclk_dpll)에서 한일:
+	// (kmem_cache#29-oX (sclk_dpll))->parent: NULL
+	// (kmem_cache#29-oX (sclk_dpll))->rate: 600000000
+	//
+	// (kmem_cache#29-oX (sclk_dpll))->parents: kmem_cache#30-oX
+	// (kmem_cache#29-oX (sclk_dpll))->parents[0]: (kmem_cache#30-oX)[0]: kmem_cache#29-oX (fin_pll)
+	// (kmem_cache#29-oX (sclk_dpll))->parents[1]: (kmem_cache#30-oX)[1]: kmem_cache#29-oX (fout_dpll)
+	//
+	// parents 인 "fin_pll", "fout_dpll" 값들 중에
+	// register CLK_SRC_TOP6 의 값을 읽어서 mux 할 parent clock 을 선택함
+	// return된 값이 선택된 parent clock의 index 값임
+	// parent clock 중에 선택된 parent clock의 이름으로 등록된 clk struct를 반환함
+	//
+	// (&(kmem_cache#29-oX (sclk_dpll))->child_node)->next: NULL
+	// (&(kmem_cache#29-oX (sclk_dpll))->child_node)->pprev: &(&(kmem_cache#29-oX (sclk_dpll))->child_node)
+	//
+	// (&(kmem_cache#29-oX (fout_dpll))->children)->first: &(kmem_cache#29-oX (sclk_dpll))->child_node
+	//
+	// orphan 으로 등록된 mout_mspll_kfc의 값을 갱신
+	// &(kmem_cache#29-oX (mout_mspll_kfc))->child_node의 next list에 pprev의 값을 연결함
+	// &(kmem_cache#29-oX (mout_mspll_kfc))->child_node를 제거
+	//
+	// (&(kmem_cache#29-oX (mout_mspll_kfc))->child_node)->next: NULL
+	// (&(kmem_cache#29-oX (mout_mspll_kfc))->child_node)->pprev: &(&(kmem_cache#29-oX (mout_mspll_kfc))->child_node)
+	//
+	// (&(kmem_cache#29-oX (sclk_dpll))->children)->first: &(kmem_cache#29-oX (mout_mspll_kfc))->child_node
+	//
+	// (kmem_cache#29-oX (mout_mspll_kfc))->parent: kmem_cache#29-oX (sclk_dpll)
+	//
+	// parent가 있는지 확인후 parent의 clock rate 값으로 clock rate 값을 세팅
+	// (kmem_cache#29-oX (mout_mspll_kfc))->rate: 600000000
+
+	// ret: NULL
 	// ret: NULL
 	// ret: NULL
 	// ret: NULL
 	// ret: NULL
 	if (!ret)
 		return 0;
+		// return 0
 		// return 0
 		// return 0
 		// return 0
@@ -2730,6 +2834,7 @@ struct clk *clk_register(struct device *dev, struct clk_hw *hw)
 	// ret: 0
 	// ret: 0
 	// ret: 0
+	// ret: 0
 
 	// _clk_register 에서 한일:
 	// (kmem_cache#29-oX)->name: kmem_cache#30-oX ("fin_pll")
@@ -2807,7 +2912,47 @@ struct clk *clk_register(struct device *dev, struct clk_hw *hw)
 	// (&clk_orphan_list)->first: &(kmem_cache#29-oX (mout_mspll_kfc))->child_node
 	//
 	// (&(kmem_cache#30-oX (mout_mspll_kfc))->hw)->clk: kmem_cache#29-oX (mout_mspll_kfc)
+	
+	// _clk_register(sclk_dpll) 에서 한일:
+	// (kmem_cache#29-oX (sclk_dpll))->name: kmem_cache#30-oX ("sclk_dpll")
+	// (kmem_cache#29-oX (sclk_dpll))->ops: &clk_mux_ops
+	// (kmem_cache#29-oX (sclk_dpll))->hw: &(kmem_cache#30-oX (sclk_dpll))->hw
+	// (kmem_cache#29-oX (sclk_dpll))->flags: 0xa0
+	// (kmem_cache#29-oX (sclk_dpll))->num_parents 2
+	// (kmem_cache#29-oX (sclk_dpll))->parent_names: kmem_cache#30-oX
+	// (kmem_cache#29-oX (sclk_dpll))->parent_names[0]: (kmem_cache#30-oX)[0]: kmem_cache#30-oX: "fin_pll"
+	// (kmem_cache#29-oX (sclk_dpll))->parent_names[1]: (kmem_cache#30-oX)[1]: kmem_cache#30-oX: "fout_dpll"
+	// (kmem_cache#29-oX (sclk_dpll))->parent: NULL
+	// (kmem_cache#29-oX (sclk_dpll))->rate: 600000000
+	//
+	// (kmem_cache#29-oX (sclk_dpll))->parents: kmem_cache#30-oX
+	// (kmem_cache#29-oX (sclk_dpll))->parents[0]: (kmem_cache#30-oX)[0]: kmem_cache#29-oX (fin_pll)
+	// (kmem_cache#29-oX (sclk_dpll))->parents[1]: (kmem_cache#30-oX)[1]: kmem_cache#29-oX (fout_dpll)
+	//
+	// parents 인 "fin_pll", "fout_dpll" 값들 중에
+	// register CLK_SRC_TOP6 의 값을 읽어서 mux 할 parent clock 을 선택함
+	// return된 값이 선택된 parent clock의 index 값임
+	// parent clock 중에 선택된 parent clock의 이름으로 등록된 clk struct를 반환함
+	//
+	// (&(kmem_cache#29-oX (sclk_dpll))->child_node)->next: NULL
+	// (&(kmem_cache#29-oX (sclk_dpll))->child_node)->pprev: &(&(kmem_cache#29-oX (sclk_dpll))->child_node)
+	//
+	// (&(kmem_cache#29-oX (fout_dpll))->children)->first: &(kmem_cache#29-oX (sclk_dpll))->child_node
+	//
+	// (&(kmem_cache#30-oX (sclk_dpll))->hw)->clk: kmem_cache#29-oX (sclk_dpll)
+	//
+	// orphan 으로 등록된 mout_mspll_kfc의 값을 갱신
+	// (&(kmem_cache#29-oX (mout_mspll_kfc))->child_node)->next: NULL
+	// (&(kmem_cache#29-oX (mout_mspll_kfc))->child_node)->pprev: &(&(kmem_cache#29-oX (mout_mspll_kfc))->child_node)
+	//
+	// (&(kmem_cache#29-oX (sclk_dpll))->children)->first: &(kmem_cache#29-oX (mout_mspll_kfc))->child_node
+	//
+	// (kmem_cache#29-oX (mout_mspll_kfc))->parent: kmem_cache#29-oX (sclk_dpll)
+	//
+	// parent가 있는지 확인후 parent의 clock rate 값으로 clock rate 값을 세팅
+	// (kmem_cache#29-oX (mout_mspll_kfc))->rate: 600000000
 
+	// ret: 0
 	// ret: 0
 	// ret: 0
 	// ret: 0
@@ -2817,11 +2962,13 @@ struct clk *clk_register(struct device *dev, struct clk_hw *hw)
 		// clk: kmem_cache#29-oX (apll)
 		// clk: kmem_cache#29-oX (epll)
 		// clk: kmem_cache#29-oX (mout_mspll_kfc)
+		// clk: kmem_cache#29-oX (sclk_dpll)
 		return clk;
 		// return kmem_cache#29-oX (fin)
 		// return kmem_cache#29-oX (apll)
 		// return kmem_cache#29-oX (epll)
 		// return kmem_cache#29-oX (mout_mspll_kfc)
+		// return kmem_cache#29-oX (sclk_dpll)
 
 	kfree(clk);
 fail_out:

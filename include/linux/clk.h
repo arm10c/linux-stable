@@ -41,6 +41,8 @@ struct clk;
  *
  */
 #define PRE_RATE_CHANGE			BIT(0)
+// ARM10C 20150228
+// POST_RATE_CHANGE: 0x2
 #define POST_RATE_CHANGE		BIT(1)
 #define ABORT_RATE_CHANGE		BIT(2)
 

@@ -458,6 +458,21 @@ static struct samsung_mux_clock exynos5420_mux_clks[] __initdata = {
 
 	MUX(none, "sclk_mpll", mpll_p, SRC_TOP6, 0, 1),
 	MUX(none, "sclk_vpll", vpll_p, SRC_TOP6, 4, 1),
+
+	// #define MUX(none, "sclk_spll", spll_p, SRC_TOP6, 8, 1):
+	// {
+	// 	.id		= none,
+	// 	.dev_name	= NULL,
+	// 	.name		= "sclk_spll",
+	// 	.parent_names	= spll_p,
+	// 	.num_parents	= ARRAY_SIZE(spll_p),
+	// 	.flags		= (0) | CLK_SET_RATE_NO_REPARENT,
+	// 	.offset		= SRC_TOP6,
+	// 	.shift		= 8,
+	// 	.width		= 1,
+	// 	.mux_flags	= 0,
+	// 	.alias		= NULL,
+	// }
 	MUX(none, "sclk_spll", spll_p, SRC_TOP6, 8, 1),
 	MUX(none, "sclk_ipll", ipll_p, SRC_TOP6, 12, 1),
 	MUX(none, "sclk_rpll", rpll_p, SRC_TOP6, 16, 1),

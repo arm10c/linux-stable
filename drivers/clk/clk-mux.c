@@ -160,6 +160,7 @@ static int clk_mux_set_parent(struct clk_hw *hw, u8 index)
 }
 
 // ARM10C 20150131
+// ARM10C 20150228
 const struct clk_ops clk_mux_ops = {
 	.get_parent = clk_mux_get_parent,
 	.set_parent = clk_mux_set_parent,
@@ -298,8 +299,9 @@ struct clk *clk_register_mux_table(struct device *dev, const char *name,
 	// clk_register(NULL, &(kmem_cache#30-oX (sclk_dpll))->hw): kmem_cache#29-oX (sclk_dpll)
 	clk = clk_register(dev, &mux->hw);
 	// clk: kmem_cache#29-oX (mout_mspll_kfc)
+	// clk: kmem_cache#29-oX (sclk_dpll)
 
-	// clk_register에서 한일:
+	// clk_register(mout_mspll_kfc)에서 한일:
 	// struct clk 만큼 메모리를 kmem_cache#29-oX (mout_mspll_kfc) 할당 받고 struct clk 의 멤버 값을 아래와 같이 초기화 수행
 	//
 	// (kmem_cache#29-oX (mout_mspll_kfc))->name: kmem_cache#30-oX ("mout_mspll_kfc")
@@ -325,12 +327,53 @@ struct clk *clk_register_mux_table(struct device *dev, const char *name,
 	//
 	// (&(kmem_cache#30-oX (mout_mspll_kfc))->hw)->clk: kmem_cache#29-oX (mout_mspll_kfc)
 
+	// clk_register(sclk_dpll)에서 한일:
+	// (kmem_cache#29-oX (sclk_dpll))->name: kmem_cache#30-oX ("sclk_dpll")
+	// (kmem_cache#29-oX (sclk_dpll))->ops: &clk_mux_ops
+	// (kmem_cache#29-oX (sclk_dpll))->hw: &(kmem_cache#30-oX (sclk_dpll))->hw
+	// (kmem_cache#29-oX (sclk_dpll))->flags: 0xa0
+	// (kmem_cache#29-oX (sclk_dpll))->num_parents 2
+	// (kmem_cache#29-oX (sclk_dpll))->parent_names: kmem_cache#30-oX
+	// (kmem_cache#29-oX (sclk_dpll))->parent_names[0]: (kmem_cache#30-oX)[0]: kmem_cache#30-oX: "fin_pll"
+	// (kmem_cache#29-oX (sclk_dpll))->parent_names[1]: (kmem_cache#30-oX)[1]: kmem_cache#30-oX: "fout_dpll"
+	// (kmem_cache#29-oX (sclk_dpll))->parent: NULL
+	// (kmem_cache#29-oX (sclk_dpll))->rate: 600000000
+	//
+	// (kmem_cache#29-oX (sclk_dpll))->parents: kmem_cache#30-oX
+	// (kmem_cache#29-oX (sclk_dpll))->parents[0]: (kmem_cache#30-oX)[0]: kmem_cache#29-oX (fin_pll)
+	// (kmem_cache#29-oX (sclk_dpll))->parents[1]: (kmem_cache#30-oX)[1]: kmem_cache#29-oX (fout_dpll)
+	//
+	// parents 인 "fin_pll", "fout_dpll" 값들 중에
+	// register CLK_SRC_TOP6 의 값을 읽어서 mux 할 parent clock 을 선택함
+	// return된 값이 선택된 parent clock의 index 값임
+	// parent clock 중에 선택된 parent clock의 이름으로 등록된 clk struct를 반환함
+	//
+	// (&(kmem_cache#29-oX (sclk_dpll))->child_node)->next: NULL
+	// (&(kmem_cache#29-oX (sclk_dpll))->child_node)->pprev: &(&(kmem_cache#29-oX (sclk_dpll))->child_node)
+	//
+	// (&(kmem_cache#29-oX (fout_dpll))->children)->first: &(kmem_cache#29-oX (sclk_dpll))->child_node
+	//
+	// (&(kmem_cache#30-oX (sclk_dpll))->hw)->clk: kmem_cache#29-oX (sclk_dpll)
+	//
+	// orphan 으로 등록된 mout_mspll_kfc의 값을 갱신
+	// (&(kmem_cache#29-oX (mout_mspll_kfc))->child_node)->next: NULL
+	// (&(kmem_cache#29-oX (mout_mspll_kfc))->child_node)->pprev: &(&(kmem_cache#29-oX (mout_mspll_kfc))->child_node)
+	//
+	// (&(kmem_cache#29-oX (sclk_dpll))->children)->first: &(kmem_cache#29-oX (mout_mspll_kfc))->child_node
+	//
+	// (kmem_cache#29-oX (mout_mspll_kfc))->parent: kmem_cache#29-oX (sclk_dpll)
+	//
+	// parent가 있는지 확인후 parent의 clock rate 값으로 clock rate 값을 세팅
+	// (kmem_cache#29-oX (mout_mspll_kfc))->rate: 600000000
+
 	if (IS_ERR(clk))
 		kfree(mux);
 
 	// clk: kmem_cache#29-oX (mout_mspll_kfc)
+	// clk: kmem_cache#29-oX (sclk_dpll)
 	return clk;
 	// return kmem_cache#29-oX (mout_mspll_kfc)
+	// return kmem_cache#29-oX (sclk_dpll)
 }
 EXPORT_SYMBOL_GPL(clk_register_mux_table);
 
@@ -379,8 +422,9 @@ struct clk *clk_register_mux(struct device *dev, const char *name,
 				      flags, reg, shift, mask, clk_mux_flags,
 				      NULL, lock);
 	// return kmem_cache#29-oX (mout_mspll_kfc)
+	// return kmem_cache#29-oX (sclk_dpll)
 
-	// clk_register_mux_table 에서 한일:
+	// clk_register_mux_table(mout_mspll_kfc) 에서 한일:
 	// struct clk_mux 만큼 메모리를 kmem_cache#30-oX (mout_mspll_kfc) 할당 받고 struct clk_mux 의 멤버 값을 아래와 같이 초기화 수행
 	//
 	// (kmem_cache#30-oX)->reg: 0xf005021c
@@ -415,5 +459,56 @@ struct clk *clk_register_mux(struct device *dev, const char *name,
 	// (&clk_orphan_list)->first: &(kmem_cache#29-oX (mout_mspll_kfc))->child_node
 	//
 	// (&(kmem_cache#30-oX (mout_mspll_kfc))->hw)->clk: kmem_cache#29-oX (mout_mspll_kfc)
+
+	// clk_register_mux_table(sclk_dpll) 에서 한일:
+	// struct clk_mux 만큼 메모리를 kmem_cache#30-oX (sclk_dpll) 할당 받고 struct clk_mux 의 멤버 값을 아래와 같이 초기화 수행
+	//
+	// (kmem_cache#30-oX)->reg: 0xf0050218
+	// (kmem_cache#30-oX)->shift: 24
+	// (kmem_cache#30-oX)->mask: 0x3
+	// (kmem_cache#30-oX)->flags: 0
+	// (kmem_cache#30-oX)->lock: &lock
+	// (kmem_cache#30-oX)->table: NULL
+	// (kmem_cache#30-oX)->hw.init: &init
+	//
+	// struct clk 만큼 메모리를 kmem_cache#29-oX (sclk_dpll) 할당 받고 struct clk 의 멤버 값을 아래와 같이 초기화 수행
+	//
+	// (kmem_cache#29-oX (sclk_dpll))->name: kmem_cache#30-oX ("sclk_dpll")
+	// (kmem_cache#29-oX (sclk_dpll))->ops: &clk_mux_ops
+	// (kmem_cache#29-oX (sclk_dpll))->hw: &(kmem_cache#30-oX (sclk_dpll))->hw
+	// (kmem_cache#29-oX (sclk_dpll))->flags: 0xa0
+	// (kmem_cache#29-oX (sclk_dpll))->num_parents 2
+	// (kmem_cache#29-oX (sclk_dpll))->parent_names: kmem_cache#30-oX
+	// (kmem_cache#29-oX (sclk_dpll))->parent_names[0]: (kmem_cache#30-oX)[0]: kmem_cache#30-oX: "fin_pll"
+	// (kmem_cache#29-oX (sclk_dpll))->parent_names[1]: (kmem_cache#30-oX)[1]: kmem_cache#30-oX: "fout_dpll"
+	// (kmem_cache#29-oX (sclk_dpll))->parent: NULL
+	// (kmem_cache#29-oX (sclk_dpll))->rate: 600000000
+	//
+	// (kmem_cache#29-oX (sclk_dpll))->parents: kmem_cache#30-oX
+	// (kmem_cache#29-oX (sclk_dpll))->parents[0]: (kmem_cache#30-oX)[0]: kmem_cache#29-oX (fin_pll)
+	// (kmem_cache#29-oX (sclk_dpll))->parents[1]: (kmem_cache#30-oX)[1]: kmem_cache#29-oX (fout_dpll)
+	//
+	// parents 인 "fin_pll", "fout_dpll" 값들 중에
+	// register CLK_SRC_TOP6 의 값을 읽어서 mux 할 parent clock 을 선택함
+	// return된 값이 선택된 parent clock의 index 값임
+	// parent clock 중에 선택된 parent clock의 이름으로 등록된 clk struct를 반환함
+	//
+	// (&(kmem_cache#29-oX (sclk_dpll))->child_node)->next: NULL
+	// (&(kmem_cache#29-oX (sclk_dpll))->child_node)->pprev: &(&(kmem_cache#29-oX (sclk_dpll))->child_node)
+	//
+	// (&(kmem_cache#29-oX (fout_dpll))->children)->first: &(kmem_cache#29-oX (sclk_dpll))->child_node
+	//
+	// (&(kmem_cache#30-oX (sclk_dpll))->hw)->clk: kmem_cache#29-oX (sclk_dpll)
+	//
+	// orphan 으로 등록된 mout_mspll_kfc의 값을 갱신
+	// (&(kmem_cache#29-oX (mout_mspll_kfc))->child_node)->next: NULL
+	// (&(kmem_cache#29-oX (mout_mspll_kfc))->child_node)->pprev: &(&(kmem_cache#29-oX (mout_mspll_kfc))->child_node)
+	//
+	// (&(kmem_cache#29-oX (sclk_dpll))->children)->first: &(kmem_cache#29-oX (mout_mspll_kfc))->child_node
+	//
+	// (kmem_cache#29-oX (mout_mspll_kfc))->parent: kmem_cache#29-oX (sclk_dpll)
+	//
+	// parent가 있는지 확인후 parent의 clock rate 값으로 clock rate 값을 세팅
+	// (kmem_cache#29-oX (mout_mspll_kfc))->rate: 600000000
 }
 EXPORT_SYMBOL_GPL(clk_register_mux);
