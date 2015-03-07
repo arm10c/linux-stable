@@ -100,6 +100,7 @@ static int clk_gate_is_enabled(struct clk_hw *hw)
 	return reg ? 1 : 0;
 }
 
+// ARM10C 20150307
 const struct clk_ops clk_gate_ops = {
 	.enable = clk_gate_enable,
 	.disable = clk_gate_disable,
@@ -118,6 +119,15 @@ EXPORT_SYMBOL_GPL(clk_gate_ops);
  * @clk_gate_flags: gate-specific flags for this clock
  * @lock: shared register lock for this clock
  */
+// ARM10C 20150307
+// NULL,
+// list->name: exynos5420_gate_clks[13].name: "sclk_uart0",
+// list->parent_name: exynos5420_gate_clks[13].parent_name: "dout_uart0",
+// list->flags: exynos5420_gate_clks[13].flags: 0x4,
+// 0xf0050850,
+// list->bit_idx: exynos5420_gate_clks[13].bit_idx: 0,
+// list->gate_flags: exynos5420_gate_clks[13].gate_flags: 0,
+// &lock
 struct clk *clk_register_gate(struct device *dev, const char *name,
 		const char *parent_name, unsigned long flags,
 		void __iomem *reg, u8 bit_idx,
@@ -127,6 +137,7 @@ struct clk *clk_register_gate(struct device *dev, const char *name,
 	struct clk *clk;
 	struct clk_init_data init;
 
+	// clk_gate_flags: 0, CLK_GATE_HIWORD_MASK: 0x2
 	if (clk_gate_flags & CLK_GATE_HIWORD_MASK) {
 		if (bit_idx > 16) {
 			pr_err("gate bit exceeds LOWORD field\n");
@@ -135,30 +146,85 @@ struct clk *clk_register_gate(struct device *dev, const char *name,
 	}
 
 	/* allocate the gate */
+	// sizeof(struct clk_gate): 18 bytes, GFP_KERNEL: 0xD0
+	// kzalloc(18, GFP_KERNEL: 0xD0): kmem_cache#30-oX (sclk_uart0)
 	gate = kzalloc(sizeof(struct clk_gate), GFP_KERNEL);
+	// gate: kmem_cache#30-oX (sclk_uart0)
+
+	// gate: kmem_cache#30-oX (sclk_uart0)
 	if (!gate) {
 		pr_err("%s: could not allocate gated clk\n", __func__);
 		return ERR_PTR(-ENOMEM);
 	}
 
+	// name: "sclk_uart0"
 	init.name = name;
+	// init.name: "sclk_uart0"
+
 	init.ops = &clk_gate_ops;
+	// init.ops: &clk_gate_ops
+
+	// flags: 0x4, CLK_IS_BASIC: 0x20
 	init.flags = flags | CLK_IS_BASIC;
+	// init.flags: 0x24
+
+	// parent_name: "dout_uart0"
 	init.parent_names = (parent_name ? &parent_name: NULL);
+	// init.parent_names: "dout_uart0"
+
+	// parent_name: "dout_uart0"
 	init.num_parents = (parent_name ? 1 : 0);
+	// init.num_parents: 1
 
 	/* struct clk_gate assignments */
+	// gate->reg: (kmem_cache#30-oX (sclk_uart0))->reg, reg: 0xf0050850
 	gate->reg = reg;
+	// gate->reg: (kmem_cache#30-oX (sclk_uart0))->reg: 0xf0050850
+
+	// gate->bit_idx: (kmem_cache#30-oX (sclk_uart0))->bit_idx, bit_idx: 0
 	gate->bit_idx = bit_idx;
+	// gate->bit_idx: (kmem_cache#30-oX (sclk_uart0))->bit_idx: 0
+
+	// gate->flags: (kmem_cache#30-oX (sclk_uart0))->flags, clk_gate_flags: 0
 	gate->flags = clk_gate_flags;
+	// gate->flags: (kmem_cache#30-oX (sclk_uart0))->flags: 0
+
+	// gate->lock: (kmem_cache#30-oX (sclk_uart0))->lock, lock: &lock
 	gate->lock = lock;
+	// gate->lock: (kmem_cache#30-oX (sclk_uart0))->lock: &lock
+
+	// gate->hw.init: (kmem_cache#30-oX (sclk_uart0))->hw.init
 	gate->hw.init = &init;
+	// gate->hw.init: (kmem_cache#30-oX (sclk_uart0))->hw.init: &init
 
+	// dev: NULL, &gate->hw: &(kmem_cache#30-oX (sclk_uart0))->hw
+	// clk_register(NULL, &(kmem_cache#30-oX (sclk_uart0))->hw): kmem_cache#29-oX (sclk_uart0)
 	clk = clk_register(dev, &gate->hw);
+	// clk: kmem_cache#29-oX (sclk_uart0)
 
+	// clk_register(sclk_uart0) 에서 한일:
+	// (kmem_cache#29-oX (sclk_uart0))->name: kmem_cache#30-oX ("sclk_uart0")
+	// (kmem_cache#29-oX (sclk_uart0))->ops: &clk_gate_ops
+	// (kmem_cache#29-oX (sclk_uart0))->hw: &(kmem_cache#30-oX (sclk_uart0))->hw
+	// (kmem_cache#29-oX (sclk_uart0))->flags: 0x24
+	// (kmem_cache#29-oX (sclk_uart0))->num_parents 1
+	// (kmem_cache#29-oX (sclk_uart0))->parent_names[0]: (kmem_cache#30-oX)[0]: kmem_cache#30-oX: "mout_apll"
+	// (kmem_cache#29-oX (sclk_uart0))->parent: kmem_cache#29-oX (dout_uart0)
+	// (kmem_cache#29-oX (sclk_uart0))->rate: 266000000
+	//
+	// clk 의 이름이 "dout_uart0"인 메모리 값을 clk_root_list 에서 찾아 리턴 수행
+	//
+	// (&(kmem_cache#29-oX (sclk_uart0))->child_node)->next: NULL
+	// (&(kmem_cache#29-oX (sclk_uart0))->child_node)->pprev: &(&(kmem_cache#29-oX (sclk_uart0))->child_node)
+	//
+	// (&(kmem_cache#29-oX (dout_uart0))->children)->first: &(kmem_cache#29-oX (sclk_uart0))->child_node
+
+	// clk: kmem_cache#29-oX (sclk_uart0), IS_ERR(kmem_cache#29-oX (sclk_uart0)): 0
 	if (IS_ERR(clk))
 		kfree(gate);
 
+	// clk: kmem_cache#29-oX (sclk_uart0)
 	return clk;
+	// return kmem_cache#29-oX (sclk_uart0)
 }
 EXPORT_SYMBOL_GPL(clk_register_gate);

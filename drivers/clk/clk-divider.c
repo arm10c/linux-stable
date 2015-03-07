@@ -376,12 +376,34 @@ static struct clk *_register_divider(struct device *dev, const char *name,
 
 	/* register the clock */
 	// dev: NULL, &div->hw: &(kmem_cache#30-oX (sclk_apll))->hw
+	// clk_register(NULL, &(kmem_cache#30-oX (sclk_apll))->hw): kmem_cache#29-oX (sclk_apll)
 	clk = clk_register(dev, &div->hw);
+	// clk: kmem_cache#29-oX (sclk_apll)
 
+	// clk_register(sclk_apll) 에서 한일:
+	// (kmem_cache#29-oX (sclk_apll))->name: kmem_cache#30-oX ("sclk_apll")
+	// (kmem_cache#29-oX (sclk_apll))->ops: &clk_divider_ops
+	// (kmem_cache#29-oX (sclk_apll))->hw: &(kmem_cache#30-oX (sclk_apll))->hw
+	// (kmem_cache#29-oX (sclk_apll))->flags: 0x0
+	// (kmem_cache#29-oX (sclk_apll))->num_parents 1
+	// (kmem_cache#29-oX (sclk_apll))->parent_names[0]: (kmem_cache#30-oX)[0]: kmem_cache#30-oX: "mout_apll"
+	// (kmem_cache#29-oX (sclk_apll))->parent: kmem_cache#29-oX (mout_apll)
+	// (kmem_cache#29-oX (sclk_apll))->rate: 800000000
+	//
+	// clk 의 이름이 "mout_apll"인 메모리 값을 clk_root_list 에서 찾아 리턴 수행
+	//
+	// (&(kmem_cache#29-oX (sclk_apll))->child_node)->next: NULL
+	// (&(kmem_cache#29-oX (sclk_apll))->child_node)->pprev: &(&(kmem_cache#29-oX (sclk_apll))->child_node)
+	//
+	// (&(kmem_cache#29-oX (fout_dpll))->children)->first: &(kmem_cache#29-oX (sclk_apll))->child_node
+
+	// clk: kmem_cache#29-oX (sclk_apll), IS_ERR(kmem_cache#29-oX (sclk_apll)): 0
 	if (IS_ERR(clk))
 		kfree(div);
 
+	// clk: kmem_cache#29-oX (sclk_apll)
 	return clk;
+	// return kmem_cache#29-oX (sclk_apll)
 }
 
 /**
@@ -413,8 +435,39 @@ struct clk *clk_register_divider(struct device *dev, const char *name,
 {
 	// dev: NULL, name: "sclk_apll", parent_name: "mout_apll", flags: 0x0, reg: 0xf0040500,
 	// shift: 24, width: 3, clk_divider_flags: 0, lock: &lock
+	// _register_divider(NULL, "sclk_apll", "mout_apll", 0x0, 0xf0040500, 24, 1, 0, NULL, &lock): kmem_cache#29-oX (sclk_apll)
 	return _register_divider(dev, name, parent_name, flags, reg, shift,
 			width, clk_divider_flags, NULL, lock);
+	// return kmem_cache#29-oX (sclk_apll)
+
+	// _register_divider(sclk_apll)에서 한일:
+	// struct clk_divider 만큼 메모리를 할당 받아 맴버값 초기화 수행
+	// kmem_cache#30-oX (sclk_apll)
+	// (kmem_cache#30-oX (sclk_apll))->reg: 0xf0040500
+	// (kmem_cache#30-oX (sclk_apll))->shift: 24
+	// (kmem_cache#30-oX (sclk_apll))->width: 3
+	// (kmem_cache#30-oX (sclk_apll))->flags: 0
+	// (kmem_cache#30-oX (sclk_apll))->lock: &lock
+	// (kmem_cache#30-oX (sclk_apll))->hw.init: &init
+	// (kmem_cache#30-oX (sclk_apll))->table: NULL
+	//
+	// struct clk 만큼 메모리를 할당 받아 맴버값 초기화 수행
+	// kmem_cache#29-oX (sclk_apll)
+	// (kmem_cache#29-oX (sclk_apll))->name: kmem_cache#30-oX ("sclk_apll")
+	// (kmem_cache#29-oX (sclk_apll))->ops: &clk_divider_ops
+	// (kmem_cache#29-oX (sclk_apll))->hw: &(kmem_cache#30-oX (sclk_apll))->hw
+	// (kmem_cache#29-oX (sclk_apll))->flags: 0x0
+	// (kmem_cache#29-oX (sclk_apll))->num_parents 1
+	// (kmem_cache#29-oX (sclk_apll))->parent_names[0]: (kmem_cache#30-oX)[0]: kmem_cache#30-oX: "mout_apll"
+	// (kmem_cache#29-oX (sclk_apll))->parent: kmem_cache#29-oX (mout_apll)
+	// (kmem_cache#29-oX (sclk_apll))->rate: 800000000
+	//
+	// clk 의 이름이 "mout_apll"인 메모리 값을 clk_root_list 에서 찾아 리턴 수행
+	//
+	// (&(kmem_cache#29-oX (sclk_apll))->child_node)->next: NULL
+	// (&(kmem_cache#29-oX (sclk_apll))->child_node)->pprev: &(&(kmem_cache#29-oX (sclk_apll))->child_node)
+	//
+	// (&(kmem_cache#29-oX (fout_dpll))->children)->first: &(kmem_cache#29-oX (sclk_apll))->child_node
 }
 EXPORT_SYMBOL_GPL(clk_register_divider);
 

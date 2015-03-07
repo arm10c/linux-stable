@@ -367,6 +367,19 @@ struct samsung_gate_clock {
 	const char		*alias;
 };
 
+// ARM10C 20150307
+// #define __GATE(sclk_uart0, NULL, "sclk_uart0", "dout_uart0", GATE_TOP_SCLK_PERIC, 0, CLK_SET_RATE_PARENT, 0, NULL):
+// {
+//     .id              = sclk_uart0,
+//     .dev_name        = NULL,
+//     .name            = "sclk_uart0",
+//     .parent_name     = "dout_uart0",
+//     .flags           = CLK_SET_RATE_PARENT,
+//     .offset          = GATE_TOP_SCLK_PERIC,
+//     .bit_idx         = 0,
+//     .gate_flags      = 0,
+//     .alias           = NULL,
+// }
 #define __GATE(_id, dname, cname, pname, o, b, f, gf, a)	\
 	{							\
 		.id		= _id,				\
@@ -380,6 +393,32 @@ struct samsung_gate_clock {
 		.alias		= a,				\
 	}
 
+// ARM10C 20150307
+// __GATE(sclk_uart0, NULL, "sclk_uart0", "dout_uart0", GATE_TOP_SCLK_PERIC, 0, CLK_SET_RATE_PARENT, 0, NULL):
+// {
+//     .id              = sclk_uart0,
+//     .dev_name        = NULL,
+//     .name            = "sclk_uart0",
+//     .parent_name     = "dout_uart0",
+//     .flags           = CLK_SET_RATE_PARENT,
+//     .offset          = GATE_TOP_SCLK_PERIC,
+//     .bit_idx         = 0,
+//     .gate_flags      = 0,
+//     .alias           = NULL,
+// }
+//
+// #define GATE(sclk_uart0, "sclk_uart0", "dout_uart0", GATE_TOP_SCLK_PERIC, 0, CLK_SET_RATE_PARENT, 0):
+// {
+//     .id              = sclk_uart0,
+//     .dev_name        = NULL,
+//     .name            = "sclk_uart0",
+//     .parent_name     = "dout_uart0",
+//     .flags           = CLK_SET_RATE_PARENT,
+//     .offset          = GATE_TOP_SCLK_PERIC,
+//     .bit_idx         = 0,
+//     .gate_flags      = 0,
+//     .alias           = NULL,
+// }
 #define GATE(_id, cname, pname, o, b, f, gf)			\
 	__GATE(_id, NULL, cname, pname, o, b, f, gf, NULL)
 

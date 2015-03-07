@@ -161,6 +161,10 @@ void __init samsung_clk_init(struct device_node *np, void __iomem *base,
 // clk: kmem_cache#29-oX (mout_mspll_kfc), list->id: exynos5420_mux_clks[0].id: 0
 // ARM10C 20150228
 // clk: kmem_cache#29-oX (sclk_dpll), list->id: exynos5420_mux_clks[44].id: 0
+// ARM10C 20150307
+// clk: kmem_cache#29-oX (sclk_apll), list->id: exynos5420_div_clks[1].id: 0
+// ARM10C 20150307
+// clk: kmem_cache#29-oX (sclk_uart0), list->id: exynos5420_gate_clks[13].id: 128
 void samsung_clk_add_lookup(struct clk *clk, unsigned int id)
 {
 	// clk_table: kmem_cache#23-o0, id: 1
@@ -168,6 +172,8 @@ void samsung_clk_add_lookup(struct clk *clk, unsigned int id)
 	// clk_table: kmem_cache#23-o0, id: 5
 	// clk_table: kmem_cache#23-o0, id: 0
 	// clk_table: kmem_cache#23-o0, id: 0
+	// clk_table: kmem_cache#23-o0, id: 0
+	// clk_table: kmem_cache#23-o0, id: 128
 	if (clk_table && id)
 		// clk_table: kmem_cache#23-o0, id: 1, clk_table[1]: (kmem_cache#23-o0)[1],
 		// clk: kmem_cache#29-oX
@@ -175,10 +181,14 @@ void samsung_clk_add_lookup(struct clk *clk, unsigned int id)
 		// clk: kmem_cache#29-oX (apll)
 		// clk_table: kmem_cache#23-o0, id: 5, clk_table[5]: (kmem_cache#23-o0)[5],
 		// clk: kmem_cache#29-oX (epll)
+		// clk_table: kmem_cache#23-o0, id: 128, clk_table[128]: (kmem_cache#23-o0)[128],
+		// clk: kmem_cache#29-oX (sclk_uart0)
 		clk_table[id] = clk;
 		// clk_table[1]: (kmem_cache#23-o0)[1]: kmem_cache#29-oX (fin)
 		// clk_table[2]: (kmem_cache#23-o0)[2]: kmem_cache#29-oX (apll)
 		// clk_table[5]: (kmem_cache#23-o0)[5]: kmem_cache#29-oX (epll)
+		// clk_table[5]: (kmem_cache#23-o0)[5]: kmem_cache#29-oX (epll)
+		// clk_table[128]: (kmem_cache#23-o0)[128]: kmem_cache#29-oX (sclk_uart0)
 }
 
 /* register a list of aliases */
@@ -541,19 +551,54 @@ void __init samsung_clk_register_div(struct samsung_div_clock *list,
 			// list->width: exynos5420_div_clks[1].width: 3,
 			// list->div_flags: exynos5420_div_clks[1].div_flags: 0,
 			// reg_base: 0xf0040000
+			// clk_register_divider("sclk_apll", "mout_apll", 0, 0xf0040500, 24, 3, 0, &lock): kmem_cache#29-oX (sclk_apll)
 			clk = clk_register_divider(NULL, list->name,
 					list->parent_name, list->flags,
 					reg_base + list->offset, list->shift,
 					list->width, list->div_flags, &lock);
+			// clk: kmem_cache#29-oX (sclk_apll)
+
+			// clk_register_divider(sclk_apll)에서 한일:
+			// struct clk_divider 만큼 메모리를 할당 받아 맴버값 초기화 수행
+			// kmem_cache#30-oX (sclk_apll)
+			// (kmem_cache#30-oX (sclk_apll))->reg: 0xf0040500
+			// (kmem_cache#30-oX (sclk_apll))->shift: 24
+			// (kmem_cache#30-oX (sclk_apll))->width: 3
+			// (kmem_cache#30-oX (sclk_apll))->flags: 0
+			// (kmem_cache#30-oX (sclk_apll))->lock: &lock
+			// (kmem_cache#30-oX (sclk_apll))->hw.init: &init
+			// (kmem_cache#30-oX (sclk_apll))->table: NULL
+			//
+			// struct clk 만큼 메모리를 할당 받아 맴버값 초기화 수행
+			// kmem_cache#29-oX (sclk_apll)
+			// (kmem_cache#29-oX (sclk_apll))->name: kmem_cache#30-oX ("sclk_apll")
+			// (kmem_cache#29-oX (sclk_apll))->ops: &clk_divider_ops
+			// (kmem_cache#29-oX (sclk_apll))->hw: &(kmem_cache#30-oX (sclk_apll))->hw
+			// (kmem_cache#29-oX (sclk_apll))->flags: 0x0
+			// (kmem_cache#29-oX (sclk_apll))->num_parents 1
+			// (kmem_cache#29-oX (sclk_apll))->parent_names[0]: (kmem_cache#30-oX)[0]: kmem_cache#30-oX: "mout_apll"
+			// (kmem_cache#29-oX (sclk_apll))->parent: kmem_cache#29-oX (mout_apll)
+			// (kmem_cache#29-oX (sclk_apll))->rate: 800000000
+			//
+			// clk 의 이름이 "mout_apll"인 메모리 값을 clk_root_list 에서 찾아 리턴 수행
+			//
+			// (&(kmem_cache#29-oX (sclk_apll))->child_node)->next: NULL
+			// (&(kmem_cache#29-oX (sclk_apll))->child_node)->pprev: &(&(kmem_cache#29-oX (sclk_apll))->child_node)
+			//
+			// (&(kmem_cache#29-oX (fout_dpll))->children)->first: &(kmem_cache#29-oX (sclk_apll))->child_node
+
+		// clk: kmem_cache#29-oX (sclk_apll), IS_ERR(kmem_cache#29-oX (sclk_apll)): 0
 		if (IS_ERR(clk)) {
 			pr_err("%s: failed to register clock %s\n", __func__,
 				list->name);
 			continue;
 		}
 
+		// clk: kmem_cache#29-oX (sclk_apll), list->id: exynos5420_div_clks[1].id: 0
 		samsung_clk_add_lookup(clk, list->id);
 
 		/* register a clock lookup only if a clock alias is specified */
+		// list->alias: exynos5420_div_clks[1].alias: NULL
 		if (list->alias) {
 			ret = clk_register_clkdev(clk, list->alias,
 						list->dev_name);
@@ -561,20 +606,70 @@ void __init samsung_clk_register_div(struct samsung_div_clock *list,
 				pr_err("%s: failed to register lookup %s\n",
 						__func__, list->alias);
 		}
+
+		// idx 0, 2...52 까지 loop 수행
 	}
 }
 
 /* register a list of gate clocks */
+// ARM10C 20150307
+// exynos5420_gate_clks, ARRAY_SIZE(exynos5420_gate_clks): 136
 void __init samsung_clk_register_gate(struct samsung_gate_clock *list,
 						unsigned int nr_clk)
 {
 	struct clk *clk;
 	unsigned int idx, ret;
 
+	// NOTE:
+	// exynos5420_gate_clks의 gate 들 중에 array index 13번의
+	// GATE(sclk_uart0, "sclk_uart0", "dout_uart0", GATE_TOP_SCLK_PERIC, 0, CLK_SET_RATE_PARENT, 0) 을 가지고 분석 진행
+
+	// nr_clk: 136
 	for (idx = 0; idx < nr_clk; idx++, list++) {
+		// idx: 13,
+		// list->name: exynos5420_gate_clks[13].name: "sclk_uart0",
+		// list->parent_name: exynos5420_gate_clks[13].parent_name: "dout_uart0",
+		// list->flags: exynos5420_gate_clks[13].flags: 0x4,
+		// list->offset: exynos5420_gate_clks[13].offset: 0x10850,
+		// list->bit_idx: exynos5420_gate_clks[13].bit_idx: 0,
+		// list->gate_flags: exynos5420_gate_clks[13].gate_flags: 0,
+		// &lock
+		// reg_base: 0xf0040000
+		// clk_register_gate(NULL, "sclk_uart0", "dout_uart0", 0x4, 0xf0050850, 0, 0, &lock): kmem_cache#29-oX (sclk_uart0)
 		clk = clk_register_gate(NULL, list->name, list->parent_name,
 				list->flags, reg_base + list->offset,
 				list->bit_idx, list->gate_flags, &lock);
+		// clk: kmem_cache#29-oX (sclk_uart0)
+
+		// clk_register_gate(sclk_uart0)에서 한일:
+		// struct clk_gate 만큼 메모리를 할당 받아 맴버값 초기화 수행
+		// kmem_cache#30-oX (sclk_uart0)
+		// (kmem_cache#30-oX (sclk_uart0))->reg: 0xf0050850
+		// (kmem_cache#30-oX (sclk_uart0))->bit_idx: 0
+		// (kmem_cache#30-oX (sclk_uart0))->flags: 0
+		// (kmem_cache#30-oX (sclk_uart0))->lock: &lock
+		// (kmem_cache#30-oX (sclk_uart0))->hw.init: &init
+		// (kmem_cache#30-oX (sclk_uart0))->table: NULL
+		//
+		// struct clk 만큼 메모리를 할당 받아 맴버값 초기화 수행
+		// kmem_cache#29-oX (sclk_uart0)
+		// (kmem_cache#29-oX (sclk_uart0))->name: kmem_cache#30-oX ("sclk_uart0")
+		// (kmem_cache#29-oX (sclk_uart0))->ops: &clk_gate_ops
+		// (kmem_cache#29-oX (sclk_uart0))->hw: &(kmem_cache#30-oX (sclk_uart0))->hw
+		// (kmem_cache#29-oX (sclk_uart0))->flags: 0x24
+		// (kmem_cache#29-oX (sclk_uart0))->num_parents 1
+		// (kmem_cache#29-oX (sclk_uart0))->parent_names[0]: (kmem_cache#30-oX)[0]: kmem_cache#30-oX: "mout_apll"
+		// (kmem_cache#29-oX (sclk_uart0))->parent: kmem_cache#29-oX (dout_uart0)
+		// (kmem_cache#29-oX (sclk_uart0))->rate: 266000000
+		//
+		// clk 의 이름이 "dout_uart0"인 메모리 값을 clk_root_list 에서 찾아 리턴 수행
+		//
+		// (&(kmem_cache#29-oX (sclk_uart0))->child_node)->next: NULL
+		// (&(kmem_cache#29-oX (sclk_uart0))->child_node)->pprev: &(&(kmem_cache#29-oX (sclk_uart0))->child_node)
+		//
+		// (&(kmem_cache#29-oX (dout_uart0))->children)->first: &(kmem_cache#29-oX (sclk_uart0))->child_node
+
+		// clk: kmem_cache#29-oX (sclk_uart0), IS_ERR(kmem_cache#29-oX (sclk_uart0)): 0
 		if (IS_ERR(clk)) {
 			pr_err("%s: failed to register clock %s\n", __func__,
 				list->name);
@@ -582,6 +677,7 @@ void __init samsung_clk_register_gate(struct samsung_gate_clock *list,
 		}
 
 		/* register a clock lookup only if a clock alias is specified */
+		// list->alias: exynos5420_gate_clks[13].alias: NULL
 		if (list->alias) {
 			ret = clk_register_clkdev(clk, list->alias,
 							list->dev_name);
@@ -590,7 +686,13 @@ void __init samsung_clk_register_gate(struct samsung_gate_clock *list,
 					__func__, list->alias);
 		}
 
+		// clk: kmem_cache#29-oX (sclk_uart0), list->id: exynos5420_gate_clks[13].id: 128
 		samsung_clk_add_lookup(clk, list->id);
+
+		// samsung_clk_add_lookup(sclk_uart0) 에서 한일:
+		// clk_table[128]: (kmem_cache#23-o0)[128]: kmem_cache#29-oX (sclk_uart0)
+
+		// idx: 0...12...136 loop 수행
 	}
 }
 

@@ -23,6 +23,8 @@
  */
 #define CLK_SET_RATE_GATE	BIT(0) /* must be gated across rate change */
 #define CLK_SET_PARENT_GATE	BIT(1) /* must be gated across re-parent */
+// ARM10C 20150307
+// CLK_SET_RATE_PARENT: 0x4
 #define CLK_SET_RATE_PARENT	BIT(2) /* propagate rate change up one level */
 #define CLK_IGNORE_UNUSED	BIT(3) /* do not gate even if unused */
 // ARM10C 20150110
@@ -33,6 +35,7 @@
 // ARM10C 20150124
 // ARM10C 20150131
 // ARM10C 20150228
+// ARM10C 20150307
 // CLK_IS_BASIC: 0x20
 #define CLK_IS_BASIC		BIT(5) /* Basic clk, can't do a to_clk_foo() */
 // ARM10C 20150117
@@ -169,6 +172,7 @@ struct clk_ops {
 // ARM10C 20150117
 // ARM10C 20150124
 // ARM10C 20150228
+// ARM10C 20150307
 struct clk_init_data {
 	const char		*name;
 	const struct clk_ops	*ops;
@@ -247,6 +251,8 @@ void of_fixed_clk_setup(struct device_node *np);
  *   register.  While setting the gate bits, higher 16-bit should also be
  *   updated to indicate changing gate bits.
  */
+// ARM10C 20150307
+// sizeof(struct clk_gate): 18 bytes
 struct clk_gate {
 	struct clk_hw hw;
 	void __iomem	*reg;
@@ -256,6 +262,8 @@ struct clk_gate {
 };
 
 #define CLK_GATE_SET_TO_DISABLE		BIT(0)
+// ARM10C 20150307
+// CLK_GATE_HIWORD_MASK: 0x2
 #define CLK_GATE_HIWORD_MASK		BIT(1)
 
 extern const struct clk_ops clk_gate_ops;
