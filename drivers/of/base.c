@@ -47,6 +47,7 @@ DEFINE_MUTEX(of_aliases_mutex);
  */
 // ARM10C 20140215
 // ARM10C 20141004
+// ARM10C 20150307
 DEFINE_RAW_SPINLOCK(devtree_lock);
 
 // ARM10C 20141018
@@ -307,6 +308,7 @@ EXPORT_SYMBOL(of_find_all_nodes);
  * and return the value.
  */
 // ARM10C 20141004
+// ARM10C 20150307
 static const void *__of_get_property(const struct device_node *np,
 				     const char *name, int *lenp)
 {
@@ -324,6 +326,7 @@ static const void *__of_get_property(const struct device_node *np,
 // ARM10C 20141018
 // ARM10C 20141101
 // ARM10C 20141213
+// ARM10C 20150307
 const void *of_get_property(const struct device_node *np, const char *name,
 			    int *lenp)
 {
@@ -534,14 +537,22 @@ EXPORT_SYMBOL(of_machine_is_compatible);
  *  Returns 1 if the status property is absent or set to "okay" or "ok",
  *  0 otherwise
  */
+// ARM10C 20150307
+// device: devtree에서 allnext로 순회 하면서 찾은 mct node의 주소
 static int __of_device_is_available(const struct device_node *device)
 {
 	const char *status;
 	int statlen;
 
+	// device: devtree에서 allnext로 순회 하면서 찾은 mct node의 주소
+	// __of_get_property(devtree에서 allnext로 순회 하면서 찾은 mct node의 주소, "status", &statlen): NULL
 	status = __of_get_property(device, "status", &statlen);
+	// status: NULL
+
+	// status: NULL
 	if (status == NULL)
 		return 1;
+		// return 1
 
 	if (statlen > 0) {
 		if (!strcmp(status, "okay") || !strcmp(status, "ok"))
@@ -559,15 +570,27 @@ static int __of_device_is_available(const struct device_node *device)
  *  Returns 1 if the status property is absent or set to "okay" or "ok",
  *  0 otherwise
  */
+// ARM10C 20150307
+// np: devtree에서 allnext로 순회 하면서 찾은 mct node의 주소
 int of_device_is_available(const struct device_node *device)
 {
 	unsigned long flags;
 	int res;
 
 	raw_spin_lock_irqsave(&devtree_lock, flags);
+	// devtree_lock을 사용한 spin lock 수행하고 cpsr을 flags에 저장
+
+	// device: devtree에서 allnext로 순회 하면서 찾은 mct node의 주소
+	// __of_device_is_available(__clksrc_of_table_exynos4210): 1
 	res = __of_device_is_available(device);
+	// res: 1
+
 	raw_spin_unlock_irqrestore(&devtree_lock, flags);
+	// devtree_lock을 사용한 spin lock 해재하고 flags에 저장된 cpsr을 복원
+
+	// res: 1
 	return res;
+	// return 1
 
 }
 EXPORT_SYMBOL(of_device_is_available);
@@ -1012,6 +1035,15 @@ EXPORT_SYMBOL(of_match_node);
 // __clk_of_table_exynos5250_audss_clk
 // __clk_of_table_exynos5420_clk
 // &match
+// ARM10C 20150307
+// from: NULL
+// matches:
+// __clksrc_of_table_armv7_arch_timer
+// __clksrc_of_table_armv8_arch_timer
+// __clksrc_of_table_armv7_arch_timer_mem
+// __clksrc_of_table_exynos4210
+// __clksrc_of_table_exynos4412
+// &match
 struct device_node *of_find_matching_node_and_match(struct device_node *from,
 					const struct of_device_id *matches,
 					const struct of_device_id **match)
@@ -1118,6 +1150,8 @@ EXPORT_SYMBOL_GPL(of_modalias_node);
  */
 // ARM10C 20141011
 // parp: exynos5420 dtb상의 gic 의 주소
+// ARM10C 20150307
+// parp: exynos5420 dtb상의 mct_map 의 주소
 struct device_node *of_find_node_by_phandle(phandle handle)
 {
 	struct device_node *np;
@@ -1125,11 +1159,14 @@ struct device_node *of_find_node_by_phandle(phandle handle)
 
 	raw_spin_lock_irqsave(&devtree_lock, flags);
 	// devtree_lock을 사용한 spin lock 수행하고 cpsr을 flags에 저장
+	// devtree_lock을 사용한 spin lock 수행하고 cpsr을 flags에 저장
 
 	for (np = of_allnodes; np; np = np->allnext)
 		// np->phandle: exynos5420 dtb상의 gic 의 주소, handle: exynos5420 dtb상의 gic 의 주소
+		// np->phandle: exynos5420 dtb상의 mct_map 의 주소, handle: exynos5420 dtb상의 mct_map 의 주소
 		if (np->phandle == handle)
 			break;
+			// break
 
 	// NOTE:
 	// np->phandle에 값이 존재하기 위해선 exynos5420 용 dts 파일들의 node 들 중에
@@ -1142,14 +1179,18 @@ struct device_node *of_find_node_by_phandle(phandle handle)
 
 
 	// np: gic node의 주소
+	// np: exynos5420 dtb상의 mct_map 의 주소
 	of_node_get(np);
 
 	raw_spin_unlock_irqrestore(&devtree_lock, flags);
 	// devtree_lock을 사용j한 spin lock 해재하고 flags에 저장된 cpsr을 복원
+	// devtree_lock을 사용j한 spin lock 해재하고 flags에 저장된 cpsr을 복원
 
 	// np: gic node의 주소
+	// np: exynos5420 dtb상의 mct_map 의 주소
 	return np;
 	// return gic node의 주소
+	// return exynos5420 dtb상의 mct_map 의 주소
 }
 EXPORT_SYMBOL(of_find_node_by_phandle);
 

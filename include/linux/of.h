@@ -51,7 +51,8 @@ struct of_irq_controller;
 // ARM10C 20141018
 // ARM10C 20150103
 // ARM10C 20150110
-// size : 60 byte
+// ARM10C 20150307
+// size: 60 byte
 struct device_node {
 	const char *name;
 	const char *type;
@@ -101,6 +102,7 @@ extern void of_node_put(struct device_node *node);
 // ARM10C 20141206
 // ARM10C 20141213
 // ARM10C 20150110
+// ARM10C 20150307
 static inline struct device_node *of_node_get(struct device_node *node)
 {
 	return node;
@@ -206,6 +208,8 @@ static inline unsigned long of_read_ulong(const __be32 *cell, int size)
 // domain->of_node: (kmem_cache#25-o0)->of_node: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소
 // ARM10C 20141213
 // device: devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소
+// ARM10C 20150307
+// device: devtree에서 allnext로 순회 하면서 찾은 mct node의 주소
 static inline const char *of_node_full_name(const struct device_node *np)
 {
 	// np: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소
@@ -270,6 +274,10 @@ static inline struct device_node *of_find_matching_node(
 // for_each_matching_node_and_match(np, clk_matches, &match):
 //     for (np = of_find_matching_node_and_match(NULL, clk_matches, &match);
 //          np; np = of_find_matching_node_and_match(np, clk_matches, &match))
+// ARM10C 20150307
+// for_each_matching_node_and_match(np, __clksrc_of_table, &match):
+//     for (np = of_find_matching_node_and_match(NULL, __clksrc_of_table, &match);
+//          np; np = of_find_matching_node_and_match(np, __clksrc_of_table, &match))
 #define for_each_matching_node_and_match(dn, matches, match) \
 	for (dn = of_find_matching_node_and_match(NULL, matches, match); \
 	     dn; dn = of_find_matching_node_and_match(dn, matches, match))

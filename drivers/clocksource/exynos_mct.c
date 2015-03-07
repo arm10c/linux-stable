@@ -57,12 +57,16 @@
 
 #define TICK_BASE_CNT	1
 
+// ARM10C 20150307
 enum {
+	// MCT_INT_SPI: 0
 	MCT_INT_SPI,
 	MCT_INT_PPI
 };
 
+// ARM10C 20150307
 enum {
+	// MCT_G0_IRQ: 0
 	MCT_G0_IRQ,
 	MCT_G1_IRQ,
 	MCT_G2_IRQ,
@@ -71,12 +75,16 @@ enum {
 	MCT_L1_IRQ,
 	MCT_L2_IRQ,
 	MCT_L3_IRQ,
+	// MCT_NR_IRQS: 8
 	MCT_NR_IRQS,
 };
 
 static void __iomem *reg_base;
 static unsigned long clk_rate;
+// ARM10C 20150307
 static unsigned int mct_int_type;
+// ARM10C 20150307
+// MCT_NR_IRQS: 8
 static int mct_irqs[MCT_NR_IRQS];
 
 struct mct_clock_event_device {
@@ -534,13 +542,18 @@ void __init mct_init(void __iomem *base, int irq_g0, int irq_l0, int irq_l1)
 	exynos4_clockevent_init();
 }
 
+// ARM10C 20150307
+// np: devtree에서 allnext로 순회 하면서 찾은 mct node의 주소, MCT_INT_SPI: 0
 static void __init mct_init_dt(struct device_node *np, unsigned int int_type)
 {
 	u32 nr_irqs, i;
 
+	// int_type: 0
 	mct_int_type = int_type;
+	// mct_int_type: 0
 
 	/* This driver uses only one global timer interrupt */
+	// np: devtree에서 allnext로 순회 하면서 찾은 mct node의 주소, MCT_G0_IRQ: 0
 	mct_irqs[MCT_G0_IRQ] = irq_of_parse_and_map(np, MCT_G0_IRQ);
 
 	/*
@@ -562,8 +575,11 @@ static void __init mct_init_dt(struct device_node *np, unsigned int int_type)
 }
 
 
+// ARM10C 20150307
+// np: devtree에서 allnext로 순회 하면서 찾은 mct node의 주소
 static void __init mct_init_spi(struct device_node *np)
 {
+	// np: devtree에서 allnext로 순회 하면서 찾은 mct node의 주소, MCT_INT_SPI: 0
 	return mct_init_dt(np, MCT_INT_SPI);
 }
 
@@ -571,5 +587,16 @@ static void __init mct_init_ppi(struct device_node *np)
 {
 	return mct_init_dt(np, MCT_INT_PPI);
 }
+// ARM10C 20150307
+// #define CLOCKSOURCE_OF_DECLARE(exynos4210, "samsung,exynos4210-mct", mct_init_spi):
+// static const struct of_device_id __clksrc_of_table_exynos4210 __used __section(__clksrc_of_table)
+// = { .compatible = "samsung,exynos4210-mct",
+//     .data = (mct_init_spi == (clocksource_of_init_fn)NULL) ? mct_init_spi : mct_init_spi }
 CLOCKSOURCE_OF_DECLARE(exynos4210, "samsung,exynos4210-mct", mct_init_spi);
+
+// ARM10C 20150307
+// #define CLOCKSOURCE_OF_DECLARE(exynos4412, "samsung,exynos4412-mct", mct_init_ppi):
+// static const struct of_device_id __clksrc_of_table_exynos4412 __used __section(__clksrc_of_table)
+// = { .compatible = "samsung,exynos4412-mct",
+//     .data = (mct_init_ppi == (clocksource_of_init_fn)NULL) ? mct_init_ppi : mct_init_ppi }
 CLOCKSOURCE_OF_DECLARE(exynos4412, "samsung,exynos4412-mct", mct_init_ppi);

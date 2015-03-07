@@ -139,7 +139,10 @@
 #define TRACE_SYSCALLS()
 #endif
 
-#ifdef CONFIG_CLKSRC_OF
+#ifdef CONFIG_CLKSRC_OF // CONFIG_CLKSRC_OF=y
+/*
+// ARM10C 20150307
+*/
 #define CLKSRC_OF_TABLES() . = ALIGN(8);				\
 			   VMLINUX_SYMBOL(__clksrc_of_table) = .;	\
 			   *(__clksrc_of_table)				\
@@ -487,6 +490,7 @@
 /*
 // ARM10C 20141004
 // ARM10C 20150103
+// ARM10C 20150307
 */
 #define INIT_DATA							\
 	*(.init.data)							\

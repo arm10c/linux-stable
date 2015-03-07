@@ -29,6 +29,7 @@ extern int of_irq_parse_oldworld(struct device_node *device, int index,
 #else /* CONFIG_PPC32 && CONFIG_PPC_PMAC */
 // ARM10C 20141011
 // ARM10C 20141213
+// ARM10C 20150307
 // of_irq_workarounds: 0
 #define of_irq_workarounds (0)
 #define of_irq_dflt_pic (NULL)

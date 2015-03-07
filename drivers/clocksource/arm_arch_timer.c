@@ -667,7 +667,18 @@ static void __init arch_timer_init(struct device_node *np)
 	arch_timer_register();
 	arch_timer_common_init();
 }
+// ARM10C 20150307
+// #define CLOCKSOURCE_OF_DECLARE(armv7_arch_timer, "arm,armv7-timer", arch_timer_init):
+// static const struct of_device_id __clksrc_of_table_armv7_arch_timer __used __section(__clksrc_of_table)
+// = { .compatible = "arm,armv7-timer",
+//     .data = (arch_timer_init == (clocksource_of_init_fn)NULL) ? arch_timer_init : arch_timer_init }
 CLOCKSOURCE_OF_DECLARE(armv7_arch_timer, "arm,armv7-timer", arch_timer_init);
+
+// ARM10C 20150307
+// #define CLOCKSOURCE_OF_DECLARE(armv8_arch_timer, "arm,armv8-timer", arch_timer_init):
+// static const struct of_device_id __clksrc_of_table_armv8_arch_timer __used __section(__clksrc_of_table)
+// = { .compatible = "arm,armv8-timer",
+//     .data = (arch_timer_init == (clocksource_of_init_fn)NULL) ? arch_timer_init : arch_timer_init }
 CLOCKSOURCE_OF_DECLARE(armv8_arch_timer, "arm,armv8-timer", arch_timer_init);
 
 static void __init arch_timer_mem_init(struct device_node *np)
@@ -733,5 +744,10 @@ static void __init arch_timer_mem_init(struct device_node *np)
 	arch_timer_mem_register(base, irq);
 	arch_timer_common_init();
 }
+// ARM10C 20150307
+// #define CLOCKSOURCE_OF_DECLARE(armv7_arch_timer_mem, "arm,armv7-timer-mem", arch_timer_mem_init):
+// static const struct of_device_id __clksrc_of_table_armv7_arch_timer_mem __used __section(__clksrc_of_table)
+// = { .compatible = "arm,armv7-timer-mem",
+//     .data = (arch_timer_mem_init == (clocksource_of_init_fn)NULL) ? arch_timer_mem_init : arch_timer_mem_init }
 CLOCKSOURCE_OF_DECLARE(armv7_arch_timer_mem, "arm,armv7-timer-mem",
 		       arch_timer_mem_init);

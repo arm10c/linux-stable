@@ -341,9 +341,10 @@ extern int clocksource_mmio_init(void __iomem *, const char *,
 
 extern int clocksource_i8253_init(void);
 
+// ARM10C 20150307
 struct device_node;
 typedef void(*clocksource_of_init_fn)(struct device_node *);
-#ifdef CONFIG_CLKSRC_OF
+#ifdef CONFIG_CLKSRC_OF // CONFIG_CLKSRC_OF=y
 extern void clocksource_of_init(void);
 
 #define CLOCKSOURCE_OF_DECLARE(name, compat, fn)			\

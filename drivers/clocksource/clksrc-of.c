@@ -18,11 +18,18 @@
 #include <linux/of.h>
 #include <linux/clocksource.h>
 
+// ARM10C 20150307
+// __clksrc_of_table_armv7_arch_timer
+// __clksrc_of_table_armv8_arch_timer
+// __clksrc_of_table_armv7_arch_timer_mem
+// __clksrc_of_table_exynos4210
+// __clksrc_of_table_exynos4412
 extern struct of_device_id __clksrc_of_table[];
 
 static const struct of_device_id __clksrc_of_table_sentinel
 	__used __section(__clksrc_of_table_end);
 
+// ARM10C 20150307
 void __init clocksource_of_init(void)
 {
 	struct device_node *np;
@@ -30,10 +37,23 @@ void __init clocksource_of_init(void)
 	clocksource_of_init_fn init_func;
 
 	for_each_matching_node_and_match(np, __clksrc_of_table, &match) {
+	// for (np = of_find_matching_node_and_match(NULL, __clksrc_of_table, &match);
+	//      np; np = of_find_matching_node_and_match(np, __clksrc_of_table, &match))
+
+		// np: devtree에서 allnext로 순회 하면서 찾은 mct node의 주소, match: __clksrc_of_table_exynos4210
+
+		// np: devtree에서 allnext로 순회 하면서 찾은 mct node의 주소
+		// of_device_is_available(devtree에서 allnext로 순회 하면서 찾은 mct node의 주소): 1
 		if (!of_device_is_available(np))
 			continue;
 
+		// match->data: __clksrc_of_table_exynos4210.data: mct_init_spi
 		init_func = match->data;
+		// init_func: mct_init_spi
+
+		// init_func: mct_init_spi
+		// np: devtree에서 allnext로 순회 하면서 찾은 mct node의 주소
+		// mct_init_spi(devtree에서 allnext로 순회 하면서 찾은 mct node의 주소)
 		init_func(np);
 	}
 }
