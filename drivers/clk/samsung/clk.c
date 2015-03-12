@@ -1,4 +1,4 @@
-/*
+o/*
  * Copyright (c) 2013 Samsung Electronics Co., Ltd.
  * Copyright (c) 2013 Linaro Ltd.
  * Author: Thomas Abraham <thomas.ab@samsung.com>
@@ -164,7 +164,7 @@ void __init samsung_clk_init(struct device_node *np, void __iomem *base,
 // ARM10C 20150307
 // clk: kmem_cache#29-oX (sclk_apll), list->id: exynos5420_div_clks[1].id: 0
 // ARM10C 20150307
-// clk: kmem_cache#29-oX (sclk_uart0), list->id: exynos5420_gate_clks[13].id: 128
+// clk: kmem_cache#29-oX (sclk_fimd1), list->id: exynos5420_gate_clks[13].id: 128
 void samsung_clk_add_lookup(struct clk *clk, unsigned int id)
 {
 	// clk_table: kmem_cache#23-o0, id: 1
@@ -182,13 +182,13 @@ void samsung_clk_add_lookup(struct clk *clk, unsigned int id)
 		// clk_table: kmem_cache#23-o0, id: 5, clk_table[5]: (kmem_cache#23-o0)[5],
 		// clk: kmem_cache#29-oX (epll)
 		// clk_table: kmem_cache#23-o0, id: 128, clk_table[128]: (kmem_cache#23-o0)[128],
-		// clk: kmem_cache#29-oX (sclk_uart0)
+		// clk: kmem_cache#29-oX (sclk_fimd1)
 		clk_table[id] = clk;
 		// clk_table[1]: (kmem_cache#23-o0)[1]: kmem_cache#29-oX (fin)
 		// clk_table[2]: (kmem_cache#23-o0)[2]: kmem_cache#29-oX (apll)
 		// clk_table[5]: (kmem_cache#23-o0)[5]: kmem_cache#29-oX (epll)
 		// clk_table[5]: (kmem_cache#23-o0)[5]: kmem_cache#29-oX (epll)
-		// clk_table[128]: (kmem_cache#23-o0)[128]: kmem_cache#29-oX (sclk_uart0)
+		// clk_table[128]: (kmem_cache#23-o0)[128]: kmem_cache#29-oX (sclk_fimd1)
 }
 
 /* register a list of aliases */
@@ -621,55 +621,55 @@ void __init samsung_clk_register_gate(struct samsung_gate_clock *list,
 	unsigned int idx, ret;
 
 	// NOTE:
-	// exynos5420_gate_clks의 gate 들 중에 array index 13번의
-	// GATE(sclk_uart0, "sclk_uart0", "dout_uart0", GATE_TOP_SCLK_PERIC, 0, CLK_SET_RATE_PARENT, 0) 을 가지고 분석 진행
+	// exynos5420_gate_clks의 gate 들 중에 array index 36번의
+	// GATE(sclk_fimd1, "sclk_fimd1", "dout_fimd1", GATE_TOP_SCLK_PERIC, 0, CLK_SET_RATE_PARENT, 0) 을 가지고 분석 진행
 
 	// nr_clk: 136
 	for (idx = 0; idx < nr_clk; idx++, list++) {
-		// idx: 13,
-		// list->name: exynos5420_gate_clks[13].name: "sclk_uart0",
-		// list->parent_name: exynos5420_gate_clks[13].parent_name: "dout_uart0",
-		// list->flags: exynos5420_gate_clks[13].flags: 0x4,
-		// list->offset: exynos5420_gate_clks[13].offset: 0x10850,
+		// idx: 36,
+		// list->name: exynos5420_gate_clks[36].name: "sclk_fimd1",
+		// list->parent_name: exynos5420_gate_clks[36].parent_name: "dout_fimd1",
+		// list->flags: exynos5420_gate_clks[36].flags: 0x4,
+		// list->offset: exynos5420_gate_clks[36].offset: 0x10828,
 		// list->bit_idx: exynos5420_gate_clks[13].bit_idx: 0,
 		// list->gate_flags: exynos5420_gate_clks[13].gate_flags: 0,
 		// &lock
 		// reg_base: 0xf0040000
-		// clk_register_gate(NULL, "sclk_uart0", "dout_uart0", 0x4, 0xf0050850, 0, 0, &lock): kmem_cache#29-oX (sclk_uart0)
+		// clk_register_gate(NULL, "sclk_fimd1", "dout_fimd1", 0x4, 0xf0050828, 0, 0, &lock): kmem_cache#29-oX (sclk_fimd1)
 		clk = clk_register_gate(NULL, list->name, list->parent_name,
 				list->flags, reg_base + list->offset,
 				list->bit_idx, list->gate_flags, &lock);
-		// clk: kmem_cache#29-oX (sclk_uart0)
+		// clk: kmem_cache#29-oX (sclk_fimd1)
 
-		// clk_register_gate(sclk_uart0)에서 한일:
+		// clk_register_gate(sclk_fimd1)에서 한일:
 		// struct clk_gate 만큼 메모리를 할당 받아 맴버값 초기화 수행
-		// kmem_cache#30-oX (sclk_uart0)
-		// (kmem_cache#30-oX (sclk_uart0))->reg: 0xf0050850
-		// (kmem_cache#30-oX (sclk_uart0))->bit_idx: 0
-		// (kmem_cache#30-oX (sclk_uart0))->flags: 0
-		// (kmem_cache#30-oX (sclk_uart0))->lock: &lock
-		// (kmem_cache#30-oX (sclk_uart0))->hw.init: &init
-		// (kmem_cache#30-oX (sclk_uart0))->table: NULL
+		// kmem_cache#30-oX (sclk_fimd1)
+		// (kmem_cache#30-oX (sclk_fimd1))->reg: 0xf0050828
+		// (kmem_cache#30-oX (sclk_fimd1))->bit_idx: 0
+		// (kmem_cache#30-oX (sclk_fimd1))->flags: 0
+		// (kmem_cache#30-oX (sclk_fimd1))->lock: &lock
+		// (kmem_cache#30-oX (sclk_fimd1))->hw.init: &init
+		// (kmem_cache#30-oX (sclk_fimd1))->table: NULL
 		//
 		// struct clk 만큼 메모리를 할당 받아 맴버값 초기화 수행
-		// kmem_cache#29-oX (sclk_uart0)
-		// (kmem_cache#29-oX (sclk_uart0))->name: kmem_cache#30-oX ("sclk_uart0")
-		// (kmem_cache#29-oX (sclk_uart0))->ops: &clk_gate_ops
-		// (kmem_cache#29-oX (sclk_uart0))->hw: &(kmem_cache#30-oX (sclk_uart0))->hw
-		// (kmem_cache#29-oX (sclk_uart0))->flags: 0x24
-		// (kmem_cache#29-oX (sclk_uart0))->num_parents 1
-		// (kmem_cache#29-oX (sclk_uart0))->parent_names[0]: (kmem_cache#30-oX)[0]: kmem_cache#30-oX: "mout_apll"
-		// (kmem_cache#29-oX (sclk_uart0))->parent: kmem_cache#29-oX (dout_uart0)
-		// (kmem_cache#29-oX (sclk_uart0))->rate: 266000000
+		// kmem_cache#29-oX (sclk_fimd1)
+		// (kmem_cache#29-oX (sclk_fimd1))->name: kmem_cache#30-oX ("sclk_fimd1")
+		// (kmem_cache#29-oX (sclk_fimd1))->ops: &clk_gate_ops
+		// (kmem_cache#29-oX (sclk_fimd1))->hw: &(kmem_cache#30-oX (sclk_fimd1))->hw
+		// (kmem_cache#29-oX (sclk_fimd1))->flags: 0x0
+		// (kmem_cache#29-oX (sclk_fimd1))->num_parents 1
+		// (kmem_cache#29-oX (sclk_fimd1))->parent_names[0]: (kmem_cache#30-oX)[0]: kmem_cache#30-oX: "mout_apll"
+		// (kmem_cache#29-oX (sclk_fimd1))->parent: kmem_cache#29-oX (dout_fimd1)
+		// (kmem_cache#29-oX (sclk_fimd1))->rate: 266000000
 		//
-		// clk 의 이름이 "dout_uart0"인 메모리 값을 clk_root_list 에서 찾아 리턴 수행
+		// clk 의 이름이 "dout_fimd1"인 메모리 값을 clk_root_list 에서 찾아 리턴 수행
 		//
-		// (&(kmem_cache#29-oX (sclk_uart0))->child_node)->next: NULL
-		// (&(kmem_cache#29-oX (sclk_uart0))->child_node)->pprev: &(&(kmem_cache#29-oX (sclk_uart0))->child_node)
+		// (&(kmem_cache#29-oX (sclk_fimd1))->child_node)->next: NULL
+		// (&(kmem_cache#29-oX (sclk_fimd1))->child_node)->pprev: &(&(kmem_cache#29-oX (sclk_fimd1))->child_node)
 		//
-		// (&(kmem_cache#29-oX (dout_uart0))->children)->first: &(kmem_cache#29-oX (sclk_uart0))->child_node
+		// (&(kmem_cache#29-oX (sclk_fimd1))->children)->first: &(kmem_cache#29-oX (sclk_fimd1))->child_node
 
-		// clk: kmem_cache#29-oX (sclk_uart0), IS_ERR(kmem_cache#29-oX (sclk_uart0)): 0
+		// clk: kmem_cache#29-oX (sclk_fimd1), IS_ERR(kmem_cache#29-oX (sclk_fimd1)): 0
 		if (IS_ERR(clk)) {
 			pr_err("%s: failed to register clock %s\n", __func__,
 				list->name);
@@ -686,11 +686,11 @@ void __init samsung_clk_register_gate(struct samsung_gate_clock *list,
 					__func__, list->alias);
 		}
 
-		// clk: kmem_cache#29-oX (sclk_uart0), list->id: exynos5420_gate_clks[13].id: 128
+		// clk: kmem_cache#29-oX (sclk_fimd1), list->id: exynos5420_gate_clks[13].id: 128
 		samsung_clk_add_lookup(clk, list->id);
 
-		// samsung_clk_add_lookup(sclk_uart0) 에서 한일:
-		// clk_table[128]: (kmem_cache#23-o0)[128]: kmem_cache#29-oX (sclk_uart0)
+		// samsung_clk_add_lookup(sclk_fimd1) 에서 한일:
+		// clk_table[128]: (kmem_cache#23-o0)[128]: kmem_cache#29-oX (sclk_fimd1)
 
 		// idx: 0...12...136 loop 수행
 	}
