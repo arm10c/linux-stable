@@ -212,7 +212,7 @@ struct clk *clk_register_gate(struct device *dev, const char *name,
 	// (kmem_cache#29-oX (sclk_fimd1))->parent: kmem_cache#29-oX (dout_fimd1)
 	// (kmem_cache#29-oX (sclk_fimd1))->rate: 266000000
 	//
-	// clk 의 이름이 "dout_uart0"인 메모리 값을 clk_root_list 에서 찾아 리턴 수행
+	// clk 의 이름이 "dout_fimd1"인 메모리 값을 clk_root_list 에서 찾아 리턴 수행
 	//
 	// (&(kmem_cache#29-oX (sclk_fimd1))->child_node)->next: NULL
 	// (&(kmem_cache#29-oX (sclk_fimd1))->child_node)->pprev: &(&(kmem_cache#29-oX (sclk_fimd1))->child_node)

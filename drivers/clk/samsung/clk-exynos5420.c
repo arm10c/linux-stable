@@ -774,24 +774,6 @@ static struct samsung_gate_clock exynos5420_gate_clks[] __initdata = {
 	//     .gate_flags      = 0,
 	//     .alias           = NULL,
 	// }
-// list->name: exynos5420_gate_clks[36].name: "sclk_fimd1",
-// list->parent_name: exynos5420_gate_clks[36].parent_name: "dout_fimd1",
-// list->flags: exynos5420_gate_clks[36].flags: 0x4, : 
-// 0xf0050828,
-// list->bit_idx: exynos5420_gate_clks[36].bit_idx: 0,
-// list->gate_flags: exynos5420_gate_clks[36].gate_flags: 0,
-// &lock
-// 
-// init.name: "sclk_fimd1"
-// init.ops: &clk_gate_ops
-// init.flags: 0x24
-// init.parent_names: "dout_fimd1"
-// init.num_parents: 1
-// (sclk_fimd1))->reg: 0xf0050828
-// (sclk_fimd1))->bit_idx: 0
-// (sclk_fimd1))->flags: 0
-// (sclk_fimd1))->lock: &lock
-// (sclk_fimd1))->hw.init: &init
 
 	GATE(sclk_fimd1, "sclk_fimd1", "dout_fimd1",
 		GATE_TOP_SCLK_DISP1, 0, CLK_SET_RATE_PARENT, 0),
@@ -1413,12 +1395,12 @@ static void __init exynos5420_clk_init(struct device_node *np)
 	
 	// samsung_clk_register_gate 에서 한일:
 	//
-	// exynos5420_gate_clks의 gate 들 중에 array index 13번의
+	// exynos5420_gate_clks의 gate 들 중에 array index 36번의
 	// GATE(sclk_fimd1, "sclk_fimd1", "dout_fimd1", GATE_TOP_SCLK_PERIC, 0, CLK_SET_RATE_PARENT, 0) 을 가지고 분석 진행
 	//
 	// struct clk_gate 만큼 메모리를 할당 받아 맴버값 초기화 수행
 	// kmem_cache#30-oX (sclk_fimd1)
-	// (kmem_cache#30-oX (sclk_fimd1))->reg: 0xf0050850
+	// (kmem_cache#30-oX (sclk_fimd1))->reg: 0xf0050828
 	// (kmem_cache#30-oX (sclk_fimd1))->bit_idx: 0
 	// (kmem_cache#30-oX (sclk_fimd1))->flags: 0
 	// (kmem_cache#30-oX (sclk_fimd1))->lock: &lock
@@ -1436,14 +1418,14 @@ static void __init exynos5420_clk_init(struct device_node *np)
 	// (kmem_cache#29-oX (sclk_fimd1))->parent: kmem_cache#29-oX (dout_fimd1)
 	// (kmem_cache#29-oX (sclk_fimd1))->rate: 266000000
 	//
-	// clk 의 이름이 "dout_uart0"인 메모리 값을 clk_root_list 에서 찾아 리턴 수행
+	// clk 의 이름이 "dout_fimd1"인 메모리 값을 clk_root_list 에서 찾아 리턴 수행
 	//
 	// (&(kmem_cache#29-oX (sclk_fimd1))->child_node)->next: NULL
 	// (&(kmem_cache#29-oX (sclk_fimd1))->child_node)->pprev: &(&(kmem_cache#29-oX (sclk_fimd1))->child_node)
 	//
 	// (&(kmem_cache#29-oX (dout_fimd1))->children)->first: &(kmem_cache#29-oX (sclk_fimd1))->child_node
 	//
-	// clk_table[128]: (kmem_cache#23-o0)[128]: kmem_cache#29-oX (sclk_fimd1)
+	// clk_table[136]: (kmem_cache#23-o0)[136]: kmem_cache#29-oX (sclk_fimd1)
 	//
 	// exynos5420_gate_clks의 idx: 0...12...136 loop 수행
 }

@@ -631,8 +631,8 @@ void __init samsung_clk_register_gate(struct samsung_gate_clock *list,
 		// list->parent_name: exynos5420_gate_clks[36].parent_name: "dout_fimd1",
 		// list->flags: exynos5420_gate_clks[36].flags: 0x4,
 		// list->offset: exynos5420_gate_clks[36].offset: 0x10828,
-		// list->bit_idx: exynos5420_gate_clks[13].bit_idx: 0,
-		// list->gate_flags: exynos5420_gate_clks[13].gate_flags: 0,
+		// list->bit_idx: exynos5420_gate_clks[36].bit_idx: 0,
+		// list->gate_flags: exynos5420_gate_clks[36].gate_flags: 0,
 		// &lock
 		// reg_base: 0xf0040000
 		// clk_register_gate(NULL, "sclk_fimd1", "dout_fimd1", 0x4, 0xf0050828, 0, 0, &lock): kmem_cache#29-oX (sclk_fimd1)
@@ -677,7 +677,7 @@ void __init samsung_clk_register_gate(struct samsung_gate_clock *list,
 		}
 
 		/* register a clock lookup only if a clock alias is specified */
-		// list->alias: exynos5420_gate_clks[13].alias: NULL
+		// list->alias: exynos5420_gate_clks[36].alias: NULL
 		if (list->alias) {
 			ret = clk_register_clkdev(clk, list->alias,
 							list->dev_name);
@@ -686,11 +686,11 @@ void __init samsung_clk_register_gate(struct samsung_gate_clock *list,
 					__func__, list->alias);
 		}
 
-		// clk: kmem_cache#29-oX (sclk_fimd1), list->id: exynos5420_gate_clks[13].id: 128
+		// clk: kmem_cache#29-oX (sclk_fimd1), list->id: exynos5420_gate_clks[36].id: 136
 		samsung_clk_add_lookup(clk, list->id);
 
 		// samsung_clk_add_lookup(sclk_fimd1) 에서 한일:
-		// clk_table[128]: (kmem_cache#23-o0)[128]: kmem_cache#29-oX (sclk_fimd1)
+		// clk_table[136]: (kmem_cache#23-o0)[136]: kmem_cache#29-oX (sclk_fimd1)
 
 		// idx: 0...12...136 loop 수행
 	}
