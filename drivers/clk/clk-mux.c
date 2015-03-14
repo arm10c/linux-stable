@@ -33,21 +33,21 @@
 // ARM10C 20150131
 // clk->hw: (kmem_cache#29-oX (mout_mspll_kfc))->hw
 // ARM10C 20150131
-// clk->hw: (kmem_cache#29-oX (sclk_dpll))->hw
+// clk->hw: (kmem_cache#29-oX (sclk_spll))->hw
 static u8 clk_mux_get_parent(struct clk_hw *hw)
 {
 	// hw: (kmem_cache#29-oX (mout_mspll_kfc))->hw
 	// to_clk_mux((kmem_cache#29-oX (mout_mspll_kfc))->hw): kmem_cache#29-oX (mout_mspll_kfc)
-	// hw: (kmem_cache#29-oX (sclk_dpll))->hw
-	// to_clk_mux((kmem_cache#29-oX (sclk_dpll))->hw): kmem_cache#29-oX (sclk_dpll)
+	// hw: (kmem_cache#29-oX (sclk_spll))->hw
+	// to_clk_mux((kmem_cache#29-oX (sclk_spll))->hw): kmem_cache#29-oX (sclk_spll)
 	struct clk_mux *mux = to_clk_mux(hw);
 	// mux: kmem_cache#29-oX (mout_mspll_kfc)
-	// mux: kmem_cache#29-oX (sclk_dpll)
+	// mux: kmem_cache#29-oX (sclk_spll)
 
 	// hw->clk: ((kmem_cache#29-oX (mout_mspll_kfc))->hw)->clk
 	// __clk_get_num_parents(((kmem_cache#29-oX (mout_mspll_kfc))->hw)->clk): 4
-	// hw->clk: ((kmem_cache#29-oX (sclk_dpll))->hw)->clk
-	// __clk_get_num_parents(((kmem_cache#29-oX (sclk_dpll))->hw)->clk): 2
+	// hw->clk: ((kmem_cache#29-oX (sclk_spll))->hw)->clk
+	// __clk_get_num_parents(((kmem_cache#29-oX (sclk_spll))->hw)->clk): 2
 	int num_parents = __clk_get_num_parents(hw->clk);
 	// num_parents: 4
 	// num_parents: 2
@@ -65,7 +65,7 @@ static u8 clk_mux_get_parent(struct clk_hw *hw)
 	// E.R.M: 5.9.1.91 CLK_SRC_TOP2
 	// 현재 5420 code 상에서는 0x1002_0218가 CLK_SRC_TOP6으로 되어 있는 상태임
 	// exynos 5250 manual 상에서는 0x1002_0218 주소가 CLK_SRC_TOP2으로 되어 있음
-	// CLK_SRC_TOP6의 28 bit의 값이 fin_pll: 0, fout_dpll: 1 로 선택하는 값을 가질것이라 예상됨
+	// CLK_SRC_TOP6의 28 bit의 값이 fin_pll: 0, fout_spll: 1 로 선택하는 값을 가질것이라 예상됨
 	// fout_dpll 로 가정하고 분석 진행 (24 bit: 1)
 
 	/*
@@ -78,21 +78,21 @@ static u8 clk_mux_get_parent(struct clk_hw *hw)
 	// mux->reg: (kmem_cache#29-oX (mout_mspll_kfc))->reg: 0xf005021c,
 	// mux->shift: (kmem_cache#29-oX (mout_mspll_kfc))->shift: 8
 	// clk_readl(0xf005021c): 0x0
-	// mux->reg: (kmem_cache#29-oX (sclk_dpll))->reg: 0xf0050218,
-	// mux->shift: (kmem_cache#29-oX (sclk_dpll))->shift: 24
+	// mux->reg: (kmem_cache#29-oX (sclk_spll))->reg: 0xf0050218,
+	// mux->shift: (kmem_cache#29-oX (sclk_spll))->shift: 24
 	// clk_readl(0xf0050218): 0xX1XXXXXX
 	val = clk_readl(mux->reg) >> mux->shift;
 	// val: 0
 	// val: 1
 
 	// val: 0, mux->mask: (kmem_cache#29-oX (mout_mspll_kfc))->mask: 0x3
-	// val: 1, mux->mask: (kmem_cache#29-oX (sclk_dpll))->mask: 0x3
+	// val: 1, mux->mask: (kmem_cache#29-oX (sclk_spll))->mask: 0x3
 	val &= mux->mask;
 	// val: 0
 	// val: 1
 
 	// mux->table: (kmem_cache#29-oX (mout_mspll_kfc))->table: NULL
-	// mux->table: (kmem_cache#29-oX (sclk_dpll))->table: NULL
+	// mux->table: (kmem_cache#29-oX (sclk_spll))->table: NULL
 	if (mux->table) {
 		int i;
 
@@ -103,12 +103,12 @@ static u8 clk_mux_get_parent(struct clk_hw *hw)
 	}
 
 	// val: 0, mux->flags: (kmem_cache#29-oX (mout_mspll_kfc))->flags: 0, CLK_MUX_INDEX_BIT: 0x2
-	// val: 1, mux->flags: (kmem_cache#29-oX (sclk_dpll))->flags: 0, CLK_MUX_INDEX_BIT: 0x2
+	// val: 1, mux->flags: (kmem_cache#29-oX (sclk_spll))->flags: 0, CLK_MUX_INDEX_BIT: 0x2
 	if (val && (mux->flags & CLK_MUX_INDEX_BIT))
 		val = ffs(val) - 1;
 
 	// val: 0, mux->flags: (kmem_cache#29-oX (mout_mspll_kfc))->flags: 0, CLK_MUX_INDEX_ONE: 0x1
-	// val: 1, mux->flags: (kmem_cache#29-oX (sclk_dpll))->flags: 0, CLK_MUX_INDEX_ONE: 0x1
+	// val: 1, mux->flags: (kmem_cache#29-oX (sclk_spll))->flags: 0, CLK_MUX_INDEX_ONE: 0x1
 	if (val && (mux->flags & CLK_MUX_INDEX_ONE))
 		val--;
 
@@ -460,8 +460,8 @@ struct clk *clk_register_mux(struct device *dev, const char *name,
 	//
 	// (&(kmem_cache#30-oX (mout_mspll_kfc))->hw)->clk: kmem_cache#29-oX (mout_mspll_kfc)
 
-	// clk_register_mux_table(sclk_dpll) 에서 한일:
-	// struct clk_mux 만큼 메모리를 kmem_cache#30-oX (sclk_dpll) 할당 받고 struct clk_mux 의 멤버 값을 아래와 같이 초기화 수행
+	// clk_register_mux_table(sclk_spll) 에서 한일:
+	// struct clk_mux 만큼 메모리를 kmem_cache#30-oX (sclk_spll) 할당 받고 struct clk_mux 의 멤버 값을 아래와 같이 초기화 수행
 	//
 	// (kmem_cache#30-oX)->reg: 0xf0050218
 	// (kmem_cache#30-oX)->shift: 24
@@ -473,20 +473,20 @@ struct clk *clk_register_mux(struct device *dev, const char *name,
 	//
 	// struct clk 만큼 메모리를 kmem_cache#29-oX (sclk_spll) 할당 받고 struct clk 의 멤버 값을 아래와 같이 초기화 수행
 	//
-	// (kmem_cache#29-oX (sclk_dpll))->name: kmem_cache#30-oX ("sclk_spll")
-	// (kmem_cache#29-oX (sclk_dpll))->ops: &clk_mux_ops
-	// (kmem_cache#29-oX (sclk_dpll))->hw: &(kmem_cache#30-oX (sclk_spll))->hw
-	// (kmem_cache#29-oX (sclk_dpll))->flags: 0xa0
-	// (kmem_cache#29-oX (sclk_dpll))->num_parents 2
-	// (kmem_cache#29-oX (sclk_dpll))->parent_names: kmem_cache#30-oX
-	// (kmem_cache#29-oX (sclk_dpll))->parent_names[0]: (kmem_cache#30-oX)[0]: kmem_cache#30-oX: "fin_pll"
-	// (kmem_cache#29-oX (sclk_dpll))->parent_names[1]: (kmem_cache#30-oX)[1]: kmem_cache#30-oX: "fout_spll"
-	// (kmem_cache#29-oX (sclk_dpll))->parent: NULL
-	// (kmem_cache#29-oX (sclk_dpll))->rate: 600000000
+	// (kmem_cache#29-oX (sclk_spll))->name: kmem_cache#30-oX ("sclk_spll")
+	// (kmem_cache#29-oX (sclk_spll))->ops: &clk_mux_ops
+	// (kmem_cache#29-oX (sclk_spll))->hw: &(kmem_cache#30-oX (sclk_spll))->hw
+	// (kmem_cache#29-oX (sclk_spll))->flags: 0xa0
+	// (kmem_cache#29-oX (sclk_spll))->num_parents 2
+	// (kmem_cache#29-oX (sclk_spll))->parent_names: kmem_cache#30-oX
+	// (kmem_cache#29-oX (sclk_spll))->parent_names[0]: (kmem_cache#30-oX)[0]: kmem_cache#30-oX: "fin_pll"
+	// (kmem_cache#29-oX (sclk_spll))->parent_names[1]: (kmem_cache#30-oX)[1]: kmem_cache#30-oX: "fout_spll"
+	// (kmem_cache#29-oX (sclk_spll))->parent: NULL
+	// (kmem_cache#29-oX (sclk_spll))->rate: 600000000
 	//
-	// (kmem_cache#29-oX (sclk_dpll))->parents: kmem_cache#30-oX
-	// (kmem_cache#29-oX (sclk_dpll))->parents[0]: (kmem_cache#30-oX)[0]: kmem_cache#29-oX (fin_pll)
-	// (kmem_cache#29-oX (sclk_dpll))->parents[1]: (kmem_cache#30-oX)[1]: kmem_cache#29-oX (fout_spll)
+	// (kmem_cache#29-oX (sclk_spll))->parents: kmem_cache#30-oX
+	// (kmem_cache#29-oX (sclk_spll))->parents[0]: (kmem_cache#30-oX)[0]: kmem_cache#29-oX (fin_pll)
+	// (kmem_cache#29-oX (sclk_spll))->parents[1]: (kmem_cache#30-oX)[1]: kmem_cache#29-oX (fout_spll)
 	//
 	// parents 인 "fin_pll", "fout_spll" 값들 중에
 	// register CLK_SRC_TOP6 의 값을 읽어서 mux 할 parent clock 을 선택함
@@ -494,9 +494,9 @@ struct clk *clk_register_mux(struct device *dev, const char *name,
 	// parent clock 중에 선택된 parent clock의 이름으로 등록된 clk struct를 반환함
 	//
 	// (&(kmem_cache#29-oX (sclk_spll))->child_node)->next: NULL
-	// (&(kmem_cache#29-oX (sclk_spll))->child_node)->pprev: &(&(kmem_cache#29-oX (sclk_dpll))->child_node)
+	// (&(kmem_cache#29-oX (sclk_spll))->child_node)->pprev: &(&(kmem_cache#29-oX (sclk_spll))->child_node)
 	//
-	// (&(kmem_cache#29-oX (fout_spll))->children)->first: &(kmem_cache#29-oX (sclk_dpll))->child_node
+	// (&(kmem_cache#29-oX (fout_spll))->children)->first: &(kmem_cache#29-oX (sclk_spll))->child_node
 	//
 	// (&(kmem_cache#30-oX (sclk_spll))->hw)->clk: kmem_cache#29-oX (sclk_spll)
 	//

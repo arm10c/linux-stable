@@ -323,30 +323,41 @@ int of_irq_parse_raw(const __be32 *addr, struct of_phandle_args *out_irq)
 	} while (old && tmp == NULL);
 
 // 2015/03/07 종료
+// 2015/03/14 시작
 
 	// old: NULL
+	// old: XXX
 	of_node_put(old); // null function
 
 	// old: NULL
+	// old: XXX
 	old = NULL;
+	// old: NULL
 	// old: NULL
 
 	// tmp: #address-cells의 property 값의 주소
 	// be32_to_cpu(*(#address-cells의 property 값의 주소)): 1
+	// tmp: mct_map node의 #address-cells의 property 값의 주소
+	// be32_to_cpu(*(mct_map node의 #address-cells의 property 값의 주소)): 0
 	addrsize = (tmp == NULL) ? 2 : be32_to_cpu(*tmp);
 	// addrsize: 1
+	// addrsize: 0
 
 	// addrsize: 1
+	// addrsize: 0
 	pr_debug(" -> addrsize=%d\n", addrsize);
 	// " -> addrsize=1\n"
+	// " -> addrsize=0\n"
 
 	/* Range check so that the temporary buffer doesn't overflow */
 	// addrsize: 1, intsize: 3, MAX_PHANDLE_ARGS: 8
+	// addrsize: 0, intsize: 1, MAX_PHANDLE_ARGS: 8
 	if (WARN_ON(addrsize + intsize > MAX_PHANDLE_ARGS))
 		goto fail;
 
 	/* Precalculate the match array - this simplifies match loop */
 	// addrsize: 1
+	// addrsize: 0
 	for (i = 0; i < addrsize; i++)
 		// i: 0, initial_match_array[0], addr: reg의 property의 값의 주소
 		// addr[0]: (reg의 property의 값의 주소)[0]: 0x10440000
@@ -354,32 +365,43 @@ int of_irq_parse_raw(const __be32 *addr, struct of_phandle_args *out_irq)
 		// initial_match_array[0]: 0x10440000
 
 	// intsize: 3
+	// intsize: 1
 	for (i = 0; i < intsize; i++)
 		// i: 0, addrsize: 1, initial_match_array[1],
-		// out_irq->args[0], (&oirq)->args[0], cpu_to_be32((&oirq)->args[0]): 0
+		// out_irq->args[0]: (&oirq)->args[0], cpu_to_be32((&oirq)->args[0]): 0
 		// i: 1, addrsize: 1, initial_match_array[2],
-		// out_irq->args[1], (&oirq)->args[1], cpu_to_be32((&oirq)->args[1]): 0
+		// out_irq->args[1]: (&oirq)->args[1], cpu_to_be32((&oirq)->args[1]): 0
 		// i: 2, addrsize: 1, initial_match_array[3],
-		// out_irq->args[2], (&oirq)->args[2], cpu_to_be32((&oirq)->args[2]): 0
+		// out_irq->args[2]: (&oirq)->args[2], cpu_to_be32((&oirq)->args[2]): 0
+		// i: 0, addrsize: 0, initial_match_array[0],
+		// out_irq->args[0]: (&oirq)->args[0], cpu_to_be32((&oirq)->args[0]): 0
 		initial_match_array[addrsize + i] = cpu_to_be32(out_irq->args[i]);
 		// initial_match_array[1]: 0
 		// initial_match_array[2]: 0
 		// initial_match_array[3]: 0
+		// initial_match_array[0]: 0
 
 	/* Now start the actual "proper" walk of the interrupt tree */
 	// ipar: gic node의 주소
+	// ipar: mct_map node의 주소
 	while (ipar != NULL) {
 		/* Now check if cursor is an interrupt-controller and if it is
 		 * then we are done
 		 */
 		// ipar: gic node의 주소,
 		// of_get_property(gic node의 주소, "interrupt-controller", NULL): NULL 아닌값
+		// ipar: mct_map node의 주소
+		// of_get_property(mct_map node의 주소, "interrupt-controller", NULL): NULL
+		// ipar: exynos5420 dtb상의 combiner node의 주소
+		// of_get_property(exynos5420 dtb상의 combiner node의 주소, "interrupt-controller", NULL): NULL 아닌값
 		if (of_get_property(ipar, "interrupt-controller", NULL) !=
 				NULL) {
 			pr_debug(" -> got it !\n");
 			// " -> got it !\n"
+			// " -> got it !\n"
 
 			return 0;
+			// return 0
 			// return 0
 		}
 
@@ -387,45 +409,88 @@ int of_irq_parse_raw(const __be32 *addr, struct of_phandle_args *out_irq)
 		 * interrupt-map parsing does not work without a reg
 		 * property when #address-cells != 0
 		 */
+		// addrsize: 0, addr: mct node의 reg의 property의 값의 주소
 		if (addrsize && !addr) {
 			pr_debug(" -> no reg passed in when needed !\n");
 			goto fail;
 		}
 
 		/* Now look for an interrupt-map */
+		// ipar: mct_map node의 주소
+		// of_get_property(mct_map node의 주소, "interrupt-map", &imaplen):
+		// mct_map node의 interrupt-map의 property 값의 주소, imaplen: 128
 		imap = of_get_property(ipar, "interrupt-map", &imaplen);
+		// imap: mct_map node의 interrupt-map의 property 값의 주소
+
 		/* No interrupt map, check for an interrupt parent */
+		// imap: mct_map node의 interrupt-map의 property 값의 주소
 		if (imap == NULL) {
 			pr_debug(" -> no map, getting parent\n");
 			newpar = of_irq_find_parent(ipar);
 			goto skiplevel;
 		}
+
+		// imaplen: 128, sizeof(u32): 4
 		imaplen /= sizeof(u32);
+		// imaplen: 32
 
 		/* Look for a mask */
+		// ipar: mct_map node의 주소
+		// of_get_property(mct_map node의 주소, "interrupt-map-mask", NULL): NULL
 		imask = of_get_property(ipar, "interrupt-map-mask", NULL);
+		// imask: NULL
+
+		// imask: NULL
 		if (!imask)
 			imask = dummy_imask;
+			// imask: &dummy_imask
 
 		/* Parse interrupt-map */
 		match = 0;
+		// match: 0
+
+		// imaplen: 32, addrsize: 0, intsize: 1, match: 0
 		while (imaplen > (addrsize + intsize + 1) && !match) {
 			/* Compare specifiers */
 			match = 1;
-			for (i = 0; i < (addrsize + intsize); i++, imaplen--)
-				match &= !((match_array[i] ^ *imap++) & imask[i]);
+			// match: 1
 
+			// addrsize: 0, intsize: 1, imaplen: 32
+			for (i = 0; i < (addrsize + intsize); i++, imaplen--)
+				// match: 1
+				// i: 0, match_array[0]: initial_match_array[0]: 0,
+				// *imap: *(mct_map node의 interrupt-map의 property 값의 주소): 0
+				// imask[0]: dummy_imask[0]: 0xffffffff
+				match &= !((match_array[i] ^ *imap++) & imask[i]);
+				// match: 1, imap: mct_map node의 interrupt-map의 property 값의 주소+4
+
+			// match: 1, imaplen: 31,
 			pr_debug(" -> match=%d (imaplen=%d)\n", match, imaplen);
+			// " -> match=1 (imaplen=31)\n"
 
 			/* Get the interrupt parent */
+			// of_irq_workarounds: 0, OF_IMAP_NO_PHANDLE: 0x00000002
 			if (of_irq_workarounds & OF_IMAP_NO_PHANDLE)
 				newpar = of_node_get(of_irq_dflt_pic);
 			else
+				// imap: mct_map node의 interrupt-map의 property 값의 주소+4
+				// be32_to_cpup(mct_map node의 interrupt-map의 property 값의 주소+4):
+				// mct_map node의 interrupt-map의 property 값의 주소+4
+				// of_find_node_by_phandle(mct_map node의 interrupt-map의 property 값의 주소+4):
+				// exynos5420 dtb상의 combiner node의 주소
 				newpar = of_find_node_by_phandle(be32_to_cpup(imap));
+				// newpar: exynos5420 dtb상의 combiner node의 주소
+
+			// imap: mct_map node의 interrupt-map의 property 값의 주소+4
 			imap++;
+			// imap: mct_map node의 interrupt-map의 property 값의 주소+8
+
+			// imaplen: 31
 			--imaplen;
+			// imaplen: 30
 
 			/* Check if not found */
+			// newpar: exynos5420 dtb상의 combiner node의 주소
 			if (newpar == NULL) {
 				pr_debug(" -> imap parent not found !\n");
 				goto fail;
@@ -434,29 +499,63 @@ int of_irq_parse_raw(const __be32 *addr, struct of_phandle_args *out_irq)
 			/* Get #interrupt-cells and #address-cells of new
 			 * parent
 			 */
+			// newpar: exynos5420 dtb상의 combiner node의 주소
+			// of_get_property(exynos5420 dtb상의 combiner node의 주소, "#interrupt-cells", NULL):
+			// combiner node의 #interrupt-cells의 property 값의 주소
 			tmp = of_get_property(newpar, "#interrupt-cells", NULL);
+			// tmp: combiner node의 #interrupt-cells의 property 값의 주소
+
+			// tmp: combiner node의 #interrupt-cells의 property 값의 주소
 			if (tmp == NULL) {
 				pr_debug(" -> parent lacks #interrupt-cells!\n");
 				goto fail;
 			}
-			newintsize = be32_to_cpu(*tmp);
-			tmp = of_get_property(newpar, "#address-cells", NULL);
-			newaddrsize = (tmp == NULL) ? 0 : be32_to_cpu(*tmp);
 
+			// tmp: combiner node의 #interrupt-cells의 property 값의 주소
+			// be32_to_cpu(*(combiner node의 #interrupt-cells의 property 값의 주소)): 2
+			newintsize = be32_to_cpu(*tmp);
+			// newintsize: 2
+
+			// newpar: exynos5420 dtb상의 combiner node의 주소
+			// of_get_property(exynos5420 dtb상의 combiner node의 주소, "#address-cells", NULL): NULL
+			tmp = of_get_property(newpar, "#address-cells", NULL);
+			// tmp: NULL
+
+			// tmp: NULL
+			newaddrsize = (tmp == NULL) ? 0 : be32_to_cpu(*tmp);
+			// newaddrsize: 0
+
+			// newintsize: 2, newaddrsize: 0
 			pr_debug(" -> newintsize=%d, newaddrsize=%d\n",
 			    newintsize, newaddrsize);
+			// " -> newintsize=2, newaddrsize=0\n"
 
 			/* Check for malformed properties */
+			// newintsize: 2, newaddrsize: 0, MAX_PHANDLE_ARGS: 8
 			if (WARN_ON(newaddrsize + newintsize > MAX_PHANDLE_ARGS))
 				goto fail;
+
+			// imaplen: 30, newintsize: 2, newaddrsize: 0
 			if (imaplen < (newaddrsize + newintsize))
 				goto fail;
 
+			// imap: mct_map node의 interrupt-map의 property 값의 주소+8,
+			// newintsize: 2, newaddrsize: 0
 			imap += newaddrsize + newintsize;
-			imaplen -= newaddrsize + newintsize;
+			// imap: mct_map node의 interrupt-map의 property 값의 주소+16
 
+			// imaplen: 30, newintsize: 2, newaddrsize: 0
+			imaplen -= newaddrsize + newintsize;
+			// imaplen: 28
+
+			// imaplen: 28
 			pr_debug(" -> imaplen=%d\n", imaplen);
+			// " -> imaplen=28\n"
+
+			// imaplen: 28, addrsize: 0, intsize: 1, match: 1
 		}
+
+		// match: 1
 		if (!match)
 			goto fail;
 
@@ -464,20 +563,50 @@ int of_irq_parse_raw(const __be32 *addr, struct of_phandle_args *out_irq)
 		 * Successfully parsed an interrrupt-map translation; copy new
 		 * interrupt specifier into the out_irq structure
 		 */
+		// out_irq->np: (&oirq)->np, newpar: exynos5420 dtb상의 combiner node의 주소
 		out_irq->np = newpar;
+		// out_irq->np: (&oirq)->np: exynos5420 dtb상의 combiner node의 주소
 
+		// imap: mct_map node의 interrupt-map의 property 값의 주소+16, newaddrsize: 0, newintsize: 2
 		match_array = imap - newaddrsize - newintsize;
+		// match_array: mct_map node의 interrupt-map의 property 값의 주소+8
+
+		// newintsize: 2
 		for (i = 0; i < newintsize; i++)
+			// i: 0, out_irq->args[0]: (&oirq)->args[0],
+			// imap: mct_map node의 interrupt-map의 property 값의 주소+16, newintsize: 2
+			// be32_to_cpup(mct_map node의 interrupt-map의 property 값의 주소+8): 23
+			// i: 1, out_irq->args[1]: (&oirq)->args[1],
+			// imap: mct_map node의 interrupt-map의 property 값의 주소+16, newintsize: 2
+			// be32_to_cpup(mct_map node의 interrupt-map의 property 값의 주소+12): 3
 			out_irq->args[i] = be32_to_cpup(imap - newintsize + i);
+			// out_irq->args[0]: (&oirq)->args[0]: 23
+			// out_irq->args[1]: (&oirq)->args[1]: 3
+
+		// out_irq->args_count: (&oirq)->args_count, intsize: 1, newintsize: 2
 		out_irq->args_count = intsize = newintsize;
+		// out_irq->args_count: (&oirq)->args_count: 2, intsize: 2
+
+		// addrsize: 0, newaddrsize: 0
 		addrsize = newaddrsize;
+		// addrsize: 0
 
 	skiplevel:
 		/* Iterate again with new parent */
+		// newpar: exynos5420 dtb상의 combiner node의 주소
+		// of_node_full_name(exynos5420 dtb상의 combiner node의 주소): interrupt-controller@10440000
 		pr_debug(" -> new parent: %s\n", of_node_full_name(newpar));
-		of_node_put(ipar);
+		// " -> new parent: interrupt-controller@10440000\n"
+
+		// ipar: mct_map node의 주소
+		of_node_put(ipar); // null function
+
+		// ipar: mct_map node의 주소, newpar: exynos5420 dtb상의 combiner node의 주소
 		ipar = newpar;
+		// ipar: exynos5420 dtb상의 combiner node의 주소
+
 		newpar = NULL;
+		// newpar: NULL
 	}
  fail:
 	of_node_put(ipar);
@@ -670,8 +799,21 @@ int of_irq_parse_one(struct device_node *device, int index, struct of_phandle_ar
 	// addr: combiner node의 reg의 property의 값의 주소, out_irq: &oirq
 	// of_irq_parse_raw(combiner node의 reg의 property의 값의 주소, &oirq): 0
 	// addr: mct node의reg의 property의 값의 주소
+	// of_irq_parse_raw(mct node의reg의 property의 값의 주소, &oirq): 0
 	res = of_irq_parse_raw(addr, out_irq);
 	// res: 0
+	// res: 0
+
+	// of_irq_parse_raw(mct node) 에서 한일:
+	// mct node의reg의 property의 값을 dtb에  분석하여 oirq 값을 가져옴
+	//
+	// (&oirq)->np: exynos5420 dtb상의 combiner node의 주소
+	// (&oirq)->args[0]: 23
+	// (&oirq)->args[1]: 3
+	// (&oirq)->args_count: 2
+
+// 2015/03/14 종료
+
  out:
 	// p: gic node의 주소
 	of_node_put(p); // null function

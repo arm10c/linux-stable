@@ -18,6 +18,7 @@ typedef int (*of_irq_init_cb_t)(struct device_node *, struct device_node *);
 // OF_IMAP_OLDWORLD_MAC: 0x00000001
 #define OF_IMAP_OLDWORLD_MAC	0x00000001
 // ARM10C 20141011
+// ARM10C 20150314
 // OF_IMAP_NO_PHANDLE: 0x00000002
 #define OF_IMAP_NO_PHANDLE	0x00000002
 
@@ -30,6 +31,7 @@ extern int of_irq_parse_oldworld(struct device_node *device, int index,
 // ARM10C 20141011
 // ARM10C 20141213
 // ARM10C 20150307
+// ARM10C 20150314
 // of_irq_workarounds: 0
 #define of_irq_workarounds (0)
 #define of_irq_dflt_pic (NULL)

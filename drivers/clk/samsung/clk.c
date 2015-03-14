@@ -1,4 +1,4 @@
-o/*
+/*
  * Copyright (c) 2013 Samsung Electronics Co., Ltd.
  * Copyright (c) 2013 Linaro Ltd.
  * Author: Thomas Abraham <thomas.ab@samsung.com>
@@ -160,7 +160,7 @@ void __init samsung_clk_init(struct device_node *np, void __iomem *base,
 // ARM10C 20150131
 // clk: kmem_cache#29-oX (mout_mspll_kfc), list->id: exynos5420_mux_clks[0].id: 0
 // ARM10C 20150228
-// clk: kmem_cache#29-oX (sclk_dpll), list->id: exynos5420_mux_clks[44].id: 0
+// clk: kmem_cache#29-oX (sclk_spll), list->id: exynos5420_mux_clks[44].id: 0
 // ARM10C 20150307
 // clk: kmem_cache#29-oX (sclk_apll), list->id: exynos5420_div_clks[1].id: 0
 // ARM10C 20150307
@@ -478,7 +478,7 @@ void __init samsung_clk_register_mux(struct samsung_mux_clock *list,
 		// (&(kmem_cache#29-oX (sclk_spll))->child_node)->next: NULL
 		// (&(kmem_cache#29-oX (sclk_spll))->child_node)->pprev: &(&(kmem_cache#29-oX (sclk_spll))->child_node)
 		//
-		// (&(kmem_cache#29-oX (fout_spll))->children)->first: &(kmem_cache#29-oX (sclk_dpll))->child_node
+		// (&(kmem_cache#29-oX (fout_spll))->children)->first: &(kmem_cache#29-oX (sclk_spll))->child_node
 		//
 		// (&(kmem_cache#30-oX (sclk_spll))->hw)->clk: kmem_cache#29-oX (sclk_spll)
 		//

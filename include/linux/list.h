@@ -813,9 +813,9 @@ static inline void hlist_del_init(struct hlist_node *n)
 // ARM10C 20150131
 // &clk->child_node: &(kmem_cache#29-oX (mout_mspll_kfc))->child_node, &clk_orphan_list
 // ARM10C 20150131
-// &clk->child_node: &(kmem_cache#29-oX (sclk_dpll))->child_node, &clk->parent->children: (&kmem_cache#29-oX (fout_dpll))->children
+// &clk->child_node: &(kmem_cache#29-oX (sclk_spll))->child_node, &clk->parent->children: (&kmem_cache#29-oX (fout_spll))->children
 // ARM10C 20150131
-// clk->child_node: (kmem_cache#29-oX (mout_mspll_kfc))->child_node, new_parent->children: (kmem_cache#29-oX (sclk_dpll))->children
+// clk->child_node: (kmem_cache#29-oX (mout_mspll_kfc))->child_node, new_parent->children: (kmem_cache#29-oX (sclk_spll))->children
 // ARM10C 20150228
 // &clk->child_node: &(kmem_cache#29-oX (sclk_apll))->child_node, &clk->parent->children: (&kmem_cache#29-oX (mout_apll))->children
 static inline void hlist_add_head(struct hlist_node *n, struct hlist_head *h)

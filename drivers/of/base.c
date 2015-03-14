@@ -327,6 +327,7 @@ static const void *__of_get_property(const struct device_node *np,
 // ARM10C 20141101
 // ARM10C 20141213
 // ARM10C 20150307
+// ARM10C 20150314
 const void *of_get_property(const struct device_node *np, const char *name,
 			    int *lenp)
 {
@@ -1152,6 +1153,8 @@ EXPORT_SYMBOL_GPL(of_modalias_node);
 // parp: exynos5420 dtb상의 gic 의 주소
 // ARM10C 20150307
 // parp: exynos5420 dtb상의 mct_map 의 주소
+// ARM10C 20150314
+// mct_map node의 interrupt-map의 property 값의 주소+4
 struct device_node *of_find_node_by_phandle(phandle handle)
 {
 	struct device_node *np;

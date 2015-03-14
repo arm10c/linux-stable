@@ -78,6 +78,7 @@ struct device_node {
 };
 
 // ARM10C 20141213
+// ARM10C 20150314
 // MAX_PHANDLE_ARGS: 8
 #define MAX_PHANDLE_ARGS 8
 
@@ -112,6 +113,7 @@ static inline struct device_node *of_node_get(struct device_node *node)
 // ARM10C 20141018
 // ARM10C 20141101
 // ARM10C 20141213
+// ARM10C 20150314
 static inline void of_node_put(struct device_node *node) { }
 #endif /* !CONFIG_OF_DYNAMIC */
 
@@ -210,6 +212,8 @@ static inline unsigned long of_read_ulong(const __be32 *cell, int size)
 // device: devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소
 // ARM10C 20150307
 // device: devtree에서 allnext로 순회 하면서 찾은 mct node의 주소
+// ARM10C 20150314
+// newpar: exynos5420 dtb상의 combiner node의 주소
 static inline const char *of_node_full_name(const struct device_node *np)
 {
 	// np: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소

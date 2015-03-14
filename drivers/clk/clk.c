@@ -587,7 +587,7 @@ struct clk_hw *__clk_get_hw(struct clk *clk)
 // ARM10C 20150131
 // hw->clk: ((kmem_cache#29-oX (mout_mspll_kfc))->hw)->clk
 // ARM10C 20150131
-// hw->clk: ((kmem_cache#29-oX (sclk_dpll))->hw)->clk
+// hw->clk: ((kmem_cache#29-oX (sclk_spll))->hw)->clk
 u8 __clk_get_num_parents(struct clk *clk)
 {
 	// clk: ((kmem_cache#29-oX (mout_mspll_kfc))->hw)->clk: kmem_cache#29-oX (mout_mspll_kfc)
@@ -604,17 +604,17 @@ struct clk *__clk_get_parent(struct clk *clk)
 // ARM10C 20150131
 // clk: kmem_cache#29-oX (mout_mspll_kfc), index: 0
 // ARM10C 20150131
-// clk: kmem_cache#29-oX (sclk_dpll), index: 1
+// clk: kmem_cache#29-oX (sclk_spll), index: 1
 struct clk *clk_get_parent_by_index(struct clk *clk, u8 index)
 {
 	// clk: kmem_cache#29-oX (mout_mspll_kfc), index: 0,
 	// clk->num_parents: (kmem_cache#29-oX (mout_mspll_kfc))->num_parents: 4,
 	// clk->parents: (kmem_cache#29-oX (mout_mspll_kfc))->parents: kmem_cache#30-oX
 	// clk->parents[0]: (kmem_cache#29-oX (mout_mspll_kfc))->parents[0]: (kmem_cache#30-oX)[0]: NULL
-	// clk: kmem_cache#29-oX (sclk_dpll), index: 1,
-	// clk->num_parents: (kmem_cache#29-oX (sclk_dpll))->num_parents: 2,
-	// clk->parents: (kmem_cache#29-oX (sclk_dpll))->parents: kmem_cache#30-oX
-	// clk->parents[1]: (kmem_cache#29-oX (sclk_dpll))->parents[1]: (kmem_cache#30-oX)[1]: kmem_cache#29-oX (fout_dpll)
+	// clk: kmem_cache#29-oX (sclk_spll), index: 1,
+	// clk->num_parents: (kmem_cache#29-oX (sclk_spll))->num_parents: 2,
+	// clk->parents: (kmem_cache#29-oX (sclk_spll))->parents: kmem_cache#30-oX
+	// clk->parents[1]: (kmem_cache#29-oX (sclk_spll))->parents[1]: (kmem_cache#30-oX)[1]: kmem_cache#29-oX (fout_dpll)
 	if (!clk || index >= clk->num_parents)
 		return NULL;
 	else if (!clk->parents)
@@ -628,7 +628,7 @@ struct clk *clk_get_parent_by_index(struct clk *clk, u8 index)
 		// clk->parents[0]: (kmem_cache#29-oX (mout_mspll_kfc))->parents[0]: (kmem_cache#30-oX)[0]: NULL
 		// return NULL
 	else
-		// clk->parents[1]: (kmem_cache#29-oX (sclk_dpll))->parents[1]: (kmem_cache#30-oX)[1]: kmem_cache#29-oX (fout_dpll)
+		// clk->parents[1]: (kmem_cache#29-oX (sclk_spll))->parents[1]: (kmem_cache#30-oX)[1]: kmem_cache#29-oX (fout_dpll)
 		return clk->parents[index];
 		// return kmem_cache#29-oX (fout_dpll)
 }
@@ -1210,9 +1210,9 @@ static void __clk_recalc_rates(struct clk *clk, unsigned long msg)
 	old_rate = clk->rate;
 	// old_rate: 0
 
-	// clk->parent: (kmem_cache#29-oX (mout_mspll_kfc))->parent: kmem_cache#29-oX (sclk_dpll)
+	// clk->parent: (kmem_cache#29-oX (mout_mspll_kfc))->parent: kmem_cache#29-oX (sclk_spll)
 	if (clk->parent)
-		// parent_rate: 0, clk->parent->rate: (kmem_cache#29-oX (sclk_dpll))->rate: 600000000
+		// parent_rate: 0, clk->parent->rate: (kmem_cache#29-oX (sclk_spll))->rate: 600000000
 		parent_rate = clk->parent->rate;
 		// parent_rate: 600000000
 
@@ -1303,7 +1303,7 @@ static int clk_fetch_parent_index(struct clk *clk, struct clk *parent)
 }
 
 // ARM10C 20150131
-// clk: kmem_cache#29-oX (mout_mspll_kfc), new_parent: kmem_cache#29-oX (sclk_dpll)
+// clk: kmem_cache#29-oX (mout_mspll_kfc), new_parent: kmem_cache#29-oX (sclk_spll)
 static void clk_reparent(struct clk *clk, struct clk *new_parent)
 {
 	// &clk->child_node: &(kmem_cache#29-oX (mout_mspll_kfc))->child_node
@@ -1313,30 +1313,30 @@ static void clk_reparent(struct clk *clk, struct clk *new_parent)
 	// &(kmem_cache#29-oX (mout_mspll_kfc))->child_node의 next list에 pprev의 값을 연결함
 	// &(kmem_cache#29-oX (mout_mspll_kfc))->child_node를 제거
 
-	// new_parent: kmem_cache#29-oX (sclk_dpll)
+	// new_parent: kmem_cache#29-oX (sclk_spll)
 	if (new_parent) {
 		/* avoid duplicate POST_RATE_CHANGE notifications */
-		// new_parent->new_child: (kmem_cache#29-oX (sclk_dpll))->new_child,
+		// new_parent->new_child: (kmem_cache#29-oX (sclk_spll))->new_child,
 		// clk: kmem_cache#29-oX (mout_mspll_kfc)
 		if (new_parent->new_child == clk)
 			new_parent->new_child = NULL;
 
 		// clk->child_node: (kmem_cache#29-oX (mout_mspll_kfc))->child_node,
-		// new_parent->children: (kmem_cache#29-oX (sclk_dpll))->children
+		// new_parent->children: (kmem_cache#29-oX (sclk_spll))->children
 		hlist_add_head(&clk->child_node, &new_parent->children);
 
 		// hlist_add_head에서 한일:
 		// (&(kmem_cache#29-oX (mout_mspll_kfc))->child_node)->next: NULL
 		// (&(kmem_cache#29-oX (mout_mspll_kfc))->child_node)->pprev: &(&(kmem_cache#29-oX (mout_mspll_kfc))->child_node)
 		//
-		// (&(kmem_cache#29-oX (sclk_dpll))->children)->first: &(kmem_cache#29-oX (mout_mspll_kfc))->child_node
+		// (&(kmem_cache#29-oX (sclk_spll))->children)->first: &(kmem_cache#29-oX (mout_mspll_kfc))->child_node
 	} else {
 		hlist_add_head(&clk->child_node, &clk_orphan_list);
 	}
 
-	// clk->parent: (kmem_cache#29-oX (mout_mspll_kfc))->parent, new_parent: kmem_cache#29-oX (sclk_dpll)
+	// clk->parent: (kmem_cache#29-oX (mout_mspll_kfc))->parent, new_parent: kmem_cache#29-oX (sclk_spll)
 	clk->parent = new_parent;
-	// clk->parent: (kmem_cache#29-oX (mout_mspll_kfc))->parent: kmem_cache#29-oX (sclk_dpll)
+	// clk->parent: (kmem_cache#29-oX (mout_mspll_kfc))->parent: kmem_cache#29-oX (sclk_spll)
 }
 
 static int __clk_set_parent(struct clk *clk, struct clk *parent, u8 p_index)
@@ -1723,7 +1723,7 @@ EXPORT_SYMBOL_GPL(clk_get_parent);
 // ARM10C 20150131
 // clk: kmem_cache#29-oX (mout_mspll_kfc)
 // ARM10C 20150131
-// clk: kmem_cache#29-oX (sclk_dpll)
+// clk: kmem_cache#29-oX (sclk_spll)
 // ARM10C 20150228
 // clk: kmem_cache#29-oX (sclk_apll)
 // ARM10C 20150307
@@ -1745,7 +1745,7 @@ static struct clk *__clk_init_parent(struct clk *clk)
 	// clk->num_parents: (kmem_cache#29-oX)->num_parents: 0
 	// clk->num_parents: (kmem_cache#29-oX (apll))->num_parents: 1
 	// clk->num_parents: (kmem_cache#29-oX (mout_mspll_kfc))->num_parents: 4
-	// clk->num_parents: (kmem_cache#29-oX (sclk_dpll))->num_parents: 2
+	// clk->num_parents: (kmem_cache#29-oX (sclk_spll))->num_parents: 2
 	// clk->num_parents: (kmem_cache#29-oX (sclk_apll))->num_parents: 1
 	// clk->num_parents: (kmem_cache#29-oX (sclk_fimd1))->num_parents: 1
 	if (!clk->num_parents)
@@ -1754,7 +1754,7 @@ static struct clk *__clk_init_parent(struct clk *clk)
 
 	// clk->num_parents: (kmem_cache#29-oX (apll))->num_parents: 1
 	// clk->num_parents: (kmem_cache#29-oX (mout_mspll_kfc))->num_parents: 4
-	// clk->num_parents: (kmem_cache#29-oX (sclk_dpll))->num_parents: 2
+	// clk->num_parents: (kmem_cache#29-oX (sclk_spll))->num_parents: 2
 	// clk->num_parents: (kmem_cache#29-oX (sclk_apll))->num_parents: 1
 	// clk->num_parents: (kmem_cache#29-oX (sclk_fimd1))->num_parents: 1
 	if (clk->num_parents == 1) {
@@ -1874,10 +1874,10 @@ out:
 }
 
 // ARM10C 20150131
-// orphan: kmem_cache#29-oX (mout_mspll_kfc), clk: kmem_cache#29-oX (sclk_dpll)
+// orphan: kmem_cache#29-oX (mout_mspll_kfc), clk: kmem_cache#29-oX (sclk_spll)
 void __clk_reparent(struct clk *clk, struct clk *new_parent)
 {
-	// clk: kmem_cache#29-oX (mout_mspll_kfc), new_parent: kmem_cache#29-oX (sclk_dpll)
+	// clk: kmem_cache#29-oX (mout_mspll_kfc), new_parent: kmem_cache#29-oX (sclk_spll)
 	clk_reparent(clk, new_parent);
 
 	// clk_reparent 에서 한일:
@@ -3944,7 +3944,7 @@ void __init of_clk_init(const struct of_device_id *matches)
 		// samsung_clk_register_mux 에서 한일:
 		// exynos5420_mux_clks에 등록 되어 있는 clock mux 들의 초기화를 수행
 		//
-		// mout_mspll_kfc, sclk_dpll를 수행한 결과:
+		// mout_mspll_kfc, sclk_spll를 수행한 결과:
 		//
 		// (mout_mspll_kfc) 에서 한일:
 		// struct clk_mux 만큼 메모리를 kmem_cache#30-oX (mout_mspll_kfc) 할당 받고 struct clk_mux 의 멤버 값을 아래와 같이 초기화 수행
