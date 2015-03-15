@@ -217,7 +217,7 @@ struct clk *clk_register_gate(struct device *dev, const char *name,
 	// (&(kmem_cache#29-oX (sclk_fimd1))->child_node)->next: NULL
 	// (&(kmem_cache#29-oX (sclk_fimd1))->child_node)->pprev: &(&(kmem_cache#29-oX (sclk_fimd1))->child_node)
 	//
-	// (&(kmem_cache#29-oX (sclk_fimd1))->children)->first: &(kmem_cache#29-oX (sclk_fimd1))->child_node
+	// (&(kmem_cache#29-oX (dout_fimd1))->children)->first: &(kmem_cache#29-oX (sclk_fimd1))->child_node
 
 	// clk: kmem_cache#29-oX (sclk_fimd1), IS_ERR(kmem_cache#29-oX (sclk_fimd1)): 0
 	if (IS_ERR(clk))

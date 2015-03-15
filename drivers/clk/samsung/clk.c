@@ -585,7 +585,7 @@ void __init samsung_clk_register_div(struct samsung_div_clock *list,
 			// (&(kmem_cache#29-oX (sclk_apll))->child_node)->next: NULL
 			// (&(kmem_cache#29-oX (sclk_apll))->child_node)->pprev: &(&(kmem_cache#29-oX (sclk_apll))->child_node)
 			//
-			// (&(kmem_cache#29-oX (fout_dpll))->children)->first: &(kmem_cache#29-oX (sclk_apll))->child_node
+			// (&(kmem_cache#29-oX (mout_apll))->children)->first: &(kmem_cache#29-oX (sclk_apll))->child_node
 
 		// clk: kmem_cache#29-oX (sclk_apll), IS_ERR(kmem_cache#29-oX (sclk_apll)): 0
 		if (IS_ERR(clk)) {
@@ -667,7 +667,7 @@ void __init samsung_clk_register_gate(struct samsung_gate_clock *list,
 		// (&(kmem_cache#29-oX (sclk_fimd1))->child_node)->next: NULL
 		// (&(kmem_cache#29-oX (sclk_fimd1))->child_node)->pprev: &(&(kmem_cache#29-oX (sclk_fimd1))->child_node)
 		//
-		// (&(kmem_cache#29-oX (sclk_fimd1))->children)->first: &(kmem_cache#29-oX (sclk_fimd1))->child_node
+		// (&(kmem_cache#29-oX (dout_fimd1))->children)->first: &(kmem_cache#29-oX (sclk_fimd1))->child_node
 
 		// clk: kmem_cache#29-oX (sclk_fimd1), IS_ERR(kmem_cache#29-oX (sclk_fimd1)): 0
 		if (IS_ERR(clk)) {

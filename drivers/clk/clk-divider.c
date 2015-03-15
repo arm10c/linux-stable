@@ -395,7 +395,7 @@ static struct clk *_register_divider(struct device *dev, const char *name,
 	// (&(kmem_cache#29-oX (sclk_apll))->child_node)->next: NULL
 	// (&(kmem_cache#29-oX (sclk_apll))->child_node)->pprev: &(&(kmem_cache#29-oX (sclk_apll))->child_node)
 	//
-	// (&(kmem_cache#29-oX (fout_dpll))->children)->first: &(kmem_cache#29-oX (sclk_apll))->child_node
+	// (&(kmem_cache#29-oX (mout_apll))->children)->first: &(kmem_cache#29-oX (sclk_apll))->child_node
 
 	// clk: kmem_cache#29-oX (sclk_apll), IS_ERR(kmem_cache#29-oX (sclk_apll)): 0
 	if (IS_ERR(clk))
@@ -467,7 +467,7 @@ struct clk *clk_register_divider(struct device *dev, const char *name,
 	// (&(kmem_cache#29-oX (sclk_apll))->child_node)->next: NULL
 	// (&(kmem_cache#29-oX (sclk_apll))->child_node)->pprev: &(&(kmem_cache#29-oX (sclk_apll))->child_node)
 	//
-	// (&(kmem_cache#29-oX (fout_dpll))->children)->first: &(kmem_cache#29-oX (sclk_apll))->child_node
+	// (&(kmem_cache#29-oX (mout_apll))->children)->first: &(kmem_cache#29-oX (sclk_apll))->child_node
 }
 EXPORT_SYMBOL_GPL(clk_register_divider);
 

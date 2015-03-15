@@ -1385,7 +1385,7 @@ static void __init exynos5420_clk_init(struct device_node *np)
 	// (&(kmem_cache#29-oX (sclk_apll))->child_node)->next: NULL
 	// (&(kmem_cache#29-oX (sclk_apll))->child_node)->pprev: &(&(kmem_cache#29-oX (sclk_apll))->child_node)
 	//
-	// (&(kmem_cache#29-oX (fout_dpll))->children)->first: &(kmem_cache#29-oX (sclk_apll))->child_node
+	// (&(kmem_cache#29-oX (mout_apll))->children)->first: &(kmem_cache#29-oX (sclk_apll))->child_node
 	//
 	// exynos5420_div_clks의 idx 0, 2...52 까지 loop 수행
 

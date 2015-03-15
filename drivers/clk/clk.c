@@ -614,7 +614,7 @@ struct clk *clk_get_parent_by_index(struct clk *clk, u8 index)
 	// clk: kmem_cache#29-oX (sclk_spll), index: 1,
 	// clk->num_parents: (kmem_cache#29-oX (sclk_spll))->num_parents: 2,
 	// clk->parents: (kmem_cache#29-oX (sclk_spll))->parents: kmem_cache#30-oX
-	// clk->parents[1]: (kmem_cache#29-oX (sclk_spll))->parents[1]: (kmem_cache#30-oX)[1]: kmem_cache#29-oX (fout_dpll)
+	// clk->parents[1]: (kmem_cache#29-oX (sclk_spll))->parents[1]: (kmem_cache#30-oX)[1]: kmem_cache#29-oX (fout_spll)
 	if (!clk || index >= clk->num_parents)
 		return NULL;
 	else if (!clk->parents)
@@ -628,9 +628,9 @@ struct clk *clk_get_parent_by_index(struct clk *clk, u8 index)
 		// clk->parents[0]: (kmem_cache#29-oX (mout_mspll_kfc))->parents[0]: (kmem_cache#30-oX)[0]: NULL
 		// return NULL
 	else
-		// clk->parents[1]: (kmem_cache#29-oX (sclk_spll))->parents[1]: (kmem_cache#30-oX)[1]: kmem_cache#29-oX (fout_dpll)
+		// clk->parents[1]: (kmem_cache#29-oX (sclk_spll))->parents[1]: (kmem_cache#30-oX)[1]: kmem_cache#29-oX (fout_spll)
 		return clk->parents[index];
-		// return kmem_cache#29-oX (fout_dpll)
+		// return kmem_cache#29-oX (fout_spll)
 }
 
 unsigned int __clk_get_enable_count(struct clk *clk)
@@ -796,7 +796,7 @@ static struct clk *__clk_lookup_subtree(const char *name, struct clk *clk)
 // ARM10C 20150228
 // clk->parent_names[0]: (kmem_cache#29-oX (sclk_apll))->parent_names[0]: (kmem_cache#30-oX)[0]: kmem_cache#30-oX: "mout_apll"
 // ARM10C 20150307
-// clk->parent_names[0]: (kmem_cache#29-oX (sclk_uart0))->parent_names[0]: (kmem_cache#30-oX)[0]: kmem_cache#30-oX: "dout_uart0"
+// clk->parent_names[0]: (kmem_cache#29-oX (sclk_fimd1))->parent_names[0]: (kmem_cache#30-oX)[0]: kmem_cache#30-oX: "dout_fimd1"
 struct clk *__clk_lookup(const char *name)
 {
 	struct clk *root_clk;
@@ -2992,7 +2992,7 @@ static int _clk_register(struct device *dev, struct clk_hw *hw, struct clk *clk)
 	// (&(kmem_cache#29-oX (sclk_fimd1))->child_node)->next: NULL
 	// (&(kmem_cache#29-oX (sclk_fimd1))->child_node)->pprev: &(&(kmem_cache#29-oX (sclk_fimd1))->child_node)
 	//
-	// (&(kmem_cache#29-oX (dout_fimd10))->children)->first: &(kmem_cache#29-oX (sclk_fimd1))->child_node
+	// (&(kmem_cache#29-oX (dout_fimd1))->children)->first: &(kmem_cache#29-oX (sclk_fimd1))->child_node
 
 	// ret: NULL
 	// ret: NULL
@@ -4064,7 +4064,7 @@ void __init of_clk_init(const struct of_device_id *matches)
 		// (&(kmem_cache#29-oX (sclk_apll))->child_node)->next: NULL
 		// (&(kmem_cache#29-oX (sclk_apll))->child_node)->pprev: &(&(kmem_cache#29-oX (sclk_apll))->child_node)
 		//
-		// (&(kmem_cache#29-oX (fout_dpll))->children)->first: &(kmem_cache#29-oX (sclk_apll))->child_node
+		// (&(kmem_cache#29-oX (mout_apll))->children)->first: &(kmem_cache#29-oX (sclk_apll))->child_node
 		//
 		// exynos5420_div_clks의 idx 0, 2...52 까지 loop 수행
 		//

@@ -394,7 +394,7 @@ void __init time_init(void)
 		// samsung_clk_register_mux 에서 한일:
 		// exynos5420_mux_clks에 등록 되어 있는 clock mux 들의 초기화를 수행
 		//
-		// mout_mspll_kfc, sclk_dpll를 수행한 결과:
+		// mout_mspll_kfc, sclk_spll를 수행한 결과:
 		//
 		// (mout_mspll_kfc) 에서 한일:
 		// struct clk_mux 만큼 메모리를 kmem_cache#30-oX (mout_mspll_kfc) 할당 받고 struct clk_mux 의 멤버 값을 아래와 같이 초기화 수행
@@ -514,7 +514,7 @@ void __init time_init(void)
 		// (&(kmem_cache#29-oX (sclk_apll))->child_node)->next: NULL
 		// (&(kmem_cache#29-oX (sclk_apll))->child_node)->pprev: &(&(kmem_cache#29-oX (sclk_apll))->child_node)
 		//
-		// (&(kmem_cache#29-oX (fout_dpll))->children)->first: &(kmem_cache#29-oX (sclk_apll))->child_node
+		// (&(kmem_cache#29-oX (mout_apll))->children)->first: &(kmem_cache#29-oX (sclk_apll))->child_node
 		//
 		// exynos5420_div_clks의 idx 0, 2...52 까지 loop 수행
 		//
