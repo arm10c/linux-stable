@@ -71,6 +71,7 @@ enum {
 	MCT_G1_IRQ,
 	MCT_G2_IRQ,
 	MCT_G3_IRQ,
+	// MCT_L0_IRQ: 4
 	MCT_L0_IRQ,
 	MCT_L1_IRQ,
 	MCT_L2_IRQ,
@@ -84,6 +85,7 @@ static unsigned long clk_rate;
 // ARM10C 20150307
 static unsigned int mct_int_type;
 // ARM10C 20150307
+// ARM10C 20150321
 // MCT_NR_IRQS: 8
 static int mct_irqs[MCT_NR_IRQS];
 
@@ -554,21 +556,66 @@ static void __init mct_init_dt(struct device_node *np, unsigned int int_type)
 
 	/* This driver uses only one global timer interrupt */
 	// np: devtree에서 allnext로 순회 하면서 찾은 mct node의 주소, MCT_G0_IRQ: 0
+	// irq_of_parse_and_map(devtree에서 allnext로 순회 하면서 찾은 mct node의 주소, 0): 347
 	mct_irqs[MCT_G0_IRQ] = irq_of_parse_and_map(np, MCT_G0_IRQ);
+	// mct_irqs[0]: 347
+
+	// irq_of_parse_and_map(mct node, 0)에서 한일:
+	// devtree의 mct node의 interrupt의 property의 값을 dtb에  분석하여 oirq 값을 가져옴
+	//
+	// (&oirq)->np: combiner node의 주소
+	// (&oirq)->args_count: 2
+	// (&oirq)->args[0]: 23
+	// (&oirq)->args[1]: 3
+	//
+	// oirq 값을 사용하여 combiner domain에서 virq 값을 찾음
+	// virq: 347
 
 	/*
 	 * Find out the number of local irqs specified. The local
 	 * timer irqs are specified after the four global timer
 	 * irqs are specified.
 	 */
-#ifdef CONFIG_OF
+#ifdef CONFIG_OF // CONFIG_OF=y
+	// np: devtree에서 allnext로 순회 하면서 찾은 mct node의 주소
+	// of_irq_count(devtree에서 allnext로 순회 하면서 찾은 mct node의 주소): 8
 	nr_irqs = of_irq_count(np);
+	// nr_irqs: 8
+	
+	// of_irq_count(mct node)에서 한일:
+	// devtree에 등록된 mct node에 irq 의 갯수를 구함
 #else
 	nr_irqs = 0;
 #endif
-	for (i = MCT_L0_IRQ; i < nr_irqs; i++)
-		mct_irqs[i] = irq_of_parse_and_map(np, i);
 
+	// nr_irqs: 8, MCT_L0_IRQ: 4
+	for (i = MCT_L0_IRQ; i < nr_irqs; i++)
+		// i: 4, np: devtree에서 allnext로 순회 하면서 찾은 mct node의 주소
+		// irq_of_parse_and_map(devtree에서 allnext로 순회 하면서 찾은 mct node의 주소, 4): 152
+		mct_irqs[i] = irq_of_parse_and_map(np, i);
+		// mct_irqs[4]: 152
+		
+		// irq_of_parse_and_map(mct node, 4)에서 한일:
+		// devtree의 mct node의 interrupt의 property의 값을 dtb에  분석하여 oirq 값을 가져옴
+		//
+		// (&oirq)->np: gic node의 주소
+		// (&oirq)->args_count: 3
+		// (&oirq)->args[0]: 0
+		// (&oirq)->args[1]: 120
+		// (&oirq)->args[2]: 0
+		//
+		// oirq 값을 사용하여 gic domain에서 virq 값을 찾음
+		// virq: 152
+
+		// i: 5...7 loop 수행
+
+	// 위 loop의 수행 결과
+	// mct_irqs[4]: 152
+	// mct_irqs[5]: 153
+	// mct_irqs[6]: 154
+	// mct_irqs[7]: 155
+
+	// np: devtree에서 allnext로 순회 하면서 찾은 mct node의 주소
 	exynos4_timer_resources(np, of_iomap(np, 0));
 	exynos4_clocksource_init();
 	exynos4_clockevent_init();

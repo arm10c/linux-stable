@@ -29,6 +29,7 @@
 
 // ARM10C 20141206
 // ARM10C 20141213
+// ARM10C 20150321
 // IRQ_IN_COMBINER: 8
 #define IRQ_IN_COMBINER		8
 
@@ -187,22 +188,33 @@ static void __init combiner_init_one(struct combiner_chip_data *combiner_data,
 // 2014/12/20 시작
 }
 
+// ARM10C 20150321
+// kmem_cache#24-o0 (combiner), combiner node의 주소, (&oirq)->args, 2, &hwirq, &type
 static int combiner_irq_domain_xlate(struct irq_domain *d,
 				     struct device_node *controller,
 				     const u32 *intspec, unsigned int intsize,
 				     unsigned long *out_hwirq,
 				     unsigned int *out_type)
 {
+	// d->of_node: (kmem_cache#24-o0 (combiner))->of_node:
+	// devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소, controller: combiner node의 주소
 	if (d->of_node != controller)
 		return -EINVAL;
 
+	// intsize: 2
 	if (intsize < 2)
 		return -EINVAL;
 
+	// *out_hwirq: *(&hwirq), intspec[0]: (&oirq)->args[0]: 23, intspec[1]: (&oirq)->args[1]: 3, IRQ_IN_COMBINER: 8
 	*out_hwirq = intspec[0] * IRQ_IN_COMBINER + intspec[1];
+	// *out_hwirq: *(&hwirq): 187
+
+	// *out_type: *(&type)
 	*out_type = 0;
+	// *out_type: *(&type): 0
 
 	return 0;
+	// return 0
 }
 
 // ARM10C 20141213

@@ -83,6 +83,7 @@ struct device_node {
 #define MAX_PHANDLE_ARGS 8
 
 // ARM10C 20141213
+// ARM10C 20150321
 // MAX_PHANDLE_ARGS: 8
 struct of_phandle_args {
 	struct device_node *np;

@@ -218,11 +218,15 @@ static void irq_insert_desc(unsigned int irq, struct irq_desc *desc)
 
 // ARM10C 20141122
 // irq: 16
+// ARM10C 20150321
+// irq: 347
 struct irq_desc *irq_to_desc(unsigned int irq)
 {
 	// irq: 16, radix_tree_lookup(&irq_desc_tree, 16): kmem_cache#28-oX (irq 16)
+	// irq: 347, radix_tree_lookup(&irq_desc_tree, 347): kmem_cache#28-oX (irq 347)
 	return radix_tree_lookup(&irq_desc_tree, irq);
 	// return kmem_cache#28-oX (irq 16)
+	// return kmem_cache#28-oX (irq 347)
 }
 EXPORT_SYMBOL(irq_to_desc);
 

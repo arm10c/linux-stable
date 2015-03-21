@@ -60,6 +60,8 @@ LIST_HEAD(static_vmlist);
 // paddr: 0x10440000 size: 0x1000, mtype: MT_DEVICE: 0
 // ARM10C 20150110
 // paddr: 0x10010000 size: 0x30000, mtype: MT_DEVICE: 0
+// ARM10C 20150321
+// paddr: 0x101C0000 size: 0x1000, mtype: MT_DEVICE: 0
 static struct static_vm *find_static_vm_paddr(phys_addr_t paddr,
 			size_t size, unsigned int mtype)
 {
@@ -319,6 +321,8 @@ remap_area_supersections(unsigned long virt, unsigned long pfn,
 // pfn: 0x10440, offset: 0, size: 0x1000, mtype: MT_DEVICE: 0, caller: __builtin_return_address(0)
 // ARM10C 20150110
 // pfn: 0x10010, offset: 0, size: 0x30000, mtype: MT_DEVICE: 0, caller: __builtin_return_address(0)
+// ARM10C 20150321
+// pfn: 0x101C0, offset: 0, size: 0x800, mtype: MT_DEVICE: 0, caller: __builtin_return_address(0)
 void __iomem * __arm_ioremap_pfn_caller(unsigned long pfn,
 	unsigned long offset, size_t size, unsigned int mtype, void *caller)
 {
@@ -330,11 +334,13 @@ void __iomem * __arm_ioremap_pfn_caller(unsigned long pfn,
 	// pfn: 0x10482, __pfn_to_phys(0x10482): 0x10482000
 	// pfn: 0x10440, __pfn_to_phys(0x10440): 0x10440000
 	// pfn: 0x10010, __pfn_to_phys(0x10010): 0x10010000
+	// pfn: 0x101C0, __pfn_to_phys(0x101C0): 0x101C0000
 	phys_addr_t paddr = __pfn_to_phys(pfn);
 	// paddr: 0x10481000
 	// paddr: 0x10482000
 	// paddr: 0x10440000
 	// paddr: 0x10010000
+	// paddr: 0x101C0000
 
 #ifndef CONFIG_ARM_LPAE // CONFIG_ARM_LPAE=n
 	/*
@@ -344,10 +350,13 @@ void __iomem * __arm_ioremap_pfn_caller(unsigned long pfn,
 	// pfn: 0x10482, paddr: 0x10482000, SUPERSECTION_MASK: 0xff000000
 	// pfn: 0x10440, paddr: 0x10440000, SUPERSECTION_MASK: 0xff000000
 	// pfn: 0x10010, paddr: 0x10010000, SUPERSECTION_MASK: 0xff000000
+	// pfn: 0x101C0, paddr: 0x101C0000, SUPERSECTION_MASK: 0xff000000
 	if (pfn >= 0x100000 && (paddr & ~SUPERSECTION_MASK))
 		return NULL;
 #endif
 
+	// mtype: MT_DEVICE: 0
+	// get_mem_type(MT_DEVICE: 0): &mem_types[0]
 	// mtype: MT_DEVICE: 0
 	// get_mem_type(MT_DEVICE: 0): &mem_types[0]
 	// mtype: MT_DEVICE: 0
@@ -361,7 +370,9 @@ void __iomem * __arm_ioremap_pfn_caller(unsigned long pfn,
 	// type: &mem_types[0]
 	// type: &mem_types[0]
 	// type: &mem_types[0]
+	// type: &mem_types[0]
 
+	// type: &mem_types[0]
 	// type: &mem_types[0]
 	// type: &mem_types[0]
 	// type: &mem_types[0]
@@ -376,11 +387,13 @@ void __iomem * __arm_ioremap_pfn_caller(unsigned long pfn,
 	// offset: 0, size: 0x1000, PAGE_ALIGN(0x1000): 0x1000
 	// offset: 0, size: 0x1000, PAGE_ALIGN(0x1000): 0x1000
 	// offset: 0, size: 0x30000, PAGE_ALIGN(0x30000): 0x30000
+	// offset: 0, size: 0x800, PAGE_ALIGN(0x800): 0x1000
 	size = PAGE_ALIGN(offset + size);
 	// size: 0x1000
 	// size: 0x1000
 	// size: 0x1000
 	// size: 0x30000
+	// size: 0x1000
 
 	/*
 	 * Try to reuse one of the static mapping whenever possible.
@@ -389,6 +402,7 @@ void __iomem * __arm_ioremap_pfn_caller(unsigned long pfn,
 	// size: 0x1000, sizeof(phys_addr_t): 4, pfn: 0x10482
 	// size: 0x1000, sizeof(phys_addr_t): 4, pfn: 0x10440
 	// size: 0x30000, sizeof(phys_addr_t): 4, pfn: 0x10010
+	// size: 0x1000, sizeof(phys_addr_t): 4, pfn: 0x101C0
 	if (size && !(sizeof(phys_addr_t) == 4 && pfn >= 0x100000)) {
 		struct static_vm *svm;
 
@@ -400,12 +414,16 @@ void __iomem * __arm_ioremap_pfn_caller(unsigned long pfn,
 		// find_static_vm_paddr(0x10440000, 0x1000, MT_DEVICE: 0): NULL
 		// paddr: 0x10010000 size: 0x30000, mtype: MT_DEVICE: 0
 		// find_static_vm_paddr(0x10010000, 0x30000, MT_DEVICE: 0): NULL
+		// paddr: 0x101C0000 size: 0x1000, mtype: MT_DEVICE: 0
+		// find_static_vm_paddr(0x101C0000, 0x1000, MT_DEVICE: 0): NULL
 		svm = find_static_vm_paddr(paddr, size, mtype);
 		// svm: NULL
 		// svm: NULL
 		// svm: NULL
 		// svm: NULL
+		// svm: NULL
 
+		// svm: NULL
 		// svm: NULL
 		// svm: NULL
 		// svm: NULL
@@ -427,6 +445,7 @@ void __iomem * __arm_ioremap_pfn_caller(unsigned long pfn,
 	// pfn: 0x10482, pfn_valid(0x10482): 0
 	// pfn: 0x10440, pfn_valid(0x10440): 0
 	// pfn: 0x10010, pfn_valid(0x10010): 0
+	// pfn: 0x101C0, pfn_valid(0x101C0): 0
 	if (WARN_ON(pfn_valid(pfn)))
 		return NULL;
 
@@ -438,6 +457,9 @@ void __iomem * __arm_ioremap_pfn_caller(unsigned long pfn,
 	// get_vm_area_caller(0x1000, 0x00000001, __builtin_return_address(0)): kmem_cache#30-oX (vm_struct)
 	// size: 0x30000, VM_IOREMAP: 0x00000001, caller: __builtin_return_address(0)
 	// get_vm_area_caller(0x30000, 0x00000001, __builtin_return_address(0)): kmem_cache#30-oX (vm_struct)
+	//
+	// size: 0x1000, VM_IOREMAP: 0x00000001, caller: __builtin_return_address(0)
+	// get_vm_area_caller(0x1000, 0x00000001, __builtin_return_address(0)): kmem_cache#30-oX (vm_struct)
 	area = get_vm_area_caller(size, VM_IOREMAP, caller);
 	// area: kmem_cache#30-oX (vm_struct)
 	// area: kmem_cache#30-oX (vm_struct)
@@ -746,6 +768,8 @@ void __iomem * __arm_ioremap_pfn_caller(unsigned long pfn,
 // phys_addr: 0x10440000, size: 0x1000, mtype: MT_DEVICE: 0, __builtin_return_address(0)
 // ARM10C 20150110
 // phys_addr: 0x10010000, size: 0x30000, mtype: MT_DEVICE: 0, __builtin_return_address(0)
+// ARM10C 20150321
+// phys_addr: 0x101C0000, size: 0x800, mtype: MT_DEVICE: 0, __builtin_return_address(0)
 void __iomem *__arm_ioremap_caller(phys_addr_t phys_addr, size_t size,
 	unsigned int mtype, void *caller)
 {
@@ -754,7 +778,9 @@ void __iomem *__arm_ioremap_caller(phys_addr_t phys_addr, size_t size,
 	// phys_addr: 0x10482000, PAGE_MASK: 0xFFFFF000
 	// phys_addr: 0x10440000, PAGE_MASK: 0xFFFFF000
 	// phys_addr: 0x10010000, PAGE_MASK: 0xFFFFF000
+	// phys_addr: 0x101C0000, PAGE_MASK: 0xFFFFF000
  	unsigned long offset = phys_addr & ~PAGE_MASK;
+	// offset: 0
 	// offset: 0
 	// offset: 0
 	// offset: 0
@@ -764,11 +790,13 @@ void __iomem *__arm_ioremap_caller(phys_addr_t phys_addr, size_t size,
 	// phys_addr: 0x10482000, __phys_to_pfn(0x10482000): 0x10482
 	// phys_addr: 0x10440000, __phys_to_pfn(0x10440000): 0x10440
 	// phys_addr: 0x10010000, __phys_to_pfn(0x10010000): 0x10010
+	// phys_addr: 0x101C0000, __phys_to_pfn(0x101C0000): 0x101C0
  	unsigned long pfn = __phys_to_pfn(phys_addr);
 	// pfn: 0x10481
 	// pfn: 0x10482
 	// pfn: 0x10440
 	// pfn: 0x10010
+	// pfn: 0x101C0
 
  	/*
  	 * Don't allow wraparound or zero size
@@ -777,16 +805,19 @@ void __iomem *__arm_ioremap_caller(phys_addr_t phys_addr, size_t size,
 	// phys_addr: 0x10482000, size: 0x1000
 	// phys_addr: 0x10440000, size: 0x1000
 	// phys_addr: 0x10010000, size: 0x30000
+	// phys_addr: 0x101C0000, size: 0x800
 	last_addr = phys_addr + size - 1;
 	// last_addr: 0x10481fff
 	// last_addr: 0x10482fff
 	// last_addr: 0x10440fff
 	// last_addr: 0x1003ffff
+	// last_addr: 0x101C07ff
 
 	// size: 0x1000, last_addr: 0x10481fff, phys_addr: 0x10481000
 	// size: 0x1000, last_addr: 0x10482fff, phys_addr: 0x10482000
 	// size: 0x1000, last_addr: 0x10440fff, phys_addr: 0x10440000
 	// size: 0x30000, last_addr: 0x1003ffff, phys_addr: 0x10010000
+	// size: 0x800, last_addr: 0x101C07ff, phys_addr: 0x101C0000
 	if (!size || last_addr < phys_addr)
 		return NULL;
 
@@ -798,6 +829,8 @@ void __iomem *__arm_ioremap_caller(phys_addr_t phys_addr, size_t size,
 	// __arm_ioremap_pfn_caller(0x10440, 0, 0x1000, MT_DEVICE: 0, __builtin_return_address(0)): 0xf0004000
 	// pfn: 0x10010, offset: 0, size: 0x30000, mtype: MT_DEVICE: 0, caller: __builtin_return_address(0)
 	// __arm_ioremap_pfn_caller(0x10010, 0, 0x30000, MT_DEVICE: 0, __builtin_return_address(0)): 0xf0040000
+	// pfn: 0x101C0, offset: 0, size: 0x800, mtype: MT_DEVICE: 0, caller: __builtin_return_address(0)
+	// __arm_ioremap_pfn_caller(0x101C0, 0, 0x800, MT_DEVICE: 0, __builtin_return_address(0)):
 	return __arm_ioremap_pfn_caller(pfn, offset, size, mtype,
 			caller);
 	// return 0xf0000000
@@ -828,6 +861,7 @@ EXPORT_SYMBOL(__arm_ioremap_pfn);
 // ARM10C 20141101
 // ARM10C 20141206
 // ARM10C 20150110
+// ARM10C 20150321
 void __iomem * (*arch_ioremap_caller)(phys_addr_t, size_t,
 				      unsigned int, void *) =
 	__arm_ioremap_caller;
@@ -840,6 +874,8 @@ void __iomem * (*arch_ioremap_caller)(phys_addr_t, size_t,
 // res.start: 0x10440000, resource_size(&res): 0x1000, MT_DEVICE: 0
 // ARM10C 20150110
 // res.start: 0x10010000, resource_size(&res): 0x30000, MT_DEVICE: 0
+// ARM10C 20150321
+// res.start: 0x101C0000, resource_size(&res): 0x800, MT_DEVICE: 0
 void __iomem *
 __arm_ioremap(phys_addr_t phys_addr, size_t size, unsigned int mtype)
 {
@@ -851,6 +887,8 @@ __arm_ioremap(phys_addr_t phys_addr, size_t size, unsigned int mtype)
 	// arch_ioremap_caller(0x10440000, 0x1000, MT_DEVICE: 0, __builtin_return_address(0)): 0xf0004000
 	// phys_addr: 0x10010000, size: 0x30000, mtype: MT_DEVICE: 0
 	// arch_ioremap_caller(0x10010000, 0x30000, MT_DEVICE: 0, __builtin_return_address(0)): 0xf0040000
+	// phys_addr: 0x101C0000, size: 0x800, mtype: MT_DEVICE: 0
+	// arch_ioremap_caller(0x101C0000, 0x800, MT_DEVICE: 0, __builtin_return_address(0)):
 	return arch_ioremap_caller(phys_addr, size, mtype,
 		__builtin_return_address(0));
 	// return 0xf0000000

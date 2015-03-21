@@ -242,16 +242,23 @@ EXPORT_SYMBOL(irq_set_chip_data);
 // virq: 16
 // ARM10C 20141213
 // virq: 160
+// ARM10C 20150321
+// virq: 347
 struct irq_data *irq_get_irq_data(unsigned int irq)
 {
 	// irq: 16, irq_to_desc(16): kmem_cache#28-oX (irq 16)
+	// irq: 347, irq_to_desc(347): kmem_cache#28-oX (irq 347)
 	struct irq_desc *desc = irq_to_desc(irq);
 	// desc: kmem_cache#28-oX (irq 16)
+	// desc: kmem_cache#28-oX (irq 347)
 
 	// desc: kmem_cache#28-oX (irq 16)
 	// &desc->irq_data: &(kmem_cache#28-oX (irq 16))->irq_data
+	// desc: kmem_cache#28-oX (irq 347)
+	// &desc->irq_data: &(kmem_cache#28-oX (irq 347))->irq_data
 	return desc ? &desc->irq_data : NULL;
 	// return &(kmem_cache#28-oX (irq 16))->irq_data
+	// return &(kmem_cache#28-oX (irq 347))->irq_data
 }
 EXPORT_SYMBOL_GPL(irq_get_irq_data);
 

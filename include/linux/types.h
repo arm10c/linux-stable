@@ -187,6 +187,7 @@ typedef phys_addr_t resource_size_t;
  */
 // ARM10C 20141108
 // ARM10C 20141213
+// ARM10C 20150321
 typedef unsigned long irq_hw_number_t;
 
 // ARM10C 20140329

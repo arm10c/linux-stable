@@ -825,6 +825,8 @@ EXPORT_SYMBOL(radix_tree_insert);
  */
 // ARM10C 20141122
 // root: &irq_desc_tree, index: 16, 0
+// ARM10C 20150321
+// root: &irq_desc_tree, index: 347, 0
 static void *radix_tree_lookup_element(struct radix_tree_root *root,
 				unsigned long index, int is_slot)
 {
@@ -941,12 +943,17 @@ EXPORT_SYMBOL(radix_tree_lookup_slot);
  */
 // ARM10C 20141122
 // &irq_desc_tree, irq: 16
+// ARM10C 20150321
+// &irq_desc_tree, irq: 347
 void *radix_tree_lookup(struct radix_tree_root *root, unsigned long index)
 {
 	// root: &irq_desc_tree, index: 16
 	// radix_tree_lookup_element(&irq_desc_tree, 16, 0): kmem_cache#28-oX (irq 16)
+	// root: &irq_desc_tree, index: 347
+	// radix_tree_lookup_element(&irq_desc_tree, 347, 0): kmem_cache#28-oX (irq 347)
 	return radix_tree_lookup_element(root, index, 0);
 	// return kmem_cache#28-oX (irq 16)
+	// return kmem_cache#28-oX (irq 347)
 }
 EXPORT_SYMBOL(radix_tree_lookup);
 

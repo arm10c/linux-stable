@@ -241,6 +241,8 @@ static inline void list_move_tail(struct list_head *list,
 // &first->list: &(GIC#1)->list, &vmap_area_list
 // ARM10C 20150110
 // &first->list: &(COMB)->list, &vmap_area_list
+// ARM10C 20150321
+// &first->list: &(CLK)->list, &vmap_area_list
 static inline int list_is_last(const struct list_head *list,
 				const struct list_head *head)
 {
@@ -250,7 +252,10 @@ static inline int list_is_last(const struct list_head *list,
 	// head: &vmap_area_list
 	// list->next: (&(COMB)->list)->next: &(SYSC)->list
 	// head: &vmap_area_list
+	// list->next: (&(CLK)->list)->next: &(SYSC)->list
+	// head: &vmap_area_list
 	return list->next == head;
+	// return 0
 	// return 0
 	// return 0
 	// return 0

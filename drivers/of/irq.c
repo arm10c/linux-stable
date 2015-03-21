@@ -38,6 +38,8 @@
 // np: devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소, i: 0
 // ARM10C 20150307
 // np: devtree에서 allnext로 순회 하면서 찾은 mct node의 주소, MCT_G0_IRQ: 0
+// ARM10C 20150321
+// np: devtree에서 allnext로 순회 하면서 찾은 mct node의 주소, i: 4
 unsigned int irq_of_parse_and_map(struct device_node *dev, int index)
 {
 	struct of_phandle_args oirq;
@@ -49,16 +51,28 @@ unsigned int irq_of_parse_and_map(struct device_node *dev, int index)
 	if (of_irq_parse_one(dev, index, &oirq))
 		return 0;
 
-	// of_irq_parse_one(0)에서 한일:
+	// of_irq_parse_one(combiner node, 0)에서 한일:
+	// combiner node의reg의 property의 값을 dtb에  분석하여 oirq 값을 가져옴
+	//
 	// (&oirq)->np: gic node의 주소
 	// (&oirq)->args_count: 3
 	// (&oirq)->args[0]: 0
 	// (&oirq)->args[1]: 0
 	// (&oirq)->args[2]: 0
 
+	// of_irq_parse_one(mct node, 0) 에서 한일:
+	// mct node의reg의 property의 값을 dtb에  분석하여 oirq 값을 가져옴
+	//
+	// (&oirq)->np: combiner node의 주소
+	// (&oirq)->args_count: 2
+	// (&oirq)->args[0]: 23
+	// (&oirq)->args[1]: 3
+
 	// irq_create_of_mapping(&oriq): 32
+	// irq_create_of_mapping(&oriq): 347
 	return irq_create_of_mapping(&oirq);
 	// return 32
+	// return 347
 }
 EXPORT_SYMBOL_GPL(irq_of_parse_and_map);
 
@@ -630,6 +644,8 @@ EXPORT_SYMBOL_GPL(of_irq_parse_raw);
 // dev: devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소, index: 0, &oirq
 // ARM10C 20150307
 // dev: devtree에서 allnext로 순회 하면서 찾은 mct node의 주소, index: 0, &oirq
+// ARM10C 20150321
+// dev: devtree에서 allnext로 순회 하면서 찾은 mct node의 주소, nr: 0, &oirq
 int of_irq_parse_one(struct device_node *device, int index, struct of_phandle_args *out_irq)
 {
 	struct device_node *p;
@@ -813,13 +829,17 @@ int of_irq_parse_one(struct device_node *device, int index, struct of_phandle_ar
 	// (&oirq)->args_count: 2
 
 // 2015/03/14 종료
+// 2015/03/21 시작
 
  out:
 	// p: gic node의 주소
+	// p: mct_map node의 주소
 	of_node_put(p); // null function
 
 	// res: 0
+	// res: 0
 	return res;
+	// return 0
 	// return 0
 }
 EXPORT_SYMBOL_GPL(of_irq_parse_one);
@@ -860,15 +880,25 @@ EXPORT_SYMBOL_GPL(of_irq_to_resource);
  * of_irq_count - Count the number of IRQs a node uses
  * @dev: pointer to device tree node
  */
+// ARM10C 20150321
+// np: devtree에서 allnext로 순회 하면서 찾은 mct node의 주소
 int of_irq_count(struct device_node *dev)
 {
 	struct of_phandle_args irq;
 	int nr = 0;
+	// nr: 0
 
+	// dev: devtree에서 allnext로 순회 하면서 찾은 mct node의 주소, nr: 0
 	while (of_irq_parse_one(dev, nr, &irq) == 0)
 		nr++;
 
+	// 위 loop 수행 결과
+	// mct_map node의 interrupt map property의 item 수를 구함
+	// nr: 8
+
+	// nr: 8
 	return nr;
+	// return 8
 }
 
 /**
