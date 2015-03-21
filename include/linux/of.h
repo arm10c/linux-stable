@@ -32,6 +32,7 @@ typedef u32 ihandle;
 
 // ARM10C 20140208
 // ARM10C 20141004
+// ARM10C 20150321
 // size : 24 byte
 struct property {
 	char	*name;
@@ -79,6 +80,7 @@ struct device_node {
 
 // ARM10C 20141213
 // ARM10C 20150314
+// ARM10C 20150321
 // MAX_PHANDLE_ARGS: 8
 #define MAX_PHANDLE_ARGS 8
 
@@ -698,6 +700,8 @@ static inline int of_property_read_u16(const struct device_node *np,
 // np: devtree에서 allnext로 순회 하면서 찾은 combiner node의 주소, &max_nr
 // ARM10C 20150110
 // np: devtree에서 allnext로 순회 하면서 찾은 fixed-rate-clocks node의 주소, &freq
+// ARM10C 20150321
+// node: clock node의 주소, cells_name: "#clock-cells"
 static inline int of_property_read_u32(const struct device_node *np,
 				       const char *propname,
 				       u32 *out_value)

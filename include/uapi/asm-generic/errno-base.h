@@ -3,6 +3,8 @@
 
 // ARM10C 20131019
 #define	EPERM		 1	/* Operation not permitted */
+// ARM10C 20150321
+// ENOENT: 2
 #define	ENOENT		 2	/* No such file or directory */
 #define	ESRCH		 3	/* No such process */
 #define	EINTR		 4	/* Interrupted system call */
@@ -27,7 +29,8 @@
 #define	ENOTDIR		20	/* Not a directory */
 #define	EISDIR		21	/* Is a directory */
 // ARM10C 20141213
-// EINVAL: 23
+// ARM10C 20150321
+// EINVAL: 22
 #define	EINVAL		22	/* Invalid argument */
 #define	ENFILE		23	/* File table overflow */
 #define	EMFILE		24	/* Too many open files */

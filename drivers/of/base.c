@@ -254,6 +254,8 @@ static struct property *__of_find_property(const struct device_node *np,
 // np: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소 (cortex_a15_gic), "interrupt-controller", NULL
 // ARM10C 20141018
 // np: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소, propname: "reg-names"
+// ARM10C 20150321
+// np: devtree에서 allnext로 순회 하면서 찾은 mct node의 주소, propname: "clock-names"
 struct property *of_find_property(const struct device_node *np,
 				  const char *name,
 				  int *lenp)
@@ -328,6 +330,7 @@ static const void *__of_get_property(const struct device_node *np,
 // ARM10C 20141213
 // ARM10C 20150307
 // ARM10C 20150314
+// ARM10C 20150321
 const void *of_get_property(const struct device_node *np, const char *name,
 			    int *lenp)
 {
@@ -1155,6 +1158,8 @@ EXPORT_SYMBOL_GPL(of_modalias_node);
 // parp: exynos5420 dtb상의 mct_map 의 주소
 // ARM10C 20150314
 // mct_map node의 interrupt-map의 property 값의 주소+4
+// ARM10C 20150321
+// phandle: exynos5420 dtb상의 clock node의 주소
 struct device_node *of_find_node_by_phandle(phandle handle)
 {
 	struct device_node *np;
@@ -1179,7 +1184,6 @@ struct device_node *of_find_node_by_phandle(phandle handle)
 	// Reference폴더에 있는 Power_ePAPR_APPROVED_v1.1.pdf의 22page의 Programming Note를 참고하면
 	// phandle값이 자동으로 삽입됨
 	// 결국 np는 gic node의 주소가 됨
-
 
 	// np: gic node의 주소
 	// np: exynos5420 dtb상의 mct_map 의 주소
@@ -1491,29 +1495,58 @@ EXPORT_SYMBOL_GPL(of_property_read_string_index);
  * This function searches a string list property and returns the index
  * of a specific string value.
  */
+// ARM10C 20150321
+// np: devtree에서 allnext로 순회 하면서 찾은 mct node의 주소, "clock-names", name: "fin_pll"
 int of_property_match_string(struct device_node *np, const char *propname,
 			     const char *string)
 {
+	// np: devtree에서 allnext로 순회 하면서 찾은 mct node의 주소, propname: "clock-names"
+	// of_find_property(devtree에서 allnext로 순회 하면서 찾은 mct node의 주소, "clock-names", NULL):
+	// mct node의 "clock-names" property의 주소
 	struct property *prop = of_find_property(np, propname, NULL);
+	// prop: mct node의 "clock-names" property의 주소
+
 	size_t l;
 	int i;
 	const char *p, *end;
 
+	// prop: mct node의 "clock-names" property의 주소
 	if (!prop)
 		return -EINVAL;
+
+	// prop->value: (mct node의 "clock-names" property의 주소)->value: property "clock-names" 값의 시작 주소 ("fin_pll", "mct";)
 	if (!prop->value)
 		return -ENODATA;
 
+	// prop->value: (mct node의 "clock-names" property의 주소)->value: property "clock-names" 값의 시작 주소 ("fin_pll", "mct";)
 	p = prop->value;
-	end = p + prop->length;
+	// p: property "clock-names" 값의 시작 주소 ("fin_pll", "mct")
 
+	// p: property "clock-names" 값의 시작 주소 ("fin_pll", "mct")
+	// prop->length: (mct node의 "clock-names" property의 주소)->length: 12
+	end = p + prop->length;
+	// end: property "clock-names" 값의 끝 주소
+
+	// p: property "clock-names" 값의 시작 주소, end: property "clock-names" 값의 끝 주소
 	for (i = 0; p < end; i++, p += l) {
+		// i: 0, p: property "clock-names" 값의 시작 주소, strlen(property "clock-names" 값의 시작 주소): 7
 		l = strlen(p) + 1;
+		// l: 8
+
+		// p: property "clock-names" 값의 시작 주소, l: 8, end: property "clock-names" 값의 끝 주소
 		if (p + l > end)
 			return -EILSEQ;
+
+		// string: "fin_pll", p: property "clock-names" 값의 시작 주소
 		pr_debug("comparing %s with %s\n", string, p);
+		// "comparing fin_pll with fin_pll\n"
+
+		// string: "fin_pll", p: property "clock-names" 값의 시작 주소 ("fin_pll")
+		// strcmp("fin_pll", property "clock-names" 값의 시작 주소 ("fin_pll")): 0
 		if (strcmp(string, p) == 0)
+			// i: 0
 			return i; /* Found it; return index */
+			// return 0
 	}
 	return -ENODATA;
 }
@@ -1563,6 +1596,9 @@ void of_print_phandle_args(const char *msg, const struct of_phandle_args *args)
 	printk("\n");
 }
 
+// ARM10C 20150321
+// np: devtree에서 allnext로 순회 하면서 찾은 mct node의 주소, list_name: "clocks",
+// cells_name: "#clock-cells", 0, index: 0, out_args: &clkspec
 static int __of_parse_phandle_with_args(const struct device_node *np,
 					const char *list_name,
 					const char *cells_name,
@@ -1571,26 +1607,51 @@ static int __of_parse_phandle_with_args(const struct device_node *np,
 {
 	const __be32 *list, *list_end;
 	int rc = 0, size, cur_index = 0;
+	// rc: 0, cur_index: 0
+
 	uint32_t count = 0;
+	// count: 0
+
 	struct device_node *node = NULL;
+	// node: NULL
+
 	phandle phandle;
 
 	/* Retrieve the phandle list property */
+	// np: devtree에서 allnext로 순회 하면서 찾은 mct node의 주소, list_name: "clocks",
+	// of_get_property(devtree에서 allnext로 순회 하면서 찾은 mct node의 주소, "clocks", &size):
+	// mct node의 "clocks" property의 값의 주소, size: 16
 	list = of_get_property(np, list_name, &size);
+	// list: mct node의 "clocks" property의 값의 주소
+
+	// list: mct node의 "clocks" property의 값의 주소
 	if (!list)
 		return -ENOENT;
+
+	// list: mct node의 "clocks" property의 값의 주소, size: 16, sizeof(*list): 4
 	list_end = list + size / sizeof(*list);
+	// list_end: mct node의 "clocks" property의 값의 주소 + 4
 
 	/* Loop over the phandles until all the requested entry is found */
+	// list: mct node의 "clocks" property의 값의 주소, list_end: mct node의 "clocks" property의 값의 주소 + 4
 	while (list < list_end) {
+		// EINVAL: 22
 		rc = -EINVAL;
+		// rc: -22
+
 		count = 0;
+		// count: 0
 
 		/*
 		 * If phandle is 0, then it is an empty entry with no
 		 * arguments.  Skip forward to the next entry.
 		 */
+		// list: mct node의 "clocks" property의 값의 주소,
+		// be32_to_cpup(mct node의 "clocks" property의 값의 주소): exynos5420 dtb상의 clock node의 주소
 		phandle = be32_to_cpup(list++);
+		// phandle: exynos5420 dtb상의 clock node의 주소
+
+		// phandle: exynos5420 dtb상의 clock node의 주소
 		if (phandle) {
 			/*
 			 * Find the provider node and parse the #*-cells
@@ -1601,8 +1662,14 @@ static int __of_parse_phandle_with_args(const struct device_node *np,
 			 * except when we're going to return the found node
 			 * below.
 			 */
+			// cells_name: "#clock-cells", cur_index: 0, index: 0
 			if (cells_name || cur_index == index) {
+				// phandle: exynos5420 dtb상의 clock node의 주소
+				// of_find_node_by_phandle(exynos5420 dtb상의 clock node의 주소): clock node의 주소
 				node = of_find_node_by_phandle(phandle);
+				// node: clock node의 주소
+
+				// node: clock node의 주소
 				if (!node) {
 					pr_err("%s: could not find phandle\n",
 						np->full_name);
@@ -1610,7 +1677,10 @@ static int __of_parse_phandle_with_args(const struct device_node *np,
 				}
 			}
 
+			// cells_name: "#clock-cells"
 			if (cells_name) {
+				// node: clock node의 주소, cells_name: "#clock-cells"
+				// of_property_read_u32(clock node의 주소, "#clock-cells", &count): 0, count: 1
 				if (of_property_read_u32(node, cells_name,
 							 &count)) {
 					pr_err("%s: could not get %s for %s\n",
@@ -1626,6 +1696,8 @@ static int __of_parse_phandle_with_args(const struct device_node *np,
 			 * Make sure that the arguments actually fit in the
 			 * remaining property data length
 			 */
+			// list: mct node의 "clocks" property의 값의 주소 + 1, count: 1,
+			// list_end: mct node의 "clocks" property의 값의 주소 + 4
 			if (list + count > list_end) {
 				pr_err("%s: arguments longer than property\n",
 					 np->full_name);
@@ -1639,25 +1711,46 @@ static int __of_parse_phandle_with_args(const struct device_node *np,
 		 * index matches, then fill the out_args structure and return,
 		 * or return -ENOENT for an empty entry.
 		 */
+		// ENOENT: 2
 		rc = -ENOENT;
+		// rc: -2
+
+		// cur_index: 0, index: 0
 		if (cur_index == index) {
+			// phandle: exynos5420 dtb상의 clock node의 주소
 			if (!phandle)
 				goto err;
 
+			// out_args: &clkspec
 			if (out_args) {
 				int i;
+
+				// count: 1, MAX_PHANDLE_ARGS: 8
 				if (WARN_ON(count > MAX_PHANDLE_ARGS))
 					count = MAX_PHANDLE_ARGS;
+
+				// out_args->np: (&clkspec)->np, node: clock node의 주소
 				out_args->np = node;
+				// out_args->np: (&clkspec)->np: clock node의 주소
+
+				// out_args->args_count: (&clkspec)->args_count, count: 1
 				out_args->args_count = count;
+				// out_args->args_count: (&clkspec)->args_count: 1
+
+				// count: 1
 				for (i = 0; i < count; i++)
+					// i: 0, out_args->args[0]: (&clkspec)->args[0]
+					// list: mct node의 "clocks" property의 값의 주소 + 1
+					// be32_to_cpup(mct node의 "clocks" property의 값의 주소 + 1): 1
 					out_args->args[i] = be32_to_cpup(list++);
+					// out_args->args[0]: (&clkspec)->args[0]: 1
 			} else {
 				of_node_put(node);
 			}
 
 			/* Found it! return success */
 			return 0;
+			// return 0
 		}
 
 		of_node_put(node);
@@ -1737,14 +1830,29 @@ EXPORT_SYMBOL(of_parse_phandle);
  * To get a device_node of the `node2' node you may call this:
  * of_parse_phandle_with_args(node3, "list", "#list-cells", 1, &args);
  */
+// ARM10C 20150321
+// np: devtree에서 allnext로 순회 하면서 찾은 mct node의 주소, "clocks", "#clock-cells", index: 0, &clkspec
 int of_parse_phandle_with_args(const struct device_node *np, const char *list_name,
 				const char *cells_name, int index,
 				struct of_phandle_args *out_args)
 {
+	// index: 0
 	if (index < 0)
 		return -EINVAL;
+
+	// np: devtree에서 allnext로 순회 하면서 찾은 mct node의 주소, list_name: "clocks",
+	// cells_name: "#clock-cells", index: 0, out_args: &clkspec
+	// __of_parse_phandle_with_args(devtree에서 allnext로 순회 하면서 찾은 mct node의 주소, "clocks", "#clock-cells", 0, 0, &clkspec): 0
 	return __of_parse_phandle_with_args(np, list_name, cells_name, 0,
 					    index, out_args);
+	// return 0
+
+	// __of_parse_phandle_with_args에서 한일:
+	// mct node 에서 "clocks" property의 이용하여 devtree의 값을 파싱하여 clkspec에 값을 가져옴
+	//
+	// (&clkspec)->np: clock node의 주소
+	// (&clkspec)->args_count: 1
+	// (&clkspec)->args[0]: 1
 }
 EXPORT_SYMBOL(of_parse_phandle_with_args);
 

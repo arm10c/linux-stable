@@ -89,6 +89,7 @@ static unsigned int mct_int_type;
 // MCT_NR_IRQS: 8
 static int mct_irqs[MCT_NR_IRQS];
 
+// ARM10C 20150321
 struct mct_clock_event_device {
 	struct clock_event_device evt;
 	unsigned long base;
@@ -305,6 +306,7 @@ static void exynos4_clockevent_init(void)
 	setup_irq(mct_irqs[MCT_G0_IRQ], &mct_comp_event_irq);
 }
 
+// ARM10C 20150321
 static DEFINE_PER_CPU(struct mct_clock_event_device, percpu_mct_tick);
 
 /* Clock event handling */
@@ -488,12 +490,17 @@ static struct notifier_block exynos4_mct_cpu_nb = {
 	.notifier_call = exynos4_mct_cpu_notify,
 };
 
+// ARM10C 20150321
+// np: devtree에서 allnext로 순회 하면서 찾은 mct node의 주소, 0xf0072000
 static void __init exynos4_timer_resources(struct device_node *np, void __iomem *base)
 {
 	int err;
 	struct mct_clock_event_device *mevt = this_cpu_ptr(&percpu_mct_tick);
+	// mevt: [pcp0] &percpu_mct_tick
+
 	struct clk *mct_clk, *tick_clk;
 
+	// np: devtree에서 allnext로 순회 하면서 찾은 mct node의 주소
 	tick_clk = np ? of_clk_get_by_name(np, "fin_pll") :
 				clk_get(NULL, "fin_pll");
 	if (IS_ERR(tick_clk))
@@ -616,6 +623,7 @@ static void __init mct_init_dt(struct device_node *np, unsigned int int_type)
 	// mct_irqs[7]: 155
 
 	// np: devtree에서 allnext로 순회 하면서 찾은 mct node의 주소
+	// of_iomap(devtree에서 allnext로 순회 하면서 찾은 mct node의 주소, 0): 0xf0072000
 	exynos4_timer_resources(np, of_iomap(np, 0));
 	exynos4_clocksource_init();
 	exynos4_clockevent_init();

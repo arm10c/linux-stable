@@ -471,6 +471,8 @@ static const struct rb_augment_callbacks dummy_callbacks = {
 // va->rb_node: (kmem_cache#30-oX (COMB))->rb_node
 // ARM10C 20150110
 // va->rb_node: (kmem_cache#30-oX (CLK))->rb_node
+// ARM10C 20150321
+// va->rb_node: (kmem_cache#30-oX (MCT))->rb_node
 void rb_insert_color(struct rb_node *node, struct rb_root *root)
 {
 	// node: &(kmem_cache#30-o9)->rb_node, root: &vmap_area_root

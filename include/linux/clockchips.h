@@ -87,6 +87,7 @@ enum clock_event_mode {
  * @list:		list head for the management code
  * @owner:		module reference
  */
+// ARM10C 20150321
 struct clock_event_device {
 	void			(*event_handler)(struct clock_event_device *);
 	int			(*set_next_event)(unsigned long evt,

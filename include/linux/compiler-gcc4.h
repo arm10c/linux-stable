@@ -11,6 +11,11 @@
 
 // ARM10C 20140405
 #define __used			__attribute__((__used__))
+// ARM10C 20150321
+// NOTE: Gcc Manual 4.8.1
+// warn_unused_result: The warn_unused_result attribute causes a warning to be emitted
+// if a caller of the function with this attribute does not use its return value.
+// http://egloos.zum.com/studyfoss/v/5310361
 #define __must_check 		__attribute__((warn_unused_result))
 #define __compiler_offsetof(a,b) __builtin_offsetof(a,b)
 
