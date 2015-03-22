@@ -1077,12 +1077,12 @@ void __iomem *of_iomap(struct device_node *np, int index)
 	// res.start: 0x10010000, resource_size(&res): 0x30000
 	// ioremap(0x10010000, 0x30000): 0xf0040000
 	// res.start: 0x101C0000, resource_size(&res): 0x800
-	// ioremap(0x101C0000, 0x800): 0xf0072000
+	// ioremap(0x101C0000, 0x800): 0xf0006000
 	return ioremap(res.start, resource_size(&res));
 	// return 0xf0000000
 	// return 0xf0002000
 	// return 0xf0004000
 	// return 0xf0040000
-	// return 0xf0072000
+	// return 0xf0006000
 }
 EXPORT_SYMBOL(of_iomap);
