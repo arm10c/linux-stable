@@ -501,12 +501,34 @@ static void __init exynos4_timer_resources(struct device_node *np, void __iomem 
 	struct clk *mct_clk, *tick_clk;
 
 	// np: devtree에서 allnext로 순회 하면서 찾은 mct node의 주소
+	// of_clk_get_by_name(devtree에서 allnext로 순회 하면서 찾은 mct node의 주소, "fin_pll"): kmem_cache#29-oX (fin_pll)
 	tick_clk = np ? of_clk_get_by_name(np, "fin_pll") :
 				clk_get(NULL, "fin_pll");
+	// tick_clk: kmem_cache#29-oX (fin_pll)
+
+	// of_clk_get_by_name에서 한일:
+	// mct node의 property "clock-names" 의 값을 찾아서 "fin_pll" 이 있는 위치를 찾고
+	// 몇번째 값인지 index를 구함
+	//
+	// mct node 에서 "clocks" property의 이용하여 devtree의 값을 파싱하여 clkspec에 값을 가져옴
+	// (&clkspec)->np: clock node의 주소
+	// (&clkspec)->args_count: 1
+	// (&clkspec)->args[0]: 1
+	//
+	// list of_clk_providers 에 등록된 정보들 중에 clkspec 와 매치되는 정보를 찾음
+	// 이전에 만들어 놓은 clk_data의 clk_table 정보를 이용하여 clkspec에 있는 arg 값을 이용하여 clk을 찾음
+	// tick_clk: kmem_cache#29-oX (fin_pll)
+
+	// tick_clk: kmem_cache#29-oX (fin_pll), IS_ERR(kmem_cache#29-oX (fin_pll)): 0
 	if (IS_ERR(tick_clk))
 		panic("%s: unable to determine tick clock rate\n", __func__);
-	clk_rate = clk_get_rate(tick_clk);
 
+	// tick_clk: kmem_cache#29-oX (fin_pll)
+	// clk_get_rate(kmem_cache#29-oX (fin_pll)): 24000000
+	clk_rate = clk_get_rate(tick_clk);
+	// clk_rate: 24000000
+
+	// np: devtree에서 allnext로 순회 하면서 찾은 mct node의 주소
 	mct_clk = np ? of_clk_get_by_name(np, "mct") : clk_get(NULL, "mct");
 	if (IS_ERR(mct_clk))
 		panic("%s: unable to retrieve mct clock instance\n", __func__);

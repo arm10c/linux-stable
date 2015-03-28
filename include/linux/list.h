@@ -582,6 +582,11 @@ static inline void list_splice_tail_init(struct list_head *list,
 // #define list_for_each_entry(h, &irq_domain_list, link):
 // for (h = list_first_entry(&irq_domain_list, typeof(*h), link);
 //     &h->link != (&irq_domain_list); h = list_next_entry(h, link))
+//
+// ARM10C 20150328
+// #define list_for_each_entry(provider, &of_clk_providers, link):
+// for (provider = list_first_entry(&of_clk_providers, typeof(*provider), link);
+//     &provider->link != (&of_clk_providers); provider = list_next_entry(provider, link))
 #define list_for_each_entry(pos, head, member)				\
 	for (pos = list_first_entry(head, typeof(*pos), member);	\
 	     &pos->member != (head);					\

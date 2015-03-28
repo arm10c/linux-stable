@@ -25,6 +25,7 @@ static struct clk **clk_table;
 static void __iomem *reg_base;
 #ifdef CONFIG_OF // CONFIG_OF=y
 // ARM10C 20150110
+// ARM10C 20150328
 static struct clk_onecell_data clk_data;
 #endif
 

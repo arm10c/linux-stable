@@ -42,6 +42,7 @@ static LIST_HEAD(clk_notifier_list);
 
 /***           locking             ***/
 // ARM10C 20150117
+// ARM10C 20150328
 static void clk_prepare_lock(void)
 {
 	// mutex_trylock(&prepare_lock): 1
@@ -72,6 +73,7 @@ static void clk_prepare_lock(void)
 }
 
 // ARM10C 20150117
+// ARM10C 20150328
 static void clk_prepare_unlock(void)
 {
 	// prepare_owner: &init_task, current: &init_task
@@ -649,6 +651,8 @@ unsigned int __clk_get_prepare_count(struct clk *clk)
 // clk->parent: (kmem_cache#29-oX (apll))->parent: kmem_cache#29-oX (fin_pll),
 // ARM10C 20150228
 // clk->parent: (kmem_cache#29-oX (sclk_apll))->parent: kmem_cache#29-oX (mout_apll),
+// ARM10C 20150328
+// clk: kmem_cache#29-oX (fin_pll),
 unsigned long __clk_get_rate(struct clk *clk)
 {
 	unsigned long ret;
@@ -1254,19 +1258,37 @@ static void __clk_recalc_rates(struct clk *clk, unsigned long msg)
  * is set, which means a recalc_rate will be issued.
  * If clk is NULL then returns 0.
  */
+// ARM10C 20150328
+// tick_clk: kmem_cache#29-oX (fin_pll)
 unsigned long clk_get_rate(struct clk *clk)
 {
 	unsigned long rate;
 
 	clk_prepare_lock();
 
+	// clk_prepare_lock 에서 한일:
+	// &prepare_lock을 이용한 mutex lock 수행
+	// prepare_refcnt: 1
+
+	// clk: kmem_cache#29-oX (fin_pll),
+	// clk->flags: (kmem_cache#29-oX (fin_pll))->flags: 0x30, CLK_GET_RATE_NOCACHE: 0x40
 	if (clk && (clk->flags & CLK_GET_RATE_NOCACHE))
 		__clk_recalc_rates(clk, 0);
 
+	// clk: kmem_cache#29-oX (fin_pll)
+	// __clk_get_rate(kmem_cache#29-oX (fin_pll)): 24000000
 	rate = __clk_get_rate(clk);
+	// rate: 24000000
+
 	clk_prepare_unlock();
 
+	// clk_prepare_unlock에서 한일:
+	// &prepare_lock을 이용한 mutex unlock 수행
+	// prepare_refcnt: 0
+
+	// rate: 24000000
 	return rate;
+	// return 24000000
 }
 EXPORT_SYMBOL_GPL(clk_get_rate);
 
@@ -3488,6 +3510,7 @@ EXPORT_SYMBOL_GPL(clk_notifier_unregister);
  * @data: context pointer to be passed into @get callback
  */
 // ARM10C 20150110
+// ARM10C 20150328
 // sizeof(struct of_clk_provider): 20 bytes
 struct of_clk_provider {
 	struct list_head link;
@@ -3510,8 +3533,10 @@ static const struct of_device_id __clk_of_table_sentinel
 	__used __section(__clk_of_table_end);
 
 // ARM10C 20150110
+// ARM10C 20150328
 static LIST_HEAD(of_clk_providers);
 // ARM10C 20150110
+// ARM10C 20150328
 static DEFINE_MUTEX(of_clk_lock);
 
 struct clk *of_clk_src_simple_get(struct of_phandle_args *clkspec,
@@ -3522,17 +3547,28 @@ struct clk *of_clk_src_simple_get(struct of_phandle_args *clkspec,
 EXPORT_SYMBOL_GPL(of_clk_src_simple_get);
 
 // ARM10C 20150110
+// ARM10C 20150328
+// &clkspec, &clk_data
 struct clk *of_clk_src_onecell_get(struct of_phandle_args *clkspec, void *data)
 {
+	// data: &clk_data
 	struct clk_onecell_data *clk_data = data;
-	unsigned int idx = clkspec->args[0];
+	// clk_data: &clk_data
 
+	// clkspec->args[0]: (&clkspec)->args[0]: 1
+	unsigned int idx = clkspec->args[0];
+	// idx: 1
+
+	// idx: 1, clk_data->clk_num: (&clk_data)->clk_num: 769
 	if (idx >= clk_data->clk_num) {
 		pr_err("%s: invalid clock index %d\n", __func__, idx);
 		return ERR_PTR(-EINVAL);
 	}
 
+	// idx: 1, clk_data->clks[1]: (&clk_data)->clks[1]:
+	// clk_table[1]: (kmem_cache#23-o0)[1]: kmem_cache#29-oX (fin_pll)
 	return clk_data->clks[idx];
+	// return kmem_cache#29-oX (fin_pll)
 }
 EXPORT_SYMBOL_GPL(of_clk_src_onecell_get);
 
@@ -3615,22 +3651,48 @@ void of_clk_del_provider(struct device_node *np)
 }
 EXPORT_SYMBOL_GPL(of_clk_del_provider);
 
+// ARM10C 20150328
+// &clkspec
 struct clk *of_clk_get_from_provider(struct of_phandle_args *clkspec)
 {
 	struct of_clk_provider *provider;
+
+	// ENOENT: 2, ERR_PTR(-2): 0xfffffffe
 	struct clk *clk = ERR_PTR(-ENOENT);
+	// clk: 0xfffffffe
 
 	/* Check if we have such a provider in our array */
 	mutex_lock(&of_clk_lock);
+	// of_clk_lock을 사용하여 mutex lock 수행
+
 	list_for_each_entry(provider, &of_clk_providers, link) {
+	// for (provider = list_first_entry(&of_clk_providers, typeof(*provider), link);
+	//     &provider->link != (&of_clk_providers); provider = list_next_entry(provider, link))
+
+		// provider: kmem_cache#30-oX (of_clk_provider)
+
+		// provider->node: (kmem_cache#30-oX (of_clk_provider))->node:
+		// devtree에서 allnext로 순회 하면서 찾은 clock node의 주소,
+		// clkspec->np: (&clkspec)->np: clock node의 주소
 		if (provider->node == clkspec->np)
+			// provider->get: (kmem_cache#30-oX (of_clk_provider))->get: of_clk_src_onecell_get
+			// clkspec: &clkspec, provider->data: (kmem_cache#30-oX (of_clk_provider))->data: &clk_data
+			// of_clk_src_onecell_get(&clkspec, &clk_data): kmem_cache#29-oX (fin_pll)
 			clk = provider->get(clkspec, provider->data);
+			// clk: kmem_cache#29-oX (fin_pll)
+
+		// clk: kmem_cache#29-oX (fin_pll), IS_ERR(kmem_cache#29-oX (fin_pll)): 0
 		if (!IS_ERR(clk))
 			break;
+			// break 수행
 	}
-	mutex_unlock(&of_clk_lock);
 
+	mutex_unlock(&of_clk_lock);
+	// of_clk_lock을 사용하여 mutex unlock 수행
+
+	// clk: kmem_cache#29-oX (fin_pll)
 	return clk;
+	// return kmem_cache#29-oX (fin_pll)
 }
 
 int of_clk_get_parent_count(struct device_node *np)
