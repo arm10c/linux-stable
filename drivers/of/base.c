@@ -1505,9 +1505,6 @@ int of_property_match_string(struct device_node *np, const char *propname,
 	// np: devtree에서 allnext로 순회 하면서 찾은 mct node의 주소, propname: "clock-names"
 	// of_find_property(devtree에서 allnext로 순회 하면서 찾은 mct node의 주소, "clock-names", NULL):
 	// mct node의 "clock-names" property의 주소
-	// np: devtree에서 allnext로 순회 하면서 찾은 mct node의 주소, propname: "clock-names"
-	// of_find_property(devtree에서 allnext로 순회 하면서 찾은 mct node의 주소, "clock-names", NULL):
-	// mct node의 "clock-names" property의 주소
 	struct property *prop = of_find_property(np, propname, NULL);
 	// prop: mct node의 "clock-names" property의 주소
 

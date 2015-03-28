@@ -94,7 +94,7 @@ int clk_notifier_unregister(struct clk *clk, struct notifier_block *nb);
  *
  * Must not be called from within atomic context.
  */
-#ifdef CONFIG_HAVE_CLK_PREPARE
+#ifdef CONFIG_HAVE_CLK_PREPARE // CONFIG_HAVE_CLK_PREPARE=y
 int clk_prepare(struct clk *clk);
 #else
 static inline int clk_prepare(struct clk *clk)
@@ -122,7 +122,7 @@ static inline void clk_unprepare(struct clk *clk)
 }
 #endif
 
-#ifdef CONFIG_HAVE_CLK
+#ifdef CONFIG_HAVE_CLK // CONFIG_HAVE_CLK=y
 /**
  * clk_get - lookup and obtain a reference to a clock producer.
  * @dev: device for clock "consumer"
@@ -329,18 +329,51 @@ static inline struct clk *clk_get_parent(struct clk *clk)
 #endif
 
 /* clk_prepare_enable helps cases using clk_enable in non-atomic context. */
+// ARM10C 20150328
+// mct_clk: kmem_cache#29-oX (mct)
 static inline int clk_prepare_enable(struct clk *clk)
 {
 	int ret;
 
+	// clk: kmem_cache#29-oX (mct)
+	// clk_prepare(kmem_cache#29-oX (mct)): 0
 	ret = clk_prepare(clk);
+	// ret:  0
+
+	// clk_prepare에서 한일:
+	// mct clock의 상위 clock 들의 ops->prepare 함수들을 수행.
+	// sck_cpll -- Group1_p -- mout_aclk66 -- dout_aclk66 -- mct
+	// sck_ppll -|
+	// sck_mpll -|
+	//
+	// sck_cpll, mout_aclk66, dout_aclk66 의 주석을 만들지 않았기 때문에
+	// 분석내용을 skip 하도록함
+
+	// ret:  0
 	if (ret)
 		return ret;
+
+	// clk: kmem_cache#29-oX (mct)
+	// clk_enable(kmem_cache#29-oX (mct)): 0
 	ret = clk_enable(clk);
+	// ret: 0
+
+	// clk_enable에서 한일:
+	// mct clock의 상위 clock 들의 ops->enable 함수들을 수행.
+	// sck_cpll -- Group1_p -- mout_aclk66 -- dout_aclk66 -- mct
+	// sck_ppll -|
+	// sck_mpll -|
+	//
+	// sck_cpll, mout_aclk66, dout_aclk66 의 주석을 만들지 않았기 때문에
+	// 분석내용을 skip 하도록함
+
+	// ret: 0
 	if (ret)
 		clk_unprepare(clk);
 
+	// ret: 0
 	return ret;
+	// return 0
 }
 
 /* clk_disable_unprepare helps cases using clk_disable in non-atomic context. */

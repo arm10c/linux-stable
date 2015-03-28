@@ -211,6 +211,8 @@ static inline void do_raw_spin_unlock(raw_spinlock_t *lock) __releases(lock)
 #if defined(CONFIG_SMP) || defined(CONFIG_DEBUG_SPINLOCK) // CONFIG_SMP=y, CONFIG_DEBUG_SPINLOCK=y
 
 // ARM10C 20150103
+// ARM10C 20150328
+// &desc->lock: (kmem_cache#28-oX (irq 152))->lock
 #define raw_spin_lock_irqsave(lock, flags)			\
 	do {						\
 		typecheck(unsigned long, flags);	\

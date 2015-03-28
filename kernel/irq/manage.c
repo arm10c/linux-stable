@@ -136,6 +136,7 @@ irq_get_pending(struct cpumask *mask, struct irq_desc *desc)
 	cpumask_copy(mask, desc->pending_mask);
 }
 #else
+// ARM10C 20150328
 static inline bool irq_can_move_pcntxt(struct irq_data *data) { return true; }
 static inline bool irq_move_pending(struct irq_data *data) { return false; }
 static inline void
@@ -144,13 +145,27 @@ static inline void
 irq_get_pending(struct cpumask *mask, struct irq_desc *desc) { }
 #endif
 
+// ARM10C 20150328
+// data: &(kmem_cache#28-oX (irq 152))->irq_data, mask: &cpu_bit_bitmap[1][0], false
 int irq_do_set_affinity(struct irq_data *data, const struct cpumask *mask,
 			bool force)
 {
+	// data: &(kmem_cache#28-oX (irq 152))->irq_data,
+	// irq_data_to_desc(&(kmem_cache#28-oX (irq 152))->irq_data): kmem_cache#28-oX (irq 152)
 	struct irq_desc *desc = irq_data_to_desc(data);
+	// desc: kmem_cache#28-oX (irq 152)
+
+	// data: &(kmem_cache#28-oX (irq 152))->irq_data,
+	// irq_data_get_irq_chip(&(kmem_cache#28-oX (irq 152))->irq_data):
+	// (&(kmem_cache#28-oX (irq 152))->irq_data)->chip: &gic_chip
 	struct irq_chip *chip = irq_data_get_irq_chip(data);
+	// chip: &gic_chip
+
 	int ret;
 
+	// chip->irq_set_affinity: (&gic_chip)->irq_set_affinity: gic_set_affinity
+	// data: &(kmem_cache#28-oX (irq 152))->irq_data, mask: &cpu_bit_bitmap[1][0],
+	// gic_set_affinity(&(kmem_cache#28-oX (irq 152))->irq_data, &cpu_bit_bitmap[1][0]): 
 	ret = chip->irq_set_affinity(data, mask, false);
 	switch (ret) {
 	case IRQ_SET_MASK_OK:
@@ -163,16 +178,32 @@ int irq_do_set_affinity(struct irq_data *data, const struct cpumask *mask,
 	return ret;
 }
 
+// ARM10C 20150328
+// &(kmem_cache#28-oX (irq 152))->irq_data, mask: &cpu_bit_bitmap[1][0]
 int __irq_set_affinity_locked(struct irq_data *data, const struct cpumask *mask)
 {
+	// data: &(kmem_cache#28-oX (irq 152))->irq_data
+	// irq_data_get_irq_chip(&(kmem_cache#28-oX (irq 152))->irq_data):
+	// (&(kmem_cache#28-oX (irq 152))->irq_data)->chip: &gic_chip
 	struct irq_chip *chip = irq_data_get_irq_chip(data);
-	struct irq_desc *desc = irq_data_to_desc(data);
-	int ret = 0;
+	// chip: &gic_chip
 
+	// data: &(kmem_cache#28-oX (irq 152))->irq_data
+	// irq_data_to_desc(&(kmem_cache#28-oX (irq 152))->irq_data): kmem_cache#28-oX (irq 152)
+	struct irq_desc *desc = irq_data_to_desc(data);
+	// desc: kmem_cache#28-oX (irq 152)
+
+	int ret = 0;
+	// ret: 0
+
+	// chip: &gic_chip, chip->irq_set_affinity: (&gic_chip)->irq_set_affinity: gic_set_affinity
 	if (!chip || !chip->irq_set_affinity)
 		return -EINVAL;
 
+	// data: &(kmem_cache#28-oX (irq 152))->irq_data
+	// irq_can_move_pcntxt(&(kmem_cache#28-oX (irq 152))->irq_data): true
 	if (irq_can_move_pcntxt(data)) {
+		// data: &(kmem_cache#28-oX (irq 152))->irq_data, mask: &cpu_bit_bitmap[1][0]
 		ret = irq_do_set_affinity(data, mask, false);
 	} else {
 		irqd_set_move_pending(data);
@@ -194,16 +225,30 @@ int __irq_set_affinity_locked(struct irq_data *data, const struct cpumask *mask)
  *	@mask:		cpumask
  *
  */
+// ARM10C 20150328
+// mct_irqs[4]: 152, cpumask_of(0): &cpu_bit_bitmap[1][0]
 int irq_set_affinity(unsigned int irq, const struct cpumask *mask)
 {
+	// irq: 152, irq_to_desc(152): kmem_cache#28-oX (irq 152)
 	struct irq_desc *desc = irq_to_desc(irq);
+	// desc: kmem_cache#28-oX (irq 152)
+
 	unsigned long flags;
 	int ret;
 
+	// desc: kmem_cache#28-oX (irq 152)
 	if (!desc)
 		return -EINVAL;
 
+	// &desc->lock: (kmem_cache#28-oX (irq 152))->lock
 	raw_spin_lock_irqsave(&desc->lock, flags);
+
+	// raw_spin_lock_irqsave에서 한일:
+	// (kmem_cache#28-oX (irq 152))->lock을 사용하여 spin lock을 걸고 cpsr을 flags에 저장
+
+	// desc: kmem_cache#28-oX (irq 152)
+	// irq_desc_get_irq_data(kmem_cache#28-oX (irq 152)): &(kmem_cache#28-oX (irq 152))->irq_data,
+	// mask: &cpu_bit_bitmap[1][0]
 	ret =  __irq_set_affinity_locked(irq_desc_get_irq_data(desc), mask);
 	raw_spin_unlock_irqrestore(&desc->lock, flags);
 	return ret;

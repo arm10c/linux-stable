@@ -952,13 +952,27 @@ void clk_unprepare(struct clk *clk)
 }
 EXPORT_SYMBOL_GPL(clk_unprepare);
 
+// ARM10C 20150328
+// clk: kmem_cache#29-oX (mct)
 int __clk_prepare(struct clk *clk)
 {
 	int ret = 0;
+	// ret: 0
 
+	// clk: kmem_cache#29-oX (mct)
 	if (!clk)
 		return 0;
 
+	// NOTE:
+	// mct clock의 상위 clock 들의 ops->prepare 함수들을 수행.
+	// sck_cpll -- Group1_p -- mout_aclk66 -- dout_aclk66 -- mct
+	// sck_ppll -|
+	// sck_mpll -|
+	//
+	// sck_cpll, mout_aclk66, dout_aclk66 의 주석을 만들지 않았기 때문에
+	// 분석내용을 skip 하도록함
+
+	// clk->prepare_count: (kmem_cache#29-oX (mct))->prepare_count
 	if (clk->prepare_count == 0) {
 		ret = __clk_prepare(clk->parent);
 		if (ret)
@@ -990,15 +1004,43 @@ int __clk_prepare(struct clk *clk)
  * exclusive.  In fact clk_prepare must be called before clk_enable.
  * Returns 0 on success, -EERROR otherwise.
  */
+// ARM10C 20150328
+// clk: kmem_cache#29-oX (mct)
 int clk_prepare(struct clk *clk)
 {
 	int ret;
 
 	clk_prepare_lock();
+
+	// clk_prepare_lock 에서 한일:
+	// &prepare_lock을 이용한 mutex lock 수행
+	// prepare_owner: &init_task
+	// prepare_refcnt: 1
+
+	// clk: kmem_cache#29-oX (mct)
+	// __clk_prepare(kmem_cache#29-oX (mct)): 0
 	ret = __clk_prepare(clk);
+	// ret: 0
+
+	// __clk_prepare에서 한일:
+	// mct clock의 상위 clock 들의 ops->prepare 함수들을 수행.
+	// sck_cpll -- Group1_p -- mout_aclk66 -- dout_aclk66 -- mct
+	// sck_ppll -|
+	// sck_mpll -|
+	//
+	// sck_cpll, mout_aclk66, dout_aclk66 의 주석을 만들지 않았기 때문에
+	// 분석내용을 skip 하도록함
+
 	clk_prepare_unlock();
 
+	// clk_prepare_unlock에서 한일:
+	// prepare_refcnt: 0
+	// prepare_owner: NULL
+	// &prepare_lock을 이용한 mutex unlock 수행
+
+	// ret: 0
 	return ret;
+	// return 0
 }
 EXPORT_SYMBOL_GPL(clk_prepare);
 
@@ -1044,12 +1086,25 @@ void clk_disable(struct clk *clk)
 }
 EXPORT_SYMBOL_GPL(clk_disable);
 
+// ARM10C 20150328
+// clk: kmem_cache#29-oX (mct)
 static int __clk_enable(struct clk *clk)
 {
 	int ret = 0;
+	// ret: 0
 
+	// clk: kmem_cache#29-oX (mct)
 	if (!clk)
 		return 0;
+
+	// NOTE:
+	// mct clock의 상위 clock 들의 ops->enable 함수들을 수행.
+	// sck_cpll -- Group1_p -- mout_aclk66 -- dout_aclk66 -- mct
+	// sck_ppll -|
+	// sck_mpll -|
+	//
+	// sck_cpll, mout_aclk66, dout_aclk66 의 주석을 만들지 않았기 때문에
+	// 분석내용을 skip 하도록함
 
 	if (WARN_ON(clk->prepare_count == 0))
 		return -ESHUTDOWN;
