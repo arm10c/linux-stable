@@ -39,6 +39,7 @@
 // CLK_IS_BASIC: 0x20
 #define CLK_IS_BASIC		BIT(5) /* Basic clk, can't do a to_clk_foo() */
 // ARM10C 20150117
+// ARM10C 20150328
 // CLK_GET_RATE_NOCACHE: 0x40
 #define CLK_GET_RATE_NOCACHE	BIT(6) /* do not use the cached clk rate */
 // ARM10C 20150131
@@ -506,6 +507,7 @@ struct of_device_id;
 typedef void (*of_clk_init_cb_t)(struct device_node *);
 
 // ARM10C 20150110
+// ARM10C 20150328
 struct clk_onecell_data {
 	struct clk **clks;
 	unsigned int clk_num;

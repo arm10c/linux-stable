@@ -74,6 +74,7 @@ struct gic_chip_data {
 };
 
 // ARM10C 20141220
+// ARM10C 20150328
 static DEFINE_RAW_SPINLOCK(irq_controller_lock);
 
 /*
@@ -83,11 +84,13 @@ static DEFINE_RAW_SPINLOCK(irq_controller_lock);
  */
 // ARM10C 20141108
 // ARM10C 20141129
+// ARM10C 20150328
 // NR_GIC_CPU_IF: 8
 #define NR_GIC_CPU_IF 8
 
 // ARM10C 20141108
 // ARM10C 20141129
+// ARM10C 20150328
 // NR_GIC_CPU_IF: 8
 static u8 gic_cpu_map[NR_GIC_CPU_IF] __read_mostly;
 
@@ -161,6 +164,8 @@ static inline void gic_set_base_accessor(struct gic_chip_data *data,
 
 // ARM10C 20141220
 // d: &(kmem_cache#28-oX (irq 32))->irq_data
+// ARM10C 20150328
+// d: &(kmem_cache#28-oX (irq 152))->irq_data
 static inline void __iomem *gic_dist_base(struct irq_data *d)
 {
 	// d: &(kmem_cache#28-oX (irq 32))->irq_data
@@ -182,6 +187,8 @@ static inline void __iomem *gic_cpu_base(struct irq_data *d)
 
 // ARM10C 20141220
 // d: &(kmem_cache#28-oX (irq 32))->irq_data
+// ARM10C 20150328
+// d: &(kmem_cache#28-oX (irq 152))->irq_data
 static inline unsigned int gic_irq(struct irq_data *d)
 {
 	// d->hwirq: (&(kmem_cache#28-oX (irq 32))->irq_data)->hwirq: 32
@@ -302,24 +309,53 @@ static int gic_retrigger(struct irq_data *d)
 	return 0;
 }
 
-#ifdef CONFIG_SMP
+#ifdef CONFIG_SMP // CONFIG_SMP=y
+// ARM10C 20150328
+// data: &(kmem_cache#28-oX (irq 152))->irq_data, mask: &cpu_bit_bitmap[1][0], false
 static int gic_set_affinity(struct irq_data *d, const struct cpumask *mask_val,
 			    bool force)
 {
+	// d: &(kmem_cache#28-oX (irq 152))->irq_data,
+	// gic_dist_base(&(kmem_cache#28-oX (irq 152))->irq_data): 0xf0000000
+	// GIC_DIST_TARGET: 0x800, gic_irq(&(kmem_cache#28-oX (irq 152))->irq_data): 152
 	void __iomem *reg = gic_dist_base(d) + GIC_DIST_TARGET + (gic_irq(d) & ~3);
+	// reg: 0xf0000898
+
+	// d: &(kmem_cache#28-oX (irq 152))->irq_data,
+	// gic_irq(&(kmem_cache#28-oX (irq 152))->irq_data): 152
 	unsigned int shift = (gic_irq(d) % 4) * 8;
+	// shift: 0
+
+	// cpu_online_bits[0]: 1
+	// mask_val: &cpu_bit_bitmap[1][0], cpu_online_mask: cpu_online_bits
+	// cpumask_any_and(&cpu_bit_bitmap[1][0], cpu_online_bits): 0
 	unsigned int cpu = cpumask_any_and(mask_val, cpu_online_mask);
+	// cpu: 0
+
 	u32 val, mask, bit;
 
+	// cpu: 0, NR_GIC_CPU_IF: 8, nr_cpu_ids: 4
 	if (cpu >= NR_GIC_CPU_IF || cpu >= nr_cpu_ids)
 		return -EINVAL;
 
 	raw_spin_lock(&irq_controller_lock);
+	// irq_controller_lock을 사용하여 spinlock 설정
+
+	// shift: 0
 	mask = 0xff << shift;
+	// mask: 0xff
+
+	// cpu: 0, gic_cpu_map[0]: 0x01, shift: 0
 	bit = gic_cpu_map[cpu] << shift;
+	// bit: 0x01
+
+// 2015/03/28 종료
+
+	// reg: 0xf0000898, mask: 0xff
 	val = readl_relaxed(reg) & ~mask;
 	writel_relaxed(val | bit, reg);
 	raw_spin_unlock(&irq_controller_lock);
+	// irq_controller_lock을 사용하여 spinlock 해제
 
 	return IRQ_SET_MASK_OK;
 }
@@ -427,6 +463,7 @@ static void gic_handle_cascade_irq(unsigned int irq, struct irq_desc *desc)
 }
 
 // ARM10C 20141122
+// ARM10C 20150328
 static struct irq_chip gic_chip = {
 	.name			= "GIC",
 	.irq_mask		= gic_mask_irq,

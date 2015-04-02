@@ -363,6 +363,7 @@ static inline irq_hw_number_t irqd_to_hwirq(struct irq_data *d)
  */
 // ARM10C 20141122
 // ARM10C 20141129
+// ARM10C 20150328
 struct irq_chip {
 	const char	*name;
 	unsigned int	(*irq_startup)(struct irq_data *data);
@@ -639,9 +640,13 @@ static inline struct irq_chip *irq_get_chip(unsigned int irq)
 	return d ? d->chip : NULL;
 }
 
+// ARM10C 20150328
+// data: &(kmem_cache#28-oX (irq 152))->irq_data
 static inline struct irq_chip *irq_data_get_irq_chip(struct irq_data *d)
 {
+	// d->chip: (&(kmem_cache#28-oX (irq 152))->irq_data)->chip
 	return d->chip;
+	// return (&(kmem_cache#28-oX (irq 152))->irq_data)->chip
 }
 
 static inline void *irq_get_chip_data(unsigned int irq)

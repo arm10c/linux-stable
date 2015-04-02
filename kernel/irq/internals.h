@@ -66,6 +66,8 @@ enum {
 #include "debug.h"
 #include "settings.h"
 
+// ARM10C 20150328
+// data: &(kmem_cache#28-oX (irq 152))->irq_data
 #define irq_data_to_desc(data)	container_of(data, struct irq_desc, irq_data)
 
 extern int __irq_set_trigger(struct irq_desc *desc, unsigned int irq,

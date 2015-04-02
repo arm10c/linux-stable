@@ -42,6 +42,7 @@ struct irq_desc;
 // ARM10C 20141122
 // ARM10C 20141220
 // ARM10C 20150321
+// ARM10C 20150328
 // sizeof(struct irq_desc): 156 bytes
 struct irq_desc {
 	struct irq_data		irq_data;
@@ -82,9 +83,13 @@ struct irq_desc {
 extern struct irq_desc irq_desc[NR_IRQS];
 #endif
 
+// ARM10C 20150328
+// desc: kmem_cache#28-oX (irq 152)
 static inline struct irq_data *irq_desc_get_irq_data(struct irq_desc *desc)
 {
+	// &desc->irq_data: &(kmem_cache#28-oX (irq 152))->irq_data
 	return &desc->irq_data;
+	// return &(kmem_cache#28-oX (irq 152))->irq_data
 }
 
 static inline struct irq_chip *irq_desc_get_chip(struct irq_desc *desc)

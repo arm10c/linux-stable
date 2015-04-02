@@ -36,6 +36,7 @@ typedef struct cpumask { DECLARE_BITMAP(bits, NR_CPUS); } cpumask_t;
 // ARM10C 20140726
 // ARM10C 20140920
 // ARM10C 20140927
+// ARM10C 20150328
 // nr_cpu_ids: 4
 extern int nr_cpu_ids;
 #endif
@@ -95,6 +96,7 @@ extern int nr_cpu_ids;
  */
 
 extern const struct cpumask *const cpu_possible_mask;
+// ARM10C 20150328
 extern const struct cpumask *const cpu_online_mask;
 extern const struct cpumask *const cpu_present_mask;
 // ARM10C 20140913
@@ -155,6 +157,7 @@ static inline unsigned int cpumask_next_zero(int n, const struct cpumask *srcp)
 	return n+1;
 }
 
+// ARM10C 20150328
 static inline unsigned int cpumask_next_and(int n,
 					    const struct cpumask *srcp,
 					    const struct cpumask *andp)
@@ -197,6 +200,8 @@ static inline unsigned int cpumask_first(const struct cpumask *srcp)
 // ARM10C 20140215
 // ARM10C 20140607
 // n: -1, srcp: cpu_possible_mask
+// ARM10C 20150328
+// n: -1, src1p: &cpu_bit_bitmap[1][0]
 static inline unsigned int cpumask_next(int n, const struct cpumask *srcp)
 {
 	/* -1 is a legal arg here. */
@@ -223,6 +228,7 @@ static inline unsigned int cpumask_next_zero(int n, const struct cpumask *srcp)
 	return find_next_zero_bit(cpumask_bits(srcp), nr_cpumask_bits, n+1);
 }
 
+// ARM10C 20150328
 int cpumask_next_and(int n, const struct cpumask *, const struct cpumask *);
 int cpumask_any_but(const struct cpumask *mask, unsigned int cpu);
 
@@ -588,6 +594,8 @@ static inline void cpumask_copy(struct cpumask *dstp,
  *
  * Returns >= nr_cpu_ids if no cpus set in both.  See also cpumask_next_and().
  */
+// ARM10C 20150328
+// mask_val: &cpu_bit_bitmap[1][0], cpu_online_mask: cpu_online_bits[1]
 #define cpumask_first_and(src1p, src2p) cpumask_next_and(-1, (src1p), (src2p))
 
 /**
@@ -597,6 +605,8 @@ static inline void cpumask_copy(struct cpumask *dstp,
  *
  * Returns >= nr_cpu_ids if no cpus set.
  */
+// ARM10C 20150328
+// mask_val: &cpu_bit_bitmap[1][0], cpu_online_mask: cpu_online_bits[1]
 #define cpumask_any_and(mask1, mask2) cpumask_first_and((mask1), (mask2))
 
 /**
@@ -604,6 +614,7 @@ static inline void cpumask_copy(struct cpumask *dstp,
  * @cpu: the cpu (<= nr_cpu_ids)
  */
 // ARM10C 20140913
+// ARM10C 20150328
 // cpu: 0
 // get_cpu_mask(0): &cpu_bit_bitmap[1][0]
 #define cpumask_of(cpu) (get_cpu_mask(cpu))

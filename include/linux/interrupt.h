@@ -193,7 +193,7 @@ extern int check_wakeup_irqs(void);
 static inline int check_wakeup_irqs(void) { return 0; }
 #endif
 
-#if defined(CONFIG_SMP)
+#if defined(CONFIG_SMP) // CONFIG_SMP=y
 
 extern cpumask_var_t irq_default_affinity;
 

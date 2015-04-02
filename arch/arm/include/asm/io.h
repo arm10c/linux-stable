@@ -306,6 +306,8 @@ extern void _memset_io(volatile void __iomem *, int, size_t);
 // ARM10C 20141108
 // __raw_readl(0xf0000004): 0x0000FC24
 // readl_relaxed(0xf0000000 + 0x004): 0x0000FC24
+// ARM10C 20150328
+// readl_relaxed(0xf0000898):
 #define readl_relaxed(c) ({ u32 __r = le32_to_cpu((__force __le32) \
 					__raw_readl(c)); __r; })
 

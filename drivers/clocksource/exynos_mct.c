@@ -58,13 +58,16 @@
 #define TICK_BASE_CNT	1
 
 // ARM10C 20150307
+// ARM10C 20150328
 enum {
 	// MCT_INT_SPI: 0
 	MCT_INT_SPI,
+	// MCT_INT_PPI: 1
 	MCT_INT_PPI
 };
 
 // ARM10C 20150307
+// ARM10C 20150328
 enum {
 	// MCT_G0_IRQ: 0
 	MCT_G0_IRQ,
@@ -80,9 +83,11 @@ enum {
 	MCT_NR_IRQS,
 };
 
+// ARM10C 20150328
 static void __iomem *reg_base;
 static unsigned long clk_rate;
 // ARM10C 20150307
+// ARM10C 20150328
 static unsigned int mct_int_type;
 // ARM10C 20150307
 // ARM10C 20150321
@@ -501,21 +506,78 @@ static void __init exynos4_timer_resources(struct device_node *np, void __iomem 
 	struct clk *mct_clk, *tick_clk;
 
 	// np: devtree에서 allnext로 순회 하면서 찾은 mct node의 주소
+	// of_clk_get_by_name(devtree에서 allnext로 순회 하면서 찾은 mct node의 주소, "fin_pll"): kmem_cache#29-oX (fin_pll)
 	tick_clk = np ? of_clk_get_by_name(np, "fin_pll") :
 				clk_get(NULL, "fin_pll");
+	// tick_clk: kmem_cache#29-oX (fin_pll)
+
+	// of_clk_get_by_name에서 한일:
+	// mct node의 property "clock-names" 의 값을 찾아서 "fin_pll" 이 있는 위치를 찾고
+	// 몇번째 값인지 index를 구함
+	//
+	// mct node 에서 "clocks" property의 이용하여 devtree의 값을 파싱하여 clkspec에 값을 가져옴
+	// (&clkspec)->np: clock node의 주소
+	// (&clkspec)->args_count: 1
+	// (&clkspec)->args[0]: 1
+	//
+	// list of_clk_providers 에 등록된 정보들 중에 clkspec 와 매치되는 정보를 찾음
+	// 이전에 만들어 놓은 clk_data의 clk_table 정보를 이용하여 clkspec에 있는 arg 값을 이용하여 clk을 찾음
+	// tick_clk: kmem_cache#29-oX (fin_pll)
+
+	// tick_clk: kmem_cache#29-oX (fin_pll), IS_ERR(kmem_cache#29-oX (fin_pll)): 0
 	if (IS_ERR(tick_clk))
 		panic("%s: unable to determine tick clock rate\n", __func__);
-	clk_rate = clk_get_rate(tick_clk);
 
+	// tick_clk: kmem_cache#29-oX (fin_pll)
+	// clk_get_rate(kmem_cache#29-oX (fin_pll)): 24000000
+	clk_rate = clk_get_rate(tick_clk);
+	// clk_rate: 24000000
+
+	// np: devtree에서 allnext로 순회 하면서 찾은 mct node의 주소
+	// of_clk_get_by_name(devtree에서 allnext로 순회 하면서 찾은 mct node의 주소, "mct"):  kmem_cache#29-oX (mct)
 	mct_clk = np ? of_clk_get_by_name(np, "mct") : clk_get(NULL, "mct");
+	// mct_clk: kmem_cache#29-oX (mct)
+
+	// of_clk_get_by_name에서 한일:
+	// mct node의 property "clock-names" 의 값을 찾아서 "mct" 이 있는 위치를 찾고
+	// 몇번째 값인지 index를 구함
+	//
+	// mct node 에서 "clocks" property의 이용하여 devtree의 값을 파싱하여 clkspec에 값을 가져옴
+	// (&clkspec)->np: clock node의 주소
+	// (&clkspec)->args_count: 1
+	// (&clkspec)->args[0]: 315
+	//
+	// list of_clk_providers 에 등록된 정보들 중에 clkspec 와 매치되는 정보를 찾음
+	// 이전에 만들어 놓은 clk_data의 clk_table 정보를 이용하여 clkspec에 있는 arg 값을 이용하여 clk을 찾음
+	// mct_clk: kmem_cache#29-oX (mct)
+
+	// mct_clk: kmem_cache#29-oX (mct), IS_ERR(kmem_cache#29-oX (mct)): 0
 	if (IS_ERR(mct_clk))
 		panic("%s: unable to retrieve mct clock instance\n", __func__);
+
+	// mct_clk: kmem_cache#29-oX (mct)
+	// clk_prepare_enable(kmem_cache#29-oX (mct)): 0
 	clk_prepare_enable(mct_clk);
 
+	// clk_prepare_enable에서 한일:
+	// mct clock의 상위 clock 들의 ops->prepare 함수들을 수행.
+	// mct clock의 상위 clock 들의 ops->enable 함수들을 수행.
+	// sck_cpll -- Group1_p -- mout_aclk66 -- dout_aclk66 -- mct
+	// sck_ppll -|
+	// sck_mpll -|
+	//
+	// sck_cpll, mout_aclk66, dout_aclk66 의 주석을 만들지 않았기 때문에
+	// 분석내용을 skip 하도록함
+
+	// base: 0xf0006000
 	reg_base = base;
+	// reg_base: 0xf0006000
+
+	// reg_base: 0xf0006000
 	if (!reg_base)
 		panic("%s: unable to ioremap mct address space\n", __func__);
 
+	// mct_int_type: 0, MCT_INT_PPI: 1
 	if (mct_int_type == MCT_INT_PPI) {
 
 		err = request_percpu_irq(mct_irqs[MCT_L0_IRQ],
@@ -524,6 +586,7 @@ static void __init exynos4_timer_resources(struct device_node *np, void __iomem 
 		WARN(err, "MCT: can't request IRQ %d (%d)\n",
 		     mct_irqs[MCT_L0_IRQ], err);
 	} else {
+		// MCT_L0_IRQ: 4, mct_irqs[4]: 152, cpumask_of(0): &cpu_bit_bitmap[1][0]
 		irq_set_affinity(mct_irqs[MCT_L0_IRQ], cpumask_of(0));
 	}
 

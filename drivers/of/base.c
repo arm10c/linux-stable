@@ -1497,6 +1497,8 @@ EXPORT_SYMBOL_GPL(of_property_read_string_index);
  */
 // ARM10C 20150321
 // np: devtree에서 allnext로 순회 하면서 찾은 mct node의 주소, "clock-names", name: "fin_pll"
+// ARM10C 20150328
+// np: devtree에서 allnext로 순회 하면서 찾은 mct node의 주소, name: "mct"
 int of_property_match_string(struct device_node *np, const char *propname,
 			     const char *string)
 {
