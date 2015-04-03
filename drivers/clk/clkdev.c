@@ -122,6 +122,7 @@ struct clk *of_clk_get_by_name(struct device_node *np, const char *name)
 			// np: devtree에서 allnext로 순회 하면서 찾은 mct node의 주소, name: "mct"
 			// of_property_match_string(devtree에서 allnext로 순회 하면서 찾은 mct node의 주소, "clock-names", "mct"): 1
 			index = of_property_match_string(np, "clock-names", name);
+			// index: 0
 			// index: 1
 
 			// of_property_match_string에서 한일:
