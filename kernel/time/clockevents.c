@@ -395,10 +395,13 @@ void clockevents_register_device(struct clock_event_device *dev)
 }
 EXPORT_SYMBOL_GPL(clockevents_register_device);
 
+// ARM10C 20150404
+// dev: [pcp0] &(&percpu_mct_tick)->evt, freq: 12000000
 void clockevents_config(struct clock_event_device *dev, u32 freq)
 {
 	u64 sec;
 
+	// dev->features: [pcp0] (&(&percpu_mct_tick)->evt)->features: 0x3, CLOCK_EVT_FEAT_ONESHOT: 0x000002
 	if (!(dev->features & CLOCK_EVT_FEAT_ONESHOT))
 		return;
 
@@ -407,7 +410,13 @@ void clockevents_config(struct clock_event_device *dev, u32 freq)
 	 * to 10 minutes for hardware which can program more than
 	 * 32bit ticks so we still get reasonable conversion values.
 	 */
+	// dev->max_delta_ticks: [pcp0] (&(&percpu_mct_tick)->evt)->max_delta_ticks: 0x7fffffff
 	sec = dev->max_delta_ticks;
+	// sec: 0x7fffffff
+
+// 2015/04/04 종료
+
+	// sec: 0x7fffffff, freq: 12000000
 	do_div(sec, freq);
 	if (!sec)
 		sec = 1;
@@ -428,12 +437,21 @@ void clockevents_config(struct clock_event_device *dev, u32 freq)
  *
  * min/max_delta can be 0 for devices which do not support oneshot mode.
  */
+// ARM10C 20150404
+// evt: [pcp0] &(&percpu_mct_tick)->evt, 12000000, 0xf, 0x7fffffff
 void clockevents_config_and_register(struct clock_event_device *dev,
 				     u32 freq, unsigned long min_delta,
 				     unsigned long max_delta)
 {
+	// dev->min_delta_ticks: [pcp0] (&(&percpu_mct_tick)->evt)->min_delta_ticks, min_delta: 0xf
 	dev->min_delta_ticks = min_delta;
+	// dev->min_delta_ticks: [pcp0] (&(&percpu_mct_tick)->evt)->min_delta_ticks: 0xf
+
+	// dev->max_delta_ticks: [pcp0] (&(&percpu_mct_tick)->evt)->max_delta_ticks, max_delta: 0x7fffffff
 	dev->max_delta_ticks = max_delta;
+	// dev->max_delta_ticks: [pcp0] (&(&percpu_mct_tick)->evt)->max_delta_ticks: 0x7fffffff
+
+	// dev: [pcp0] &(&percpu_mct_tick)->evt, freq: 12000000
 	clockevents_config(dev, freq);
 	clockevents_register_device(dev);
 }

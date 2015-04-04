@@ -58,6 +58,7 @@ typedef	int (*notifier_fn_t)(struct notifier_block *nb,
 // ARM10C 20140726
 // ARM10C 20140927
 // ARM10C 20150103
+// ARM10C 20150404
 struct notifier_block {
 	notifier_fn_t notifier_call;
 	struct notifier_block __rcu *next;

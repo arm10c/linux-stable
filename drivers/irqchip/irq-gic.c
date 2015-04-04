@@ -350,14 +350,34 @@ static int gic_set_affinity(struct irq_data *d, const struct cpumask *mask_val,
 	// bit: 0x01
 
 // 2015/03/28 종료
+// 2015/04/04 시작
+
+	// E.R.M:
+	// 9.6.2.18 GICD_ITARGETSR38
+	// Interrupt pending register
+
+	// NOTE:
+	// GICD_ITARGETSR38 값을 모르기 때문에 0x00000000 로
+	// 읽히는 것으로 가정하고 진행
 
 	// reg: 0xf0000898, mask: 0xff
+	// readl_relaxed(0xf0000898): 0x00000000
 	val = readl_relaxed(reg) & ~mask;
+	// val: 0x00000000
+
+	// val: 0x00000000, bit: 0x01, reg: 0xf0000898
 	writel_relaxed(val | bit, reg);
+
+	// writel_relaxed에서 한일:
+	// GICD_ITARGETSR38에 0x00000001를 write 함
+	// CPU interface 0에 interrupt가 발생을 나타냄
+
 	raw_spin_unlock(&irq_controller_lock);
 	// irq_controller_lock을 사용하여 spinlock 해제
 
+	// IRQ_SET_MASK_OK: 0
 	return IRQ_SET_MASK_OK;
+	// return 0
 }
 #endif
 
@@ -1355,6 +1375,26 @@ void __init gic_init_bases(unsigned int gic_nr, int irq_start,
 	// struct irq_desc의 자료 구조크기 만큼 160개의 메모리를 할당 받아
 	// radix tree 구조로 구성
 	//
+	// irq 16 ~ 159를 위한 struct irq_desc 메모리를 할당 받아 초기화 수행
+	// (kmem_cache#28-oX (irq 16...159))->lock 을 이용한 spinlock 초기화 수행
+	// (kmem_cache#28-oX (irq 16...159))->status_use_accessors: 0xc00
+	// (kmem_cache#28-oX (irq 16...159))->handle_irq: handle_bad_irq
+	// (kmem_cache#28-oX (irq 16...159))->depth: 1
+	// (kmem_cache#28-oX (irq 16...159))->irq_count: 0
+	// (kmem_cache#28-oX (irq 16...159))->irqs_unhandled: 0
+	// (kmem_cache#28-oX (irq 16...159))->name: NULL
+	// (kmem_cache#28-oX (irq 16...159))->owner: null
+	// (kmem_cache#28-oX (irq 16...159))->kstat_irqs: pcp 4 byte 공간
+	// [pcp0...3] (kmem_cache#28-oX (irq 16...159))->kstat_irqs: 0
+	// (kmem_cache#28-oX (irq 16...159))->irq_data.irq: 16...159
+	// (kmem_cache#28-oX (irq 16...159))->irq_data.chip: &no_irq_chip
+	// (kmem_cache#28-oX (irq 16...159))->irq_data.chip_data: NULL
+	// (kmem_cache#28-oX (irq 16...159))->irq_data.handler_data: NULL
+	// (kmem_cache#28-oX (irq 16...159))->irq_data.msi_desc: NULL
+	// (kmem_cache#28-oX (irq 16...159))->irq_data.state_use_accessors: 0x10000
+	// (kmem_cache#28-oX (irq 16...159))->irq_data.node: 0
+	// (kmem_cache#28-oX (irq 16...159))->irq_data.affinity.bits[0]: 0xF
+	//
 	// radix tree의 root node: &irq_desc_tree 값을 변경
 	// (&irq_desc_tree)->rnode: kmem_cache#20-o1 (RADIX_LSB: 1)
 	// (&irq_desc_tree)->height: 2
@@ -1379,7 +1419,7 @@ void __init gic_init_bases(unsigned int gic_nr, int irq_start,
 	// (kmem_cache#20-o3)->height: 1
 	// (kmem_cache#20-o3)->count: 32
 	// (kmem_cache#20-o3)->parent: kmem_cache#20-o1 (RADIX_LSB: 1)
-	// (kmem_cache#20-o3)->slots[0...32]: kmem_cache#28-oX (irq 127...160)
+	// (kmem_cache#20-o3)->slots[0...32]: kmem_cache#28-oX (irq 127...159)
 	//
 	// (&irq_desc_tree)->rnode --> +-----------------------+
 	//                             |    radix_tree_node    |
@@ -1397,7 +1437,7 @@ void __init gic_init_bases(unsigned int gic_nr, int irq_start,
 	//    +-----------------------+  +-----------------------+  +-----------------------+
 	//    | height: 1 | count: 64 |  | height: 1 | count: 64 |  | height: 1 | count: 32 |
 	//    +-----------------------+  +-----------------------+  +-----------------------+
-	//    |    irq  0 ~ 63        |  |    irq 64 ~ 127       |  |    irq 128 ~ 160      |
+	//    |    irq  0 ~ 63        |  |    irq 64 ~ 127       |  |    irq 128 ~ 159      |
 	//    +-----------------------+  +-----------------------+  +-----------------------+
 	*/
 
@@ -1428,20 +1468,20 @@ void __init gic_init_bases(unsigned int gic_nr, int irq_start,
 	// (kmem_cache#25-o0)->revmap_direct_max_irq: 0
 	// irq_domain_list에 (kmem_cache#25-o0)->link를 추가
 	//
-	// irq 16...160까지의 struct irq_data에 값을 설정
-	// (&(kmem_cache#28-oX (irq 16...160))->irq_data)->hwirq: 16...160
-	// (&(kmem_cache#28-oX (irq 16...160))->irq_data)->domain: kmem_cache#25-o0
-	// (&(kmem_cache#28-oX (irq 16...160))->irq_data)->state_use_accessors: 0x10800
-	// (kmem_cache#28-oX (irq 16...160))->percpu_enabled: kmem_cache#30-oX
-	// (kmem_cache#28-oX (irq 16...160))->status_use_accessors: 0x31600
-	// (kmem_cache#28-oX (irq 16...160))->irq_data.chip: &gic_chip
-	// (kmem_cache#28-oX (irq 16...160))->handle_irq: handle_percpu_devid_irq
-	// (kmem_cache#28-oX (irq 16...160))->name: NULL
-	// (kmem_cache#28-oX (irq 16...160))->irq_data.chip_data: &gic_data[0]
-	// (kmem_cache#28-oX (irq 16...160))->status_use_accessors: 0x31600
+	// irq 16...159까지의 struct irq_data, struct irq_desc에 값을 설정
+	// (kmem_cache#28-oX (irq 16...159))->irq_data.hwirq: 16...159
+	// (kmem_cache#28-oX (irq 16...159))->irq_data.domain: kmem_cache#25-o0
+	// (kmem_cache#28-oX (irq 16...159))->irq_data.state_use_accessors: 0x10800
+	// (kmem_cache#28-oX (irq 16...159))->irq_data.chip: &gic_chip
+	// (kmem_cache#28-oX (irq 16...159))->irq_data.chip_data: &gic_data[0]
+	//
+	// (kmem_cache#28-oX (irq 16...159))->percpu_enabled: kmem_cache#30-oX
+	// (kmem_cache#28-oX (irq 16...159))->handle_irq: handle_percpu_devid_irq
+	// (kmem_cache#28-oX (irq 16...159))->name: NULL
+	// (kmem_cache#28-oX (irq 16...159))->status_use_accessors: 0x31600
 	//
 	// (kmem_cache#25-o0)->name: "GIC"
-	// (kmem_cache#25-o0)->linear_revmap[16...160]: 16...160
+	// (kmem_cache#25-o0)->linear_revmap[16...159]: 16...159
 
 	// gic->domain: (&gic_data[0])->domain: kmem_cache#25-o0
 	if (WARN_ON(!gic->domain))
@@ -1451,15 +1491,18 @@ void __init gic_init_bases(unsigned int gic_nr, int irq_start,
 	if (gic_nr == 0) {
 #ifdef CONFIG_SMP // CONFIG_SMP=y
 		set_smp_cross_call(gic_raise_softirq);
+
 		// set_smp_cross_call에서 한일:
 		// smp_cross_call: gic_raise_softirq
 
 		register_cpu_notifier(&gic_cpu_notifier);
+
 		// register_cpu_notifier에서 한일:
 		// (&cpu_chain)->head: gic_cpu_notifier 포인터 대입
 		// (&gic_cpu_notifier)->next은 (&radix_tree_callback_nb)->next로 대입
 #endif
 		set_handle_irq(gic_handle_irq);
+
 		// set_handle_irq에서 한일:
 		// handle_arch_irq: gic_handle_irq
 	}
@@ -1470,6 +1513,7 @@ void __init gic_init_bases(unsigned int gic_nr, int irq_start,
 
 	// gic: &gic_data[0]
 	gic_dist_init(gic);
+
 	// gic_dist_init에서 한일:
 	//
 	// register GICD_CTLR을 0으로 초기화
@@ -1491,6 +1535,7 @@ void __init gic_init_bases(unsigned int gic_nr, int irq_start,
 
 	// gic: &gic_data[0]
 	gic_cpu_init(gic);
+
 	// gic_cpu_init에서 한일:
 	//
 	// gic_cpu_map[0]: 0x01
@@ -1513,6 +1558,7 @@ void __init gic_init_bases(unsigned int gic_nr, int irq_start,
 
 	// gic: &gic_data[0]
 	gic_pm_init(gic);
+
 	// gic_pm_init에서 한일:
 	//
 	// (&gic_data[0])->saved_ppi_enable: kmem_cache#26-o0 에서의 4 byte 할당된 주소 (pcp)
@@ -1676,6 +1722,7 @@ int __init gic_of_init(struct device_node *node, struct device_node *parent)
 	// gic_cnt: 0, dist_base: 0xf0000000, cpu_base: 0xf0002000, percpu_offset: 0,
 	// node: devtree에서 allnext로 순회 하면서 찾은 gic node의 주소
 	gic_init_bases(gic_cnt, -1, dist_base, cpu_base, percpu_offset, node);
+
 	// gic_init_bases에서 한일:
 	//
 	// (&gic_data[0])->dist_base.common_base: 0xf0000000
@@ -1683,54 +1730,74 @@ int __init gic_of_init(struct device_node *node, struct device_node *parent)
 	// (&gic_data[0])->gic_irqs: 160
 	//
 	/*
-	 * struct irq_desc의 자료 구조크기 만큼 160개의 메모리를 할당 받아
-	 * radix tree 구조로 구성
-	 *
-	 * radix tree의 root node: &irq_desc_tree 값을 변경
-	 * (&irq_desc_tree)->rnode: kmem_cache#20-o1 (RADIX_LSB: 1)
-	 * (&irq_desc_tree)->height: 2
-	 *
-	 * (kmem_cache#20-o1)->height: 2
-	 * (kmem_cache#20-o1)->count: 3
-	 * (kmem_cache#20-o1)->parent: NULL
-	 * (kmem_cache#20-o1)->slots[0]: kmem_cache#20-o0 (radix height 1 관리 주소)
-	 * (kmem_cache#20-o1)->slots[1]: kmem_cache#20-o2 (radix height 1 관리 주소)
-	 * (kmem_cache#20-o1)->slots[2]: kmem_cache#20-o3 (radix height 1 관리 주소)
-	 *
-	 * (kmem_cache#20-o0)->height: 1
-	 * (kmem_cache#20-o0)->count: 63
-	 * (kmem_cache#20-o0)->parent: kmem_cache#20-o1 (RADIX_LSB: 1)
-	 * (kmem_cache#20-o0)->slots[0...63]: kmem_cache#28-oX (irq 0...63)
-	 *
-	 * (kmem_cache#20-o2)->height: 1
-	 * (kmem_cache#20-o2)->count: 63
-	 * (kmem_cache#20-o2)->parent: kmem_cache#20-o1 (RADIX_LSB: 1)
-	 * (kmem_cache#20-o2)->slots[0...63]: kmem_cache#28-oX (irq 63...127)
-	 *
-	 * (kmem_cache#20-o3)->height: 1
-	 * (kmem_cache#20-o3)->count: 32
-	 * (kmem_cache#20-o3)->parent: kmem_cache#20-o1 (RADIX_LSB: 1)
-	 * (kmem_cache#20-o3)->slots[0...32]: kmem_cache#28-oX (irq 127...160)
-	 *
-	 * (&irq_desc_tree)->rnode --> +-----------------------+
-	 *                             |    radix_tree_node    |
-	 *                             |   (kmem_cache#20-o1)  |
-	 *                             +-----------------------+
-	 *                             | height: 2 | count: 3  |
-	 *                             +-----------------------+
-	 *                             | radix_tree_node 0 ~ 2 |
-	 *                             +-----------------------+
-	 *                            /            |             \
-	 *    slot: 0                /   slot: 1   |              \ slot: 2
-	 *    +-----------------------+  +-----------------------+  +-----------------------+
-	 *    |    radix_tree_node    |  |    radix_tree_node    |  |    radix_tree_node    |
-	 *    |   (kmem_cache#20-o0)  |  |   (kmem_cache#20-o2)  |  |   (kmem_cache#20-o3)  |
-	 *    +-----------------------+  +-----------------------+  +-----------------------+
-	 *    | height: 1 | count: 64 |  | height: 1 | count: 64 |  | height: 1 | count: 32 |
-	 *    +-----------------------+  +-----------------------+  +-----------------------+
-	 *    |    irq  0 ~ 63        |  |    irq 64 ~ 127       |  |    irq 128 ~ 160      |
-	 *    +-----------------------+  +-----------------------+  +-----------------------+
-	 */
+	// struct irq_desc의 자료 구조크기 만큼 160개의 메모리를 할당 받아
+	// radix tree 구조로 구성
+	//
+	// irq 16 ~ 159를 위한 struct irq_desc 메모리를 할당 받아 초기화 수행
+	// (kmem_cache#28-oX (irq 16...159))->lock 을 이용한 spinlock 초기화 수행
+	// (kmem_cache#28-oX (irq 16...159))->status_use_accessors: 0xc00
+	// (kmem_cache#28-oX (irq 16...159))->handle_irq: handle_bad_irq
+	// (kmem_cache#28-oX (irq 16...159))->depth: 1
+	// (kmem_cache#28-oX (irq 16...159))->irq_count: 0
+	// (kmem_cache#28-oX (irq 16...159))->irqs_unhandled: 0
+	// (kmem_cache#28-oX (irq 16...159))->name: NULL
+	// (kmem_cache#28-oX (irq 16...159))->owner: null
+	// (kmem_cache#28-oX (irq 16...159))->kstat_irqs: pcp 4 byte 공간
+	// [pcp0...3] (kmem_cache#28-oX (irq 16...159))->kstat_irqs: 0
+	// (kmem_cache#28-oX (irq 16...159))->irq_data.irq: 16...159
+	// (kmem_cache#28-oX (irq 16...159))->irq_data.chip: &no_irq_chip
+	// (kmem_cache#28-oX (irq 16...159))->irq_data.chip_data: NULL
+	// (kmem_cache#28-oX (irq 16...159))->irq_data.handler_data: NULL
+	// (kmem_cache#28-oX (irq 16...159))->irq_data.msi_desc: NULL
+	// (kmem_cache#28-oX (irq 16...159))->irq_data.state_use_accessors: 0x10000
+	// (kmem_cache#28-oX (irq 16...159))->irq_data.node: 0
+	// (kmem_cache#28-oX (irq 16...159))->irq_data.affinity.bits[0]: 0xF
+	//
+	// radix tree의 root node: &irq_desc_tree 값을 변경
+	// (&irq_desc_tree)->rnode: kmem_cache#20-o1 (RADIX_LSB: 1)
+	// (&irq_desc_tree)->height: 2
+	//
+	// (kmem_cache#20-o1)->height: 2
+	// (kmem_cache#20-o1)->count: 3
+	// (kmem_cache#20-o1)->parent: NULL
+	// (kmem_cache#20-o1)->slots[0]: kmem_cache#20-o0 (radix height 1 관리 주소)
+	// (kmem_cache#20-o1)->slots[1]: kmem_cache#20-o2 (radix height 1 관리 주소)
+	// (kmem_cache#20-o1)->slots[2]: kmem_cache#20-o3 (radix height 1 관리 주소)
+	//
+	// (kmem_cache#20-o0)->height: 1
+	// (kmem_cache#20-o0)->count: 63
+	// (kmem_cache#20-o0)->parent: kmem_cache#20-o1 (RADIX_LSB: 1)
+	// (kmem_cache#20-o0)->slots[0...63]: kmem_cache#28-oX (irq 0...63)
+	//
+	// (kmem_cache#20-o2)->height: 1
+	// (kmem_cache#20-o2)->count: 63
+	// (kmem_cache#20-o2)->parent: kmem_cache#20-o1 (RADIX_LSB: 1)
+	// (kmem_cache#20-o2)->slots[0...63]: kmem_cache#28-oX (irq 63...127)
+	//
+	// (kmem_cache#20-o3)->height: 1
+	// (kmem_cache#20-o3)->count: 32
+	// (kmem_cache#20-o3)->parent: kmem_cache#20-o1 (RADIX_LSB: 1)
+	// (kmem_cache#20-o3)->slots[0...32]: kmem_cache#28-oX (irq 127...159)
+	//
+	// (&irq_desc_tree)->rnode --> +-----------------------+
+	//                             |    radix_tree_node    |
+	//                             |   (kmem_cache#20-o1)  |
+	//                             +-----------------------+
+	//                             | height: 2 | count: 3  |
+	//                             +-----------------------+
+	//                             | radix_tree_node 0 ~ 2 |
+	//                             +-----------------------+
+	//                            /            |             \
+	//    slot: 0                /   slot: 1   |              \ slot: 2
+	//    +-----------------------+  +-----------------------+  +-----------------------+
+	//    |    radix_tree_node    |  |    radix_tree_node    |  |    radix_tree_node    |
+	//    |   (kmem_cache#20-o0)  |  |   (kmem_cache#20-o2)  |  |   (kmem_cache#20-o3)  |
+	//    +-----------------------+  +-----------------------+  +-----------------------+
+	//    | height: 1 | count: 64 |  | height: 1 | count: 64 |  | height: 1 | count: 32 |
+	//    +-----------------------+  +-----------------------+  +-----------------------+
+	//    |    irq  0 ~ 63        |  |    irq 64 ~ 127       |  |    irq 128 ~ 159      |
+	//    +-----------------------+  +-----------------------+  +-----------------------+
+	*/
 	// (&gic_data[0])->domain: kmem_cache#25-o0
 	// (&(kmem_cache#25-o0)->revmap_tree)->height: 0
 	// (&(kmem_cache#25-o0)->revmap_tree)->gfp_mask: GFP_KERNEL: 0xD0
@@ -1742,21 +1809,21 @@ int __init gic_of_init(struct device_node *node, struct device_node *parent)
 	// (kmem_cache#25-o0)->revmap_size: 160
 	// (kmem_cache#25-o0)->revmap_direct_max_irq: 0
 	// (kmem_cache#25-o0)->name: "GIC"
-	// (kmem_cache#25-o0)->linear_revmap[16...160]: 16...160
+	// (kmem_cache#25-o0)->linear_revmap[16...159]: 16...159
 	//
 	// irq_domain_list에 (kmem_cache#25-o0)->link를 추가
 	//
-	// irq 16...160까지의 struct irq_data에 값을 설정
-	// (&(kmem_cache#28-oX (irq 16...160))->irq_data)->hwirq: 16...160
-	// (&(kmem_cache#28-oX (irq 16...160))->irq_data)->domain: kmem_cache#25-o0
-	// (&(kmem_cache#28-oX (irq 16...160))->irq_data)->state_use_accessors: 0x10800
-	// (kmem_cache#28-oX (irq 16...160))->percpu_enabled: kmem_cache#30-oX
-	// (kmem_cache#28-oX (irq 16...160))->status_use_accessors: 0x31600
-	// (kmem_cache#28-oX (irq 16...160))->irq_data.chip: &gic_chip
-	// (kmem_cache#28-oX (irq 16...160))->handle_irq: handle_percpu_devid_irq
-	// (kmem_cache#28-oX (irq 16...160))->name: NULL
-	// (kmem_cache#28-oX (irq 16...160))->irq_data.chip_data: &gic_data[0]
-	// (kmem_cache#28-oX (irq 16...160))->status_use_accessors: 0x31600
+	// irq 16...159까지의 struct irq_data, struct irq_desc에 값을 설정
+	// (kmem_cache#28-oX (irq 16...159))->irq_data.hwirq: 16...159
+	// (kmem_cache#28-oX (irq 16...159))->irq_data.domain: kmem_cache#25-o0
+	// (kmem_cache#28-oX (irq 16...159))->irq_data.state_use_accessors: 0x10800
+	// (kmem_cache#28-oX (irq 16...159))->irq_data.chip: &gic_chip
+	// (kmem_cache#28-oX (irq 16...159))->irq_data.chip_data: &gic_data[0]
+	//
+	// (kmem_cache#28-oX (irq 16...159))->percpu_enabled: kmem_cache#30-oX
+	// (kmem_cache#28-oX (irq 16...159))->handle_irq: handle_percpu_devid_irq
+	// (kmem_cache#28-oX (irq 16...159))->name: NULL
+	// (kmem_cache#28-oX (irq 16...159))->status_use_accessors: 0x31600
 	//
 	// smp_cross_call: gic_raise_softirq
 	//

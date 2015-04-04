@@ -27,6 +27,7 @@
 
 #include <asm/mach/time.h>
 
+// ARM10C 20150404
 #define EXYNOS4_MCTREG(x)		(x)
 #define EXYNOS4_MCT_G_CNT_L		EXYNOS4_MCTREG(0x100)
 #define EXYNOS4_MCT_G_CNT_U		EXYNOS4_MCTREG(0x104)
@@ -38,7 +39,13 @@
 #define EXYNOS4_MCT_G_INT_CSTAT		EXYNOS4_MCTREG(0x244)
 #define EXYNOS4_MCT_G_INT_ENB		EXYNOS4_MCTREG(0x248)
 #define EXYNOS4_MCT_G_WSTAT		EXYNOS4_MCTREG(0x24C)
+// ARM10C 20150404
+// EXYNOS4_MCTREG(0x300): 0x300
+// _EXYNOS4_MCT_L_BASE: 0x300
 #define _EXYNOS4_MCT_L_BASE		EXYNOS4_MCTREG(0x300)
+// ARM10C 20150404
+// _EXYNOS4_MCT_L_BASE: 0x300
+// EXYNOS4_MCT_L_BASE(0): 0x300
 #define EXYNOS4_MCT_L_BASE(x)		(_EXYNOS4_MCT_L_BASE + (0x100 * x))
 #define EXYNOS4_MCT_L_MASK		(0xffffff00)
 
@@ -55,6 +62,8 @@
 #define MCT_L_TCON_INT_START		(1 << 1)
 #define MCT_L_TCON_TIMER_START		(1 << 0)
 
+// ARM10C 20150404
+// TICK_BASE_CNT: 1
 #define TICK_BASE_CNT	1
 
 // ARM10C 20150307
@@ -85,6 +94,8 @@ enum {
 
 // ARM10C 20150328
 static void __iomem *reg_base;
+// ARM10C 20150321
+// ARM10C 20150404
 static unsigned long clk_rate;
 // ARM10C 20150307
 // ARM10C 20150328
@@ -95,6 +106,7 @@ static unsigned int mct_int_type;
 static int mct_irqs[MCT_NR_IRQS];
 
 // ARM10C 20150321
+// ARM10C 20150404
 struct mct_clock_event_device {
 	struct clock_event_device evt;
 	unsigned long base;
@@ -349,6 +361,7 @@ static void exynos4_mct_tick_start(unsigned long cycles,
 	exynos4_mct_write(tmp, mevt->base + MCT_L_TCON_OFFSET);
 }
 
+// ARM10C 20150404
 static int exynos4_tick_set_next_event(unsigned long cycles,
 				       struct clock_event_device *evt)
 {
@@ -359,6 +372,7 @@ static int exynos4_tick_set_next_event(unsigned long cycles,
 	return 0;
 }
 
+// ARM10C 20150404
 static inline void exynos4_tick_set_mode(enum clock_event_mode mode,
 					 struct clock_event_device *evt)
 {
@@ -415,22 +429,58 @@ static irqreturn_t exynos4_mct_tick_isr(int irq, void *dev_id)
 	return IRQ_HANDLED;
 }
 
+// ARM10C 20150404
+// &mevt->evt: [pcp0] &(&percpu_mct_tick)->evt
 static int exynos4_local_timer_setup(struct clock_event_device *evt)
 {
 	struct mct_clock_event_device *mevt;
+
+	// smp_processor_id(): 0
 	unsigned int cpu = smp_processor_id();
+	// cpu: 0
 
+	// evt: [pcp0] &(&percpu_mct_tick)->evt
+	// container_of([pcp0] &(&percpu_mct_tick)->evt, struct mct_clock_event_device, evt): [pcp0] &percpu_mct_tick
 	mevt = container_of(evt, struct mct_clock_event_device, evt);
+	// mevt: [pcp0] &percpu_mct_tick
 
+	// mevt->base: [pcp0] (&percpu_mct_tick)->base,
+	// cpu: 0, EXYNOS4_MCT_L_BASE(0): 0x300
 	mevt->base = EXYNOS4_MCT_L_BASE(cpu);
-	sprintf(mevt->name, "mct_tick%d", cpu);
+	// mevt->base: [pcp0] (&percpu_mct_tick)->base: 0x300
 
+	// mevt->name: [pcp0] (&percpu_mct_tick)->name, cpu: 0
+	sprintf(mevt->name, "mct_tick%d", cpu);
+	// mevt->name: [pcp0] (&percpu_mct_tick)->name: "mct_tick0"
+
+	// evt->name: [pcp0] (&(&percpu_mct_tick)->evt)->name,
+	// mevt->name: [pcp0] (&percpu_mct_tick)->name: "mct_tick0"
 	evt->name = mevt->name;
+	// evt->name: [pcp0] (&(&percpu_mct_tick)->evt)->name: "mct_tick0"
+
+	// evt->cpumask: [pcp0] (&(&percpu_mct_tick)->evt)->cpumask,
+	// cpu: 0, cpumask_of(0): &cpu_bit_bitmap[1][0]
 	evt->cpumask = cpumask_of(cpu);
+	// evt->cpumask: [pcp0] (&(&percpu_mct_tick)->evt)->cpumask: &cpu_bit_bitmap[1][0]
+
+	// evt->set_next_event: [pcp0] (&(&percpu_mct_tick)->evt)->set_next_event
 	evt->set_next_event = exynos4_tick_set_next_event;
+	// evt->set_next_event: [pcp0] (&(&percpu_mct_tick)->evt)->set_next_event: exynos4_tick_set_next_event
+
+	// evt->set_mode: [pcp0] (&(&percpu_mct_tick)->evt)->set_mode
 	evt->set_mode = exynos4_tick_set_mode;
+	// evt->set_mode: [pcp0] (&(&percpu_mct_tick)->evt)->set_mode: exynos4_tick_set_mode
+
+	// evt->features: [pcp0] (&(&percpu_mct_tick)->evt)->features,
+	// CLOCK_EVT_FEAT_PERIODIC: 0x000001, CLOCK_EVT_FEAT_ONESHOT: 0x000002
 	evt->features = CLOCK_EVT_FEAT_PERIODIC | CLOCK_EVT_FEAT_ONESHOT;
+	// evt->features: [pcp0] (&(&percpu_mct_tick)->evt)->features: 0x3
+
+	// evt->rating: [pcp0] (&(&percpu_mct_tick)->evt)->rating
 	evt->rating = 450;
+	// evt->rating: [pcp0] (&(&percpu_mct_tick)->evt)->rating: 450
+
+	// evt: [pcp0] &(&percpu_mct_tick)->evt, clk_rate: 24000000, TICK_BASE_CNT: 1
 	clockevents_config_and_register(evt, clk_rate / (TICK_BASE_CNT + 1),
 					0xf, 0x7fffffff);
 
@@ -461,6 +511,7 @@ static void exynos4_local_timer_stop(struct clock_event_device *evt)
 		disable_percpu_irq(mct_irqs[MCT_L0_IRQ]);
 }
 
+// ARM10C 20150404
 static int exynos4_mct_cpu_notify(struct notifier_block *self,
 					   unsigned long action, void *hcpu)
 {
@@ -491,6 +542,7 @@ static int exynos4_mct_cpu_notify(struct notifier_block *self,
 	return NOTIFY_OK;
 }
 
+// ARM10C 20150404
 static struct notifier_block exynos4_mct_cpu_nb = {
 	.notifier_call = exynos4_mct_cpu_notify,
 };
@@ -587,14 +639,37 @@ static void __init exynos4_timer_resources(struct device_node *np, void __iomem 
 		     mct_irqs[MCT_L0_IRQ], err);
 	} else {
 		// MCT_L0_IRQ: 4, mct_irqs[4]: 152, cpumask_of(0): &cpu_bit_bitmap[1][0]
+		// irq_set_affinity(152, &cpu_bit_bitmap[1][0]): 0
 		irq_set_affinity(mct_irqs[MCT_L0_IRQ], cpumask_of(0));
+
+		// irq_set_affinity에서 한일:
+		//
+		// Interrupt pending register인 GICD_ITARGETSR38 값을 읽고
+		// 그 값과 mask 값인 cpu_bit_bitmap[1][0] 을 or 연산한 값을 GICD_ITARGETSR38에
+		// 다시 write함
+		//
+		// GICD_ITARGETSR38 값을 모르기 때문에 0x00000000 로
+		// 읽히는 것으로 가정하고 GICD_ITARGETSR38에 0x00000001를 write 함
+		// CPU interface 0에 interrupt가 발생을 나타냄
+		//
+		// (&(kmem_cache#28-oX (irq 152))->irq_data)->affinity->bits[0]: 1
+		// (&(kmem_cache#28-oX (irq 152))->irq_data)->state_use_accessors: 0x11000
 	}
 
+	// register_cpu_notifier(&exynos4_mct_cpu_nb): 0
 	err = register_cpu_notifier(&exynos4_mct_cpu_nb);
+	// err: 0
+
+	// register_cpu_notifier 에서 한일:
+	// (&cpu_chain)->head: &exynos4_mct_cpu_nb 포인터 대입
+	// (&exynos4_mct_cpu_nb)->next은 (&hrtimers_nb)->next로 대입
+
+	// err: 0
 	if (err)
 		goto out_irq;
 
 	/* Immediately configure the timer on the boot CPU */
+	// &mevt->evt: [pcp0] &(&percpu_mct_tick)->evt
 	exynos4_local_timer_setup(&mevt->evt);
 	return;
 

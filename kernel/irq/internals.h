@@ -234,13 +234,17 @@ static inline void irqd_clear(struct irq_data *d, unsigned int mask)
 // &desc->irq_data: &(kmem_cache#28-oX (irq 16))->irq_data, IRQD_PER_CPU: 0x800
 // ARM10C 20141122
 // &desc->irq_data: &(kmem_cache#28-oX (irq 16))->irq_data, irq_settings_get_trigger_mask(kmem_cache#28-oX (irq 16)): 0
+// ARM10C 20150404
+// data: &(kmem_cache#28-oX (irq 152))->irq_data, IRQD_AFFINITY_SET: 0x1000
 static inline void irqd_set(struct irq_data *d, unsigned int mask)
 {
 	// d->state_use_accessors: (&(kmem_cache#28-o0)->irq_data)->state_use_accessors: 0, mask: 0x10000
 	// d->state_use_accessors: (&(kmem_cache#28-oX (irq 16))->irq_data)->state_use_accessors: 0x10000, mask: 0x800
+	// d->state_use_accessors: (&(kmem_cache#28-oX (irq 152))->irq_data)->state_use_accessors: 0x10000, mask: 0x1000
 	d->state_use_accessors |= mask;
 	// d->state_use_accessors: (&(kmem_cache#28-o0)->irq_data)->state_use_accessors: 0x10000
 	// d->state_use_accessors: (&(kmem_cache#28-oX (irq 16))->irq_data)->state_use_accessors: 0x10800
+	// d->state_use_accessors: (&(kmem_cache#28-oX (irq 152))->irq_data)->state_use_accessors: 0x11000
 }
 
 static inline bool irqd_has_set(struct irq_data *d, unsigned int mask)

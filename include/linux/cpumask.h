@@ -14,6 +14,7 @@
 // ARM10C 20130831
 // ARM10C 20140830
 // ARM10C 20150103
+// ARM10C 20150404
 // struct cpumask { bits[1]; }
 typedef struct cpumask { DECLARE_BITMAP(bits, NR_CPUS); } cpumask_t;
 
@@ -568,6 +569,8 @@ static inline void cpumask_shift_left(struct cpumask *dstp,
  */
 // ARM10C 20140913
 // p->cpus_allowed: (&init_task)->cpus_allowed, new_mask: &cpu_bit_bitmap[1][0]
+// ARM10C 20150404
+// data->affinity: (&(kmem_cache#28-oX (irq 152))->irq_data)->affinity, mask: &cpu_bit_bitmap[1][0]
 static inline void cpumask_copy(struct cpumask *dstp,
 				const struct cpumask *srcp)
 {
@@ -575,8 +578,13 @@ static inline void cpumask_copy(struct cpumask *dstp,
 	// cpumask_bits((&init_task)->cpus_allowed): (&init_task)->cpus_allowed->bits,
 	// cpumask_bits(&cpu_bit_bitmap[1][0]): (&cpu_bit_bitmap[1][0])->bits
 	// nr_cpumask_bits: 4
+	// dstp: (&(kmem_cache#28-oX (irq 152))->irq_data)->affinity, srcp: &cpu_bit_bitmap[1][0]
+	// cpumask_bits((&(kmem_cache#28-oX (irq 152))->irq_data)->affinity): (&(kmem_cache#28-oX (irq 152))->irq_data)->affinity->bits,
+	// cpumask_bits(&cpu_bit_bitmap[1][0]): (&cpu_bit_bitmap[1][0])->bits
+	// nr_cpumask_bits: 4
 	bitmap_copy(cpumask_bits(dstp), cpumask_bits(srcp), nr_cpumask_bits);
 	// (&init_task)->cpus_allowed->bits[0]: 1
+	// (&(kmem_cache#28-oX (irq 152))->irq_data)->affinity->bits[0]: 1
 }
 
 /**
@@ -615,6 +623,7 @@ static inline void cpumask_copy(struct cpumask *dstp,
  */
 // ARM10C 20140913
 // ARM10C 20150328
+// ARM10C 20150404
 // cpu: 0
 // get_cpu_mask(0): &cpu_bit_bitmap[1][0]
 #define cpumask_of(cpu) (get_cpu_mask(cpu))
@@ -766,6 +775,7 @@ void free_bootmem_cpumask_var(cpumask_var_t mask);
 #else
 // ARM10C 20140830
 // ARM10C 20150103
+// ARM10C 20150404
 typedef struct cpumask cpumask_var_t[1];
 
 // ARM10C 20140830

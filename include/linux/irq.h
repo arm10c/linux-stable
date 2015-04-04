@@ -145,7 +145,9 @@ enum {
  * IRQ_SET_MASK_OK	- OK, core updates irq_data.affinity
  * IRQ_SET_MASK_NOCPY	- OK, chip did update irq_data.affinity
  */
+// ARM10C 20150404
 enum {
+	// IRQ_SET_MASK_OK: 0
 	IRQ_SET_MASK_OK = 0,
 	IRQ_SET_MASK_OK_NOCOPY,
 };
@@ -178,6 +180,7 @@ struct irq_domain;
 // ARM10C 20141122
 // ARM10C 20141213
 // ARM10C 20150321
+// ARM10C 20150404
 // sizeof(struct irq_data): 44 bytes
 struct irq_data {
 	u32			mask;
@@ -213,6 +216,7 @@ struct irq_data {
 // ARM10C 20141004
 // ARM10C 20141122
 // ARM10C 20141220
+// ARM10C 20150404
 enum {
 	// IRQD_TRIGGER_MASK: 0xf
 	IRQD_TRIGGER_MASK		= 0xf,
@@ -221,6 +225,7 @@ enum {
 	IRQD_NO_BALANCING		= (1 << 10),
 	// IRQD_PER_CPU: 0x800
 	IRQD_PER_CPU			= (1 << 11),
+	// IRQD_AFFINITY_SET: 0x1000
 	IRQD_AFFINITY_SET		= (1 << 12),
 	// IRQD_LEVEL: 0x2000
 	IRQD_LEVEL			= (1 << 13),

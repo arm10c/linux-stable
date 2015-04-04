@@ -217,6 +217,8 @@ void cpu_hotplug_enable(void)
 // &timers_nb
 // ARM10C 20150103
 // &hrtimers_nb
+// ARM10C 20150404
+// &exynos4_mct_cpu_nb
 int __ref register_cpu_notifier(struct notifier_block *nb)
 {
 	int ret;
@@ -229,32 +231,81 @@ int __ref register_cpu_notifier(struct notifier_block *nb)
 	// waiter를 만들어 mutex를 lock을 시도하며 기다리다 가능할 때 mutex lock한다.
 	// waiter를 만들어 mutex를 lock을 시도하며 기다리다 가능할 때 mutex lock한다.
 	// waiter를 만들어 mutex를 lock을 시도하며 기다리다 가능할 때 mutex lock한다.
+	// waiter를 만들어 mutex를 lock을 시도하며 기다리다 가능할 때 mutex lock한다.
 
 	// &cpu_chain, nb: &page_alloc_cpu_notify_nb
+	// raw_notifier_chain_register(&cpu_chain, &page_alloc_cpu_notify_nb): 0
 	// &cpu_chain, nb: &slab_notifier
+	// raw_notifier_chain_register(&cpu_chain, &slab_notifier): 0
 	// &cpu_chain, nb: &sched_ilb_notifier_nb
+	// raw_notifier_chain_register(&cpu_chain, &sched_ilb_notifier_nb): 0
 	// &cpu_chain, nb: &rcu_cpu_notify_nb
+	// raw_notifier_chain_register(&cpu_chain, &rcu_cpu_notify_nb): 0
 	// &cpu_chain, nb: &radix_tree_callback_nb
+	// raw_notifier_chain_register(&cpu_chain, &radix_tree_callback_nb): 0
 	// &cpu_chain, nb: &gic_cpu_notifier
+	// raw_notifier_chain_register(&cpu_chain, &gic_cpu_notifier): 0
 	// &cpu_chain, nb: &timers_nb
+	// raw_notifier_chain_register(&cpu_chain, &timers_nb): 0
 	// &cpu_chain, nb: &hrtimers_nb
+	// raw_notifier_chain_register(&cpu_chain, &hrtimers_nb): 0
+	// &cpu_chain, nb: &exynos4_mct_cpu_nb
+	// raw_notifier_chain_register(&cpu_chain, &exynos4_mct_cpu_nb): 0
 	ret = raw_notifier_chain_register(&cpu_chain, nb);
+	// ret: 0
+	// ret: 0
+	// ret: 0
+	// ret: 0
+	// ret: 0
+	// ret: 0
+	// ret: 0
+	// ret: 0
+	// ret: 0
+
+	// raw_notifier_chain_register(&page_alloc_cpu_notify_nb) 에서 한일:
+	//
 	// (&cpu_chain)->head: page_alloc_cpu_notify_nb 포인터 대입
 	// (&page_alloc_cpu_notify_nb)->next은 NULL로 대입
+
+	// raw_notifier_chain_register(&slab_notifier) 에서 한일:
+	//
 	// (&cpu_chain)->head: slab_notifier 포인터 대입
 	// (&slab_notifier)->next은 (&page_alloc_cpu_notify_nb)->next로 대입
+
+	// raw_notifier_chain_register(&sched_ilb_notifier_nb) 에서 한일:
+	//
 	// (&cpu_chain)->head: sched_ilb_notifier_nb 포인터 대입
 	// (&sched_ilb_notifier_nb)->next은 (&slab_notifier)->next로 대입
+
+	// raw_notifier_chain_register(&rcu_cpu_notify_nb) 에서 한일:
+	//
 	// (&cpu_chain)->head: rcu_cpu_notify_nb 포인터 대입
 	// (&rcu_cpu_notify_nb)->next은 (&sched_ilb_notifier_nb)->next로 대입
+
+	// raw_notifier_chain_register(&radix_tree_callback_nb) 에서 한일:
+	//
 	// (&cpu_chain)->head: radix_tree_callback_nb 포인터 대입
 	// (&radix_tree_callback_nb)->next은 (&rcu_cpu_notify_nb)->next로 대입
+
+	// raw_notifier_chain_register(&gic_cpu_notifier) 에서 한일:
+	//
 	// (&cpu_chain)->head: gic_cpu_notifier 포인터 대입
 	// (&gic_cpu_notifier)->next은 (&radix_tree_callback_nb)->next로 대입
+
+	// raw_notifier_chain_register(&timers_nb) 에서 한일:
+	//
 	// (&cpu_chain)->head: timers_nb 포인터 대입
 	// (&timers_nb)->next은 (&gic_cpu_notifier)->next로 대입
+
+	// raw_notifier_chain_register(&hrtimers_nb) 에서 한일:
+	//
 	// (&cpu_chain)->head: &hrtimers_nb 포인터 대입
 	// (&hrtimers_nb)->next은 (&timers_nb)->next로 대입
+
+	// raw_notifier_chain_register(&exynos4_mct_cpu_nb) 에서 한일:
+	//
+	// (&cpu_chain)->head: &exynos4_mct_cpu_nb 포인터 대입
+	// (&exynos4_mct_cpu_nb)->next은 (&hrtimers_nb)->next로 대입
 
 	cpu_maps_update_done();
 	// mutex를 기다리는(waiter)가 있으면 깨우고 아니면 mutex unlock한다.
@@ -265,8 +316,27 @@ int __ref register_cpu_notifier(struct notifier_block *nb)
 	// mutex를 기다리는(waiter)가 있으면 깨우고 아니면 mutex unlock한다.
 	// mutex를 기다리는(waiter)가 있으면 깨우고 아니면 mutex unlock한다.
 	// mutex를 기다리는(waiter)가 있으면 깨우고 아니면 mutex unlock한다.
+	// mutex를 기다리는(waiter)가 있으면 깨우고 아니면 mutex unlock한다.
 
+	// ret: 0
+	// ret: 0
+	// ret: 0
+	// ret: 0
+	// ret: 0
+	// ret: 0
+	// ret: 0
+	// ret: 0
+	// ret: 0
 	return ret;
+	// return 0
+	// return 0
+	// return 0
+	// return 0
+	// return 0
+	// return 0
+	// return 0
+	// return 0
+	// return 0
 }
 
 static int __cpu_notify(unsigned long val, void *v, int nr_to_call,

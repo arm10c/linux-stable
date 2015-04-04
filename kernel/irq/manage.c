@@ -165,17 +165,36 @@ int irq_do_set_affinity(struct irq_data *data, const struct cpumask *mask,
 
 	// chip->irq_set_affinity: (&gic_chip)->irq_set_affinity: gic_set_affinity
 	// data: &(kmem_cache#28-oX (irq 152))->irq_data, mask: &cpu_bit_bitmap[1][0],
-	// gic_set_affinity(&(kmem_cache#28-oX (irq 152))->irq_data, &cpu_bit_bitmap[1][0]): 
+	// gic_set_affinity(&(kmem_cache#28-oX (irq 152))->irq_data, &cpu_bit_bitmap[1][0]): 0
 	ret = chip->irq_set_affinity(data, mask, false);
+	// ret: 0
+
+	// gic_set_affinity에서 한일:
+	// Interrupt pending register인 GICD_ITARGETSR38 값을 읽고
+	// 그 값과 mask 값인 cpu_bit_bitmap[1][0] 을 or 연산한 값을 GICD_ITARGETSR38에
+	// 다시 write함
+	//
+	// GICD_ITARGETSR38 값을 모르기 때문에 0x00000000 로
+	// 읽히는 것으로 가정하고 GICD_ITARGETSR38에 0x00000001를 write 함
+	// CPU interface 0에 interrupt가 발생을 나타냄
+
+	// ret: 0, IRQ_SET_MASK_OK: 0
 	switch (ret) {
 	case IRQ_SET_MASK_OK:
+		// data->affinity: (&(kmem_cache#28-oX (irq 152))->irq_data)->affinity, mask: &cpu_bit_bitmap[1][0]
 		cpumask_copy(data->affinity, mask);
+
+		// cpumask_copy에서 한일:
+		// (&(kmem_cache#28-oX (irq 152))->irq_data)->affinity->bits[0]: 1
+
 	case IRQ_SET_MASK_OK_NOCOPY:
 		irq_set_thread_affinity(desc);
 		ret = 0;
 	}
 
+	// ret: 0
 	return ret;
+	// return 0
 }
 
 // ARM10C 20150328
@@ -204,19 +223,40 @@ int __irq_set_affinity_locked(struct irq_data *data, const struct cpumask *mask)
 	// irq_can_move_pcntxt(&(kmem_cache#28-oX (irq 152))->irq_data): true
 	if (irq_can_move_pcntxt(data)) {
 		// data: &(kmem_cache#28-oX (irq 152))->irq_data, mask: &cpu_bit_bitmap[1][0]
+		// irq_do_set_affinity(&(kmem_cache#28-oX (irq 152))->irq_data, &cpu_bit_bitmap[1][0]): 0
 		ret = irq_do_set_affinity(data, mask, false);
+		// ret: 0
+
+		// irq_do_set_affinity에서 한일:
+		// Interrupt pending register인 GICD_ITARGETSR38 값을 읽고
+		// 그 값과 mask 값인 cpu_bit_bitmap[1][0] 을 or 연산한 값을 GICD_ITARGETSR38에
+		// 다시 write함
+		//
+		// GICD_ITARGETSR38 값을 모르기 때문에 0x00000000 로
+		// 읽히는 것으로 가정하고 GICD_ITARGETSR38에 0x00000001를 write 함
+		// CPU interface 0에 interrupt가 발생을 나타냄
+		//
+		// (&(kmem_cache#28-oX (irq 152))->irq_data)->affinity->bits[0]: 1
 	} else {
 		irqd_set_move_pending(data);
 		irq_copy_pending(desc, mask);
 	}
 
+	// data->affinity_notify: (&(kmem_cache#28-oX (irq 152))->irq_data)->affinity_notify: NULL
 	if (desc->affinity_notify) {
 		kref_get(&desc->affinity_notify->kref);
 		schedule_work(&desc->affinity_notify->work);
 	}
+
+	// data: &(kmem_cache#28-oX (irq 152))->irq_data, IRQD_AFFINITY_SET: 0x1000
 	irqd_set(data, IRQD_AFFINITY_SET);
 
+	// irqd_set에서 한일:
+	// (&(kmem_cache#28-oX (irq 152))->irq_data)->state_use_accessors: 0x11000
+
+	// ret: 0
 	return ret;
+	// return 0
 }
 
 /**
@@ -244,14 +284,37 @@ int irq_set_affinity(unsigned int irq, const struct cpumask *mask)
 	raw_spin_lock_irqsave(&desc->lock, flags);
 
 	// raw_spin_lock_irqsave에서 한일:
-	// (kmem_cache#28-oX (irq 152))->lock을 사용하여 spin lock을 걸고 cpsr을 flags에 저장
+	// (kmem_cache#28-oX (irq 152))->lock을 사용하여 spin lock을 수행하고 cpsr을 flags에 저장
 
 	// desc: kmem_cache#28-oX (irq 152)
 	// irq_desc_get_irq_data(kmem_cache#28-oX (irq 152)): &(kmem_cache#28-oX (irq 152))->irq_data,
 	// mask: &cpu_bit_bitmap[1][0]
+	// __irq_set_affinity_locked(&(kmem_cache#28-oX (irq 152))->irq_data, &cpu_bit_bitmap[1][0]):  0
 	ret =  __irq_set_affinity_locked(irq_desc_get_irq_data(desc), mask);
+	// ret: 0
+
+	// __irq_set_affinity_locked 에서 한일:
+	//
+	// Interrupt pending register인 GICD_ITARGETSR38 값을 읽고
+	// 그 값과 mask 값인 cpu_bit_bitmap[1][0] 을 or 연산한 값을 GICD_ITARGETSR38에
+	// 다시 write함
+	//
+	// GICD_ITARGETSR38 값을 모르기 때문에 0x00000000 로
+	// 읽히는 것으로 가정하고 GICD_ITARGETSR38에 0x00000001를 write 함
+	// CPU interface 0에 interrupt가 발생을 나타냄
+	//
+	// (&(kmem_cache#28-oX (irq 152))->irq_data)->affinity->bits[0]: 1
+	// (&(kmem_cache#28-oX (irq 152))->irq_data)->state_use_accessors: 0x11000
+
+	// &desc->lock: (kmem_cache#28-oX (irq 152))->lock
 	raw_spin_unlock_irqrestore(&desc->lock, flags);
+
+	// raw_spin_unlock_irqrestore에서 한일:
+	// (kmem_cache#28-oX (irq 152))->lock을 사용하여 spin unlock을 수행하고 flags에 저장된 cpsr을 복원
+
+	// ret: 0
 	return ret;
+	// return 0
 }
 
 int irq_set_affinity_hint(unsigned int irq, const struct cpumask *m)

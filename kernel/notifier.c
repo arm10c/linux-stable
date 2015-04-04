@@ -26,6 +26,7 @@ BLOCKING_NOTIFIER_HEAD(reboot_notifier_list);
 // &nh->head: (&pm_chain_head)->head: NULL, n: &rcu_pm_notify_nb
 // ARM10C 20141129
 // ARM10C 20150103
+// ARM10C 20150404
 static int notifier_chain_register(struct notifier_block **nl,
 		struct notifier_block *n)
 {
@@ -60,6 +61,7 @@ static int notifier_chain_register(struct notifier_block **nl,
 	// (&pm_chain_head)->head: rcu_pm_notify_nb 포인터 대입
 
 	return 0;
+	// return 0
 }
 
 static int notifier_chain_cond_register(struct notifier_block **nl,
@@ -398,36 +400,91 @@ EXPORT_SYMBOL_GPL(blocking_notifier_call_chain);
 // &cpu_chain, nb: &timers_nb
 // ARM10C 20150103
 // &cpu_chain, nb: &hrtimers_nb
+// ARM10C 20150404
+// &cpu_chain, nb: &exynos4_mct_cpu_nb
 int raw_notifier_chain_register(struct raw_notifier_head *nh,
 		struct notifier_block *n)
 {
 	// nh->head: (&cpu_chain)->head: NULL, n: &page_alloc_cpu_notify_nb
+	// notifier_chain_register(NULL, &page_alloc_cpu_notify_nb): 0
 	// nh->head: (&cpu_chain)->head: &page_alloc_cpu_notify_nb, n: &slab_notifier
+	// notifier_chain_register(&page_alloc_cpu_notify_nb, &slab_notifier): 0
 	// nh->head: (&cpu_chain)->head: &slab_notifier, n: &sched_ilb_notifier_nb
+	// notifier_chain_register(&slab_notifier, &page_alloc_cpu_notify_nb): 0
 	// nh->head: (&cpu_chain)->head: &sched_ilb_notifier_nb, n: &rcu_cpu_notify_nb
+	// notifier_chain_register(&sched_ilb_notifier_nb, &rcu_cpu_notify_nb): 0
 	// nh->head: (&cpu_chain)->head: &rcu_cpu_notify_nb, n: &radix_tree_callback_nb
+	// notifier_chain_register(&rcu_cpu_notify_nb, &radix_tree_callback_nb): 0
 	// nh->head: (&cpu_chain)->head: &radix_tree_callback_nb, n: &gic_cpu_notifier
+	// notifier_chain_register(&radix_tree_callback_nb, &gic_cpu_notifier): 0
 	// nh->head: (&cpu_pm_notifier_chain)->head: NULL, n: &gic_notifier_block
+	// notifier_chain_register(NULL, &gic_notifier_block): 0
 	// nh->head: (&cpu_chain)->head: &gic_cpu_notifier, n: &timers_nb
+	// notifier_chain_register(&gic_cpu_notifier, &timers_nb): 0
 	// nh->head: (&cpu_chain)->head: &timers_nb, n: &hrtimers_nb
+	// notifier_chain_register(&timers_nb, &hrtimers_nb): 0
+	// nh->head: (&cpu_chain)->head: &hrtimers_nb, n: &exynos4_mct_cpu_nb
+	// notifier_chain_register(&hrtimers_nb, &exynos4_mct_cpu_nb): 0
 	return notifier_chain_register(&nh->head, n);
+	// return 0
+	// return 0
+	// return 0
+	// return 0
+	// return 0
+	// return 0
+	// return 0
+	// return 0
+	// return 0
+	// return 0
+
+	// notifier_chain_register(&page_alloc_cpu_notify_nb)에서 한일:
+	//
 	// (&cpu_chain)->head: &page_alloc_cpu_notify_nb
 	// &nh->head에 n의 포인터를 대입함
+
+	// notifier_chain_register(&slab_notifier)에서 한일:
+	//
 	// (&cpu_chain)->head: &slab_notifier
 	// &nh->head에 n의 포인터를 대입함
+
+	// notifier_chain_register(&sched_ilb_notifier_nb)에서 한일:
+	//
 	// (&cpu_chain)->head: &sched_ilb_notifier_nb
 	// &nh->head에 n의 포인터를 대입함
+
+	// notifier_chain_register(&rcu_cpu_notify_nb)에서 한일:
+	//
 	// (&cpu_chain)->head: &rcu_cpu_notify_nb
 	// &nh->head에 n의 포인터를 대입함
+
+	// notifier_chain_register(&radix_tree_callback_nb)에서 한일:
+	//
 	// (&cpu_chain)->head: &radix_tree_callback_nb
 	// &nh->head에 n의 포인터를 대입함
+
+	// notifier_chain_register(&gic_cpu_notifier)에서 한일:
+	//
 	// (&cpu_chain)->head: &gic_cpu_notifier
 	// &nh->head에 n의 포인터를 대입함
+
+	// notifier_chain_register(&gic_notifier_block)에서 한일:
+	//
 	// (&cpu_pm_notifier_chain)->head: &gic_notifier_block
 	// &nh->head에 n의 포인터를 대입함
+
+	// notifier_chain_register(&timers_nb)에서 한일:
+	//
 	// (&cpu_chain)->head: &timers_nb
 	// &nh->head에 n의 포인터를 대입함
+
+	// notifier_chain_register(&hrtimers_nb)에서 한일:
+	//
 	// (&cpu_chain)->head: &hrtimers_nb
+	// &nh->head에 n의 포인터를 대입함
+
+	// notifier_chain_register(&exynos4_mct_cpu_nb)에서 한일:
+	//
+	// (&cpu_chain)->head: &exynos4_mct_cpu_nb
 	// &nh->head에 n의 포인터를 대입함
 }
 EXPORT_SYMBOL_GPL(raw_notifier_chain_register);
