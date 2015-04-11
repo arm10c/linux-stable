@@ -149,10 +149,18 @@ EXPORT_SYMBOL_GPL(clockevent_delta2ns);
  *
  * Must be called with interrupts disabled !
  */
+// ARM10C 20150411
+// dev: [pcp0] &(&percpu_mct_tick)->evt, CLOCK_EVT_MODE_SHUTDOWN: 1
 void clockevents_set_mode(struct clock_event_device *dev,
 				 enum clock_event_mode mode)
 {
+// 2015/04/11 종료
+
+	// dev->mode: [pcp0] (&(&percpu_mct_tick)->evt)->mode: 0, mode: 1
 	if (dev->mode != mode) {
+		// dev->set_mode: [pcp0] (&(&percpu_mct_tick)->evt)->set_mode: exynos4_tick_set_mode
+		// mode: 1, dev: [pcp0] &(&percpu_mct_tick)->evt
+		// exynos4_tick_set_mode(1, [pcp0] &(&percpu_mct_tick)->evt):
 		dev->set_mode(mode, dev);
 		dev->mode = mode;
 
@@ -173,8 +181,11 @@ void clockevents_set_mode(struct clock_event_device *dev,
  * clockevents_shutdown - shutdown the device and clear next_event
  * @dev:	device to shutdown
  */
+// ARM10C 20150411
+// new: [pcp0] &(&percpu_mct_tick)->evt
 void clockevents_shutdown(struct clock_event_device *dev)
 {
+	// dev: [pcp0] &(&percpu_mct_tick)->evt, CLOCK_EVT_MODE_SHUTDOWN: 1
 	clockevents_set_mode(dev, CLOCK_EVT_MODE_SHUTDOWN);
 	dev->next_event.tv64 = KTIME_MAX;
 }
@@ -583,16 +594,23 @@ void clockevents_handle_noop(struct clock_event_device *dev)
  *
  * Called from the notifier chain. clockevents_lock is held already
  */
+// ARM10C 20150411
+// curdev: [pcp0] (&tick_cpu_device)->evtdev: NULL, newdev: [pcp0] &(&percpu_mct_tick)->evt
 void clockevents_exchange_device(struct clock_event_device *old,
 				 struct clock_event_device *new)
 {
 	unsigned long flags;
 
 	local_irq_save(flags);
+
+	// local_irq_save 에서 한일:
+	// cpsr을 flags에 저장하고 interrupt disable 함
+
 	/*
 	 * Caller releases a clock event device. We queue it into the
 	 * released list and do a notify add later.
 	 */
+	// old: [pcp0] (&tick_cpu_device)->evtdev: NULL
 	if (old) {
 		module_put(old->owner);
 		clockevents_set_mode(old, CLOCK_EVT_MODE_UNUSED);
@@ -600,11 +618,18 @@ void clockevents_exchange_device(struct clock_event_device *old,
 		list_add(&old->list, &clockevents_released);
 	}
 
+	// new: [pcp0] &(&percpu_mct_tick)->evt: NULL 이 아닌 값
 	if (new) {
+		// new->mode: [pcp0] (&(&percpu_mct_tick)->evt)->mode: 0, CLOCK_EVT_MODE_UNUSED: 0
 		BUG_ON(new->mode != CLOCK_EVT_MODE_UNUSED);
+
+		// new: [pcp0] &(&percpu_mct_tick)->evt
 		clockevents_shutdown(new);
 	}
 	local_irq_restore(flags);
+
+	// local_irq_restore 에서 한일:
+	// flags에 저장된 cpsr을 복원하고 interrupt enable 함
 }
 
 /**

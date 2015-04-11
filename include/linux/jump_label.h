@@ -57,7 +57,7 @@ extern bool static_key_initialized;
 				    __func__)
 
 // ARM10C 20140322
-// CONFIG_JUMP_LABLE=n
+// CONFIG_JUMP_LABLE=n, CONFIG_JUMP_LABEL=n
 #if defined(CC_HAVE_ASM_GOTO) && defined(CONFIG_JUMP_LABEL)
 
 struct static_key {

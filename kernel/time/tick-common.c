@@ -277,9 +277,13 @@ static bool tick_check_preferred(struct clock_event_device *curdev,
 	 * Use the higher rated one, but prefer a CPU local device with a lower
 	 * rating than a non-CPU local device
 	 */
+	// curdev: [pcp0] (&tick_cpu_device)->evtdev: NULL, newdev->rating: [pcp0] (&(&percpu_mct_tick)->evt)->rating,
+	// curdev->rating: [pcp0] (&tick_cpu_device)->evtdev->rating, curdev->cpumask: [pcp0] (&tick_cpu_device)->evtdev->cpumask,
+	// newdev->cpumask: [pcp0] (&(&percpu_mct_tick)->evt)->cpumask,
 	return !curdev ||
 		newdev->rating > curdev->rating ||
 	       !cpumask_equal(curdev->cpumask, newdev->cpumask);
+	// retun 1
 }
 
 /*
@@ -332,9 +336,12 @@ void tick_check_new_device(struct clock_event_device *newdev)
 
 	/* Preference decision */
 	// curdev: [pcp0] (&tick_cpu_device)->evtdev, newdev: [pcp0] &(&percpu_mct_tick)->evt
+	// tick_check_preferred([pcp0] (&tick_cpu_device)->evtdev, [pcp0] &(&percpu_mct_tick)->evt): 1
 	if (!tick_check_preferred(curdev, newdev))
 		goto out_bc;
 
+	// newdev->owner: [pcp0] (&(&percpu_mct_tick)->evt)->owner,
+	// try_module_get([pcp0] (&(&percpu_mct_tick)->evt)->owner): true
 	if (!try_module_get(newdev->owner))
 		return;
 
@@ -343,10 +350,14 @@ void tick_check_new_device(struct clock_event_device *newdev)
 	 * device. If the current device is the broadcast device, do
 	 * not give it back to the clockevents layer !
 	 */
+	// curdev: [pcp0] (&tick_cpu_device)->evtdev: NULL
+	// tick_is_broadcast_device([pcp0] (&tick_cpu_device)->evtdev): 0
 	if (tick_is_broadcast_device(curdev)) {
 		clockevents_shutdown(curdev);
 		curdev = NULL;
 	}
+
+	// curdev: [pcp0] (&tick_cpu_device)->evtdev: NULL, newdev: [pcp0] &(&percpu_mct_tick)->evt
 	clockevents_exchange_device(curdev, newdev);
 	tick_setup_device(td, newdev, cpu, cpumask_of(cpu));
 	if (newdev->features & CLOCK_EVT_FEAT_ONESHOT)

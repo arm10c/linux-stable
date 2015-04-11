@@ -226,6 +226,7 @@ struct module_ref {
 	unsigned long decs;
 } __attribute((aligned(2 * sizeof(unsigned long))));
 
+// ARM10C 20150411
 struct module
 {
 	enum module_state state;
@@ -257,7 +258,7 @@ struct module
 	const struct kernel_symbol *gpl_syms;
 	const unsigned long *gpl_crcs;
 
-#ifdef CONFIG_UNUSED_SYMBOLS
+#ifdef CONFIG_UNUSED_SYMBOLS // CONFIG_UNUSED_SYMBOLS=n
 	/* unused exported symbols. */
 	const struct kernel_symbol *unused_syms;
 	const unsigned long *unused_crcs;
@@ -269,7 +270,7 @@ struct module
 	const unsigned long *unused_gpl_crcs;
 #endif
 
-#ifdef CONFIG_MODULE_SIG
+#ifdef CONFIG_MODULE_SIG // CONFIG_MODULE_SIG=n
 	/* Signature was verified. */
 	bool sig_ok;
 #endif
@@ -306,14 +307,14 @@ struct module
 
 	unsigned int taints;	/* same bits as kernel:tainted */
 
-#ifdef CONFIG_GENERIC_BUG
+#ifdef CONFIG_GENERIC_BUG // CONFIG_GENERIC_BUG=y
 	/* Support for BUG */
 	unsigned num_bugs;
 	struct list_head bug_list;
 	struct bug_entry *bug_table;
 #endif
 
-#ifdef CONFIG_KALLSYMS
+#ifdef CONFIG_KALLSYMS // CONFIG_KALLSYMS=y
 	/*
 	 * We keep the symbol and string tables for kallsyms.
 	 * The core_* fields below are temporary, loader-only (they
@@ -334,34 +335,34 @@ struct module
 	   keeping pointers to this stuff */
 	char *args;
 
-#ifdef CONFIG_SMP
+#ifdef CONFIG_SMP // CONFIG_SMP=y
 	/* Per-cpu data. */
 	void __percpu *percpu;
 	unsigned int percpu_size;
 #endif
 
-#ifdef CONFIG_TRACEPOINTS
+#ifdef CONFIG_TRACEPOINTS // CONFIG_TRACEPOINTS=n
 	unsigned int num_tracepoints;
 	struct tracepoint * const *tracepoints_ptrs;
 #endif
-#ifdef HAVE_JUMP_LABEL
+#ifdef HAVE_JUMP_LABEL // undefined
 	struct jump_entry *jump_entries;
 	unsigned int num_jump_entries;
 #endif
-#ifdef CONFIG_TRACING
+#ifdef CONFIG_TRACING // CONFIG_TRACING=n
 	unsigned int num_trace_bprintk_fmt;
 	const char **trace_bprintk_fmt_start;
 #endif
-#ifdef CONFIG_EVENT_TRACING
+#ifdef CONFIG_EVENT_TRACING // CONFIG_EVENT_TRACING=n
 	struct ftrace_event_call **trace_events;
 	unsigned int num_trace_events;
 #endif
-#ifdef CONFIG_FTRACE_MCOUNT_RECORD
+#ifdef CONFIG_FTRACE_MCOUNT_RECORD // CONFIG_FTRACE_MCOUNT_RECORD=n
 	unsigned int num_ftrace_callsites;
 	unsigned long *ftrace_callsites;
 #endif
 
-#ifdef CONFIG_MODULE_UNLOAD
+#ifdef CONFIG_MODULE_UNLOAD // CONFIG_MODULE_UNLOAD=y
 	/* What modules depend on me? */
 	struct list_head source_list;
 	/* What modules do I depend on? */
@@ -373,7 +374,7 @@ struct module
 	struct module_ref __percpu *refptr;
 #endif
 
-#ifdef CONFIG_CONSTRUCTORS
+#ifdef CONFIG_CONSTRUCTORS // CONFIG_CONSTRUCTORS=n
 	/* Constructor functions. */
 	ctor_fn_t *ctors;
 	unsigned int num_ctors;
@@ -388,8 +389,11 @@ extern struct mutex module_mutex;
 /* FIXME: It'd be nice to isolate modules during init, too, so they
    aren't used before they (may) fail.  But presently too much code
    (IDE & SCSI) require entry into the module during init.*/
+// ARM10C 20150411
+// module: [pcp0] (&(&percpu_mct_tick)->evt)->owner
 static inline int module_is_live(struct module *mod)
 {
+	// mod->state: [pcp0] (&(&percpu_mct_tick)->evt)->owner->state
 	return mod->state != MODULE_STATE_GOING;
 }
 
@@ -453,7 +457,7 @@ extern void __module_put_and_exit(struct module *mod, long code)
 	__attribute__((noreturn));
 #define module_put_and_exit(code) __module_put_and_exit(THIS_MODULE, code);
 
-#ifdef CONFIG_MODULE_UNLOAD
+#ifdef CONFIG_MODULE_UNLOAD // CONFIG_MODULE_UNLOAD=y
 unsigned long module_refcount(struct module *mod);
 void __symbol_put(const char *symbol);
 #define symbol_put(x) __symbol_put(VMLINUX_SYMBOL_STR(x))
@@ -465,6 +469,7 @@ extern void __module_get(struct module *module);
 
 /* This is the Right Way to get a module: if it fails, it's being removed,
  * so pretend it's not there. */
+// ARM10C 20150411
 extern bool try_module_get(struct module *module);
 
 extern void module_put(struct module *module);

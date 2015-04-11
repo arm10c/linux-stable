@@ -374,6 +374,8 @@ static int exynos4_tick_set_next_event(unsigned long cycles,
 }
 
 // ARM10C 20150404
+// ARM10C 20150411
+// mode: 1, dev: [pcp0] &(&percpu_mct_tick)->evt
 static inline void exynos4_tick_set_mode(enum clock_event_mode mode,
 					 struct clock_event_device *evt)
 {

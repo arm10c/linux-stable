@@ -948,10 +948,14 @@ void __module_get(struct module *module)
 }
 EXPORT_SYMBOL(__module_get);
 
+// ARM10C 20150411
+// newdev->owner: [pcp0] (&(&percpu_mct_tick)->evt)->owner
 bool try_module_get(struct module *module)
 {
 	bool ret = true;
+	// ret: true
 
+	// module: [pcp0] (&(&percpu_mct_tick)->evt)->owner: NULL
 	if (module) {
 		preempt_disable();
 
@@ -963,7 +967,10 @@ bool try_module_get(struct module *module)
 
 		preempt_enable();
 	}
+
+	// ret: true
 	return ret;
+	// return true
 }
 EXPORT_SYMBOL(try_module_get);
 

@@ -28,6 +28,7 @@
  * timer stops in C3 state.
  */
 
+// ARM10C 20150411
 static struct tick_device tick_broadcast_device;
 // ARM10C 20150103
 static cpumask_var_t tick_broadcast_mask;
@@ -118,9 +119,13 @@ void tick_install_broadcast_device(struct clock_event_device *dev)
 /*
  * Check, if the device is the broadcast device
  */
+// ARM10C 20150411
+// curdev: [pcp0] (&tick_cpu_device)->evtdev: NULL
 int tick_is_broadcast_device(struct clock_event_device *dev)
 {
+	// dev: [pcp0] (&tick_cpu_device)->evtdev: NULL, tick_broadcast_device.evtdev: NULL
 	return (dev && tick_broadcast_device.evtdev == dev);
+	// return 0
 }
 
 static void err_broadcast(const struct cpumask *mask)
