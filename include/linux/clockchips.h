@@ -33,7 +33,9 @@ struct clock_event_device;
 struct module;
 
 /* Clock event mode commands */
+// ARM10C 20150411
 enum clock_event_mode {
+	// CLOCK_EVT_MODE_UNUSED: 0
 	CLOCK_EVT_MODE_UNUSED = 0,
 	CLOCK_EVT_MODE_SHUTDOWN,
 	CLOCK_EVT_MODE_PERIODIC,
@@ -48,6 +50,7 @@ enum clock_event_mode {
 // CLOCK_EVT_FEAT_PERIODIC: 0x000001
 #define CLOCK_EVT_FEAT_PERIODIC		0x000001
 // ARM10C 20150404
+// ARM10C 20150411
 // CLOCK_EVT_FEAT_ONESHOT: 0x000002
 #define CLOCK_EVT_FEAT_ONESHOT		0x000002
 #define CLOCK_EVT_FEAT_KTIME		0x000004
@@ -92,6 +95,7 @@ enum clock_event_mode {
  * @owner:		module reference
  */
 // ARM10C 20150321
+// ARM10C 20150411
 struct clock_event_device {
 	void			(*event_handler)(struct clock_event_device *);
 	int			(*set_next_event)(unsigned long evt,
@@ -165,11 +169,22 @@ extern int clockevents_program_event(struct clock_event_device *dev,
 
 extern void clockevents_handle_noop(struct clock_event_device *dev);
 
+// ARM10C 20150411
+// dev: [pcp0] &(&percpu_mct_tick)->evt, freq: 12000000, sec: 178
 static inline void
 clockevents_calc_mult_shift(struct clock_event_device *ce, u32 freq, u32 minsec)
 {
+	// &ce->mult: [pcp0] &(&(&percpu_mct_tick)->evt)->mult,
+	// &ce->shift: [pcp0] &(&(&percpu_mct_tick)->evt)->shift,
+	// NSEC_PER_SEC: 1000000000L, freq: 12000000, minsec: 178
+	// clocks_calc_mult_shift([pcp0] &(&(&percpu_mct_tick)->evt)->mult,
+	// [pcp0] &(&(&percpu_mct_tick)->evt)->shift, 1000000000L, 12000000, 178)
 	return clocks_calc_mult_shift(&ce->mult, &ce->shift, NSEC_PER_SEC,
 				      freq, minsec);
+
+	// clocks_calc_mult_shift에서 한일:
+	// *mult: [pcp0] (&(&percpu_mct_tick)->evt)->mult: 0x3126E98
+	// *shift: [pcp0] (&(&percpu_mct_tick)->evt)->shift: 32
 }
 
 extern void clockevents_suspend(void);

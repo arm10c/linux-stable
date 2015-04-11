@@ -78,6 +78,8 @@
 // tmp: 3840000000, clock->mult: (&clocksource_jiffies)->mult: 2560000000
 // ARM10C 20150124
 // fvco: 505032704, 12
+// ARM10C 20150411
+// sec: 0x7fffffff, freq: 12000000
 #define do_div(n, base)							\
 ({									\
 	unsigned int __r, __b = (base);					\

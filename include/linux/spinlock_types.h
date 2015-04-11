@@ -82,15 +82,59 @@ typedef struct raw_spinlock {
 //	  .owner_cpu = -1,
 //	  .owner = 0xffffffff,
 //	}
+// ARM10C 20150411
+// #define __RAW_SPIN_LOCK_INITIALIZER(clockevents_lock):
+//	{
+//	  .raw_lock = { { 0 } },
+//	  .magic = 0xdead4ead,
+//	  .owner_cpu = -1,
+//	  .owner = 0xffffffff,
+//	}
 #define __RAW_SPIN_LOCK_INITIALIZER(lockname)	\
 	{					\
 	.raw_lock = __ARCH_SPIN_LOCK_UNLOCKED,	\
 	SPIN_DEBUG_INIT(lockname)		\
 	SPIN_DEP_MAP_INIT(lockname) }
 
+// ARM10C 20150411
+// __RAW_SPIN_LOCK_INITIALIZER(clockevents_lock):
+// {
+//    .raw_lock = { { 0 } },
+//    .magic = 0xdead4ead,
+//    .owner_cpu = -1,
+//    .owner = 0xffffffff,
+// }
+//
+// #define __RAW_SPIN_LOCK_UNLOCKED(clockevents_lock):
+// (raw_spinlock_t)
+// {
+//    .raw_lock = { { 0 } },
+//    .magic = 0xdead4ead,
+//    .owner_cpu = -1,
+//    .owner = 0xffffffff,
+// }
 #define __RAW_SPIN_LOCK_UNLOCKED(lockname)	\
 	(raw_spinlock_t) __RAW_SPIN_LOCK_INITIALIZER(lockname)
 
+// ARM10C 20150411
+// __RAW_SPIN_LOCK_UNLOCKED(clockevents_lock):
+// (raw_spinlock_t)
+// {
+//    .raw_lock = { { 0 } },
+//    .magic = 0xdead4ead,
+//    .owner_cpu = -1,
+//    .owner = 0xffffffff,
+// }
+//
+// #define DEFINE_RAW_SPINLOCK(clockevents_lock):
+// raw_spinlock_t clockevents_lock =
+// (raw_spinlock_t)
+// {
+//    .raw_lock = { { 0 } },
+//    .magic = 0xdead4ead,
+//    .owner_cpu = -1,
+//    .owner = 0xffffffff,
+// }
 #define DEFINE_RAW_SPINLOCK(x)	raw_spinlock_t x = __RAW_SPIN_LOCK_UNLOCKED(x)
 
 // ARM10C 20130914

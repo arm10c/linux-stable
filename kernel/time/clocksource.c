@@ -132,35 +132,61 @@ EXPORT_SYMBOL_GPL(timecounter_cyc2time);
  * reduce the conversion accuracy by chosing smaller mult and shift
  * factors.
  */
+// ARM10C 20150411
+// &ce->mult: [pcp0] &(&(&percpu_mct_tick)->evt)->mult,
+// &ce->shift: [pcp0] &(&(&percpu_mct_tick)->evt)->shift,
+// NSEC_PER_SEC: 1000000000L, freq: 12000000, minsec: 178
 void
 clocks_calc_mult_shift(u32 *mult, u32 *shift, u32 from, u32 to, u32 maxsec)
 {
 	u64 tmp;
 	u32 sft, sftacc= 32;
+	// sftacc: 32
 
 	/*
 	 * Calculate the shift factor which is limiting the conversion
 	 * range:
 	 */
+	// maxsec: 178, from: 1000000000L
 	tmp = ((u64)maxsec * from) >> 32;
+	// tmp: 41
+
+	// tmp: 41, sftacc: 32
 	while (tmp) {
 		tmp >>=1;
 		sftacc--;
 	}
+	// sftacc: 26, tmp: 0
 
 	/*
 	 * Find the conversion shift/mult pair which has the best
 	 * accuracy and fits the maxsec conversion range:
 	 */
 	for (sft = 32; sft > 0; sft--) {
+		// sft: 32, to: 12000000
 		tmp = (u64) to << sft;
+		// tmp: 0xb71b0000000000
+
+		// tmp: 0xb71b0000000000, from: 1000000000L
 		tmp += from / 2;
+		// tmp: 0xb71b001dcd6500
+
+		// tmp: 0xb71b001dcd6500, from: 1000000000L
 		do_div(tmp, from);
+		// tmp: 0x3126E98
+
+		// tmp: 0x3126E98, sftacc: 26
 		if ((tmp >> sftacc) == 0)
 			break;
+			// break 수행
 	}
+	// *mult: [pcp0] (&(&percpu_mct_tick)->evt)->mult, tmp: 0x3126E98
 	*mult = tmp;
+	// *mult: [pcp0] (&(&percpu_mct_tick)->evt)->mult: 0x3126E98
+
+	// *shift: [pcp0] (&(&percpu_mct_tick)->evt)->shift, sft: 32
 	*shift = sft;
+	// *shift: [pcp0] (&(&percpu_mct_tick)->evt)->shift: 32
 }
 
 /*[Clocksource internal variables]---------

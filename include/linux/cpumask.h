@@ -328,6 +328,8 @@ static inline void cpumask_clear_cpu(int cpu, struct cpumask *dstp)
 // test_bit(0, cpu_possible_mask->bits): 1
 // ARM10C 20140913
 // rq->cpu: (&runqueues)->cpu: 0, cpu_active_mask: cpu_active_bits[1]: 0
+// ARM10C 20150411
+// cpu: 0, newdev->cpumask: [pcp0] (&(&percpu_mct_tick)->evt)->cpumask: &cpu_bit_bitmap[1][0]
 #define cpumask_test_cpu(cpu, cpumask) \
 	test_bit(cpumask_check(cpu), cpumask_bits((cpumask)))
 
@@ -466,6 +468,9 @@ static inline void cpumask_complement(struct cpumask *dstp,
  * @src1p: the first input
  * @src2p: the second input
  */
+// ARM10C 20150411
+// newdev->cpumask: [pcp0] (&(&percpu_mct_tick)->evt)->cpumask: &cpu_bit_bitmap[1][0],
+// cpumask_of(0): &cpu_bit_bitmap[1][0]
 static inline bool cpumask_equal(const struct cpumask *src1p,
 				const struct cpumask *src2p)
 {
@@ -624,6 +629,7 @@ static inline void cpumask_copy(struct cpumask *dstp,
 // ARM10C 20140913
 // ARM10C 20150328
 // ARM10C 20150404
+// ARM10C 20150411
 // cpu: 0
 // get_cpu_mask(0): &cpu_bit_bitmap[1][0]
 #define cpumask_of(cpu) (get_cpu_mask(cpu))

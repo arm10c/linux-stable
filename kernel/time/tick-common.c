@@ -27,6 +27,7 @@
 /*
  * Tick devices
  */
+// ARM10C 20150411
 DEFINE_PER_CPU(struct tick_device, tick_cpu_device);
 /*
  * Tick next event: keeps track of the tick time
@@ -232,13 +233,23 @@ void tick_install_replacement(struct clock_event_device *newdev)
 		tick_oneshot_notify();
 }
 
+// ARM10C 20150411
+// curdev: [pcp0] (&tick_cpu_device)->evtdev, newdev: [pcp0] &(&percpu_mct_tick)->evt, cpu: 0
 static bool tick_check_percpu(struct clock_event_device *curdev,
 			      struct clock_event_device *newdev, int cpu)
 {
+	// cpu: 0, newdev->cpumask: [pcp0] (&(&percpu_mct_tick)->evt)->cpumask: &cpu_bit_bitmap[1][0]
+	// cpumask_test_cpu(0, &cpu_bit_bitmap[1][0]): 1
 	if (!cpumask_test_cpu(cpu, newdev->cpumask))
 		return false;
+
+	// newdev->cpumask: [pcp0] (&(&percpu_mct_tick)->evt)->cpumask: &cpu_bit_bitmap[1][0],
+	// cpu: 0, cpumask_of(0): &cpu_bit_bitmap[1][0]
+	// cpumask_equal(&cpu_bit_bitmap[1][0], &cpu_bit_bitmap[1][0]): 1
 	if (cpumask_equal(newdev->cpumask, cpumask_of(cpu)))
 		return true;
+		// return true
+
 	/* Check if irq affinity can be set */
 	if (newdev->irq >= 0 && !irq_can_set_affinity(newdev->irq))
 		return false;
@@ -248,10 +259,13 @@ static bool tick_check_percpu(struct clock_event_device *curdev,
 	return true;
 }
 
+// ARM10C 20150411
+// curdev: [pcp0] (&tick_cpu_device)->evtdev, newdev: [pcp0] &(&percpu_mct_tick)->evt
 static bool tick_check_preferred(struct clock_event_device *curdev,
 				 struct clock_event_device *newdev)
 {
 	/* Prefer oneshot capable device */
+	// newdev->features: [pcp0] (&(&percpu_mct_tick)->evt)->features: 0x3, CLOCK_EVT_FEAT_ONESHOT: 0x000002
 	if (!(newdev->features & CLOCK_EVT_FEAT_ONESHOT)) {
 		if (curdev && (curdev->features & CLOCK_EVT_FEAT_ONESHOT))
 			return false;
@@ -285,24 +299,39 @@ bool tick_check_replacement(struct clock_event_device *curdev,
  * Check, if the new registered device should be used. Called with
  * clockevents_lock held and interrupts disabled.
  */
+// ARM10C 20150411
+// dev: [pcp0] &(&percpu_mct_tick)->evt
 void tick_check_new_device(struct clock_event_device *newdev)
 {
 	struct clock_event_device *curdev;
 	struct tick_device *td;
 	int cpu;
 
+	// smp_processor_id(): 0
 	cpu = smp_processor_id();
+	// cpu: 0
+
+	// cpu: 0, newdev->cpumask: [pcp0] (&(&percpu_mct_tick)->evt)->cpumask: &cpu_bit_bitmap[1][0]
+	// cpumask_test_cpu(0, &cpu_bit_bitmap[1][0]): 1
 	if (!cpumask_test_cpu(cpu, newdev->cpumask))
 		goto out_bc;
 
+	// cpu: 0, per_cpu(tick_cpu_device, 0): [pcp0] tick_cpu_device
 	td = &per_cpu(tick_cpu_device, cpu);
+	// td: [pcp0] &tick_cpu_device
+
+	// td->evtdev: [pcp0] (&tick_cpu_device)->evtdev
 	curdev = td->evtdev;
+	// curdev: [pcp0] (&tick_cpu_device)->evtdev
 
 	/* cpu local device ? */
+	// curdev: [pcp0] (&tick_cpu_device)->evtdev, newdev: [pcp0] &(&percpu_mct_tick)->evt, cpu: 0
+	// tick_check_percpu([pcp0] (&tick_cpu_device)->evtdev, [pcp0] &(&percpu_mct_tick)->evt, 0): true
 	if (!tick_check_percpu(curdev, newdev, cpu))
 		goto out_bc;
 
 	/* Preference decision */
+	// curdev: [pcp0] (&tick_cpu_device)->evtdev, newdev: [pcp0] &(&percpu_mct_tick)->evt
 	if (!tick_check_preferred(curdev, newdev))
 		goto out_bc;
 

@@ -21,9 +21,21 @@
 #include "tick-internal.h"
 
 /* The registered clock event devices */
+// ARM10C 20150411
 static LIST_HEAD(clockevent_devices);
 static LIST_HEAD(clockevents_released);
+
 /* Protection for the above */
+// ARM10C 20150411
+// DEFINE_RAW_SPINLOCK(clockevents_lock):
+// raw_spinlock_t clockevents_lock =
+// (raw_spinlock_t)
+// {
+//    .raw_lock = { { 0 } },
+//    .magic = 0xdead4ead,
+//    .owner_cpu = -1,
+//    .owner = 0xffffffff,
+// }
 static DEFINE_RAW_SPINLOCK(clockevents_lock);
 /* Protection for unbind operations */
 static DEFINE_MUTEX(clockevents_mutex);
@@ -33,22 +45,40 @@ struct ce_unbind {
 	int res;
 };
 
+// ARM10C 20150411
+// dev->min_delta_ticks: [pcp0] (&(&percpu_mct_tick)->evt)->min_delta_ticks: 0xf, dev: [pcp0] &(&percpu_mct_tick)->evt, false
+// ARM10C 20150411
+// dev->max_delta_ticks: [pcp0] (&(&percpu_mct_tick)->evt)->max_delta_ticks: 0x7fffffff, dev: [pcp0] &(&percpu_mct_tick)->evt, true
 static u64 cev_delta2ns(unsigned long latch, struct clock_event_device *evt,
 			bool ismax)
 {
+	// latch: 0xf, evt->shift: [pcp0] (&(&percpu_mct_tick)->evt)->shift: 32
+	// latch: 0x7fffffff, evt->shift: [pcp0] (&(&percpu_mct_tick)->evt)->shift: 32
 	u64 clc = (u64) latch << evt->shift;
+	// clc: 0xf00000000
+	// clc: 0x7fffffff00000000
+
 	u64 rnd;
 
+	// evt->mult: [pcp0] (&(&percpu_mct_tick)->evt)->mult: 0x3126E98
+	// evt->mult: [pcp0] (&(&percpu_mct_tick)->evt)->mult: 0x3126E98
 	if (unlikely(!evt->mult)) {
 		evt->mult = 1;
 		WARN_ON(1);
 	}
+
+	// evt->mult: [pcp0] (&(&percpu_mct_tick)->evt)->mult: 0x3126E98
+	// evt->mult: [pcp0] (&(&percpu_mct_tick)->evt)->mult: 0x3126E98
 	rnd = (u64) evt->mult - 1;
+	// rnd: 0x3126E97
+	// rnd: 0x3126E97
 
 	/*
 	 * Upper bound sanity check. If the backwards conversion is
 	 * not equal latch, we know that the above shift overflowed.
 	 */
+	// clc: 0xf00000000, evt->shift: [pcp0] (&(&percpu_mct_tick)->evt)->shift: 32, latch: 0xf
+	// clc: 0x7fffffff00000000, evt->shift: [pcp0] (&(&percpu_mct_tick)->evt)->shift: 32, latch: 0x7fffffff
 	if ((clc >> evt->shift) != (u64)latch)
 		clc = ~0ULL;
 
@@ -71,14 +101,32 @@ static u64 cev_delta2ns(unsigned long latch, struct clock_event_device *evt,
 	 *
 	 * Also omit the add if it would overflow the u64 boundary.
 	 */
+	// clc: 0xf00000000, rnd: 0x3126E97, ismax: false,
+	// evt->mult: [pcp0] (&(&percpu_mct_tick)->evt)->mult: 0x3126E98,
+	// evt->shift: [pcp0] (&(&percpu_mct_tick)->evt)->shift: 32
+	// clc: 0x7fffffff00000000, rnd: 0x3126E97, ismax: true,
+	// evt->mult: [pcp0] (&(&percpu_mct_tick)->evt)->mult: 0x3126E98,
+	// evt->shift: [pcp0] (&(&percpu_mct_tick)->evt)->shift: 32
 	if ((~0ULL - clc > rnd) &&
 	    (!ismax || evt->mult <= (1U << evt->shift)))
+		// clc: 0xf00000000, rnd: 0x3126E97
+		// clc: 0x7fffffff00000000, rnd: 0x3126E97
 		clc += rnd;
+		// clc: 0xf03126E97
+		// clc: 0x7fffffff03126E97
 
+	// clc: 0xf03126E97, evt->mult: [pcp0] (&(&percpu_mct_tick)->evt)->mult: 0x3126E98
+	// clc: 0x7fffffff03126E97, evt->mult: [pcp0] (&(&percpu_mct_tick)->evt)->mult: 0x3126E98
 	do_div(clc, evt->mult);
+	// clc: 0x4E2
+	// clc: 0x29AAAAA444
 
 	/* Deltas less than 1usec are pointless noise */
+	// clc: 0x4E2
+	// clc: 0x29AAAAA444
 	return clc > 1000 ? clc : 1000;
+	// return 0x4E2
+	// return 0x29AAAAA444
 }
 
 /**
@@ -375,11 +423,16 @@ EXPORT_SYMBOL_GPL(clockevents_unbind);
  * clockevents_register_device - register a clock event device
  * @dev:	device to register
  */
+// ARM10C 20150411
+// dev: [pcp0] &(&percpu_mct_tick)->evt
 void clockevents_register_device(struct clock_event_device *dev)
 {
 	unsigned long flags;
 
+	// dev->mode: [pcp0] (&(&percpu_mct_tick)->evt)->mode: 0, CLOCK_EVT_MODE_UNUSED: 0
 	BUG_ON(dev->mode != CLOCK_EVT_MODE_UNUSED);
+
+	// evt->cpumask: [pcp0] (&(&percpu_mct_tick)->evt)->cpumask: &cpu_bit_bitmap[1][0]
 	if (!dev->cpumask) {
 		WARN_ON(num_possible_cpus() > 1);
 		dev->cpumask = cpumask_of(smp_processor_id());
@@ -387,7 +440,16 @@ void clockevents_register_device(struct clock_event_device *dev)
 
 	raw_spin_lock_irqsave(&clockevents_lock, flags);
 
+	// raw_spin_lock_irqsave에서 한일:
+	// clockevents_lock를 사용하여 spin lock을 수행하고 cpsr을 flags에 저장
+
+	// &dev->list: [pcp0] (&(&percpu_mct_tick)->evt)->list
 	list_add(&dev->list, &clockevent_devices);
+
+	// list_add에서 한일:
+	// list clockevent_devices에 [pcp0] (&(&percpu_mct_tick)->evt)->list를 추가함
+
+	// dev: [pcp0] &(&percpu_mct_tick)->evt
 	tick_check_new_device(dev);
 	clockevents_notify_released();
 
@@ -415,17 +477,38 @@ void clockevents_config(struct clock_event_device *dev, u32 freq)
 	// sec: 0x7fffffff
 
 // 2015/04/04 종료
+// 2015/04/11 시작
 
 	// sec: 0x7fffffff, freq: 12000000
 	do_div(sec, freq);
+	// sec: 178
+
+	// sec: 178, dev->max_delta_ticks: [pcp0] (&(&percpu_mct_tick)->evt)->max_delta_ticks: 0x7fffffff,
+	// UINT_MAX: 0xFFFFFFFF
 	if (!sec)
 		sec = 1;
 	else if (sec > 600 && dev->max_delta_ticks > UINT_MAX)
 		sec = 600;
 
+	// dev: [pcp0] &(&percpu_mct_tick)->evt, freq: 12000000, sec: 178
+	// clockevents_calc_mult_shift([pcp0] &(&percpu_mct_tick)->evt, 12000000, 178)
 	clockevents_calc_mult_shift(dev, freq, sec);
+
+	// clockevents_calc_mult_shift에서 한일:
+	// [pcp0] (&(&percpu_mct_tick)->evt)->mult: 0x3126E98
+	// [pcp0] (&(&percpu_mct_tick)->evt)->shift: 32
+
+	// dev->min_delta_ns: [pcp0] (&(&percpu_mct_tick)->evt)->min_delta_ns,
+	// dev->min_delta_ticks: [pcp0] (&(&percpu_mct_tick)->evt)->min_delta_ticks: 0xf, dev: [pcp0] &(&percpu_mct_tick)->evt
+	// cev_delta2ns(0xf, [pcp0] &(&percpu_mct_tick)->evt, false): 0x4E2
 	dev->min_delta_ns = cev_delta2ns(dev->min_delta_ticks, dev, false);
+	// dev->min_delta_ns: [pcp0] (&(&percpu_mct_tick)->evt)->min_delta_ns: 0x4E2
+
+	// dev->max_delta_ns: [pcp0] (&(&percpu_mct_tick)->evt)->max_delta_ns,
+	// dev->max_delta_ticks: [pcp0] (&(&percpu_mct_tick)->evt)->max_delta_ticks: 0x7fffffff, dev: [pcp0] &(&percpu_mct_tick)->evt
+	// cev_delta2ns(0x7fffffff, [pcp0] &(&percpu_mct_tick)->evt, true): 0x29AAAAA444
 	dev->max_delta_ns = cev_delta2ns(dev->max_delta_ticks, dev, true);
+	// dev->max_delta_ns: [pcp0] (&(&percpu_mct_tick)->evt)->max_delta_ns: 0x29AAAAA444
 }
 
 /**
@@ -452,7 +535,16 @@ void clockevents_config_and_register(struct clock_event_device *dev,
 	// dev->max_delta_ticks: [pcp0] (&(&percpu_mct_tick)->evt)->max_delta_ticks: 0x7fffffff
 
 	// dev: [pcp0] &(&percpu_mct_tick)->evt, freq: 12000000
+	// clockevents_config(&(&percpu_mct_tick)->evt, 12000000)
 	clockevents_config(dev, freq);
+
+	// clockevents_config에서 한일:
+	// [pcp0] (&(&percpu_mct_tick)->evt)->mult: 0x3126E98
+	// [pcp0] (&(&percpu_mct_tick)->evt)->shift: 32
+	// [pcp0] (&(&percpu_mct_tick)->evt)->min_delta_ns: 0x4E2
+	// [pcp0] (&(&percpu_mct_tick)->evt)->max_delta_ns: 0x29AAAAA444
+
+	// dev: [pcp0] &(&percpu_mct_tick)->evt
 	clockevents_register_device(dev);
 }
 EXPORT_SYMBOL_GPL(clockevents_config_and_register);

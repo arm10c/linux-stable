@@ -15,11 +15,13 @@
 
 #ifdef CONFIG_GENERIC_CLOCKEVENTS // CONFIG_GENERIC_CLOCKEVENTS=y
 
+// ARM10C 20150411
 enum tick_device_mode {
 	TICKDEV_MODE_PERIODIC,
 	TICKDEV_MODE_ONESHOT,
 };
 
+// ARM10C 20150411
 struct tick_device {
 	struct clock_event_device *evtdev;
 	enum tick_device_mode mode;
