@@ -99,6 +99,7 @@ static void tick_periodic(int cpu)
 /*
  * Event handler for periodic ticks
  */
+// ARM10C 20150418
 void tick_handle_periodic(struct clock_event_device *dev)
 {
 	int cpu = smp_processor_id();
@@ -134,14 +135,26 @@ void tick_handle_periodic(struct clock_event_device *dev)
 /*
  * Setup the device for a periodic tick
  */
+// ARM10C 20150418
+// newdev: [pcp0] &(&percpu_mct_tick)->evt, 0
 void tick_setup_periodic(struct clock_event_device *dev, int broadcast)
 {
+	// dev: [pcp0] &(&percpu_mct_tick)->evt, broadcast: 0
 	tick_set_periodic_handler(dev, broadcast);
 
+	// tick_set_periodic_handler에서 한일:
+	// [pcp0] (&(&percpu_mct_tick)->evt)->event_handler: tick_handle_periodic
+
 	/* Broadcast setup ? */
+	// dev: [pcp0] &(&percpu_mct_tick)->evt,
+	// tick_device_is_functional([pcp0] &(&percpu_mct_tick)->evt): 1
 	if (!tick_device_is_functional(dev))
 		return;
 
+// 2015/04/18 종료
+
+	// dev->features: [pcp0] (&(&percpu_mct_tick)->evt)->features: 0x3, CLOCK_EVT_FEAT_ONESHOT: 0x000002
+	// tick_broadcast_oneshot_active(): 0
 	if ((dev->features & CLOCK_EVT_FEAT_PERIODIC) &&
 	    !tick_broadcast_oneshot_active()) {
 		clockevents_set_mode(dev, CLOCK_EVT_MODE_PERIODIC);
@@ -195,26 +208,40 @@ static void tick_setup_device(struct tick_device *td,
 				// tick_do_timer_cpu: 0
 			else
 				tick_do_timer_cpu = TICK_DO_TIMER_NONE;
+
+			// ktime_get(): (ktime_t) { .tv64 = 0}
 			tick_next_period = ktime_get();
+			// tick_next_period.tv64: 0
+
+			// NSEC_PER_SEC: 1000000000L, HZ: 100
+			// ktime_set(0, 10000000): (ktime_t) { .tv64 = 10000000}
 			tick_period = ktime_set(0, NSEC_PER_SEC / HZ);
+			// tick_period.tv64: 10000000
 		}
 
 		/*
 		 * Startup in periodic mode first.
 		 */
+		// td->mode: [pcp0] (&tick_cpu_device)->mode, TICKDEV_MODE_PERIODIC: 0
 		td->mode = TICKDEV_MODE_PERIODIC;
+		// td->mode: [pcp0] (&tick_cpu_device)->mode: 0
 	} else {
 		handler = td->evtdev->event_handler;
 		next_event = td->evtdev->next_event;
 		td->evtdev->event_handler = clockevents_handle_noop;
 	}
 
+	// td->evtdev: [pcp0] (&tick_cpu_device)->evtdev: NULL, newdev: [pcp0] &(&percpu_mct_tick)->evt
 	td->evtdev = newdev;
+	// td->evtdev: [pcp0] (&tick_cpu_device)->evtdev: [pcp0] &(&percpu_mct_tick)->evt
 
 	/*
 	 * When the device is not per cpu, pin the interrupt to the
 	 * current cpu:
 	 */
+	// newdev->cpumask: [pcp0] (&(&percpu_mct_tick)->evt)->cpumask: &cpu_bit_bitmap[1][0],
+	// cpumask: &cpu_bit_bitmap[1][0]
+	// cpumask_equal(&cpu_bit_bitmap[1][0], &cpu_bit_bitmap[1][0]): 1
 	if (!cpumask_equal(newdev->cpumask, cpumask))
 		irq_set_affinity(newdev->irq, cpumask);
 
@@ -225,10 +252,14 @@ static void tick_setup_device(struct tick_device *td,
 	 * way. This function also returns !=0 when we keep the
 	 * current active broadcast state for this CPU.
 	 */
+	// newdev: [pcp0] &(&percpu_mct_tick)->evt, cpu: 0
+	// tick_device_uses_broadcast([pcp0] &(&percpu_mct_tick)->evt, 0): 0
 	if (tick_device_uses_broadcast(newdev, cpu))
 		return;
 
+	// td->mode: [pcp0] (&tick_cpu_device)->mode: 0, TICKDEV_MODE_PERIODIC: 0
 	if (td->mode == TICKDEV_MODE_PERIODIC)
+		// newdev: [pcp0] &(&percpu_mct_tick)->evt
 		tick_setup_periodic(newdev, 0);
 	else
 		tick_setup_oneshot(newdev, handler, next_event);

@@ -29,13 +29,17 @@
  */
 
 // ARM10C 20150411
+// ARM10C 20150418
 static struct tick_device tick_broadcast_device;
 // ARM10C 20150103
+// ARM10C 20150418
 static cpumask_var_t tick_broadcast_mask;
 // ARM10C 20150103
+// ARM10C 20150418
 static cpumask_var_t tick_broadcast_on;
 // ARM10C 20150103
 static cpumask_var_t tmpmask;
+// ARM10C 20150418
 static DEFINE_RAW_SPINLOCK(tick_broadcast_lock);
 static int tick_broadcast_force;
 
@@ -149,13 +153,21 @@ static void tick_device_setup_broadcast_func(struct clock_event_device *dev)
  * needs to be handled by the broadcast device.
  */
 // ARM10C 20150103
+// ARM10C 20150418
+// newdev: [pcp0] &(&percpu_mct_tick)->evt, cpu: 0
 int tick_device_uses_broadcast(struct clock_event_device *dev, int cpu)
 {
+	// tick_broadcast_device.evtdev: NULL
 	struct clock_event_device *bc = tick_broadcast_device.evtdev;
+	// bc: NULL
+
 	unsigned long flags;
 	int ret;
 
 	raw_spin_lock_irqsave(&tick_broadcast_lock, flags);
+
+	// raw_spin_lock_irqsave에서 한일:
+	// &tick_broadcast_lock을 사용하여 spin lock을 수행하고 cpsr을 flags에 저장
 
 	/*
 	 * Devices might be registered with both periodic and oneshot
@@ -163,6 +175,8 @@ int tick_device_uses_broadcast(struct clock_event_device *dev, int cpu)
 	 * operated from the broadcast device and is a placeholder for
 	 * the cpu local device.
 	 */
+	// dev: [pcp0] &(&percpu_mct_tick)->evt
+	// tick_device_is_functional([pcp0] &(&percpu_mct_tick)->evt): 1
 	if (!tick_device_is_functional(dev)) {
 		dev->event_handler = tick_handle_periodic;
 		tick_device_setup_broadcast_func(dev);
@@ -177,8 +191,15 @@ int tick_device_uses_broadcast(struct clock_event_device *dev, int cpu)
 		 * Clear the broadcast bit for this cpu if the
 		 * device is not power state affected.
 		 */
+		// dev->features: [pcp0] (&(&percpu_mct_tick)->evt)->features: 0x3,
+		// CLOCK_EVT_FEAT_C3STOP: 0x000008
 		if (!(dev->features & CLOCK_EVT_FEAT_C3STOP))
+			// cpu: 0, tick_broadcast_mask.bits[0]: 0
+			// cpumask_clear_cpu(0, tick_broadcast_mask)
 			cpumask_clear_cpu(cpu, tick_broadcast_mask);
+
+			// cpumask_clear_cpu에서 한일:
+			// tick_broadcast_mask.bits[0]: 0
 		else
 			tick_device_setup_broadcast_func(dev);
 
@@ -186,11 +207,19 @@ int tick_device_uses_broadcast(struct clock_event_device *dev, int cpu)
 		 * Clear the broadcast bit if the CPU is not in
 		 * periodic broadcast on state.
 		 */
+		// cpu: 0, tick_broadcast_on.bits[0]: 0
+		// cpumask_test_cpu(0, tick_broadcast_on): 0
 		if (!cpumask_test_cpu(cpu, tick_broadcast_on))
+			// cpu: 0, tick_broadcast_mask.bits[0]: 0
+			// cpumask_clear_cpu(0, tick_broadcast_mask)
 			cpumask_clear_cpu(cpu, tick_broadcast_mask);
 
+			// cpumask_clear_cpu에서 한일:
+			// tick_broadcast_mask.bits[0]: 0
+
+		// tick_broadcast_device.mode: 0
 		switch (tick_broadcast_device.mode) {
-		case TICKDEV_MODE_ONESHOT:
+		case TICKDEV_MODE_ONESHOT: // TICKDEV_MODE_ONESHOT: 1
 			/*
 			 * If the system is in oneshot mode we can
 			 * unconditionally clear the oneshot mask bit,
@@ -203,12 +232,14 @@ int tick_device_uses_broadcast(struct clock_event_device *dev, int cpu)
 			ret = 0;
 			break;
 
-		case TICKDEV_MODE_PERIODIC:
+		case TICKDEV_MODE_PERIODIC: // TICKDEV_MODE_PERIODIC: 0
 			/*
 			 * If the system is in periodic mode, check
 			 * whether the broadcast device can be
 			 * switched off now.
 			 */
+			// tick_broadcast_mask.bits[0]: 0
+			// cpumask_empty(tick_broadcast_mask): 1, bc: NULL
 			if (cpumask_empty(tick_broadcast_mask) && bc)
 				clockevents_shutdown(bc);
 			/*
@@ -217,8 +248,13 @@ int tick_device_uses_broadcast(struct clock_event_device *dev, int cpu)
 			 * in shutdown state. The periodic interrupt
 			 * is delivered by the broadcast device.
 			 */
+			// cpu: 0, tick_broadcast_mask.bits[0]: 0
+			// cpumask_test_cpu(0, tick_broadcast_on): 0
 			ret = cpumask_test_cpu(cpu, tick_broadcast_mask);
+			// ret: 0
+
 			break;
+			// break 수행
 		default:
 			/* Nothing to do */
 			ret = 0;
@@ -226,7 +262,13 @@ int tick_device_uses_broadcast(struct clock_event_device *dev, int cpu)
 		}
 	}
 	raw_spin_unlock_irqrestore(&tick_broadcast_lock, flags);
+
+	// raw_spin_unlock_irqrestore에서 한일:
+	// &tick_broadcast_lock을 사용하여 spin unlock을 수행하고 flags에 저장된 cpsr을 복원
+
+	// ret: 0
 	return ret;
+	// return 0
 }
 
 #ifdef CONFIG_GENERIC_CLOCKEVENTS_BROADCAST
@@ -404,10 +446,15 @@ void tick_broadcast_on_off(unsigned long reason, int *oncpu)
 /*
  * Set the periodic handler depending on broadcast on/off
  */
+// ARM10C 20150418
+// dev: [pcp0] &(&percpu_mct_tick)->evt, broadcast: 0
 void tick_set_periodic_handler(struct clock_event_device *dev, int broadcast)
 {
+	// broadcast: 0
 	if (!broadcast)
+		// dev->event_handler: [pcp0] (&(&percpu_mct_tick)->evt)->event_handler
 		dev->event_handler = tick_handle_periodic;
+		// dev->event_handler: [pcp0] (&(&percpu_mct_tick)->evt)->event_handler: tick_handle_periodic
 	else
 		dev->event_handler = tick_handle_periodic_broadcast;
 }
@@ -870,9 +917,12 @@ void tick_shutdown_broadcast_oneshot(unsigned int *cpup)
 /*
  * Check, whether the broadcast device is in one shot mode
  */
+// ARM10C 20150418
 int tick_broadcast_oneshot_active(void)
 {
+	// tick_broadcast_device.mode: 0, TICKDEV_MODE_ONESHOT: 1
 	return tick_broadcast_device.mode == TICKDEV_MODE_ONESHOT;
+	// return 0
 }
 
 /*

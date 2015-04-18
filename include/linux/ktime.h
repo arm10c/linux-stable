@@ -81,6 +81,10 @@ typedef union ktime ktime_t;		/* Kill this */
 // ts.tv_sec: tmp.tv_sec: 0, ts.tv_nsec, tmp.tv_nsec: 0
 // ARM10C 20150103
 // tk->tai_offset: (&timekeeper)->tai_offset: 0, 0
+// ARM10C 20150418
+// secs: 0, 0
+// ARM10C 20150418
+// 0, 10000000
 static inline ktime_t ktime_set(const long secs, const unsigned long nsecs)
 {
 #if (BITS_PER_LONG == 64) // BITS_PER_LONG: 32
@@ -111,6 +115,8 @@ static inline ktime_t ktime_set(const long secs, const unsigned long nsecs)
 //
 // #define ktime_add_ns(ktime_zero, 1000000000)
 // 		({ (ktime_t){ .tv64 = (ktime_zero).tv64 + (1000000000) }; })
+// ARM10C 20150418
+// (ktime_t) { .tv64 = 0}, 0
 #define ktime_add_ns(kt, nsval) \
 		({ (ktime_t){ .tv64 = (kt).tv64 + (nsval) }; })
 

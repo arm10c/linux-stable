@@ -154,6 +154,7 @@ extern int bitmap_ord_to_pos(const unsigned long *bitmap, int n, int bits);
 // BITMAP_LAST_WORD_MASK(4): 0xF
 // ARM10C 20140301
 // BITMAP_LAST_WORD_MASK(8): 0xFF
+// ARM10C 20150418
 #define BITMAP_LAST_WORD_MASK(nbits)					\
 (									\
 	((nbits) % BITS_PER_LONG) ?					\
@@ -168,6 +169,7 @@ extern int bitmap_ord_to_pos(const unsigned long *bitmap, int n, int bits);
 // nbits: 8
 // ARM10C 20140913
 // ARM10C 20141004
+// ARM10C 20150418
 #define small_const_nbits(nbits) \
 	(__builtin_constant_p(nbits) && (nbits) <= BITS_PER_LONG)
 
@@ -301,10 +303,15 @@ static inline int bitmap_subset(const unsigned long *src1,
 		return __bitmap_subset(src1, src2, nbits);
 }
 
+// ARM10C 20150418
+// tick_broadcast_mask->bits, nr_cpumask_bits: 4
 static inline int bitmap_empty(const unsigned long *src, int nbits)
 {
+	// nbits: 4, small_const_nbits(4): 1
 	if (small_const_nbits(nbits))
+		// *src: tick_broadcast_mask.bits[0]: 0, BITMAP_LAST_WORD_MASK(4): 0xF
 		return ! (*src & BITMAP_LAST_WORD_MASK(nbits));
+		// return 1
 	else
 		return __bitmap_empty(src, nbits);
 }

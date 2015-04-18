@@ -50,6 +50,7 @@ void tick_setup_oneshot(struct clock_event_device *newdev,
 			ktime_t next_event)
 {
 	newdev->event_handler = handler;
+
 	clockevents_set_mode(newdev, CLOCK_EVT_MODE_ONESHOT);
 	clockevents_program_event(newdev, next_event, true);
 }

@@ -212,6 +212,7 @@ static inline void do_raw_spin_unlock(raw_spinlock_t *lock) __releases(lock)
 
 // ARM10C 20150103
 // ARM10C 20150328
+// ARM10C 20150418
 // &desc->lock: (kmem_cache#28-oX (irq 152))->lock
 #define raw_spin_lock_irqsave(lock, flags)			\
 	do {						\

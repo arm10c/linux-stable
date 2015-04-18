@@ -226,10 +226,14 @@ static inline unsigned raw_seqcount_begin(const seqcount_t *s)
  */
 // ARM10C 20140913
 // s: &cd.seq, start: 0
+// ARM10C 20150418
+// s: &timekeeper_seq, start: 0
 static inline int __read_seqcount_retry(const seqcount_t *s, unsigned start)
 {
 	// s->sequence: (&cd.seq)->sequence: 0, start: 0
+	// s->sequence: (&timekeeper_seq)->sequence: 0, start: 0
 	return unlikely(s->sequence != start);
+	// return 0
 	// return 0
 }
 
@@ -245,13 +249,18 @@ static inline int __read_seqcount_retry(const seqcount_t *s, unsigned start)
  */
 // ARM10C 20140913
 // &cd.seq, seq: 0
+// ARM10C 20150418
+// &timekeeper_seq, seq: 0
 static inline int read_seqcount_retry(const seqcount_t *s, unsigned start)
 {
 	smp_rmb();
 	// memory barrier 수행
+	// memory barrier 수행
 
 	// s: &cd.seq, start: 0, __read_seqcount_retry(&cd.seq, 0): 0
+	// s: &timekeeper_seq, start: 0, __read_seqcount_retry(&timekeeper_seq, 0): 0
 	return __read_seqcount_retry(s, start);
+	// return 0
 	// return 0
 }
 

@@ -65,7 +65,11 @@ enum clock_event_mode {
  * - Clockevent source stops in C3 State and needs broadcast support.
  * - Local APIC timer is used as a dummy device.
  */
+// ARM10C 20150418
+// CLOCK_EVT_FEAT_C3STOP: 0x000008
 #define CLOCK_EVT_FEAT_C3STOP		0x000008
+// ARM10C 20150418
+// CLOCK_EVT_FEAT_DUMMY: 0x000010
 #define CLOCK_EVT_FEAT_DUMMY		0x000010
 
 /*
@@ -101,6 +105,7 @@ enum clock_event_mode {
  */
 // ARM10C 20150321
 // ARM10C 20150411
+// ARM10C 20150418
 struct clock_event_device {
 	void			(*event_handler)(struct clock_event_device *);
 	int			(*set_next_event)(unsigned long evt,

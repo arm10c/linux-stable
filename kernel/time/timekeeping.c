@@ -265,7 +265,7 @@ static void tk_setup_internals(struct timekeeper *tk, struct clocksource *clock)
 
 /* Timekeeper helper functions. */
 
-#ifdef CONFIG_ARCH_USES_GETTIMEOFFSET
+#ifdef CONFIG_ARCH_USES_GETTIMEOFFSET // CONFIG_ARCH_USES_GETTIMEOFFSET=n
 u32 (*arch_gettimeoffset)(void);
 
 u32 get_arch_timeoffset(void)
@@ -275,6 +275,7 @@ u32 get_arch_timeoffset(void)
 	return 0;
 }
 #else
+// ARM10C 20150418
 static inline u32 get_arch_timeoffset(void) { return 0; }
 #endif
 
@@ -297,15 +298,23 @@ static inline s64 timekeeping_get_ns(struct timekeeper *tk)
 	// cycle_now: 0xFFFFFFFFFFFF8AD0
 
 	/* calculate the delta since the last update_wall_time: */
-	// cycle_now: 0xFFFFFFFFFFFF8AD0, clock->cycle_last: (&clocksource_jiffies)->cycle_last: 0xFFFFFFFFFFFF8AD0
+	// cycle_now: 0xFFFFFFFFFFFF8AD0, clock->cycle_last: (&clocksource_jiffies)->cycle_last: 0xFFFFFFFFFFFF8AD0,
 	// clock->mask: (&clocksource_jiffies)->mask: 0xffffffff
 	cycle_delta = (cycle_now - clock->cycle_last) & clock->mask;
+	// cycle_delta: 0
 
+	// cycle_delta: 0, tk->mult: (&timekeeper)->mult: 2560000000, tk->xtime_nsec: (&timekeeper)->xtime_nsec: 0
 	nsec = cycle_delta * tk->mult + tk->xtime_nsec;
+	// nsec: 0
+
+	// nsec: 0, tk->shift: (&timekeeper)->shift: 8
 	nsec >>= tk->shift;
+	// nsec: 0
 
 	/* If arch requires, add in get_arch_timeoffset() */
+	// nsec: 0, get_arch_timeoffset(): 0
 	return nsec + get_arch_timeoffset();
+	// return 0
 }
 
 static inline s64 timekeeping_get_ns_raw(struct timekeeper *tk)
@@ -481,15 +490,21 @@ ktime_t ktime_get(void)
 		secs = tk->xtime_sec + tk->wall_to_monotonic.tv_sec;
 		// secs: 0
 
-		// tk: &timekeeper
+		// tk: &timekeeper, timekeeping_get_ns(&timekeeper): 0
+		// tk->wall_to_monotonic.tv_sec: (&timekeeper)->wall_to_monotonic.tv_sec: 0
 		nsecs = timekeeping_get_ns(tk) + tk->wall_to_monotonic.tv_nsec;
+		// nsecs: 0
 
+		// seq: 0, read_seqcount_retry(&timekeeper_seq, 0): 0
 	} while (read_seqcount_retry(&timekeeper_seq, seq));
 	/*
 	 * Use ktime_set/ktime_add_ns to create a proper ktime on
 	 * 32-bit architectures without CONFIG_KTIME_SCALAR.
 	 */
+	// secs: 0, nsecs: 0, ktime_set(0, 0): (ktime_t) { .tv64 = 0}
+	// ktime_add_ns((ktime_t) { .tv64 = 0}, 0): (ktime_t) { .tv64 = 0}
 	return ktime_add_ns(ktime_set(secs, 0), nsecs);
+	// return (ktime_t) { .tv64 = 0}
 }
 EXPORT_SYMBOL_GPL(ktime_get);
 

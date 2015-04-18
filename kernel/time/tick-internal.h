@@ -38,7 +38,7 @@ extern ssize_t sysfs_get_uname(const char *buf, char *dst, size_t cnt);
 /*
  * NO_HZ / high resolution timer shared code
  */
-#ifdef CONFIG_TICK_ONESHOT
+#ifdef CONFIG_TICK_ONESHOT // CONFIG_TICK_ONESHOT=y
 extern void tick_setup_oneshot(struct clock_event_device *newdev,
 			       void (*handler)(struct clock_event_device *),
 			       ktime_t nextevt);
@@ -46,12 +46,13 @@ extern int tick_program_event(ktime_t expires, int force);
 extern void tick_oneshot_notify(void);
 extern int tick_switch_to_oneshot(void (*handler)(struct clock_event_device *));
 extern void tick_resume_oneshot(void);
-# ifdef CONFIG_GENERIC_CLOCKEVENTS_BROADCAST
+# ifdef CONFIG_GENERIC_CLOCKEVENTS_BROADCAST // CONFIG_GENERIC_CLOCKEVENTS_BROADCAST=y
 extern void tick_broadcast_setup_oneshot(struct clock_event_device *bc);
 extern void tick_broadcast_oneshot_control(unsigned long reason);
 extern void tick_broadcast_switch_to_oneshot(void);
 extern void tick_shutdown_broadcast_oneshot(unsigned int *cpup);
 extern int tick_resume_broadcast_oneshot(struct clock_event_device *bc);
+// ARM10C 20150418
 extern int tick_broadcast_oneshot_active(void);
 extern void tick_check_oneshot_broadcast(int cpu);
 bool tick_broadcast_oneshot_available(void);
@@ -150,9 +151,14 @@ static inline void tick_set_periodic_handler(struct clock_event_device *dev,
 /*
  * Check, if the device is functional or a dummy for broadcast
  */
+// ARM10C 20150418
+// dev: [pcp0] &(&percpu_mct_tick)->evt
 static inline int tick_device_is_functional(struct clock_event_device *dev)
 {
+	// dev->features: [pcp0] (&(&percpu_mct_tick)->evt)->features: 0x3,
+	// CLOCK_EVT_FEAT_DUMMY: 0x000010
 	return !(dev->features & CLOCK_EVT_FEAT_DUMMY);
+	// return 1
 }
 
 #endif

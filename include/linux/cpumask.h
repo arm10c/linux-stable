@@ -51,6 +51,7 @@ extern int nr_cpu_ids;
 // ARM10C 20140830
 // ARM10C 20140913
 // ARM10C 20141004
+// ARM10C 20150418
 // NR_CPUS: 4
 // nr_cpumask_bits: 4
 #define nr_cpumask_bits	NR_CPUS
@@ -307,6 +308,8 @@ static inline void cpumask_set_cpu(unsigned int cpu, struct cpumask *dstp)
  * @cpu: cpu number (< nr_cpu_ids)
  * @dstp: the cpumask pointer
  */
+// ARM10C 20150418
+// cpu: 0, tick_broadcast_mask
 static inline void cpumask_clear_cpu(int cpu, struct cpumask *dstp)
 {
 	clear_bit(cpumask_check(cpu), cpumask_bits(dstp));
@@ -330,6 +333,7 @@ static inline void cpumask_clear_cpu(int cpu, struct cpumask *dstp)
 // rq->cpu: (&runqueues)->cpu: 0, cpu_active_mask: cpu_active_bits[1]: 0
 // ARM10C 20150411
 // cpu: 0, newdev->cpumask: [pcp0] (&(&percpu_mct_tick)->evt)->cpumask: &cpu_bit_bitmap[1][0]
+// ARM10C 20150418
 #define cpumask_test_cpu(cpu, cpumask) \
 	test_bit(cpumask_check(cpu), cpumask_bits((cpumask)))
 
@@ -469,6 +473,7 @@ static inline void cpumask_complement(struct cpumask *dstp,
  * @src2p: the second input
  */
 // ARM10C 20150411
+// ARM10C 20150418
 // newdev->cpumask: [pcp0] (&(&percpu_mct_tick)->evt)->cpumask: &cpu_bit_bitmap[1][0],
 // cpumask_of(0): &cpu_bit_bitmap[1][0]
 static inline bool cpumask_equal(const struct cpumask *src1p,
@@ -508,9 +513,15 @@ static inline int cpumask_subset(const struct cpumask *src1p,
  * cpumask_empty - *srcp == 0
  * @srcp: the cpumask to that all cpus < nr_cpu_ids are clear.
  */
+// ARM10C 20150418
+// tick_broadcast_mask.bits[0]: 0
 static inline bool cpumask_empty(const struct cpumask *srcp)
 {
+	// srcp: tick_broadcast_mask, cpumask_bits(tick_broadcast_mask): tick_broadcast_mask->bits,
+	// nr_cpumask_bits: 4
+	// bitmap_empty(tick_broadcast_mask->bits, 4): 1
 	return bitmap_empty(cpumask_bits(srcp), nr_cpumask_bits);
+	// return 1
 }
 
 /**
