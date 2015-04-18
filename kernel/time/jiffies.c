@@ -65,6 +65,7 @@
 #endif
 
 // ARM10C 20150103
+// ARM10C 20150418
 // &clocksource_jiffies
 static cycle_t jiffies_read(struct clocksource *cs)
 {
@@ -74,6 +75,7 @@ static cycle_t jiffies_read(struct clocksource *cs)
 }
 
 // ARM10C 20150103
+// ARM10C 20150418
 static struct clocksource clocksource_jiffies = {
 	.name		= "jiffies",
 	.rating		= 1, /* lowest valid rating*/

@@ -156,6 +156,10 @@
 // DEFINE_PER_CPU(struct vm_event_state, vm_event_states):
 //	__attribute__((section(".data..percpu" "")))
 //	__typeof__(struct vm_event_state) vm_event_states
+// ARM10C 20150418
+// DEFINE_PER_CPU(struct mct_clock_event_device, percpu_mct_tick):
+//	__attribute__((section(".data..percpu" "")))
+//	__typeof__(struct mct_clock_event_device) percpu_mct_tick
 #define DEFINE_PER_CPU(type, name)					\
 	DEFINE_PER_CPU_SECTION(type, name, "")
 

@@ -630,6 +630,7 @@ static inline void cpumask_copy(struct cpumask *dstp,
 // ARM10C 20150328
 // ARM10C 20150404
 // ARM10C 20150411
+// ARM10C 20150418
 // cpu: 0
 // get_cpu_mask(0): &cpu_bit_bitmap[1][0]
 #define cpumask_of(cpu) (get_cpu_mask(cpu))

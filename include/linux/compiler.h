@@ -375,6 +375,7 @@ void ftrace_likely_update(struct ftrace_branch_data *f, int val, int expect);
 /*
 // ARM10C 20140412
 // ARM10C 20141122
+// ARM10C 20150418
 */
 #define ACCESS_ONCE(x) (*(volatile typeof(x) *)&(x))
 

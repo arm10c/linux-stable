@@ -92,6 +92,7 @@ static inline struct timespec timespec_sub(struct timespec lhs,
 }
 
 // ARM10C 20150103
+// ARM10C 20150418
 // KTIME_MAX: 0x7FFFFFFFFFFFFFFF
 #define KTIME_MAX			((s64)~((u64)1 << 63))
 #if (BITS_PER_LONG == 64)

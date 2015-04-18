@@ -20,6 +20,7 @@
 
 /* clocksource cycle base type */
 // ARM10C 20150103
+// ARM10C 20150418
 typedef u64 cycle_t;
 struct clocksource;
 struct module;
@@ -167,6 +168,7 @@ extern u64 timecounter_cyc2time(struct timecounter *tc,
  * @owner:		module reference, must be set by clocksource in modules
  */
 // ARM10C 20150103
+// ARM10C 20150418
 struct clocksource {
 	/*
 	 * Hotpath data, fits in a single cache line when the

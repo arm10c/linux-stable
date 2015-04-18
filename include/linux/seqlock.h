@@ -45,6 +45,7 @@
  */
 // ARM10C 20140913
 // ARM10C 20150103
+// ARM10C 20150418
 typedef struct seqcount {
 	unsigned sequence;
 #ifdef CONFIG_DEBUG_LOCK_ALLOC // CONFIG_DEBUG_LOCK_ALLOC=n
@@ -62,7 +63,7 @@ static inline void __seqcount_init(seqcount_t *s, const char *name,
 	s->sequence = 0;
 }
 
-#ifdef CONFIG_DEBUG_LOCK_ALLOC
+#ifdef CONFIG_DEBUG_LOCK_ALLOC // CONFIG_DEBUG_LOCK_ALLOC=n
 # define SEQCOUNT_DEP_MAP_INIT(lockname) \
 		.dep_map = { .name = #lockname } \
 
@@ -86,6 +87,7 @@ static inline void seqcount_lockdep_reader_access(const seqcount_t *s)
 #else
 # define SEQCOUNT_DEP_MAP_INIT(lockname)
 # define seqcount_init(s) __seqcount_init(s, NULL, NULL)
+// ARM10C 20150418
 # define seqcount_lockdep_reader_access(x)
 #endif
 
@@ -107,13 +109,17 @@ static inline void seqcount_lockdep_reader_access(const seqcount_t *s)
  */
 // ARM10C 20140913
 // s: &cd.seq
+// ARM10C 20150418
+// s: &timekeeper_seq
 static inline unsigned __read_seqcount_begin(const seqcount_t *s)
 {
 	unsigned ret;
 
 repeat:
 	// s->sequence: (&cd.seq)->sequence: 0
+	// s->sequence: (&timekeeper_seq)->sequence: 0
 	ret = ACCESS_ONCE(s->sequence);
+	// ret: 0
 	// ret: 0
 
 	if (unlikely(ret & 1)) {
@@ -122,7 +128,9 @@ repeat:
 	}
 
 	// ret: 0
+	// ret: 0
 	return ret;
+	// return 0
 	// return 0
 }
 
@@ -137,17 +145,24 @@ repeat:
  */
 // ARM10C 20140913
 // &cd.seq
+// ARM10C 20150418
+// s: &timekeeper_seq
 static inline unsigned raw_read_seqcount_begin(const seqcount_t *s)
 {
 	// s: &cd.seq, __read_seqcount_begin(&cd.seq): 0
+	// s: &timekeeper_seq, __read_seqcount_begin(&timekeeper_seq): 0
 	unsigned ret = __read_seqcount_begin(s);
+	// ret: 0
 	// ret: 0
 
 	smp_rmb();
 	// memmory barrier 수행
+	// memmory barrier 수행
 
 	// ret: 0
+	// ret: 0
 	return ret;
+	// return 0
 	// return 0
 }
 
@@ -160,10 +175,16 @@ static inline unsigned raw_read_seqcount_begin(const seqcount_t *s)
  * Validity of the critical section is tested by checking read_seqcount_retry
  * function.
  */
+// ARM10C 20150418
+// &timekeeper_seq
 static inline unsigned read_seqcount_begin(const seqcount_t *s)
 {
-	seqcount_lockdep_reader_access(s);
+	// s: &timekeeper_seq
+	seqcount_lockdep_reader_access(s); // null function
+
+	// s: &timekeeper_seq, raw_read_seqcount_begin(&timekeeper_seq): 0
 	return raw_read_seqcount_begin(s);
+	// return 0
 }
 
 /**

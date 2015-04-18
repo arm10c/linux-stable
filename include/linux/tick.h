@@ -191,6 +191,7 @@ extern void __tick_nohz_task_switch(struct task_struct *tsk);
 // ARM10C 20141004
 static inline void tick_nohz_init(void) { }
 static inline bool tick_nohz_full_enabled(void) { return false; }
+// ARM10C 20150418
 static inline bool tick_nohz_full_cpu(int cpu) { return false; }
 static inline void __tick_nohz_full_check(void) { }
 static inline void tick_nohz_full_kick(void) { }

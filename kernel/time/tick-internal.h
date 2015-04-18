@@ -11,6 +11,8 @@ extern seqlock_t jiffies_lock;
 #ifdef CONFIG_GENERIC_CLOCKEVENTS_BUILD
 
 #define TICK_DO_TIMER_NONE	-1
+// ARM10C 20150418
+// TICK_DO_TIMER_BOOT: -2
 #define TICK_DO_TIMER_BOOT	-2
 
 DECLARE_PER_CPU(struct tick_device, tick_cpu_device);

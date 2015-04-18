@@ -32,6 +32,7 @@ DEFINE_PER_CPU(struct tick_device, tick_cpu_device);
 /*
  * Tick next event: keeps track of the tick time
  */
+// ARM10C 20150418
 ktime_t tick_next_period;
 ktime_t tick_period;
 
@@ -49,6 +50,9 @@ ktime_t tick_period;
  *    at it will take over and keep the time keeping alive.  The handover
  *    procedure also covers cpu hotplug.
  */
+// ARM10C 20150418
+// TICK_DO_TIMER_BOOT: -2
+// tick_do_timer_cpu: -2
 int tick_do_timer_cpu __read_mostly = TICK_DO_TIMER_BOOT;
 
 /*
@@ -163,24 +167,32 @@ void tick_setup_periodic(struct clock_event_device *dev, int broadcast)
 /*
  * Setup the tick device
  */
+// ARM10C 20150418
+// td: [pcp0] &tick_cpu_device, newdev: [pcp0] &(&percpu_mct_tick)->evt, cpu: 0, cpumask_of(0): &cpu_bit_bitmap[1][0]
 static void tick_setup_device(struct tick_device *td,
 			      struct clock_event_device *newdev, int cpu,
 			      const struct cpumask *cpumask)
 {
 	ktime_t next_event;
 	void (*handler)(struct clock_event_device *) = NULL;
+	// handler: NULL
 
 	/*
 	 * First device setup ?
 	 */
+	// td->evtdev: [pcp0] (&tick_cpu_device)->evtdev: NULL
 	if (!td->evtdev) {
 		/*
 		 * If no cpu took the do_timer update, assign it to
 		 * this cpu:
 		 */
+		// tick_do_timer_cpu: -2, TICK_DO_TIMER_BOOT: -2
 		if (tick_do_timer_cpu == TICK_DO_TIMER_BOOT) {
+			// cpu: 0, tick_nohz_full_cpu(0): false
 			if (!tick_nohz_full_cpu(cpu))
+				// tick_do_timer_cpu: -2, cpu: 0
 				tick_do_timer_cpu = cpu;
+				// tick_do_timer_cpu: 0
 			else
 				tick_do_timer_cpu = TICK_DO_TIMER_NONE;
 			tick_next_period = ktime_get();
@@ -358,7 +370,18 @@ void tick_check_new_device(struct clock_event_device *newdev)
 	}
 
 	// curdev: [pcp0] (&tick_cpu_device)->evtdev: NULL, newdev: [pcp0] &(&percpu_mct_tick)->evt
+	// clockevents_exchange_device(NULL, [pcp0] &(&percpu_mct_tick)->evt)
 	clockevents_exchange_device(curdev, newdev);
+
+	// clockevents_exchange_device에서 한일:
+	// timer control register L0_TCON 값을 읽어 timer start, timer interrupt 설정을
+	// 동작하지 않도록 변경함
+	// L0_TCON 값이 0 으로 가정하였으므로 timer는 동작하지 않은 상태임
+	//
+	// [pcp0] (&(&percpu_mct_tick)->evt)->mode: 1
+	// [pcp0] (&(&percpu_mct_tick)->evt)->next_event.tv64: 0x7FFFFFFFFFFFFFFF
+
+	// td: [pcp0] &tick_cpu_device, newdev: [pcp0] &(&percpu_mct_tick)->evt, cpu: 0, cpumask_of(0): &cpu_bit_bitmap[1][0]
 	tick_setup_device(td, newdev, cpu, cpumask_of(cpu));
 	if (newdev->features & CLOCK_EVT_FEAT_ONESHOT)
 		tick_oneshot_notify();

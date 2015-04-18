@@ -51,6 +51,8 @@
 
 #define MCT_L_TCNTB_OFFSET		(0x00)
 #define MCT_L_ICNTB_OFFSET		(0x08)
+// ARM10C 20150418
+// MCT_L_TCON_OFFSET: 0x20
 #define MCT_L_TCON_OFFSET		(0x20)
 #define MCT_L_INT_CSTAT_OFFSET		(0x30)
 #define MCT_L_INT_ENB_OFFSET		(0x34)
@@ -59,7 +61,11 @@
 #define MCT_G_TCON_COMP0_AUTO_INC	(1 << 1)
 #define MCT_G_TCON_COMP0_ENABLE		(1 << 0)
 #define MCT_L_TCON_INTERVAL_MODE	(1 << 2)
+// ARM10C 20150418
+// MCT_L_TCON_INT_START: 0x2
 #define MCT_L_TCON_INT_START		(1 << 1)
+// ARM10C 20150418
+// MCT_L_TCON_TIMER_START: 0x1
 #define MCT_L_TCON_TIMER_START		(1 << 0)
 
 // ARM10C 20150404
@@ -93,6 +99,7 @@ enum {
 };
 
 // ARM10C 20150328
+// ARM10C 20150418
 static void __iomem *reg_base;
 // ARM10C 20150321
 // ARM10C 20150404
@@ -325,16 +332,36 @@ static void exynos4_clockevent_init(void)
 }
 
 // ARM10C 20150321
+// ARM10C 20150418
 static DEFINE_PER_CPU(struct mct_clock_event_device, percpu_mct_tick);
 
 /* Clock event handling */
+// ARM10C 20150418
+// mevt: [pcp0] &percpu_mct_tick
 static void exynos4_mct_tick_stop(struct mct_clock_event_device *mevt)
 {
 	unsigned long tmp;
-	unsigned long mask = MCT_L_TCON_INT_START | MCT_L_TCON_TIMER_START;
-	unsigned long offset = mevt->base + MCT_L_TCON_OFFSET;
 
+	// MCT_L_TCON_INT_START: 0x2, MCT_L_TCON_TIMER_START: 0x1
+	unsigned long mask = MCT_L_TCON_INT_START | MCT_L_TCON_TIMER_START;
+	// mask: 0x3
+
+	// mevt->base: [pcp0] (&percpu_mct_tick)->base: 0x300, MCT_L_TCON_OFFSET: 0x20
+	unsigned long offset = mevt->base + MCT_L_TCON_OFFSET;
+	// offset: 0x320
+
+	// E.R.M:
+	// L0_TCON: Specifies the timer control register
+
+	// NOTE:
+	// register L0_TCON 값이 reset 값인 0x0으로 읽히는 것으로 가정하고 코드 분석 진행
+
+	// reg_base: 0xf0006000, offset: 0x320
+	// __raw_readl(0xf0006320): 0
 	tmp = __raw_readl(reg_base + offset);
+	// tmp: 0
+
+	// tmp: 0, mask: 0x3
 	if (tmp & mask) {
 		tmp &= ~mask;
 		exynos4_mct_write(tmp, offset);
@@ -379,23 +406,34 @@ static int exynos4_tick_set_next_event(unsigned long cycles,
 static inline void exynos4_tick_set_mode(enum clock_event_mode mode,
 					 struct clock_event_device *evt)
 {
+	// this_cpu_ptr(&percpu_mct_tick): [pcp0] &percpu_mct_tick
 	struct mct_clock_event_device *mevt = this_cpu_ptr(&percpu_mct_tick);
+	// mevt: [pcp0] &percpu_mct_tick
+
 	unsigned long cycles_per_jiffy;
 
+	// mevt: [pcp0] &percpu_mct_tick
 	exynos4_mct_tick_stop(mevt);
 
+	// exynos4_mct_tick_stop에서 한일:
+	// timer control register L0_TCON 값을 읽어 timer start, timer interrupt 설정을
+	// 동작하지 않도록 변경함
+	// L0_TCON 값이 0 으로 가정하였으므로 timer는 동작하지 않은 상태임
+
+	// mode: 1
 	switch (mode) {
-	case CLOCK_EVT_MODE_PERIODIC:
+	case CLOCK_EVT_MODE_PERIODIC: // CLOCK_EVT_MODE_PERIODIC: 2
 		cycles_per_jiffy =
 			(((unsigned long long) NSEC_PER_SEC / HZ * evt->mult) >> evt->shift);
 		exynos4_mct_tick_start(cycles_per_jiffy, mevt);
 		break;
 
-	case CLOCK_EVT_MODE_ONESHOT:
-	case CLOCK_EVT_MODE_UNUSED:
-	case CLOCK_EVT_MODE_SHUTDOWN:
-	case CLOCK_EVT_MODE_RESUME:
+	case CLOCK_EVT_MODE_ONESHOT:  // CLOCK_EVT_MODE_ONESHOT: 3
+	case CLOCK_EVT_MODE_UNUSED:   // CLOCK_EVT_MODE_UNUSED: 0
+	case CLOCK_EVT_MODE_SHUTDOWN: // CLOCK_EVT_MODE_SHUTDOWN: 1
+	case CLOCK_EVT_MODE_RESUME:   // CLOCK_EVT_MODE_RESUME: 4
 		break;
+		// break 수행
 	}
 }
 

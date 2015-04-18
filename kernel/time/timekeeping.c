@@ -32,15 +32,18 @@
 #define TK_CLOCK_WAS_SET	(1 << 2)
 
 // ARM10C 20150103
+// ARM10C 20150418
 static struct timekeeper timekeeper;
 // ARM10C 20150103
 static DEFINE_RAW_SPINLOCK(timekeeper_lock);
 // ARM10C 20150103
+// ARM10C 20150418
 static seqcount_t timekeeper_seq;
 // ARM10C 20150103
 static struct timekeeper shadow_timekeeper;
 
 /* flag for if timekeeping is suspended */
+// ARM10C 20150418
 int __read_mostly timekeeping_suspended;
 
 /* Flag for if there is a persistent clock on this platform */
@@ -275,6 +278,8 @@ u32 get_arch_timeoffset(void)
 static inline u32 get_arch_timeoffset(void) { return 0; }
 #endif
 
+// ARM10C 20150418
+// tk: &timekeeper
 static inline s64 timekeeping_get_ns(struct timekeeper *tk)
 {
 	cycle_t cycle_now, cycle_delta;
@@ -282,10 +287,18 @@ static inline s64 timekeeping_get_ns(struct timekeeper *tk)
 	s64 nsec;
 
 	/* read clocksource: */
+	// tk->clock: (&timekeeper)->clock: &clocksource_jiffies
 	clock = tk->clock;
+	// clock: &clocksource_jiffies
+
+	// clock->read: (&clocksource_jiffies)->read: jiffies_read
+	// jiffies_read(&clocksource_jiffies): 0xFFFFFFFFFFFF8AD0
 	cycle_now = clock->read(clock);
+	// cycle_now: 0xFFFFFFFFFFFF8AD0
 
 	/* calculate the delta since the last update_wall_time: */
+	// cycle_now: 0xFFFFFFFFFFFF8AD0, clock->cycle_last: (&clocksource_jiffies)->cycle_last: 0xFFFFFFFFFFFF8AD0
+	// clock->mask: (&clocksource_jiffies)->mask: 0xffffffff
 	cycle_delta = (cycle_now - clock->cycle_last) & clock->mask;
 
 	nsec = cycle_delta * tk->mult + tk->xtime_nsec;
@@ -446,17 +459,29 @@ void getnstimeofday(struct timespec *ts)
 }
 EXPORT_SYMBOL(getnstimeofday);
 
+// ARM10C 20150418
 ktime_t ktime_get(void)
 {
 	struct timekeeper *tk = &timekeeper;
+	// tk: &timekeeper
+
 	unsigned int seq;
 	s64 secs, nsecs;
 
+	// timekeeping_suspended: 0
 	WARN_ON(timekeeping_suspended);
 
 	do {
+		// read_seqcount_begin(&timekeeper_seq): 0
 		seq = read_seqcount_begin(&timekeeper_seq);
+		// seq: 0
+
+		// tk->xtime_sec: (&timekeeper)->xtime_sec: 0,
+		// tk->wall_to_monotonic.tv_sec: (&timekeeper)->wall_to_monotonic.tv_sec: 0
 		secs = tk->xtime_sec + tk->wall_to_monotonic.tv_sec;
+		// secs: 0
+
+		// tk: &timekeeper
 		nsecs = timekeeping_get_ns(tk) + tk->wall_to_monotonic.tv_nsec;
 
 	} while (read_seqcount_retry(&timekeeper_seq, seq));

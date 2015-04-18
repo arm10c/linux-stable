@@ -155,19 +155,29 @@ void clockevents_set_mode(struct clock_event_device *dev,
 				 enum clock_event_mode mode)
 {
 // 2015/04/11 종료
+// 2015/04/18 시작
 
 	// dev->mode: [pcp0] (&(&percpu_mct_tick)->evt)->mode: 0, mode: 1
 	if (dev->mode != mode) {
 		// dev->set_mode: [pcp0] (&(&percpu_mct_tick)->evt)->set_mode: exynos4_tick_set_mode
 		// mode: 1, dev: [pcp0] &(&percpu_mct_tick)->evt
-		// exynos4_tick_set_mode(1, [pcp0] &(&percpu_mct_tick)->evt):
+		// exynos4_tick_set_mode(1, [pcp0] &(&percpu_mct_tick)->evt)
 		dev->set_mode(mode, dev);
+
+		// exynos4_tick_set_mode에서 한일:
+		// timer control register L0_TCON 값을 읽어 timer start, timer interrupt 설정을
+		// 동작하지 않도록 변경함
+		// L0_TCON 값이 0 으로 가정하였으므로 timer는 동작하지 않은 상태임
+
+		// dev->mode: [pcp0] (&(&percpu_mct_tick)->evt)->mode: 0, mode: 1
 		dev->mode = mode;
+		// dev->mode: [pcp0] (&(&percpu_mct_tick)->evt)->mode: 1
 
 		/*
 		 * A nsec2cyc multiplicator of 0 is invalid and we'd crash
 		 * on it, so fix it up and emit a warning:
 		 */
+		// mode: 1, CLOCK_EVT_MODE_ONESHOT: 3
 		if (mode == CLOCK_EVT_MODE_ONESHOT) {
 			if (unlikely(!dev->mult)) {
 				dev->mult = 1;
@@ -186,8 +196,19 @@ void clockevents_set_mode(struct clock_event_device *dev,
 void clockevents_shutdown(struct clock_event_device *dev)
 {
 	// dev: [pcp0] &(&percpu_mct_tick)->evt, CLOCK_EVT_MODE_SHUTDOWN: 1
+	// clockevents_set_mode([pcp0] &(&percpu_mct_tick)->evt, 1)
 	clockevents_set_mode(dev, CLOCK_EVT_MODE_SHUTDOWN);
+
+	// clockevents_set_mode에서 한일:
+	// timer control register L0_TCON 값을 읽어 timer start, timer interrupt 설정을
+	// 동작하지 않도록 변경함
+	// L0_TCON 값이 0 으로 가정하였으므로 timer는 동작하지 않은 상태임
+	//
+	// dev->mode: [pcp0] (&(&percpu_mct_tick)->evt)->mode: 1
+
+	// dev->next_event.tv64: [pcp0] (&(&percpu_mct_tick)->evt)->next_event.tv64, KTIME_MAX: 0x7FFFFFFFFFFFFFFF
 	dev->next_event.tv64 = KTIME_MAX;
+	// dev->next_event.tv64: [pcp0] (&(&percpu_mct_tick)->evt)->next_event.tv64: 0x7FFFFFFFFFFFFFFF
 }
 
 #ifdef CONFIG_GENERIC_CLOCKEVENTS_MIN_ADJUST
@@ -624,7 +645,16 @@ void clockevents_exchange_device(struct clock_event_device *old,
 		BUG_ON(new->mode != CLOCK_EVT_MODE_UNUSED);
 
 		// new: [pcp0] &(&percpu_mct_tick)->evt
+		// clockevents_shutdown([pcp0] &(&percpu_mct_tick)->evt)
 		clockevents_shutdown(new);
+
+		// clockevents_shutdown에서 한일:
+		// timer control register L0_TCON 값을 읽어 timer start, timer interrupt 설정을
+		// 동작하지 않도록 변경함
+		// L0_TCON 값이 0 으로 가정하였으므로 timer는 동작하지 않은 상태임
+		//
+		// [pcp0] (&(&percpu_mct_tick)->evt)->mode: 1
+		// [pcp0] (&(&percpu_mct_tick)->evt)->next_event.tv64: 0x7FFFFFFFFFFFFFFF
 	}
 	local_irq_restore(flags);
 

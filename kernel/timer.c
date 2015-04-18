@@ -53,6 +53,7 @@
 #include <trace/events/timer.h>
 
 // ARM10C 20140830
+// ARM10C 20150418
 // __cacheline_aligned_in_smp:
 // __attribute__((__aligned__(64), __section__(".data..cacheline_aligned")))
 // INITIAL_JIFFIES: -30000 (0xFFFFFFFFFFFF8AD0)
