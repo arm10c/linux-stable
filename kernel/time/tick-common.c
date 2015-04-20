@@ -34,6 +34,7 @@ DEFINE_PER_CPU(struct tick_device, tick_cpu_device);
  */
 // ARM10C 20150418
 ktime_t tick_next_period;
+// ARM10C 20150418
 ktime_t tick_period;
 
 /*

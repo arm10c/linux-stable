@@ -481,9 +481,9 @@ ktime_t ktime_get(void)
 	WARN_ON(timekeeping_suspended);
 
 	do {
-		// read_seqcount_begin(&timekeeper_seq): 0
+		// read_seqcount_begin(&timekeeper_seq): 2
 		seq = read_seqcount_begin(&timekeeper_seq);
-		// seq: 0
+		// seq: 2
 
 		// tk->xtime_sec: (&timekeeper)->xtime_sec: 0,
 		// tk->wall_to_monotonic.tv_sec: (&timekeeper)->wall_to_monotonic.tv_sec: 0
@@ -495,8 +495,9 @@ ktime_t ktime_get(void)
 		nsecs = timekeeping_get_ns(tk) + tk->wall_to_monotonic.tv_nsec;
 		// nsecs: 0
 
-		// seq: 0, read_seqcount_retry(&timekeeper_seq, 0): 0
+		// seq: 2, read_seqcount_retry(&timekeeper_seq, 2): 0
 	} while (read_seqcount_retry(&timekeeper_seq, seq));
+
 	/*
 	 * Use ktime_set/ktime_add_ns to create a proper ktime on
 	 * 32-bit architectures without CONFIG_KTIME_SCALAR.

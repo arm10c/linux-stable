@@ -117,10 +117,10 @@ static inline unsigned __read_seqcount_begin(const seqcount_t *s)
 
 repeat:
 	// s->sequence: (&cd.seq)->sequence: 0
-	// s->sequence: (&timekeeper_seq)->sequence: 0
+	// s->sequence: (&timekeeper_seq)->sequence: 2
 	ret = ACCESS_ONCE(s->sequence);
 	// ret: 0
-	// ret: 0
+	// ret: 2
 
 	if (unlikely(ret & 1)) {
 		cpu_relax();
@@ -128,10 +128,10 @@ repeat:
 	}
 
 	// ret: 0
-	// ret: 0
+	// ret: 2
 	return ret;
 	// return 0
-	// return 0
+	// return 2
 }
 
 /**
@@ -150,20 +150,20 @@ repeat:
 static inline unsigned raw_read_seqcount_begin(const seqcount_t *s)
 {
 	// s: &cd.seq, __read_seqcount_begin(&cd.seq): 0
-	// s: &timekeeper_seq, __read_seqcount_begin(&timekeeper_seq): 0
+	// s: &timekeeper_seq, __read_seqcount_begin(&timekeeper_seq): 2
 	unsigned ret = __read_seqcount_begin(s);
 	// ret: 0
-	// ret: 0
+	// ret: 2
 
 	smp_rmb();
 	// memmory barrier 수행
 	// memmory barrier 수행
 
 	// ret: 0
-	// ret: 0
+	// ret: 2
 	return ret;
 	// return 0
-	// return 0
+	// return 2
 }
 
 /**
@@ -182,9 +182,9 @@ static inline unsigned read_seqcount_begin(const seqcount_t *s)
 	// s: &timekeeper_seq
 	seqcount_lockdep_reader_access(s); // null function
 
-	// s: &timekeeper_seq, raw_read_seqcount_begin(&timekeeper_seq): 0
+	// s: &timekeeper_seq, raw_read_seqcount_begin(&timekeeper_seq): 2
 	return raw_read_seqcount_begin(s);
-	// return 0
+	// return 2
 }
 
 /**
@@ -227,11 +227,11 @@ static inline unsigned raw_seqcount_begin(const seqcount_t *s)
 // ARM10C 20140913
 // s: &cd.seq, start: 0
 // ARM10C 20150418
-// s: &timekeeper_seq, start: 0
+// s: &timekeeper_seq, start: 2
 static inline int __read_seqcount_retry(const seqcount_t *s, unsigned start)
 {
 	// s->sequence: (&cd.seq)->sequence: 0, start: 0
-	// s->sequence: (&timekeeper_seq)->sequence: 0, start: 0
+	// s->sequence: (&timekeeper_seq)->sequence: 2, start: 2
 	return unlikely(s->sequence != start);
 	// return 0
 	// return 0
@@ -250,7 +250,7 @@ static inline int __read_seqcount_retry(const seqcount_t *s, unsigned start)
 // ARM10C 20140913
 // &cd.seq, seq: 0
 // ARM10C 20150418
-// &timekeeper_seq, seq: 0
+// &timekeeper_seq, seq: 2
 static inline int read_seqcount_retry(const seqcount_t *s, unsigned start)
 {
 	smp_rmb();
@@ -258,7 +258,7 @@ static inline int read_seqcount_retry(const seqcount_t *s, unsigned start)
 	// memory barrier 수행
 
 	// s: &cd.seq, start: 0, __read_seqcount_retry(&cd.seq, 0): 0
-	// s: &timekeeper_seq, start: 0, __read_seqcount_retry(&timekeeper_seq, 0): 0
+	// s: &timekeeper_seq, start: 2, __read_seqcount_retry(&timekeeper_seq, 2): 0
 	return __read_seqcount_retry(s, start);
 	// return 0
 	// return 0

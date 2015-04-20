@@ -255,6 +255,7 @@ int tick_device_uses_broadcast(struct clock_event_device *dev, int cpu)
 
 			break;
 			// break 수행
+
 		default:
 			/* Nothing to do */
 			ret = 0;
