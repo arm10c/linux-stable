@@ -197,6 +197,8 @@ extern int _find_next_bit_be(const unsigned long *p, int size, int offset);
  */
 // ARM10C 20141004
 // 0, allocated_irqs
+// ARM10C 20150509
+// 0, &ts->check_clocks: [pcp0] &(&tick_cpu_sched)->check_clocks
 #define set_bit(nr,p)			ATOMIC_BITOP(set_bit,nr,p)  // _set_bit(nr,p)로 치환
 #define clear_bit(nr,p)			ATOMIC_BITOP(clear_bit,nr,p)
 #define change_bit(nr,p)		ATOMIC_BITOP(change_bit,nr,p)

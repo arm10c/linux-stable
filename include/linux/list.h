@@ -274,6 +274,7 @@ static inline int list_is_last(const struct list_head *list,
 // ARM10C 20140517
 // list: (&boot_pageset + (__per_cpu_offset[0]))->pcp.lists[0]
 // ARM10C 20150117
+// ARM10C 20150509
 static inline int list_empty(const struct list_head *head)
 {
 	// head->next: waiter->list->next, head: waiter->list

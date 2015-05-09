@@ -88,6 +88,7 @@ static inline void __raw_writeb(u8 val, volatile void __iomem *addr)
 }
 
 // ARM10C 20141129
+// ARM10C 20150509
 static inline void __raw_writel(u32 val, volatile void __iomem *addr)
 {
 	asm volatile("str %1, %0"
@@ -107,6 +108,7 @@ static inline u8 __raw_readb(const volatile void __iomem *addr)
 // ARM10C 20131130
 // ARM10C 20141108
 // 0xf0000000 + 0x004
+// ARM10C 20150509
 static inline u32 __raw_readl(const volatile void __iomem *addr)
 {
 	u32 val;

@@ -290,6 +290,8 @@ extern unsigned long __per_cpu_offset[NR_CPUS];
 #define this_cpu_ptr(ptr) __this_cpu_ptr(ptr)
 #endif
 
+// ARM10C 20150509
+// __get_cpu_var(tick_cpu_sched): (*this_cpu_ptr(&(tick_cpu_sched)))
 #define __get_cpu_var(var) (*this_cpu_ptr(&(var)))
 // ARM10C 20140830
 // __raw_get_cpu_var(hrtimer_bases): *__this_cpu_ptr(&(hrtimer_bases))

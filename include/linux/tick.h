@@ -57,6 +57,7 @@ enum tick_nohz_mode {
  * @sleep_length:	Duration of the current idle sleep
  * @do_timer_lst:	CPU was the last one doing do_timer before going idle
  */
+// ARM10C 20150509
 struct tick_sched {
 	struct hrtimer			sched_timer;
 	unsigned long			check_clocks;

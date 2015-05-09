@@ -44,27 +44,44 @@
 // _EXYNOS4_MCT_L_BASE: 0x300
 #define _EXYNOS4_MCT_L_BASE		EXYNOS4_MCTREG(0x300)
 // ARM10C 20150404
+// ARM10C 20150509
 // _EXYNOS4_MCT_L_BASE: 0x300
 // EXYNOS4_MCT_L_BASE(0): 0x300
 #define EXYNOS4_MCT_L_BASE(x)		(_EXYNOS4_MCT_L_BASE + (0x100 * x))
+// ARM10C 20150509
+// EXYNOS4_MCT_L_MASK: 0xffffff00
 #define EXYNOS4_MCT_L_MASK		(0xffffff00)
 
+// ARM10C 20150509
+// MCT_L_TCNTB_OFFSET: 0x00
 #define MCT_L_TCNTB_OFFSET		(0x00)
+// ARM10C 20150509
+// ARM10C 20150509
+// MCT_L_ICNTB_OFFSET: 0x08
 #define MCT_L_ICNTB_OFFSET		(0x08)
 // ARM10C 20150418
+// ARM10C 20150509
 // MCT_L_TCON_OFFSET: 0x20
 #define MCT_L_TCON_OFFSET		(0x20)
 #define MCT_L_INT_CSTAT_OFFSET		(0x30)
+// ARM10C 20150509
+// MCT_L_INT_ENB_OFFSET: 0x34
 #define MCT_L_INT_ENB_OFFSET		(0x34)
+// ARM10C 20150509
+// MCT_L_WSTAT_OFFSET: 0x40
 #define MCT_L_WSTAT_OFFSET		(0x40)
 #define MCT_G_TCON_START		(1 << 8)
 #define MCT_G_TCON_COMP0_AUTO_INC	(1 << 1)
 #define MCT_G_TCON_COMP0_ENABLE		(1 << 0)
+// ARM10C 20150509
+// MCT_L_TCON_INTERVAL_MODE: 0x4
 #define MCT_L_TCON_INTERVAL_MODE	(1 << 2)
 // ARM10C 20150418
+// ARM10C 20150509
 // MCT_L_TCON_INT_START: 0x2
 #define MCT_L_TCON_INT_START		(1 << 1)
 // ARM10C 20150418
+// ARM10C 20150509
 // MCT_L_TCON_TIMER_START: 0x1
 #define MCT_L_TCON_TIMER_START		(1 << 0)
 
@@ -121,28 +138,84 @@ struct mct_clock_event_device {
 	char name[10];
 };
 
+// ARM10C 20150509
+// tmp: 0x8001D4C0, 0x308
+// ARM10C 20150509
+// 0x1, 0x334
+// ARM10C 20150509
+// tmp: 0x7, 0x320
 static void exynos4_mct_write(unsigned int value, unsigned long offset)
 {
 	unsigned long stat_addr;
 	u32 mask;
 	u32 i;
 
+	// E.R.M: 21.4.1.23 L0_ICNTB
+	// L_ICNTB: Specifies the interrupt count buffer register
+	// 31 bit   - interrupt manual update
+	// 30~0 bit - interrupt count buffer
+
+	// E.R.M: 21.4.1.29 L0_INT_ENB
+	// L_INT_ENB: Specifies the interrupt enable for L_IRQ0
+	// 1 bit  - FRCEIE: free running counter expired (L0_FRCCNT = 0) interrupt enable
+	// 0 bit  - ICNTEIE: interrupt counter expired (L0_INTCNT = 0) interrupt enable
+
+	// E.R.M: 21.4.1.27 L0_TCON
+	// L_TCON: Specifies the timer control register
+	// 3 bit  - frc start/stop
+	// 2 bit  - interrupt type
+	// 1 bit  - interrupt start/stop
+	// 0 bit  - timer start/stop
+
+	// value: 0x8001D4C0, reg_base: 0xf0006000, offset: 0x308
+	// value: 0x1, reg_base: 0xf0006000, offset: 0x334
+	// value: 0x7, reg_base: 0xf0006000, offset: 0x320
 	__raw_writel(value, reg_base + offset);
 
+	// __raw_writel에서 한일:
+	// register L_ICNTB 에 0x8001D4C0 write함
+	// local timer 0 의 interrupt count buffer 값을 120000 (0x1D4C0)을 write 하고
+	// interrupt manual update를 enable 시킴
+
+	// __raw_writel에서 한일:
+	// register L_INT_ENB 에 0x1 write함
+	// local timer 0 의 ICNTEIE 값을 0x1을 write 하여 L0_INTCNT 값이 0 이 되었을 때
+	// interrupt counter expired interrupt 가 발생하도록 함
+
+	// __raw_writel에서 한일:
+	// register L_TCON 에 0x7 write함
+	// local timer 0 의 interrupt type을 interval mode로 설정하고 interrupt, timer 를 start 시킴
+
+	// offset: 0x308, EXYNOS4_MCT_L_BASE(0): 0x300
+	// offset: 0x334, EXYNOS4_MCT_L_BASE(0): 0x300
+	// offset: 0x320, EXYNOS4_MCT_L_BASE(0): 0x300
 	if (likely(offset >= EXYNOS4_MCT_L_BASE(0))) {
+		// offset: 0x308, EXYNOS4_MCT_L_MASK: 0xffffff00, MCT_L_WSTAT_OFFSET: 0x40
+		// offset: 0x334, EXYNOS4_MCT_L_MASK: 0xffffff00, MCT_L_WSTAT_OFFSET: 0x40
+		// offset: 0x320, EXYNOS4_MCT_L_MASK: 0xffffff00, MCT_L_WSTAT_OFFSET: 0x40
 		stat_addr = (offset & ~EXYNOS4_MCT_L_MASK) + MCT_L_WSTAT_OFFSET;
+		// stat_addr: 0x48
+		// stat_addr: 0x74
+		// stat_addr: 0x60
+
+		// offset: 0x308, EXYNOS4_MCT_L_MASK: 0xffffff00
+		// offset: 0x334, EXYNOS4_MCT_L_MASK: 0xffffff00
+		// offset: 0x320, EXYNOS4_MCT_L_MASK: 0xffffff00
 		switch (offset & EXYNOS4_MCT_L_MASK) {
-		case MCT_L_TCON_OFFSET:
+		case MCT_L_TCON_OFFSET:  // MCT_L_TCON_OFFSET: 0x20
 			mask = 1 << 3;		/* L_TCON write status */
 			break;
-		case MCT_L_ICNTB_OFFSET:
+		case MCT_L_ICNTB_OFFSET: // MCT_L_ICNTB_OFFSET: 0x08
 			mask = 1 << 1;		/* L_ICNTB write status */
 			break;
-		case MCT_L_TCNTB_OFFSET:
+		case MCT_L_TCNTB_OFFSET: // MCT_L_TCNTB_OFFSET: 0x00
 			mask = 1 << 0;		/* L_TCNTB write status */
 			break;
 		default:
 			return;
+			// return 수행
+			// return 수행
+			// return 수행
 		}
 	} else {
 		switch (offset) {
@@ -338,6 +411,10 @@ static DEFINE_PER_CPU(struct mct_clock_event_device, percpu_mct_tick);
 /* Clock event handling */
 // ARM10C 20150418
 // mevt: [pcp0] &percpu_mct_tick
+// ARM10C 20150509
+// mevt: [pcp0] &percpu_mct_tick
+// ARM10C 20150509
+// mevt: [pcp0] &percpu_mct_tick
 static void exynos4_mct_tick_stop(struct mct_clock_event_device *mevt)
 {
 	unsigned long tmp;
@@ -350,8 +427,12 @@ static void exynos4_mct_tick_stop(struct mct_clock_event_device *mevt)
 	unsigned long offset = mevt->base + MCT_L_TCON_OFFSET;
 	// offset: 0x320
 
-	// E.R.M:
-	// L0_TCON: Specifies the timer control register
+	// E.R.M: 21.4.1.27 L0_TCON
+	// L_TCON: Specifies the timer control register
+	// 3 bit  - frc start/stop
+	// 2 bit  - interrupt type
+	// 1 bit  - interrupt start/stop
+	// 0 bit  - timer start/stop
 
 	// NOTE:
 	// register L0_TCON 값이 reset 값인 0x0으로 읽히는 것으로 가정하고 코드 분석 진행
@@ -368,25 +449,68 @@ static void exynos4_mct_tick_stop(struct mct_clock_event_device *mevt)
 	}
 }
 
+// ARM10C 20150509
+// cycles_per_jiffy: 120000 (0x1D4C0), mevt: [pcp0] &percpu_mct_tick
 static void exynos4_mct_tick_start(unsigned long cycles,
 				   struct mct_clock_event_device *mevt)
 {
 	unsigned long tmp;
 
+	// mevt: [pcp0] &percpu_mct_tick
 	exynos4_mct_tick_stop(mevt);
 
+	// exynos4_mct_tick_stop에서 한일:
+	// timer control register L0_TCON 값을 읽어 timer start, timer interrupt 설정을
+	// 동작하지 않도록 변경함
+	// L0_TCON 값이 0 으로 가정하였으므로 timer는 동작하지 않은 상태임
+
+	// cycles: 0x1D4C0
 	tmp = (1 << 31) | cycles;	/* MCT_L_UPDATE_ICNTB */
+	// tmp: 0x8001D4C0
 
 	/* update interrupt count buffer */
+	// tmp: 0x8001D4C0, mevt->base: [pcp0] (&percpu_mct_tick)->base: 0x300, MCT_L_ICNTB_OFFSET: 0x08
 	exynos4_mct_write(tmp, mevt->base + MCT_L_ICNTB_OFFSET);
 
+	// exynos4_mct_write에서 한일:
+	// register L_ICNTB 에 0x8001D4C0 write함
+	// local timer 0 의 interrupt count buffer 값을 120000 (0x1D4C0) write 하고
+	// interrupt manual update를 enable 시킴
+
 	/* enable MCT tick interrupt */
+	// mevt->base: [pcp0] (&percpu_mct_tick)->base: 0x300, MCT_L_INT_ENB_OFFSET: 0x34
 	exynos4_mct_write(0x1, mevt->base + MCT_L_INT_ENB_OFFSET);
 
+	// exynos4_mct_write에서 한일:
+	// register L_INT_ENB 에 0x1 write함
+	// local timer 0 의 ICNTEIE 값을 0x1을 write 하여 L0_INTCNT 값이 0 이 되었을 때
+	// interrupt counter expired interrupt 가 발생하도록 함
+
+	// E.R.M: 21.4.1.27 L0_TCON
+	// L_TCON: Specifies the timer control register
+	// 3 bit  - frc start/stop
+	// 2 bit  - interrupt type
+	// 1 bit  - interrupt start/stop
+	// 0 bit  - timer start/stop
+
+	// NOTE:
+	// register L0_TCON 값이 reset 값인 0x0으로 읽히는 것으로 가정하고 코드 분석 진행
+
+	// reg_base: 0xf0006000, mevt->base: [pcp0] (&percpu_mct_tick)->base: 0x300, MCT_L_TCON_OFFSET: 0x20
 	tmp = __raw_readl(reg_base + mevt->base + MCT_L_TCON_OFFSET);
+	// tmp: 0
+
+	// tmp: 0, MCT_L_TCON_INT_START: 0x2, MCT_L_TCON_TIMER_START: 0x1, MCT_L_TCON_INTERVAL_MODE: 0x4
 	tmp |= MCT_L_TCON_INT_START | MCT_L_TCON_TIMER_START |
 	       MCT_L_TCON_INTERVAL_MODE;
+	// tmp: 0x7
+
+	// tmp: 0x7, mevt->base: [pcp0] (&percpu_mct_tick)->base: 0x300, MCT_L_TCON_OFFSET: 0x20
 	exynos4_mct_write(tmp, mevt->base + MCT_L_TCON_OFFSET);
+
+	// exynos4_mct_write에서 한일:
+	// register L_TCON 에 0x7 write함
+	// local timer 0 의 interrupt type을 interval mode로 설정하고 interrupt, timer 를 start 시킴
 }
 
 // ARM10C 20150404
@@ -403,15 +527,20 @@ static int exynos4_tick_set_next_event(unsigned long cycles,
 // ARM10C 20150404
 // ARM10C 20150411
 // mode: 1, dev: [pcp0] &(&percpu_mct_tick)->evt
+// ARM10C 20150509
+// mode: 2, dev: [pcp0] &(&percpu_mct_tick)->evt
 static inline void exynos4_tick_set_mode(enum clock_event_mode mode,
 					 struct clock_event_device *evt)
 {
 	// this_cpu_ptr(&percpu_mct_tick): [pcp0] &percpu_mct_tick
+	// this_cpu_ptr(&percpu_mct_tick): [pcp0] &percpu_mct_tick
 	struct mct_clock_event_device *mevt = this_cpu_ptr(&percpu_mct_tick);
+	// mevt: [pcp0] &percpu_mct_tick
 	// mevt: [pcp0] &percpu_mct_tick
 
 	unsigned long cycles_per_jiffy;
 
+	// mevt: [pcp0] &percpu_mct_tick
 	// mevt: [pcp0] &percpu_mct_tick
 	exynos4_mct_tick_stop(mevt);
 
@@ -420,13 +549,43 @@ static inline void exynos4_tick_set_mode(enum clock_event_mode mode,
 	// 동작하지 않도록 변경함
 	// L0_TCON 값이 0 으로 가정하였으므로 timer는 동작하지 않은 상태임
 
+	// exynos4_mct_tick_stop에서 한일:
+	// timer control register L0_TCON 값을 읽어 timer start, timer interrupt 설정을
+	// 동작하지 않도록 변경함
+	// L0_TCON 값이 0 으로 가정하였으므로 timer는 동작하지 않은 상태임
+
 	// mode: 1
+	// mode: 2
 	switch (mode) {
 	case CLOCK_EVT_MODE_PERIODIC: // CLOCK_EVT_MODE_PERIODIC: 2
+		// NSEC_PER_SEC: 1000000000L, HZ: 100,
+		// evt->mult: [pcp0] (&(&percpu_mct_tick)->evt)->mult: 0x3126E98,
+		// evt->shift: [pcp0] (&(&percpu_mct_tick)->evt)->shift: 32
 		cycles_per_jiffy =
 			(((unsigned long long) NSEC_PER_SEC / HZ * evt->mult) >> evt->shift);
+		// cycles_per_jiffy: 120000 (0x1D4C0)
+
+		// cycles_per_jiffy: 120000 (0x1D4C0), mevt: [pcp0] &percpu_mct_tick
 		exynos4_mct_tick_start(cycles_per_jiffy, mevt);
+
+		// exynos4_mct_tick_start에서 한일:
+		// timer control register L0_TCON 값을 읽어 timer start, timer interrupt 설정을
+		// 동작하지 않도록 변경함
+		// L0_TCON 값이 0 으로 가정하였으므로 timer는 동작하지 않은 상태임
+		//
+		// register L_ICNTB 에 0x8001D4C0 write함
+		// local timer 0 의 interrupt count buffer 값을 120000 (0x1D4C0) write 하고
+		// interrupt manual update를 enable 시킴
+		//
+		// register L_INT_ENB 에 0x1 write함
+		// local timer 0 의 ICNTEIE 값을 0x1을 write 하여 L0_INTCNT 값이 0 이 되었을 때
+		// interrupt counter expired interrupt 가 발생하도록 함
+		//
+		// register L_TCON 에 0x7 write함
+		// local timer 0 의 interrupt type을 interval mode로 설정하고 interrupt, timer 를 start 시킴
+
 		break;
+		// break 수행
 
 	case CLOCK_EVT_MODE_ONESHOT:  // CLOCK_EVT_MODE_ONESHOT: 3
 	case CLOCK_EVT_MODE_UNUSED:   // CLOCK_EVT_MODE_UNUSED: 0
@@ -524,6 +683,43 @@ static int exynos4_local_timer_setup(struct clock_event_device *evt)
 	// evt: [pcp0] &(&percpu_mct_tick)->evt, clk_rate: 24000000, TICK_BASE_CNT: 1
 	clockevents_config_and_register(evt, clk_rate / (TICK_BASE_CNT + 1),
 					0xf, 0x7fffffff);
+
+	// clockevents_config_and_register에서 한일:
+	// [pcp0] (&(&percpu_mct_tick)->evt)->min_delta_ticks: 0xf
+	// [pcp0] (&(&percpu_mct_tick)->evt)->max_delta_ticks: 0x7fffffff
+	// [pcp0] (&(&percpu_mct_tick)->evt)->mult: 0x3126E98
+	// [pcp0] (&(&percpu_mct_tick)->evt)->shift: 32
+	// [pcp0] (&(&percpu_mct_tick)->evt)->min_delta_ns: 0x4E2
+	// [pcp0] (&(&percpu_mct_tick)->evt)->max_delta_ns: 0x29AAAAA444
+	// [pcp0] (&(&percpu_mct_tick)->evt)->next_event.tv64: 0x7FFFFFFFFFFFFFFF
+	// [pcp0] (&(&percpu_mct_tick)->evt)->event_handler: tick_handle_periodic
+	// [pcp0] (&(&percpu_mct_tick)->evt)->mode: 2
+	//
+	// [pcp0] (&tick_cpu_device)->mode: 0
+	// [pcp0] (&tick_cpu_device)->evtdev: [pcp0] &(&percpu_mct_tick)->evt
+	//
+	// [pcp0] (&tick_cpu_sched)->check_clocks: 1
+	//
+	// list clockevent_devices에 [pcp0] (&(&percpu_mct_tick)->evt)->list를 추가함
+	//
+	// tick_do_timer_cpu: 0
+	// tick_next_period.tv64: 0
+	// tick_period.tv64: 10000000
+	//
+	// timer control register L0_TCON 값을 읽어 timer start, timer interrupt 설정을
+	// 동작하지 않도록 변경함
+	// L0_TCON 값이 0 으로 가정하였으므로 timer는 동작하지 않은 상태임
+	//
+	// register L_ICNTB 에 0x8001D4C0 write함
+	// local timer 0 의 interrupt count buffer 값을 120000 (0x1D4C0) write 하고
+	// interrupt manual update를 enable 시킴
+	//
+	// register L_INT_ENB 에 0x1 write함
+	// local timer 0 의 ICNTEIE 값을 0x1을 write 하여 L0_INTCNT 값이 0 이 되었을 때
+	// interrupt counter expired interrupt 가 발생하도록 함
+	//
+	// register L_TCON 에 0x7 write함
+	// local timer 0 의 interrupt type을 interval mode로 설정하고 interrupt, timer 를 start 시킴
 
 	exynos4_mct_write(TICK_BASE_CNT, mevt->base + MCT_L_TCNTB_OFFSET);
 

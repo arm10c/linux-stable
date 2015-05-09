@@ -153,12 +153,32 @@ void tick_setup_periodic(struct clock_event_device *dev, int broadcast)
 		return;
 
 // 2015/04/18 종료
+// 2015/05/09 시작
 
-	// dev->features: [pcp0] (&(&percpu_mct_tick)->evt)->features: 0x3, CLOCK_EVT_FEAT_ONESHOT: 0x000002
+	// dev->features: [pcp0] (&(&percpu_mct_tick)->evt)->features: 0x3, CLOCK_EVT_FEAT_ONESHOT: 0x000002,
 	// tick_broadcast_oneshot_active(): 0
 	if ((dev->features & CLOCK_EVT_FEAT_PERIODIC) &&
 	    !tick_broadcast_oneshot_active()) {
+		// dev: [pcp0] &(&percpu_mct_tick)->evt, CLOCK_EVT_MODE_PERIODIC: 2
 		clockevents_set_mode(dev, CLOCK_EVT_MODE_PERIODIC);
+
+		// clockevents_set_mode에서 한일:
+		// timer control register L0_TCON 값을 읽어 timer start, timer interrupt 설정을
+		// 동작하지 않도록 변경함
+		// L0_TCON 값이 0 으로 가정하였으므로 timer는 동작하지 않은 상태임
+		//
+		// register L_ICNTB 에 0x8001D4C0 write함
+		// local timer 0 의 interrupt count buffer 값을 120000 (0x1D4C0) write 하고
+		// interrupt manual update를 enable 시킴
+		//
+		// register L_INT_ENB 에 0x1 write함
+		// local timer 0 의 ICNTEIE 값을 0x1을 write 하여 L0_INTCNT 값이 0 이 되었을 때
+		// interrupt counter expired interrupt 가 발생하도록 함
+		//
+		// register L_TCON 에 0x7 write함
+		// local timer 0 의 interrupt type을 interval mode로 설정하고 interrupt, timer 를 start 시킴
+		//
+		// [pcp0] (&(&percpu_mct_tick)->evt)->mode: 2
 	} else {
 		unsigned long seq;
 		ktime_t next;
@@ -262,6 +282,25 @@ static void tick_setup_device(struct tick_device *td,
 	if (td->mode == TICKDEV_MODE_PERIODIC)
 		// newdev: [pcp0] &(&percpu_mct_tick)->evt
 		tick_setup_periodic(newdev, 0);
+
+		// tick_setup_periodic에서 한일:
+		// [pcp0] (&(&percpu_mct_tick)->evt)->event_handler: tick_handle_periodic
+		// [pcp0] (&(&percpu_mct_tick)->evt)->mode: 2
+		//
+		// timer control register L0_TCON 값을 읽어 timer start, timer interrupt 설정을
+		// 동작하지 않도록 변경함
+		// L0_TCON 값이 0 으로 가정하였으므로 timer는 동작하지 않은 상태임
+		//
+		// register L_ICNTB 에 0x8001D4C0 write함
+		// local timer 0 의 interrupt count buffer 값을 120000 (0x1D4C0) write 하고
+		// interrupt manual update를 enable 시킴
+		//
+		// register L_INT_ENB 에 0x1 write함
+		// local timer 0 의 ICNTEIE 값을 0x1을 write 하여 L0_INTCNT 값이 0 이 되었을 때
+		// interrupt counter expired interrupt 가 발생하도록 함
+		//
+		// register L_TCON 에 0x7 write함
+		// local timer 0 의 interrupt type을 interval mode로 설정하고 interrupt, timer 를 start 시킴
 	else
 		tick_setup_oneshot(newdev, handler, next_event);
 }
@@ -415,9 +454,43 @@ void tick_check_new_device(struct clock_event_device *newdev)
 
 	// td: [pcp0] &tick_cpu_device, newdev: [pcp0] &(&percpu_mct_tick)->evt, cpu: 0, cpumask_of(0): &cpu_bit_bitmap[1][0]
 	tick_setup_device(td, newdev, cpu, cpumask_of(cpu));
+
+	// tick_setup_device에서 한일:
+	//
+	// tick_do_timer_cpu: 0
+	// tick_next_period.tv64: 0
+	// tick_period.tv64: 10000000
+	//
+	// [pcp0] (&tick_cpu_device)->mode: 0
+	// [pcp0] (&tick_cpu_device)->evtdev: [pcp0] &(&percpu_mct_tick)->evt
+	//
+	// [pcp0] (&(&percpu_mct_tick)->evt)->event_handler: tick_handle_periodic
+	// [pcp0] (&(&percpu_mct_tick)->evt)->mode: 2
+	//
+	// timer control register L0_TCON 값을 읽어 timer start, timer interrupt 설정을
+	// 동작하지 않도록 변경함
+	// L0_TCON 값이 0 으로 가정하였으므로 timer는 동작하지 않은 상태임
+	//
+	// register L_ICNTB 에 0x8001D4C0 write함
+	// local timer 0 의 interrupt count buffer 값을 120000 (0x1D4C0) write 하고
+	// interrupt manual update를 enable 시킴
+	//
+	// register L_INT_ENB 에 0x1 write함
+	// local timer 0 의 ICNTEIE 값을 0x1을 write 하여 L0_INTCNT 값이 0 이 되었을 때
+	// interrupt counter expired interrupt 가 발생하도록 함
+	//
+	// register L_TCON 에 0x7 write함
+	// local timer 0 의 interrupt type을 interval mode로 설정하고 interrupt, timer 를 start 시킴
+
+	// newdev->features: [pcp0] (&(&percpu_mct_tick)->evt)->features: 0x3, CLOCK_EVT_FEAT_ONESHOT: 0x000002
 	if (newdev->features & CLOCK_EVT_FEAT_ONESHOT)
 		tick_oneshot_notify();
+
+		// tick_oneshot_notify에서 한일:
+		// [pcp0] (&tick_cpu_sched)->check_clocks: 1
+
 	return;
+	// return 수행
 
 out_bc:
 	/*
