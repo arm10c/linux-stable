@@ -1009,19 +1009,30 @@ static void irq_setup_forced_threading(struct irqaction *new)
  * Internal function to register an irqaction - typically used to
  * allocate special interrupts that are part of the architecture.
  */
+// ARM10C 20150509
+// irq: 152, desc: kmem_cache#28-oX (irq 152), action: kmem_cache#30-oX
 static int
 __setup_irq(unsigned int irq, struct irq_desc *desc, struct irqaction *new)
 {
 	struct irqaction *old, **old_ptr;
 	unsigned long flags, thread_mask = 0;
+	// thread_mask: 0
+
 	int ret, nested, shared = 0;
+	// shared: 0
+
 	cpumask_var_t mask;
 
+	// desc: kmem_cache#28-oX (irq 152)
 	if (!desc)
 		return -EINVAL;
 
+	// desc->irq_data.chip: (kmem_cache#28-oX (irq 152))->irq_data.chip: &gic_chip
 	if (desc->irq_data.chip == &no_irq_chip)
 		return -ENOSYS;
+
+	// desc->owner: (kmem_cache#28-oX (irq 152))->owner: NULL,
+	// try_module_get((kmem_cache#28-oX (irq 152))->owner): true
 	if (!try_module_get(desc->owner))
 		return -ENODEV;
 
@@ -1029,7 +1040,12 @@ __setup_irq(unsigned int irq, struct irq_desc *desc, struct irqaction *new)
 	 * Check whether the interrupt nests into another interrupt
 	 * thread.
 	 */
+	// desc: kmem_cache#28-oX (irq 152),
+	// irq_settings_is_nested_thread(kmem_cache#28-oX (irq 152)): 0
 	nested = irq_settings_is_nested_thread(desc);
+	// nested: 0
+
+	// nested: 0
 	if (nested) {
 		if (!new->thread_fn) {
 			ret = -EINVAL;
@@ -1042,6 +1058,8 @@ __setup_irq(unsigned int irq, struct irq_desc *desc, struct irqaction *new)
 		 */
 		new->handler = irq_nested_primary_handler;
 	} else {
+		// desc: kmem_cache#28-oX (irq 152),
+		// irq_settings_can_thread(kmem_cache#28-oX (irq 152)): 0
 		if (irq_settings_can_thread(desc))
 			irq_setup_forced_threading(new);
 	}
@@ -1051,6 +1069,7 @@ __setup_irq(unsigned int irq, struct irq_desc *desc, struct irqaction *new)
 	 * and the interrupt does not nest into another interrupt
 	 * thread.
 	 */
+	// new->thread_fn: (kmem_cache#30-oX)->thread_fn: NULL, nested: 0
 	if (new->thread_fn && !nested) {
 		struct task_struct *t;
 		static const struct sched_param param = {
@@ -1085,6 +1104,7 @@ __setup_irq(unsigned int irq, struct irq_desc *desc, struct irqaction *new)
 		set_bit(IRQTF_AFFINITY, &new->thread_flags);
 	}
 
+	// GFP_KERNEL: 0xD0, alloc_cpumask_var(&mask, 0xD0): true
 	if (!alloc_cpumask_var(&mask, GFP_KERNEL)) {
 		ret = -ENOMEM;
 		goto out_thread;
@@ -1099,6 +1119,8 @@ __setup_irq(unsigned int irq, struct irq_desc *desc, struct irqaction *new)
 	 * chip flags, so we can avoid the unmask dance at the end of
 	 * the threaded handler for those.
 	 */
+	// desc->irq_data.chip->flags: (kmem_cache#28-oX (irq 152))->irq_data.chip->flags: 0,
+	// IRQCHIP_ONESHOT_SAFE: 0x20
 	if (desc->irq_data.chip->flags & IRQCHIP_ONESHOT_SAFE)
 		new->flags &= ~IRQF_ONESHOT;
 
@@ -1106,8 +1128,19 @@ __setup_irq(unsigned int irq, struct irq_desc *desc, struct irqaction *new)
 	 * The following block of code has to be executed atomically
 	 */
 	raw_spin_lock_irqsave(&desc->lock, flags);
+
+	// raw_spin_lock_irqsave에서 한일:
+	// (kmem_cache#28-oX (irq 152))->lock을 사용하여 spin lock을 수행하고 cpsr을 flags에 저장
+
+	// &desc->action: &(kmem_cache#28-oX (irq 152))->action
 	old_ptr = &desc->action;
+	// old_ptr: &(kmem_cache#28-oX (irq 152))->action
+
+	// *old_ptr: *(&(kmem_cache#28-oX (irq 152))->action): NULL
 	old = *old_ptr;
+	// old: NULL
+
+	// old: NULL
 	if (old) {
 		/*
 		 * Can't share interrupts unless both agree to and are
@@ -1145,6 +1178,10 @@ __setup_irq(unsigned int irq, struct irq_desc *desc, struct irqaction *new)
 	 * !ONESHOT irqs the thread mask is 0 so we can avoid a
 	 * conditional in irq_wake_thread().
 	 */
+	// new->flags: (kmem_cache#30-oX)->flags: 0x14A00, IRQF_ONESHOT: 0x00002000,
+	// new->handler: (kmem_cache#30-oX)->handler: exynos4_mct_tick_isr,
+	// desc->irq_data.chip->flags: (kmem_cache#28-oX (irq 152))->irq_data.chip->flags: 0,
+	// IRQCHIP_ONESHOT_SAFE: 0x20
 	if (new->flags & IRQF_ONESHOT) {
 		/*
 		 * Unlikely to have 32 resp 64 irqs sharing one line,
@@ -1199,10 +1236,17 @@ __setup_irq(unsigned int irq, struct irq_desc *desc, struct irqaction *new)
 		goto out_mask;
 	}
 
+	// shared: 0
 	if (!shared) {
+		// &desc->wait_for_threads: &(kmem_cache#28-oX (irq 152))->wait_for_threads
 		init_waitqueue_head(&desc->wait_for_threads);
 
+		// init_waitqueue_head에서 한일:
+		// &(&(kmem_cache#28-oX (irq 152))->wait_for_threads)->lock을 사용한 spinlock 초기화
+		// &(&(kmem_cache#28-oX (irq 152))->wait_for_threads)->task_list를 사용한 list 초기화
+
 		/* Setup the type (level, edge polarity) if configured: */
+		// new->flags: (kmem_cache#30-oX)->flags: 0x14A00, IRQF_TRIGGER_MASK: 0xF
 		if (new->flags & IRQF_TRIGGER_MASK) {
 			ret = __irq_set_trigger(desc, irq,
 					new->flags & IRQF_TRIGGER_MASK);
@@ -1211,27 +1255,51 @@ __setup_irq(unsigned int irq, struct irq_desc *desc, struct irqaction *new)
 				goto out_mask;
 		}
 
+		// &desc->istate: &(kmem_cache#28-oX (irq 152))->istate: 0
+		// IRQS_AUTODETECT: 0x00000001, IRQS_SPURIOUS_DISABLED: 0x00000002,
+		// IRQS_ONESHOT: 0x00000020, IRQS_WAITING: 0x00000080
 		desc->istate &= ~(IRQS_AUTODETECT | IRQS_SPURIOUS_DISABLED | \
 				  IRQS_ONESHOT | IRQS_WAITING);
+		// &desc->istate: &(kmem_cache#28-oX (irq 152))->istate: 0
+
+		// &desc->irq_data: &(kmem_cache#28-oX (irq 152))->irq_data, IRQD_IRQ_INPROGRESS: 0x40000
 		irqd_clear(&desc->irq_data, IRQD_IRQ_INPROGRESS);
 
+		// irqd_clear에서 한일;
+		// (&(kmem_cache#28-oX (irq 152))->irq_data)->state_use_accessors: 0x10800
+
+		// new->flags: (kmem_cache#30-oX)->flags: 0x14A00, IRQF_PERCPU: 0x00000400
 		if (new->flags & IRQF_PERCPU) {
 			irqd_set(&desc->irq_data, IRQD_PER_CPU);
 			irq_settings_set_per_cpu(desc);
 		}
 
+		// new->flags: (kmem_cache#30-oX)->flags: 0x14A00, IRQF_ONESHOT: 0x00002000
 		if (new->flags & IRQF_ONESHOT)
 			desc->istate |= IRQS_ONESHOT;
 
+		// desc: kmem_cache#28-oX (irq 152),
+		// irq_settings_can_autoenable(kmem_cache#28-oX (irq 152)): 0
 		if (irq_settings_can_autoenable(desc))
 			irq_startup(desc, true);
 		else
 			/* Undo nested disables: */
+			// desc->depth: (kmem_cache#28-oX (irq 152))->depth
 			desc->depth = 1;
+			// desc->depth: (kmem_cache#28-oX (irq 152))->depth: 1
 
 		/* Exclude IRQ from balancing if requested */
+		// new->flags: (kmem_cache#30-oX)->flags: 0x14A00, IRQF_NOBALANCING: 0x00000800
 		if (new->flags & IRQF_NOBALANCING) {
+			// desc: kmem_cache#28-oX (irq 152)
 			irq_settings_set_no_balancing(desc);
+
+			// irq_settings_set_no_balancing에서 한일:
+			// desc->status_use_accessors: (kmem_cache#28-oX (irq 152))->status_use_accessors: 0x33600
+
+// 2015/05/09 종료
+
+			// &desc->irq_data: &(kmem_cache#28-oX (irq 152))->irq_data, IRQD_NO_BALANCING: 0x400
 			irqd_set(&desc->irq_data, IRQD_NO_BALANCING);
 		}
 
@@ -1501,6 +1569,8 @@ EXPORT_SYMBOL(free_irq);
  *	IRQF_TRIGGER_*		Specify active edge(s) or level
  *
  */
+// ARM10C 20150509
+// irq: 152, handler: exynos4_mct_tick_isr, NULL, flags: 0x14A00, name: "mct_tick0", dev: [pcp0] &percpu_mct_tick
 int request_threaded_irq(unsigned int irq, irq_handler_t handler,
 			 irq_handler_t thread_fn, unsigned long irqflags,
 			 const char *devname, void *dev_id)
@@ -1515,34 +1585,68 @@ int request_threaded_irq(unsigned int irq, irq_handler_t handler,
 	 * which interrupt is which (messes up the interrupt freeing
 	 * logic etc).
 	 */
+	// irqflags: 0x14A00, IRQF_SHARED: 0x00000080, dev_id: [pcp0] &percpu_mct_tick
 	if ((irqflags & IRQF_SHARED) && !dev_id)
 		return -EINVAL;
 
+	// irq: 152, irq_to_desc(152): kmem_cache#28-oX (irq 152)
 	desc = irq_to_desc(irq);
+	// desc: kmem_cache#28-oX (irq 152)
+
+	// desc: kmem_cache#28-oX (irq 152)
 	if (!desc)
 		return -EINVAL;
 
+	// FIXME:
+	// irq_settings_is_per_cpu_devid(kmem_cache#28-oX (irq 152)): 1 이 맞는지???
+	//
+	// desc->status_use_accessors: (kmem_cache#28-oX (irq 152))->status_use_accessors: 0x31600
+	// 값을 확인 후 주석 수정 필요
+
+	// desc: kmem_cache#28-oX (irq 152), irq_settings_can_request(kmem_cache#28-oX (irq 152)): 1
 	if (!irq_settings_can_request(desc) ||
 	    WARN_ON(irq_settings_is_per_cpu_devid(desc)))
 		return -EINVAL;
 
+	// handler: exynos4_mct_tick_isr
 	if (!handler) {
 		if (!thread_fn)
 			return -EINVAL;
 		handler = irq_default_primary_handler;
 	}
 
+	// sizeof(struct irqaction): 48 bytes, GFP_KERNEL: 0xD0, kzalloc(48, 0xD0): kmem_cache#30-oX
 	action = kzalloc(sizeof(struct irqaction), GFP_KERNEL);
+	// action: kmem_cache#30-oX
+
+	// action: kmem_cache#30-oX
 	if (!action)
 		return -ENOMEM;
 
+	// action->handler: (kmem_cache#30-oX)->handler, handler: exynos4_mct_tick_isr
 	action->handler = handler;
-	action->thread_fn = thread_fn;
-	action->flags = irqflags;
-	action->name = devname;
-	action->dev_id = dev_id;
+	// action->handler: (kmem_cache#30-oX)->handler: exynos4_mct_tick_isr
 
+	// action->thread_fn: (kmem_cache#30-oX)->thread_fn, thread_fn: NULL
+	action->thread_fn = thread_fn;
+	// action->thread_fn: (kmem_cache#30-oX)->thread_fn: NULL
+
+	// action->flags: (kmem_cache#30-oX)->flags, irqflags: 0x14A00
+	action->flags = irqflags;
+	// action->flags: (kmem_cache#30-oX)->flags: 0x14A00
+
+	// action->name: (kmem_cache#30-oX)->name, devname: "mct_tick0"
+	action->name = devname;
+	// action->name: (kmem_cache#30-oX)->name: "mct_tick0"
+
+	// action->dev_id: (kmem_cache#30-oX)->dev_id, dev_id: [pcp0] &percpu_mct_tick
+	action->dev_id = dev_id;
+	// action->dev_id: (kmem_cache#30-oX)->dev_id: [pcp0] &percpu_mct_tick
+
+	// desc: kmem_cache#28-oX (irq 152)
 	chip_bus_lock(desc);
+
+	// irq: 152, desc: kmem_cache#28-oX (irq 152), action: kmem_cache#30-oX
 	retval = __setup_irq(irq, desc, action);
 	chip_bus_sync_unlock(desc);
 

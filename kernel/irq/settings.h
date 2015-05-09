@@ -5,6 +5,7 @@
 // ARM10C 20141004
 // ARM10C 20141122
 // ARM10C 20141220
+// ARM10C 20150509
 enum {
 	// IRQ_DEFAULT_INIT_FLAGS: 0xc00
 	// _IRQ_DEFAULT_INIT_FLAGS: 0xc00
@@ -21,6 +22,8 @@ enum {
 	_IRQ_NOREQUEST		= IRQ_NOREQUEST,
 	// _IRQ_NOTHREAD: 0x10000
 	_IRQ_NOTHREAD		= IRQ_NOTHREAD,
+	// IRQ_NOAUTOEN: 0x1000
+	// _IRQ_NOAUTOEN: 0x1000
 	_IRQ_NOAUTOEN		= IRQ_NOAUTOEN,
 	// IRQ_MOVE_PCNTXT: 0x4000
 	// _IRQ_MOVE_PCNTXT: 0x4000
@@ -28,7 +31,11 @@ enum {
 	// IRQ_NO_BALANCING: 0x2000
 	// _IRQ_NO_BALANCING: 0x2000
 	_IRQ_NO_BALANCING	= IRQ_NO_BALANCING,
+	// IRQ_NESTED_THREAD: 0x8000
+	// _IRQ_NESTED_THREAD: 0x8000
 	_IRQ_NESTED_THREAD	= IRQ_NESTED_THREAD,
+	// IRQ_PER_CPU_DEVID: 0x20000
+	// _IRQ_PER_CPU_DEVID: 0x20000
 	_IRQ_PER_CPU_DEVID	= IRQ_PER_CPU_DEVID,
 	_IRQ_IS_POLLED		= IRQ_IS_POLLED,
 	// IRQF_MODIFY_MASK: 0x3ff0f
@@ -89,9 +96,14 @@ static inline bool irq_settings_is_per_cpu(struct irq_desc *desc)
 	// return 0x200
 }
 
+// ARM10C 20150509
+// desc: kmem_cache#28-oX (irq 152)
 static inline bool irq_settings_is_per_cpu_devid(struct irq_desc *desc)
 {
+	// desc->status_use_accessors: (kmem_cache#28-oX (irq 152))->status_use_accessors: 0x31600,
+	// _IRQ_PER_CPU_DEVID: 0x20000
 	return desc->status_use_accessors & _IRQ_PER_CPU_DEVID;
+	// return 1
 }
 
 static inline void irq_settings_set_per_cpu(struct irq_desc *desc)
@@ -99,9 +111,14 @@ static inline void irq_settings_set_per_cpu(struct irq_desc *desc)
 	desc->status_use_accessors |= _IRQ_PER_CPU;
 }
 
+// ARM10C 20150509
+// desc: kmem_cache#28-oX (irq 152)
 static inline void irq_settings_set_no_balancing(struct irq_desc *desc)
 {
+	// desc->status_use_accessors: (kmem_cache#28-oX (irq 152))->status_use_accessors: 0x31600,
+	// _IRQ_NO_BALANCING: 0x2000
 	desc->status_use_accessors |= _IRQ_NO_BALANCING;
+	// desc->status_use_accessors: (kmem_cache#28-oX (irq 152))->status_use_accessors: 0x33600
 }
 
 // ARM10C 20141122
@@ -156,9 +173,14 @@ static inline void irq_settings_set_level(struct irq_desc *desc)
 	desc->status_use_accessors |= _IRQ_LEVEL;
 }
 
+// ARM10C 20150509
+// desc: kmem_cache#28-oX (irq 152)
 static inline bool irq_settings_can_request(struct irq_desc *desc)
 {
+	// desc->status_use_accessors: (kmem_cache#28-oX (irq 152))->status_use_accessors: 0x31600,
+	// _IRQ_NOREQUEST: 0x800
 	return !(desc->status_use_accessors & _IRQ_NOREQUEST);
+	// return 1
 }
 
 static inline void irq_settings_clr_norequest(struct irq_desc *desc)
@@ -176,9 +198,14 @@ static inline void irq_settings_set_norequest(struct irq_desc *desc)
 	// desc->status_use_accessors: (kmem_cache#28-oX (irq 32))->status_use_accessors: 0x31e00
 }
 
+// ARM10C 20150509
+// desc: kmem_cache#28-oX (irq 152)
 static inline bool irq_settings_can_thread(struct irq_desc *desc)
 {
+	// desc->status_use_accessors: (kmem_cache#28-oX (irq 152))->status_use_accessors: 0x31600,
+	// _IRQ_NOTHREAD: 0x10000
 	return !(desc->status_use_accessors & _IRQ_NOTHREAD);
+	// return 0
 }
 
 static inline void irq_settings_clr_nothread(struct irq_desc *desc)
@@ -227,14 +254,24 @@ static inline bool irq_settings_can_move_pcntxt(struct irq_desc *desc)
 	// return 0
 }
 
+// ARM10C 20150509
+// desc: kmem_cache#28-oX (irq 152)
 static inline bool irq_settings_can_autoenable(struct irq_desc *desc)
 {
+	// desc->status_use_accessors: (kmem_cache#28-oX (irq 152))->status_use_accessors: 0x31600,
+	// _IRQ_NOAUTOEN: 0x1000
 	return !(desc->status_use_accessors & _IRQ_NOAUTOEN);
+	// return 0
 }
 
+// ARM10C 20150509
+// desc: kmem_cache#28-oX (irq 152)
 static inline bool irq_settings_is_nested_thread(struct irq_desc *desc)
 {
+	// desc->status_use_accessors: (kmem_cache#28-oX (irq 152))->status_use_accessors: 0x31600,
+	// _IRQ_NESTED_THREAD: 0x8000
 	return desc->status_use_accessors & _IRQ_NESTED_THREAD;
+	// return 0
 }
 
 static inline bool irq_settings_is_polled(struct irq_desc *desc)

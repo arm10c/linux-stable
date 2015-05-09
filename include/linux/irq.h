@@ -79,6 +79,7 @@ typedef	void (*irq_preflow_handler_t)(struct irq_data *data);
 // ARM10C 20141122
 // ARM10C 20141213
 // ARM10C 20141220
+// ARM10C 20150509
 enum {
 	// IRQ_TYPE_NONE: 0x00000000
 	IRQ_TYPE_NONE		= 0x00000000,
@@ -217,6 +218,7 @@ struct irq_data {
 // ARM10C 20141122
 // ARM10C 20141220
 // ARM10C 20150404
+// ARM10C 20150509
 enum {
 	// IRQD_TRIGGER_MASK: 0xf
 	IRQD_TRIGGER_MASK		= 0xf,
@@ -236,6 +238,7 @@ enum {
 	IRQD_IRQ_DISABLED		= (1 << 16),
 	// IRQD_IRQ_MASKED: 0x20000
 	IRQD_IRQ_MASKED			= (1 << 17),
+	// IRQD_IRQ_INPROGRESS: 0x40000
 	IRQD_IRQ_INPROGRESS		= (1 << 18),
 };
 
@@ -414,12 +417,14 @@ struct irq_chip {
  *				when irq enabled
  * IRQCHIP_SKIP_SET_WAKE:	Skip chip.irq_set_wake(), for this irq chip
  */
+// ARM10C 20150509
 enum {
 	IRQCHIP_SET_TYPE_MASKED		= (1 <<  0),
 	IRQCHIP_EOI_IF_HANDLED		= (1 <<  1),
 	IRQCHIP_MASK_ON_SUSPEND		= (1 <<  2),
 	IRQCHIP_ONOFFLINE_ENABLED	= (1 <<  3),
 	IRQCHIP_SKIP_SET_WAKE		= (1 <<  4),
+	// IRQCHIP_ONESHOT_SAFE: 0x20
 	IRQCHIP_ONESHOT_SAFE		= (1 <<  5),
 };
 
