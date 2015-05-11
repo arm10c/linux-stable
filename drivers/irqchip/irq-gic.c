@@ -1145,13 +1145,17 @@ void __init gic_init_physaddr(struct device_node *node)
 
 // ARM10C 20141122
 // kmem_cache#25-o0, 16, 16
+// ARM10C 20141122
+// kmem_cache#25-o0, 32, 32
 static int gic_irq_domain_map(struct irq_domain *d, unsigned int irq,
 				irq_hw_number_t hw)
 {
 	// hw: 16
+	// hw: 32
 	if (hw < 32) {
 		// irq: 16
 		irq_set_percpu_devid(irq);
+
 		// irq_set_percpu_devid에서 한일:
 		// (kmem_cache#28-oX (irq 16))->percpu_enabled: kmem_cache#30-oX
 		// (kmem_cache#28-oX (irq 16))->status_use_accessors: 0x31600
@@ -1160,6 +1164,7 @@ static int gic_irq_domain_map(struct irq_domain *d, unsigned int irq,
 		// irq: 16
 		irq_set_chip_and_handler(irq, &gic_chip,
 					 handle_percpu_devid_irq);
+
 		// irq_set_chip_and_handler에서 한일:
 		// (kmem_cache#28-oX (irq 16))->irq_data.chip: &gic_chip
 		// (kmem_cache#28-oX (irq 16))->handle_irq: handle_percpu_devid_irq
@@ -1167,20 +1172,40 @@ static int gic_irq_domain_map(struct irq_domain *d, unsigned int irq,
 
 		// irq: 16, IRQF_VALID: 1, IRQF_NOAUTOEN: 0x4
 		set_irq_flags(irq, IRQF_VALID | IRQF_NOAUTOEN);
+
 		// set_irq_flags에서 한일:
 		// (kmem_cache#28-oX (irq 16))->status_use_accessors: 0x31600
 		// (&(kmem_cache#28-oX (irq 16))->irq_data)->state_use_accessors: 0x10800
 	} else {
+		// irq: 32
 		irq_set_chip_and_handler(irq, &gic_chip,
 					 handle_fasteoi_irq);
+
+		// irq_set_chip_and_handler에서 한일:
+		// (kmem_cache#28-oX (irq 32))->irq_data.chip: &gic_chip
+		// (kmem_cache#28-oX (irq 32))->handle_irq: handle_fasteoi_irq
+		// (kmem_cache#28-oX (irq 32))->name: NULL
+
+		// irq: 32, IRQF_VALID: 1, IRQF_NOAUTOEN: 0x4
 		set_irq_flags(irq, IRQF_VALID | IRQF_PROBE);
+
+		// set_irq_flags에서 한일:
+		// (kmem_cache#28-oX (irq 32))->status_use_accessors: 0x1400
+		// (&(kmem_cache#28-oX (irq 32))->irq_data)->state_use_accessors: 0x10000
 	}
+
 	// irq: 16, d->host_data: (kmem_cache#25-o0)->host_data: &gic_data[0]
+	// irq: 32, d->host_data: (kmem_cache#25-o0)->host_data: &gic_data[0]
 	irq_set_chip_data(irq, d->host_data);
+
 	// irq_set_chip_data에서 한일:
 	// desc->irq_data.chip_data: (kmem_cache#28-oX (irq 16))->irq_data.chip_data: &gic_data[0]
 
+	// irq_set_chip_data에서 한일:
+	// desc->irq_data.chip_data: (kmem_cache#28-oX (irq 32))->irq_data.chip_data: &gic_data[0]
+
 	return 0;
+	// return 0
 	// return 0
 }
 
@@ -1471,14 +1496,19 @@ void __init gic_init_bases(unsigned int gic_nr, int irq_start,
 	// irq 16...159까지의 struct irq_data, struct irq_desc에 값을 설정
 	// (kmem_cache#28-oX (irq 16...159))->irq_data.hwirq: 16...159
 	// (kmem_cache#28-oX (irq 16...159))->irq_data.domain: kmem_cache#25-o0
-	// (kmem_cache#28-oX (irq 16...159))->irq_data.state_use_accessors: 0x10800
 	// (kmem_cache#28-oX (irq 16...159))->irq_data.chip: &gic_chip
 	// (kmem_cache#28-oX (irq 16...159))->irq_data.chip_data: &gic_data[0]
-	//
-	// (kmem_cache#28-oX (irq 16...159))->percpu_enabled: kmem_cache#30-oX
-	// (kmem_cache#28-oX (irq 16...159))->handle_irq: handle_percpu_devid_irq
 	// (kmem_cache#28-oX (irq 16...159))->name: NULL
-	// (kmem_cache#28-oX (irq 16...159))->status_use_accessors: 0x31600
+	//
+	// (kmem_cache#28-oX (irq 16...31))->irq_data.state_use_accessors: 0x10800
+	// (kmem_cache#28-oX (irq 16...31))->percpu_enabled: kmem_cache#30-oX
+	// (kmem_cache#28-oX (irq 16...31))->handle_irq: handle_percpu_devid_irq
+	// (kmem_cache#28-oX (irq 16...31))->status_use_accessors: 0x31600
+	//
+	// (kmem_cache#28-oX (irq 32...159))->irq_data.state_use_accessors: 0x10000
+	// (kmem_cache#28-oX (irq 32...159))->percpu_enabled: NULL
+	// (kmem_cache#28-oX (irq 32...159))->handle_irq: handle_fasteoi_irq
+	// (kmem_cache#28-oX (irq 32...159))->status_use_accessors: 0x1400
 	//
 	// (kmem_cache#25-o0)->name: "GIC"
 	// (kmem_cache#25-o0)->linear_revmap[16...159]: 16...159
@@ -1816,14 +1846,19 @@ int __init gic_of_init(struct device_node *node, struct device_node *parent)
 	// irq 16...159까지의 struct irq_data, struct irq_desc에 값을 설정
 	// (kmem_cache#28-oX (irq 16...159))->irq_data.hwirq: 16...159
 	// (kmem_cache#28-oX (irq 16...159))->irq_data.domain: kmem_cache#25-o0
-	// (kmem_cache#28-oX (irq 16...159))->irq_data.state_use_accessors: 0x10800
 	// (kmem_cache#28-oX (irq 16...159))->irq_data.chip: &gic_chip
 	// (kmem_cache#28-oX (irq 16...159))->irq_data.chip_data: &gic_data[0]
-	//
-	// (kmem_cache#28-oX (irq 16...159))->percpu_enabled: kmem_cache#30-oX
-	// (kmem_cache#28-oX (irq 16...159))->handle_irq: handle_percpu_devid_irq
 	// (kmem_cache#28-oX (irq 16...159))->name: NULL
-	// (kmem_cache#28-oX (irq 16...159))->status_use_accessors: 0x31600
+	//
+	// (kmem_cache#28-oX (irq 16...31))->irq_data.state_use_accessors: 0x10800
+	// (kmem_cache#28-oX (irq 16...31))->percpu_enabled: kmem_cache#30-oX
+	// (kmem_cache#28-oX (irq 16...31))->handle_irq: handle_percpu_devid_irq
+	// (kmem_cache#28-oX (irq 16...31))->status_use_accessors: 0x31600
+	//
+	// (kmem_cache#28-oX (irq 32...159))->irq_data.state_use_accessors: 0x10000
+	// (kmem_cache#28-oX (irq 32...159))->percpu_enabled: NULL
+	// (kmem_cache#28-oX (irq 32...159))->handle_irq: handle_fasteoi_irq
+	// (kmem_cache#28-oX (irq 32...159))->status_use_accessors: 0x1400
 	//
 	// smp_cross_call: gic_raise_softirq
 	//

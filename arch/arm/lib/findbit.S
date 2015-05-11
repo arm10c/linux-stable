@@ -54,6 +54,8 @@ ENDPROC(_find_first_zero_bit_le)
 // map: allocated_irqs, size: 8212, start: 16
 // ARM10C 20141122
 // map: allocated_irqs, size: 160, start: 16
+// ARM10C 20141122
+// map: allocated_irqs, size: 160, start: 32
 // ARM10C 20141213
 // map: allocated_irqs, size: 8212, start: 160
 ENTRY(_find_next_zero_bit_le)

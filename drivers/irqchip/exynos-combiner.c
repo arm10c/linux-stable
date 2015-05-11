@@ -142,9 +142,10 @@ static void __init combiner_cascade_irq(struct combiner_chip_data *combiner_data
 
 	// irq_set_chained_handler에서 한일:
 	// (kmem_cache#28-oX (irq 32))->handle_irq: combiner_handle_cascade_irq
-	// (kmem_cache#28-oX (irq 32))->status_use_accessors: 0x31e00
+	// (kmem_cache#28-oX (irq 32))->name: NULL
+	// (kmem_cache#28-oX (irq 32))->status_use_accessors: 0x11c00
 	// (kmem_cache#28-oX (irq 32))->depth: 0
-	// (&(kmem_cache#28-oX (irq 32))->irq_data)->state_use_accessors: 0x800
+	// (&(kmem_cache#28-oX (irq 32))->irq_data)->state_use_accessors: 0
 	//
 	// register GICD_ISENABLER1 의 값을 세팅 하여 irq 32의 interrupt를 enable 시킴
 }
@@ -244,8 +245,8 @@ static int combiner_irq_domain_map(struct irq_domain *d, unsigned int irq,
 	set_irq_flags(irq, IRQF_VALID | IRQF_PROBE);
 
 	// set_irq_flags(160)에서 한일:
-	// (kmem_cache#28-oX (irq 160))->status_use_accessors: 0x31600
-	// (&(kmem_cache#28-oX (irq 160))->irq_data)->state_use_accessors: 0x10800
+	// (kmem_cache#28-oX (irq 160))->status_use_accessors: 0
+	// (&(kmem_cache#28-oX (irq 160))->irq_data)->state_use_accessors: 0x10000
 
 	return 0;
 	// return 0
@@ -412,7 +413,7 @@ static void __init combiner_init(void __iomem *combiner_base,
 	//
 	// (&(kmem_cache#28-oX (irq 160...415))->irq_data)->hwirq: 0...255
 	// (&(kmem_cache#28-oX (irq 160...415))->irq_data)->domain: kmem_cache#24-o0
-	// (&(kmem_cache#28-oX (irq 160...415))->irq_data)->state_use_accessors: 0x10800
+	// (&(kmem_cache#28-oX (irq 160...415))->irq_data)->state_use_accessors: 0x10000
 	//
 	// (kmem_cache#28-oX (irq 160...415))->irq_data.chip: &combiner_chip
 	// (kmem_cache#28-oX (irq 160...415))->handle_irq: handle_level_irq
@@ -423,7 +424,7 @@ static void __init combiner_init(void __iomem *combiner_base,
 	// ......
 	// (kmem_cache#28-oX (irq 408...415))->irq_data.chip_data: &(kmem_cache#26-oX)[31] (combiner_data)
 	//
-	// (kmem_cache#28-oX (irq 160...415))->status_use_accessors: 0x31600
+	// (kmem_cache#28-oX (irq 160...415))->status_use_accessors: 0
 	//
 	// (kmem_cache#24-o0)->name: "COMBINER"
 	// (kmem_cache#24-o0)->linear_revmap[0...255]: 160...415
@@ -456,11 +457,11 @@ static void __init combiner_init(void __iomem *combiner_base,
 		combiner_cascade_irq(&combiner_data[i], irq);
 
 		// combiner_cascade_irq에서 한일:
-		// (kmem_cache#28-oX (irq 32))->irq_data.handler_data: &combiner_data[0]
 		// (kmem_cache#28-oX (irq 32))->handle_irq: combiner_handle_cascade_irq
-		// (kmem_cache#28-oX (irq 32))->status_use_accessors: 0x31e00
+		// (kmem_cache#28-oX (irq 32))->name: NULL
+		// (kmem_cache#28-oX (irq 32))->status_use_accessors: 0x11c00
 		// (kmem_cache#28-oX (irq 32))->depth: 0
-		// (&(kmem_cache#28-oX (irq 32))->irq_data)->state_use_accessors: 0x800
+		// (&(kmem_cache#28-oX (irq 32))->irq_data)->state_use_accessors: 0
 		//
 		// register GICD_ISENABLER1 의 값을 세팅 하여 irq 32의 interrupt를 enable 시킴
 		
@@ -662,9 +663,9 @@ static void __init combiner_init(void __iomem *combiner_base,
 	//
 	// (kmem_cache#28-oX (irq 32...63))->irq_data.handler_data: &combiner_data[0...31]
 	// (kmem_cache#28-oX (irq 32...63))->handle_irq: combiner_handle_cascade_irq
-	// (kmem_cache#28-oX (irq 32...63))->status_use_accessors: 0x31e00
+	// (kmem_cache#28-oX (irq 32...63))->status_use_accessors: 0x11c00
 	// (kmem_cache#28-oX (irq 32...63))->depth: 0
-	// (&(kmem_cache#28-oX (irq 32...63))->irq_data)->state_use_accessors: 0x800
+	// (&(kmem_cache#28-oX (irq 32...63))->irq_data)->state_use_accessors: 0
 	//
 	// register GICD_ISENABLER1 의 값을 세팅 하여 irq 32~63의 interrupt를 enable 시킴
 }
@@ -900,7 +901,7 @@ static int __init combiner_of_init(struct device_node *np,
 	//
 	// (&(kmem_cache#28-oX (irq 160...415))->irq_data)->hwirq: 0...255
 	// (&(kmem_cache#28-oX (irq 160...415))->irq_data)->domain: kmem_cache#24-o0
-	// (&(kmem_cache#28-oX (irq 160...415))->irq_data)->state_use_accessors: 0x10800
+	// (&(kmem_cache#28-oX (irq 160...415))->irq_data)->state_use_accessors: 0x10000
 	//
 	// (kmem_cache#28-oX (irq 160...415))->irq_data.chip: &combiner_chip
 	// (kmem_cache#28-oX (irq 160...415))->handle_irq: handle_level_irq
@@ -911,7 +912,7 @@ static int __init combiner_of_init(struct device_node *np,
 	// ......
 	// (kmem_cache#28-oX (irq 408...415))->irq_data.chip_data: &(kmem_cache#26-oX)[31] (combiner_data)
 	//
-	// (kmem_cache#28-oX (irq 160...415))->status_use_accessors: 0x31600
+	// (kmem_cache#28-oX (irq 160...415))->status_use_accessors: 0
 	//
 	// (kmem_cache#24-o0)->name: "COMBINER"
 	// (kmem_cache#24-o0)->linear_revmap[0...255]: 160...415
@@ -956,9 +957,9 @@ static int __init combiner_of_init(struct device_node *np,
 	//
 	// (kmem_cache#28-oX (irq 32...63))->irq_data.handler_data: &combiner_data[0...31]
 	// (kmem_cache#28-oX (irq 32...63))->handle_irq: combiner_handle_cascade_irq
-	// (kmem_cache#28-oX (irq 32...63))->status_use_accessors: 0x31e00
+	// (kmem_cache#28-oX (irq 32...63))->status_use_accessors: 0x11c00
 	// (kmem_cache#28-oX (irq 32...63))->depth: 0
-	// (&(kmem_cache#28-oX (irq 32...63))->irq_data)->state_use_accessors: 0x800
+	// (&(kmem_cache#28-oX (irq 32...63))->irq_data)->state_use_accessors: 0
 	//
 	// register GICD_ISENABLER1 의 값을 세팅 하여 irq 32~63의 interrupt를 enable 시킴
 

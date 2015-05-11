@@ -364,6 +364,8 @@ EXPORT_SYMBOL(bitmap_clear);
 // allocated_irqs, IRQ_BITMAP_BITS: 8212, from: 16, cnt: 144, 0
 // ARM10C 20141122
 // allocated_irqs, nr_irqs: 160, from: 16, cnt: 1, 0
+// ARM10C 20141122
+// allocated_irqs, nr_irqs: 160, from: 32, cnt: 1, 0
 // ARM10C 20141213
 // allocated_irqs, 8212, 160, 256, 0
 // ARM10C 20141213
@@ -380,6 +382,8 @@ again:
 	// find_next_zero_bit(allocated_irqs, 8212, 16): 16
 	// map: allocated_irqs, size: 160, start: 16
 	// find_next_zero_bit(allocated_irqs, 160, 16): 160
+	// map: allocated_irqs, size: 160, start: 32
+	// find_next_zero_bit(allocated_irqs, 160, 32): 160
 	// map: allocated_irqs, size: 8212, start: 160
 	// find_next_zero_bit(allocated_irqs, 8212, 16): 160
 	// map: allocated_irqs, size: 416, start: 160
@@ -388,41 +392,50 @@ again:
 	// index: 16
 	// index: 160
 	// index: 160
+	// index: 160
 	// index: 416
 
 	/* Align allocation */
 	// index: 16, align_mask: 0
 	// __ALIGN_MASK(16, 0): 16
 	// index: 160, align_mask: 0
-	// __ALIGN_MASK(16, 0): 160
+	// __ALIGN_MASK(160, 0): 160
 	// index: 160, align_mask: 0
-	// __ALIGN_MASK(16, 0): 160
+	// __ALIGN_MASK(106, 0): 160
+	// index: 160, align_mask: 0
+	// __ALIGN_MASK(160, 0): 160
 	// index: 416, align_mask: 0
 	// __ALIGN_MASK(416, 0): 416
 	index = __ALIGN_MASK(index, align_mask);
 	// index: 16
 	// index: 160
 	// index: 160
+	// index: 160
 	// index: 416
 
 	// index: 16, nr: 144
+	// index: 160, nr: 1
 	// index: 160, nr: 1
 	// index: 160, nr: 256
 	// index: 416, nr: 1
 	end = index + nr;
 	// end: 160
 	// end: 161
+	// end: 161
 	// end: 416
 	// end: 417
 
 	// end: 160, size: 8212
 	// end: 161, size: 160
+	// end: 161, size: 160
 	// end: 416, size: 8212
 	// end: 417, size: 416
 	if (end > size)
 		// end: 161
+		// end: 161
 		// end: 417
 		return end;
+		// return 161
 		// return 161
 		// return 417
 

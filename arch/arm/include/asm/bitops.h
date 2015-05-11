@@ -222,6 +222,8 @@ extern int _find_next_bit_be(const unsigned long *p, int size, int offset);
 // map: allocated_irqs, size: 8212, start: 16
 // ARM10C 20141122
 // map: allocated_irqs, size: 160, start: 16
+// ARM10C 20141122
+// map: allocated_irqs, size: 160, start: 32
 // ARM10C 20141213
 // map: allocated_irqs, size: 8212, start: 160
 #define find_next_zero_bit(p,sz,off)	_find_next_zero_bit_le(p,sz,off)

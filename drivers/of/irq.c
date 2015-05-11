@@ -1321,14 +1321,19 @@ void __init of_irq_init(const struct of_device_id *matches)
 			// irq 16...159까지의 struct irq_data, struct irq_desc에 값을 설정
 			// (kmem_cache#28-oX (irq 16...159))->irq_data.hwirq: 16...159
 			// (kmem_cache#28-oX (irq 16...159))->irq_data.domain: kmem_cache#25-o0
-			// (kmem_cache#28-oX (irq 16...159))->irq_data.state_use_accessors: 0x10800
 			// (kmem_cache#28-oX (irq 16...159))->irq_data.chip: &gic_chip
 			// (kmem_cache#28-oX (irq 16...159))->irq_data.chip_data: &gic_data[0]
-			//
-			// (kmem_cache#28-oX (irq 16...159))->percpu_enabled: kmem_cache#30-oX
-			// (kmem_cache#28-oX (irq 16...159))->handle_irq: handle_percpu_devid_irq
 			// (kmem_cache#28-oX (irq 16...159))->name: NULL
-			// (kmem_cache#28-oX (irq 16...159))->status_use_accessors: 0x31600
+			//
+			// (kmem_cache#28-oX (irq 16...31))->irq_data.state_use_accessors: 0x10800
+			// (kmem_cache#28-oX (irq 16...31))->percpu_enabled: kmem_cache#30-oX
+			// (kmem_cache#28-oX (irq 16...31))->handle_irq: handle_percpu_devid_irq
+			// (kmem_cache#28-oX (irq 16...31))->status_use_accessors: 0x31600
+			//
+			// (kmem_cache#28-oX (irq 32...159))->irq_data.state_use_accessors: 0x10000
+			// (kmem_cache#28-oX (irq 32...159))->percpu_enabled: NULL
+			// (kmem_cache#28-oX (irq 32...159))->handle_irq: handle_fasteoi_irq
+			// (kmem_cache#28-oX (irq 32...159))->status_use_accessors: 0x1400
 			//
 			// smp_cross_call: gic_raise_softirq
 			//
@@ -1553,7 +1558,7 @@ void __init of_irq_init(const struct of_device_id *matches)
 			//
 			// (&(kmem_cache#28-oX (irq 160...415))->irq_data)->hwirq: 0...255
 			// (&(kmem_cache#28-oX (irq 160...415))->irq_data)->domain: kmem_cache#24-o0
-			// (&(kmem_cache#28-oX (irq 160...415))->irq_data)->state_use_accessors: 0x10800
+			// (&(kmem_cache#28-oX (irq 160...415))->irq_data)->state_use_accessors: 0x10000
 			//
 			// (kmem_cache#28-oX (irq 160...415))->irq_data.chip: &combiner_chip
 			// (kmem_cache#28-oX (irq 160...415))->handle_irq: handle_level_irq
@@ -1564,7 +1569,7 @@ void __init of_irq_init(const struct of_device_id *matches)
 			// ......
 			// (kmem_cache#28-oX (irq 408...415))->irq_data.chip_data: &(kmem_cache#26-oX)[31] (combiner_data)
 			//
-			// (kmem_cache#28-oX (irq 160...415))->status_use_accessors: 0x31600
+			// (kmem_cache#28-oX (irq 160...415))->status_use_accessors: 0
 			//
 			// (kmem_cache#24-o0)->name: "COMBINER"
 			// (kmem_cache#24-o0)->linear_revmap[0...255]: 160...415
@@ -1609,9 +1614,9 @@ void __init of_irq_init(const struct of_device_id *matches)
 			//
 			// (kmem_cache#28-oX (irq 32...63))->irq_data.handler_data: &combiner_data[0...31]
 			// (kmem_cache#28-oX (irq 32...63))->handle_irq: combiner_handle_cascade_irq
-			// (kmem_cache#28-oX (irq 32...63))->status_use_accessors: 0x31e00
+			// (kmem_cache#28-oX (irq 32...63))->status_use_accessors: 0x11c00
 			// (kmem_cache#28-oX (irq 32...63))->depth: 0
-			// (&(kmem_cache#28-oX (irq 32...63))->irq_data)->state_use_accessors: 0x800
+			// (&(kmem_cache#28-oX (irq 32...63))->irq_data)->state_use_accessors: 0
 			//
 			// register GICD_ISENABLER1 의 값을 세팅 하여 irq 32~63의 interrupt를 enable 시킴
 

@@ -1266,7 +1266,7 @@ __setup_irq(unsigned int irq, struct irq_desc *desc, struct irqaction *new)
 		irqd_clear(&desc->irq_data, IRQD_IRQ_INPROGRESS);
 
 		// irqd_clear에서 한일;
-		// (&(kmem_cache#28-oX (irq 152))->irq_data)->state_use_accessors: 0x10800
+		// (&(kmem_cache#28-oX (irq 152))->irq_data)->state_use_accessors: 0x10000
 
 		// new->flags: (kmem_cache#30-oX)->flags: 0x14A00, IRQF_PERCPU: 0x00000400
 		if (new->flags & IRQF_PERCPU) {
@@ -1295,12 +1295,15 @@ __setup_irq(unsigned int irq, struct irq_desc *desc, struct irqaction *new)
 			irq_settings_set_no_balancing(desc);
 
 			// irq_settings_set_no_balancing에서 한일:
-			// desc->status_use_accessors: (kmem_cache#28-oX (irq 152))->status_use_accessors: 0x33600
+			// desc->status_use_accessors: (kmem_cache#28-oX (irq 152))->status_use_accessors: 0x3400
 
 // 2015/05/09 종료
 
 			// &desc->irq_data: &(kmem_cache#28-oX (irq 152))->irq_data, IRQD_NO_BALANCING: 0x400
 			irqd_set(&desc->irq_data, IRQD_NO_BALANCING);
+
+			// irqd_set에서 한일:
+			// (&(kmem_cache#28-oX (irq 152))->irq_data)->state_use_accessors: 0x11400
 		}
 
 		/* Set default affinity mask once everything is setup */
@@ -1597,13 +1600,8 @@ int request_threaded_irq(unsigned int irq, irq_handler_t handler,
 	if (!desc)
 		return -EINVAL;
 
-	// FIXME:
-	// irq_settings_is_per_cpu_devid(kmem_cache#28-oX (irq 152)): 1 이 맞는지???
-	//
-	// desc->status_use_accessors: (kmem_cache#28-oX (irq 152))->status_use_accessors: 0x31600
-	// 값을 확인 후 주석 수정 필요
-
 	// desc: kmem_cache#28-oX (irq 152), irq_settings_can_request(kmem_cache#28-oX (irq 152)): 1
+	// irq_settings_is_per_cpu_devid(kmem_cache#28-oX (irq 152)): 0
 	if (!irq_settings_can_request(desc) ||
 	    WARN_ON(irq_settings_is_per_cpu_devid(desc)))
 		return -EINVAL;
