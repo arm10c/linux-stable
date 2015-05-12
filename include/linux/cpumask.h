@@ -794,6 +794,7 @@ void free_bootmem_cpumask_var(cpumask_var_t mask);
 // ARM10C 20140830
 // ARM10C 20150103
 // ARM10C 20150404
+// ARM10C 20150509
 typedef struct cpumask cpumask_var_t[1];
 
 // ARM10C 20140830
@@ -804,6 +805,8 @@ typedef struct cpumask cpumask_var_t[1];
 // &rd->rto_mask: &(&def_root_domain)->rto_mask, GFP_KERNEL: 0xD0
 // ARM10C 20141004
 // &irq_default_affinity, GFP_NOWAIT: 0
+// ARM10C 20150509
+// &mask, GFP_KERNEL: 0xD0
 static inline bool alloc_cpumask_var(cpumask_var_t *mask, gfp_t flags)
 {
 	return true;

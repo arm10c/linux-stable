@@ -18,6 +18,7 @@
 #endif
 
 // ARM10C 20141220
+// ARM10C 20150509
 #define istate core_internal_state__do_not_mess_with_it
 
 extern bool noirqdebug;
@@ -50,13 +51,18 @@ enum {
  * IRQS_SUSPENDED		- irq is suspended
  */
 // ARM10C 20141220
+// ARM10C 20150509
 enum {
+	// IRQS_AUTODETECT: 0x00000001
 	IRQS_AUTODETECT		= 0x00000001,
+	// IRQS_SPURIOUS_DISABLED: 0x00000002
 	IRQS_SPURIOUS_DISABLED	= 0x00000002,
 	IRQS_POLL_INPROGRESS	= 0x00000008,
+	// IRQS_ONESHOT: 0x00000020
 	IRQS_ONESHOT		= 0x00000020,
 	// IRQS_REPLAY: 0x00000040
 	IRQS_REPLAY		= 0x00000040,
+	// IRQS_WAITING: 0x00000080
 	IRQS_WAITING		= 0x00000080,
 	// IRQS_PENDING: 0x00000200
 	IRQS_PENDING		= 0x00000200,
@@ -117,9 +123,12 @@ extern int irq_do_set_affinity(struct irq_data *data,
 /* Inline functions for support of irq chips on slow busses */
 // ARM10C 20141122
 // desc: kmem_cache#28-oX (irq 16)
+// ARM10C 20150509
+// desc: kmem_cache#28-oX (irq 152)
 static inline void chip_bus_lock(struct irq_desc *desc)
 {
 	// desc->irq_data.chip->irq_bus_lock: (kmem_cache#28-oX (irq 16))->irq_data.chip->irq_bus_lock: NULL
+	// desc->irq_data.chip->irq_bus_lock: (kmem_cache#28-oX (irq 152))->irq_data.chip->irq_bus_lock: NULL
 	if (unlikely(desc->irq_data.chip->irq_bus_lock))
 		desc->irq_data.chip->irq_bus_lock(&desc->irq_data);
 }
@@ -145,6 +154,8 @@ void __irq_put_desc_unlock(struct irq_desc *desc, unsigned long flags, bool bus)
 
 // ARM10C 20141122
 // irq: 16, &flags, 0
+// ARM10C 20141122
+// irq: 32, &flags, 0
 // ARM10C 20141213
 // irq: 160, &flags, 0
 // ARM10C 20141220
@@ -160,6 +171,8 @@ irq_get_desc_buslock(unsigned int irq, unsigned long *flags, unsigned int check)
 
 // ARM10C 20141122
 // desc: kmem_cache#28-oX (irq 16)
+// ARM10C 20141122
+// desc: kmem_cache#28-oX (irq 32)
 // ARM10C 20141213
 // desc: kmem_cache#28-oX (irq 160)
 static inline void
@@ -170,6 +183,8 @@ irq_put_desc_busunlock(struct irq_desc *desc, unsigned long flags)
 
 // ARM10C 20141122
 // irq: 16, &flags, 0
+// ARM10C 20141122
+// irq: 32, &flags, 0
 // ARM10C 20141213
 // irq: 160, &flags, 0
 // ARM10C 20141220
@@ -185,6 +200,8 @@ irq_get_desc_lock(unsigned int irq, unsigned long *flags, unsigned int check)
 
 // ARM10C 20141122
 // desc: kmem_cache#28-oX (irq 16), flags
+// ARM10C 20141122
+// desc: kmem_cache#28-oX (irq 32), flags
 // ARM10C 20141213
 // desc: kmem_cache#28-oX (irq 160), flags
 // ARM10C 20141220
@@ -211,21 +228,43 @@ static inline void irqd_clr_move_pending(struct irq_data *d)
 
 // ARM10C 20141122
 // &desc->irq_data: &(kmem_cache#28-oX (irq 16))->irq_data, 0xac0f
+// ARM10C 20141122
+// &desc->irq_data: &(kmem_cache#28-oX (irq 32))->irq_data, 0xac0f
+// ARM10C 20141213
+// &desc->irq_data: &(kmem_cache#28-oX (irq 160))->irq_data, 0xac0f
 // ARM10C 20141220
 // &desc->irq_data: &(kmem_cache#28-oX (irq 32))->irq_data, IRQD_IRQ_DISABLED: 0x10000
 // ARM10C 20141220
 // &desc->irq_data: &(kmem_cache#28-oX (irq 32))->irq_data, IRQD_IRQ_MASKED: 0x20000
+// ARM10C 20150509
+// &desc->irq_data: &(kmem_cache#28-oX (irq 152))->irq_data, IRQD_IRQ_INPROGRESS: 0x40000
 static inline void irqd_clear(struct irq_data *d, unsigned int mask)
 {
 	// d->state_use_accessors:
 	// (&(kmem_cache#28-oX (irq 16))->irq_data)->state_use_accessors: 0x10000, mask: 0xac0f
 	// d->state_use_accessors:
-	// (&(kmem_cache#28-oX (irq 32))->irq_data)->state_use_accessors: 0x10800, mask: 0x10000
+	// (&(kmem_cache#28-oX (irq 32))->irq_data)->state_use_accessors: 0x10000, mask: 0xac0f
+	// d->state_use_accessors:
+	// (&(kmem_cache#28-oX (irq 160))->irq_data)->state_use_accessors: 0x10000, mask: 0xac0f
+	// d->state_use_accessors:
+	// (&(kmem_cache#28-oX (irq 32))->irq_data)->state_use_accessors: 0x10000, mask: 0x10000
+	// d->state_use_accessors:
+	// (&(kmem_cache#28-oX (irq 32))->irq_data)->state_use_accessors: 0, mask: 0x20000
+	// d->state_use_accessors:
+	// (&(kmem_cache#28-oX (irq 152))->irq_data)->state_use_accessors: 0x10000, mask: 0x40000
 	d->state_use_accessors &= ~mask;
 	// d->state_use_accessors:
 	// (&(kmem_cache#28-oX (irq 16))->irq_data)->state_use_accessors: 0x10000
 	// d->state_use_accessors:
-	// (&(kmem_cache#28-oX (irq 32))->irq_data)->state_use_accessors: 0x800
+	// (&(kmem_cache#28-oX (irq 32))->irq_data)->state_use_accessors: 0x10000
+	// d->state_use_accessors:
+	// (&(kmem_cache#28-oX (irq 160))->irq_data)->state_use_accessors: 0x10000
+	// d->state_use_accessors:
+	// (&(kmem_cache#28-oX (irq 32))->irq_data)->state_use_accessors: 0
+	// d->state_use_accessors:
+	// (&(kmem_cache#28-oX (irq 32))->irq_data)->state_use_accessors: 0
+	// d->state_use_accessors:
+	// (&(kmem_cache#28-oX (irq 152))->irq_data)->state_use_accessors: 0x10000
 }
 
 // ARM10C 20141004
@@ -234,17 +273,31 @@ static inline void irqd_clear(struct irq_data *d, unsigned int mask)
 // &desc->irq_data: &(kmem_cache#28-oX (irq 16))->irq_data, IRQD_PER_CPU: 0x800
 // ARM10C 20141122
 // &desc->irq_data: &(kmem_cache#28-oX (irq 16))->irq_data, irq_settings_get_trigger_mask(kmem_cache#28-oX (irq 16)): 0
+// ARM10C 20141122
+// &desc->irq_data: &(kmem_cache#28-oX (irq 32))->irq_data, irq_settings_get_trigger_mask(kmem_cache#28-oX (irq 32)): 0
+// ARM10C 20141213
+// &desc->irq_data: &(kmem_cache#28-oX (irq 160))->irq_data, irq_settings_get_trigger_mask(kmem_cache#28-oX (irq 160)): 0
 // ARM10C 20150404
 // data: &(kmem_cache#28-oX (irq 152))->irq_data, IRQD_AFFINITY_SET: 0x1000
+// ARM10C 20150509
+// &desc->irq_data: &(kmem_cache#28-oX (irq 152))->irq_data, IRQD_NO_BALANCING: 0x400
 static inline void irqd_set(struct irq_data *d, unsigned int mask)
 {
 	// d->state_use_accessors: (&(kmem_cache#28-o0)->irq_data)->state_use_accessors: 0, mask: 0x10000
 	// d->state_use_accessors: (&(kmem_cache#28-oX (irq 16))->irq_data)->state_use_accessors: 0x10000, mask: 0x800
+	// d->state_use_accessors: (&(kmem_cache#28-oX (irq 16))->irq_data)->state_use_accessors: 0x10800, mask: 0
+	// d->state_use_accessors: (&(kmem_cache#28-oX (irq 32))->irq_data)->state_use_accessors: 0x10000, mask: 0
+	// d->state_use_accessors: (&(kmem_cache#28-oX (irq 160))->irq_data)->state_use_accessors: 0x10000, mask: 0
 	// d->state_use_accessors: (&(kmem_cache#28-oX (irq 152))->irq_data)->state_use_accessors: 0x10000, mask: 0x1000
+	// d->state_use_accessors: (&(kmem_cache#28-oX (irq 152))->irq_data)->state_use_accessors: 0x11000, mask: 0x400
 	d->state_use_accessors |= mask;
 	// d->state_use_accessors: (&(kmem_cache#28-o0)->irq_data)->state_use_accessors: 0x10000
 	// d->state_use_accessors: (&(kmem_cache#28-oX (irq 16))->irq_data)->state_use_accessors: 0x10800
+	// d->state_use_accessors: (&(kmem_cache#28-oX (irq 16))->irq_data)->state_use_accessors: 0x10800
+	// d->state_use_accessors: (&(kmem_cache#28-oX (irq 32))->irq_data)->state_use_accessors: 0x10000
+	// d->state_use_accessors: (&(kmem_cache#28-oX (irq 160))->irq_data)->state_use_accessors: 0x10000
 	// d->state_use_accessors: (&(kmem_cache#28-oX (irq 152))->irq_data)->state_use_accessors: 0x11000
+	// d->state_use_accessors: (&(kmem_cache#28-oX (irq 152))->irq_data)->state_use_accessors: 0x11400
 }
 
 static inline bool irqd_has_set(struct irq_data *d, unsigned int mask)

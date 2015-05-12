@@ -470,6 +470,7 @@ extern void __module_get(struct module *module);
 /* This is the Right Way to get a module: if it fails, it's being removed,
  * so pretend it's not there. */
 // ARM10C 20150411
+// ARM10C 20150509
 extern bool try_module_get(struct module *module);
 
 extern void module_put(struct module *module);

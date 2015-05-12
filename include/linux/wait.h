@@ -33,6 +33,7 @@ struct wait_bit_queue {
 };
 
 // ARM10C 20141004
+// ARM10C 20150509
 // sizeof(struct __wait_queue_head): 24 bytes
 struct __wait_queue_head {
 	spinlock_t		lock;
@@ -40,6 +41,7 @@ struct __wait_queue_head {
 };
 
 // ARM10C 20141004
+// ARM10C 20150509
 typedef struct __wait_queue_head wait_queue_head_t;
 
 struct task_struct;
@@ -74,6 +76,8 @@ extern void __init_waitqueue_head(wait_queue_head_t *q, const char *name, struct
 // ARM10C 20140111
 // ARM10C 20140927
 // &rsp->gp_wq: &(&rcu_bh_state)->gp_wq
+// ARM10C 20150509
+// &desc->wait_for_threads: &(kmem_cache#28-oX (irq 152))->wait_for_threads
 #define init_waitqueue_head(q)				\
 	do {						\
 		static struct lock_class_key __key;	\

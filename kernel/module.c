@@ -950,12 +950,16 @@ EXPORT_SYMBOL(__module_get);
 
 // ARM10C 20150411
 // newdev->owner: [pcp0] (&(&percpu_mct_tick)->evt)->owner
+// ARM10C 20150509
+// desc->owner: (kmem_cache#28-oX (irq 152))->owner: NULL
 bool try_module_get(struct module *module)
 {
 	bool ret = true;
 	// ret: true
+	// ret: true
 
 	// module: [pcp0] (&(&percpu_mct_tick)->evt)->owner: NULL
+	// module: [pcp0] (kmem_cache#28-oX (irq 152))->owner: NULL
 	if (module) {
 		preempt_disable();
 
@@ -969,7 +973,9 @@ bool try_module_get(struct module *module)
 	}
 
 	// ret: true
+	// ret: true
 	return ret;
+	// return true
 	// return true
 }
 EXPORT_SYMBOL(try_module_get);

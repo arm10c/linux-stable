@@ -27,10 +27,24 @@
  * may be as per machine or firmware initialisation.
  */
 #define IRQF_TRIGGER_NONE	0x00000000
+// ARM10C 20150509
+// IRQF_TRIGGER_RISING: 0x00000001
 #define IRQF_TRIGGER_RISING	0x00000001
+// ARM10C 20150509
+// IRQF_TRIGGER_FALLING: 0x00000002
 #define IRQF_TRIGGER_FALLING	0x00000002
+// ARM10C 20150509
+// IRQF_TRIGGER_HIGH: 0x00000004
 #define IRQF_TRIGGER_HIGH	0x00000004
+// ARM10C 20150509
+// IRQF_TRIGGER_LOW: 0x00000008
 #define IRQF_TRIGGER_LOW	0x00000008
+// ARM10C 20150509
+// IRQF_TRIGGER_RISING: 0x00000001
+// IRQF_TRIGGER_FALLING: 0x00000002
+// IRQF_TRIGGER_HIGH: 0x00000004
+// IRQF_TRIGGER_LOW: 0x00000008
+// IRQF_TRIGGER_MASK: 0xF
 #define IRQF_TRIGGER_MASK	(IRQF_TRIGGER_HIGH | IRQF_TRIGGER_LOW | \
 				 IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING)
 #define IRQF_TRIGGER_PROBE	0x00000010
@@ -59,18 +73,37 @@
  *                resume time.
  */
 #define IRQF_DISABLED		0x00000020
+// ARM10C 20150509
+// IRQF_SHARED: 0x00000080
 #define IRQF_SHARED		0x00000080
 #define IRQF_PROBE_SHARED	0x00000100
+// ARM10C 20150509
+// __IRQF_TIMER: 0x00000200
 #define __IRQF_TIMER		0x00000200
+// ARM10C 20150509
+// IRQF_PERCPU: 0x00000400
 #define IRQF_PERCPU		0x00000400
+// ARM10C 20150509
+// IRQF_NOBALANCING: 0x00000800
 #define IRQF_NOBALANCING	0x00000800
 #define IRQF_IRQPOLL		0x00001000
+// ARM10C 20150509
+// IRQF_ONESHOT: 0x00002000
 #define IRQF_ONESHOT		0x00002000
+// ARM10C 20150509
+// IRQF_NO_SUSPEND: 0x00004000
 #define IRQF_NO_SUSPEND		0x00004000
 #define IRQF_FORCE_RESUME	0x00008000
+// ARM10C 20150509
+// IRQF_NO_THREAD 0x00010000
 #define IRQF_NO_THREAD		0x00010000
 #define IRQF_EARLY_RESUME	0x00020000
 
+// ARM10C 20150509
+// __IRQF_TIMER: 0x00000200
+// IRQF_NO_SUSPEND: 0x00004000
+// IRQF_NO_THREAD 0x00010000
+// IRQF_TIMER: 0x14200
 #define IRQF_TIMER		(__IRQF_TIMER | IRQF_NO_SUSPEND | IRQF_NO_THREAD)
 
 /*
@@ -85,6 +118,7 @@ enum {
 	IRQC_IS_NESTED,
 };
 
+// ARM10C 20150509
 typedef irqreturn_t (*irq_handler_t)(int, void *);
 
 /**
@@ -102,6 +136,8 @@ typedef irqreturn_t (*irq_handler_t)(int, void *);
  * @thread_mask:	bitmask for keeping track of @thread activity
  * @dir:	pointer to the proc/irq/NN/name entry
  */
+// ARM10C 20150509
+// sizeof(struct irqaction): 48 bytes
 struct irqaction {
 	irq_handler_t		handler;
 	void			*dev_id;
@@ -124,10 +160,14 @@ request_threaded_irq(unsigned int irq, irq_handler_t handler,
 		     irq_handler_t thread_fn,
 		     unsigned long flags, const char *name, void *dev);
 
+// ARM10C 20150509
+// evt->irq: [pcp0] (&(&percpu_mct_tick)->evt)->irq: 152, exynos4_mct_tick_isr, 0x14A00,
+// evt->name: [pcp0] (&(&percpu_mct_tick)->evt)->name: "mct_tick0", mevt: [pcp0] &percpu_mct_tick
 static inline int __must_check
 request_irq(unsigned int irq, irq_handler_t handler, unsigned long flags,
 	    const char *name, void *dev)
 {
+	// irq: 152, handler: exynos4_mct_tick_isr, flags: 0x14A00, name: "mct_tick0", dev: [pcp0] &percpu_mct_tick
 	return request_threaded_irq(irq, handler, NULL, flags, name, dev);
 }
 

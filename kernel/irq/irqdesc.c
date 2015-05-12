@@ -225,6 +225,8 @@ static void irq_insert_desc(unsigned int irq, struct irq_desc *desc)
 // irq: 347
 // ARM10C 20150328
 // irq: 152
+// ARM10C 20150509
+// irq: 152
 struct irq_desc *irq_to_desc(unsigned int irq)
 {
 	// irq: 16, radix_tree_lookup(&irq_desc_tree, 16): kmem_cache#28-oX (irq 16)
@@ -1029,6 +1031,8 @@ EXPORT_SYMBOL_GPL(__irq_alloc_descs);
  */
 // ARM10C 20141122
 // irq: 16, 1
+// ARM10C 20141122
+// irq: 32, 1
 // ARM10C 20141213
 // irq: 160, 1
 int irq_reserve_irqs(unsigned int from, unsigned int cnt)
@@ -1037,42 +1041,56 @@ int irq_reserve_irqs(unsigned int from, unsigned int cnt)
 	int ret = 0;
 	// ret: 0
 	// ret: 0
+	// ret: 0
 
 	// cnt: 1, from: 16, nr_irqs: 160
+	// cnt: 1, from: 32, nr_irqs: 160
 	// cnt: 1, from: 160, nr_irqs: 416
 	if (!cnt || (from + cnt) > nr_irqs)
 		return -EINVAL;
 
 	mutex_lock(&sparse_irq_lock);
+
+	// sparse_irq_lock을 이용한 mutex lock 수행
 	// sparse_irq_lock을 이용한 mutex lock 수행
 	// sparse_irq_lock을 이용한 mutex lock 수행
 
 	// nr_irqs: 160, from: 16, cnt: 1
 	// bitmap_find_next_zero_area(allocated_irqs, 160, 16, 1, 0): 161
+	// nr_irqs: 160, from: 32, cnt: 1
+	// bitmap_find_next_zero_area(allocated_irqs, 160, 32, 1, 0): 161
 	// nr_irqs: 416, from: 160, cnt: 1
 	// bitmap_find_next_zero_area(allocated_irqs, 416, 160, 1, 0): 417
 	start = bitmap_find_next_zero_area(allocated_irqs, nr_irqs, from, cnt, 0);
 	// start: 161
+	// start: 161
 	// start: 417
 
 	// start: 161, from: 16
+	// start: 161, from: 32
 	// start: 417, from: 160
 	if (start == from)
 		bitmap_set(allocated_irqs, start, cnt);
 	else
 		// ret: 0, EEXIST: 17
 		// ret: 0, EEXIST: 17
+		// ret: 0, EEXIST: 17
 		ret = -EEXIST;
+		// ret: -17 (EEXIST)
 		// ret: -17 (EEXIST)
 		// ret: -17 (EEXIST)
 
 	mutex_unlock(&sparse_irq_lock);
+
+	// sparse_irq_lock을 이용한 mutex unlock 수행
 	// sparse_irq_lock을 이용한 mutex unlock 수행
 	// sparse_irq_lock을 이용한 mutex unlock 수행
 
 	// ret: -17 (EEXIST)
 	// ret: -17 (EEXIST)
+	// ret: -17 (EEXIST)
 	return ret;
+	// return -17 (EEXIST)
 	// return -17 (EEXIST)
 	// return -17 (EEXIST)
 }
@@ -1177,6 +1195,7 @@ int irq_set_percpu_devid(unsigned int irq)
 
 	// irq: 16
 	irq_set_percpu_devid_flags(irq);
+
 	// irq_set_percpu_devid_flags에서 한일:
 	// (kmem_cache#28-oX (irq 16))->status_use_accessors: 0x31600
 	// (&(kmem_cache#28-oX (irq 16))->irq_data)->state_use_accessors: 0x10800

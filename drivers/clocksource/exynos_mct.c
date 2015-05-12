@@ -53,6 +53,7 @@
 #define EXYNOS4_MCT_L_MASK		(0xffffff00)
 
 // ARM10C 20150509
+// ARM10C 20150509
 // MCT_L_TCNTB_OFFSET: 0x00
 #define MCT_L_TCNTB_OFFSET		(0x00)
 // ARM10C 20150509
@@ -86,11 +87,13 @@
 #define MCT_L_TCON_TIMER_START		(1 << 0)
 
 // ARM10C 20150404
+// ARM10C 20150509
 // TICK_BASE_CNT: 1
 #define TICK_BASE_CNT	1
 
 // ARM10C 20150307
 // ARM10C 20150328
+// ARM10C 20150509
 enum {
 	// MCT_INT_SPI: 0
 	MCT_INT_SPI,
@@ -100,6 +103,7 @@ enum {
 
 // ARM10C 20150307
 // ARM10C 20150328
+// ARM10C 20150509
 enum {
 	// MCT_G0_IRQ: 0
 	MCT_G0_IRQ,
@@ -123,6 +127,7 @@ static void __iomem *reg_base;
 static unsigned long clk_rate;
 // ARM10C 20150307
 // ARM10C 20150328
+// ARM10C 20150509
 static unsigned int mct_int_type;
 // ARM10C 20150307
 // ARM10C 20150321
@@ -144,6 +149,8 @@ struct mct_clock_event_device {
 // 0x1, 0x334
 // ARM10C 20150509
 // tmp: 0x7, 0x320
+// ARM10C 20150509
+// TICK_BASE_CNT: 1, 0x300
 static void exynos4_mct_write(unsigned int value, unsigned long offset)
 {
 	unsigned long stat_addr;
@@ -167,9 +174,14 @@ static void exynos4_mct_write(unsigned int value, unsigned long offset)
 	// 1 bit  - interrupt start/stop
 	// 0 bit  - timer start/stop
 
+	// E.R.M: 21.4.1.21 L0_TCNTB
+	// L_TCNTB: Specifies the tick integer count buffer register
+	// 31~0 bit - tick count buffer
+
 	// value: 0x8001D4C0, reg_base: 0xf0006000, offset: 0x308
 	// value: 0x1, reg_base: 0xf0006000, offset: 0x334
 	// value: 0x7, reg_base: 0xf0006000, offset: 0x320
+	// value: 0x1, reg_base: 0xf0006000, offset: 0x300
 	__raw_writel(value, reg_base + offset);
 
 	// __raw_writel에서 한일:
@@ -186,21 +198,29 @@ static void exynos4_mct_write(unsigned int value, unsigned long offset)
 	// register L_TCON 에 0x7 write함
 	// local timer 0 의 interrupt type을 interval mode로 설정하고 interrupt, timer 를 start 시킴
 
+	// __raw_writel에서 한일:
+	// register L_TCNTB 에 0x1 write함
+	// local timer 0 의 tick count 값을 1로 write 함
+
 	// offset: 0x308, EXYNOS4_MCT_L_BASE(0): 0x300
 	// offset: 0x334, EXYNOS4_MCT_L_BASE(0): 0x300
 	// offset: 0x320, EXYNOS4_MCT_L_BASE(0): 0x300
+	// offset: 0x300, EXYNOS4_MCT_L_BASE(0): 0x300
 	if (likely(offset >= EXYNOS4_MCT_L_BASE(0))) {
 		// offset: 0x308, EXYNOS4_MCT_L_MASK: 0xffffff00, MCT_L_WSTAT_OFFSET: 0x40
 		// offset: 0x334, EXYNOS4_MCT_L_MASK: 0xffffff00, MCT_L_WSTAT_OFFSET: 0x40
 		// offset: 0x320, EXYNOS4_MCT_L_MASK: 0xffffff00, MCT_L_WSTAT_OFFSET: 0x40
+		// offset: 0x300, EXYNOS4_MCT_L_MASK: 0xffffff00, MCT_L_WSTAT_OFFSET: 0x40
 		stat_addr = (offset & ~EXYNOS4_MCT_L_MASK) + MCT_L_WSTAT_OFFSET;
 		// stat_addr: 0x48
 		// stat_addr: 0x74
 		// stat_addr: 0x60
+		// stat_addr: 0x40
 
 		// offset: 0x308, EXYNOS4_MCT_L_MASK: 0xffffff00
 		// offset: 0x334, EXYNOS4_MCT_L_MASK: 0xffffff00
 		// offset: 0x320, EXYNOS4_MCT_L_MASK: 0xffffff00
+		// offset: 0x300, EXYNOS4_MCT_L_MASK: 0xffffff00
 		switch (offset & EXYNOS4_MCT_L_MASK) {
 		case MCT_L_TCON_OFFSET:  // MCT_L_TCON_OFFSET: 0x20
 			mask = 1 << 3;		/* L_TCON write status */
@@ -213,6 +233,7 @@ static void exynos4_mct_write(unsigned int value, unsigned long offset)
 			break;
 		default:
 			return;
+			// return 수행
 			// return 수행
 			// return 수행
 			// return 수행
@@ -617,6 +638,7 @@ static int exynos4_mct_tick_clear(struct mct_clock_event_device *mevt)
 	}
 }
 
+// ARM10C 20150509
 static irqreturn_t exynos4_mct_tick_isr(int irq, void *dev_id)
 {
 	struct mct_clock_event_device *mevt = dev_id;
@@ -721,10 +743,22 @@ static int exynos4_local_timer_setup(struct clock_event_device *evt)
 	// register L_TCON 에 0x7 write함
 	// local timer 0 의 interrupt type을 interval mode로 설정하고 interrupt, timer 를 start 시킴
 
+	// TICK_BASE_CNT: 1 mevt->base: [pcp0] (&percpu_mct_tick)->base: 0x300, MCT_L_TCNTB_OFFSET: 0x00
 	exynos4_mct_write(TICK_BASE_CNT, mevt->base + MCT_L_TCNTB_OFFSET);
 
+	// exynos4_mct_write에서 한일:
+	// register L_TCNTB 에 0x1 write함
+	// local timer 0 의 tick count 값을 1로 write 함
+
+	// mct_int_type: 0, MCT_INT_SPI: 0
 	if (mct_int_type == MCT_INT_SPI) {
+		// evt->irq: [pcp0] (&(&percpu_mct_tick)->evt)->irq,
+		// MCT_L0_IRQ: 4, cpu: 0, mct_irqs[4]: 152
 		evt->irq = mct_irqs[MCT_L0_IRQ + cpu];
+		// evt->irq: [pcp0] (&(&percpu_mct_tick)->evt)->irq: 152
+
+		// evt->irq: [pcp0] (&(&percpu_mct_tick)->evt)->irq: 152, IRQF_TIMER: 0x14200, IRQF_NOBALANCING: 0x00000800,
+		// evt->name: [pcp0] (&(&percpu_mct_tick)->evt)->name: "mct_tick0", mevt: [pcp0] &percpu_mct_tick
 		if (request_irq(evt->irq, exynos4_mct_tick_isr,
 				IRQF_TIMER | IRQF_NOBALANCING,
 				evt->name, mevt)) {

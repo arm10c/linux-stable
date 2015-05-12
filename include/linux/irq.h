@@ -79,6 +79,7 @@ typedef	void (*irq_preflow_handler_t)(struct irq_data *data);
 // ARM10C 20141122
 // ARM10C 20141213
 // ARM10C 20141220
+// ARM10C 20150509
 enum {
 	// IRQ_TYPE_NONE: 0x00000000
 	IRQ_TYPE_NONE		= 0x00000000,
@@ -217,6 +218,7 @@ struct irq_data {
 // ARM10C 20141122
 // ARM10C 20141220
 // ARM10C 20150404
+// ARM10C 20150509
 enum {
 	// IRQD_TRIGGER_MASK: 0xf
 	IRQD_TRIGGER_MASK		= 0xf,
@@ -236,6 +238,7 @@ enum {
 	IRQD_IRQ_DISABLED		= (1 << 16),
 	// IRQD_IRQ_MASKED: 0x20000
 	IRQD_IRQ_MASKED			= (1 << 17),
+	// IRQD_IRQ_INPROGRESS: 0x40000
 	IRQD_IRQ_INPROGRESS		= (1 << 18),
 };
 
@@ -414,12 +417,14 @@ struct irq_chip {
  *				when irq enabled
  * IRQCHIP_SKIP_SET_WAKE:	Skip chip.irq_set_wake(), for this irq chip
  */
+// ARM10C 20150509
 enum {
 	IRQCHIP_SET_TYPE_MASKED		= (1 <<  0),
 	IRQCHIP_EOI_IF_HANDLED		= (1 <<  1),
 	IRQCHIP_MASK_ON_SUSPEND		= (1 <<  2),
 	IRQCHIP_ONOFFLINE_ENABLED	= (1 <<  3),
 	IRQCHIP_SKIP_SET_WAKE		= (1 <<  4),
+	// IRQCHIP_ONESHOT_SAFE: 0x20
 	IRQCHIP_ONESHOT_SAFE		= (1 <<  5),
 };
 
@@ -508,14 +513,32 @@ irq_set_chip_and_handler_name(unsigned int irq, struct irq_chip *chip,
 
 // ARM10C 20141122
 // irq: 16, &gic_chip, handle_percpu_devid_irq
+// ARM10C 20141122
+// irq: 32, &gic_chip, handle_fasteoi_irq
 // ARM10C 20141213
 // irq: 160, &combiner_chip, handle_level_irq
 static inline void irq_set_chip_and_handler(unsigned int irq, struct irq_chip *chip,
 					    irq_flow_handler_t handle)
 {
 	// irq: 16, chip: &gic_chip, handle: handle_percpu_devid_irq
+	// irq: 32, chip: &gic_chip, handle: handle_fasteoi_irq
 	// irq: 160, chip: &combiner_chip, handle: handle_level_irq
 	irq_set_chip_and_handler_name(irq, chip, handle, NULL);
+
+	// irq_set_chip_and_handler_name(16)에서 한일:
+	// (kmem_cache#28-oX (irq 16))->irq_data.chip: &gic_chip
+	// (kmem_cache#28-oX (irq 16))->handle_irq: handle_percpu_devid_irq
+	// (kmem_cache#28-oX (irq 16))->name: NULL
+
+	// irq_set_chip_and_handler_name(32)에서 한일:
+	// (kmem_cache#28-oX (irq 32))->irq_data.chip: &gic_chip
+	// (kmem_cache#28-oX (irq 32))->handle_irq: handle_fasteoi_irq
+	// (kmem_cache#28-oX (irq 32))->name: NULL
+
+	// irq_set_chip_and_handler_name(160)에서 한일:
+	// (kmem_cache#28-oX (irq 160))->irq_data.chip: &combiner_chip
+	// (kmem_cache#28-oX (irq 160))->handle_irq: handle_level_irq
+	// (kmem_cache#28-oX (irq 160))->name: NULL
 }
 
 extern int irq_set_percpu_devid(unsigned int irq);
@@ -545,9 +568,10 @@ irq_set_chained_handler(unsigned int irq, irq_flow_handler_t handle)
 
 	// __irq_set_handler에서 한일:
 	// (kmem_cache#28-oX (irq 32))->handle_irq: combiner_handle_cascade_irq
-	// (kmem_cache#28-oX (irq 32))->status_use_accessors: 0x31e00
+	// (kmem_cache#28-oX (irq 32))->name: NULL
+	// (kmem_cache#28-oX (irq 32))->status_use_accessors: 0x11c00
 	// (kmem_cache#28-oX (irq 32))->depth: 0
-	// (&(kmem_cache#28-oX (irq 32))->irq_data)->state_use_accessors: 0x800
+	// (&(kmem_cache#28-oX (irq 32))->irq_data)->state_use_accessors: 0
 	//
 	// register GICD_ISENABLER1 의 값을 세팅 하여 irq 32의 interrupt를 enable 시킴
 }
@@ -564,11 +588,15 @@ static inline void irq_set_status_flags(unsigned int irq, unsigned long set)
 
 // ARM10C 20141122
 // virq: 16, IRQ_NOREQUEST: 0x800
+// ARM10C 20141122
+// virq: 32, IRQ_NOREQUEST: 0x800
 // ARM10C 20141213
 // virq: 160, IRQ_NOREQUEST: 0x800
 static inline void irq_clear_status_flags(unsigned int irq, unsigned long clr)
 {
 	// irq: 16, clr: 0x800
+	// irq: 32, clr: 0x800
+	// irq: 160, clr: 0x800
 	irq_modify_status(irq, clr, 0);
 }
 
@@ -746,13 +774,17 @@ static inline void irq_free_desc(unsigned int irq)
 
 // ARM10C 20141122
 // irq: 16
+// ARM10C 20141122
+// irq: 32
 // ARM10C 20141213
 // irq: 160
 static inline int irq_reserve_irq(unsigned int irq)
 {
 	// irq: 16, irq_reserve_irqs(16, 1): -17 (EEXIST)
+	// irq: 32, irq_reserve_irqs(32, 1): -17 (EEXIST)
 	// irq: 160, irq_reserve_irqs(160, 1): -17 (EEXIST)
 	return irq_reserve_irqs(irq, 1);
+	// return -17 (EEXIST)
 	// return -17 (EEXIST)
 	// return -17 (EEXIST)
 }
