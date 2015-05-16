@@ -15,6 +15,7 @@
 // ARM10C 20140830
 // ARM10C 20150103
 // ARM10C 20150404
+// ARM10C 20150516
 // struct cpumask { bits[1]; }
 typedef struct cpumask { DECLARE_BITMAP(bits, NR_CPUS); } cpumask_t;
 
@@ -859,6 +860,7 @@ static inline void alloc_bootmem_cpumask_var(cpumask_var_t *mask)
 {
 }
 
+// ARM10C 20150516
 static inline void free_cpumask_var(cpumask_var_t mask)
 {
 }

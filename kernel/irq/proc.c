@@ -15,6 +15,7 @@
 
 #include "internals.h"
 
+// ARM10C 20150516
 static struct proc_dir_entry *root_irq_dir;
 
 #ifdef CONFIG_SMP
@@ -266,16 +267,30 @@ static const struct file_operations irq_spurious_proc_fops = {
 	.release	= single_release,
 };
 
+// ARM10C 20150516
+// MAX_NAMELEN: 128
 #define MAX_NAMELEN 128
 
+// ARM10C 20150516
+// irq: 152, new: kmem_cache#30-oX
 static int name_unique(unsigned int irq, struct irqaction *new_action)
 {
+	// irq: 152, irq_to_desc(152): kmem_cache#28-oX (irq 152)
 	struct irq_desc *desc = irq_to_desc(irq);
+	// desc: kmem_cache#28-oX (irq 152)
+
 	struct irqaction *action;
 	unsigned long flags;
 	int ret = 1;
+	// ret: 1
 
+	// &desc->lock: (kmem_cache#28-oX (irq 152))->lock
 	raw_spin_lock_irqsave(&desc->lock, flags);
+
+	// raw_spin_lock_irqsave에서 한일:
+	// (kmem_cache#28-oX (irq 152))->lock을 사용하여 spin lock을 수행하고 cpsr을 flags에 저장
+
+	// desc->action: (kmem_cache#28-oX (irq 152))->action: NULL
 	for (action = desc->action ; action; action = action->next) {
 		if ((action != new_action) && action->name &&
 				!strcmp(new_action->name, action->name)) {
@@ -283,18 +298,36 @@ static int name_unique(unsigned int irq, struct irqaction *new_action)
 			break;
 		}
 	}
+
+	// &desc->lock: (kmem_cache#28-oX (irq 152))->lock
 	raw_spin_unlock_irqrestore(&desc->lock, flags);
+
+	// raw_spin_unlock_irqrestore에서 한일:
+	// (kmem_cache#28-oX (irq 152))->lock을 사용하여 spin unlock을 수행하고 flags에 저장된 cpsr을 복원
+
+	// ret: 1
 	return ret;
+	// return 1
 }
 
+// ARM10C 20150516
+// irq: 152, new: kmem_cache#30-oX
 void register_handler_proc(unsigned int irq, struct irqaction *action)
 {
+	// MAX_NAMELEN: 128
 	char name [MAX_NAMELEN];
-	struct irq_desc *desc = irq_to_desc(irq);
 
+	// irq: 152, irq_to_desc(152): kmem_cache#28-oX (irq 152)
+	struct irq_desc *desc = irq_to_desc(irq);
+	// desc: kmem_cache#28-oX (irq 152)
+
+	// desc->dir: (kmem_cache#28-oX (irq 152))->dir, action->dir: (kmem_cache#30-oX)->dir: NULL,
+	// action->name: (kmem_cache#30-oX)->name: "mct_tick0",
+	// irq: 152, new: kmem_cache#30-oX, name_unique(152, kmem_cache#30-oX): 1
 	if (!desc->dir || action->dir || !action->name ||
 					!name_unique(irq, action))
 		return;
+		// return 수행
 
 	memset(name, 0, MAX_NAMELEN);
 	snprintf(name, MAX_NAMELEN, "%s", action->name);
@@ -305,14 +338,22 @@ void register_handler_proc(unsigned int irq, struct irqaction *action)
 
 #undef MAX_NAMELEN
 
+// ARM10C 20150516
+// MAX_NAMELEN: 10
 #define MAX_NAMELEN 10
 
+// ARM10C 20150516
+// irq: 152, desc: kmem_cache#28-oX (irq 152)
 void register_irq_proc(unsigned int irq, struct irq_desc *desc)
 {
+	// MAX_NAMELEN: 10
 	char name [MAX_NAMELEN];
 
+	// root_irq_dir: NULL, desc->irq_data.chip: (kmem_cache#28-oX (irq 152))->irq_data.chip: &gic_chip,
+	// desc->dir: (kmem_cache#28-oX (irq 152))->dir: NULL
 	if (!root_irq_dir || (desc->irq_data.chip == &no_irq_chip) || desc->dir)
 		return;
+		// return 수행
 
 	memset(name, 0, MAX_NAMELEN);
 	sprintf(name, "%d", irq);

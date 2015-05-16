@@ -219,6 +219,7 @@ struct irq_data {
 // ARM10C 20141220
 // ARM10C 20150404
 // ARM10C 20150509
+// ARM10C 20150516
 enum {
 	// IRQD_TRIGGER_MASK: 0xf
 	IRQD_TRIGGER_MASK		= 0xf,
@@ -252,9 +253,14 @@ static inline bool irqd_is_per_cpu(struct irq_data *d)
 	return d->state_use_accessors & IRQD_PER_CPU;
 }
 
+// ARM10C 20150516
+// &desc->irq_data: &(kmem_cache#28-oX (irq 152))->irq_data
 static inline bool irqd_can_balance(struct irq_data *d)
 {
+	// d->state_use_accessors: (&(kmem_cache#28-oX (irq 152))->irq_data)->state_use_accessors: 0x11400
+	// IRQD_PER_CPU: 0x800, IRQD_NO_BALANCING: 0x400
 	return !(d->state_use_accessors & (IRQD_PER_CPU | IRQD_NO_BALANCING));
+	// return 0
 }
 
 static inline bool irqd_affinity_was_set(struct irq_data *d)

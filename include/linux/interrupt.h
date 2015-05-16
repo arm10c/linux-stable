@@ -168,7 +168,30 @@ request_irq(unsigned int irq, irq_handler_t handler, unsigned long flags,
 	    const char *name, void *dev)
 {
 	// irq: 152, handler: exynos4_mct_tick_isr, flags: 0x14A00, name: "mct_tick0", dev: [pcp0] &percpu_mct_tick
+	// request_threaded_irq(152, exynos4_mct_tick_isr, NULL, 0x14A00, "mct_tick0", [pcp0] &percpu_mct_tick): 0
 	return request_threaded_irq(irq, handler, NULL, flags, name, dev);
+	// return 0
+
+	// request_threaded_irq에서 한일:
+	// struct irqaction의 메모리 공간을 할당 받고 맴버값 세팅
+	//
+	// (kmem_cache#30-oX)->handler: exynos4_mct_tick_isr
+	// (kmem_cache#30-oX)->thread_fn: NULL
+	// (kmem_cache#30-oX)->flags: 0x14A00
+	// (kmem_cache#30-oX)->name: "mct_tick0"
+	// (kmem_cache#30-oX)->dev_id: [pcp0] &percpu_mct_tick
+	// (kmem_cache#30-oX)->irq: 152
+	// (kmem_cache#30-oX)->dir: NULL
+	//
+	// irq_desc 152의 맴버값을 초기화
+	// &(&(kmem_cache#28-oX (irq 152))->wait_for_threads)->lock을 사용한 spinlock 초기화
+	// &(&(kmem_cache#28-oX (irq 152))->wait_for_threads)->task_list를 사용한 list 초기화
+	// (kmem_cache#28-oX (irq 152))->istate: 0
+	// (kmem_cache#28-oX (irq 152))->depth: 1
+	// (kmem_cache#28-oX (irq 152))->status_use_accessors: 0x3400
+	// (kmem_cache#28-oX (irq 152))->irq_count: 0
+	// (kmem_cache#28-oX (irq 152))->irqs_unhandled: 0
+	// (&(kmem_cache#28-oX (irq 152))->irq_data)->state_use_accessors: 0x11400
 }
 
 extern int __must_check

@@ -759,6 +759,7 @@ static int exynos4_local_timer_setup(struct clock_event_device *evt)
 
 		// evt->irq: [pcp0] (&(&percpu_mct_tick)->evt)->irq: 152, IRQF_TIMER: 0x14200, IRQF_NOBALANCING: 0x00000800,
 		// evt->name: [pcp0] (&(&percpu_mct_tick)->evt)->name: "mct_tick0", mevt: [pcp0] &percpu_mct_tick
+		// request_irq(152, exynos4_mct_tick_isr, 0x14a00, "mct_tick0", [pcp0] &percpu_mct_tick): 0
 		if (request_irq(evt->irq, exynos4_mct_tick_isr,
 				IRQF_TIMER | IRQF_NOBALANCING,
 				evt->name, mevt)) {
@@ -766,11 +767,33 @@ static int exynos4_local_timer_setup(struct clock_event_device *evt)
 				evt->irq);
 			return -EIO;
 		}
+
+		// request_irq에서 한일:
+		// struct irqaction의 메모리 공간을 할당 받고 맴버값 세팅
+		//
+		// (kmem_cache#30-oX)->handler: exynos4_mct_tick_isr
+		// (kmem_cache#30-oX)->thread_fn: NULL
+		// (kmem_cache#30-oX)->flags: 0x14A00
+		// (kmem_cache#30-oX)->name: "mct_tick0"
+		// (kmem_cache#30-oX)->dev_id: [pcp0] &percpu_mct_tick
+		// (kmem_cache#30-oX)->irq: 152
+		// (kmem_cache#30-oX)->dir: NULL
+		//
+		// irq_desc 152의 맴버값을 초기화
+		// &(&(kmem_cache#28-oX (irq 152))->wait_for_threads)->lock을 사용한 spinlock 초기화
+		// &(&(kmem_cache#28-oX (irq 152))->wait_for_threads)->task_list를 사용한 list 초기화
+		// (kmem_cache#28-oX (irq 152))->istate: 0
+		// (kmem_cache#28-oX (irq 152))->depth: 1
+		// (kmem_cache#28-oX (irq 152))->status_use_accessors: 0x3400
+		// (kmem_cache#28-oX (irq 152))->irq_count: 0
+		// (kmem_cache#28-oX (irq 152))->irqs_unhandled: 0
+		// (&(kmem_cache#28-oX (irq 152))->irq_data)->state_use_accessors: 0x11400
 	} else {
 		enable_percpu_irq(mct_irqs[MCT_L0_IRQ], 0);
 	}
 
 	return 0;
+	// return 0
 }
 
 static void exynos4_local_timer_stop(struct clock_event_device *evt)
@@ -941,8 +964,80 @@ static void __init exynos4_timer_resources(struct device_node *np, void __iomem 
 
 	/* Immediately configure the timer on the boot CPU */
 	// &mevt->evt: [pcp0] &(&percpu_mct_tick)->evt
+	// exynos4_local_timer_setup([pcp0] &(&percpu_mct_tick)->evt): 0
 	exynos4_local_timer_setup(&mevt->evt);
+
+	// exynos4_local_timer_setup에서 한일:
+	//
+	// [pcp0] (&percpu_mct_tick)->base: 0x300
+	// [pcp0] (&percpu_mct_tick)->name: "mct_tick0"
+	// [pcp0] (&(&percpu_mct_tick)->evt)->name: "mct_tick0"
+	// [pcp0] (&(&percpu_mct_tick)->evt)->cpumask: &cpu_bit_bitmap[1][0]
+	// [pcp0] (&(&percpu_mct_tick)->evt)->set_next_event: exynos4_tick_set_next_event
+	// [pcp0] (&(&percpu_mct_tick)->evt)->set_mode: exynos4_tick_set_mode
+	// [pcp0] (&(&percpu_mct_tick)->evt)->features: 0x3
+	// [pcp0] (&(&percpu_mct_tick)->evt)->rating: 450
+	// [pcp0] (&(&percpu_mct_tick)->evt)->min_delta_ticks: 0xf
+	// [pcp0] (&(&percpu_mct_tick)->evt)->max_delta_ticks: 0x7fffffff
+	// [pcp0] (&(&percpu_mct_tick)->evt)->mult: 0x3126E98
+	// [pcp0] (&(&percpu_mct_tick)->evt)->shift: 32
+	// [pcp0] (&(&percpu_mct_tick)->evt)->min_delta_ns: 0x4E2
+	// [pcp0] (&(&percpu_mct_tick)->evt)->max_delta_ns: 0x29AAAAA444
+	// [pcp0] (&(&percpu_mct_tick)->evt)->next_event.tv64: 0x7FFFFFFFFFFFFFFF
+	// [pcp0] (&(&percpu_mct_tick)->evt)->event_handler: tick_handle_periodic
+	// [pcp0] (&(&percpu_mct_tick)->evt)->mode: 2
+	// [pcp0] (&(&percpu_mct_tick)->evt)->irq: 152
+	//
+	// [pcp0] (&tick_cpu_device)->mode: 0
+	// [pcp0] (&tick_cpu_device)->evtdev: [pcp0] &(&percpu_mct_tick)->evt
+	//
+	// [pcp0] (&tick_cpu_sched)->check_clocks: 1
+	//
+	// list clockevent_devices에 [pcp0] (&(&percpu_mct_tick)->evt)->list를 추가함
+	//
+	// tick_do_timer_cpu: 0
+	// tick_next_period.tv64: 0
+	// tick_period.tv64: 10000000
+	//
+	// timer control register L0_TCON 값을 읽어 timer start, timer interrupt 설정을
+	// 동작하지 않도록 변경함
+	// L0_TCON 값이 0 으로 가정하였으므로 timer는 동작하지 않은 상태임
+	//
+	// register L_ICNTB 에 0x8001D4C0 write함
+	// local timer 0 의 interrupt count buffer 값을 120000 (0x1D4C0) write 하고
+	// interrupt manual update를 enable 시킴
+	//
+	// register L_INT_ENB 에 0x1 write함
+	// local timer 0 의 ICNTEIE 값을 0x1을 write 하여 L0_INTCNT 값이 0 이 되었을 때
+	// interrupt counter expired interrupt 가 발생하도록 함
+	//
+	// register L_TCON 에 0x7 write함
+	// local timer 0 의 interrupt type을 interval mode로 설정하고 interrupt, timer 를 start 시킴
+	//
+	// register L_TCNTB 에 0x1 write함
+	// local timer 0 의 tick count 값을 1로 write 함
+	//
+	// struct irqaction의 메모리 공간을 할당 받고 맴버값 세팅
+	// (kmem_cache#30-oX)->handler: exynos4_mct_tick_isr
+	// (kmem_cache#30-oX)->thread_fn: NULL
+	// (kmem_cache#30-oX)->flags: 0x14A00
+	// (kmem_cache#30-oX)->name: "mct_tick0"
+	// (kmem_cache#30-oX)->dev_id: [pcp0] &percpu_mct_tick
+	// (kmem_cache#30-oX)->irq: 152
+	// (kmem_cache#30-oX)->dir: NULL
+	//
+	// irq_desc 152의 맴버값을 초기화
+	// &(&(kmem_cache#28-oX (irq 152))->wait_for_threads)->lock을 사용한 spinlock 초기화
+	// &(&(kmem_cache#28-oX (irq 152))->wait_for_threads)->task_list를 사용한 list 초기화
+	// (kmem_cache#28-oX (irq 152))->istate: 0
+	// (kmem_cache#28-oX (irq 152))->depth: 1
+	// (kmem_cache#28-oX (irq 152))->status_use_accessors: 0x3400
+	// (kmem_cache#28-oX (irq 152))->irq_count: 0
+	// (kmem_cache#28-oX (irq 152))->irqs_unhandled: 0
+	// (&(kmem_cache#28-oX (irq 152))->irq_data)->state_use_accessors: 0x11400
+
 	return;
+	// return 수행
 
 out_irq:
 	free_percpu_irq(mct_irqs[MCT_L0_IRQ], &percpu_mct_tick);
@@ -1093,6 +1188,124 @@ static void __init mct_init_dt(struct device_node *np, unsigned int int_type)
 	// |              |       +--------------+ +4096
 	//
 	// cache의 값을 전부 메모리에 반영
+
+	// exynos4_timer_resources에서 한일:
+	//
+	// mct node의 property "clock-names" 의 값을 찾아서 "fin_pll" 이 있는 위치를 찾고
+	// 몇번째 값인지 index를 구함
+	//
+	// mct node 에서 "clocks" property의 이용하여 devtree의 값을 파싱하여 clkspec에 값을 가져옴
+	// (&clkspec)->np: clock node의 주소
+	// (&clkspec)->args_count: 1
+	// (&clkspec)->args[0]: 1
+	//
+	// list of_clk_providers 에 등록된 정보들 중에 clkspec 와 매치되는 정보를 찾음
+	// 이전에 만들어 놓은 clk_data의 clk_table 정보를 이용하여 clkspec에 있는 arg 값을 이용하여 clk을 찾음
+	// tick_clk: kmem_cache#29-oX (fin_pll)
+	//
+	// mct node의 property "clock-names" 의 값을 찾아서 "mct" 이 있는 위치를 찾고
+	// 몇번째 값인지 index를 구함
+	//
+	// mct node 에서 "clocks" property의 이용하여 devtree의 값을 파싱하여 clkspec에 값을 가져옴
+	// (&clkspec)->np: clock node의 주소
+	// (&clkspec)->args_count: 1
+	// (&clkspec)->args[0]: 315
+	//
+	// list of_clk_providers 에 등록된 정보들 중에 clkspec 와 매치되는 정보를 찾음
+	// 이전에 만들어 놓은 clk_data의 clk_table 정보를 이용하여 clkspec에 있는 arg 값을 이용하여 clk을 찾음
+	// mct_clk: kmem_cache#29-oX (mct)
+	// 
+	// clk_prepare_enable에서 한일:
+	// mct clock의 상위 clock 들의 ops->prepare 함수들을 수행.
+	// mct clock의 상위 clock 들의 ops->enable 함수들을 수행.
+	// sck_cpll -- Group1_p -- mout_aclk66 -- dout_aclk66 -- mct
+	// sck_ppll -|
+	// sck_mpll -|
+	//
+	// sck_cpll, mout_aclk66, dout_aclk66 의 주석을 만들지 않았기 때문에
+	// 분석내용을 skip 하도록함
+	//
+	// Interrupt pending register인 GICD_ITARGETSR38 값을 읽고
+	// 그 값과 mask 값인 cpu_bit_bitmap[1][0] 을 or 연산한 값을 GICD_ITARGETSR38에
+	// 다시 write함
+	//
+	// GICD_ITARGETSR38 값을 모르기 때문에 0x00000000 로
+	// 읽히는 것으로 가정하고 GICD_ITARGETSR38에 0x00000001를 write 함
+	// CPU interface 0에 interrupt가 발생을 나타냄
+	//
+	// (&(kmem_cache#28-oX (irq 152))->irq_data)->affinity->bits[0]: 1
+	// (&(kmem_cache#28-oX (irq 152))->irq_data)->state_use_accessors: 0x11000
+	//
+	// register_cpu_notifier 에서 한일:
+	// (&cpu_chain)->head: &exynos4_mct_cpu_nb 포인터 대입
+	// (&exynos4_mct_cpu_nb)->next은 (&hrtimers_nb)->next로 대입
+	//
+	// [pcp0] (&percpu_mct_tick)->base: 0x300
+	// [pcp0] (&percpu_mct_tick)->name: "mct_tick0"
+	// [pcp0] (&(&percpu_mct_tick)->evt)->name: "mct_tick0"
+	// [pcp0] (&(&percpu_mct_tick)->evt)->cpumask: &cpu_bit_bitmap[1][0]
+	// [pcp0] (&(&percpu_mct_tick)->evt)->set_next_event: exynos4_tick_set_next_event
+	// [pcp0] (&(&percpu_mct_tick)->evt)->set_mode: exynos4_tick_set_mode
+	// [pcp0] (&(&percpu_mct_tick)->evt)->features: 0x3
+	// [pcp0] (&(&percpu_mct_tick)->evt)->rating: 450
+	// [pcp0] (&(&percpu_mct_tick)->evt)->min_delta_ticks: 0xf
+	// [pcp0] (&(&percpu_mct_tick)->evt)->max_delta_ticks: 0x7fffffff
+	// [pcp0] (&(&percpu_mct_tick)->evt)->mult: 0x3126E98
+	// [pcp0] (&(&percpu_mct_tick)->evt)->shift: 32
+	// [pcp0] (&(&percpu_mct_tick)->evt)->min_delta_ns: 0x4E2
+	// [pcp0] (&(&percpu_mct_tick)->evt)->max_delta_ns: 0x29AAAAA444
+	// [pcp0] (&(&percpu_mct_tick)->evt)->next_event.tv64: 0x7FFFFFFFFFFFFFFF
+	// [pcp0] (&(&percpu_mct_tick)->evt)->event_handler: tick_handle_periodic
+	// [pcp0] (&(&percpu_mct_tick)->evt)->mode: 2
+	// [pcp0] (&(&percpu_mct_tick)->evt)->irq: 152
+	//
+	// [pcp0] (&tick_cpu_device)->mode: 0
+	// [pcp0] (&tick_cpu_device)->evtdev: [pcp0] &(&percpu_mct_tick)->evt
+	//
+	// [pcp0] (&tick_cpu_sched)->check_clocks: 1
+	//
+	// list clockevent_devices에 [pcp0] (&(&percpu_mct_tick)->evt)->list를 추가함
+	//
+	// tick_do_timer_cpu: 0
+	// tick_next_period.tv64: 0
+	// tick_period.tv64: 10000000
+	//
+	// timer control register L0_TCON 값을 읽어 timer start, timer interrupt 설정을
+	// 동작하지 않도록 변경함
+	// L0_TCON 값이 0 으로 가정하였으므로 timer는 동작하지 않은 상태임
+	//
+	// register L_ICNTB 에 0x8001D4C0 write함
+	// local timer 0 의 interrupt count buffer 값을 120000 (0x1D4C0) write 하고
+	// interrupt manual update를 enable 시킴
+	//
+	// register L_INT_ENB 에 0x1 write함
+	// local timer 0 의 ICNTEIE 값을 0x1을 write 하여 L0_INTCNT 값이 0 이 되었을 때
+	// interrupt counter expired interrupt 가 발생하도록 함
+	//
+	// register L_TCON 에 0x7 write함
+	// local timer 0 의 interrupt type을 interval mode로 설정하고 interrupt, timer 를 start 시킴
+	//
+	// register L_TCNTB 에 0x1 write함
+	// local timer 0 의 tick count 값을 1로 write 함
+	//
+	// struct irqaction의 메모리 공간을 할당 받고 맴버값 세팅
+	// (kmem_cache#30-oX)->handler: exynos4_mct_tick_isr
+	// (kmem_cache#30-oX)->thread_fn: NULL
+	// (kmem_cache#30-oX)->flags: 0x14A00
+	// (kmem_cache#30-oX)->name: "mct_tick0"
+	// (kmem_cache#30-oX)->dev_id: [pcp0] &percpu_mct_tick
+	// (kmem_cache#30-oX)->irq: 152
+	// (kmem_cache#30-oX)->dir: NULL
+	//
+	// irq_desc 152의 맴버값을 초기화
+	// &(&(kmem_cache#28-oX (irq 152))->wait_for_threads)->lock을 사용한 spinlock 초기화
+	// &(&(kmem_cache#28-oX (irq 152))->wait_for_threads)->task_list를 사용한 list 초기화
+	// (kmem_cache#28-oX (irq 152))->istate: 0
+	// (kmem_cache#28-oX (irq 152))->depth: 1
+	// (kmem_cache#28-oX (irq 152))->status_use_accessors: 0x3400
+	// (kmem_cache#28-oX (irq 152))->irq_count: 0
+	// (kmem_cache#28-oX (irq 152))->irqs_unhandled: 0
+	// (&(kmem_cache#28-oX (irq 152))->irq_data)->state_use_accessors: 0x11400
 
 	exynos4_clocksource_init();
 	exynos4_clockevent_init();

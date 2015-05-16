@@ -29,6 +29,7 @@ struct mempolicy;
  * /proc file has a parent, but "subdir" is NULL for all
  * non-directory entries).
  */
+// ARM10C 20150516
 struct proc_dir_entry {
 	unsigned int low_ino;
 	umode_t mode;

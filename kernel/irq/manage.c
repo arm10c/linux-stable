@@ -78,6 +78,7 @@ EXPORT_SYMBOL(synchronize_irq);
 
 #ifdef CONFIG_SMP // CONFIG_SMP=y
 // ARM10C 20141004
+// ARM10C 20150516
 cpumask_var_t irq_default_affinity;
 
 /**
@@ -85,13 +86,23 @@ cpumask_var_t irq_default_affinity;
  *	@irq:		Interrupt to check
  *
  */
+// ARM10C 20150516
+// irq: 152
 int irq_can_set_affinity(unsigned int irq)
 {
+	// irq: 152, irq_to_desc(152): kmem_cache#28-oX (irq 152)
 	struct irq_desc *desc = irq_to_desc(irq);
+	// desc: kmem_cache#28-oX (irq 152)
 
+	// desc: kmem_cache#28-oX (irq 152)
+	// &desc->irq_data: &(kmem_cache#28-oX (irq 152))->irq_data,
+	// irqd_can_balance(&(kmem_cache#28-oX (irq 152))->irq_data): 0
+	// desc->irq_data.chip: (kmem_cache#28-oX (irq 152))->irq_data.chip: &gic_chip,
+	// desc->irq_data.chip->irq_set_affinity: (kmem_cache#28-oX (irq 152))->irq_data.chip->irq_set_affinity: gic_set_affinity
 	if (!desc || !irqd_can_balance(&desc->irq_data) ||
 	    !desc->irq_data.chip || !desc->irq_data.chip->irq_set_affinity)
 		return 0;
+		// return 0
 
 	return 1;
 }
@@ -398,19 +409,27 @@ irq_set_affinity_notifier(unsigned int irq, struct irq_affinity_notify *notify)
 }
 EXPORT_SYMBOL_GPL(irq_set_affinity_notifier);
 
-#ifndef CONFIG_AUTO_IRQ_AFFINITY
+#ifndef CONFIG_AUTO_IRQ_AFFINITY // CONFIG_AUTO_IRQ_AFFINITY=n
 /*
  * Generic version of the affinity autoselector.
  */
+// ARM10C 20150516
+// irq: 152, desc: kmem_cache#28-oX (irq 152), mask
 static int
 setup_affinity(unsigned int irq, struct irq_desc *desc, struct cpumask *mask)
 {
 	struct cpumask *set = irq_default_affinity;
+	// set: irq_default_affinity
+
+	// desc->irq_data.node: (kmem_cache#28-oX (irq 152))->irq_data.node: 0
 	int node = desc->irq_data.node;
+	// node: 0
 
 	/* Excludes PER_CPU and NO_BALANCE interrupts */
+	// irq: 152, irq_can_set_affinity(152): 0
 	if (!irq_can_set_affinity(irq))
 		return 0;
+		// return 0
 
 	/*
 	 * Preserve an userspace affinity setup, but make sure that
@@ -1127,6 +1146,7 @@ __setup_irq(unsigned int irq, struct irq_desc *desc, struct irqaction *new)
 	/*
 	 * The following block of code has to be executed atomically
 	 */
+	// &desc->lock: (kmem_cache#28-oX (irq 152))->lock
 	raw_spin_lock_irqsave(&desc->lock, flags);
 
 	// raw_spin_lock_irqsave에서 한일:
@@ -1298,6 +1318,7 @@ __setup_irq(unsigned int irq, struct irq_desc *desc, struct irqaction *new)
 			// desc->status_use_accessors: (kmem_cache#28-oX (irq 152))->status_use_accessors: 0x3400
 
 // 2015/05/09 종료
+// 2015/05/16 시작
 
 			// &desc->irq_data: &(kmem_cache#28-oX (irq 152))->irq_data, IRQD_NO_BALANCING: 0x400
 			irqd_set(&desc->irq_data, IRQD_NO_BALANCING);
@@ -1307,6 +1328,7 @@ __setup_irq(unsigned int irq, struct irq_desc *desc, struct irqaction *new)
 		}
 
 		/* Set default affinity mask once everything is setup */
+		// irq: 152, desc: kmem_cache#28-oX (irq 152), setup_affinity(kmem_cache#28-oX (irq 152)): 0
 		setup_affinity(irq, desc, mask);
 
 	} else if (new->flags & IRQF_TRIGGER_MASK) {
@@ -1319,37 +1341,61 @@ __setup_irq(unsigned int irq, struct irq_desc *desc, struct irqaction *new)
 				   irq, nmsk, omsk);
 	}
 
+	// new->irq: (kmem_cache#30-oX)->irq, irq: 152
 	new->irq = irq;
+	// new->irq: (kmem_cache#30-oX)->irq: 152
+
+	// new: kmem_cache#30-oX
 	*old_ptr = new;
+	// *old_ptr: kmem_cache#30-oX
 
 	/* Reset broken irq detection when installing new handler */
+	// desc->irq_count: (kmem_cache#28-oX (irq 152))->irq_count
 	desc->irq_count = 0;
+	// desc->irq_count: (kmem_cache#28-oX (irq 152))->irq_count: 0
+
+	// desc->irqs_unhandled: (kmem_cache#28-oX (irq 152))->irqs_unhandled
 	desc->irqs_unhandled = 0;
+	// desc->irqs_unhandled: (kmem_cache#28-oX (irq 152))->irqs_unhandled: 0
 
 	/*
 	 * Check whether we disabled the irq via the spurious handler
 	 * before. Reenable it and give it another chance.
 	 */
+	// shared: 0, desc->istate: (kmem_cache#28-oX (irq 152))->istate: 0,
+	// IRQS_SPURIOUS_DISABLED: 0x00000002
 	if (shared && (desc->istate & IRQS_SPURIOUS_DISABLED)) {
 		desc->istate &= ~IRQS_SPURIOUS_DISABLED;
 		__enable_irq(desc, irq, false);
 	}
 
+	// &desc->lock: (kmem_cache#28-oX (irq 152))->lock
 	raw_spin_unlock_irqrestore(&desc->lock, flags);
+
+	// raw_spin_unlock_irqrestore에서 한일:
+	// (kmem_cache#28-oX (irq 152))->lock을 사용하여 spin unlock을 수행하고 flags에 저장된 cpsr을 복원
 
 	/*
 	 * Strictly no need to wake it up, but hung_task complains
 	 * when no hard interrupt wakes the thread up.
 	 */
+	// new->thread: (kmem_cache#30-oX)->thread: NULL
 	if (new->thread)
 		wake_up_process(new->thread);
 
+	// irq: 152, desc: kmem_cache#28-oX (irq 152)
 	register_irq_proc(irq, desc);
+
+	// new->dir: (kmem_cache#30-oX)->dir
 	new->dir = NULL;
+	// new->dir: (kmem_cache#30-oX)->dir: NULL
+
+	// irq: 152, new: kmem_cache#30-oX
 	register_handler_proc(irq, new);
-	free_cpumask_var(mask);
+	free_cpumask_var(mask); // null function
 
 	return 0;
+	// return 0
 
 mismatch:
 	if (!(new->flags & IRQF_PROBE_SHARED)) {
@@ -1645,13 +1691,32 @@ int request_threaded_irq(unsigned int irq, irq_handler_t handler,
 	chip_bus_lock(desc);
 
 	// irq: 152, desc: kmem_cache#28-oX (irq 152), action: kmem_cache#30-oX
+	// __setup_irq(152, kmem_cache#28-oX (irq 152), kmem_cache#30-oX): 0
 	retval = __setup_irq(irq, desc, action);
+	// retval: 0
+
+	// __setup_irq에서 한일:
+	// &(&(kmem_cache#28-oX (irq 152))->wait_for_threads)->lock을 사용한 spinlock 초기화
+	// &(&(kmem_cache#28-oX (irq 152))->wait_for_threads)->task_list를 사용한 list 초기화
+	// (kmem_cache#28-oX (irq 152))->istate: 0
+	// (kmem_cache#28-oX (irq 152))->depth: 1
+	// (kmem_cache#28-oX (irq 152))->status_use_accessors: 0x3400
+	// (kmem_cache#28-oX (irq 152))->irq_count: 0
+	// (kmem_cache#28-oX (irq 152))->irqs_unhandled: 0
+	// (&(kmem_cache#28-oX (irq 152))->irq_data)->state_use_accessors: 0x11400
+	//
+	// struct irqaction 멤버 값 세팅
+	// (kmem_cache#30-oX)->irq: 152
+	// (kmem_cache#30-oX)->dir: NULL
+
+	// desc: kmem_cache#28-oX (irq 152)
 	chip_bus_sync_unlock(desc);
 
+	// retval: 0
 	if (retval)
 		kfree(action);
 
-#ifdef CONFIG_DEBUG_SHIRQ_FIXME
+#ifdef CONFIG_DEBUG_SHIRQ_FIXME // CONFIG_DEBUG_SHIRQ_FIXME=n
 	if (!retval && (irqflags & IRQF_SHARED)) {
 		/*
 		 * It's a shared IRQ -- the driver ought to be prepared for it
@@ -1670,7 +1735,9 @@ int request_threaded_irq(unsigned int irq, irq_handler_t handler,
 		enable_irq(irq);
 	}
 #endif
+	// retval: 0
 	return retval;
+	// return 0
 }
 EXPORT_SYMBOL(request_threaded_irq);
 

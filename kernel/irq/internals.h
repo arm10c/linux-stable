@@ -52,6 +52,7 @@ enum {
  */
 // ARM10C 20141220
 // ARM10C 20150509
+// ARM10C 20150516
 enum {
 	// IRQS_AUTODETECT: 0x00000001
 	IRQS_AUTODETECT		= 0x00000001,
@@ -99,7 +100,7 @@ irqreturn_t handle_irq_event(struct irq_desc *desc);
 void check_irq_resend(struct irq_desc *desc, unsigned int irq);
 bool irq_wait_for_poll(struct irq_desc *desc);
 
-#ifdef CONFIG_PROC_FS
+#ifdef CONFIG_PROC_FS // CONFIG_PROC_FS=y
 extern void register_irq_proc(unsigned int irq, struct irq_desc *desc);
 extern void unregister_irq_proc(unsigned int irq, struct irq_desc *desc);
 extern void register_handler_proc(unsigned int irq, struct irqaction *action);
@@ -133,8 +134,11 @@ static inline void chip_bus_lock(struct irq_desc *desc)
 		desc->irq_data.chip->irq_bus_lock(&desc->irq_data);
 }
 
+// ARM10C 20150516
+// desc: kmem_cache#28-oX (irq 152)
 static inline void chip_bus_sync_unlock(struct irq_desc *desc)
 {
+	// desc->irq_data.chip->irq_bus_sync_unlock: (kmem_cache#28-oX (irq 152))->irq_data.chip->irq_bus_sync_unlock: NULL
 	if (unlikely(desc->irq_data.chip->irq_bus_sync_unlock))
 		desc->irq_data.chip->irq_bus_sync_unlock(&desc->irq_data);
 }
