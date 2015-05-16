@@ -29,12 +29,26 @@
 
 // ARM10C 20150404
 #define EXYNOS4_MCTREG(x)		(x)
+// ARM10C 20150516
+// EXYNOS4_MCT_G_CNT_L: 0x100
 #define EXYNOS4_MCT_G_CNT_L		EXYNOS4_MCTREG(0x100)
+// ARM10C 20150516
+// EXYNOS4_MCT_G_CNT_U: 0x104
 #define EXYNOS4_MCT_G_CNT_U		EXYNOS4_MCTREG(0x104)
+// ARM10C 20150516
+// EXYNOS4_MCT_G_CNT_WSTAT: 0x110
 #define EXYNOS4_MCT_G_CNT_WSTAT		EXYNOS4_MCTREG(0x110)
+// ARM10C 20150516
+// EXYNOS4_MCT_G_COMP0_L: 0x200
 #define EXYNOS4_MCT_G_COMP0_L		EXYNOS4_MCTREG(0x200)
+// ARM10C 20150516
+// EXYNOS4_MCT_G_COMP0_U: 0x204
 #define EXYNOS4_MCT_G_COMP0_U		EXYNOS4_MCTREG(0x204)
+// ARM10C 20150516
+// EXYNOS4_MCT_G_COMP0_ADD_INCR: 0x208
 #define EXYNOS4_MCT_G_COMP0_ADD_INCR	EXYNOS4_MCTREG(0x208)
+// ARM10C 20150516
+// EXYNOS4_MCT_G_TCON: 0x240
 #define EXYNOS4_MCT_G_TCON		EXYNOS4_MCTREG(0x240)
 #define EXYNOS4_MCT_G_INT_CSTAT		EXYNOS4_MCTREG(0x244)
 #define EXYNOS4_MCT_G_INT_ENB		EXYNOS4_MCTREG(0x248)
@@ -151,6 +165,10 @@ struct mct_clock_event_device {
 // tmp: 0x7, 0x320
 // ARM10C 20150509
 // TICK_BASE_CNT: 1, 0x300
+// ARM10C 20150516
+// lo: 0, EXYNOS4_MCT_G_CNT_L: 0x100
+// ARM10C 20150516
+// hi: 0, EXYNOS4_MCT_G_CNT_U: 0x104
 static void exynos4_mct_write(unsigned int value, unsigned long offset)
 {
 	unsigned long stat_addr;
@@ -178,10 +196,20 @@ static void exynos4_mct_write(unsigned int value, unsigned long offset)
 	// L_TCNTB: Specifies the tick integer count buffer register
 	// 31~0 bit - tick count buffer
 
+	// E.R.M: 21.4.1.2 G_CNT_L
+	// G_CNT_L: Specifies the lower 32 bit value of FRC buffer register
+	// 31~0 bit - FRC count buffer
+
+	// E.R.M: 21.4.1.2 G_CNT_U
+	// G_CNT_U: Specifies the upper 32 bit value of FRC buffer register
+	// 31~0 bit - FRC count buffer
+
 	// value: 0x8001D4C0, reg_base: 0xf0006000, offset: 0x308
 	// value: 0x1, reg_base: 0xf0006000, offset: 0x334
 	// value: 0x7, reg_base: 0xf0006000, offset: 0x320
 	// value: 0x1, reg_base: 0xf0006000, offset: 0x300
+	// value: 0x0, reg_base: 0xf0006000, offset: 0x100
+	// value: 0x0, reg_base: 0xf0006000, offset: 0x104
 	__raw_writel(value, reg_base + offset);
 
 	// __raw_writel에서 한일:
@@ -202,10 +230,20 @@ static void exynos4_mct_write(unsigned int value, unsigned long offset)
 	// register L_TCNTB 에 0x1 write함
 	// local timer 0 의 tick count 값을 1로 write 함
 
+	// __raw_writel에서 한일:
+	// register G_CNT_L 에 0x0 write함
+	// FRC count buffer 의 tick count 값을 0로 write 함
+
+	// __raw_writel에서 한일:
+	// register G_CNT_U 에 0x0 write함
+	// FRC count buffer 의 tick count 값을 0로 write 함
+
 	// offset: 0x308, EXYNOS4_MCT_L_BASE(0): 0x300
 	// offset: 0x334, EXYNOS4_MCT_L_BASE(0): 0x300
 	// offset: 0x320, EXYNOS4_MCT_L_BASE(0): 0x300
 	// offset: 0x300, EXYNOS4_MCT_L_BASE(0): 0x300
+	// offset: 0x100, EXYNOS4_MCT_L_BASE(0): 0x300
+	// offset: 0x104, EXYNOS4_MCT_L_BASE(0): 0x300
 	if (likely(offset >= EXYNOS4_MCT_L_BASE(0))) {
 		// offset: 0x308, EXYNOS4_MCT_L_MASK: 0xffffff00, MCT_L_WSTAT_OFFSET: 0x40
 		// offset: 0x334, EXYNOS4_MCT_L_MASK: 0xffffff00, MCT_L_WSTAT_OFFSET: 0x40
@@ -239,53 +277,113 @@ static void exynos4_mct_write(unsigned int value, unsigned long offset)
 			// return 수행
 		}
 	} else {
+		// offset: 0x100
+		// offset: 0x104
 		switch (offset) {
-		case EXYNOS4_MCT_G_TCON:
+		case EXYNOS4_MCT_G_TCON: // EXYNOS4_MCT_G_TCON: 0x240
 			stat_addr = EXYNOS4_MCT_G_WSTAT;
 			mask = 1 << 16;		/* G_TCON write status */
 			break;
-		case EXYNOS4_MCT_G_COMP0_L:
+		case EXYNOS4_MCT_G_COMP0_L: // EXYNOS4_MCT_G_COMP0_L: 0x200
 			stat_addr = EXYNOS4_MCT_G_WSTAT;
 			mask = 1 << 0;		/* G_COMP0_L write status */
 			break;
-		case EXYNOS4_MCT_G_COMP0_U:
+		case EXYNOS4_MCT_G_COMP0_U: // EXYNOS4_MCT_G_COMP0_U: 0x204
 			stat_addr = EXYNOS4_MCT_G_WSTAT;
 			mask = 1 << 1;		/* G_COMP0_U write status */
 			break;
-		case EXYNOS4_MCT_G_COMP0_ADD_INCR:
+		case EXYNOS4_MCT_G_COMP0_ADD_INCR: // EXYNOS4_MCT_G_COMP0_ADD_INCR: 0x208
 			stat_addr = EXYNOS4_MCT_G_WSTAT;
 			mask = 1 << 2;		/* G_COMP0_ADD_INCR w status */
 			break;
-		case EXYNOS4_MCT_G_CNT_L:
+		case EXYNOS4_MCT_G_CNT_L: // EXYNOS4_MCT_G_CNT_L: 0x100
+			// EXYNOS4_MCT_G_CNT_WSTAT: 0x110
 			stat_addr = EXYNOS4_MCT_G_CNT_WSTAT;
+			// stat_addr: 0x110
+
 			mask = 1 << 0;		/* G_CNT_L write status */
+			// mask: 0x1
+
 			break;
-		case EXYNOS4_MCT_G_CNT_U:
+			// break 수행
+		case EXYNOS4_MCT_G_CNT_U: // EXYNOS4_MCT_G_CNT_U: 0x104
+			// EXYNOS4_MCT_G_CNT_WSTAT: 0x110
 			stat_addr = EXYNOS4_MCT_G_CNT_WSTAT;
+			// stat_addr: 0x110
+			//
 			mask = 1 << 1;		/* G_CNT_U write status */
+			// mask: 0x2
+
 			break;
+			// break 수행
 		default:
 			return;
 		}
 	}
 
 	/* Wait maximum 1 ms until written values are applied */
+	// loops_per_jiffy: 4096, HZ: 100
+	// loops_per_jiffy: 4096, HZ: 100
 	for (i = 0; i < loops_per_jiffy / 1000 * HZ; i++)
+		// E.R.M: 21.4.1.4 G_CNT_WSTAT
+		// G_CNT_WSTAT: Specifies G_CNT_L and G_CNT_U SFR write status register
+		// 0 bit - G_CNT_L write status
+
+		// E.R.M: 21.4.1.4 G_CNT_WSTAT
+		// G_CNT_WSTAT: Specifies G_CNT_L and G_CNT_U SFR write status register
+		// 1 bit - G_CNT_U write status
+
+		// reg_base: 0xf0006000, stat_addr: 0x110, mask: 0x1, __raw_readl(0xf0006110): 0x1
+		// reg_base: 0xf0006000, stat_addr: 0x110, mask: 0x2, __raw_readl(0xf0006110): 0x1
 		if (__raw_readl(reg_base + stat_addr) & mask) {
+			// mask: 0x1, reg_base: 0xf0006000, stat_addr: 0x110
+			// mask: 0x2, reg_base: 0xf0006000, stat_addr: 0x110
 			__raw_writel(mask, reg_base + stat_addr);
+
+			// __raw_writel에서 한일:
+			// register G_CNT_WSTAT 에 0x1 write함
+			// G_CNT_L write status 의  값을 1로 write 함
+
+			// __raw_writel에서 한일:
+			// register G_CNT_WSTAT 에 0x2 write함
+			// G_CNT_L write status 의  값을 2로 write 함
+
 			return;
+			// return 수행
+			// return 수행
 		}
 
 	panic("MCT hangs after writing %d (offset:0x%lx)\n", value, offset);
 }
 
 /* Clocksource handling */
+// ARM10C 20150516
+// 0, 0
 static void exynos4_mct_frc_start(u32 hi, u32 lo)
 {
 	u32 reg;
 
+	// lo: 0, EXYNOS4_MCT_G_CNT_L: 0x100
 	exynos4_mct_write(lo, EXYNOS4_MCT_G_CNT_L);
+
+	// exynos4_mct_write 에서 한일:
+	// register G_CNT_L 에 0x0 write함
+	// FRC count buffer 의 tick count 값을 0로 write 함
+	//
+	// register G_CNT_WSTAT 에 0x1 write함
+	// G_CNT_L write status 의  값을 1로 write 함
+
+	// hi: 0, EXYNOS4_MCT_G_CNT_U: 0x104
 	exynos4_mct_write(hi, EXYNOS4_MCT_G_CNT_U);
+
+	// exynos4_mct_write 에서 한일:
+	// register G_CNT_U 에 0x0 write함
+	// FRC count buffer 의 tick count 값을 0로 write 함
+	//
+	// register G_CNT_WSTAT 에 0x1 write함
+	// G_CNT_U write status 의  값을 1로 write 함
+
+// 2015/05/16 종료
 
 	reg = __raw_readl(reg_base + EXYNOS4_MCT_G_TCON);
 	reg |= MCT_G_TCON_START;
@@ -320,6 +418,7 @@ struct clocksource mct_frc = {
 	.resume		= exynos4_frc_resume,
 };
 
+// ARM10C 20150516
 static void __init exynos4_clocksource_init(void)
 {
 	exynos4_mct_frc_start(0, 0);
@@ -1214,7 +1313,7 @@ static void __init mct_init_dt(struct device_node *np, unsigned int int_type)
 	// list of_clk_providers 에 등록된 정보들 중에 clkspec 와 매치되는 정보를 찾음
 	// 이전에 만들어 놓은 clk_data의 clk_table 정보를 이용하여 clkspec에 있는 arg 값을 이용하여 clk을 찾음
 	// mct_clk: kmem_cache#29-oX (mct)
-	// 
+	//
 	// clk_prepare_enable에서 한일:
 	// mct clock의 상위 clock 들의 ops->prepare 함수들을 수행.
 	// mct clock의 상위 clock 들의 ops->enable 함수들을 수행.

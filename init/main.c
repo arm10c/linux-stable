@@ -211,6 +211,8 @@ static int __init obsolete_checksetup(char *line)
  * This should be approx 2 Bo*oMips to start (note initial shift), and will
  * still work even if initially too large, it will just take slightly longer
  */
+// ARM10C 20150516
+// loops_per_jiffy: 4096
 unsigned long loops_per_jiffy = (1<<12);
 
 EXPORT_SYMBOL(loops_per_jiffy);
