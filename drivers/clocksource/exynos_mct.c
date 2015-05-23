@@ -390,6 +390,7 @@ static void exynos4_mct_frc_start(u32 hi, u32 lo)
 	exynos4_mct_write(reg, EXYNOS4_MCT_G_TCON);
 }
 
+
 static cycle_t exynos4_frc_read(struct clocksource *cs)
 {
 	unsigned int lo, hi;
@@ -425,6 +426,8 @@ static void __init exynos4_clocksource_init(void)
 
 	if (clocksource_register_hz(&mct_frc, clk_rate))
 		panic("%s: can't register clocksource\n", mct_frc.name);
+        /* clocksource_register_hz() 한일
+	 * list clouck soruce_list에 &(&mct_frc)->list를 추가함. */
 }
 
 static void exynos4_mct_comp0_stop(void)

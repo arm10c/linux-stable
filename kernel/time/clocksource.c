@@ -693,6 +693,7 @@ static void __clocksource_select(bool skipcur)
  * Select the clocksource with the best rating, or the clocksource,
  * which is selected by userspace override.
  */
+/* a10c_5526 */
 static void clocksource_select(void)
 {
 	return __clocksource_select(false);
@@ -820,7 +821,10 @@ int __clocksource_register_scale(struct clocksource *cs, u32 scale, u32 freq)
 	mutex_lock(&clocksource_mutex);
 	clocksource_enqueue(cs);
 	clocksource_enqueue_watchdog(cs);
+	/* clockcource_enqueue_watchdog(): 
+	 * (&mct_frc)->flags: 0x21  */
 	clocksource_select();
+	/* clocksource_select(): NULL function */
 	mutex_unlock(&clocksource_mutex);
 	return 0;
 }
