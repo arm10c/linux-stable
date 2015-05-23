@@ -36,6 +36,7 @@ struct module;
 // ARM10C 20150411
 // ARM10C 20150418
 // ARM10C 20150509
+// ARM10C 20150523
 enum clock_event_mode {
 	// CLOCK_EVT_MODE_UNUSED: 0
 	CLOCK_EVT_MODE_UNUSED = 0,
@@ -53,11 +54,13 @@ enum clock_event_mode {
  * Clock event features
  */
 // ARM10C 20150404
+// ARM10C 20150523
 // CLOCK_EVT_FEAT_PERIODIC: 0x000001
 #define CLOCK_EVT_FEAT_PERIODIC		0x000001
 // ARM10C 20150404
 // ARM10C 20150411
 // ARM10C 20150509
+// ARM10C 20150523
 // CLOCK_EVT_FEAT_ONESHOT: 0x000002
 #define CLOCK_EVT_FEAT_ONESHOT		0x000002
 #define CLOCK_EVT_FEAT_KTIME		0x000004
@@ -68,15 +71,19 @@ enum clock_event_mode {
  * - Local APIC timer is used as a dummy device.
  */
 // ARM10C 20150418
+// ARM10C 20150523
 // CLOCK_EVT_FEAT_C3STOP: 0x000008
 #define CLOCK_EVT_FEAT_C3STOP		0x000008
 // ARM10C 20150418
+// ARM10C 20150523
 // CLOCK_EVT_FEAT_DUMMY: 0x000010
 #define CLOCK_EVT_FEAT_DUMMY		0x000010
 
 /*
  * Core shall set the interrupt affinity dynamically in broadcast mode
  */
+// ARM10C 20150523
+// CLOCK_EVT_FEAT_DYNIRQ: 0x000020
 #define CLOCK_EVT_FEAT_DYNIRQ		0x000020
 #define CLOCK_EVT_FEAT_PERCPU		0x000040
 
@@ -109,6 +116,7 @@ enum clock_event_mode {
 // ARM10C 20150411
 // ARM10C 20150418
 // ARM10C 20150509
+// ARM10C 20150523
 struct clock_event_device {
 	void			(*event_handler)(struct clock_event_device *);
 	int			(*set_next_event)(unsigned long evt,
@@ -184,6 +192,8 @@ extern void clockevents_handle_noop(struct clock_event_device *dev);
 
 // ARM10C 20150411
 // dev: [pcp0] &(&percpu_mct_tick)->evt, freq: 12000000, sec: 178
+// ARM10C 20150523
+// dev: &mct_comp_device, freq: 24000000, sec: 178
 static inline void
 clockevents_calc_mult_shift(struct clock_event_device *ce, u32 freq, u32 minsec)
 {
@@ -192,12 +202,19 @@ clockevents_calc_mult_shift(struct clock_event_device *ce, u32 freq, u32 minsec)
 	// NSEC_PER_SEC: 1000000000L, freq: 12000000, minsec: 178
 	// clocks_calc_mult_shift([pcp0] &(&(&percpu_mct_tick)->evt)->mult,
 	// [pcp0] &(&(&percpu_mct_tick)->evt)->shift, 1000000000L, 12000000, 178)
+	// &ce->mult: &(&mct_comp_device)->mult, &ce->shift: &(&mct_comp_device)->shift,
+	// NSEC_PER_SEC: 1000000000L, freq: 24000000, minsec: 178
+	// clocks_calc_mult_shift(&(&mct_comp_device)->mult, &(&mct_comp_device)->shift, 1000000000L, 24000000, 178)
 	return clocks_calc_mult_shift(&ce->mult, &ce->shift, NSEC_PER_SEC,
 				      freq, minsec);
 
 	// clocks_calc_mult_shift에서 한일:
 	// *mult: [pcp0] (&(&percpu_mct_tick)->evt)->mult: 0x3126E98
 	// *shift: [pcp0] (&(&percpu_mct_tick)->evt)->shift: 32
+
+	// clocks_calc_mult_shift에서 한일:
+	// *mult: (&mct_comp_device)->mult: 0x3126E98
+	// *shift: (&mct_comp_device)->shift: 31
 }
 
 extern void clockevents_suspend(void);

@@ -318,10 +318,14 @@ void tick_install_replacement(struct clock_event_device *newdev)
 
 // ARM10C 20150411
 // curdev: [pcp0] (&tick_cpu_device)->evtdev, newdev: [pcp0] &(&percpu_mct_tick)->evt, cpu: 0
+// ARM10C 20150523
+// curdev: [pcp0] (&tick_cpu_device)->evtdev, newdev: &mct_comp_device, cpu: 0
 static bool tick_check_percpu(struct clock_event_device *curdev,
 			      struct clock_event_device *newdev, int cpu)
 {
 	// cpu: 0, newdev->cpumask: [pcp0] (&(&percpu_mct_tick)->evt)->cpumask: &cpu_bit_bitmap[1][0]
+	// cpumask_test_cpu(0, &cpu_bit_bitmap[1][0]): 1
+	// cpu: 0, newdev->cpumask: (&mct_comp_device)->cpumask: &cpu_bit_bitmap[1][0]
 	// cpumask_test_cpu(0, &cpu_bit_bitmap[1][0]): 1
 	if (!cpumask_test_cpu(cpu, newdev->cpumask))
 		return false;
@@ -329,8 +333,12 @@ static bool tick_check_percpu(struct clock_event_device *curdev,
 	// newdev->cpumask: [pcp0] (&(&percpu_mct_tick)->evt)->cpumask: &cpu_bit_bitmap[1][0],
 	// cpu: 0, cpumask_of(0): &cpu_bit_bitmap[1][0]
 	// cpumask_equal(&cpu_bit_bitmap[1][0], &cpu_bit_bitmap[1][0]): 1
+	// newdev->cpumask: (&mct_comp_device)->cpumask: &cpu_bit_bitmap[1][0],
+	// cpu: 0, cpumask_of(0): &cpu_bit_bitmap[1][0]
+	// cpumask_equal(&cpu_bit_bitmap[1][0], &cpu_bit_bitmap[1][0]): 1
 	if (cpumask_equal(newdev->cpumask, cpumask_of(cpu)))
 		return true;
+		// return true
 		// return true
 
 	/* Check if irq affinity can be set */
@@ -344,11 +352,14 @@ static bool tick_check_percpu(struct clock_event_device *curdev,
 
 // ARM10C 20150411
 // curdev: [pcp0] (&tick_cpu_device)->evtdev, newdev: [pcp0] &(&percpu_mct_tick)->evt
+// ARM10C 20150523
+// curdev: [pcp0] (&tick_cpu_device)->evtdev, newdev: &mct_comp_device
 static bool tick_check_preferred(struct clock_event_device *curdev,
 				 struct clock_event_device *newdev)
 {
 	/* Prefer oneshot capable device */
 	// newdev->features: [pcp0] (&(&percpu_mct_tick)->evt)->features: 0x3, CLOCK_EVT_FEAT_ONESHOT: 0x000002
+	// newdev->features: (&mct_comp_device)->features: 0x3, CLOCK_EVT_FEAT_ONESHOT: 0x000002
 	if (!(newdev->features & CLOCK_EVT_FEAT_ONESHOT)) {
 		if (curdev && (curdev->features & CLOCK_EVT_FEAT_ONESHOT))
 			return false;
@@ -363,10 +374,17 @@ static bool tick_check_preferred(struct clock_event_device *curdev,
 	// curdev: [pcp0] (&tick_cpu_device)->evtdev: NULL, newdev->rating: [pcp0] (&(&percpu_mct_tick)->evt)->rating,
 	// curdev->rating: [pcp0] (&tick_cpu_device)->evtdev->rating, curdev->cpumask: [pcp0] (&tick_cpu_device)->evtdev->cpumask,
 	// newdev->cpumask: [pcp0] (&(&percpu_mct_tick)->evt)->cpumask,
+	// curdev: [pcp0] (&tick_cpu_device)->evtdev: [pcp0] &(&percpu_mct_tick)->evt,
+	// newdev->rating: (&mct_comp_device)->rating: 250,
+	// curdev->rating: [pcp0] (&tick_cpu_device)->evtdev->rating: 450,
+	// curdev->cpumask: [pcp0] (&tick_cpu_device)->evtdev->cpumask: &cpu_bit_bitmap[1][0],
+	// newdev->cpumask: (&mct_comp_device)->cpumask: &cpu_bit_bitmap[1][0],
+	// cpumask_equal(&cpu_bit_bitmap[1][0], &cpu_bit_bitmap[1][0]): 1
 	return !curdev ||
 		newdev->rating > curdev->rating ||
 	       !cpumask_equal(curdev->cpumask, newdev->cpumask);
 	// retun 1
+	// retun 0
 }
 
 /*
@@ -388,6 +406,8 @@ bool tick_check_replacement(struct clock_event_device *curdev,
  */
 // ARM10C 20150411
 // dev: [pcp0] &(&percpu_mct_tick)->evt
+// ARM10C 20150523
+// dev: &mct_comp_device
 void tick_check_new_device(struct clock_event_device *newdev)
 {
 	struct clock_event_device *curdev;
@@ -395,33 +415,46 @@ void tick_check_new_device(struct clock_event_device *newdev)
 	int cpu;
 
 	// smp_processor_id(): 0
+	// smp_processor_id(): 0
 	cpu = smp_processor_id();
+	// cpu: 0
 	// cpu: 0
 
 	// cpu: 0, newdev->cpumask: [pcp0] (&(&percpu_mct_tick)->evt)->cpumask: &cpu_bit_bitmap[1][0]
+	// cpumask_test_cpu(0, &cpu_bit_bitmap[1][0]): 1
+	// cpu: 0, newdev->cpumask: (&mct_comp_device)->cpumask: &cpu_bit_bitmap[1][0]
 	// cpumask_test_cpu(0, &cpu_bit_bitmap[1][0]): 1
 	if (!cpumask_test_cpu(cpu, newdev->cpumask))
 		goto out_bc;
 
 	// cpu: 0, per_cpu(tick_cpu_device, 0): [pcp0] tick_cpu_device
+	// cpu: 0, per_cpu(tick_cpu_device, 0): [pcp0] tick_cpu_device
 	td = &per_cpu(tick_cpu_device, cpu);
+	// td: [pcp0] &tick_cpu_device
 	// td: [pcp0] &tick_cpu_device
 
 	// td->evtdev: [pcp0] (&tick_cpu_device)->evtdev
+	// td->evtdev: [pcp0] (&tick_cpu_device)->evtdev
 	curdev = td->evtdev;
+	// curdev: [pcp0] (&tick_cpu_device)->evtdev
 	// curdev: [pcp0] (&tick_cpu_device)->evtdev
 
 	/* cpu local device ? */
 	// curdev: [pcp0] (&tick_cpu_device)->evtdev, newdev: [pcp0] &(&percpu_mct_tick)->evt, cpu: 0
 	// tick_check_percpu([pcp0] (&tick_cpu_device)->evtdev, [pcp0] &(&percpu_mct_tick)->evt, 0): true
+	// curdev: [pcp0] (&tick_cpu_device)->evtdev, newdev: &mct_comp_device, cpu: 0
+	// tick_check_percpu([pcp0] (&tick_cpu_device)->evtdev, &mct_comp_device, 0): true
 	if (!tick_check_percpu(curdev, newdev, cpu))
 		goto out_bc;
 
 	/* Preference decision */
 	// curdev: [pcp0] (&tick_cpu_device)->evtdev, newdev: [pcp0] &(&percpu_mct_tick)->evt
 	// tick_check_preferred([pcp0] (&tick_cpu_device)->evtdev, [pcp0] &(&percpu_mct_tick)->evt): 1
+	// curdev: [pcp0] (&tick_cpu_device)->evtdev, newdev: &mct_comp_device
+	// tick_check_preferred([pcp0] (&tick_cpu_device)->evtdev, &mct_comp_device): 0
 	if (!tick_check_preferred(curdev, newdev))
 		goto out_bc;
+		// goto out_bc 수행
 
 	// newdev->owner: [pcp0] (&(&percpu_mct_tick)->evt)->owner,
 	// try_module_get([pcp0] (&(&percpu_mct_tick)->evt)->owner): true
@@ -496,7 +529,24 @@ out_bc:
 	/*
 	 * Can the new device be used as a broadcast device ?
 	 */
+	// newdev: &mct_comp_device
 	tick_install_broadcast_device(newdev);
+
+	// tick_install_broadcast_device에서 한일:
+	// register G_TCON 에 0x100 write함
+	// global timer enable 의 값을 1로 write 함
+	//
+	// register G_INT_ENB 에 0x0 write함
+	// global timer interrupt enable 의 값을 0로 write 함
+	//
+	// comparator 0의 auto increment0, comp0 enable,comp0 interrupt enable 값을
+	// 0으로 clear 하여 comparator 0를 동작하지 않도록 함
+	//
+	// (&mct_comp_device)->mode: 1
+	// (&mct_comp_device)->next_event.tv64: 0x7FFFFFFFFFFFFFFF
+	//
+	// tick_broadcast_device.evtdev: &mct_comp_device
+	// [pcp0] &(&tick_cpu_sched)->check_clocks: 0xf
 }
 
 /*

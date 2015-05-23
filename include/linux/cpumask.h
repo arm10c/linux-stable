@@ -16,6 +16,7 @@
 // ARM10C 20150103
 // ARM10C 20150404
 // ARM10C 20150516
+// ARM10C 20150523
 // struct cpumask { bits[1]; }
 typedef struct cpumask { DECLARE_BITMAP(bits, NR_CPUS); } cpumask_t;
 
@@ -39,6 +40,7 @@ typedef struct cpumask { DECLARE_BITMAP(bits, NR_CPUS); } cpumask_t;
 // ARM10C 20140920
 // ARM10C 20140927
 // ARM10C 20150328
+// ARM10C 20150523
 // nr_cpu_ids: 4
 extern int nr_cpu_ids;
 #endif
@@ -53,6 +55,7 @@ extern int nr_cpu_ids;
 // ARM10C 20140913
 // ARM10C 20141004
 // ARM10C 20150418
+// ARM10C 20150523
 // NR_CPUS: 4
 // nr_cpumask_bits: 4
 #define nr_cpumask_bits	NR_CPUS
@@ -205,14 +208,22 @@ static inline unsigned int cpumask_first(const struct cpumask *srcp)
 // n: -1, srcp: cpu_possible_mask
 // ARM10C 20150328
 // n: -1, src1p: &cpu_bit_bitmap[1][0]
+// ARM10C 20150523
+// n: -1, src1p: mask
 static inline unsigned int cpumask_next(int n, const struct cpumask *srcp)
 {
 	/* -1 is a legal arg here. */
 	// n: -1
+	// n: -1
 	if (n != -1)
 		cpumask_check(n);
+
 	// cpumask_bits(cpu_possible_mask): cpu_possible_mask->bits: 0xF, nr_cpumask_bits: 4, n: -1+1
+	// find_next_bit(0xF, 4, 0): 0
+	// cpumask_bits(mask): mask->bits: 0x1, nr_cpumask_bits: 4, n: -1+1
+	// find_next_bit(0x1, 4, 0): 0
 	return find_next_bit(cpumask_bits(srcp), nr_cpumask_bits, n+1);
+	// return 0
 	// return 0
 }
 
@@ -335,6 +346,8 @@ static inline void cpumask_clear_cpu(int cpu, struct cpumask *dstp)
 // ARM10C 20150411
 // cpu: 0, newdev->cpumask: [pcp0] (&(&percpu_mct_tick)->evt)->cpumask: &cpu_bit_bitmap[1][0]
 // ARM10C 20150418
+// ARM10C 20150523
+// cpu: 0, newdev->cpumask: (&mct_comp_device)->cpumask: &cpu_bit_bitmap[1][0]
 #define cpumask_test_cpu(cpu, cpumask) \
 	test_bit(cpumask_check(cpu), cpumask_bits((cpumask)))
 
@@ -405,12 +418,23 @@ static inline void cpumask_clear(struct cpumask *dstp)
  *
  * If *@dstp is empty, returns 0, else returns 1
  */
+// ARM10C 20150523
+// mask, cpu_online_mask: cpu_online_bits, set: irq_default_affinity
 static inline int cpumask_and(struct cpumask *dstp,
 			       const struct cpumask *src1p,
 			       const struct cpumask *src2p)
 {
+	// dstp: mask, cpumask_bits(mask): (mask)->bits,
+	// src1p: cpu_online_bits, cpumask_bits(cpu_online_bits): (cpu_online_bits)->bits,
+	// src2p: irq_default_affinity, cpumask_bits(irq_default_affinity): (irq_default_affinity)->bits,
+	// nr_cpumask_bits: 4
+	// bitmap_and((mask)->bits, (cpu_online_bits)->bits, (irq_default_affinity)->bits, 4): 1
 	return bitmap_and(cpumask_bits(dstp), cpumask_bits(src1p),
 				       cpumask_bits(src2p), nr_cpumask_bits);
+	// return 1
+
+	// bitmap_and에서 한일:
+	// *dst: (mask)->bits[0]: 1
 }
 
 /**
@@ -477,6 +501,12 @@ static inline void cpumask_complement(struct cpumask *dstp,
 // ARM10C 20150418
 // newdev->cpumask: [pcp0] (&(&percpu_mct_tick)->evt)->cpumask: &cpu_bit_bitmap[1][0],
 // cpumask_of(0): &cpu_bit_bitmap[1][0]
+// ARM10C 20150523
+// newdev->cpumask: (&mct_comp_device)->cpumask: &cpu_bit_bitmap[1][0],
+// cpumask_of(0): &cpu_bit_bitmap[1][0]
+// ARM10C 20150523
+// curdev->cpumask: [pcp0] (&tick_cpu_device)->evtdev->cpumask: &cpu_bit_bitmap[1][0],
+// newdev->cpumask: (&mct_comp_device)->cpumask: &cpu_bit_bitmap[1][0]
 static inline bool cpumask_equal(const struct cpumask *src1p,
 				const struct cpumask *src2p)
 {
@@ -489,11 +519,17 @@ static inline bool cpumask_equal(const struct cpumask *src1p,
  * @src1p: the first input
  * @src2p: the second input
  */
+// ARM10C 20150523
+// mask, nodemask: 0
 static inline bool cpumask_intersects(const struct cpumask *src1p,
 				     const struct cpumask *src2p)
 {
+	// src1p: mask, cpumask_bits(mask): (mask)->bits,
+	// src2p: nodemask, cpumask_bits(nodemask): (nodemask)->bits, nr_cpumask_bits: 4
+	// bitmap_intersects((mask)->bits, (nodemask)->bits, 4): 0
 	return bitmap_intersects(cpumask_bits(src1p), cpumask_bits(src2p),
 						      nr_cpumask_bits);
+	// return 0
 }
 
 /**
@@ -515,6 +551,8 @@ static inline int cpumask_subset(const struct cpumask *src1p,
  * @srcp: the cpumask to that all cpus < nr_cpu_ids are clear.
  */
 // ARM10C 20150418
+// tick_broadcast_mask.bits[0]: 0
+// ARM10C 20150523
 // tick_broadcast_mask.bits[0]: 0
 static inline bool cpumask_empty(const struct cpumask *srcp)
 {
@@ -588,6 +626,8 @@ static inline void cpumask_shift_left(struct cpumask *dstp,
 // p->cpus_allowed: (&init_task)->cpus_allowed, new_mask: &cpu_bit_bitmap[1][0]
 // ARM10C 20150404
 // data->affinity: (&(kmem_cache#28-oX (irq 152))->irq_data)->affinity, mask: &cpu_bit_bitmap[1][0]
+// ARM10C 20150523
+// data->affinity: (&(kmem_cache#28-oX (irq 347))->irq_data)->affinity, mask: mask
 static inline void cpumask_copy(struct cpumask *dstp,
 				const struct cpumask *srcp)
 {
@@ -599,9 +639,13 @@ static inline void cpumask_copy(struct cpumask *dstp,
 	// cpumask_bits((&(kmem_cache#28-oX (irq 152))->irq_data)->affinity): (&(kmem_cache#28-oX (irq 152))->irq_data)->affinity->bits,
 	// cpumask_bits(&cpu_bit_bitmap[1][0]): (&cpu_bit_bitmap[1][0])->bits
 	// nr_cpumask_bits: 4
+	// dstp: (&(kmem_cache#28-oX (irq 347))->irq_data)->affinity, srcp: mask
+	// cpumask_bits((&(kmem_cache#28-oX (irq 347))->irq_data)->affinity): (&(kmem_cache#28-oX (irq 347))->irq_data)->affinity->bits,
+	// cpumask_bits(mask): (mask)->bits, nr_cpumask_bits: 4
 	bitmap_copy(cpumask_bits(dstp), cpumask_bits(srcp), nr_cpumask_bits);
 	// (&init_task)->cpus_allowed->bits[0]: 1
 	// (&(kmem_cache#28-oX (irq 152))->irq_data)->affinity->bits[0]: 1
+	// (&(kmem_cache#28-oX (irq 347))->irq_data)->affinity->bits[0]: 1
 }
 
 /**
@@ -621,6 +665,8 @@ static inline void cpumask_copy(struct cpumask *dstp,
  */
 // ARM10C 20150328
 // mask_val: &cpu_bit_bitmap[1][0], cpu_online_mask: cpu_online_bits[1]
+// ARM10C 20150523
+// mask_val: mask, cpu_online_mask: cpu_online_bits
 #define cpumask_first_and(src1p, src2p) cpumask_next_and(-1, (src1p), (src2p))
 
 /**
@@ -632,6 +678,8 @@ static inline void cpumask_copy(struct cpumask *dstp,
  */
 // ARM10C 20150328
 // mask_val: &cpu_bit_bitmap[1][0], cpu_online_mask: cpu_online_bits[1]
+// ARM10C 20150523
+// mask_val: mask, cpu_online_mask: cpu_online_bits
 #define cpumask_any_and(mask1, mask2) cpumask_first_and((mask1), (mask2))
 
 /**
@@ -643,6 +691,7 @@ static inline void cpumask_copy(struct cpumask *dstp,
 // ARM10C 20150404
 // ARM10C 20150411
 // ARM10C 20150418
+// ARM10C 20150523
 // cpu: 0
 // get_cpu_mask(0): &cpu_bit_bitmap[1][0]
 #define cpumask_of(cpu) (get_cpu_mask(cpu))
@@ -885,6 +934,7 @@ extern const DECLARE_BITMAP(cpu_all_bits, NR_CPUS);
 // ARM10C 20140927
 // ARM10C 20141004
 // ARM10C 20150103
+// ARM10C 20150523
 // #define for_each_cpu(i, cpu_possible_mask)
 //	for ((i) = -1; (i) = cpumask_next((i), (cpu_possible_mask)), (i) < nr_cpu_ids; )
 #define for_each_possible_cpu(cpu) for_each_cpu((cpu), cpu_possible_mask)

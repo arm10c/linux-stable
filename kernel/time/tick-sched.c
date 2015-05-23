@@ -35,6 +35,7 @@
  * Per cpu nohz control structure
  */
 // ARM10C 20150509
+// ARM10C 20150523
 DEFINE_PER_CPU(struct tick_sched, tick_cpu_sched);
 
 /*
@@ -1162,12 +1163,25 @@ void tick_cancel_sched_timer(int cpu)
 /**
  * Async notification about clocksource changes
  */
+// ARM10C 20150523
 void tick_clock_notify(void)
 {
 	int cpu;
 
+	// nr_cpu_ids: 4
 	for_each_possible_cpu(cpu)
+	// for ((cpu) = -1; (cpu) = cpumask_next((cpu), (cpu_possible_mask)), (cpu) < nr_cpu_ids; )
+
+		// cpu: 0, &per_cpu(tick_cpu_sched, 0).check_clocks: [pcp0] [pcp0] &(&tick_cpu_sched)->check_clocks
 		set_bit(0, &per_cpu(tick_cpu_sched, cpu).check_clocks);
+
+		// set_bit에서 한일:
+		// [pcp0] &(&tick_cpu_sched)->check_clocks: 1
+
+		// cpu: 1...3 loop 수행
+	
+	// 위 loop 수행 결과
+	// [pcp0] &(&tick_cpu_sched)->check_clocks: 0xf
 }
 
 /*

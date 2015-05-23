@@ -48,10 +48,15 @@
 // EXYNOS4_MCT_G_COMP0_ADD_INCR: 0x208
 #define EXYNOS4_MCT_G_COMP0_ADD_INCR	EXYNOS4_MCTREG(0x208)
 // ARM10C 20150516
+// ARM10C 20150523
 // EXYNOS4_MCT_G_TCON: 0x240
 #define EXYNOS4_MCT_G_TCON		EXYNOS4_MCTREG(0x240)
 #define EXYNOS4_MCT_G_INT_CSTAT		EXYNOS4_MCTREG(0x244)
+// ARM10C 20150523
+// EXYNOS4_MCT_G_INT_ENB: 0x248
 #define EXYNOS4_MCT_G_INT_ENB		EXYNOS4_MCTREG(0x248)
+// ARM10C 20150523
+// EXYNOS4_MCT_G_WSTAT: 0x24C
 #define EXYNOS4_MCT_G_WSTAT		EXYNOS4_MCTREG(0x24C)
 // ARM10C 20150404
 // EXYNOS4_MCTREG(0x300): 0x300
@@ -85,8 +90,14 @@
 // ARM10C 20150509
 // MCT_L_WSTAT_OFFSET: 0x40
 #define MCT_L_WSTAT_OFFSET		(0x40)
+// ARM10C 20150523
+// MCT_G_TCON_START: 0x100
 #define MCT_G_TCON_START		(1 << 8)
+// ARM10C 20150523
+// MCT_G_TCON_COMP0_AUTO_INC: 0x2
 #define MCT_G_TCON_COMP0_AUTO_INC	(1 << 1)
+// ARM10C 20150523
+// MCT_G_TCON_COMP0_ENABLE: 0x1
 #define MCT_G_TCON_COMP0_ENABLE		(1 << 0)
 // ARM10C 20150509
 // MCT_L_TCON_INTERVAL_MODE: 0x4
@@ -118,6 +129,7 @@ enum {
 // ARM10C 20150307
 // ARM10C 20150328
 // ARM10C 20150509
+// ARM10C 20150523
 enum {
 	// MCT_G0_IRQ: 0
 	MCT_G0_IRQ,
@@ -169,6 +181,12 @@ struct mct_clock_event_device {
 // lo: 0, EXYNOS4_MCT_G_CNT_L: 0x100
 // ARM10C 20150516
 // hi: 0, EXYNOS4_MCT_G_CNT_U: 0x104
+// ARM10C 20150523
+// reg: 0x100, EXYNOS4_MCT_G_TCON: 0x240
+// ARM10C 20150523
+// tcon: 0x100, EXYNOS4_MCT_G_TCON: 0x240
+// ARM10C 20150523
+// 0, EXYNOS4_MCT_G_INT_ENB: 0x248
 static void exynos4_mct_write(unsigned int value, unsigned long offset)
 {
 	unsigned long stat_addr;
@@ -204,12 +222,33 @@ static void exynos4_mct_write(unsigned int value, unsigned long offset)
 	// G_CNT_U: Specifies the upper 32 bit value of FRC buffer register
 	// 31~0 bit - FRC count buffer
 
+	// E.R.M: 21.4.1.17 G_TCON
+	// G_TCON: Specifies the global timer control register
+	// 8 bit  - timer enable
+	// 7 bit  - auto increment3
+	// 6 bit  - comp3 enable
+	// 5 bit  - auto increment2
+	// 4 bit  - comp2 enable
+	// 3 bit  - auto increment1
+	// 2 bit  - comp1 enable
+	// 1 bit  - auto increment0
+	// 0 bit  - comp0 enable
+
+	// E.R.M: 21.4.1.19 G_INT_ENB
+	// G_INT_ENB: Specifies the interrupt enable for G_IRQ0 to 3
+	// 3 bit  - C_INT3_ENABLE
+	// 2 bit  - C_INT2_ENABLE
+	// 1 bit  - C_INT1_ENABLE
+	// 0 bit  - C_INT0_ENABLE
+
 	// value: 0x8001D4C0, reg_base: 0xf0006000, offset: 0x308
 	// value: 0x1, reg_base: 0xf0006000, offset: 0x334
 	// value: 0x7, reg_base: 0xf0006000, offset: 0x320
 	// value: 0x1, reg_base: 0xf0006000, offset: 0x300
 	// value: 0x0, reg_base: 0xf0006000, offset: 0x100
 	// value: 0x0, reg_base: 0xf0006000, offset: 0x104
+	// value: 0x100, reg_base: 0xf0006000, offset: 0x240
+	// value: 0x0, reg_base: 0xf0006000, offset: 0x248
 	__raw_writel(value, reg_base + offset);
 
 	// __raw_writel에서 한일:
@@ -238,12 +277,22 @@ static void exynos4_mct_write(unsigned int value, unsigned long offset)
 	// register G_CNT_U 에 0x0 write함
 	// FRC count buffer 의 tick count 값을 0로 write 함
 
+	// __raw_writel에서 한일:
+	// register G_TCON 에 0x100 write함
+	// global timer enable 의 값을 1로 write 함
+
+	// __raw_writel에서 한일:
+	// register G_INT_ENB 에 0x0 write함
+	// global timer interrupt enable 의 값을 0로 write 함
+
 	// offset: 0x308, EXYNOS4_MCT_L_BASE(0): 0x300
 	// offset: 0x334, EXYNOS4_MCT_L_BASE(0): 0x300
 	// offset: 0x320, EXYNOS4_MCT_L_BASE(0): 0x300
 	// offset: 0x300, EXYNOS4_MCT_L_BASE(0): 0x300
 	// offset: 0x100, EXYNOS4_MCT_L_BASE(0): 0x300
 	// offset: 0x104, EXYNOS4_MCT_L_BASE(0): 0x300
+	// offset: 0x240, EXYNOS4_MCT_L_BASE(0): 0x300
+	// offset: 0x248, EXYNOS4_MCT_L_BASE(0): 0x300
 	if (likely(offset >= EXYNOS4_MCT_L_BASE(0))) {
 		// offset: 0x308, EXYNOS4_MCT_L_MASK: 0xffffff00, MCT_L_WSTAT_OFFSET: 0x40
 		// offset: 0x334, EXYNOS4_MCT_L_MASK: 0xffffff00, MCT_L_WSTAT_OFFSET: 0x40
@@ -279,11 +328,18 @@ static void exynos4_mct_write(unsigned int value, unsigned long offset)
 	} else {
 		// offset: 0x100
 		// offset: 0x104
+		// offset: 0x240
+		// offset: 0x248
 		switch (offset) {
 		case EXYNOS4_MCT_G_TCON: // EXYNOS4_MCT_G_TCON: 0x240
+			// EXYNOS4_MCT_G_WSTAT: 0x24C
 			stat_addr = EXYNOS4_MCT_G_WSTAT;
+			// stat_addr: 0x24C
+
 			mask = 1 << 16;		/* G_TCON write status */
+			// mask: 0x10000
 			break;
+			// break 수행
 		case EXYNOS4_MCT_G_COMP0_L: // EXYNOS4_MCT_G_COMP0_L: 0x200
 			stat_addr = EXYNOS4_MCT_G_WSTAT;
 			mask = 1 << 0;		/* G_COMP0_L write status */
@@ -310,7 +366,7 @@ static void exynos4_mct_write(unsigned int value, unsigned long offset)
 			// EXYNOS4_MCT_G_CNT_WSTAT: 0x110
 			stat_addr = EXYNOS4_MCT_G_CNT_WSTAT;
 			// stat_addr: 0x110
-			//
+
 			mask = 1 << 1;		/* G_CNT_U write status */
 			// mask: 0x2
 
@@ -318,10 +374,12 @@ static void exynos4_mct_write(unsigned int value, unsigned long offset)
 			// break 수행
 		default:
 			return;
+			// return 수행
 		}
 	}
 
 	/* Wait maximum 1 ms until written values are applied */
+	// loops_per_jiffy: 4096, HZ: 100
 	// loops_per_jiffy: 4096, HZ: 100
 	// loops_per_jiffy: 4096, HZ: 100
 	for (i = 0; i < loops_per_jiffy / 1000 * HZ; i++)
@@ -333,22 +391,45 @@ static void exynos4_mct_write(unsigned int value, unsigned long offset)
 		// G_CNT_WSTAT: Specifies G_CNT_L and G_CNT_U SFR write status register
 		// 1 bit - G_CNT_U write status
 
+		// E.R.M: 21.4.1.20 G_WSTAT
+		// G_WSTAT: Specifies the write status for comparator 0 to 3
+		// 16 bit - G_TCON write status
+		// 14 bit - G_COMP3_ADD_INCR write status
+		// 13 bit - G_COMP3_U write status
+		// 12 bit - G_COMP3_L write status
+		// 10 bit - G_COMP2_ADD_INCR write status
+		//  9 bit - G_COMP2_U write status
+		//  8 bit - G_COMP2_L write status
+		//  6 bit - G_COMP1_ADD_INCR write status
+		//  5 bit - G_COMP1_U write status
+		//  4 bit - G_COMP1_L write status
+		//  2 bit - G_COMP0_ADD_INCR write status
+		//  1 bit - G_COMP0_U write status
+		//  0 bit - G_COMP0_L write status
+
 		// reg_base: 0xf0006000, stat_addr: 0x110, mask: 0x1, __raw_readl(0xf0006110): 0x1
 		// reg_base: 0xf0006000, stat_addr: 0x110, mask: 0x2, __raw_readl(0xf0006110): 0x1
+		// reg_base: 0xf0006000, stat_addr: 0x24C, mask: 0x10000, __raw_readl(0xf000624C): 0x10000
 		if (__raw_readl(reg_base + stat_addr) & mask) {
 			// mask: 0x1, reg_base: 0xf0006000, stat_addr: 0x110
 			// mask: 0x2, reg_base: 0xf0006000, stat_addr: 0x110
+			// mask: 0x10000, reg_base: 0xf0006000, stat_addr: 0x24C
 			__raw_writel(mask, reg_base + stat_addr);
 
 			// __raw_writel에서 한일:
 			// register G_CNT_WSTAT 에 0x1 write함
-			// G_CNT_L write status 의  값을 1로 write 함
+			// G_CNT_L write status 의 값을 1로 write 함
 
 			// __raw_writel에서 한일:
 			// register G_CNT_WSTAT 에 0x2 write함
-			// G_CNT_L write status 의  값을 2로 write 함
+			// G_CNT_L write status 의 값을 2로 write 함
+
+			// __raw_writel에서 한일:
+			// register G_WSTAT 에 0x10000 write함
+			// G_TCON write status 의 값을 1로 write 함
 
 			return;
+			// return 수행
 			// return 수행
 			// return 수행
 		}
@@ -384,10 +465,38 @@ static void exynos4_mct_frc_start(u32 hi, u32 lo)
 	// G_CNT_U write status 의  값을 1로 write 함
 
 // 2015/05/16 종료
+// 2015/05/23 시작
 
+	// E.R.M: 21.4.1.17 G_TCON
+	// G_TCON: Specifies the global timer control register
+	// 8 bit  - timer enable
+	// 7 bit  - auto increment3
+	// 6 bit  - comp3 enable
+	// 5 bit  - auto increment2
+	// 4 bit  - comp2 enable
+	// 3 bit  - auto increment1
+	// 2 bit  - comp1 enable
+	// 1 bit  - auto increment0
+	// 0 bit  - comp0 enable
+	
+	// NOTE:
+	// register G_TCON 값이 reset 값인 0x0으로 읽히는 것으로 가정하고 코드 분석 진행
+
+	// reg_base: 0xf0006000, EXYNOS4_MCT_G_TCON: 0x240
+	// __raw_readl(0xf0006240): 0x0
 	reg = __raw_readl(reg_base + EXYNOS4_MCT_G_TCON);
+	// reg: 0x0
+
+	// MCT_G_TCON_START: 0x100
 	reg |= MCT_G_TCON_START;
+	// reg: 0x100
+
+	// reg: 0x100, EXYNOS4_MCT_G_TCON: 0x240
 	exynos4_mct_write(reg, EXYNOS4_MCT_G_TCON);
+
+	// exynos4_mct_write 에서 한일:
+	// register G_TCON 에 0x100 write함
+	// global timer enable 의 값을 1로 write 함
 }
 
 static cycle_t exynos4_frc_read(struct clocksource *cs)
@@ -409,11 +518,14 @@ static void exynos4_frc_resume(struct clocksource *cs)
 	exynos4_mct_frc_start(0, 0);
 }
 
+// ARM10C 20150523
 struct clocksource mct_frc = {
 	.name		= "mct-frc",
 	.rating		= 400,
 	.read		= exynos4_frc_read,
+	// CLOCKSOURCE_MASK(64): 0xFFFFFFFF
 	.mask		= CLOCKSOURCE_MASK(64),
+	// CLOCK_SOURCE_IS_CONTINUOUS: 0x01
 	.flags		= CLOCK_SOURCE_IS_CONTINUOUS,
 	.resume		= exynos4_frc_resume,
 };
@@ -423,19 +535,75 @@ static void __init exynos4_clocksource_init(void)
 {
 	exynos4_mct_frc_start(0, 0);
 
+	// exynos4_mct_frc_start에서 한일:
+	// register G_CNT_L 에 0x0 write함
+	// FRC count buffer 의 tick count 값을 0로 write 함
+	//
+	// register G_CNT_WSTAT 에 0x1 write함
+	// G_CNT_L write status 의  값을 1로 write 함
+	//
+	// register G_CNT_U 에 0x0 write함
+	// FRC count buffer 의 tick count 값을 0로 write 함
+	//
+	// register G_CNT_WSTAT 에 0x1 write함
+	// G_CNT_U write status 의  값을 1로 write 함
+	//
+	// register G_TCON 에 0x100 write함
+	// global timer enable 의 값을 1로 write 함
+
+	// clk_rate: 24000000, clocksource_register_hz(&mct_frc, 24000000): 0
 	if (clocksource_register_hz(&mct_frc, clk_rate))
 		panic("%s: can't register clocksource\n", mct_frc.name);
+
+	// clocksource_register_hz에서 한일:
+	// (&mct_frc)->mult: 0xA6AAAAAA
+	// (&mct_frc)->shift: 26
+	// (&mct_frc)->maxadj: 0x12555555
+	// (&mct_frc)->max_idle_ns: 0x103955554C
+	// (&mct_frc)->flags: 0x21
+	//
+	// list clocksource_list의 next에 &(&mct_frc)->list를 추가함
 }
 
+// ARM10C 20150523
 static void exynos4_mct_comp0_stop(void)
 {
 	unsigned int tcon;
 
-	tcon = __raw_readl(reg_base + EXYNOS4_MCT_G_TCON);
-	tcon &= ~(MCT_G_TCON_COMP0_ENABLE | MCT_G_TCON_COMP0_AUTO_INC);
+	// E.R.M: 21.4.1.17 G_TCON
+	// G_TCON: Specifies the global timer control register
+	// 8 bit  - timer enable
+	// 7 bit  - auto increment3
+	// 6 bit  - comp3 enable
+	// 5 bit  - auto increment2
+	// 4 bit  - comp2 enable
+	// 3 bit  - auto increment1
+	// 2 bit  - comp1 enable
+	// 1 bit  - auto increment0
+	// 0 bit  - comp0 enable
 
+	// reg_base: 0xf0006000, EXYNOS4_MCT_G_TCON: 0x240
+	// __raw_readl(0xf0006240): 0x100
+	tcon = __raw_readl(reg_base + EXYNOS4_MCT_G_TCON);
+	// tcon: 0x100
+
+	// tcon: 0x100, MCT_G_TCON_COMP0_ENABLE: 0x1, MCT_G_TCON_COMP0_AUTO_INC: 0x2
+	tcon &= ~(MCT_G_TCON_COMP0_ENABLE | MCT_G_TCON_COMP0_AUTO_INC);
+	// tcon: 0x100
+
+	// tcon: 0x100, EXYNOS4_MCT_G_TCON: 0x240
 	exynos4_mct_write(tcon, EXYNOS4_MCT_G_TCON);
+
+	// exynos4_mct_write에서 한일:
+	// register G_TCON 에 0x100 write함
+	// global timer enable 의 값을 1로 write 함
+
+	// EXYNOS4_MCT_G_INT_ENB: 0x248
 	exynos4_mct_write(0, EXYNOS4_MCT_G_INT_ENB);
+
+	// exynos4_mct_write에서 한일:
+	// register G_INT_ENB 에 0x0 write함
+	// global timer interrupt enable 의 값을 0로 write 함
 }
 
 static void exynos4_mct_comp0_start(enum clock_event_mode mode,
@@ -469,29 +637,46 @@ static int exynos4_comp_set_next_event(unsigned long cycles,
 	return 0;
 }
 
+// ARM10C 20150523
+// mode: 1, dev: &mct_comp_device
 static void exynos4_comp_set_mode(enum clock_event_mode mode,
 				  struct clock_event_device *evt)
 {
 	unsigned long cycles_per_jiffy;
+
 	exynos4_mct_comp0_stop();
 
+	// exynos4_mct_comp0_stop에서 한일:
+	// register G_TCON 에 0x100 write함
+	// global timer enable 의 값을 1로 write 함
+	//
+	// register G_INT_ENB 에 0x0 write함
+	// global timer interrupt enable 의 값을 0로 write 함
+	//
+	// comparator 0의 auto increment0, comp0 enable,comp0 interrupt enable 값을
+	// 0으로 clear 하여 comparator 0를 동작하지 않도록 함
+
+	// mode: 1
 	switch (mode) {
-	case CLOCK_EVT_MODE_PERIODIC:
+	case CLOCK_EVT_MODE_PERIODIC: // CLOCK_EVT_MODE_PERIODIC: 2
 		cycles_per_jiffy =
 			(((unsigned long long) NSEC_PER_SEC / HZ * evt->mult) >> evt->shift);
 		exynos4_mct_comp0_start(mode, cycles_per_jiffy);
 		break;
 
-	case CLOCK_EVT_MODE_ONESHOT:
-	case CLOCK_EVT_MODE_UNUSED:
-	case CLOCK_EVT_MODE_SHUTDOWN:
-	case CLOCK_EVT_MODE_RESUME:
+	case CLOCK_EVT_MODE_ONESHOT:  // CLOCK_EVT_MODE_ONESHOT: 3
+	case CLOCK_EVT_MODE_UNUSED:   // CLOCK_EVT_MODE_UNUSED: 0
+	case CLOCK_EVT_MODE_SHUTDOWN: // CLOCK_EVT_MODE_SHUTDOWN: 1
+	case CLOCK_EVT_MODE_RESUME:   // CLOCK_EVT_MODE_RESUME: 4
 		break;
+		// break 수행
 	}
 }
 
+// ARM10C 20150523
 static struct clock_event_device mct_comp_device = {
 	.name		= "mct-comp",
+	// CLOCK_EVT_FEAT_PERIODIC: 0x000001, CLOCK_EVT_FEAT_ONESHOT: 0x000002
 	.features       = CLOCK_EVT_FEAT_PERIODIC | CLOCK_EVT_FEAT_ONESHOT,
 	.rating		= 250,
 	.set_next_event	= exynos4_comp_set_next_event,
@@ -509,19 +694,76 @@ static irqreturn_t exynos4_mct_comp_isr(int irq, void *dev_id)
 	return IRQ_HANDLED;
 }
 
+// ARM10C 20150523
 static struct irqaction mct_comp_event_irq = {
 	.name		= "mct_comp_irq",
+	// IRQF_TIMER: 0x14200, IRQF_IRQPOLL: 0x00001000
 	.flags		= IRQF_TIMER | IRQF_IRQPOLL,
 	.handler	= exynos4_mct_comp_isr,
 	.dev_id		= &mct_comp_device,
 };
 
+// ARM10C 20150523
 static void exynos4_clockevent_init(void)
 {
+	// cpumask_of(0): &cpu_bit_bitmap[1][0]
 	mct_comp_device.cpumask = cpumask_of(0);
+	// mct_comp_device.cpumask: &cpu_bit_bitmap[1][0
+
+	// clk_rate: 24000000
+	// clockevents_config_and_register(&mct_comp_device, 24000000, 0xf, 0xffffffff)
 	clockevents_config_and_register(&mct_comp_device, clk_rate,
 					0xf, 0xffffffff);
+
+	// clockevents_config_and_register에서 한일:
+	// mct_comp_device.cpumask: &cpu_bit_bitmap[1][0
+	// (&mct_comp_device)->min_delta_ticks: 0xf
+	// (&mct_comp_device)->max_delta_ticks: 0xffffffff
+	// (&mct_comp_device)->mult: 0x3126E98
+	// (&mct_comp_device)->shift: 31
+	// (&mct_comp_device)->min_delta_ns: 0x3E8
+	// (&mct_comp_device)->max_delta_ns: 0x29AAAAA46E
+	// (&mct_comp_device)->mode: 1
+	// (&mct_comp_device)->next_event.tv64: 0x7FFFFFFFFFFFFFFF
+	//
+	// list clockevent_devices에 (&mct_comp_device)->list를 추가함
+	//
+	// register G_TCON 에 0x100 write함
+	// global timer enable 의 값을 1로 write 함
+	//
+	// register G_INT_ENB 에 0x0 write함
+	// global timer interrupt enable 의 값을 0로 write 함
+	//
+	// comparator 0의 auto increment0, comp0 enable,comp0 interrupt enable 값을
+	// 0으로 clear 하여 comparator 0를 동작하지 않도록 함
+	//
+	// tick_broadcast_device.evtdev: &mct_comp_device
+	// [pcp0] &(&tick_cpu_sched)->check_clocks: 0xf
+
+	// MCT_G0_IRQ: 0, mct_irqs[0]: 347, setup_irq(347, &mct_comp_event_irq): 0
 	setup_irq(mct_irqs[MCT_G0_IRQ], &mct_comp_event_irq);
+
+	// setup_irq에서 한일:
+	// &(&(kmem_cache#28-oX (irq 347))->wait_for_threads)->lock을 사용한 spinlock 초기화
+	// &(&(kmem_cache#28-oX (irq 347))->wait_for_threads)->task_list를 사용한 list 초기화
+	// &(kmem_cache#28-oX (irq 347))->istate: 0
+	// (kmem_cache#28-oX (irq 347))->depth: 0
+	// (kmem_cache#28-oX (irq 347))->action: &mct_comp_event_irq
+	// (kmem_cache#28-oX (irq 347))->irq_count: 0
+	// (kmem_cache#28-oX (irq 347))->irqs_unhandled: 0
+	//
+	// (&(kmem_cache#28-oX (irq 347))->irq_data)->state_use_accessors: 0x10000
+	// (&(kmem_cache#28-oX (irq 347))->irq_data)->affinity->bits[0]: 1
+	//
+	// register IESR5의 MCT_G0 bit 를 1 로 write 하여 MCT_G0 의 interrupt 를 enable 시킴
+	//
+	// GICD_ITARGETSR46 값을 모르기 때문에 0x00000000 로
+	// 읽히는 것으로 가정하고 GICD_ITARGETSR46에 0x1000000를 write 함
+	// CPU interface 0에 interrupt가 발생을 나타냄
+	//
+	// struct irqaction 멤버 값 세팅
+	// (&mct_comp_event_irq)->irq: 347
+	// (&mct_comp_event_irq)->dir: NULL
 }
 
 // ARM10C 20150321
@@ -883,6 +1125,7 @@ static int exynos4_local_timer_setup(struct clock_event_device *evt)
 		// &(&(kmem_cache#28-oX (irq 152))->wait_for_threads)->task_list를 사용한 list 초기화
 		// (kmem_cache#28-oX (irq 152))->istate: 0
 		// (kmem_cache#28-oX (irq 152))->depth: 1
+		// (kmem_cache#28-oX (irq 152))->action: kmem_cache#30-oX (irqaction)
 		// (kmem_cache#28-oX (irq 152))->status_use_accessors: 0x3400
 		// (kmem_cache#28-oX (irq 152))->irq_count: 0
 		// (kmem_cache#28-oX (irq 152))->irqs_unhandled: 0
@@ -1130,6 +1373,7 @@ static void __init exynos4_timer_resources(struct device_node *np, void __iomem 
 	// &(&(kmem_cache#28-oX (irq 152))->wait_for_threads)->task_list를 사용한 list 초기화
 	// (kmem_cache#28-oX (irq 152))->istate: 0
 	// (kmem_cache#28-oX (irq 152))->depth: 1
+	// (kmem_cache#28-oX (irq 152))->action: kmem_cache#30-oX (irqaction)
 	// (kmem_cache#28-oX (irq 152))->status_use_accessors: 0x3400
 	// (kmem_cache#28-oX (irq 152))->irq_count: 0
 	// (kmem_cache#28-oX (irq 152))->irqs_unhandled: 0
@@ -1401,13 +1645,86 @@ static void __init mct_init_dt(struct device_node *np, unsigned int int_type)
 	// &(&(kmem_cache#28-oX (irq 152))->wait_for_threads)->task_list를 사용한 list 초기화
 	// (kmem_cache#28-oX (irq 152))->istate: 0
 	// (kmem_cache#28-oX (irq 152))->depth: 1
+	// (kmem_cache#28-oX (irq 152))->action: kmem_cache#30-oX (irqaction)
 	// (kmem_cache#28-oX (irq 152))->status_use_accessors: 0x3400
 	// (kmem_cache#28-oX (irq 152))->irq_count: 0
 	// (kmem_cache#28-oX (irq 152))->irqs_unhandled: 0
 	// (&(kmem_cache#28-oX (irq 152))->irq_data)->state_use_accessors: 0x11400
 
 	exynos4_clocksource_init();
+
+	// exynos4_clocksource_init에서 한일:
+	// register G_CNT_L 에 0x0 write함
+	// FRC count buffer 의 tick count 값을 0로 write 함
+	//
+	// register G_CNT_WSTAT 에 0x1 write함
+	// G_CNT_L write status 의  값을 1로 write 함
+	//
+	// register G_CNT_U 에 0x0 write함
+	// FRC count buffer 의 tick count 값을 0로 write 함
+	//
+	// register G_CNT_WSTAT 에 0x1 write함
+	// G_CNT_U write status 의  값을 1로 write 함
+	//
+	// register G_TCON 에 0x100 write함
+	// global timer enable 의 값을 1로 write 함
+	//
+	// (&mct_frc)->mult: 0xA6AAAAAA
+	// (&mct_frc)->shift: 26
+	// (&mct_frc)->maxadj: 0x12555555
+	// (&mct_frc)->max_idle_ns: 0x103955554C
+	// (&mct_frc)->flags: 0x21
+	//
+	// list clocksource_list의 next에 &(&mct_frc)->list를 추가함
+
 	exynos4_clockevent_init();
+
+	// exynos4_clockevent_init에서 한일:
+	// mct_comp_device.cpumask: &cpu_bit_bitmap[1][0
+	//
+	// (&mct_comp_device)->min_delta_ticks: 0xf
+	// (&mct_comp_device)->max_delta_ticks: 0xffffffff
+	// (&mct_comp_device)->mult: 0x3126E98
+	// (&mct_comp_device)->shift: 31
+	// (&mct_comp_device)->min_delta_ns: 0x3E8
+	// (&mct_comp_device)->max_delta_ns: 0x29AAAAA46E
+	// (&mct_comp_device)->mode: 1
+	// (&mct_comp_device)->next_event.tv64: 0x7FFFFFFFFFFFFFFF
+	//
+	// list clockevent_devices에 (&mct_comp_device)->list를 추가함
+	//
+	// register G_TCON 에 0x100 write함
+	// global timer enable 의 값을 1로 write 함
+	//
+	// register G_INT_ENB 에 0x0 write함
+	// global timer interrupt enable 의 값을 0로 write 함
+	//
+	// comparator 0의 auto increment0, comp0 enable,comp0 interrupt enable 값을
+	// 0으로 clear 하여 comparator 0를 동작하지 않도록 함
+	//
+	// tick_broadcast_device.evtdev: &mct_comp_device
+	// [pcp0] &(&tick_cpu_sched)->check_clocks: 0xf
+	//
+	// &(&(kmem_cache#28-oX (irq 347))->wait_for_threads)->lock을 사용한 spinlock 초기화
+	// &(&(kmem_cache#28-oX (irq 347))->wait_for_threads)->task_list를 사용한 list 초기화
+	// &(kmem_cache#28-oX (irq 347))->istate: 0
+	// (kmem_cache#28-oX (irq 347))->depth: 0
+	// (kmem_cache#28-oX (irq 347))->action: &mct_comp_event_irq
+	// (kmem_cache#28-oX (irq 347))->irq_count: 0
+	// (kmem_cache#28-oX (irq 347))->irqs_unhandled: 0
+	//
+	// (&(kmem_cache#28-oX (irq 347))->irq_data)->state_use_accessors: 0x10000
+	// (&(kmem_cache#28-oX (irq 347))->irq_data)->affinity->bits[0]: 1
+	//
+	// register IESR5의 MCT_G0 bit 를 1 로 write 하여 MCT_G0 의 interrupt 를 enable 시킴
+	//
+	// GICD_ITARGETSR46 값을 모르기 때문에 0x00000000 로
+	// 읽히는 것으로 가정하고 GICD_ITARGETSR46에 0x1000000를 write 함
+	// CPU interface 0에 interrupt가 발생을 나타냄
+	//
+	// struct irqaction 멤버 값 세팅
+	// (&mct_comp_event_irq)->irq: 347
+	// (&mct_comp_event_irq)->dir: NULL
 }
 
 
@@ -1416,7 +1733,270 @@ static void __init mct_init_dt(struct device_node *np, unsigned int int_type)
 static void __init mct_init_spi(struct device_node *np)
 {
 	// np: devtree에서 allnext로 순회 하면서 찾은 mct node의 주소, MCT_INT_SPI: 0
+	// mct_init_dt(devtree에서 allnext로 순회 하면서 찾은 mct node의 주소, 0)
 	return mct_init_dt(np, MCT_INT_SPI);
+
+	// mct_init_dt에서 한일:
+	// mct_int_type: 0
+	//
+	// devtree의 mct node의 interrupt의 property의 값을 dtb에  분석하여 oirq 값을 가져옴
+	//
+	// (&oirq)->np: combiner node의 주소
+	// (&oirq)->args_count: 2
+	// (&oirq)->args[0]: 23
+	// (&oirq)->args[1]: 3
+	//
+	// oirq 값을 사용하여 combiner domain에서 virq 값을 찾음
+	// virq: 347
+	//
+	// mct_irqs[4]: 152
+	// mct_irqs[5]: 153
+	// mct_irqs[6]: 154
+	// mct_irqs[7]: 155
+	//
+	// device tree 있는  mct node에서 node의 resource 값을 가져옴
+	// (&res)->start: 0x101C0000
+	// (&res)->end: 0x101C07ff
+	// (&res)->flags: IORESOURCE_MEM: 0x00000200
+	// (&res)->name: "/mct@101C0000"
+	/*
+	// alloc area (MCT) 를 만들고 rb tree에 alloc area 를 추가
+	// 가상주소 va_start 기준으로 MCT 를 RB Tree 추가한 결과
+	//
+	//                                      CHID-b
+	//                                    (0xF8000000)
+	//                                  /              \
+	//                            CLK-b                  PMU-b
+	//                         (0xF0040000)              (0xF8180000)
+	//                        /          \                /        \
+	//                 GIC#1-r            TMR-r        CMU-b         SRAM-b
+	//             (0xF0002000)         (0xF6300000)   (0xF8100000)  (0xF8400000)
+	//              /       \              /    \                         \
+	//        GIC#0-b       COMB-b     SYSC-b     WDT-b                   ROMC-r
+	//    (0xF0000000) (0xF0004000) (0xF6100000)  (0xF6400000)            (0xF84C0000)
+	//                          \
+	//                          MCT-r
+	//                       (0xF0006000)
+	//
+	// vmap_area_list에 GIC#0 - GIC#1 - COMB - MCT - CLK - SYSC -TMR - WDT - CHID - CMU - PMU - SRAM - ROMC
+	// 순서로 리스트에 연결이 됨
+	//
+	// (kmem_cache#30-oX (vm_struct))->flags: GFP_KERNEL: 0xD0
+	// (kmem_cache#30-oX (vm_struct))->addr: 0xf0006000
+	// (kmem_cache#30-oX (vm_struct))->size: 0x2000
+	// (kmem_cache#30-oX (vm_struct))->caller: __builtin_return_address(0)
+	//
+	// (kmem_cache#30-oX (vmap_area CLK))->vm: kmem_cache#30-oX (vm_struct)
+	// (kmem_cache#30-oX (vmap_area CLK))->flags: 0x04
+	*/
+	// device tree 있는 mct node에서 node의 resource 값을 pgtable에 매핑함
+	// 0xc0004780이 가리키는 pte의 시작주소에 0x101C0653 값을 갱신
+	// (linux pgtable과 hardware pgtable의 값 같이 갱신)
+	//
+	//  pgd                   pte
+	// |              |
+	// +--------------+
+	// |              |       +--------------+ +0
+	// |              |       |  0xXXXXXXXX  | ---> 0x101C0653 에 매칭되는 linux pgtable 값
+	// +- - - - - - - +       |  Linux pt 0  |
+	// |              |       +--------------+ +1024
+	// |              |       |              |
+	// +--------------+ +0    |  Linux pt 1  |
+	// | *(c0004780)  |-----> +--------------+ +2048
+	// |              |       |  0x101C0653  | ---> 2076
+	// +- - - - - - - + +4    |   h/w pt 0   |
+	// | *(c0004784)  |-----> +--------------+ +3072
+	// |              |       +              +
+	// +--------------+ +8    |   h/w pt 1   |
+	// |              |       +--------------+ +4096
+	//
+	// cache의 값을 전부 메모리에 반영
+	//
+	// mct node의 property "clock-names" 의 값을 찾아서 "fin_pll" 이 있는 위치를 찾고
+	// 몇번째 값인지 index를 구함
+	//
+	// mct node 에서 "clocks" property의 이용하여 devtree의 값을 파싱하여 clkspec에 값을 가져옴
+	// (&clkspec)->np: clock node의 주소
+	// (&clkspec)->args_count: 1
+	// (&clkspec)->args[0]: 1
+	//
+	// list of_clk_providers 에 등록된 정보들 중에 clkspec 와 매치되는 정보를 찾음
+	// 이전에 만들어 놓은 clk_data의 clk_table 정보를 이용하여 clkspec에 있는 arg 값을 이용하여 clk을 찾음
+	// tick_clk: kmem_cache#29-oX (fin_pll)
+	//
+	// mct node의 property "clock-names" 의 값을 찾아서 "mct" 이 있는 위치를 찾고
+	// 몇번째 값인지 index를 구함
+	//
+	// mct node 에서 "clocks" property의 이용하여 devtree의 값을 파싱하여 clkspec에 값을 가져옴
+	// (&clkspec)->np: clock node의 주소
+	// (&clkspec)->args_count: 1
+	// (&clkspec)->args[0]: 315
+	//
+	// list of_clk_providers 에 등록된 정보들 중에 clkspec 와 매치되는 정보를 찾음
+	// 이전에 만들어 놓은 clk_data의 clk_table 정보를 이용하여 clkspec에 있는 arg 값을 이용하여 clk을 찾음
+	// mct_clk: kmem_cache#29-oX (mct)
+	//
+	// clk_prepare_enable에서 한일:
+	// mct clock의 상위 clock 들의 ops->prepare 함수들을 수행.
+	// mct clock의 상위 clock 들의 ops->enable 함수들을 수행.
+	// sck_cpll -- Group1_p -- mout_aclk66 -- dout_aclk66 -- mct
+	// sck_ppll -|
+	// sck_mpll -|
+	//
+	// sck_cpll, mout_aclk66, dout_aclk66 의 주석을 만들지 않았기 때문에
+	// 분석내용을 skip 하도록함
+	//
+	// Interrupt pending register인 GICD_ITARGETSR38 값을 읽고
+	// 그 값과 mask 값인 cpu_bit_bitmap[1][0] 을 or 연산한 값을 GICD_ITARGETSR38에
+	// 다시 write함
+	//
+	// GICD_ITARGETSR38 값을 모르기 때문에 0x00000000 로
+	// 읽히는 것으로 가정하고 GICD_ITARGETSR38에 0x00000001를 write 함
+	// CPU interface 0에 interrupt가 발생을 나타냄
+	//
+	// (&(kmem_cache#28-oX (irq 152))->irq_data)->affinity->bits[0]: 1
+	// (&(kmem_cache#28-oX (irq 152))->irq_data)->state_use_accessors: 0x11000
+	//
+	// register_cpu_notifier 에서 한일:
+	// (&cpu_chain)->head: &exynos4_mct_cpu_nb 포인터 대입
+	// (&exynos4_mct_cpu_nb)->next은 (&hrtimers_nb)->next로 대입
+	//
+	// [pcp0] (&percpu_mct_tick)->base: 0x300
+	// [pcp0] (&percpu_mct_tick)->name: "mct_tick0"
+	// [pcp0] (&(&percpu_mct_tick)->evt)->name: "mct_tick0"
+	// [pcp0] (&(&percpu_mct_tick)->evt)->cpumask: &cpu_bit_bitmap[1][0]
+	// [pcp0] (&(&percpu_mct_tick)->evt)->set_next_event: exynos4_tick_set_next_event
+	// [pcp0] (&(&percpu_mct_tick)->evt)->set_mode: exynos4_tick_set_mode
+	// [pcp0] (&(&percpu_mct_tick)->evt)->features: 0x3
+	// [pcp0] (&(&percpu_mct_tick)->evt)->rating: 450
+	// [pcp0] (&(&percpu_mct_tick)->evt)->min_delta_ticks: 0xf
+	// [pcp0] (&(&percpu_mct_tick)->evt)->max_delta_ticks: 0x7fffffff
+	// [pcp0] (&(&percpu_mct_tick)->evt)->mult: 0x3126E98
+	// [pcp0] (&(&percpu_mct_tick)->evt)->shift: 32
+	// [pcp0] (&(&percpu_mct_tick)->evt)->min_delta_ns: 0x4E2
+	// [pcp0] (&(&percpu_mct_tick)->evt)->max_delta_ns: 0x29AAAAA444
+	// [pcp0] (&(&percpu_mct_tick)->evt)->next_event.tv64: 0x7FFFFFFFFFFFFFFF
+	// [pcp0] (&(&percpu_mct_tick)->evt)->event_handler: tick_handle_periodic
+	// [pcp0] (&(&percpu_mct_tick)->evt)->mode: 2
+	// [pcp0] (&(&percpu_mct_tick)->evt)->irq: 152
+	//
+	// [pcp0] (&tick_cpu_device)->mode: 0
+	// [pcp0] (&tick_cpu_device)->evtdev: [pcp0] &(&percpu_mct_tick)->evt
+	//
+	// [pcp0] (&tick_cpu_sched)->check_clocks: 1
+	//
+	// list clockevent_devices에 [pcp0] (&(&percpu_mct_tick)->evt)->list를 추가함
+	//
+	// tick_do_timer_cpu: 0
+	// tick_next_period.tv64: 0
+	// tick_period.tv64: 10000000
+	//
+	// timer control register L0_TCON 값을 읽어 timer start, timer interrupt 설정을
+	// 동작하지 않도록 변경함
+	// L0_TCON 값이 0 으로 가정하였으므로 timer는 동작하지 않은 상태임
+	//
+	// register L_ICNTB 에 0x8001D4C0 write함
+	// local timer 0 의 interrupt count buffer 값을 120000 (0x1D4C0) write 하고
+	// interrupt manual update를 enable 시킴
+	//
+	// register L_INT_ENB 에 0x1 write함
+	// local timer 0 의 ICNTEIE 값을 0x1을 write 하여 L0_INTCNT 값이 0 이 되었을 때
+	// interrupt counter expired interrupt 가 발생하도록 함
+	//
+	// register L_TCON 에 0x7 write함
+	// local timer 0 의 interrupt type을 interval mode로 설정하고 interrupt, timer 를 start 시킴
+	//
+	// register L_TCNTB 에 0x1 write함
+	// local timer 0 의 tick count 값을 1로 write 함
+	//
+	// struct irqaction의 메모리 공간을 할당 받고 맴버값 세팅
+	// (kmem_cache#30-oX)->handler: exynos4_mct_tick_isr
+	// (kmem_cache#30-oX)->thread_fn: NULL
+	// (kmem_cache#30-oX)->flags: 0x14A00
+	// (kmem_cache#30-oX)->name: "mct_tick0"
+	// (kmem_cache#30-oX)->dev_id: [pcp0] &percpu_mct_tick
+	// (kmem_cache#30-oX)->irq: 152
+	// (kmem_cache#30-oX)->dir: NULL
+	//
+	// irq_desc 152의 맴버값을 초기화
+	// &(&(kmem_cache#28-oX (irq 152))->wait_for_threads)->lock을 사용한 spinlock 초기화
+	// &(&(kmem_cache#28-oX (irq 152))->wait_for_threads)->task_list를 사용한 list 초기화
+	// (kmem_cache#28-oX (irq 152))->istate: 0
+	// (kmem_cache#28-oX (irq 152))->depth: 1
+	// (kmem_cache#28-oX (irq 152))->action: kmem_cache#30-oX (irqaction)
+	// (kmem_cache#28-oX (irq 152))->status_use_accessors: 0x3400
+	// (kmem_cache#28-oX (irq 152))->irq_count: 0
+	// (kmem_cache#28-oX (irq 152))->irqs_unhandled: 0
+	// (&(kmem_cache#28-oX (irq 152))->irq_data)->state_use_accessors: 0x11400
+	//
+	// register G_CNT_L 에 0x0 write함
+	// FRC count buffer 의 tick count 값을 0로 write 함
+	//
+	// register G_CNT_WSTAT 에 0x1 write함
+	// G_CNT_L write status 의  값을 1로 write 함
+	//
+	// register G_CNT_U 에 0x0 write함
+	// FRC count buffer 의 tick count 값을 0로 write 함
+	//
+	// register G_CNT_WSTAT 에 0x1 write함
+	// G_CNT_U write status 의  값을 1로 write 함
+	//
+	// register G_TCON 에 0x100 write함
+	// global timer enable 의 값을 1로 write 함
+	//
+	// (&mct_frc)->mult: 0xA6AAAAAA
+	// (&mct_frc)->shift: 26
+	// (&mct_frc)->maxadj: 0x12555555
+	// (&mct_frc)->max_idle_ns: 0x103955554C
+	// (&mct_frc)->flags: 0x21
+	//
+	// list clocksource_list의 next에 &(&mct_frc)->list를 추가함
+	//
+	// mct_comp_device.cpumask: &cpu_bit_bitmap[1][0
+	//
+	// (&mct_comp_device)->min_delta_ticks: 0xf
+	// (&mct_comp_device)->max_delta_ticks: 0xffffffff
+	// (&mct_comp_device)->mult: 0x3126E98
+	// (&mct_comp_device)->shift: 31
+	// (&mct_comp_device)->min_delta_ns: 0x3E8
+	// (&mct_comp_device)->max_delta_ns: 0x29AAAAA46E
+	// (&mct_comp_device)->mode: 1
+	// (&mct_comp_device)->next_event.tv64: 0x7FFFFFFFFFFFFFFF
+	//
+	// list clockevent_devices에 (&mct_comp_device)->list를 추가함
+	//
+	// register G_TCON 에 0x100 write함
+	// global timer enable 의 값을 1로 write 함
+	//
+	// register G_INT_ENB 에 0x0 write함
+	// global timer interrupt enable 의 값을 0로 write 함
+	//
+	// comparator 0의 auto increment0, comp0 enable,comp0 interrupt enable 값을
+	// 0으로 clear 하여 comparator 0를 동작하지 않도록 함
+	//
+	// tick_broadcast_device.evtdev: &mct_comp_device
+	// [pcp0] &(&tick_cpu_sched)->check_clocks: 0xf
+	//
+	// &(&(kmem_cache#28-oX (irq 347))->wait_for_threads)->lock을 사용한 spinlock 초기화
+	// &(&(kmem_cache#28-oX (irq 347))->wait_for_threads)->task_list를 사용한 list 초기화
+	// &(kmem_cache#28-oX (irq 347))->istate: 0
+	// (kmem_cache#28-oX (irq 347))->depth: 0
+	// (kmem_cache#28-oX (irq 347))->action: &mct_comp_event_irq
+	// (kmem_cache#28-oX (irq 347))->irq_count: 0
+	// (kmem_cache#28-oX (irq 347))->irqs_unhandled: 0
+	//
+	// (&(kmem_cache#28-oX (irq 347))->irq_data)->state_use_accessors: 0x10000
+	// (&(kmem_cache#28-oX (irq 347))->irq_data)->affinity->bits[0]: 1
+	//
+	// register IESR5의 MCT_G0 bit 를 1 로 write 하여 MCT_G0 의 interrupt 를 enable 시킴
+	//
+	// GICD_ITARGETSR46 값을 모르기 때문에 0x00000000 로
+	// 읽히는 것으로 가정하고 GICD_ITARGETSR46에 0x1000000를 write 함
+	// CPU interface 0에 interrupt가 발생을 나타냄
+	//
+	// struct irqaction 멤버 값 세팅
+	// (&mct_comp_event_irq)->irq: 347
+	// (&mct_comp_event_irq)->dir: NULL
 }
 
 static void __init mct_init_ppi(struct device_node *np)

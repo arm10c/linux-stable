@@ -86,8 +86,11 @@
 // ARM10C 20150509
 // IRQF_NOBALANCING: 0x00000800
 #define IRQF_NOBALANCING	0x00000800
+// ARM10C 20150523
+// IRQF_IRQPOLL: 0x00001000
 #define IRQF_IRQPOLL		0x00001000
 // ARM10C 20150509
+// ARM10C 20150523
 // IRQF_ONESHOT: 0x00002000
 #define IRQF_ONESHOT		0x00002000
 // ARM10C 20150509
@@ -100,6 +103,7 @@
 #define IRQF_EARLY_RESUME	0x00020000
 
 // ARM10C 20150509
+// ARM10C 20150523
 // __IRQF_TIMER: 0x00000200
 // IRQF_NO_SUSPEND: 0x00004000
 // IRQF_NO_THREAD 0x00010000
@@ -137,6 +141,7 @@ typedef irqreturn_t (*irq_handler_t)(int, void *);
  * @dir:	pointer to the proc/irq/NN/name entry
  */
 // ARM10C 20150509
+// ARM10C 20150523
 // sizeof(struct irqaction): 48 bytes
 struct irqaction {
 	irq_handler_t		handler;
@@ -188,6 +193,7 @@ request_irq(unsigned int irq, irq_handler_t handler, unsigned long flags,
 	// &(&(kmem_cache#28-oX (irq 152))->wait_for_threads)->task_list를 사용한 list 초기화
 	// (kmem_cache#28-oX (irq 152))->istate: 0
 	// (kmem_cache#28-oX (irq 152))->depth: 1
+	// (kmem_cache#28-oX (irq 152))->action: kmem_cache#30-oX (irqaction)
 	// (kmem_cache#28-oX (irq 152))->status_use_accessors: 0x3400
 	// (kmem_cache#28-oX (irq 152))->irq_count: 0
 	// (kmem_cache#28-oX (irq 152))->irqs_unhandled: 0
@@ -375,7 +381,7 @@ static inline int disable_irq_wake(unsigned int irq)
 }
 
 
-#ifdef CONFIG_IRQ_FORCED_THREADING
+#ifdef CONFIG_IRQ_FORCED_THREADING // CONFIG_IRQ_FORCED_THREADING=y
 extern bool force_irqthreads;
 #else
 #define force_irqthreads	(0)

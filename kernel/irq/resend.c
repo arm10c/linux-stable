@@ -56,6 +56,9 @@ static DECLARE_TASKLET(resend_tasklet, resend_irqs, 0);
 // ARM10C 20141220
 // desc: kmem_cache#28-oX (irq 32),
 // desc->irq_data.irq: (kmem_cache#28-oX (irq 32))->irq_data.irq: 32
+// ARM10C 20150523
+// desc: kmem_cache#28-oX (irq 347),
+// desc->irq_data.irq: (kmem_cache#28-oX (irq 347))->irq_data.irq: 347
 void check_irq_resend(struct irq_desc *desc, unsigned int irq)
 {
 	/*
@@ -64,18 +67,22 @@ void check_irq_resend(struct irq_desc *desc, unsigned int irq)
 	 * active. Clear the pending bit so suspend/resume does not
 	 * get confused.
 	 */
-	// desc: kmem_cache#28-oX (irq 32)
+	// desc: kmem_cache#28-oX (irq 32),
 	// irq_settings_is_level(kmem_cache#28-oX (irq 32)): 0
+	// desc: kmem_cache#28-oX (irq 347),
+	// irq_settings_is_level(kmem_cache#28-oX (irq 347)): 0
 	if (irq_settings_is_level(desc)) {
 		desc->istate &= ~IRQS_PENDING;
 		return;
 	}
 
 	// desc->istate: (kmem_cache#28-oX (irq 32))->istate: 0, IRQS_REPLAY: 0x00000040
+	// desc->istate: (kmem_cache#28-oX (irq 347))->istate: 0, IRQS_REPLAY: 0x00000040
 	if (desc->istate & IRQS_REPLAY)
 		return;
 
 	// desc->istate: (kmem_cache#28-oX (irq 32))->istate: 0, IRQS_PENDING: 0x00000200
+	// desc->istate: (kmem_cache#28-oX (irq 347))->istate: 0, IRQS_PENDING: 0x00000200
 	if (desc->istate & IRQS_PENDING) {
 		desc->istate &= ~IRQS_PENDING;
 		desc->istate |= IRQS_REPLAY;

@@ -24,6 +24,7 @@
 // ARM10C 20150411
 static LIST_HEAD(clockevent_devices);
 // ARM10C 20150509
+// ARM10C 20150523
 static LIST_HEAD(clockevents_released);
 
 /* Protection for the above */
@@ -50,19 +51,29 @@ struct ce_unbind {
 // dev->min_delta_ticks: [pcp0] (&(&percpu_mct_tick)->evt)->min_delta_ticks: 0xf, dev: [pcp0] &(&percpu_mct_tick)->evt, false
 // ARM10C 20150411
 // dev->max_delta_ticks: [pcp0] (&(&percpu_mct_tick)->evt)->max_delta_ticks: 0x7fffffff, dev: [pcp0] &(&percpu_mct_tick)->evt, true
+// ARM10C 20150523
+// dev->min_delta_ticks: (&mct_comp_device)->min_delta_ticks: 0xf, dev: &mct_comp_device, false
+// ARM10C 20150523
+// dev->max_delta_ticks: (&mct_comp_device)->max_delta_ticks: 0xffffffff, dev: &mct_comp_device, true
 static u64 cev_delta2ns(unsigned long latch, struct clock_event_device *evt,
 			bool ismax)
 {
 	// latch: 0xf, evt->shift: [pcp0] (&(&percpu_mct_tick)->evt)->shift: 32
 	// latch: 0x7fffffff, evt->shift: [pcp0] (&(&percpu_mct_tick)->evt)->shift: 32
+	// latch: 0xf, evt->shift: (&mct_comp_device)->shift: 31
+	// latch: 0xffffffff, evt->shift: (&mct_comp_device)->shift: 31
 	u64 clc = (u64) latch << evt->shift;
 	// clc: 0xf00000000
 	// clc: 0x7fffffff00000000
+	// clc: 0x780000000
+	// clc: 0x7FFFFFFF80000000
 
 	u64 rnd;
 
 	// evt->mult: [pcp0] (&(&percpu_mct_tick)->evt)->mult: 0x3126E98
 	// evt->mult: [pcp0] (&(&percpu_mct_tick)->evt)->mult: 0x3126E98
+	// evt->mult: (&mct_comp_device)->mult: 0x3126E98
+	// evt->mult: (&mct_comp_device)->mult: 0x3126E98
 	if (unlikely(!evt->mult)) {
 		evt->mult = 1;
 		WARN_ON(1);
@@ -70,7 +81,11 @@ static u64 cev_delta2ns(unsigned long latch, struct clock_event_device *evt,
 
 	// evt->mult: [pcp0] (&(&percpu_mct_tick)->evt)->mult: 0x3126E98
 	// evt->mult: [pcp0] (&(&percpu_mct_tick)->evt)->mult: 0x3126E98
+	// evt->mult: (&mct_comp_device)->mult: 0x3126E98
+	// evt->mult: (&mct_comp_device)->mult: 0x3126E98
 	rnd = (u64) evt->mult - 1;
+	// rnd: 0x3126E97
+	// rnd: 0x3126E97
 	// rnd: 0x3126E97
 	// rnd: 0x3126E97
 
@@ -80,6 +95,8 @@ static u64 cev_delta2ns(unsigned long latch, struct clock_event_device *evt,
 	 */
 	// clc: 0xf00000000, evt->shift: [pcp0] (&(&percpu_mct_tick)->evt)->shift: 32, latch: 0xf
 	// clc: 0x7fffffff00000000, evt->shift: [pcp0] (&(&percpu_mct_tick)->evt)->shift: 32, latch: 0x7fffffff
+	// clc: 0x780000000, evt->shift: (&mct_comp_device)->shift: 31, latch: 0xf
+	// clc: 0x7FFFFFFF80000000, evt->shift: (&mct_comp_device)->shift: 31, latch: 0xffffffff
 	if ((clc >> evt->shift) != (u64)latch)
 		clc = ~0ULL;
 
@@ -108,26 +125,42 @@ static u64 cev_delta2ns(unsigned long latch, struct clock_event_device *evt,
 	// clc: 0x7fffffff00000000, rnd: 0x3126E97, ismax: true,
 	// evt->mult: [pcp0] (&(&percpu_mct_tick)->evt)->mult: 0x3126E98,
 	// evt->shift: [pcp0] (&(&percpu_mct_tick)->evt)->shift: 32
+	// clc: 0x780000000, rnd: 0x3126E97, ismax: false,
+	// evt->mult: (&mct_comp_device)->mult: 0x3126E98, evt->shift: (&mct_comp_device)->shift: 31
+	// clc: 0x7FFFFFFF80000000, rnd: 0x3126E97, ismax: true,
+	// evt->mult: (&mct_comp_device)->mult: 0x3126E98, evt->shift: (&mct_comp_device)->shift: 31
 	if ((~0ULL - clc > rnd) &&
 	    (!ismax || evt->mult <= (1U << evt->shift)))
 		// clc: 0xf00000000, rnd: 0x3126E97
 		// clc: 0x7fffffff00000000, rnd: 0x3126E97
+		// clc: 0x780000000, rnd: 0x3126E97
+		// clc: 0x7FFFFFFF80000000, rnd: 0x3126E97
 		clc += rnd;
 		// clc: 0xf03126E97
 		// clc: 0x7fffffff03126E97
+		// clc: 0x783126E97
+		// clc: 0x7FFFFFFF83126E97
 
 	// clc: 0xf03126E97, evt->mult: [pcp0] (&(&percpu_mct_tick)->evt)->mult: 0x3126E98
 	// clc: 0x7fffffff03126E97, evt->mult: [pcp0] (&(&percpu_mct_tick)->evt)->mult: 0x3126E98
+	// clc: 0x783126E97, evt->mult: (&mct_comp_device)->mult: 0x3126E98
+	// clc: 0x7FFFFFFF83126E97, evt->mult: (&mct_comp_device)->mult: 0x3126E98
 	do_div(clc, evt->mult);
 	// clc: 0x4E2
 	// clc: 0x29AAAAA444
+	// clc: 0x271
+	// clc: 0x29AAAAA46E
 
 	/* Deltas less than 1usec are pointless noise */
 	// clc: 0x4E2
 	// clc: 0x29AAAAA444
+	// clc: 0x271
+	// clc: 0x29AAAAA46E
 	return clc > 1000 ? clc : 1000;
 	// return 0x4E2
 	// return 0x29AAAAA444
+	// return 0x3E8
+	// return 0x29AAAAA46E
 }
 
 /**
@@ -154,6 +187,8 @@ EXPORT_SYMBOL_GPL(clockevent_delta2ns);
 // dev: [pcp0] &(&percpu_mct_tick)->evt, CLOCK_EVT_MODE_SHUTDOWN: 1
 // ARM10C 20150509
 // dev: [pcp0] &(&percpu_mct_tick)->evt, CLOCK_EVT_MODE_PERIODIC: 2
+// ARM10C 20150523
+// dev: &mct_comp_device, CLOCK_EVT_MODE_SHUTDOWN: 1
 void clockevents_set_mode(struct clock_event_device *dev,
 				 enum clock_event_mode mode)
 {
@@ -162,6 +197,7 @@ void clockevents_set_mode(struct clock_event_device *dev,
 
 	// dev->mode: [pcp0] (&(&percpu_mct_tick)->evt)->mode: 0, mode: 1
 	// dev->mode: [pcp0] (&(&percpu_mct_tick)->evt)->mode: 1, mode: 2
+	// dev->mode: (&mct_comp_device)->mode: 0, mode: 1
 	if (dev->mode != mode) {
 		// dev->set_mode: [pcp0] (&(&percpu_mct_tick)->evt)->set_mode: exynos4_tick_set_mode
 		// mode: 1, dev: [pcp0] &(&percpu_mct_tick)->evt
@@ -169,6 +205,9 @@ void clockevents_set_mode(struct clock_event_device *dev,
 		// dev->set_mode: [pcp0] (&(&percpu_mct_tick)->evt)->set_mode: exynos4_tick_set_mode
 		// mode: 2, dev: [pcp0] &(&percpu_mct_tick)->evt
 		// exynos4_tick_set_mode(2, [pcp0] &(&percpu_mct_tick)->evt)
+		// dev->set_mode: (&mct_comp_device)->set_mode: exynos4_comp_set_mode
+		// mode: 1, dev: &mct_comp_device
+		// exynos4_comp_set_mode(1, &mct_comp_device)
 		dev->set_mode(mode, dev);
 
 		// exynos4_tick_set_mode(1)에서 한일:
@@ -192,11 +231,23 @@ void clockevents_set_mode(struct clock_event_device *dev,
 		// register L_TCON 에 0x7 write함
 		// local timer 0 의 interrupt type을 interval mode로 설정하고 interrupt, timer 를 start 시킴
 
+		// exynos4_comp_set_mode(1)에서 한일:
+		// register G_TCON 에 0x100 write함
+		// global timer enable 의 값을 1로 write 함
+		//
+		// register G_INT_ENB 에 0x0 write함
+		// global timer interrupt enable 의 값을 0로 write 함
+		//
+		// comparator 0의 auto increment0, comp0 enable,comp0 interrupt enable 값을
+		// 0으로 clear 하여 comparator 0를 동작하지 않도록 함
+
 		// dev->mode: [pcp0] (&(&percpu_mct_tick)->evt)->mode: 0, mode: 1
 		// dev->mode: [pcp0] (&(&percpu_mct_tick)->evt)->mode: 1, mode: 2
+		// dev->mode: (&mct_comp_device)->mode: 0, mode: 1
 		dev->mode = mode;
 		// dev->mode: [pcp0] (&(&percpu_mct_tick)->evt)->mode: 1
 		// dev->mode: [pcp0] (&(&percpu_mct_tick)->evt)->mode: 2
+		// dev->mode: (&mct_comp_device)->mode: 1
 
 		/*
 		 * A nsec2cyc multiplicator of 0 is invalid and we'd crash
@@ -204,6 +255,7 @@ void clockevents_set_mode(struct clock_event_device *dev,
 		 */
 		// mode: 1, CLOCK_EVT_MODE_ONESHOT: 3
 		// mode: 2, CLOCK_EVT_MODE_ONESHOT: 3
+		// mode: 1, CLOCK_EVT_MODE_ONESHOT: 3
 		if (mode == CLOCK_EVT_MODE_ONESHOT) {
 			if (unlikely(!dev->mult)) {
 				dev->mult = 1;
@@ -219,10 +271,14 @@ void clockevents_set_mode(struct clock_event_device *dev,
  */
 // ARM10C 20150411
 // new: [pcp0] &(&percpu_mct_tick)->evt
+// ARM10C 20150523
+// new: &mct_comp_device
 void clockevents_shutdown(struct clock_event_device *dev)
 {
 	// dev: [pcp0] &(&percpu_mct_tick)->evt, CLOCK_EVT_MODE_SHUTDOWN: 1
 	// clockevents_set_mode([pcp0] &(&percpu_mct_tick)->evt, 1)
+	// dev: &mct_comp_device, CLOCK_EVT_MODE_SHUTDOWN: 1
+	// clockevents_set_mode(&mct_comp_device, 1)
 	clockevents_set_mode(dev, CLOCK_EVT_MODE_SHUTDOWN);
 
 	// clockevents_set_mode에서 한일:
@@ -232,9 +288,23 @@ void clockevents_shutdown(struct clock_event_device *dev)
 	//
 	// dev->mode: [pcp0] (&(&percpu_mct_tick)->evt)->mode: 1
 
+	// clockevents_set_mode에서 한일:
+	// register G_TCON 에 0x100 write함
+	// global timer enable 의 값을 1로 write 함
+	//
+	// register G_INT_ENB 에 0x0 write함
+	// global timer interrupt enable 의 값을 0로 write 함
+	//
+	// comparator 0의 auto increment0, comp0 enable,comp0 interrupt enable 값을
+	// 0으로 clear 하여 comparator 0를 동작하지 않도록 함
+	//
+	// dev->mode: (&mct_comp_device)->mode: 1
+
 	// dev->next_event.tv64: [pcp0] (&(&percpu_mct_tick)->evt)->next_event.tv64, KTIME_MAX: 0x7FFFFFFFFFFFFFFF
+	// dev->next_event.tv64: (&mct_comp_device)->next_event.tv64, KTIME_MAX: 0x7FFFFFFFFFFFFFFF
 	dev->next_event.tv64 = KTIME_MAX;
 	// dev->next_event.tv64: [pcp0] (&(&percpu_mct_tick)->evt)->next_event.tv64: 0x7FFFFFFFFFFFFFFF
+	// dev->next_event.tv64: (&mct_comp_device)->next_event.tv64: 0x7FFFFFFFFFFFFFFF
 }
 
 #ifdef CONFIG_GENERIC_CLOCKEVENTS_MIN_ADJUST
@@ -381,6 +451,7 @@ int clockevents_program_event(struct clock_event_device *dev, ktime_t expires,
  * released from the notifier call.
  */
 // ARM10C 20150509
+// ARM10C 20150523
 static void clockevents_notify_released(void)
 {
 	struct clock_event_device *dev;
@@ -485,14 +556,18 @@ EXPORT_SYMBOL_GPL(clockevents_unbind);
  */
 // ARM10C 20150411
 // dev: [pcp0] &(&percpu_mct_tick)->evt
+// ARM10C 20150523
+// dev: &mct_comp_device
 void clockevents_register_device(struct clock_event_device *dev)
 {
 	unsigned long flags;
 
 	// dev->mode: [pcp0] (&(&percpu_mct_tick)->evt)->mode: 0, CLOCK_EVT_MODE_UNUSED: 0
+	// dev->mode: (&mct_comp_device)->mode: 0, CLOCK_EVT_MODE_UNUSED: 0
 	BUG_ON(dev->mode != CLOCK_EVT_MODE_UNUSED);
 
 	// evt->cpumask: [pcp0] (&(&percpu_mct_tick)->evt)->cpumask: &cpu_bit_bitmap[1][0]
+	// evt->cpumask: (&mct_comp_device)->cpumask: &cpu_bit_bitmap[1][0]
 	if (!dev->cpumask) {
 		WARN_ON(num_possible_cpus() > 1);
 		dev->cpumask = cpumask_of(smp_processor_id());
@@ -503,16 +578,24 @@ void clockevents_register_device(struct clock_event_device *dev)
 	// raw_spin_lock_irqsave에서 한일:
 	// clockevents_lock를 사용하여 spin lock을 수행하고 cpsr을 flags에 저장
 
+	// raw_spin_lock_irqsave에서 한일:
+	// clockevents_lock를 사용하여 spin lock을 수행하고 cpsr을 flags에 저장
+
 	// &dev->list: [pcp0] (&(&percpu_mct_tick)->evt)->list
+	// &dev->list: (&mct_comp_device)->list
 	list_add(&dev->list, &clockevent_devices);
 
 	// list_add에서 한일:
 	// list clockevent_devices에 [pcp0] (&(&percpu_mct_tick)->evt)->list를 추가함
 
+	// list_add에서 한일:
+	// list clockevent_devices에 (&mct_comp_device)->list를 추가함
+
 	// dev: [pcp0] &(&percpu_mct_tick)->evt
+	// dev: &mct_comp_device
 	tick_check_new_device(dev);
 
-	// tick_check_new_device에서 한일:
+	// tick_check_new_device([pcp0] &(&percpu_mct_tick)->evt)에서 한일:
 	// tick_do_timer_cpu: 0
 	// tick_next_period.tv64: 0
 	// tick_period.tv64: 10000000
@@ -541,9 +624,28 @@ void clockevents_register_device(struct clock_event_device *dev)
 	// register L_TCON 에 0x7 write함
 	// local timer 0 의 interrupt type을 interval mode로 설정하고 interrupt, timer 를 start 시킴
 
+	// tick_check_new_device(&mct_comp_device)에서 한일:
+	// register G_TCON 에 0x100 write함
+	// global timer enable 의 값을 1로 write 함
+	//
+	// register G_INT_ENB 에 0x0 write함
+	// global timer interrupt enable 의 값을 0로 write 함
+	//
+	// comparator 0의 auto increment0, comp0 enable,comp0 interrupt enable 값을
+	// 0으로 clear 하여 comparator 0를 동작하지 않도록 함
+	//
+	// (&mct_comp_device)->mode: 1
+	// (&mct_comp_device)->next_event.tv64: 0x7FFFFFFFFFFFFFFF
+	//
+	// tick_broadcast_device.evtdev: &mct_comp_device
+	// [pcp0] &(&tick_cpu_sched)->check_clocks: 0xf
+
 	clockevents_notify_released();
 
 	raw_spin_unlock_irqrestore(&clockevents_lock, flags);
+
+	// raw_spin_unlock_irqrestore에서 한일:
+	// clockevents_lock를 사용하여 spin unlock을 수행하고 flags에 저장된 cpsr을 복원
 
 	// raw_spin_unlock_irqrestore에서 한일:
 	// clockevents_lock를 사용하여 spin unlock을 수행하고 flags에 저장된 cpsr을 복원
@@ -552,11 +654,14 @@ EXPORT_SYMBOL_GPL(clockevents_register_device);
 
 // ARM10C 20150404
 // dev: [pcp0] &(&percpu_mct_tick)->evt, freq: 12000000
+// ARM10C 20150523
+// dev: &mct_comp_device, freq: 24000000
 void clockevents_config(struct clock_event_device *dev, u32 freq)
 {
 	u64 sec;
 
 	// dev->features: [pcp0] (&(&percpu_mct_tick)->evt)->features: 0x3, CLOCK_EVT_FEAT_ONESHOT: 0x000002
+	// dev->features: (&mct_comp_device)->features: 0x3, CLOCK_EVT_FEAT_ONESHOT: 0x000002
 	if (!(dev->features & CLOCK_EVT_FEAT_ONESHOT))
 		return;
 
@@ -566,17 +671,23 @@ void clockevents_config(struct clock_event_device *dev, u32 freq)
 	 * 32bit ticks so we still get reasonable conversion values.
 	 */
 	// dev->max_delta_ticks: [pcp0] (&(&percpu_mct_tick)->evt)->max_delta_ticks: 0x7fffffff
+	// dev->max_delta_ticks: (&mct_comp_device)->max_delta_ticks: 0xffffffff
 	sec = dev->max_delta_ticks;
 	// sec: 0x7fffffff
+	// sec: 0xffffffff
 
 // 2015/04/04 종료
 // 2015/04/11 시작
 
 	// sec: 0x7fffffff, freq: 12000000
+	// sec: 0xffffffff, freq: 24000000
 	do_div(sec, freq);
+	// sec: 178
 	// sec: 178
 
 	// sec: 178, dev->max_delta_ticks: [pcp0] (&(&percpu_mct_tick)->evt)->max_delta_ticks: 0x7fffffff,
+	// UINT_MAX: 0xFFFFFFFF
+	// sec: 178, dev->max_delta_ticks: [pcp0] (&mct_comp_device)->max_delta_ticks: 0xffffffff,
 	// UINT_MAX: 0xFFFFFFFF
 	if (!sec)
 		sec = 1;
@@ -585,23 +696,38 @@ void clockevents_config(struct clock_event_device *dev, u32 freq)
 
 	// dev: [pcp0] &(&percpu_mct_tick)->evt, freq: 12000000, sec: 178
 	// clockevents_calc_mult_shift([pcp0] &(&percpu_mct_tick)->evt, 12000000, 178)
+	// dev: &mct_comp_device, freq: 24000000, sec: 178
+	// clockevents_calc_mult_shift(&mct_comp_device, 24000000, 178)
 	clockevents_calc_mult_shift(dev, freq, sec);
 
 	// clockevents_calc_mult_shift에서 한일:
 	// [pcp0] (&(&percpu_mct_tick)->evt)->mult: 0x3126E98
 	// [pcp0] (&(&percpu_mct_tick)->evt)->shift: 32
 
+	// clockevents_calc_mult_shift에서 한일:
+	// (&mct_comp_device)->mult: 0x3126E98
+	// (&mct_comp_device)->shift: 31
+
 	// dev->min_delta_ns: [pcp0] (&(&percpu_mct_tick)->evt)->min_delta_ns,
 	// dev->min_delta_ticks: [pcp0] (&(&percpu_mct_tick)->evt)->min_delta_ticks: 0xf, dev: [pcp0] &(&percpu_mct_tick)->evt
 	// cev_delta2ns(0xf, [pcp0] &(&percpu_mct_tick)->evt, false): 0x4E2
+	// dev->min_delta_ns: (&mct_comp_device)->min_delta_ns,
+	// dev->min_delta_ticks: (&mct_comp_device)->min_delta_ticks: 0xf, dev: &mct_comp_device
+	// cev_delta2ns(0xf, &mct_comp_device, false): 0x3E8
 	dev->min_delta_ns = cev_delta2ns(dev->min_delta_ticks, dev, false);
 	// dev->min_delta_ns: [pcp0] (&(&percpu_mct_tick)->evt)->min_delta_ns: 0x4E2
+	// dev->min_delta_ns: (&mct_comp_device)->min_delta_ns: 0x3E8
 
 	// dev->max_delta_ns: [pcp0] (&(&percpu_mct_tick)->evt)->max_delta_ns,
 	// dev->max_delta_ticks: [pcp0] (&(&percpu_mct_tick)->evt)->max_delta_ticks: 0x7fffffff, dev: [pcp0] &(&percpu_mct_tick)->evt
 	// cev_delta2ns(0x7fffffff, [pcp0] &(&percpu_mct_tick)->evt, true): 0x29AAAAA444
+	//
+	// dev->max_delta_ns: (&mct_comp_device)->max_delta_ns,
+	// dev->max_delta_ticks: (&mct_comp_device)->max_delta_ticks: 0xffffffff, dev: &mct_comp_device
+	// cev_delta2ns(0xffffffff, &mct_comp_device, true): 0x29AAAAA46E
 	dev->max_delta_ns = cev_delta2ns(dev->max_delta_ticks, dev, true);
 	// dev->max_delta_ns: [pcp0] (&(&percpu_mct_tick)->evt)->max_delta_ns: 0x29AAAAA444
+	// dev->max_delta_ns: (&mct_comp_device)->max_delta_ns: 0x29AAAAA46E
 }
 
 /**
@@ -615,20 +741,28 @@ void clockevents_config(struct clock_event_device *dev, u32 freq)
  */
 // ARM10C 20150404
 // evt: [pcp0] &(&percpu_mct_tick)->evt, 12000000, 0xf, 0x7fffffff
+// ARM10C 20150523
+// &mct_comp_device, clk_rate: 24000000, 0xf, 0xffffffff
 void clockevents_config_and_register(struct clock_event_device *dev,
 				     u32 freq, unsigned long min_delta,
 				     unsigned long max_delta)
 {
 	// dev->min_delta_ticks: [pcp0] (&(&percpu_mct_tick)->evt)->min_delta_ticks, min_delta: 0xf
+	// dev->min_delta_ticks: (&mct_comp_device)->min_delta_ticks, min_delta: 0xf
 	dev->min_delta_ticks = min_delta;
 	// dev->min_delta_ticks: [pcp0] (&(&percpu_mct_tick)->evt)->min_delta_ticks: 0xf
+	// dev->min_delta_ticks: (&mct_comp_device)->min_delta_ticks: 0xf
 
 	// dev->max_delta_ticks: [pcp0] (&(&percpu_mct_tick)->evt)->max_delta_ticks, max_delta: 0x7fffffff
+	// dev->max_delta_ticks: (&mct_comp_device)->max_delta_ticks, max_delta: 0xffffffff
 	dev->max_delta_ticks = max_delta;
 	// dev->max_delta_ticks: [pcp0] (&(&percpu_mct_tick)->evt)->max_delta_ticks: 0x7fffffff
+	// dev->max_delta_ticks: (&mct_comp_device)->max_delta_ticks: 0xffffffff
 
 	// dev: [pcp0] &(&percpu_mct_tick)->evt, freq: 12000000
 	// clockevents_config(&(&percpu_mct_tick)->evt, 12000000)
+	// dev: &mct_comp_device, freq: 24000000
+	// clockevents_config(&mct_comp_device, 24000000)
 	clockevents_config(dev, freq);
 
 	// clockevents_config에서 한일:
@@ -637,10 +771,17 @@ void clockevents_config_and_register(struct clock_event_device *dev,
 	// [pcp0] (&(&percpu_mct_tick)->evt)->min_delta_ns: 0x4E2
 	// [pcp0] (&(&percpu_mct_tick)->evt)->max_delta_ns: 0x29AAAAA444
 
+	// clockevents_config에서 한일:
+	// (&mct_comp_device)->mult: 0x3126E98
+	// (&mct_comp_device)->shift: 31
+	// (&mct_comp_device)->min_delta_ns: 0x3E8
+	// (&mct_comp_device)->max_delta_ns: 0x29AAAAA46E
+
 	// dev: [pcp0] &(&percpu_mct_tick)->evt
+	// dev: &mct_comp_device
 	clockevents_register_device(dev);
 
-	// clockevents_register_device에서 한일:
+	// clockevents_register_device([pcp0] &(&percpu_mct_tick)->evt)에서 한일:
 	// list clockevent_devices에 [pcp0] (&(&percpu_mct_tick)->evt)->list를 추가함
 	//
 	// tick_do_timer_cpu: 0
@@ -670,6 +811,24 @@ void clockevents_config_and_register(struct clock_event_device *dev,
 	//
 	// register L_TCON 에 0x7 write함
 	// local timer 0 의 interrupt type을 interval mode로 설정하고 interrupt, timer 를 start 시킴
+
+	// clockevents_register_device(&mct_comp_device)에서 한일:
+	// list clockevent_devices에 (&mct_comp_device)->list를 추가함
+	//
+	// register G_TCON 에 0x100 write함
+	// global timer enable 의 값을 1로 write 함
+	//
+	// register G_INT_ENB 에 0x0 write함
+	// global timer interrupt enable 의 값을 0로 write 함
+	//
+	// comparator 0의 auto increment0, comp0 enable,comp0 interrupt enable 값을
+	// 0으로 clear 하여 comparator 0를 동작하지 않도록 함
+	//
+	// (&mct_comp_device)->mode: 1
+	// (&mct_comp_device)->next_event.tv64: 0x7FFFFFFFFFFFFFFF
+	//
+	// tick_broadcast_device.evtdev: &mct_comp_device
+	// [pcp0] &(&tick_cpu_sched)->check_clocks: 0xf
 }
 EXPORT_SYMBOL_GPL(clockevents_config_and_register);
 
@@ -709,6 +868,8 @@ void clockevents_handle_noop(struct clock_event_device *dev)
  */
 // ARM10C 20150411
 // curdev: [pcp0] (&tick_cpu_device)->evtdev: NULL, newdev: [pcp0] &(&percpu_mct_tick)->evt
+// ARM10C 20150523
+// cur: tick_broadcast_device.evtdev, dev: &mct_comp_device
 void clockevents_exchange_device(struct clock_event_device *old,
 				 struct clock_event_device *new)
 {
@@ -719,11 +880,15 @@ void clockevents_exchange_device(struct clock_event_device *old,
 	// local_irq_save 에서 한일:
 	// cpsr을 flags에 저장하고 interrupt disable 함
 
+	// local_irq_save 에서 한일:
+	// cpsr을 flags에 저장하고 interrupt disable 함
+
 	/*
 	 * Caller releases a clock event device. We queue it into the
 	 * released list and do a notify add later.
 	 */
 	// old: [pcp0] (&tick_cpu_device)->evtdev: NULL
+	// old: tick_broadcast_device.evtdev: NULL
 	if (old) {
 		module_put(old->owner);
 		clockevents_set_mode(old, CLOCK_EVT_MODE_UNUSED);
@@ -732,12 +897,14 @@ void clockevents_exchange_device(struct clock_event_device *old,
 	}
 
 	// new: [pcp0] &(&percpu_mct_tick)->evt: NULL 이 아닌 값
+	// new: &mct_comp_device
 	if (new) {
 		// new->mode: [pcp0] (&(&percpu_mct_tick)->evt)->mode: 0, CLOCK_EVT_MODE_UNUSED: 0
+		// new->mode: (&mct_comp_device)->mode: 0, CLOCK_EVT_MODE_UNUSED: 0
 		BUG_ON(new->mode != CLOCK_EVT_MODE_UNUSED);
 
-		// new: [pcp0] &(&percpu_mct_tick)->evt
-		// clockevents_shutdown([pcp0] &(&percpu_mct_tick)->evt)
+		// new: [pcp0] &(&percpu_mct_tick)->evt, clockevents_shutdown([pcp0] &(&percpu_mct_tick)->evt)
+		// new: &mct_comp_device, clockevents_shutdown(&mct_comp_device)
 		clockevents_shutdown(new);
 
 		// clockevents_shutdown에서 한일:
@@ -747,8 +914,24 @@ void clockevents_exchange_device(struct clock_event_device *old,
 		//
 		// [pcp0] (&(&percpu_mct_tick)->evt)->mode: 1
 		// [pcp0] (&(&percpu_mct_tick)->evt)->next_event.tv64: 0x7FFFFFFFFFFFFFFF
+
+		// clockevents_shutdown에서 한일:
+		// register G_TCON 에 0x100 write함
+		// global timer enable 의 값을 1로 write 함
+		//
+		// register G_INT_ENB 에 0x0 write함
+		// global timer interrupt enable 의 값을 0로 write 함
+		//
+		// comparator 0의 auto increment0, comp0 enable,comp0 interrupt enable 값을
+		// 0으로 clear 하여 comparator 0를 동작하지 않도록 함
+		//
+		// (&mct_comp_device)->mode: 1
+		// (&mct_comp_device)->next_event.tv64: 0x7FFFFFFFFFFFFFFF
 	}
 	local_irq_restore(flags);
+
+	// local_irq_restore 에서 한일:
+	// flags에 저장된 cpsr을 복원하고 interrupt enable 함
 
 	// local_irq_restore 에서 한일:
 	// flags에 저장된 cpsr을 복원하고 interrupt enable 함

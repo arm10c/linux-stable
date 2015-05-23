@@ -80,6 +80,10 @@
 // fvco: 505032704, 12
 // ARM10C 20150411
 // sec: 0x7fffffff, freq: 12000000
+// ARM10C 20150523
+// sec: 0xE0000000, freq: 24000000
+// ARM10C 20150523
+// sec: 0x9, scale: 1
 #define do_div(n, base)							\
 ({									\
 	unsigned int __r, __b = (base);					\

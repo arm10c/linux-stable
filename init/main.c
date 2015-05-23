@@ -741,6 +741,9 @@ asmlinkage void __init start_kernel(void)
 	// ntp 관련 전역변수 초기화, timekeeper, shadow_timekeeper의 맴버값 초기화 수행
 
 	time_init();
+
+// 2015/05/23 종료
+
 	sched_clock_postinit();
 	perf_event_init();
 	profile_init();
