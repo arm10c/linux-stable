@@ -220,6 +220,7 @@ struct irq_data {
 // ARM10C 20150404
 // ARM10C 20150509
 // ARM10C 20150516
+// ARM10C 20150523
 enum {
 	// IRQD_TRIGGER_MASK: 0xf
 	IRQD_TRIGGER_MASK		= 0xf,
@@ -255,12 +256,17 @@ static inline bool irqd_is_per_cpu(struct irq_data *d)
 
 // ARM10C 20150516
 // &desc->irq_data: &(kmem_cache#28-oX (irq 152))->irq_data
+// ARM10C 20150523
+// &desc->irq_data: &(kmem_cache#28-oX (irq 347))->irq_data
 static inline bool irqd_can_balance(struct irq_data *d)
 {
 	// d->state_use_accessors: (&(kmem_cache#28-oX (irq 152))->irq_data)->state_use_accessors: 0x11400
 	// IRQD_PER_CPU: 0x800, IRQD_NO_BALANCING: 0x400
+	// d->state_use_accessors: (&(kmem_cache#28-oX (irq 347))->irq_data)->state_use_accessors: 0x10000
+	// IRQD_PER_CPU: 0x800, IRQD_NO_BALANCING: 0x400
 	return !(d->state_use_accessors & (IRQD_PER_CPU | IRQD_NO_BALANCING));
 	// return 0
+	// return 1
 }
 
 static inline bool irqd_affinity_was_set(struct irq_data *d)
@@ -673,19 +679,31 @@ extern int irq_set_msi_desc_off(unsigned int irq_base, unsigned int irq_offset,
 				struct msi_desc *entry);
 extern struct irq_data *irq_get_irq_data(unsigned int irq);
 
+// ARM10C 20150523
+// 55
 static inline struct irq_chip *irq_get_chip(unsigned int irq)
 {
+	// irq: 55, irq_get_irq_data(55): &(kmem_cache#28-oX (irq 55))->irq_data
 	struct irq_data *d = irq_get_irq_data(irq);
+	// d: &(kmem_cache#28-oX (irq 55))->irq_data
+
+	// d: &(kmem_cache#28-oX (irq 55))->irq_data,
+	// d->chip: (&(kmem_cache#28-oX (irq 55))->irq_data)->chip: &gic_chip
 	return d ? d->chip : NULL;
+	// return &gic_chip
 }
 
 // ARM10C 20150328
 // data: &(kmem_cache#28-oX (irq 152))->irq_data
+// ARM10C 20150523
+// data: &(kmem_cache#28-oX (irq 347))->irq_data
 static inline struct irq_chip *irq_data_get_irq_chip(struct irq_data *d)
 {
 	// d->chip: (&(kmem_cache#28-oX (irq 152))->irq_data)->chip
+	// d->chip: (&(kmem_cache#28-oX (irq 347))->irq_data)->chip
 	return d->chip;
 	// return (&(kmem_cache#28-oX (irq 152))->irq_data)->chip
+	// return (&(kmem_cache#28-oX (irq 347))->irq_data)->chip
 }
 
 static inline void *irq_get_chip_data(unsigned int irq)
@@ -696,11 +714,17 @@ static inline void *irq_get_chip_data(unsigned int irq)
 
 // ARM10C 20141220
 // d: &(kmem_cache#28-oX (irq 32))->irq_data
+// ARM10C 20150523
+// data: &(kmem_cache#28-oX (irq 347))->irq_data
+// ARM10C 20150523
+// d: &(kmem_cache#28-oX (irq 347))->irq_data
 static inline void *irq_data_get_irq_chip_data(struct irq_data *d)
 {
 	// d->chip_data: (&(kmem_cache#28-oX (irq 32))->irq_data)->chip_data: &gic_data[0]
+	// d->chip_data: (&(kmem_cache#28-oX (irq 347))->irq_data)->chip_data: &(kmem_cache#26-oX)[23] (combiner_data)
 	return d->chip_data;
 	// return &gic_data[0]
+	// return &(kmem_cache#26-oX)[23] (combiner_data)
 }
 
 static inline void *irq_get_handler_data(unsigned int irq)

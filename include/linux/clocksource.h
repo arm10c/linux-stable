@@ -169,6 +169,7 @@ extern u64 timecounter_cyc2time(struct timecounter *tc,
  */
 // ARM10C 20150103
 // ARM10C 20150418
+// ARM10C 20150523
 struct clocksource {
 	/*
 	 * Hotpath data, fits in a single cache line when the
@@ -207,16 +208,22 @@ struct clocksource {
 /*
  * Clock source flags bits::
  */
+// ARM10C 20150523
+// CLOCK_SOURCE_IS_CONTINUOUS: 0x01
 #define CLOCK_SOURCE_IS_CONTINUOUS		0x01
 #define CLOCK_SOURCE_MUST_VERIFY		0x02
 
 #define CLOCK_SOURCE_WATCHDOG			0x10
+// ARM10C 20150523
+// CLOCK_SOURCE_VALID_FOR_HRES: 0x20
 #define CLOCK_SOURCE_VALID_FOR_HRES		0x20
 #define CLOCK_SOURCE_UNSTABLE			0x40
 #define CLOCK_SOURCE_SUSPEND_NONSTOP		0x80
 #define CLOCK_SOURCE_RESELECT			0x100
 
 /* simplify initialization of mask field */
+// ARM10C 20150523
+// CLOCKSOURCE_MASK(64): 0xFFFFFFFF
 #define CLOCKSOURCE_MASK(bits) (cycle_t)((bits) < 64 ? ((1ULL<<(bits))-1) : -1)
 
 /**
@@ -280,9 +287,13 @@ static inline u32 clocksource_hz2mult(u32 hz, u32 shift_constant)
  *
  * XXX - This could use some mult_lxl_ll() asm optimization
  */
+// ARM10C 20150523
+// max_cycles: 0x80000000, 0x94555555, shift: 26
 static inline s64 clocksource_cyc2ns(cycle_t cycles, u32 mult, u32 shift)
 {
+	// cycles: 0x80000000, mult: 0x94555555, shift: 26
 	return ((u64) cycles * mult) >> shift;
+	// return 0x128AAAAAA0
 }
 
 
@@ -310,10 +321,27 @@ __clocksource_register_scale(struct clocksource *cs, u32 scale, u32 freq);
 extern void
 __clocksource_updatefreq_scale(struct clocksource *cs, u32 scale, u32 freq);
 
+<<<<<<< HEAD
 /* a10c_5526 */
+=======
+// ARM10C 20150523
+// &mct_frc, clk_rate: 24000000
+>>>>>>> 1e01d49e8084d40f3e40dd4b43720d7d8452e738
 static inline int clocksource_register_hz(struct clocksource *cs, u32 hz)
 {
+	// cs: &mct_frc, hz: 24000000
+	// __clocksource_register_scale(&mct_frc, 1, 24000000): 0
 	return __clocksource_register_scale(cs, 1, hz);
+	// return 0
+
+	// __clocksource_register_scale에서 한일:
+	// (&mct_frc)->mult: 0xA6AAAAAA
+	// (&mct_frc)->shift: 26
+	// (&mct_frc)->maxadj: 0x12555555
+	// (&mct_frc)->max_idle_ns: 0x103955554C
+	// (&mct_frc)->flags: 0x21
+	//
+	// list clocksource_list의 next에 &(&mct_frc)->list를 추가함
 }
 
 static inline int clocksource_register_khz(struct clocksource *cs, u32 khz)

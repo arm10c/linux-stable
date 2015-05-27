@@ -58,6 +58,7 @@ enum tick_nohz_mode {
  * @do_timer_lst:	CPU was the last one doing do_timer before going idle
  */
 // ARM10C 20150509
+// ARM10C 20150523
 struct tick_sched {
 	struct hrtimer			sched_timer;
 	unsigned long			check_clocks;
@@ -108,7 +109,8 @@ extern struct cpumask *tick_get_broadcast_oneshot_mask(void);
 
 # endif /* BROADCAST */
 
-# ifdef CONFIG_TICK_ONESHOT
+# ifdef CONFIG_TICK_ONESHOT // CONFIG_TICK_ONESHOT=y
+// ARM10C 20150523
 extern void tick_clock_notify(void);
 extern int tick_check_oneshot_change(int allow_nohz);
 extern struct tick_sched *tick_get_tick_sched(int cpu);

@@ -78,6 +78,8 @@ extern void __init_waitqueue_head(wait_queue_head_t *q, const char *name, struct
 // &rsp->gp_wq: &(&rcu_bh_state)->gp_wq
 // ARM10C 20150509
 // &desc->wait_for_threads: &(kmem_cache#28-oX (irq 152))->wait_for_threads
+// ARM10C 20150523
+// &desc->wait_for_threads: &(kmem_cache#28-oX (irq 347))->wait_for_threads
 #define init_waitqueue_head(q)				\
 	do {						\
 		static struct lock_class_key __key;	\

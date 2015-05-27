@@ -237,6 +237,8 @@ extern int _find_next_bit_be(const unsigned long *p, int size, int offset);
 // map: allocated_irqs, end: 160, index: 16
 // ARM10C 20141213
 // map: allocated_irqs, end: 416, index: 160
+// ARM10C 20150523
+// cpumask_bits(mask): mask->bits: 0x1, nr_cpumask_bits: 4, n: -1+1
 #define find_next_bit(p,sz,off)		_find_next_bit_le(p,sz,off)
 
 #else

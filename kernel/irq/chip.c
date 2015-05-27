@@ -278,6 +278,8 @@ EXPORT_SYMBOL(irq_set_chip_data);
 // virq: 160
 // ARM10C 20150321
 // virq: 347
+// ARM10C 20150523
+// irq: 55
 struct irq_data *irq_get_irq_data(unsigned int irq)
 {
 	// irq: 16, irq_to_desc(16): kmem_cache#28-oX (irq 16)
@@ -298,14 +300,21 @@ EXPORT_SYMBOL_GPL(irq_get_irq_data);
 
 // ARM10C 20141220
 // desc: kmem_cache#28-oX (irq 32)
+// ARM10C 20150523
+// desc: kmem_cache#28-oX (irq 347)
 static void irq_state_clr_disabled(struct irq_desc *desc)
 {
 	// &desc->irq_data: &(kmem_cache#28-oX (irq 32))->irq_data,
+	// IRQD_IRQ_DISABLED: 0x10000
+	// &desc->irq_data: &(kmem_cache#28-oX (irq 347))->irq_data,
 	// IRQD_IRQ_DISABLED: 0x10000
 	irqd_clear(&desc->irq_data, IRQD_IRQ_DISABLED);
 
 	// irqd_clear에서 한일:
 	// (&(kmem_cache#28-oX (irq 32))->irq_data)->state_use_accessors: 0
+
+	// irqd_clear에서 한일:
+	// (&(kmem_cache#28-oX (irq 347))->irq_data)->state_use_accessors: 0x10000
 }
 
 static void irq_state_set_disabled(struct irq_desc *desc)
@@ -315,14 +324,21 @@ static void irq_state_set_disabled(struct irq_desc *desc)
 
 // ARM10C 20141220
 // desc: kmem_cache#28-oX (irq 32)
+// ARM10C 20150523
+// desc: kmem_cache#28-oX (irq 347)
 static void irq_state_clr_masked(struct irq_desc *desc)
 {
 	// &desc->irq_data: &(kmem_cache#28-oX (irq 32))->irq_data,
+	// IRQD_IRQ_MASKED: 0x20000
+	// &desc->irq_data: &(kmem_cache#28-oX (irq 347))->irq_data,
 	// IRQD_IRQ_MASKED: 0x20000
 	irqd_clear(&desc->irq_data, IRQD_IRQ_MASKED);
 
 	// irqd_clear에서 한일:
 	// (&(kmem_cache#28-oX (irq 32))->irq_data)->state_use_accessors: 0
+
+	// irqd_clear에서 한일:
+	// (&(kmem_cache#28-oX (irq 347))->irq_data)->state_use_accessors: 0x10000
 }
 
 static void irq_state_set_masked(struct irq_desc *desc)
@@ -332,42 +348,61 @@ static void irq_state_set_masked(struct irq_desc *desc)
 
 // ARM10C 20141220
 // desc: kmem_cache#28-oX (irq 32), true
+// ARM10C 20150523
+// desc: kmem_cache#28-oX (irq 347), true
 int irq_startup(struct irq_desc *desc, bool resend)
 {
 	int ret = 0;
 	// ret: 0
 
 	// desc: kmem_cache#28-oX (irq 32)
+	// desc: kmem_cache#28-oX (irq 347)
 	irq_state_clr_disabled(desc);
 
 	// irq_state_clr_disabled에서 한일:
 	// (&(kmem_cache#28-oX (irq 32))->irq_data)->state_use_accessors: 0
 
+	// irq_state_clr_disabled에서 한일:
+	// (&(kmem_cache#28-oX (irq 347))->irq_data)->state_use_accessors: 0x10000
+
 	// desc->depth: (kmem_cache#28-oX (irq 32))->depth
+	// desc->depth: (kmem_cache#28-oX (irq 347))->depth
 	desc->depth = 0;
 	// desc->depth: (kmem_cache#28-oX (irq 32))->depth: 0
+	// desc->depth: (kmem_cache#28-oX (irq 347))->depth: 0
 
 	// desc->irq_data.chip->irq_startup: (kmem_cache#28-oX (irq 32))->irq_data.chip->irq_startup: NULL
+	// desc->irq_data.chip->irq_startup: (kmem_cache#28-oX (irq 347))->irq_data.chip->irq_startup: NULL
 	if (desc->irq_data.chip->irq_startup) {
 		ret = desc->irq_data.chip->irq_startup(&desc->irq_data);
 		irq_state_clr_masked(desc);
 	} else {
 		// desc: kmem_cache#28-oX (irq 32)
+		// desc: kmem_cache#28-oX (irq 347)
 		irq_enable(desc);
 
 		// irq_enable에서 한일:
 		// (&(kmem_cache#28-oX (irq 32))->irq_data)->state_use_accessors: 0
 		// register GICD_ISENABLER1 의 값을 세팅 하여 irq 32의 interrupt를 enable 시킴
+
+		// irq_enable에서 한일:
+		// (&(kmem_cache#28-oX (irq 347))->irq_data)->state_use_accessors: 0x10000
+		// register IESR5의 MCT_G0 bit 를 1 로 write 하여 MCT_G0 의 interrupt 를 enable 시킴
 	}
 
+	// resend: true
 	// resend: true
 	if (resend)
 		// desc: kmem_cache#28-oX (irq 32),
 		// desc->irq_data.irq: (kmem_cache#28-oX (irq 32))->irq_data.irq: 32
+		// desc: kmem_cache#28-oX (irq 347),
+		// desc->irq_data.irq: (kmem_cache#28-oX (irq 347))->irq_data.irq: 347
 		check_irq_resend(desc, desc->irq_data.irq);
 
 	// ret: 0
+	// ret: 0
 	return ret;
+	// return 0
 	// return 0
 }
 
@@ -386,14 +421,21 @@ void irq_shutdown(struct irq_desc *desc)
 
 // ARM10C 20141220
 // desc: kmem_cache#28-oX (irq 32)
+// ARM10C 20150523
+// desc: kmem_cache#28-oX (irq 347)
 void irq_enable(struct irq_desc *desc)
 {
 	// desc: kmem_cache#28-oX (irq 32)
+	// desc: kmem_cache#28-oX (irq 347)
 	irq_state_clr_disabled(desc);
 
 	// irq_state_clr_disabled에서 한일
 	// (&(kmem_cache#28-oX (irq 32))->irq_data)->state_use_accessors: 0
 
+	// irq_state_clr_disabled에서 한일
+	// (&(kmem_cache#28-oX (irq 347))->irq_data)->state_use_accessors: 0x10000
+
+	// desc->irq_data.chip->irq_enable: NULL
 	// desc->irq_data.chip->irq_enable: NULL
 	if (desc->irq_data.chip->irq_enable)
 		desc->irq_data.chip->irq_enable(&desc->irq_data);
@@ -401,16 +443,26 @@ void irq_enable(struct irq_desc *desc)
 		// desc->irq_data.chip->irq_unmask: (kmem_cache#28-oX (irq 32))->irq_data.chip->irq_unmask: gic_unmask_irq
 		// &desc->irq_data: &(kmem_cache#28-oX (irq 32))->irq_data
 		// gic_unmask_irq(&(kmem_cache#28-oX (irq 32))->irq_data):
+		// desc->irq_data.chip->irq_unmask: (kmem_cache#28-oX (irq 347))->irq_data.chip->irq_unmask: combiner_unmask_irq
+		// &desc->irq_data: &(kmem_cache#28-oX (irq 347))->irq_data
+		// combiner_unmask_irq(&(kmem_cache#28-oX (irq 347))->irq_data):
 		desc->irq_data.chip->irq_unmask(&desc->irq_data);
 
 		// gic_unmask_irq에서 한일:
 		// register GICD_ISENABLER1 의 값을 세팅 하여 irq 32의 interrupt를 enable 시킴
 
+		// combiner_unmask_irq에서 한일:
+		// register IESR5의 MCT_G0 bit 를 1 로 write 하여 MCT_G0 의 interrupt 를 enable 시킴
+
 	// desc: kmem_cache#28-oX (irq 32)
+	// desc: kmem_cache#28-oX (irq 347)
 	irq_state_clr_masked(desc);
 
 	// irq_state_clr_masked에서 한일:
 	// (&(kmem_cache#28-oX (irq 32))->irq_data)->state_use_accessors: 0
+
+	// irq_state_clr_masked에서 한일:
+	// (&(kmem_cache#28-oX (irq 347))->irq_data)->state_use_accessors: 0x10000
 }
 
 /**

@@ -155,6 +155,8 @@ extern int bitmap_ord_to_pos(const unsigned long *bitmap, int n, int bits);
 // ARM10C 20140301
 // BITMAP_LAST_WORD_MASK(8): 0xFF
 // ARM10C 20150418
+// ARM10C 20150523
+// nbits: 4, BITMAP_LAST_WORD_MASK(4): 0xF
 #define BITMAP_LAST_WORD_MASK(nbits)					\
 (									\
 	((nbits) % BITS_PER_LONG) ?					\
@@ -170,6 +172,7 @@ extern int bitmap_ord_to_pos(const unsigned long *bitmap, int n, int bits);
 // ARM10C 20140913
 // ARM10C 20141004
 // ARM10C 20150418
+// ARM10C 20150523
 #define small_const_nbits(nbits) \
 	(__builtin_constant_p(nbits) && (nbits) <= BITS_PER_LONG)
 
@@ -219,25 +222,39 @@ static inline void bitmap_fill(unsigned long *dst, int nbits)
 // cpumask_bits((&init_task)->cpus_allowed): (&init_task)->cpus_allowed->bits,
 // cpumask_bits(&cpu_bit_bitmap[1][0]): (&cpu_bit_bitmap[1][0])->bits
 // nr_cpumask_bits: 4
+// ARM10C 20150523
+// cpumask_bits((&(kmem_cache#28-oX (irq 347))->irq_data)->affinity): (&(kmem_cache#28-oX (irq 347))->irq_data)->affinity->bits,
+// cpumask_bits(mask): (mask)->bits, nr_cpumask_bits: 4
 static inline void bitmap_copy(unsigned long *dst, const unsigned long *src,
 			int nbits)
 {
 	// nbits: 4, small_const_nbits(4): true
+	// nbits: 4, small_const_nbits(4): true
 	if (small_const_nbits(nbits))
 		// *dst: (&init_task)->cpus_allowed->bits[0], *src: (&cpu_bit_bitmap[1][0])->bits[0]: 1
+		// *dst: (&(kmem_cache#28-oX (irq 347))->irq_data)->affinity->bits[0], *src: (mask)->bits[0]: 1
 		*dst = *src;
 		// *dst: (&init_task)->cpus_allowed->bits[0]: 1
+		// *dst: (&(kmem_cache#28-oX (irq 347))->irq_data)->affinity->bits[0]: (mask)->bits[0]: 1
 	else {
 		int len = BITS_TO_LONGS(nbits) * sizeof(unsigned long);
 		memcpy(dst, src, len);
 	}
 }
 
+// ARM10C 20150523
+// cpumask_bits(mask): (mask)->bits, cpumask_bits(cpu_online_bits): (cpu_online_bits)->bits,
+// cpumask_bits(irq_default_affinity): (irq_default_affinity)->bits, nr_cpumask_bits: 4
 static inline int bitmap_and(unsigned long *dst, const unsigned long *src1,
 			const unsigned long *src2, int nbits)
 {
+	// nbits: 4, small_const_nbits(4): 1
 	if (small_const_nbits(nbits))
+		// *dst: (mask)->bits[0], *src1: (cpu_online_bits)->bits[0]: 1,
+		// *src2: (irq_default_affinity)->bits[0]: 0xF
 		return (*dst = *src1 & *src2) != 0;
+		// return 1
+
 	return __bitmap_and(dst, src1, src2, nbits);
 }
 
@@ -285,11 +302,17 @@ static inline int bitmap_equal(const unsigned long *src1,
 		return __bitmap_equal(src1, src2, nbits);
 }
 
+// ARM10C 20150523
+// cpumask_bits(mask): (mask)->bits, cpumask_bits(nodemask): (nodemask)->bits, nr_cpumask_bits: 4
 static inline int bitmap_intersects(const unsigned long *src1,
 			const unsigned long *src2, int nbits)
 {
+	// nbits: 4, small_const_nbits(4): 1
 	if (small_const_nbits(nbits))
+		// *src1: (mask)->bits[0]: 1, *src2: (nodemask)->bits[0]: 0,
+		// nbits: 4, BITMAP_LAST_WORD_MASK(4): 0xF
 		return ((*src1 & *src2) & BITMAP_LAST_WORD_MASK(nbits)) != 0;
+		// return 0
 	else
 		return __bitmap_intersects(src1, src2, nbits);
 }

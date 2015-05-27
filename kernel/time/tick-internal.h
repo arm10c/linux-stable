@@ -107,6 +107,7 @@ static inline bool tick_broadcast_oneshot_available(void) { return false; }
 #ifdef CONFIG_GENERIC_CLOCKEVENTS_BROADCAST // CONFIG_GENERIC_CLOCKEVENTS_BROADCAST=y
 // ARM10C 20150103
 extern int tick_device_uses_broadcast(struct clock_event_device *dev, int cpu);
+// ARM10C 20150523
 extern void tick_install_broadcast_device(struct clock_event_device *dev);
 extern int tick_is_broadcast_device(struct clock_event_device *dev);
 extern void tick_broadcast_on_off(unsigned long reason, int *oncpu);

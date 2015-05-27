@@ -21,6 +21,8 @@
 
 #include "irqchip.h"
 
+// ARM10C 20150523
+// COMBINER_ENABLE_SET: 0x0
 #define COMBINER_ENABLE_SET	0x0
 // ARM10C 20141213
 // COMBINER_ENABLE_CLEAR: 0x4
@@ -37,6 +39,7 @@ static DEFINE_SPINLOCK(irq_controller_lock);
 
 // ARM10C 20141206
 // ARM10C 20141213
+// ARM10C 20150523
 // sizeof(struct combiner_chip_data): 16 bytes
 struct combiner_chip_data {
 	unsigned int hwirq_offset;
@@ -48,12 +51,19 @@ struct combiner_chip_data {
 // ARM10C 20141206
 static struct irq_domain *combiner_irq_domain;
 
+// ARM10C 20150523
+// data: &(kmem_cache#28-oX (irq 347))->irq_data
 static inline void __iomem *combiner_base(struct irq_data *data)
 {
+	// data: &(kmem_cache#28-oX (irq 347))->irq_data,
+	// irq_data_get_irq_chip_data(&(kmem_cache#28-oX (irq 347))->irq_data): &(kmem_cache#26-oX)[23] (combiner_data)
 	struct combiner_chip_data *combiner_data =
 		irq_data_get_irq_chip_data(data);
+	// combiner_data: &(kmem_cache#26-oX)[23] (combiner_data)
 
+	// combiner_data->base: (&(kmem_cache#26-oX)[23] (combiner_data))->base: 0xf0004050
 	return combiner_data->base;
+	// return 0xf0004050
 }
 
 static void combiner_mask_irq(struct irq_data *data)
@@ -63,11 +73,25 @@ static void combiner_mask_irq(struct irq_data *data)
 	__raw_writel(mask, combiner_base(data) + COMBINER_ENABLE_CLEAR);
 }
 
+// ARM10C 20150523
+// &desc->irq_data: &(kmem_cache#28-oX (irq 347))->irq_data
 static void combiner_unmask_irq(struct irq_data *data)
 {
+	// data->hwirq: (&(kmem_cache#28-oX (irq 347))->irq_data)->hwirq: 187
 	u32 mask = 1 << (data->hwirq % 32);
+	// mask: 0x8000000
 
+	// E.R.M: 10.5.1.21 IESR5
+	// Interrupt enable set register for group 20 to 23
+	// 27 bit - MCT_G0
+
+	// mask: 0x8000000, data: &(kmem_cache#28-oX (irq 347))->irq_data,
+	// combiner_base(&(kmem_cache#28-oX (irq 347))->irq_data): 0xf0004050, COMBINER_ENABLE_SET: 0x0
+	// __raw_writel(0x8000000, 0xf0004050)
 	__raw_writel(mask, combiner_base(data) + COMBINER_ENABLE_SET);
+
+	// __raw_writel에서 한일:
+	// register IESR5의 MCT_G0 bit 를 1 로 write 하여 MCT_G0 의 interrupt 를 enable 시킴
 }
 
 // ARM10C 20141220
@@ -100,22 +124,46 @@ static void combiner_handle_cascade_irq(unsigned int irq, struct irq_desc *desc)
 	chained_irq_exit(chip, desc);
 }
 
-#ifdef CONFIG_SMP
+#ifdef CONFIG_SMP // CONFIG_SMP=y
+// ARM10C 20150523
+// data: &(kmem_cache#28-oX (irq 347))->irq_data, mask: mask, false
 static int combiner_set_affinity(struct irq_data *d,
 				 const struct cpumask *mask_val, bool force)
 {
+	// d: &(kmem_cache#28-oX (irq 347))->irq_data
+	// irq_data_get_irq_chip_data(&(kmem_cache#28-oX (irq 347))->irq_data):
+	// &(kmem_cache#26-oX)[23] (combiner_data)
 	struct combiner_chip_data *chip_data = irq_data_get_irq_chip_data(d);
-	struct irq_chip *chip = irq_get_chip(chip_data->parent_irq);
-	struct irq_data *data = irq_get_irq_data(chip_data->parent_irq);
+	// chip_data: &(kmem_cache#26-oX)[23] (combiner_data)
 
+	// chip_data->parent_irq: (&(kmem_cache#26-oX)[23] (combiner_data))->parent_irq: 55,
+	// irq_get_chip(55): &gic_chip
+	struct irq_chip *chip = irq_get_chip(chip_data->parent_irq);
+	// chip: &gic_chip
+
+	// chip_data->parent_irq: (&(kmem_cache#26-oX)[23] (combiner_data))->parent_irq: 55,
+	// irq_get_irq_data(55): &(kmem_cache#28-oX (irq 347))->irq_data
+	struct irq_data *data = irq_get_irq_data(chip_data->parent_irq);
+	// data: &(kmem_cache#28-oX (irq 347))->irq_data
+
+	// chip: &gic_chip, chip->irq_set_affinity: (&gic_chip)->irq_set_affinity: gic_set_affinity
 	if (chip && chip->irq_set_affinity)
+		// data: &(kmem_cache#28-oX (irq 347))->irq_data, mask_val: mask, force: false
+		// chip->irq_set_affinity: (&gic_chip)->irq_set_affinity: gic_set_affinity
+		// gic_set_affinity(&(kmem_cache#28-oX (irq 347))->irq_data, mask, false): 0
 		return chip->irq_set_affinity(data, mask_val, force);
+		// return 0
+
+		// gic_set_affinity에서 한일:
+		// GICD_ITARGETSR46에 0x1000000를 write 함
+		// CPU interface 0에 interrupt가 발생을 나타냄
 	else
 		return -EINVAL;
 }
 #endif
 
 // ARM10C 20141213
+// ARM10C 20150523
 static struct irq_chip combiner_chip = {
 	.name			= "COMBINER",
 	.irq_mask		= combiner_mask_irq,

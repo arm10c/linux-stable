@@ -30,9 +30,11 @@
 
 // ARM10C 20150411
 // ARM10C 20150418
+// ARM10C 20150523
 static struct tick_device tick_broadcast_device;
 // ARM10C 20150103
 // ARM10C 20150418
+// ARM10C 20150523
 static cpumask_var_t tick_broadcast_mask;
 // ARM10C 20150103
 // ARM10C 20150418
@@ -74,38 +76,76 @@ static void tick_broadcast_start_periodic(struct clock_event_device *bc)
 /*
  * Check, if the device can be utilized as broadcast device:
  */
+// ARM10C 20150523
+// cur: tick_broadcast_device.evtdev, dev: &mct_comp_device
 static bool tick_check_broadcast_device(struct clock_event_device *curdev,
 					struct clock_event_device *newdev)
 {
+	// newdev->features: (&mct_comp_device)->features: 0x3, CLOCK_EVT_FEAT_DUMMY: 0x000010,
+	// CLOCK_EVT_FEAT_DYNIRQ: 0x000020, CLOCK_EVT_FEAT_C3STOP: 0x000008
 	if ((newdev->features & CLOCK_EVT_FEAT_DUMMY) ||
 	    (newdev->features & CLOCK_EVT_FEAT_PERCPU) ||
 	    (newdev->features & CLOCK_EVT_FEAT_C3STOP))
 		return false;
 
+	// tick_broadcast_device.mode: 0, TICKDEV_MODE_ONESHOT: 1,
+	// newdev->features: (&mct_comp_device)->features: 0x3, CLOCK_EVT_FEAT_ONESHOT: 0x000002
 	if (tick_broadcast_device.mode == TICKDEV_MODE_ONESHOT &&
 	    !(newdev->features & CLOCK_EVT_FEAT_ONESHOT))
 		return false;
 
+	// curdev: tick_broadcast_device.evtdev: NULL
+	// newdev->rating: (&mct_comp_device)->rating,
+	// curdev->rating: (tick_broadcast_device.evtdev)->rating
 	return !curdev || newdev->rating > curdev->rating;
+	// return 1
 }
 
 /*
  * Conditionally install/replace broadcast device
  */
+// ARM10C 20150523
+// newdev: &mct_comp_device
 void tick_install_broadcast_device(struct clock_event_device *dev)
 {
 	struct clock_event_device *cur = tick_broadcast_device.evtdev;
+	// cur: tick_broadcast_device.evtdev
 
+	// cur: tick_broadcast_device.evtdev, dev: &mct_comp_device
+	// tick_check_broadcast_device(tick_broadcast_device.evtdev, &mct_comp_device): 1
 	if (!tick_check_broadcast_device(cur, dev))
 		return;
 
+	// dev->owner: (&mct_comp_device)->owner,
+	// try_module_get((&mct_comp_device)->owner): true
 	if (!try_module_get(dev->owner))
 		return;
 
+	// cur: tick_broadcast_device.evtdev, dev: &mct_comp_device
 	clockevents_exchange_device(cur, dev);
+
+	// clockevents_exchange_device에서 한일:
+	// register G_TCON 에 0x100 write함
+	// global timer enable 의 값을 1로 write 함
+	//
+	// register G_INT_ENB 에 0x0 write함
+	// global timer interrupt enable 의 값을 0로 write 함
+	//
+	// comparator 0의 auto increment0, comp0 enable,comp0 interrupt enable 값을
+	// 0으로 clear 하여 comparator 0를 동작하지 않도록 함
+	//
+	// (&mct_comp_device)->mode: 1
+	// (&mct_comp_device)->next_event.tv64: 0x7FFFFFFFFFFFFFFF
+
+	// cur: tick_broadcast_device.evtdev: NULL
 	if (cur)
 		cur->event_handler = clockevents_handle_noop;
+
+	// dev: &mct_comp_device
 	tick_broadcast_device.evtdev = dev;
+	// tick_broadcast_device.evtdev: &mct_comp_device
+
+	// tick_broadcast_mask.bits[0]: 0, cpumask_empty(tick_broadcast_mask): 1
 	if (!cpumask_empty(tick_broadcast_mask))
 		tick_broadcast_start_periodic(dev);
 	/*
@@ -116,8 +156,12 @@ void tick_install_broadcast_device(struct clock_event_device *dev)
 	 * notification the systems stays stuck in periodic mode
 	 * forever.
 	 */
+	// dev->features: (&mct_comp_device)->features: 0x3, CLOCK_EVT_FEAT_ONESHOT: 0x000002
 	if (dev->features & CLOCK_EVT_FEAT_ONESHOT)
 		tick_clock_notify();
+
+		// tick_clock_notify에서 한일:
+		// [pcp0] &(&tick_cpu_sched)->check_clocks: 0xf
 }
 
 /*

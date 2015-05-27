@@ -952,14 +952,21 @@ EXPORT_SYMBOL(__module_get);
 // newdev->owner: [pcp0] (&(&percpu_mct_tick)->evt)->owner
 // ARM10C 20150509
 // desc->owner: (kmem_cache#28-oX (irq 152))->owner: NULL
+// ARM10C 20150523
+// dev->owner: (&mct_comp_device)->owner
+// ARM10C 20150523
+// desc->owner: (kmem_cache#28-oX (irq 347))->owner: NULL,
 bool try_module_get(struct module *module)
 {
 	bool ret = true;
 	// ret: true
 	// ret: true
+	// ret: true
 
 	// module: [pcp0] (&(&percpu_mct_tick)->evt)->owner: NULL
-	// module: [pcp0] (kmem_cache#28-oX (irq 152))->owner: NULL
+	// module: (kmem_cache#28-oX (irq 152))->owner: NULL
+	// module: (&mct_comp_device)->owner: NULL
+	// module: (kmem_cache#28-oX (irq 347))->owner: NULL
 	if (module) {
 		preempt_disable();
 
@@ -974,7 +981,11 @@ bool try_module_get(struct module *module)
 
 	// ret: true
 	// ret: true
+	// ret: true
+	// ret: true
 	return ret;
+	// return true
+	// return true
 	// return true
 	// return true
 }

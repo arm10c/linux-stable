@@ -273,25 +273,37 @@ static const struct file_operations irq_spurious_proc_fops = {
 
 // ARM10C 20150516
 // irq: 152, new: kmem_cache#30-oX
+// ARM10C 20150523
+// irq: 347, new: &mct_comp_event_irq
 static int name_unique(unsigned int irq, struct irqaction *new_action)
 {
 	// irq: 152, irq_to_desc(152): kmem_cache#28-oX (irq 152)
+	// irq: 347, irq_to_desc(347): kmem_cache#28-oX (irq 347)
 	struct irq_desc *desc = irq_to_desc(irq);
 	// desc: kmem_cache#28-oX (irq 152)
+	// desc: kmem_cache#28-oX (irq 347)
 
 	struct irqaction *action;
 	unsigned long flags;
 	int ret = 1;
 	// ret: 1
+	// ret: 1
 
 	// &desc->lock: (kmem_cache#28-oX (irq 152))->lock
+	// &desc->lock: (kmem_cache#28-oX (irq 347))->lock
 	raw_spin_lock_irqsave(&desc->lock, flags);
 
 	// raw_spin_lock_irqsave에서 한일:
 	// (kmem_cache#28-oX (irq 152))->lock을 사용하여 spin lock을 수행하고 cpsr을 flags에 저장
 
-	// desc->action: (kmem_cache#28-oX (irq 152))->action: NULL
+	// raw_spin_lock_irqsave에서 한일:
+	// (kmem_cache#28-oX (irq 347))->lock을 사용하여 spin lock을 수행하고 cpsr을 flags에 저장
+
+	// desc->action: (kmem_cache#28-oX (irq 152))->action: kmem_cache#30-oX
+	// desc->action: (kmem_cache#28-oX (irq 347))->action: &mct_comp_event_irq
 	for (action = desc->action ; action; action = action->next) {
+		// action: kmem_cache#30-oX, new_action: kmem_cache#30-oX
+		// action: &mct_comp_event_irq, new_action: &mct_comp_event_irq
 		if ((action != new_action) && action->name &&
 				!strcmp(new_action->name, action->name)) {
 			ret = 0;
@@ -300,33 +312,48 @@ static int name_unique(unsigned int irq, struct irqaction *new_action)
 	}
 
 	// &desc->lock: (kmem_cache#28-oX (irq 152))->lock
+	// &desc->lock: (kmem_cache#28-oX (irq 347))->lock
 	raw_spin_unlock_irqrestore(&desc->lock, flags);
 
 	// raw_spin_unlock_irqrestore에서 한일:
 	// (kmem_cache#28-oX (irq 152))->lock을 사용하여 spin unlock을 수행하고 flags에 저장된 cpsr을 복원
 
+	// raw_spin_unlock_irqrestore에서 한일:
+	// (kmem_cache#28-oX (irq 347))->lock을 사용하여 spin unlock을 수행하고 flags에 저장된 cpsr을 복원
+
+	// ret: 1
 	// ret: 1
 	return ret;
+	// return 1
 	// return 1
 }
 
 // ARM10C 20150516
 // irq: 152, new: kmem_cache#30-oX
+// ARM10C 20150523
+// irq: 347, new: &mct_comp_event_irq
 void register_handler_proc(unsigned int irq, struct irqaction *action)
 {
+	// MAX_NAMELEN: 128
 	// MAX_NAMELEN: 128
 	char name [MAX_NAMELEN];
 
 	// irq: 152, irq_to_desc(152): kmem_cache#28-oX (irq 152)
+	// irq: 347, irq_to_desc(347): kmem_cache#28-oX (irq 347)
 	struct irq_desc *desc = irq_to_desc(irq);
 	// desc: kmem_cache#28-oX (irq 152)
+	// desc: kmem_cache#28-oX (irq 347)
 
 	// desc->dir: (kmem_cache#28-oX (irq 152))->dir, action->dir: (kmem_cache#30-oX)->dir: NULL,
 	// action->name: (kmem_cache#30-oX)->name: "mct_tick0",
 	// irq: 152, new: kmem_cache#30-oX, name_unique(152, kmem_cache#30-oX): 1
+	// desc->dir: (kmem_cache#28-oX (irq 347))->dir, action->dir: (&mct_comp_event_irq))->dir: NULL,
+	// action->name: (&mct_comp_event_irq)->name: "mct_comp_irq",
+	// irq: 347, new: &mct_comp_event_irq, name_unique(347, &mct_comp_event_irq): 1
 	if (!desc->dir || action->dir || !action->name ||
 					!name_unique(irq, action))
 		return;
+		// return 수행
 		// return 수행
 
 	memset(name, 0, MAX_NAMELEN);
@@ -344,15 +371,21 @@ void register_handler_proc(unsigned int irq, struct irqaction *action)
 
 // ARM10C 20150516
 // irq: 152, desc: kmem_cache#28-oX (irq 152)
+// ARM10C 20150523
+// irq: 347, desc: kmem_cache#28-oX (irq 347)
 void register_irq_proc(unsigned int irq, struct irq_desc *desc)
 {
+	// MAX_NAMELEN: 10
 	// MAX_NAMELEN: 10
 	char name [MAX_NAMELEN];
 
 	// root_irq_dir: NULL, desc->irq_data.chip: (kmem_cache#28-oX (irq 152))->irq_data.chip: &gic_chip,
 	// desc->dir: (kmem_cache#28-oX (irq 152))->dir: NULL
+	// root_irq_dir: NULL, desc->irq_data.chip: (kmem_cache#28-oX (irq 347))->irq_data.chip: &combiner_chip,
+	// desc->dir: (kmem_cache#28-oX (irq 347))->dir: NULL
 	if (!root_irq_dir || (desc->irq_data.chip == &no_irq_chip) || desc->dir)
 		return;
+		// return 수행
 		// return 수행
 
 	memset(name, 0, MAX_NAMELEN);

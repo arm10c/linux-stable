@@ -1,7 +1,9 @@
 #IAMROOT.ORG Kernel스터디10차(ARM)
 
 #HISTORY
-* 100th (2015/05/09) week [101차](https://github.com/hephaex/kernel_review/blob/master/a10c_100.md)
+* 102th (2015/05/23) week [102차](https://github.com/hephaex/kernel_review/blob/master/a10c_102.md)
+* 101th (2015/05/16) week [101차](https://github.com/hephaex/kernel_review/blob/master/a10c_101.md)
+* 100th (2015/05/09) week [100차](https://github.com/hephaex/kernel_review/blob/master/a10c_100.md)
 * Temp. (2015/04/25) week [temp](https://github.com/hephaex/kernel_review/blob/master/a10c_tmp.md)
  - NIPA 5층 대강당, 12차 Iamroot OT.
  - 개발에 대한 자유토론. (IoT, 3D/4D Printing, 라즈베리파이2, 오드로이드...)

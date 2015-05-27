@@ -166,6 +166,8 @@ static inline void gic_set_base_accessor(struct gic_chip_data *data,
 // d: &(kmem_cache#28-oX (irq 32))->irq_data
 // ARM10C 20150328
 // d: &(kmem_cache#28-oX (irq 152))->irq_data
+// ARM10C 20150523
+// d: &(kmem_cache#28-oX (irq 347))->irq_data,
 static inline void __iomem *gic_dist_base(struct irq_data *d)
 {
 	// d: &(kmem_cache#28-oX (irq 32))->irq_data
@@ -189,11 +191,15 @@ static inline void __iomem *gic_cpu_base(struct irq_data *d)
 // d: &(kmem_cache#28-oX (irq 32))->irq_data
 // ARM10C 20150328
 // d: &(kmem_cache#28-oX (irq 152))->irq_data
+// ARM10C 20150523
+// d: &(kmem_cache#28-oX (irq 347))->irq_data
 static inline unsigned int gic_irq(struct irq_data *d)
 {
 	// d->hwirq: (&(kmem_cache#28-oX (irq 32))->irq_data)->hwirq: 32
+	// d->hwirq: (&(kmem_cache#28-oX (irq 347))->irq_data)->hwirq: 187
 	return d->hwirq;
 	// return 32
+	// return 187
 }
 
 /*
@@ -312,42 +318,65 @@ static int gic_retrigger(struct irq_data *d)
 #ifdef CONFIG_SMP // CONFIG_SMP=y
 // ARM10C 20150328
 // data: &(kmem_cache#28-oX (irq 152))->irq_data, mask: &cpu_bit_bitmap[1][0], false
+// ARM10C 20150523
+// data: &(kmem_cache#28-oX (irq 347))->irq_data, mask_val: mask, force: false
 static int gic_set_affinity(struct irq_data *d, const struct cpumask *mask_val,
 			    bool force)
 {
 	// d: &(kmem_cache#28-oX (irq 152))->irq_data,
 	// gic_dist_base(&(kmem_cache#28-oX (irq 152))->irq_data): 0xf0000000
 	// GIC_DIST_TARGET: 0x800, gic_irq(&(kmem_cache#28-oX (irq 152))->irq_data): 152
+	// d: &(kmem_cache#28-oX (irq 347))->irq_data,
+	// gic_dist_base(&(kmem_cache#28-oX (irq 347))->irq_data): 0xf0000000
+	// GIC_DIST_TARGET: 0x800, gic_irq(&(kmem_cache#28-oX (irq 347))->irq_data): 187
 	void __iomem *reg = gic_dist_base(d) + GIC_DIST_TARGET + (gic_irq(d) & ~3);
 	// reg: 0xf0000898
+	// reg: 0xf00008b8
 
 	// d: &(kmem_cache#28-oX (irq 152))->irq_data,
 	// gic_irq(&(kmem_cache#28-oX (irq 152))->irq_data): 152
+	// d: &(kmem_cache#28-oX (irq 347))->irq_data,
+	// gic_irq(&(kmem_cache#28-oX (irq 347))->irq_data): 187
 	unsigned int shift = (gic_irq(d) % 4) * 8;
 	// shift: 0
+	// shift: 24
 
 	// cpu_online_bits[0]: 1
 	// mask_val: &cpu_bit_bitmap[1][0], cpu_online_mask: cpu_online_bits
 	// cpumask_any_and(&cpu_bit_bitmap[1][0], cpu_online_bits): 0
+	// cpu_online_bits[0]: 1
+	// mask_val: mask, cpu_online_mask: cpu_online_bits
+	// cpumask_any_and(mask, cpu_online_bits): 0
 	unsigned int cpu = cpumask_any_and(mask_val, cpu_online_mask);
+	// cpu: 0
 	// cpu: 0
 
 	u32 val, mask, bit;
 
 	// cpu: 0, NR_GIC_CPU_IF: 8, nr_cpu_ids: 4
+	// cpu: 0, NR_GIC_CPU_IF: 8, nr_cpu_ids: 4
 	if (cpu >= NR_GIC_CPU_IF || cpu >= nr_cpu_ids)
 		return -EINVAL;
 
 	raw_spin_lock(&irq_controller_lock);
+
+	// raw_spin_lock에서 한일:
+	// irq_controller_lock을 사용하여 spinlock 설정
+
+	// raw_spin_lock에서 한일:
 	// irq_controller_lock을 사용하여 spinlock 설정
 
 	// shift: 0
+	// shift: 24
 	mask = 0xff << shift;
 	// mask: 0xff
+	// mask: 0xff000000
 
 	// cpu: 0, gic_cpu_map[0]: 0x01, shift: 0
+	// cpu: 0, gic_cpu_map[0]: 0x01, shift: 24
 	bit = gic_cpu_map[cpu] << shift;
 	// bit: 0x01
+	// bit: 0x1000000
 
 // 2015/03/28 종료
 // 2015/04/04 시작
@@ -356,27 +385,50 @@ static int gic_set_affinity(struct irq_data *d, const struct cpumask *mask_val,
 	// 9.6.2.18 GICD_ITARGETSR38
 	// Interrupt pending register
 
+	// E.R.M:
+	// 9.6.2.14 GICD_ITARGETSR46
+	// Interrupt pending register
+
 	// NOTE:
 	// GICD_ITARGETSR38 값을 모르기 때문에 0x00000000 로
 	// 읽히는 것으로 가정하고 진행
 
+	// NOTE:
+	// GICD_ITARGETSR46 값을 모르기 때문에 0x00000000 로
+	// 읽히는 것으로 가정하고 진행
+
 	// reg: 0xf0000898, mask: 0xff
 	// readl_relaxed(0xf0000898): 0x00000000
+	// reg: 0xf00008b8, mask: 0xff000000
+	// readl_relaxed(0xf00008b8): 0x00000000
 	val = readl_relaxed(reg) & ~mask;
+	// val: 0x00000000
 	// val: 0x00000000
 
 	// val: 0x00000000, bit: 0x01, reg: 0xf0000898
+	// val: 0x00000000, bit: 0x1000000, reg: 0xf00008b8
 	writel_relaxed(val | bit, reg);
 
 	// writel_relaxed에서 한일:
 	// GICD_ITARGETSR38에 0x00000001를 write 함
 	// CPU interface 0에 interrupt가 발생을 나타냄
 
+	// writel_relaxed에서 한일:
+	// GICD_ITARGETSR46에 0x1000000를 write 함
+	// CPU interface 0에 interrupt가 발생을 나타냄
+
 	raw_spin_unlock(&irq_controller_lock);
+
+	// raw_spin_unlock에서 한일:
+	// irq_controller_lock을 사용하여 spinlock 해제
+
+	// raw_spin_unlock에서 한일:
 	// irq_controller_lock을 사용하여 spinlock 해제
 
 	// IRQ_SET_MASK_OK: 0
+	// IRQ_SET_MASK_OK: 0
 	return IRQ_SET_MASK_OK;
+	// return 0
 	// return 0
 }
 #endif

@@ -36,20 +36,29 @@ EXPORT_SYMBOL(__next_cpu_nr);
  */
 // ARM10C 20150328
 // -1, mask_val: &cpu_bit_bitmap[1][0], cpu_online_mask: cpu_online_bits
+// ARM10C 20150523
+// -1, mask_val: mask, cpu_online_mask: cpu_online_bits
 int cpumask_next_and(int n, const struct cpumask *src1p,
 		     const struct cpumask *src2p)
 {
 	// nr_cpu_ids: 4
 	// n: -1, src1p: &cpu_bit_bitmap[1][0], cpumask_next(-1, &cpu_bit_bitmap[1][0]): 0
+	// nr_cpu_ids: 4
+	// n: -1, src1p: mask, cpumask_next(-1, mask): 0
 	while ((n = cpumask_next(n, src1p)) < nr_cpu_ids)
+		// n: 0, src2p: cpu_online_bits[1]
+		// cpumask_test_cpu(0, cpu_online_bits): 1
 		// n: 0, src2p: cpu_online_bits[1]
 		// cpumask_test_cpu(0, cpu_online_bits): 1
 		if (cpumask_test_cpu(n, src2p))
 			break;
 			// break 수행
+			// break 수행
 
 	// n: 0
+	// n: 0
 	return n;
+	// return 0
 	// return 0
 }
 EXPORT_SYMBOL(cpumask_next_and);

@@ -133,60 +133,153 @@ EXPORT_SYMBOL_GPL(timecounter_cyc2time);
  * factors.
  */
 // ARM10C 20150411
-// &ce->mult: [pcp0] &(&(&percpu_mct_tick)->evt)->mult,
+// [1st] &ce->mult: [pcp0] &(&(&percpu_mct_tick)->evt)->mult,
 // &ce->shift: [pcp0] &(&(&percpu_mct_tick)->evt)->shift,
 // NSEC_PER_SEC: 1000000000L, freq: 12000000, minsec: 178
+// ARM10C 20150523
+// [2nd] &cs->mult: &(&mct_frc)->mult, &cs->shift: &(&mct_frc)->mult,
+// freq: 24000000, 1000000000, 156
+// ARM10C 20150523
+// [3rd] &ce->mult: &(&mct_comp_device)->mult, &ce->shift: &(&mct_comp_device)->shift,
+// NSEC_PER_SEC: 1000000000L, freq: 24000000, minsec: 178
 void
 clocks_calc_mult_shift(u32 *mult, u32 *shift, u32 from, u32 to, u32 maxsec)
 {
 	u64 tmp;
 	u32 sft, sftacc= 32;
+	// [1st] sftacc: 32
+	// [2nd] sftacc: 32
 	// sftacc: 32
 
 	/*
 	 * Calculate the shift factor which is limiting the conversion
 	 * range:
 	 */
-	// maxsec: 178, from: 1000000000L
+	// [1st] maxsec: 178, from: 1000000000L
+	// [2nd] maxsec: 156, from: 24000000
+	// [3rd] maxsec: 178, from: 1000000000L
 	tmp = ((u64)maxsec * from) >> 32;
-	// tmp: 41
+	// [1st] tmp: 41
+	// [2nd] tmp: 0
+	// [3rd] tmp: 41
 
-	// tmp: 41, sftacc: 32
+	// [1st] tmp: 41, sftacc: 32
+	// [2nd] tmp: 0, sftacc: 32
+	// [3rd] tmp: 41, sftacc: 32
 	while (tmp) {
 		tmp >>=1;
 		sftacc--;
 	}
-	// sftacc: 26, tmp: 0
+	// [1st] sftacc: 26, tmp: 0
+	// [2nd] sftacc: 32, tmp: 0
+	// [3rd] sftacc: 26, tmp: 0
 
 	/*
 	 * Find the conversion shift/mult pair which has the best
 	 * accuracy and fits the maxsec conversion range:
 	 */
 	for (sft = 32; sft > 0; sft--) {
-		// sft: 32, to: 12000000
+		// NOTE:
+		// for 의 1st loop 수행을 [f1] 로, 2nd loop 수행을 [f2] 로 주석에 prefix 로 추가
+
+		// [1st][f1] sft: 32, to: 12000000
+		// [2nd][f1] sft: 32, to: 1000000000
+		// [2nd][f2] sft: 31, to: 1000000000
+		// [2nd][f3] sft: 30, to: 1000000000
+		// [2nd][f4] sft: 29, to: 1000000000
+		// [2nd][f5] sft: 28, to: 1000000000
+		// [2nd][f6] sft: 27, to: 1000000000
+		// [2nd][f7] sft: 26, to: 1000000000
+		// [3rd][f1] sft: 32, to: 24000000
+		// [3rd][f2] sft: 31, to: 24000000
 		tmp = (u64) to << sft;
-		// tmp: 0xb71b0000000000
+		// [1st][f1] tmp: 0xb71b0000000000
+		// [2nd][f1] tmp: 0x3B9ACA0000000000
+		// [2nd][f2] tmp: 0x1DCD650000000000
+		// [2nd][f3] tmp: 0xEE6B28000000000
+		// [2nd][f4] tmp: 0x773594000000000
+		// [2nd][f5] tmp: 0x3B9ACA000000000
+		// [2nd][f6] tmp: 0x1DCD65000000000
+		// [2nd][f7] tmp: 0xEE6B2800000000
+		// [3rd][f1] tmp: 0x16E360000000000
+		// [3rd][f2] tmp: 0xB71B0000000000
 
-		// tmp: 0xb71b0000000000, from: 1000000000L
+		// [1st][f1] tmp: 0xb71b0000000000, from: 1000000000L
+		// [2nd][f1] tmp: 0x3B9ACA0000000000, from: 24000000
+		// [2nd][f2] tmp: 0x1DCD650000000000, from: 24000000
+		// [2nd][f3] tmp: 0xEE6B28000000000, from: 24000000
+		// [2nd][f4] tmp: 0x773594000000000, from: 24000000
+		// [2nd][f5] tmp: 0x3B9ACA000000000, from: 24000000
+		// [2nd][f6] tmp: 0x1DCD65000000000, from: 24000000
+		// [2nd][f7] tmp: 0xEE6B2800000000, from: 24000000
+		// [3rd][f1] tmp: 0x16E360000000000, from: 1000000000L
+		// [3rd][f2] tmp: 0xB71B0000000000, from: 1000000000L
 		tmp += from / 2;
-		// tmp: 0xb71b001dcd6500
+		// [1st][f1] tmp: 0xb71b001dcd6500
+		// [2nd][f1] tmp: 0x3B9ACA0000B71B00
+		// [2nd][f2] tmp: 0x1DCD650000B71B00
+		// [2nd][f3] tmp: 0xEE6B28000B71B00
+		// [2nd][f4] tmp: 0x773594000B71B00
+		// [2nd][f5] tmp: 0x3B9ACA000B71B00
+		// [2nd][f6] tmp: 0x1DCD65000B71B00
+		// [2nd][f7] tmp: 0xEE6B2800B71B00
+		// [3rd][f1] tmp: 0x16E36001DCD6500
+		// [3rd][f2] tmp: 0xB71B001DCD6500
 
-		// tmp: 0xb71b001dcd6500, from: 1000000000L
+		// [1st][f1] tmp: 0xb71b001dcd6500, from: 1000000000L
+		// [2nd][f1] tmp: 0x3B9ACA0000B71B00, from: 24000000
+		// [2nd][f2] tmp: 0x1DCD650000B71B00, from: 24000000
+		// [2nd][f3] tmp: 0xEE6B28000B71B00, from: 24000000
+		// [2nd][f4] tmp: 0x773594000B71B00, from: 24000000
+		// [2nd][f5] tmp: 0x3B9ACA000B71B00, from: 24000000
+		// [2nd][f6] tmp: 0x1DCD65000B71B00, from: 24000000
+		// [2nd][f7] tmp: 0xEE6B2800B71B00, from: 24000000
+		// [3rd][f1] tmp: 0x16E36001DCD6500, from: 1000000000L
+		// [3rd][f2] tmp: 0xB71B001DCD6500, from: 1000000000L
 		do_div(tmp, from);
-		// tmp: 0x3126E98
+		// [1st][f1] tmp: 0x3126E98
+		// [2nd][f1] tmp: 0x29AAAAAAAB
+		// [2nd][f2] tmp: 0x14D5555555
+		// [2nd][f3] tmp: 0xA6AAAAAAB
+		// [2nd][f4] tmp: 0x535555555
+		// [2nd][f5] tmp: 0x29AAAAAAA
+		// [2nd][f6] tmp: 0x14D555555
+		// [2nd][f7] tmp: 0xA6AAAAAA
+		// [3rd][f1] tmp: 0x624DD2F
+		// [3rd][f2] tmp: 0x3126E98
 
-		// tmp: 0x3126E98, sftacc: 26
+		// [1st][f1] tmp: 0x3126E98, sftacc: 26
+		// [2nd][f1] tmp: 0x29AAAAAAAB, sftacc: 32
+		// [2nd][f2] tmp: 0x14D5555555, sftacc: 32
+		// [2nd][f3] tmp: 0xA6AAAAAAB, sftacc: 32
+		// [2nd][f4] tmp: 0x535555555, sftacc: 32
+		// [2nd][f5] tmp: 0x29AAAAAAA, sftacc: 32
+		// [2nd][f6] tmp: 0x14D555555, sftacc: 32
+		// [2nd][f7] tmp: 0xA6AAAAAA, sftacc: 32
+		// [3rd][f1] tmp: 0x624DD2F, sftacc: 26
+		// [3rd][f2] tmp: 0x3126E98, sftacc: 26
 		if ((tmp >> sftacc) == 0)
 			break;
-			// break 수행
+			// [1st][f1] break 수행
+			// [2nd][f7] break 수행
+			// [3rd][f2] break 수행
 	}
-	// *mult: [pcp0] (&(&percpu_mct_tick)->evt)->mult, tmp: 0x3126E98
-	*mult = tmp;
-	// *mult: [pcp0] (&(&percpu_mct_tick)->evt)->mult: 0x3126E98
 
-	// *shift: [pcp0] (&(&percpu_mct_tick)->evt)->shift, sft: 32
+	// [1st] *mult: [pcp0] (&(&percpu_mct_tick)->evt)->mult, tmp: 0x3126E98
+	// [2nd] *mult: (&mct_frc)->mult, tmp: 0xA6AAAAAA
+	// [3rd] *mult: (&mct_comp_device)->mult, tmp: 0x3126E98
+	*mult = tmp;
+	// [1st] *mult: [pcp0] (&(&percpu_mct_tick)->evt)->mult: 0x3126E98
+	// [2nd] *mult: (&mct_frc)->mult: 0xA6AAAAAA
+	// [3rd] *mult: (&mct_comp_device)->mult: 0x3126E98
+
+	// [1st] *shift: [pcp0] (&(&percpu_mct_tick)->evt)->shift, sft: 32
+	// [2nd] *shift: (&mct_frc)->mult, sft: 26
+	// [3rd] *shift: (&mct_comp_device)->shift, sft: 31
 	*shift = sft;
-	// *shift: [pcp0] (&(&percpu_mct_tick)->evt)->shift: 32
+	// [1st] *shift: [pcp0] (&(&percpu_mct_tick)->evt)->shift: 32
+	// [2nd] *shift: (&mct_frc)->shift: 26
+	// [3rd] *shift: (&mct_comp_device)->shift: 31
 }
 
 /*[Clocksource internal variables]---------
@@ -200,12 +293,14 @@ clocks_calc_mult_shift(u32 *mult, u32 *shift, u32 from, u32 to, u32 maxsec)
  *	Name of the user-specified clocksource.
  */
 static struct clocksource *curr_clocksource;
+// ARM10C 20150523
 static LIST_HEAD(clocksource_list);
+// ARM10C 20150523
 static DEFINE_MUTEX(clocksource_mutex);
 static char override_name[CS_NAME_LEN];
 static int finished_booting;
 
-#ifdef CONFIG_CLOCKSOURCE_WATCHDOG
+#ifdef CONFIG_CLOCKSOURCE_WATCHDOG // CONFIG_CLOCKSOURCE_WATCHDOG=n
 static void clocksource_watchdog_work(struct work_struct *work);
 static void clocksource_select(void);
 
@@ -495,10 +590,15 @@ static bool clocksource_is_watchdog(struct clocksource *cs)
 
 #else /* CONFIG_CLOCKSOURCE_WATCHDOG */
 
+// ARM10C 20150523
+// cs: &mct_frc
 static void clocksource_enqueue_watchdog(struct clocksource *cs)
 {
+	// cs->flags: (&mct_frc)->flags: 0x1, CLOCK_SOURCE_IS_CONTINUOUS: 0x01
 	if (cs->flags & CLOCK_SOURCE_IS_CONTINUOUS)
+		// cs->flags: (&mct_frc)->flags: 0x1, CLOCK_SOURCE_VALID_FOR_HRES: 0x20
 		cs->flags |= CLOCK_SOURCE_VALID_FOR_HRES;
+		// cs->flags: (&mct_frc)->flags: 0x21
 }
 
 static inline void clocksource_dequeue_watchdog(struct clocksource *cs) { }
@@ -552,15 +652,25 @@ void clocksource_touch_watchdog(void)
  * @cs:         Pointer to clocksource
  *
  */
+// ARM10C 20150523
+// cs: &mct_frc
 static u32 clocksource_max_adjustment(struct clocksource *cs)
 {
 	u64 ret;
 	/*
 	 * We won't try to correct for more than 11% adjustments (110,000 ppm),
 	 */
+	// cs->mult: (&mct_frc)->mult: 0xA6AAAAAA
 	ret = (u64)cs->mult * 11;
+	// ret: 0x72955554E
+
+	// ret: 0x72955554E
 	do_div(ret,100);
+	// ret: 0x12555555
+
+	// ret: 0x12555555
 	return (u32)ret;
+	// return 0x12555555
 }
 
 /**
@@ -570,6 +680,9 @@ static u32 clocksource_max_adjustment(struct clocksource *cs)
  * @maxadj:	maximum adjustment value to mult (~11%)
  * @mask:	bitmask for two's complement subtraction of non 64 bit counters
  */
+// ARM10C 20150523
+// cs->mult: (&mct_frc)->mult: 0xA6AAAAAA, cs->shift: (&mct_frc)->shift: 26,
+// cs->maxadj: (&mct_frc)->maxadj: 0x12555555, cs->mask: (&mct_frc)->mask: 0xFFFFFFFF
 u64 clocks_calc_max_nsecs(u32 mult, u32 shift, u32 maxadj, u64 mask)
 {
 	u64 max_nsecs, max_cycles;
@@ -588,7 +701,9 @@ u64 clocks_calc_max_nsecs(u32 mult, u32 shift, u32 maxadj, u64 mask)
 	 * any rounding errors, ensure the above inequality is satisfied and
 	 * no overflow will occur.
 	 */
+	// mult: 0xA6AAAAAA, maxadj: 0x12555555, ilog2(0xb8ffffff): 31
 	max_cycles = 1ULL << (63 - (ilog2(mult + maxadj) + 1));
+	// max_cycles: 0x80000000
 
 	/*
 	 * The actual maximum number of cycles we can defer the clocksource is
@@ -596,10 +711,18 @@ u64 clocks_calc_max_nsecs(u32 mult, u32 shift, u32 maxadj, u64 mask)
 	 * Note: Here we subtract the maxadj to make sure we don't sleep for
 	 * too long if there's a large negative adjustment.
 	 */
+	// max_cycles: 0x80000000, 0xFFFFFFFF
 	max_cycles = min(max_cycles, mask);
-	max_nsecs = clocksource_cyc2ns(max_cycles, mult - maxadj, shift);
+	// max_cycles: 0x80000000
 
+	// max_cycles: 0x80000000, mult: 0xA6AAAAAA, maxadj: 0x12555555, shift: 26,
+	// clocksource_cyc2ns(0x80000000, 0x94555555, 26): 0x128AAAAAA0
+	max_nsecs = clocksource_cyc2ns(max_cycles, mult - maxadj, shift);
+	// max_nsecs: 0x128AAAAAA0
+
+	// max_nsecs: 0x128AAAAAA0
 	return max_nsecs;
+	// return 0x128AAAAAA0
 }
 
 /**
@@ -607,19 +730,27 @@ u64 clocks_calc_max_nsecs(u32 mult, u32 shift, u32 maxadj, u64 mask)
  * @cs:         Pointer to clocksource
  *
  */
+// ARM10C 20150523
+// cs: &mct_frc
 static u64 clocksource_max_deferment(struct clocksource *cs)
 {
 	u64 max_nsecs;
 
+	// cs->mult: (&mct_frc)->mult: 0xA6AAAAAA, cs->shift: (&mct_frc)->shift: 26,
+	// cs->maxadj: (&mct_frc)->maxadj: 0x12555555, cs->mask: (&mct_frc)->mask: 0xFFFFFFFF
+	// clocks_calc_max_nsecs(0xA6AAAAAA, 26, 0x12555555, 0xFFFFFFFF): 0x128AAAAAA0
 	max_nsecs = clocks_calc_max_nsecs(cs->mult, cs->shift, cs->maxadj,
 					  cs->mask);
+	// max_nsecs: 0x128AAAAAA0
 	/*
 	 * To ensure that the clocksource does not wrap whilst we are idle,
 	 * limit the time the clocksource can be deferred by 12.5%. Please
 	 * note a margin of 12.5% is used because this can be computed with
 	 * a shift, versus say 10% which would require division.
 	 */
+	// max_nsecs: 0x128AAAAAA0
 	return max_nsecs - (max_nsecs >> 3);
+	// return 0x103955554C
 }
 
 #ifndef CONFIG_ARCH_USES_GETTIMEOFFSET
@@ -706,6 +837,7 @@ static void clocksource_select_fallback(void)
 
 #else /* !CONFIG_ARCH_USES_GETTIMEOFFSET */
 
+// ARM10C 20150523
 static inline void clocksource_select(void) { }
 static inline void clocksource_select_fallback(void) { }
 
@@ -736,16 +868,28 @@ fs_initcall(clocksource_done_booting);
 /*
  * Enqueue the clocksource sorted by rating
  */
+// ARM10C 20150523
+// cs: &mct_frc
 static void clocksource_enqueue(struct clocksource *cs)
 {
 	struct list_head *entry = &clocksource_list;
+	// entry: &clocksource_list
+
 	struct clocksource *tmp;
 
 	list_for_each_entry(tmp, &clocksource_list, list)
+	// for (tmp = list_first_entry(&clocksource_list, typeof(*tmp), list);
+	//     &tmp->list != (&clocksource_list); tmp = list_next_entry(tmp, list))
+
 		/* Keep track of the place, where to insert */
 		if (tmp->rating >= cs->rating)
 			entry = &tmp->list;
+
+	// &cs->list: &(&mct_frc)->list, entry: &clocksource_list
 	list_add(&cs->list, entry);
+
+	// list_add에서 한일:
+	// list clocksource_list의 next에 &(&mct_frc)->list를 추가함
 }
 
 /**
@@ -759,6 +903,8 @@ static void clocksource_enqueue(struct clocksource *cs)
  * This *SHOULD NOT* be called directly! Please use the
  * clocksource_updatefreq_hz() or clocksource_updatefreq_khz helper functions.
  */
+// ARM10C 20150523
+// cs: &mct_frc, scale: 1, freq: 24000000
 void __clocksource_updatefreq_scale(struct clocksource *cs, u32 scale, u32 freq)
 {
 	u64 sec;
@@ -772,23 +918,45 @@ void __clocksource_updatefreq_scale(struct clocksource *cs, u32 scale, u32 freq)
 	 * ~ 0.06ppm granularity for NTP. We apply the same 12.5%
 	 * margin as we do in clocksource_max_deferment()
 	 */
+	// cs->mask: (&mct_frc)->mask: 0xFFFFFFFF
 	sec = (cs->mask - (cs->mask >> 3));
+	// sec: 0xE0000000
+
+	// sec: 0xE0000000, freq: 24000000
+	// do_div(0xE0000000, 24000000): 0
 	do_div(sec, freq);
+	// sec: 156
+
+	// sec: 156, scale: 1
+	// do_div(156, 1): 0
 	do_div(sec, scale);
+	// sec: 156
+
+	// sec: 156
 	if (!sec)
 		sec = 1;
 	else if (sec > 600 && cs->mask > UINT_MAX)
 		sec = 600;
 
+	// &cs->mult: &(&mct_frc)->mult, &cs->shift: &(&mct_frc)->mult,
+	// freq: 24000000, NSEC_PER_SEC: 1000000000L, scale: 1, sec: 156
 	clocks_calc_mult_shift(&cs->mult, &cs->shift, freq,
 			       NSEC_PER_SEC / scale, sec * scale);
+
+	// clocks_calc_mult_shift에서 한일:
+	// (&mct_frc)->mult: 0xA6AAAAAA
+	// (&mct_frc)->shift: 26
 
 	/*
 	 * for clocksources that have large mults, to avoid overflow.
 	 * Since mult may be adjusted by ntp, add an safety extra margin
 	 *
 	 */
+	// cs->maxadj: (&mct_frc)->maxadj, cs: &mct_frc, clocksource_max_adjustment(&mct_frc): 0x12555555
 	cs->maxadj = clocksource_max_adjustment(cs);
+	// cs->maxadj: (&mct_frc)->maxadj: 0x12555555
+
+	// cs->mult: (&mct_frc)->mult: 0xA6AAAAAA, cs->maxadj: (&mct_frc)->maxadj: 0x12555555
 	while ((cs->mult + cs->maxadj < cs->mult)
 		|| (cs->mult - cs->maxadj > cs->mult)) {
 		cs->mult >>= 1;
@@ -796,7 +964,10 @@ void __clocksource_updatefreq_scale(struct clocksource *cs, u32 scale, u32 freq)
 		cs->maxadj = clocksource_max_adjustment(cs);
 	}
 
+	// cs->max_idle_ns: (&mct_frc)->max_idle_ns, cs: &mct_frc, clocksource_max_deferment(&mct_frc): 0x103955554C
 	cs->max_idle_ns = clocksource_max_deferment(cs);
+	// cs->max_idle_ns: (&mct_frc)->max_idle_ns: 0x103955554C
+
 }
 EXPORT_SYMBOL_GPL(__clocksource_updatefreq_scale);
 
@@ -811,22 +982,55 @@ EXPORT_SYMBOL_GPL(__clocksource_updatefreq_scale);
  * This *SHOULD NOT* be called directly! Please use the
  * clocksource_register_hz() or clocksource_register_khz helper functions.
  */
+// ARM10C 20150523
+// cs: &mct_frc, 1, hz: 24000000
 int __clocksource_register_scale(struct clocksource *cs, u32 scale, u32 freq)
 {
 
 	/* Initialize mult/shift and max_idle_ns */
+	// cs: &mct_frc, scale: 1, freq: 24000000
 	__clocksource_updatefreq_scale(cs, scale, freq);
+
+	// __clocksource_updatefreq_scale에서 한일:
+	// (&mct_frc)->mult: 0xA6AAAAAA
+	// (&mct_frc)->shift: 26
+	// (&mct_frc)->maxadj: 0x12555555
+	// (&mct_frc)->max_idle_ns: 0x103955554C
 
 	/* Add clocksource to the clcoksource list */
 	mutex_lock(&clocksource_mutex);
+
+	// mutex_lock에서 한일:
+	// clocksource_mutex을 사용하여 mutex lock 수행
+
+	// cs: &mct_frc
 	clocksource_enqueue(cs);
+
+	// clocksource_enqueue에서 한일:
+	// list clocksource_list의 next에 &(&mct_frc)->list를 추가함
+
+	// cs: &mct_frc
 	clocksource_enqueue_watchdog(cs);
+<<<<<<< HEAD
 	/* clockcource_enqueue_watchdog(): 
 	 * (&mct_frc)->flags: 0x21  */
 	clocksource_select();
 	/* clocksource_select(): NULL function */
+=======
+
+	// clocksource_enqueue_watchdog에서 한일:
+	// (&mct_frc)->flags: 0x21
+
+	clocksource_select(); // null function
+
+>>>>>>> 1e01d49e8084d40f3e40dd4b43720d7d8452e738
 	mutex_unlock(&clocksource_mutex);
+
+	// mutex_unlock에서 한일:
+	// clocksource_mutex을 사용하여 mutex unlock 수행
+
 	return 0;
+	// return 0
 }
 EXPORT_SYMBOL_GPL(__clocksource_register_scale);
 
