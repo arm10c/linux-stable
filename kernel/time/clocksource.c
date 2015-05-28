@@ -1011,19 +1011,12 @@ int __clocksource_register_scale(struct clocksource *cs, u32 scale, u32 freq)
 
 	// cs: &mct_frc
 	clocksource_enqueue_watchdog(cs);
-<<<<<<< HEAD
-	/* clockcource_enqueue_watchdog(): 
-	 * (&mct_frc)->flags: 0x21  */
-	clocksource_select();
-	/* clocksource_select(): NULL function */
-=======
 
 	// clocksource_enqueue_watchdog에서 한일:
 	// (&mct_frc)->flags: 0x21
 
 	clocksource_select(); // null function
 
->>>>>>> 1e01d49e8084d40f3e40dd4b43720d7d8452e738
 	mutex_unlock(&clocksource_mutex);
 
 	// mutex_unlock에서 한일:

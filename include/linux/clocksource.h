@@ -321,12 +321,8 @@ __clocksource_register_scale(struct clocksource *cs, u32 scale, u32 freq);
 extern void
 __clocksource_updatefreq_scale(struct clocksource *cs, u32 scale, u32 freq);
 
-<<<<<<< HEAD
-/* a10c_5526 */
-=======
 // ARM10C 20150523
 // &mct_frc, clk_rate: 24000000
->>>>>>> 1e01d49e8084d40f3e40dd4b43720d7d8452e738
 static inline int clocksource_register_hz(struct clocksource *cs, u32 hz)
 {
 	// cs: &mct_frc, hz: 24000000

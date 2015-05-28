@@ -555,10 +555,6 @@ static void __init exynos4_clocksource_init(void)
 	// clk_rate: 24000000, clocksource_register_hz(&mct_frc, 24000000): 0
 	if (clocksource_register_hz(&mct_frc, clk_rate))
 		panic("%s: can't register clocksource\n", mct_frc.name);
-<<<<<<< HEAD
-        /* clocksource_register_hz() 한일
-	 * list clouck soruce_list에 &(&mct_frc)->list를 추가함. */
-=======
 
 	// clocksource_register_hz에서 한일:
 	// (&mct_frc)->mult: 0xA6AAAAAA
@@ -568,7 +564,6 @@ static void __init exynos4_clocksource_init(void)
 	// (&mct_frc)->flags: 0x21
 	//
 	// list clocksource_list의 next에 &(&mct_frc)->list를 추가함
->>>>>>> 1e01d49e8084d40f3e40dd4b43720d7d8452e738
 }
 
 // ARM10C 20150523
