@@ -298,6 +298,7 @@ static LIST_HEAD(clocksource_list);
 // ARM10C 20150523
 static DEFINE_MUTEX(clocksource_mutex);
 static char override_name[CS_NAME_LEN];
+// ARM10C 20150523
 static int finished_booting;
 
 #ifdef CONFIG_CLOCKSOURCE_WATCHDOG // CONFIG_CLOCKSOURCE_WATCHDOG=n
@@ -753,14 +754,18 @@ static u64 clocksource_max_deferment(struct clocksource *cs)
 	// return 0x103955554C
 }
 
-#ifndef CONFIG_ARCH_USES_GETTIMEOFFSET
+#ifndef CONFIG_ARCH_USES_GETTIMEOFFSET // CONFIG_ARCH_USES_GETTIMEOFFSET=n
 
+// ARM10C 20150523
+// oneshot: 0, skipcur: false
 static struct clocksource *clocksource_find_best(bool oneshot, bool skipcur)
 {
 	struct clocksource *cs;
 
+	// finished_booting: 0, list_empty(&clocksource_list): 0
 	if (!finished_booting || list_empty(&clocksource_list))
 		return NULL;
+		// return NULL
 
 	/*
 	 * We pick the clocksource with the highest rating. If oneshot
@@ -777,15 +782,25 @@ static struct clocksource *clocksource_find_best(bool oneshot, bool skipcur)
 	return NULL;
 }
 
+// ARM10C 20150523
+// false
 static void __clocksource_select(bool skipcur)
 {
+	// tick_oneshot_mode_active(): 0
 	bool oneshot = tick_oneshot_mode_active();
+	// oneshot: 0
+
 	struct clocksource *best, *cs;
 
 	/* Find the best suitable clocksource */
+	// oneshot: 0, skipcur: false, clocksource_find_best(0, false): NULL
 	best = clocksource_find_best(oneshot, skipcur);
+	// best: NULL
+
+	// best: NULL
 	if (!best)
 		return;
+		// return 수행
 
 	/* Check for the override clocksource. */
 	list_for_each_entry(cs, &clocksource_list, list) {
@@ -824,7 +839,7 @@ static void __clocksource_select(bool skipcur)
  * Select the clocksource with the best rating, or the clocksource,
  * which is selected by userspace override.
  */
-/* a10c_5526 */
+// ARM10C 20150523
 static void clocksource_select(void)
 {
 	return __clocksource_select(false);
@@ -837,7 +852,6 @@ static void clocksource_select_fallback(void)
 
 #else /* !CONFIG_ARCH_USES_GETTIMEOFFSET */
 
-// ARM10C 20150523
 static inline void clocksource_select(void) { }
 static inline void clocksource_select_fallback(void) { }
 
@@ -1015,7 +1029,7 @@ int __clocksource_register_scale(struct clocksource *cs, u32 scale, u32 freq)
 	// clocksource_enqueue_watchdog에서 한일:
 	// (&mct_frc)->flags: 0x21
 
-	clocksource_select(); // null function
+	clocksource_select();
 
 	mutex_unlock(&clocksource_mutex);
 

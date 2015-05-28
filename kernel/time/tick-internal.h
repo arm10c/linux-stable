@@ -15,6 +15,9 @@ extern seqlock_t jiffies_lock;
 // TICK_DO_TIMER_BOOT: -2
 #define TICK_DO_TIMER_BOOT	-2
 
+// ARM10C 20150523
+// DECLARE_PER_CPU(struct tick_device, tick_cpu_device):
+// extern __attribute__((section(".data..percpu" ""))) __typeof__(struct tick_device) tick_cpu_device
 DECLARE_PER_CPU(struct tick_device, tick_cpu_device);
 extern ktime_t tick_next_period;
 extern ktime_t tick_period;

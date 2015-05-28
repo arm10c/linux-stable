@@ -17,6 +17,7 @@
 
 // ARM10C 20150411
 // ARM10C 20150418
+// ARM10C 20150523
 enum tick_device_mode {
 	// TICKDEV_MODE_PERIODIC: 0
 	TICKDEV_MODE_PERIODIC,
@@ -26,6 +27,7 @@ enum tick_device_mode {
 
 // ARM10C 20150411
 // ARM10C 20150418
+// ARM10C 20150523
 struct tick_device {
 	struct clock_event_device *evtdev;
 	enum tick_device_mode mode;
@@ -115,6 +117,7 @@ extern void tick_clock_notify(void);
 extern int tick_check_oneshot_change(int allow_nohz);
 extern struct tick_sched *tick_get_tick_sched(int cpu);
 extern void tick_check_idle(int cpu);
+// ARM10C 20150523
 extern int tick_oneshot_mode_active(void);
 #  ifndef arch_needs_cpu
 #   define arch_needs_cpu(cpu) (0)

@@ -92,16 +92,29 @@ int tick_switch_to_oneshot(void (*handler)(struct clock_event_device *))
  *
  * returns 1 when either nohz or highres are enabled. otherwise 0.
  */
+// ARM10C 20150523
 int tick_oneshot_mode_active(void)
 {
 	unsigned long flags;
 	int ret;
 
 	local_irq_save(flags);
+
+	// local_irq_save에서 한일:
+	// flags에 CPSR값을 저장함
+
+	// __this_cpu_read(tick_cpu_device.mode): [pcp0] tick_cpu_device.mode: 0, TICKDEV_MODE_ONESHOT: 1
 	ret = __this_cpu_read(tick_cpu_device.mode) == TICKDEV_MODE_ONESHOT;
+	// ret: 0
+
 	local_irq_restore(flags);
 
+	// local_irq_restore에서 한일:
+	// flags에 저정된 CPSR을 복원함
+
+	// ret: 0
 	return ret;
+	// return 0
 }
 
 #ifdef CONFIG_HIGH_RES_TIMERS

@@ -28,6 +28,7 @@
  * Tick devices
  */
 // ARM10C 20150411
+// ARM10C 20150523
 DEFINE_PER_CPU(struct tick_device, tick_cpu_device);
 /*
  * Tick next event: keeps track of the tick time

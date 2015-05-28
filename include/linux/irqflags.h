@@ -30,7 +30,8 @@
 # define INIT_TRACE_IRQFLAGS	.softirqs_enabled = 1,
 #else
 # define trace_hardirqs_on()		do { } while (0)    // ARM10C this 
-  // ARM10C 20140412
+// ARM10C 20140412
+// ARM10C 20150523
 # define trace_hardirqs_off()		do { } while (0)    // ARM10C this 
 # define trace_softirqs_on(ip)		do { } while (0)
 # define trace_softirqs_off(ip)		do { } while (0)
@@ -60,6 +61,7 @@
 #define raw_local_irq_disable()		arch_local_irq_disable()
 #define raw_local_irq_enable()		arch_local_irq_enable()
 // ARM10C 20150411
+// ARM10C 20150523
 #define raw_local_irq_save(flags)			\
 	do {						\
 		typecheck(unsigned long, flags);	\
@@ -104,6 +106,7 @@
 // ARM10C 20140510
 // ARM10C 20141227
 // ARM10C 20150411
+// ARM10C 20150523
 #define local_irq_save(flags)	/*ARM10C this*/		\
 	do {						\
 		raw_local_irq_save(flags);		\

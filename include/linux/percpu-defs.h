@@ -100,6 +100,9 @@
 //
 // DECLARE_PER_CPU_SECTION(struct rq, runqueues, ""):
 // extern __attribute__((section(".data..percpu" ""))) __typeof__(struct rq) runqueues
+// ARM10C 20150523
+// DECLARE_PER_CPU_SECTION(struct tick_device, tick_cpu_device, ""):
+// extern __attribute__((section(".data..percpu" ""))) __typeof__(struct tick_device) tick_cpu_device
 #define DECLARE_PER_CPU_SECTION(type, name, sec)			\
 	extern __PCPU_ATTRS(sec) __typeof__(type) name
 
@@ -139,6 +142,12 @@
 //
 // DECLARE_PER_CPU(struct rq, runqueues):
 // extern __attribute__((section(".data..percpu" ""))) __typeof__(struct rq) runqueues
+// ARM10C 20150523
+// DECLARE_PER_CPU_SECTION(struct tick_device, tick_cpu_device, ""):
+// extern __attribute__((section(".data..percpu" ""))) __typeof__(struct tick_device) tick_cpu_device
+//
+// DECLARE_PER_CPU(struct tick_device, tick_cpu_device):
+// extern __attribute__((section(".data..percpu" ""))) __typeof__(struct tick_device) tick_cpu_device
 #define DECLARE_PER_CPU(type, name)					\
 	DECLARE_PER_CPU_SECTION(type, name, "")
 
