@@ -79,6 +79,8 @@ struct rb_root {
 // #define RB_CLEAR_NODE((&(&(&def_rt_bandwidth)->rt_period_timer)->node)->node)
 // 	(((&(&(&def_rt_bandwidth)->rt_period_timer)->node)->node)->__rb_parent_color =
 // 	(unsigned long)((&(&(&def_rt_bandwidth)->rt_period_timer)->node)->node))
+// ARM10C 20150530
+// &node->node: (&(&sched_clock_timer)->node)->node
 #define RB_CLEAR_NODE(node)  \
 	((node)->__rb_parent_color = (unsigned long)(node))
 

@@ -45,6 +45,8 @@ struct timerqueue_node *timerqueue_getnext(struct timerqueue_head *head)
 // &timer->base: &(&(&def_rt_bandwidth)->rt_period_timer)->node
 // ARM10C 20140913
 // &timer->node: &(&(&runqueues)->hrtick_timer)->node
+// ARM10C 20150530
+// &timer->node: &(&sched_clock_timer)->node
 static inline void timerqueue_init(struct timerqueue_node *node)
 {
 	// &node->node: (&(&(&def_rt_bandwidth)->rt_period_timer)->node)->node
@@ -55,6 +57,10 @@ static inline void timerqueue_init(struct timerqueue_node *node)
 	// RB_CLEAR_NODE((&(&(&runqueues)->hrtick_timer)->node)->node):
 	// (((&(&(&runqueues)->hrtick_timer)->node)->node)->__rb_parent_color =
 	// (unsigned long)(((&(&(&runqueues)->hrtick_timer)->node)->node))
+	// &node->node: (&(&sched_clock_timer)->node)->node
+	// RB_CLEAR_NODE((&(&sched_clock_timer)->node)->node):
+	// (((&(&sched_clock_timer)->node)->node)->__rb_parent_color =
+	// (unsigned long)(((&(&sched_clock_timer)->node)->node))
 	RB_CLEAR_NODE(&node->node);
 }
 

@@ -268,26 +268,46 @@ static inline int read_seqcount_retry(const seqcount_t *s, unsigned start)
 
 // ARM10C 20150103
 // s: &timekeeper_seq
+// ARM10C 20150530
+// &cd.seq
+// ARM10C 20150530
+// &cd.seq
 static inline void raw_write_seqcount_begin(seqcount_t *s)
 {
 	// s->sequence: (&timekeeper_seq)->sequence: 0
+	// s->sequence: (&cd.seq)->sequence: 0
+	// s->sequence: (&cd.seq)->sequence: 2
 	s->sequence++;
 	// s->sequence: (&timekeeper_seq)->sequence: 1
+	// s->sequence: (&cd.seq)->sequence: 1
+	// s->sequence: (&cd.seq)->sequence: 3
 
 	smp_wmb();
+	// 공유자원을 다른 cpu core가 사용할수 있게 메모리 적용
+	// 공유자원을 다른 cpu core가 사용할수 있게 메모리 적용
 	// 공유자원을 다른 cpu core가 사용할수 있게 메모리 적용
 }
 
 // ARM10C 20150103
 // s: &timekeeper_seq
+// ARM10C 20150530
+// &cd.seq
+// ARM10C 20150530
+// &cd.seq
 static inline void raw_write_seqcount_end(seqcount_t *s)
 {
 	smp_wmb();
 	// 공유자원을 다른 cpu core가 사용할수 있게 메모리 적용
+	// 공유자원을 다른 cpu core가 사용할수 있게 메모리 적용
+	// 공유자원을 다른 cpu core가 사용할수 있게 메모리 적용
 
 	// s->sequence: (&timekeeper_seq)->sequence: 1
+	// s->sequence: (&cd.seq)->sequence: 1
+	// s->sequence: (&cd.seq)->sequence: 3
 	s->sequence++;
 	// s->sequence: (&timekeeper_seq)->sequence: 2
+	// s->sequence: (&cd.seq)->sequence: 2
+	// s->sequence: (&cd.seq)->sequence: 4
 }
 
 /*

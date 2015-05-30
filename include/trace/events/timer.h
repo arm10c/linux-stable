@@ -127,6 +127,8 @@ DEFINE_EVENT(timer_class, timer_cancel,
  * @clockid:	the hrtimers clock
  * @mode:	the hrtimers mode
  */
+// ARM10C 20150530
+// timer: &sched_clock_timer, clock_id: 1, mode: 1
 TRACE_EVENT(hrtimer_init,
 
 	TP_PROTO(struct hrtimer *hrtimer, clockid_t clockid,
