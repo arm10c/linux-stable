@@ -76,6 +76,7 @@
 	} while (0)
 // ARM10C 20130831
 // ARM10C 20140920
+// ARM10C 20150530
 #define raw_local_save_flags(flags)			\
 	do {						\
 		typecheck(unsigned long, flags);	\
@@ -83,6 +84,7 @@
 	} while (0)
 // ARM10C 20140412
 // ARM10C 20140920
+// ARM10C 20150530
 #define raw_irqs_disabled_flags(flags)			\
 	({						\
 		typecheck(unsigned long, flags);	\
@@ -143,6 +145,7 @@
 // ARM10C 20131019
 // ARM10C 20140621
 // ARM10C 20140920
+// ARM10C 20150530
 #define irqs_disabled()					\
 	({						\
 		unsigned long _flags;			\

@@ -741,8 +741,11 @@ asmlinkage void __init start_kernel(void)
 	// ntp 관련 전역변수 초기화, timekeeper, shadow_timekeeper의 맴버값 초기화 수행
 
 	time_init();
+	// timer 를 사용하기 위한 clk source, clk_table 메모리 할당 및 초기화,
+	// timer event를 위한 timer irq (MCT) 초기화 수행
 
 // 2015/05/23 종료
+// 2015/05/30 시작
 
 	sched_clock_postinit();
 	perf_event_init();

@@ -11,6 +11,7 @@
 // ARM10C 20150418
 // ARM10C 20150509
 // ARM10C 20150516
+// ARM10C 20150530
 // CONFIG_HZ: 100
 // HZ: 100
 # define HZ		CONFIG_HZ	/* Internal kernel timer frequency */

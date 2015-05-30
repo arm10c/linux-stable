@@ -9,6 +9,7 @@
 #else
 /*
 // ARM10C 20141115
+// ARM10C 20150530
 // BITS_PER_LONG: 32
 */
 #define BITS_PER_LONG 32

@@ -19,6 +19,7 @@
 #include <linux/bitops.h>
 
 // ARM10C 20140913
+// ARM10C 20150530
 struct clock_data {
 	ktime_t wrap_kt;
 	u64 epoch_ns;
@@ -36,15 +37,18 @@ static int irqtime = -1;
 core_param(irqtime, irqtime, int, 0400);
 
 // ARM10C 20140913
+// ARM10C 20150530
 // NSEC_PER_SEC: 1000000000L, HZ: 100
 static struct clock_data cd = {
 	.mult	= NSEC_PER_SEC / HZ,
 };
 
 // ARM10C 20140913
+// ARM10C 20150530
 static u64 __read_mostly sched_clock_mask;
 
 // ARM10C 20140913
+// ARM10C 20150530
 static u64 notrace jiffy_sched_clock_read(void)
 {
 	/*
@@ -64,6 +68,7 @@ static u64 notrace read_sched_clock_32_wrapper(void)
 }
 
 // ARM10C 20140913
+// ARM10C 20150530
 static u64 __read_mostly (*read_sched_clock)(void) = jiffy_sched_clock_read;
 
 // ARM10C 20140913
@@ -146,6 +151,8 @@ static enum hrtimer_restart sched_clock_poll(struct hrtimer *hrt)
 	return HRTIMER_RESTART;
 }
 
+// ARM10C 20150530
+// jiffy_sched_clock_read, BITS_PER_LONG: 32, HZ: 100
 void __init sched_clock_register(u64 (*read)(void), int bits,
 				 unsigned long rate)
 {
@@ -153,16 +160,32 @@ void __init sched_clock_register(u64 (*read)(void), int bits,
 	u64 res, wrap;
 	char r_unit;
 
+	// cd.rate: 0, rate: 100
 	if (cd.rate > rate)
 		return;
 
+	// irqs_disabled(): 1
 	WARN_ON(!irqs_disabled());
+
+	// read: jiffy_sched_clock_read
 	read_sched_clock = read;
+	// read_sched_clock: jiffy_sched_clock_read
+
+	// bits: 32, CLOCKSOURCE_MASK(32): 0xFFFFFFFF
 	sched_clock_mask = CLOCKSOURCE_MASK(bits);
+	// sched_clock_mask: 0xFFFFFFFF
+
+	// cd.rate: 0, rate: 100
 	cd.rate = rate;
+	// cd.rate: 100
 
 	/* calculate the mult/shift to convert counter ticks to ns. */
+	// rate: 100, NSEC_PER_SEC: 1000000000L
 	clocks_calc_mult_shift(&cd.mult, &cd.shift, rate, NSEC_PER_SEC, 3600);
+
+	// clocks_calc_mult_shift에서 한일:
+	// (&cd)->mult: 0x98968000
+	// (&cd)->shift: 8
 
 	r = rate;
 	if (r >= 4000000) {
@@ -203,13 +226,16 @@ void __init setup_sched_clock(u32 (*read)(void), int bits, unsigned long rate)
 	sched_clock_register(read_sched_clock_32_wrapper, bits, rate);
 }
 
+// ARM10C 20150530
 void __init sched_clock_postinit(void)
 {
 	/*
 	 * If no sched_clock function has been provided at that point,
 	 * make it the final one one.
 	 */
+	// read_sched_clock: jiffy_sched_clock_read
 	if (read_sched_clock == jiffy_sched_clock_read)
+		// BITS_PER_LONG: 32, HZ: 100
 		sched_clock_register(jiffy_sched_clock_read, BITS_PER_LONG, HZ);
 
 	update_sched_clock();

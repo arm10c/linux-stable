@@ -142,6 +142,8 @@ EXPORT_SYMBOL_GPL(timecounter_cyc2time);
 // ARM10C 20150523
 // [3rd] &ce->mult: &(&mct_comp_device)->mult, &ce->shift: &(&mct_comp_device)->shift,
 // NSEC_PER_SEC: 1000000000L, freq: 24000000, minsec: 178
+// ARM10C 20150530
+// [4th] &cd.mult, &cd.shift, rate: 100, NSEC_PER_SEC: 1000000000L, 3600
 void
 clocks_calc_mult_shift(u32 *mult, u32 *shift, u32 from, u32 to, u32 maxsec)
 {
@@ -149,7 +151,8 @@ clocks_calc_mult_shift(u32 *mult, u32 *shift, u32 from, u32 to, u32 maxsec)
 	u32 sft, sftacc= 32;
 	// [1st] sftacc: 32
 	// [2nd] sftacc: 32
-	// sftacc: 32
+	// [3rd] sftacc: 32
+	// [4th] sftacc: 32
 
 	/*
 	 * Calculate the shift factor which is limiting the conversion
@@ -158,14 +161,17 @@ clocks_calc_mult_shift(u32 *mult, u32 *shift, u32 from, u32 to, u32 maxsec)
 	// [1st] maxsec: 178, from: 1000000000L
 	// [2nd] maxsec: 156, from: 24000000
 	// [3rd] maxsec: 178, from: 1000000000L
+	// [4th] maxsec: 3600, from: 100
 	tmp = ((u64)maxsec * from) >> 32;
 	// [1st] tmp: 41
 	// [2nd] tmp: 0
 	// [3rd] tmp: 41
+	// [4th] tmp: 0
 
 	// [1st] tmp: 41, sftacc: 32
 	// [2nd] tmp: 0, sftacc: 32
 	// [3rd] tmp: 41, sftacc: 32
+	// [4th] tmp: 0, sftacc: 32
 	while (tmp) {
 		tmp >>=1;
 		sftacc--;
@@ -173,6 +179,7 @@ clocks_calc_mult_shift(u32 *mult, u32 *shift, u32 from, u32 to, u32 maxsec)
 	// [1st] sftacc: 26, tmp: 0
 	// [2nd] sftacc: 32, tmp: 0
 	// [3rd] sftacc: 26, tmp: 0
+	// [4th] sftacc: 32, tmp: 0
 
 	/*
 	 * Find the conversion shift/mult pair which has the best
@@ -182,104 +189,284 @@ clocks_calc_mult_shift(u32 *mult, u32 *shift, u32 from, u32 to, u32 maxsec)
 		// NOTE:
 		// for 의 1st loop 수행을 [f1] 로, 2nd loop 수행을 [f2] 로 주석에 prefix 로 추가
 
-		// [1st][f1] sft: 32, to: 12000000
-		// [2nd][f1] sft: 32, to: 1000000000
-		// [2nd][f2] sft: 31, to: 1000000000
-		// [2nd][f3] sft: 30, to: 1000000000
-		// [2nd][f4] sft: 29, to: 1000000000
-		// [2nd][f5] sft: 28, to: 1000000000
-		// [2nd][f6] sft: 27, to: 1000000000
-		// [2nd][f7] sft: 26, to: 1000000000
-		// [3rd][f1] sft: 32, to: 24000000
-		// [3rd][f2] sft: 31, to: 24000000
+		// [1st][f1]  sft: 32, to: 12000000
+		// [2nd][f1]  sft: 32, to: 1000000000
+		// [2nd][f2]  sft: 31, to: 1000000000
+		// [2nd][f3]  sft: 30, to: 1000000000
+		// [2nd][f4]  sft: 29, to: 1000000000
+		// [2nd][f5]  sft: 28, to: 1000000000
+		// [2nd][f6]  sft: 27, to: 1000000000
+		// [2nd][f7]  sft: 26, to: 1000000000
+		// [3rd][f1]  sft: 32, to: 24000000
+		// [3rd][f2]  sft: 31, to: 24000000
+		// [4th][f1]  sft: 32, to: 1000000000
+		// [4th][f2]  sft: 31, to: 1000000000
+		// [4th][f3]  sft: 30, to: 1000000000
+		// [4th][f4]  sft: 29, to: 1000000000
+		// [4th][f5]  sft: 28, to: 1000000000
+		// [4th][f6]  sft: 27, to: 1000000000
+		// [4th][f7]  sft: 26, to: 1000000000
+		// [4th][f8]  sft: 25, to: 1000000000
+		// [4th][f9]  sft: 24, to: 1000000000
+		// [4th][f10] sft: 23, to: 1000000000
+		// [4th][f11] sft: 22, to: 1000000000
+		// [4th][f12] sft: 21, to: 1000000000
+		// [4th][f13] sft: 20, to: 1000000000
+		// [4th][f14] sft: 19, to: 1000000000
+		// [4th][f15] sft: 18, to: 1000000000
+		// [4th][f16] sft: 17, to: 1000000000
+		// [4th][f17] sft: 16, to: 1000000000
+		// [4th][f18] sft: 15, to: 1000000000
+		// [4th][f19] sft: 14, to: 1000000000
+		// [4th][f20] sft: 13, to: 1000000000
+		// [4th][f21] sft: 12, to: 1000000000
+		// [4th][f22] sft: 11, to: 1000000000
+		// [4th][f23] sft: 10, to: 1000000000
+		// [4th][f24] sft:  9, to: 1000000000
+		// [4th][f25] sft:  8, to: 1000000000
 		tmp = (u64) to << sft;
-		// [1st][f1] tmp: 0xb71b0000000000
-		// [2nd][f1] tmp: 0x3B9ACA0000000000
-		// [2nd][f2] tmp: 0x1DCD650000000000
-		// [2nd][f3] tmp: 0xEE6B28000000000
-		// [2nd][f4] tmp: 0x773594000000000
-		// [2nd][f5] tmp: 0x3B9ACA000000000
-		// [2nd][f6] tmp: 0x1DCD65000000000
-		// [2nd][f7] tmp: 0xEE6B2800000000
-		// [3rd][f1] tmp: 0x16E360000000000
-		// [3rd][f2] tmp: 0xB71B0000000000
+		// [1st][f1]  tmp: 0xb71b0000000000
+		// [2nd][f1]  tmp: 0x3B9ACA0000000000
+		// [2nd][f2]  tmp: 0x1DCD650000000000
+		// [2nd][f3]  tmp: 0xEE6B28000000000
+		// [2nd][f4]  tmp: 0x773594000000000
+		// [2nd][f5]  tmp: 0x3B9ACA000000000
+		// [2nd][f6]  tmp: 0x1DCD65000000000
+		// [2nd][f7]  tmp: 0xEE6B2800000000
+		// [3rd][f1]  tmp: 0x16E360000000000
+		// [3rd][f2]  tmp: 0xB71B0000000000
+		// [4th][f1]  tmp: 0x3B9ACA0000000000
+		// [4th][f2]  tmp: 0x1DCD650000000000
+		// [4th][f3]  tmp: 0xEE6B28000000000
+		// [4th][f4]  tmp: 0x773594000000000
+		// [4th][f5]  tmp: 0x3B9ACA000000000
+		// [4th][f6]  tmp: 0x1DCD65000000000
+		// [4th][f7]  tmp: 0xEE6B2800000000
+		// [4th][f8]  tmp: 0x77359400000000
+		// [4th][f9]  tmp: 0x3B9ACA00000000
+		// [4th][f10] tmp: 0x1DCD6500000000
+		// [4th][f11] tmp: 0xEE6B280000000
+		// [4th][f12] tmp: 0x7735940000000
+		// [4th][f13] tmp: 0x3B9ACA0000000
+		// [4th][f14] tmp: 0x1DCD650000000
+		// [4th][f15] tmp: 0xEE6B28000000
+		// [4th][f16] tmp: 0x773594000000
+		// [4th][f17] tmp: 0x3B9ACA000000
+		// [4th][f18] tmp: 0x1DCD65000000
+		// [4th][f19] tmp: 0xEE6B2800000
+		// [4th][f20] tmp: 0x77359400000
+		// [4th][f21] tmp: 0x3B9ACA00000
+		// [4th][f22] tmp: 0x1DCD6500000
+		// [4th][f23] tmp: 0xEE6B280000
+		// [4th][f24] tmp: 0x7735940000
+		// [4th][f25] tmp: 0x3B9ACA0000
 
-		// [1st][f1] tmp: 0xb71b0000000000, from: 1000000000L
-		// [2nd][f1] tmp: 0x3B9ACA0000000000, from: 24000000
-		// [2nd][f2] tmp: 0x1DCD650000000000, from: 24000000
-		// [2nd][f3] tmp: 0xEE6B28000000000, from: 24000000
-		// [2nd][f4] tmp: 0x773594000000000, from: 24000000
-		// [2nd][f5] tmp: 0x3B9ACA000000000, from: 24000000
-		// [2nd][f6] tmp: 0x1DCD65000000000, from: 24000000
-		// [2nd][f7] tmp: 0xEE6B2800000000, from: 24000000
-		// [3rd][f1] tmp: 0x16E360000000000, from: 1000000000L
-		// [3rd][f2] tmp: 0xB71B0000000000, from: 1000000000L
+		// [1st][f1]  tmp: 0xb71b0000000000,   from: 1000000000L
+		// [2nd][f1]  tmp: 0x3B9ACA0000000000, from: 24000000
+		// [2nd][f2]  tmp: 0x1DCD650000000000, from: 24000000
+		// [2nd][f3]  tmp: 0xEE6B28000000000,  from: 24000000
+		// [2nd][f4]  tmp: 0x773594000000000,  from: 24000000
+		// [2nd][f5]  tmp: 0x3B9ACA000000000,  from: 24000000
+		// [2nd][f6]  tmp: 0x1DCD65000000000,  from: 24000000
+		// [2nd][f7]  tmp: 0xEE6B2800000000,   from: 24000000
+		// [3rd][f1]  tmp: 0x16E360000000000,  from: 1000000000L
+		// [3rd][f2]  tmp: 0xB71B0000000000,   from: 1000000000L
+		// [4th][f1]  tmp: 0x3B9ACA0000000000, from: 100
+		// [4th][f2]  tmp: 0x1DCD650000000000, from: 100
+		// [4th][f3]  tmp: 0xEE6B28000000000,  from: 100
+		// [4th][f4]  tmp: 0x773594000000000,  from: 100
+		// [4th][f5]  tmp: 0x3B9ACA000000000,  from: 100
+		// [4th][f6]  tmp: 0x1DCD65000000000,  from: 100
+		// [4th][f7]  tmp: 0xEE6B2800000000,   from: 100
+		// [4th][f8]  tmp: 0x77359400000000,   from: 100
+		// [4th][f9]  tmp: 0x3B9ACA00000000,   from: 100
+		// [4th][f10] tmp: 0x1DCD6500000000,   from: 100
+		// [4th][f11] tmp: 0xEE6B280000000,    from: 100
+		// [4th][f12] tmp: 0x7735940000000,    from: 100
+		// [4th][f13] tmp: 0x3B9ACA0000000,    from: 100
+		// [4th][f14] tmp: 0x1DCD650000000,    from: 100
+		// [4th][f15] tmp: 0xEE6B28000000,     from: 100
+		// [4th][f16] tmp: 0x773594000000,     from: 100
+		// [4th][f17] tmp: 0x3B9ACA000000,     from: 100
+		// [4th][f18] tmp: 0x1DCD65000000,     from: 100
+		// [4th][f19] tmp: 0xEE6B2800000,      from: 100
+		// [4th][f20] tmp: 0x77359400000,      from: 100
+		// [4th][f21] tmp: 0x3B9ACA00000,      from: 100
+		// [4th][f22] tmp: 0x1DCD6500000,      from: 100
+		// [4th][f23] tmp: 0xEE6B280000,       from: 100
+		// [4th][f24] tmp: 0x7735940000,       from: 100
+		// [4th][f25] tmp: 0x3B9ACA0000,       from: 100
 		tmp += from / 2;
-		// [1st][f1] tmp: 0xb71b001dcd6500
-		// [2nd][f1] tmp: 0x3B9ACA0000B71B00
-		// [2nd][f2] tmp: 0x1DCD650000B71B00
-		// [2nd][f3] tmp: 0xEE6B28000B71B00
-		// [2nd][f4] tmp: 0x773594000B71B00
-		// [2nd][f5] tmp: 0x3B9ACA000B71B00
-		// [2nd][f6] tmp: 0x1DCD65000B71B00
-		// [2nd][f7] tmp: 0xEE6B2800B71B00
-		// [3rd][f1] tmp: 0x16E36001DCD6500
-		// [3rd][f2] tmp: 0xB71B001DCD6500
+		// [1st][f1]  tmp: 0xb71b001dcd6500
+		// [2nd][f1]  tmp: 0x3B9ACA0000B71B00
+		// [2nd][f2]  tmp: 0x1DCD650000B71B00
+		// [2nd][f3]  tmp: 0xEE6B28000B71B00
+		// [2nd][f4]  tmp: 0x773594000B71B00
+		// [2nd][f5]  tmp: 0x3B9ACA000B71B00
+		// [2nd][f6]  tmp: 0x1DCD65000B71B00
+		// [2nd][f7]  tmp: 0xEE6B2800B71B00
+		// [3rd][f1]  tmp: 0x16E36001DCD6500
+		// [3rd][f2]  tmp: 0xB71B001DCD6500
+		// [4th][f1]  tmp: 0x3B9ACA0000000032
+		// [4th][f2]  tmp: 0x1DCD650000000032
+		// [4th][f3]  tmp: 0xEE6B28000000032
+		// [4th][f4]  tmp: 0x773594000000032
+		// [4th][f5]  tmp: 0x3B9ACA000000032
+		// [4th][f6]  tmp: 0x1DCD65000000032
+		// [4th][f7]  tmp: 0xEE6B2800000032
+		// [4th][f8]  tmp: 0x77359400000032
+		// [4th][f9]  tmp: 0x3B9ACA00000032
+		// [4th][f10] tmp: 0x1DCD6500000032
+		// [4th][f11] tmp: 0xEE6B280000032
+		// [4th][f12] tmp: 0x7735940000032
+		// [4th][f13] tmp: 0x3B9ACA0000032
+		// [4th][f14] tmp: 0x1DCD650000032
+		// [4th][f15] tmp: 0xEE6B28000032
+		// [4th][f16] tmp: 0x773594000032
+		// [4th][f17] tmp: 0x3B9ACA000032
+		// [4th][f18] tmp: 0x1DCD65000032
+		// [4th][f19] tmp: 0xEE6B2800032
+		// [4th][f20] tmp: 0x77359400032
+		// [4th][f21] tmp: 0x3B9ACA00032
+		// [4th][f22] tmp: 0x1DCD6500032
+		// [4th][f23] tmp: 0xEE6B280032
+		// [4th][f24] tmp: 0x7735940032
+		// [4th][f25] tmp: 0x3B9ACA0032
 
-		// [1st][f1] tmp: 0xb71b001dcd6500, from: 1000000000L
-		// [2nd][f1] tmp: 0x3B9ACA0000B71B00, from: 24000000
-		// [2nd][f2] tmp: 0x1DCD650000B71B00, from: 24000000
-		// [2nd][f3] tmp: 0xEE6B28000B71B00, from: 24000000
-		// [2nd][f4] tmp: 0x773594000B71B00, from: 24000000
-		// [2nd][f5] tmp: 0x3B9ACA000B71B00, from: 24000000
-		// [2nd][f6] tmp: 0x1DCD65000B71B00, from: 24000000
-		// [2nd][f7] tmp: 0xEE6B2800B71B00, from: 24000000
-		// [3rd][f1] tmp: 0x16E36001DCD6500, from: 1000000000L
-		// [3rd][f2] tmp: 0xB71B001DCD6500, from: 1000000000L
+		// [1st][f1]  tmp: 0xb71b001dcd6500,   from: 1000000000L
+		// [2nd][f1]  tmp: 0x3B9ACA0000B71B00, from: 24000000
+		// [2nd][f2]  tmp: 0x1DCD650000B71B00, from: 24000000
+		// [2nd][f3]  tmp: 0xEE6B28000B71B00,  from: 24000000
+		// [2nd][f4]  tmp: 0x773594000B71B00,  from: 24000000
+		// [2nd][f5]  tmp: 0x3B9ACA000B71B00,  from: 24000000
+		// [2nd][f6]  tmp: 0x1DCD65000B71B00,  from: 24000000
+		// [2nd][f7]  tmp: 0xEE6B2800B71B00,   from: 24000000
+		// [3rd][f1]  tmp: 0x16E36001DCD6500,  from: 1000000000L
+		// [3rd][f2]  tmp: 0xB71B001DCD6500,   from: 1000000000L
+		// [4th][f1]  tmp: 0x3B9ACA0000000032, from: 100
+		// [4th][f2]  tmp: 0x1DCD650000000032, from: 100
+		// [4th][f3]  tmp: 0xEE6B28000000032,  from: 100
+		// [4th][f4]  tmp: 0x773594000000032,  from: 100
+		// [4th][f5]  tmp: 0x3B9ACA000000032,  from: 100
+		// [4th][f6]  tmp: 0x1DCD65000000032,  from: 100
+		// [4th][f7]  tmp: 0xEE6B2800000032,   from: 100
+		// [4th][f8]  tmp: 0x77359400000032,   from: 100
+		// [4th][f9]  tmp: 0x3B9ACA00000032,   from: 100
+		// [4th][f10] tmp: 0x1DCD6500000032,   from: 100
+		// [4th][f11] tmp: 0xEE6B280000032,    from: 100
+		// [4th][f12] tmp: 0x7735940000032,    from: 100
+		// [4th][f13] tmp: 0x3B9ACA0000032,    from: 100
+		// [4th][f14] tmp: 0x1DCD650000032,    from: 100
+		// [4th][f15] tmp: 0xEE6B28000032,     from: 100
+		// [4th][f16] tmp: 0x773594000032,     from: 100
+		// [4th][f17] tmp: 0x3B9ACA000032,     from: 100
+		// [4th][f18] tmp: 0x1DCD65000032,     from: 100
+		// [4th][f19] tmp: 0xEE6B2800032,      from: 100
+		// [4th][f20] tmp: 0x77359400032,      from: 100
+		// [4th][f21] tmp: 0x3B9ACA00032,      from: 100
+		// [4th][f22] tmp: 0x1DCD6500032,      from: 100
+		// [4th][f23] tmp: 0xEE6B280032,       from: 100
+		// [4th][f24] tmp: 0x7735940032,       from: 100
+		// [4th][f25] tmp: 0x3B9ACA0032,       from: 100
 		do_div(tmp, from);
-		// [1st][f1] tmp: 0x3126E98
-		// [2nd][f1] tmp: 0x29AAAAAAAB
-		// [2nd][f2] tmp: 0x14D5555555
-		// [2nd][f3] tmp: 0xA6AAAAAAB
-		// [2nd][f4] tmp: 0x535555555
-		// [2nd][f5] tmp: 0x29AAAAAAA
-		// [2nd][f6] tmp: 0x14D555555
-		// [2nd][f7] tmp: 0xA6AAAAAA
-		// [3rd][f1] tmp: 0x624DD2F
-		// [3rd][f2] tmp: 0x3126E98
+		// [1st][f1]  tmp: 0x3126E98
+		// [2nd][f1]  tmp: 0x29AAAAAAAB
+		// [2nd][f2]  tmp: 0x14D5555555
+		// [2nd][f3]  tmp: 0xA6AAAAAAB
+		// [2nd][f4]  tmp: 0x535555555
+		// [2nd][f5]  tmp: 0x29AAAAAAA
+		// [2nd][f6]  tmp: 0x14D555555
+		// [2nd][f7]  tmp: 0xA6AAAAAA
+		// [3rd][f1]  tmp: 0x624DD2F
+		// [3rd][f2]  tmp: 0x3126E98
+		// [4th][f1]  tmp: 0x98968000000000
+		// [4th][f2]  tmp: 0x4C4B4000000000
+		// [4th][f3]  tmp: 0x2625A000000000
+		// [4th][f4]  tmp: 0x1312D000000000
+		// [4th][f5]  tmp: 0x9896800000000
+		// [4th][f6]  tmp: 0x4C4B400000000
+		// [4th][f7]  tmp: 0x2625A00000000
+		// [4th][f8]  tmp: 0x1312D00000000
+		// [4th][f9]  tmp: 0x989680000000
+		// [4th][f10] tmp: 0x4C4B40000000
+		// [4th][f11] tmp: 0x2625A0000000
+		// [4th][f12] tmp: 0x1312D0000000
+		// [4th][f13] tmp: 0x98968000000
+		// [4th][f14] tmp: 0x4C4B4000000
+		// [4th][f15] tmp: 0x2625A000000
+		// [4th][f16] tmp: 0x1312D000000
+		// [4th][f17] tmp: 0x9896800000
+		// [4th][f18] tmp: 0x4C4B400000
+		// [4th][f19] tmp: 0x2625A00000
+		// [4th][f20] tmp: 0x1312D00000
+		// [4th][f21] tmp: 0x989680000
+		// [4th][f22] tmp: 0x4C4B40000
+		// [4th][f23] tmp: 0x2625A0000
+		// [4th][f24] tmp: 0x1312D0000
+		// [4th][f25] tmp: 0x98968000
 
-		// [1st][f1] tmp: 0x3126E98, sftacc: 26
-		// [2nd][f1] tmp: 0x29AAAAAAAB, sftacc: 32
-		// [2nd][f2] tmp: 0x14D5555555, sftacc: 32
-		// [2nd][f3] tmp: 0xA6AAAAAAB, sftacc: 32
-		// [2nd][f4] tmp: 0x535555555, sftacc: 32
-		// [2nd][f5] tmp: 0x29AAAAAAA, sftacc: 32
-		// [2nd][f6] tmp: 0x14D555555, sftacc: 32
-		// [2nd][f7] tmp: 0xA6AAAAAA, sftacc: 32
-		// [3rd][f1] tmp: 0x624DD2F, sftacc: 26
-		// [3rd][f2] tmp: 0x3126E98, sftacc: 26
+		// [1st][f1]  tmp: 0x3126E98,        sftacc: 26
+		// [2nd][f1]  tmp: 0x29AAAAAAAB,     sftacc: 32
+		// [2nd][f2]  tmp: 0x14D5555555,     sftacc: 32
+		// [2nd][f3]  tmp: 0xA6AAAAAAB,      sftacc: 32
+		// [2nd][f4]  tmp: 0x535555555,      sftacc: 32
+		// [2nd][f5]  tmp: 0x29AAAAAAA,      sftacc: 32
+		// [2nd][f6]  tmp: 0x14D555555,      sftacc: 32
+		// [2nd][f7]  tmp: 0xA6AAAAAA,       sftacc: 32
+		// [3rd][f1]  tmp: 0x624DD2F,        sftacc: 26
+		// [3rd][f2]  tmp: 0x3126E98,        sftacc: 26
+		// [4th][f1]  tmp: 0x98968000000000, sftacc: 32
+		// [4th][f2]  tmp: 0x4C4B4000000000, sftacc: 32
+		// [4th][f3]  tmp: 0x2625A000000000, sftacc: 32
+		// [4th][f4]  tmp: 0x1312D000000000, sftacc: 32
+		// [4th][f5]  tmp: 0x9896800000000,  sftacc: 32
+		// [4th][f6]  tmp: 0x4C4B400000000,  sftacc: 32
+		// [4th][f7]  tmp: 0x2625A00000000,  sftacc: 32
+		// [4th][f8]  tmp: 0x1312D00000000,  sftacc: 32
+		// [4th][f9]  tmp: 0x989680000000,   sftacc: 32
+		// [4th][f10] tmp: 0x4C4B40000000,   sftacc: 32
+		// [4th][f11] tmp: 0x2625A0000000,   sftacc: 32
+		// [4th][f12] tmp: 0x1312D0000000,   sftacc: 32
+		// [4th][f13] tmp: 0x98968000000,    sftacc: 32
+		// [4th][f14] tmp: 0x4C4B4000000,    sftacc: 32
+		// [4th][f15] tmp: 0x2625A000000,    sftacc: 32
+		// [4th][f16] tmp: 0x1312D000000,    sftacc: 32
+		// [4th][f17] tmp: 0x9896800000,     sftacc: 32
+		// [4th][f18] tmp: 0x4C4B400000,     sftacc: 32
+		// [4th][f19] tmp: 0x2625A00000,     sftacc: 32
+		// [4th][f20] tmp: 0x1312D00000,     sftacc: 32
+		// [4th][f21] tmp: 0x989680000,      sftacc: 32
+		// [4th][f22] tmp: 0x4C4B40000,      sftacc: 32
+		// [4th][f23] tmp: 0x2625A0000,      sftacc: 32
+		// [4th][f24] tmp: 0x1312D0000,      sftacc: 32
+		// [4th][f25] tmp: 0x98968000,       sftacc: 32
 		if ((tmp >> sftacc) == 0)
 			break;
-			// [1st][f1] break 수행
-			// [2nd][f7] break 수행
-			// [3rd][f2] break 수행
+			// [1st][f1]  break 수행
+			// [2nd][f7]  break 수행
+			// [3rd][f2]  break 수행
+			// [4th][f25] break 수행
 	}
 
 	// [1st] *mult: [pcp0] (&(&percpu_mct_tick)->evt)->mult, tmp: 0x3126E98
 	// [2nd] *mult: (&mct_frc)->mult, tmp: 0xA6AAAAAA
 	// [3rd] *mult: (&mct_comp_device)->mult, tmp: 0x3126E98
+	// [4th] *mult: (&cd)->mult, tmp: 0x98968000
 	*mult = tmp;
 	// [1st] *mult: [pcp0] (&(&percpu_mct_tick)->evt)->mult: 0x3126E98
 	// [2nd] *mult: (&mct_frc)->mult: 0xA6AAAAAA
 	// [3rd] *mult: (&mct_comp_device)->mult: 0x3126E98
+	// [4th] *mult: (&cd)->mult: 0x98968000
 
 	// [1st] *shift: [pcp0] (&(&percpu_mct_tick)->evt)->shift, sft: 32
 	// [2nd] *shift: (&mct_frc)->mult, sft: 26
 	// [3rd] *shift: (&mct_comp_device)->shift, sft: 31
+	// [4th] *shift: (&cd)->shift, sft: 8
 	*shift = sft;
 	// [1st] *shift: [pcp0] (&(&percpu_mct_tick)->evt)->shift: 32
 	// [2nd] *shift: (&mct_frc)->shift: 26
 	// [3rd] *shift: (&mct_comp_device)->shift: 31
+	// [4th] *shift: (&cd)->shift: 8
 }
 
 /*[Clocksource internal variables]---------

@@ -224,6 +224,8 @@ struct clocksource {
 /* simplify initialization of mask field */
 // ARM10C 20150523
 // CLOCKSOURCE_MASK(64): 0xFFFFFFFF
+// ARM10C 20150530
+// CLOCKSOURCE_MASK(32): 0xFFFFFFFF
 #define CLOCKSOURCE_MASK(bits) (cycle_t)((bits) < 64 ? ((1ULL<<(bits))-1) : -1)
 
 /**
