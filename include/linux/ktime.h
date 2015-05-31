@@ -117,6 +117,8 @@ static inline ktime_t ktime_set(const long secs, const unsigned long nsecs)
 // 		({ (ktime_t){ .tv64 = (ktime_zero).tv64 + (1000000000) }; })
 // ARM10C 20150418
 // (ktime_t) { .tv64 = 0}, 0
+// ARM10C 20150530
+// ns: 0x42C1D800000000
 #define ktime_add_ns(kt, nsval) \
 		({ (ktime_t){ .tv64 = (kt).tv64 + (nsval) }; })
 
@@ -408,15 +410,23 @@ extern void ktime_get_ts(struct timespec *ts);
 
 // ARM10C 20140830
 // period: 1000000000
+// ARM10C 20150530
+// 0x42C1D800000000
 static inline ktime_t ns_to_ktime(u64 ns)
 {
 	static const ktime_t ktime_zero = { .tv64 = 0 };
 	// ktime_zero.tv64: 0
+	// ktime_zero.tv64: 0
 
-	// ns: 1000000000
-	// ktime_add_ns(ktime_zero, 1000000000):
-	// ({ (ktime_t){ .tv64 = (ktime_zero).tv64 + (1000000000) }; })
+	// ns: 1000000000, ktime_zero.tv64: 0
+	// ktime_add_ns(ktime_zero, 1000000000): 1000000000
+	// ({ (ktime_t){ .tv64 = 0 + (1000000000) }; })
+	// ns: 0x42C1D800000000, ktime_zero.tv64: 1000000000
+	// ktime_add_ns(ktime_zero, 0x42C1D800000000): 0x42C1D83B9ACA00
+	// ({ (ktime_t){ .tv64 = 1000000000 + (0x42C1D800000000) }; })
 	return ktime_add_ns(ktime_zero, ns);
+	// return 1000000000
+	// return 0x42C1D83B9ACA00
 }
 
 static inline ktime_t ms_to_ktime(u64 ms)

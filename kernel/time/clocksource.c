@@ -871,6 +871,8 @@ static u32 clocksource_max_adjustment(struct clocksource *cs)
 // ARM10C 20150523
 // cs->mult: (&mct_frc)->mult: 0xA6AAAAAA, cs->shift: (&mct_frc)->shift: 26,
 // cs->maxadj: (&mct_frc)->maxadj: 0x12555555, cs->mask: (&mct_frc)->mask: 0xFFFFFFFF
+// ARM10C 20150530
+// cd.mult: 0x98968000 cd.shift: 8, 0, sched_clock_mask: 0xFFFFFFFF
 u64 clocks_calc_max_nsecs(u32 mult, u32 shift, u32 maxadj, u64 mask)
 {
 	u64 max_nsecs, max_cycles;
@@ -890,7 +892,9 @@ u64 clocks_calc_max_nsecs(u32 mult, u32 shift, u32 maxadj, u64 mask)
 	 * no overflow will occur.
 	 */
 	// mult: 0xA6AAAAAA, maxadj: 0x12555555, ilog2(0xb8ffffff): 31
+	// mult: 0x98968000, maxadj: 0, ilog2(0x98968000): 31
 	max_cycles = 1ULL << (63 - (ilog2(mult + maxadj) + 1));
+	// max_cycles: 0x80000000
 	// max_cycles: 0x80000000
 
 	/*
@@ -899,18 +903,25 @@ u64 clocks_calc_max_nsecs(u32 mult, u32 shift, u32 maxadj, u64 mask)
 	 * Note: Here we subtract the maxadj to make sure we don't sleep for
 	 * too long if there's a large negative adjustment.
 	 */
-	// max_cycles: 0x80000000, 0xFFFFFFFF
+	// max_cycles: 0x80000000, mask: 0xFFFFFFFF
+	// max_cycles: 0x80000000, mask: 0xFFFFFFFF
 	max_cycles = min(max_cycles, mask);
+	// max_cycles: 0x80000000
 	// max_cycles: 0x80000000
 
 	// max_cycles: 0x80000000, mult: 0xA6AAAAAA, maxadj: 0x12555555, shift: 26,
 	// clocksource_cyc2ns(0x80000000, 0x94555555, 26): 0x128AAAAAA0
+	// max_cycles: 0x80000000, mult: 0x98968000, maxadj: 0, shift: 8,
+	// clocksource_cyc2ns(0x80000000, 0x98968000, 8): 0x4C4B4000000000
 	max_nsecs = clocksource_cyc2ns(max_cycles, mult - maxadj, shift);
 	// max_nsecs: 0x128AAAAAA0
+	// max_nsecs: 0x4C4B4000000000
 
 	// max_nsecs: 0x128AAAAAA0
+	// max_nsecs: 0x4C4B4000000000
 	return max_nsecs;
 	// return 0x128AAAAAA0
+	// return 0x4C4B4000000000
 }
 
 /**

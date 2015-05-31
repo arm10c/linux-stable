@@ -101,6 +101,8 @@ unsigned long __rounddown_pow_of_two(unsigned long n)
 // n: 64, return 6
 // ARM10C 20150523
 // 0xb8ffffff, return 31
+// ARM10C 20150530
+// 0x98968000, return 31
 #define ilog2(n)				\
 (						\
 	__builtin_constant_p(n) ? (		\

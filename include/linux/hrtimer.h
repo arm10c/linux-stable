@@ -32,6 +32,7 @@ struct hrtimer_cpu_base;
  */
 // ARM10C 20140830
 // ARM10C 20140913
+// ARM10C 20150530
 enum hrtimer_mode {
 	// HRTIMER_MODE_ABS: 0
 	HRTIMER_MODE_ABS = 0x0,		/* Time value is absolute */
@@ -110,6 +111,7 @@ enum hrtimer_restart {
  * The hrtimer structure must be initialized by hrtimer_init()
  */
 // ARM10C 20140830
+// ARM10C 20150530
 // sizeof(struct hrtimer): 40 bytes
 struct hrtimer {
 	struct timerqueue_node		node;

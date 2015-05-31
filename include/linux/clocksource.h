@@ -291,11 +291,15 @@ static inline u32 clocksource_hz2mult(u32 hz, u32 shift_constant)
  */
 // ARM10C 20150523
 // max_cycles: 0x80000000, 0x94555555, shift: 26
+// ARM10C 20150530
+// max_cycles: 0x80000000, 0x98968000, shift: 8
 static inline s64 clocksource_cyc2ns(cycle_t cycles, u32 mult, u32 shift)
 {
 	// cycles: 0x80000000, mult: 0x94555555, shift: 26
+	// cycles: 0x80000000, mult: 0x98968000, shift: 8
 	return ((u64) cycles * mult) >> shift;
 	// return 0x128AAAAAA0
+	// return 0x4C4B4000000000
 }
 
 

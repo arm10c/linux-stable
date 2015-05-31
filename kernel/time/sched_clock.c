@@ -31,7 +31,9 @@ struct clock_data {
 	bool suspended;
 };
 
+// ARM10C 20150530
 static struct hrtimer sched_clock_timer;
+// ARM10C 20150530
 static int irqtime = -1;
 
 core_param(irqtime, irqtime, int, 0400);
@@ -73,10 +75,18 @@ static u64 __read_mostly (*read_sched_clock)(void) = jiffy_sched_clock_read;
 
 // ARM10C 20140913
 // cyc: 0, cd.mult: 10000000, cd.shift: 0
+// ARM10C 20150530
+// 1, cd.mult: 0x98968000 cd.shift: 8
+// ARM10C 20150530
+// 0, cd.mult: 0x98968000 cd.shift: 8
 static inline u64 notrace cyc_to_ns(u64 cyc, u32 mult, u32 shift)
 {
 	// cyc: 0, mult: 10000000, shift: 0
+	// cyc: 1, mult: 0x98968000, shift: 8
+	// cyc: 0, mult: 0x98968000, shift: 8
 	return (cyc * mult) >> shift;
+	// return 0
+	// return 0x989680
 	// return 0
 }
 
@@ -125,25 +135,76 @@ unsigned long long notrace sched_clock(void)
 /*
  * Atomically update the sched_clock epoch.
  */
+// ARM10C 20150530
+// ARM10C 20150530
 static void notrace update_sched_clock(void)
 {
 	unsigned long flags;
 	u64 cyc;
 	u64 ns;
 
+	// read_sched_clock(): 0
+	// read_sched_clock(): 0
 	cyc = read_sched_clock();
+	// cyc: 0
+	// cyc: 0
+
+	// epoch_ns: 0, cyc: 0, cd.epoch_cyc: 0, 0xFFFFFFFF, cd.mult: 0x98968000, cd.shift: 8
+	// cyc_to_ns(0, 0x98968000, 8): 0
+	// epoch_ns: 0, cyc: 0, cd.epoch_cyc: 0, 0xFFFFFFFF, cd.mult: 0x98968000, cd.shift: 8
+	// cyc_to_ns(0, 0x98968000, 8): 0
 	ns = cd.epoch_ns +
 		cyc_to_ns((cyc - cd.epoch_cyc) & sched_clock_mask,
 			  cd.mult, cd.shift);
+	// ns: 0
+	// ns: 0
 
 	raw_local_irq_save(flags);
+
+	// raw_local_irq_save에서 한일:
+	// flags에 cpsr을 저장하고 interrupt disable 함
+
+	// raw_local_irq_save에서 한일:
+	// flags에 cpsr을 저장하고 interrupt disable 함
+
 	raw_write_seqcount_begin(&cd.seq);
+
+	// raw_write_seqcount_begin에서 한일:
+	// s->sequence: (&cd.seq)->sequence: 1
+
+	// raw_write_seqcount_begin에서 한일:
+	// s->sequence: (&cd.seq)->sequence: 3
+
+	// ns: 0
+	// ns: 0
 	cd.epoch_ns = ns;
+	// cd.epoch_ns: 0
+	// cd.epoch_ns: 0
+
+	// cyc: 0
+	// cyc: 0
 	cd.epoch_cyc = cyc;
+	// cd.epoch_cyc: 0
+	// cd.epoch_cyc: 0
+
 	raw_write_seqcount_end(&cd.seq);
+
+	// raw_write_seqcount_end에서 한일:
+	// s->sequence: (&cd.seq)->sequence: 2
+
+	// raw_write_seqcount_end에서 한일:
+	// s->sequence: (&cd.seq)->sequence: 4
+
 	raw_local_irq_restore(flags);
+
+	// raw_local_irq_restore에서 한일:
+	// flags에 저장된 cpsr을 복원하고 interrupt enable 함
+
+	// raw_local_irq_restore에서 한일:
+	// flags에 저장된 cpsr을 복원하고 interrupt enable 함
 }
 
+// ARM10C 20150530
 static enum hrtimer_restart sched_clock_poll(struct hrtimer *hrt)
 {
 	update_sched_clock();
@@ -187,7 +248,11 @@ void __init sched_clock_register(u64 (*read)(void), int bits,
 	// (&cd)->mult: 0x98968000
 	// (&cd)->shift: 8
 
+	// rate: 100
 	r = rate;
+	// r: 100
+
+	// r: 100
 	if (r >= 4000000) {
 		r /= 1000000;
 		r_unit = 'M';
@@ -196,28 +261,49 @@ void __init sched_clock_register(u64 (*read)(void), int bits,
 		r_unit = 'k';
 	} else
 		r_unit = ' ';
+		// r_unit: ' '
 
 	/* calculate how many ns until we wrap */
+	// cd.mult: 0x98968000 cd.shift: 8, sched_clock_mask: 0xFFFFFFFF
+	// clocks_calc_max_nsecs(0x98968000, 8, 0, 0xFFFFFFFF): 0x4C4B4000000000
 	wrap = clocks_calc_max_nsecs(cd.mult, cd.shift, 0, sched_clock_mask);
+	// wrap: 0x4C4B4000000000
+
+	// wrap: 0x4C4B4000000000, ns_to_ktime(0x42C1D800000000): 0x42C1D83B9ACA00
 	cd.wrap_kt = ns_to_ktime(wrap - (wrap >> 3));
+	// cd.wrap_kt: 0x42C1D83B9ACA00
 
 	/* calculate the ns resolution of this counter */
+	// cd.mult: 0x98968000 cd.shift: 8, cyc_to_ns(1, 0x98968000, 8): 0x989680
 	res = cyc_to_ns(1ULL, cd.mult, cd.shift);
+	// res: 0x989680
+
+	// bits: 32, r: 100, r_unit: ' ', res: 0x989680, wrap: 0x4C4B4000000000
 	pr_info("sched_clock: %u bits at %lu%cHz, resolution %lluns, wraps every %lluns\n",
 		bits, r, r_unit, res, wrap);
+	// "sched_clock: 32 bits at 100 Hz, resolution 10000000ns, wraps every 21474836480000000ns"
 
 	update_sched_clock();
+
+	// update_sched_clock에서 한일:
+	// cd.epoch_ns: 0
+	// cd.epoch_cyc: 0
+	// (&cd.seq)->sequence: 2
 
 	/*
 	 * Ensure that sched_clock() starts off at 0ns
 	 */
 	cd.epoch_ns = 0;
+	// cd.epoch_ns: 0
 
 	/* Enable IRQ time accounting if we have a fast enough sched_clock */
+	// irqtime: -1, rate: 100
 	if (irqtime > 0 || (irqtime == -1 && rate >= 1000000))
 		enable_sched_clock_irqtime();
 
+	// read: jiffy_sched_clock_read
 	pr_debug("Registered %pF as sched_clock source\n", read);
+	// Registered 0xXXXXXXXXF as sched_clock source"
 }
 
 void __init setup_sched_clock(u32 (*read)(void), int bits, unsigned long rate)
@@ -238,14 +324,42 @@ void __init sched_clock_postinit(void)
 		// BITS_PER_LONG: 32, HZ: 100
 		sched_clock_register(jiffy_sched_clock_read, BITS_PER_LONG, HZ);
 
+		// sched_clock_register에서 한일:
+		// read_sched_clock: jiffy_sched_clock_read
+		// sched_clock_mask: 0xFFFFFFFF
+		// cd.rate: 100
+		// cd.epoch_ns: 0
+		// cd.epoch_cyc: 0
+		// cd.wrap_kt: 0x42C1D83B9ACA00
+		// (&cd)->mult: 0x98968000
+		// (&cd)->shift: 8
+		// (&cd.seq)->sequence: 2
+
 	update_sched_clock();
+
+	// update_sched_clock에서 한일:
+	// cd.epoch_ns: 0
+	// cd.epoch_cyc: 0
+	// (&cd.seq)->sequence: 4
 
 	/*
 	 * Start the timer to keep sched_clock() properly updated and
 	 * sets the initial epoch.
 	 */
+	// CLOCK_MONOTONIC: 1, HRTIMER_MODE_REL: 1
 	hrtimer_init(&sched_clock_timer, CLOCK_MONOTONIC, HRTIMER_MODE_REL);
+
+	// hrtimer_init에서 한일:
+	// sched_clock_timer의 값을 0으로 초기화
+	// (&sched_clock_timer)->base: &hrtimer_bases->clock_base[0]
+	// RB Tree의 &(&sched_clock_timer)->node 를 초기화
+
 	sched_clock_timer.function = sched_clock_poll;
+	// sched_clock_timer.function: sched_clock_poll
+
+// 2015/05/30 종료
+
+	// cd.wrap_kt: 0x42C1D83B9ACA00, HRTIMER_MODE_REL: 1
 	hrtimer_start(&sched_clock_timer, cd.wrap_kt, HRTIMER_MODE_REL);
 }
 

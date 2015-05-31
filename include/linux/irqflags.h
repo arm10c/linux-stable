@@ -62,6 +62,7 @@
 #define raw_local_irq_enable()		arch_local_irq_enable()
 // ARM10C 20150411
 // ARM10C 20150523
+// ARM10C 20150530
 #define raw_local_irq_save(flags)			\
 	do {						\
 		typecheck(unsigned long, flags);	\
