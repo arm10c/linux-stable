@@ -160,9 +160,14 @@ static inline void init_llist_head(struct llist_head *list)
  * test whether the list is empty without deleting something from the
  * list.
  */
+// ARM10C 20150606
+// &rq->wake_list: [pcp0] &(&runqueues)->wake_list
 static inline bool llist_empty(const struct llist_head *head)
 {
+	// head->first: [pcp0] (&(&runqueues)->wake_list)->first,
+	// ACCESS_ONCE([pcp0] (&(&runqueues)->wake_list)->first): NULL
 	return ACCESS_ONCE(head->first) == NULL;
+	// return 1
 }
 
 static inline struct llist_node *llist_next(struct llist_node *node)

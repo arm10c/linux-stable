@@ -26,9 +26,11 @@ extern void __chk_user_ptr(const volatile void __user *);
 extern void __chk_io_ptr(const volatile void __iomem *);
 #else
 # define __user
+// ARM10C 20150606
 # define __kernel
 # define __safe
 // ARM10C 20140322
+// ARM10C 20150606
 # define __force
 # define __nocast
 // ARM10C 20140215

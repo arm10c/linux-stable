@@ -427,6 +427,7 @@ static inline int rcu_read_lock_sched_held(void)
 # define rcu_lock_release(a)		do { } while (0)
 
 // ARM10C 20141122
+// ARM10C 20150606
 static inline int rcu_read_lock_held(void)
 {
 	return 1;
@@ -496,6 +497,7 @@ static inline void rcu_preempt_sleep_check(void)
 
 // ARM10C 20140913
 // ARM10C 20141122
+// ARM10C 20150606
 #define rcu_lockdep_assert(c, s) do { } while (0)
 #define rcu_sleep_check() do { } while (0)
 
@@ -515,6 +517,7 @@ static inline void rcu_preempt_sleep_check(void)
 	((void)(((typeof(*p) space *)p) == p))
 #else /* #ifdef __CHECKER__ */
 // ARM10C 20141122
+// ARM10C 20150606
 #define rcu_dereference_sparse(p, space)
 #endif /* #else #ifdef __CHECKER__ */
 
@@ -547,6 +550,17 @@ static inline void rcu_preempt_sleep_check(void)
 // 	rcu_dereference_sparse((kmem_cache#20-o1)->slots[0], __rcu);
 // 	smp_read_barrier_depends();
 // 	((typeof(*(kmem_cache#20-o1)->slots[0]) __force __kernel *)(_________p1));
+// })
+//
+// ARM10C 20150606
+// cpu_rq(0)->sd: ([pcp0] &runqueues)->sd: NULL, 1, __rcu
+// #define __rcu_dereference_check(([pcp0] prunqueues)->sd, c, __rcu):
+// ({
+// 	typeof(*([pcp0] &runqueues)->sd) *_________p1 = (typeof(*([pcp0] &runqueues)->sd)*__force )ACCESS_ONCE(([pcp0] &runqueues)->sd);
+// 	rcu_lockdep_assert(1, "suspicious rcu_dereference_check()" " usage");
+// 	rcu_dereference_sparse(([pcp0] &runqueues)->sd, __rcu);
+// 	smp_read_barrier_depends();
+// 	((typeof(*([pcp0] &prunqueues)->sd) __force __kernel *)(_________p1));
 // })
 #define __rcu_dereference_check(p, c, space) \
 	({ \
@@ -675,6 +689,12 @@ static inline void rcu_preempt_sleep_check(void)
 // root->rnode: (&irq_desc_tree)->rnode: kmem_cache#20-o1 (RADIX_LSB: 1), 1
 // ARM10C 20141122
 // *slot: (kmem_cache#20-o1)->slots[0], 1
+// ARM10C 20150606
+// rcu_read_lock_held(): 1
+// __rcu_dereference_check(([pcp0] &runqueues)->sd, 1): ([pcp0] &runqueues)->sd
+//
+// cpu_rq(0)->sd: ([pcp0] &runqueues)->sd: NULL, 0
+// #define rcu_dereference_check(([pcp0] &runqueues)->sd, 0): ([pcp0] &runqueues)->sd
 #define rcu_dereference_check(p, c) \
 	__rcu_dereference_check((p), rcu_read_lock_held() || (c), __rcu)
 
@@ -837,15 +857,21 @@ static inline void rcu_preempt_sleep_check(void)
  * inheritance.
  */
 // ARM10C 20140913
+// ARM10C 20150606
 static inline void rcu_read_lock(void)
 {
 	__rcu_read_lock();
+
+	// __rcu_read_lock에서 한일:
+	// (&init_task)->rcu_read_lock_nesting: 1
+
 	// __rcu_read_lock에서 한일:
 	// (&init_task)->rcu_read_lock_nesting: 1
 
 	__acquire(RCU); // null function
 	rcu_lock_acquire(&rcu_lock_map); // null function
 
+	// rcu_is_watching(): true
 	// rcu_is_watching(): true
 	rcu_lockdep_assert(rcu_is_watching(),
 			   "rcu_read_lock() used illegally while idle"); // null function
@@ -867,14 +893,20 @@ static inline void rcu_read_lock(void)
  * See rcu_read_lock() for more information.
  */
 // ARM10C 20140913
+// ARM10C 20150606
 static inline void rcu_read_unlock(void)
 {
+	// rcu_is_watching(): true
 	// rcu_is_watching(): true
 	rcu_lockdep_assert(rcu_is_watching(),
 			   "rcu_read_unlock() used illegally while idle"); // null function
 	rcu_lock_release(&rcu_lock_map); // null function
 	__release(RCU); // null function
 	__rcu_read_unlock();
+
+	// __rcu_read_unlock에서 한일:
+	// (&init_task)->rcu_read_lock_nesting: 0
+
 	// __rcu_read_unlock에서 한일:
 	// (&init_task)->rcu_read_lock_nesting: 0
 }

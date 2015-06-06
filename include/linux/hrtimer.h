@@ -33,11 +33,13 @@ struct hrtimer_cpu_base;
 // ARM10C 20140830
 // ARM10C 20140913
 // ARM10C 20150530
+// ARM10C 20150606
 enum hrtimer_mode {
 	// HRTIMER_MODE_ABS: 0
 	HRTIMER_MODE_ABS = 0x0,		/* Time value is absolute */
 	// HRTIMER_MODE_REL: 1
 	HRTIMER_MODE_REL = 0x1,		/* Time value is relative to now */
+	// HRTIMER_MODE_PINNED: 0x02
 	HRTIMER_MODE_PINNED = 0x02,	/* Timer is bound to CPU */
 	HRTIMER_MODE_ABS_PINNED = 0x02,
 	HRTIMER_MODE_REL_PINNED = 0x03,
@@ -83,6 +85,8 @@ enum hrtimer_restart {
  * All state transitions are protected by cpu_base->lock.
  */
 #define HRTIMER_STATE_INACTIVE	0x00
+// ARM10C 20150606
+// HRTIMER_STATE_ENQUEUED: 0x01
 #define HRTIMER_STATE_ENQUEUED	0x01
 #define HRTIMER_STATE_CALLBACK	0x02
 #define HRTIMER_STATE_MIGRATE	0x04
@@ -151,6 +155,7 @@ struct hrtimer_sleeper {
  * @offset:		offset of this clock to the monotonic base
  */
 // ARM10C 20150103
+// ARM10C 20150606
 struct hrtimer_clock_base {
 	struct hrtimer_cpu_base	*cpu_base;
 	int			index;
@@ -164,6 +169,7 @@ struct hrtimer_clock_base {
 
 // ARM10C 20140830
 // ARM10C 20150103
+// ARM10C 20150606
 enum  hrtimer_base_type {
 	// HRTIMER_BASE_MONOTONIC: 0
 	HRTIMER_BASE_MONOTONIC,
@@ -192,6 +198,7 @@ enum  hrtimer_base_type {
  */
 // ARM10C 20140830
 // ARM10C 20150103
+// ARM10C 20150606
 struct hrtimer_cpu_base {
 	raw_spinlock_t			lock;
 	unsigned int			active_bases;
@@ -220,10 +227,19 @@ static inline void hrtimer_set_expires_range(struct hrtimer *timer, ktime_t time
 	timer->node.expires = ktime_add_safe(time, delta);
 }
 
+// ARM10C 20150606
+// timer: &sched_clock_timer, tim: 0x42C1D83B9ACA00, delta_ns: 0
 static inline void hrtimer_set_expires_range_ns(struct hrtimer *timer, ktime_t time, unsigned long delta)
 {
+	// timer->_softexpires: (&sched_clock_timer)->_softexpires, time: 0x42C1D83B9ACA00
 	timer->_softexpires = time;
+	// timer->_softexpires: (&sched_clock_timer)->_softexpires: 0x42C1D83B9ACA00
+
+	// timer->node.expires: (&sched_clock_timer)->node.expires,
+	// time: 0x42C1D83B9ACA00, delta: 0, ns_to_ktime(0): (ktime_t){ .tv64 = 0 + (0) }
+	// ktime_add_safe(0x42C1D83B9ACA00, (ktime_t){ .tv64 = 0 + (0) }): (ktime_t){ .tv64 = 0 + (0x42C1D83B9ACA00) }
 	timer->node.expires = ktime_add_safe(time, ns_to_ktime(delta));
+	// timer->node.expires: (&sched_clock_timer)->node.expires: 0x42C1D83B9ACA00
 }
 
 static inline void hrtimer_set_expires_tv64(struct hrtimer *timer, s64 tv64)
@@ -419,9 +435,13 @@ static inline int hrtimer_active(const struct hrtimer *timer)
 /*
  * Helper function to check, whether the timer is on one of the queues
  */
+// ARM10C 20150606
+// timer: &sched_clock_timer
 static inline int hrtimer_is_queued(struct hrtimer *timer)
 {
+	// timer->state: (&sched_clock_timer)->state: 0, HRTIMER_STATE_ENQUEUED: 0x01
 	return timer->state & HRTIMER_STATE_ENQUEUED;
+	// return 0
 }
 
 /*

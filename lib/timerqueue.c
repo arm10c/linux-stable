@@ -36,15 +36,26 @@
  * Adds the timer node to the timerqueue, sorted by the
  * node's expires value.
  */
+// ARM10C 20150606
+// &base->active: [pcp0] &(&(&hrtimer_bases)->clock_base[0])->active,
+// &timer->node: &(&sched_clock_timer)->node
 void timerqueue_add(struct timerqueue_head *head, struct timerqueue_node *node)
 {
+	// &head->head.rb_node: [pcp0] &(&(&(&hrtimer_bases)->clock_base[0])->active)->head.rb_node
 	struct rb_node **p = &head->head.rb_node;
+	// p: [pcp0] &(&(&(&hrtimer_bases)->clock_base[0])->active)->head.rb_node
+
 	struct rb_node *parent = NULL;
+	// parent: NULL
+
 	struct timerqueue_node  *ptr;
 
 	/* Make sure we don't add nodes that are already added */
+	// &node->node: &(&(&sched_clock_timer)->node)->node,
+	// RB_EMPTY_NODE(&(&(&sched_clock_timer)->node)->node): 1
 	WARN_ON_ONCE(!RB_EMPTY_NODE(&node->node));
 
+	// *p: [pcp0] (&(&(&hrtimer_bases)->clock_base[0])->active)->head.rb_node: NULL
 	while (*p) {
 		parent = *p;
 		ptr = rb_entry(parent, struct timerqueue_node, node);
@@ -53,6 +64,11 @@ void timerqueue_add(struct timerqueue_head *head, struct timerqueue_node *node)
 		else
 			p = &(*p)->rb_right;
 	}
+
+// 2015/06/06 종료
+
+	// &node->node: &(&(&sched_clock_timer)->node)->node, parent: NULL,
+	// p: [pcp0] &(&(&(&hrtimer_bases)->clock_base[0])->active)->head.rb_node
 	rb_link_node(&node->node, parent, p);
 	rb_insert_color(&node->node, &head->head);
 

@@ -63,6 +63,7 @@
  */
 // ARM10C 20140830
 // ARM10C 20150103
+// ARM10C 20150606
 // DEFINE_PER_CPU(struct hrtimer_cpu_base, hrtimer_bases):
 //	__attribute__((section(".data..percpu" "")))
 //	__typeof__(struct hrtimer_cpu_base) hrtimer_bases
@@ -73,6 +74,7 @@ DEFINE_PER_CPU(struct hrtimer_cpu_base, hrtimer_bases) =
 	.clock_base =
 	{
 		{
+			// HRTIMER_BASE_MONOTONIC: 0
 			.index = HRTIMER_BASE_MONOTONIC,
 			.clockid = CLOCK_MONOTONIC,
 			.get_time = &ktime_get,
@@ -151,7 +153,7 @@ static void hrtimer_get_softirq_time(struct hrtimer_cpu_base *base)
  * Functions and macros which are different for UP/SMP systems are kept in a
  * single place
  */
-#ifdef CONFIG_SMP
+#ifdef CONFIG_SMP // CONFIG_SMP=y
 
 /*
  * We are using hashed locking: holding per_cpu(hrtimer_bases)[n].lock
@@ -165,6 +167,8 @@ static void hrtimer_get_softirq_time(struct hrtimer_cpu_base *base)
  * possible to set timer->base = NULL and drop the lock: the timer remains
  * locked.
  */
+// ARM10C 20150606
+// timer: &sched_clock_timer, &flags
 static
 struct hrtimer_clock_base *lock_hrtimer_base(const struct hrtimer *timer,
 					     unsigned long *flags)
@@ -172,13 +176,31 @@ struct hrtimer_clock_base *lock_hrtimer_base(const struct hrtimer *timer,
 	struct hrtimer_clock_base *base;
 
 	for (;;) {
+		// timer->base: (&sched_clock_timer)->base: &hrtimer_bases->clock_base[0]
 		base = timer->base;
+		// base: &hrtimer_bases->clock_base[0]
+
+		// base: &hrtimer_bases->clock_base[0]
 		if (likely(base != NULL)) {
+			// &base->cpu_base->lock: (&hrtimer_bases->clock_base[0])->cpu_base->lock, flags: &flags
 			raw_spin_lock_irqsave(&base->cpu_base->lock, *flags);
+
+			// raw_spin_lock_irqsave에서 한일:
+			// (&hrtimer_bases->clock_base[0])->cpu_base->lock을 사용하여 spin lock을 수행하고 cpsr을 flags에 저장
+
+			// base: &hrtimer_bases->clock_base[0],
+			// timer->base: (&sched_clock_timer)->base: &hrtimer_bases->clock_base[0]
 			if (likely(base == timer->base))
+				// base: &hrtimer_bases->clock_base[0]
 				return base;
+				// return &hrtimer_bases->clock_base[0]
+
 			/* The timer has migrated to another CPU: */
+			// &base->cpu_base->lock: (&hrtimer_bases->clock_base[0])->cpu_base->lock, flags: &flags
 			raw_spin_unlock_irqrestore(&base->cpu_base->lock, *flags);
+
+			// raw_spin_unlock_irqrestore에서 한일:
+			// (&hrtimer_bases->clock_base[0])->cpu_base->lock을 사용하여 spin unlock을 수행하고 flags에 저장된 cpsr을 복원
 		}
 		cpu_relax();
 	}
@@ -188,11 +210,16 @@ struct hrtimer_clock_base *lock_hrtimer_base(const struct hrtimer *timer,
 /*
  * Get the preferred target CPU for NOHZ
  */
+// ARM10C 20150606
+// this_cpu: 0, pinned: 0
 static int hrtimer_get_target(int this_cpu, int pinned)
 {
-#ifdef CONFIG_NO_HZ_COMMON
+#ifdef CONFIG_NO_HZ_COMMON // CONFIG_NO_HZ_COMMON=y
+	// pinned: 0, get_sysctl_timer_migration(): 1, this_cpu: 0, idle_cpu(0): 1
 	if (!pinned && get_sysctl_timer_migration() && idle_cpu(this_cpu))
+		// get_nohz_timer_target(): 0
 		return get_nohz_timer_target();
+		// return 0
 #endif
 	return this_cpu;
 }
@@ -223,20 +250,37 @@ hrtimer_check_target(struct hrtimer *timer, struct hrtimer_clock_base *new_base)
 /*
  * Switch the timer base to the current CPU when possible.
  */
+// ARM10C 20150606
+// timer: &sched_clock_timer, base: &hrtimer_bases->clock_base[0], 0
 static inline struct hrtimer_clock_base *
 switch_hrtimer_base(struct hrtimer *timer, struct hrtimer_clock_base *base,
 		    int pinned)
 {
 	struct hrtimer_clock_base *new_base;
 	struct hrtimer_cpu_base *new_cpu_base;
+
+	// smp_processor_id(): 0
 	int this_cpu = smp_processor_id();
+	// this_cpu: 0
+
+	// this_cpu: 0, pinned: 0, hrtimer_get_target(0, 0): 0
 	int cpu = hrtimer_get_target(this_cpu, pinned);
+	// cpu: 0
+
+	// base->index: (&hrtimer_bases->clock_base[0])->index: 0
 	int basenum = base->index;
+	// basenum: 0
 
 again:
+	// cpu: 0, &per_cpu(hrtimer_bases, 0): [pcp0] &hrtimer_bases
 	new_cpu_base = &per_cpu(hrtimer_bases, cpu);
-	new_base = &new_cpu_base->clock_base[basenum];
+	// new_cpu_base: [pcp0] &hrtimer_bases
 
+	// basenum: 0, &new_cpu_base->clock_base[0]: [pcp0] &(&hrtimer_bases)->clock_base[0]
+	new_base = &new_cpu_base->clock_base[basenum];
+	// new_base: [pcp0] &(&hrtimer_bases)->clock_base[0]
+
+	// base: &hrtimer_bases->clock_base[0], new_base: [pcp0] &(&hrtimer_bases)->clock_base[0]
 	if (base != new_base) {
 		/*
 		 * We are trying to move timer to new_base.
@@ -264,7 +308,10 @@ again:
 		}
 		timer->base = new_base;
 	}
+
+	// new_base: [pcp0] &(&hrtimer_bases)->clock_base[0]
 	return new_base;
+	// return [pcp0] &(&hrtimer_bases)->clock_base[0]
 }
 
 #else /* CONFIG_SMP */
@@ -366,18 +413,28 @@ u64 ktime_divns(const ktime_t kt, s64 div)
 /*
  * Add two ktime values and do a safety check for overflow:
  */
+// ARM10C 20150606
+// tim: 0x42C1D83B9ACA00, ktime_get(): (ktime_t) { .tv64 = 0}
+// ARM10C 20150606
+// time: 0x42C1D83B9ACA00, ns_to_ktime(0): (ktime_t){ .tv64 = 0 + (0) }
 ktime_t ktime_add_safe(const ktime_t lhs, const ktime_t rhs)
 {
+	// lhs.tv64: 0x42C1D83B9ACA00, rhs.tv64: 0,
+	// ktime_add(0x42C1D83B9ACA00, 0): 0x42C1D83B9ACA00
 	ktime_t res = ktime_add(lhs, rhs);
+	// res.tv64: 0x42C1D83B9ACA00
 
 	/*
 	 * We use KTIME_SEC_MAX here, the maximum timeout which we can
 	 * return to user space in a timespec:
 	 */
+	// res.tv64: 0x42C1D83B9ACA00, lhs.tv64: 0x42C1D83B9ACA00, rhs.tv64: 0
 	if (res.tv64 < 0 || res.tv64 < lhs.tv64 || res.tv64 < rhs.tv64)
 		res = ktime_set(KTIME_SEC_MAX, 0);
 
+	// res.tv64: 0x42C1D83B9ACA00
 	return res;
+	// return (ktime_t) { .tv64 = 0x42C1D83B9ACA00}
 }
 
 EXPORT_SYMBOL_GPL(ktime_add_safe);
@@ -500,6 +557,8 @@ void destroy_hrtimer_on_stack(struct hrtimer *timer)
 // ARM10C 20150530
 // timer: &sched_clock_timer
 static inline void debug_hrtimer_init(struct hrtimer *timer) { }
+// ARM10C 20150606
+// timer: &sched_clock_timer
 static inline void debug_hrtimer_activate(struct hrtimer *timer) { }
 static inline void debug_hrtimer_deactivate(struct hrtimer *timer) { }
 #endif
@@ -525,9 +584,14 @@ debug_init(struct hrtimer *timer, clockid_t clockid,
 	trace_hrtimer_init(timer, clockid, mode);
 }
 
+// ARM10C 20150606
+// timer: &sched_clock_timer
 static inline void debug_activate(struct hrtimer *timer)
 {
-	debug_hrtimer_activate(timer);
+	// timer: &sched_clock_timer
+	debug_hrtimer_activate(timer); // null funtion
+
+	// timer: &sched_clock_timer
 	trace_hrtimer_start(timer);
 }
 
@@ -836,9 +900,11 @@ void hrtimers_resume(void)
 	clock_was_set_delayed();
 }
 
+// ARM10C 20150606
+// timer: &sched_clock_timer
 static inline void timer_stats_hrtimer_set_start_info(struct hrtimer *timer)
 {
-#ifdef CONFIG_TIMER_STATS
+#ifdef CONFIG_TIMER_STATS // CONFIG_TIMER_STATS=n
 	if (timer->start_site)
 		return;
 	timer->start_site = __builtin_return_address(0);
@@ -922,11 +988,16 @@ EXPORT_SYMBOL_GPL(hrtimer_forward);
  *
  * Returns 1 when the new timer is the leftmost timer in the tree.
  */
+// ARM10C 20150606
+// timer: &sched_clock_timer, new_base: [pcp0] &(&hrtimer_bases)->clock_base[0]
 static int enqueue_hrtimer(struct hrtimer *timer,
 			   struct hrtimer_clock_base *base)
 {
-	debug_activate(timer);
+	// timer: &sched_clock_timer
+	debug_activate(timer); // null function
 
+	// &base->active: [pcp0] &(&(&hrtimer_bases)->clock_base[0])->active,
+	// &timer->node: &(&sched_clock_timer)->node
 	timerqueue_add(&base->active, &timer->node);
 	base->cpu_base->active_bases |= 1 << base->index;
 
@@ -981,9 +1052,12 @@ out:
 /*
  * remove hrtimer, called with base lock held
  */
+// ARM10C 20150606
+// timer: &sched_clock_timer, base: &hrtimer_bases->clock_base[0]
 static inline int
 remove_hrtimer(struct hrtimer *timer, struct hrtimer_clock_base *base)
 {
+	// timer: &sched_clock_timer, hrtimer_is_queued(&sched_clock_timer): 0
 	if (hrtimer_is_queued(timer)) {
 		unsigned long state;
 		int reprogram;
@@ -1009,6 +1083,7 @@ remove_hrtimer(struct hrtimer *timer, struct hrtimer_clock_base *base)
 		return 1;
 	}
 	return 0;
+	// return 0
 }
 
 // ARM10C 20150530
@@ -1021,16 +1096,38 @@ int __hrtimer_start_range_ns(struct hrtimer *timer, ktime_t tim,
 	unsigned long flags;
 	int ret, leftmost;
 
+	// timer: &sched_clock_timer
+	// lock_hrtimer_base(&sched_clock_timer, &flags): &hrtimer_bases->clock_base[0]
 	base = lock_hrtimer_base(timer, &flags);
+	// base: &hrtimer_bases->clock_base[0]
+
+	// lock_hrtimer_base에서 한일:
+	// (&sched_clock_timer)->base: &hrtimer_bases->clock_base[0] 을 리턴
+	// flags에 cpsr값을 가져옴
 
 	/* Remove an active timer from the queue: */
+	// timer: &sched_clock_timer, base: &hrtimer_bases->clock_base[0]
+	// remove_hrtimer(&sched_clock_timer, &hrtimer_bases->clock_base[0]): 0
 	ret = remove_hrtimer(timer, base);
+	// ret: 0
 
 	/* Switch the timer base, if necessary: */
+	// timer: &sched_clock_timer, base: &hrtimer_bases->clock_base[0], mode: 1,
+	// HRTIMER_MODE_PINNED: 0x02
+	// switch_hrtimer_base(&sched_clock_timer, &hrtimer_bases->clock_base[0], 0):
+	// [pcp0] &(&hrtimer_bases)->clock_base[0]
 	new_base = switch_hrtimer_base(timer, base, mode & HRTIMER_MODE_PINNED);
+	// new_base: [pcp0] &(&hrtimer_bases)->clock_base[0]
 
+	// mode: 1, HRTIMER_MODE_REL: 1
 	if (mode & HRTIMER_MODE_REL) {
+		// tim.tv64: 0x42C1D83B9ACA00,
+		// new_base->get_time: [pcp0] (&(&hrtimer_bases)->clock_base[0])->get_time: &ktime_get,
+		// ktime_get(): (ktime_t) { .tv64 = 0}
+		// ktime_add_safe(0x42C1D83B9ACA00, (ktime_t) { .tv64 = 0}): (ktime_t) { .tv64 = 0x42C1D83B9ACA00}
 		tim = ktime_add_safe(tim, new_base->get_time());
+		// tim.tv64: 0x42C1D83B9ACA00
+
 		/*
 		 * CONFIG_TIME_LOW_RES is a temporary way for architectures
 		 * to signal that they simply return xtime in
@@ -1038,15 +1135,22 @@ int __hrtimer_start_range_ns(struct hrtimer *timer, ktime_t tim,
 		 * resolution when starting a relative timer, to avoid short
 		 * timeouts. This will go away with the GTOD framework.
 		 */
-#ifdef CONFIG_TIME_LOW_RES
+#ifdef CONFIG_TIME_LOW_RES // CONFIG_TIME_LOW_RES=n
 		tim = ktime_add_safe(tim, base->resolution);
 #endif
 	}
 
+	// timer: &sched_clock_timer, tim: 0x42C1D83B9ACA00, delta_ns: 0
 	hrtimer_set_expires_range_ns(timer, tim, delta_ns);
 
-	timer_stats_hrtimer_set_start_info(timer);
+	// hrtimer_set_expires_range_ns에서 한일:
+	// timer->_softexpires: (&sched_clock_timer)->_softexpires: 0x42C1D83B9ACA00
+	// timer->node.expires: (&sched_clock_timer)->node.expires: 0x42C1D83B9ACA00
 
+	// timer: &sched_clock_timer
+	timer_stats_hrtimer_set_start_info(timer); // null function
+
+	// timer: &sched_clock_timer, new_base: [pcp0] &(&hrtimer_bases)->clock_base[0]
 	leftmost = enqueue_hrtimer(timer, new_base);
 
 	/*

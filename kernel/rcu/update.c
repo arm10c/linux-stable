@@ -69,10 +69,13 @@ module_param(rcu_expedited, int, 0);
  * if we block.
  */
 // ARM10C 20140913
+// ARM10C 20150606
 void __rcu_read_lock(void)
 {
 	// current->rcu_read_lock_nesting: (&init_task)->rcu_read_lock_nesting: 0
+	// current->rcu_read_lock_nesting: (&init_task)->rcu_read_lock_nesting: 0
 	current->rcu_read_lock_nesting++;
+	// current->rcu_read_lock_nesting: (&init_task)->rcu_read_lock_nesting: 1
 	// current->rcu_read_lock_nesting: (&init_task)->rcu_read_lock_nesting: 1
 
 	barrier();  /* critical section after entry code. */
@@ -87,6 +90,7 @@ EXPORT_SYMBOL_GPL(__rcu_read_lock);
  * in an RCU read-side critical section and other special cases.
  */
 // ARM10C 20140913
+// ARM10C 20150606
 void __rcu_read_unlock(void)
 {
 	// current: &init_task

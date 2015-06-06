@@ -358,6 +358,7 @@ void __init sched_clock_postinit(void)
 	// sched_clock_timer.function: sched_clock_poll
 
 // 2015/05/30 종료
+// 2015/06/06 시작
 
 	// cd.wrap_kt: 0x42C1D83B9ACA00, HRTIMER_MODE_REL: 1
 	hrtimer_start(&sched_clock_timer, cd.wrap_kt, HRTIMER_MODE_REL);

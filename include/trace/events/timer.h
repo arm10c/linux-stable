@@ -159,6 +159,8 @@ TRACE_EVENT(hrtimer_init,
  * hrtimer_start - called when the hrtimer is started
  * @hrtimer: pointer to struct hrtimer
  */
+// ARM10C 20150606
+// timer: &sched_clock_timer
 TRACE_EVENT(hrtimer_start,
 
 	TP_PROTO(struct hrtimer *hrtimer),

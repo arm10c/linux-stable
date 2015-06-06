@@ -197,6 +197,7 @@ extern unsigned long __per_cpu_offset[NR_CPUS];
 //  	} while (0)
 //  	(&(tick_cpu_device) + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋);
 // })
+// ARM10C 20150606
 #define per_cpu(var, cpu) \
 	(*SHIFT_PERCPU_PTR(&(var), per_cpu_offset(cpu)))
 

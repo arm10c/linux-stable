@@ -103,6 +103,8 @@ static inline ktime_t ktime_set(const long secs, const unsigned long nsecs)
 /* Add two ktime_t variables. res = lhs + rhs: */
 // ARM10C 20150103
 // tk->offs_real: (&timekeeper)->offs_real.tv64: 0, ktime_set(0, 0): (ktime_t) { .tv64 = 0}
+// ARM10C 20150606
+// lhs: 0x42C1D83B9ACA00, rhs: 0
 #define ktime_add(lhs, rhs) \
 		({ (ktime_t){ .tv64 = (lhs).tv64 + (rhs).tv64 }; })
 
@@ -412,9 +414,12 @@ extern void ktime_get_ts(struct timespec *ts);
 // period: 1000000000
 // ARM10C 20150530
 // 0x42C1D800000000
+// ARM10C 20150606
+// delta: 0
 static inline ktime_t ns_to_ktime(u64 ns)
 {
 	static const ktime_t ktime_zero = { .tv64 = 0 };
+	// ktime_zero.tv64: 0
 	// ktime_zero.tv64: 0
 	// ktime_zero.tv64: 0
 
@@ -424,9 +429,13 @@ static inline ktime_t ns_to_ktime(u64 ns)
 	// ns: 0x42C1D800000000, ktime_zero.tv64: 1000000000
 	// ktime_add_ns(ktime_zero, 0x42C1D800000000): 0x42C1D83B9ACA00
 	// ({ (ktime_t){ .tv64 = 1000000000 + (0x42C1D800000000) }; })
+	// ns: 0, ktime_zero.tv64: 0
+	// ktime_add_ns(ktime_zero, 0): 0
+	// ({ (ktime_t){ .tv64 = 0 + (0) }; })
 	return ktime_add_ns(ktime_zero, ns);
 	// return 1000000000
 	// return 0x42C1D83B9ACA00
+	// return 0
 }
 
 static inline ktime_t ms_to_ktime(u64 ms)

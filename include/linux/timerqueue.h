@@ -7,6 +7,7 @@
 
 // ARM10C 20140830
 // ARM10C 20150103
+// ARM10C 20150606
 // sizeof(struct timerqueue_node): 20 bytes
 struct timerqueue_node {
 	struct rb_node node;

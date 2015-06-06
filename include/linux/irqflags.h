@@ -63,6 +63,7 @@
 // ARM10C 20150411
 // ARM10C 20150523
 // ARM10C 20150530
+// ARM10C 20150606
 #define raw_local_irq_save(flags)			\
 	do {						\
 		typecheck(unsigned long, flags);	\

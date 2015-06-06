@@ -62,10 +62,13 @@ int sched_proc_update_handler(struct ctl_table *table, int write,
 		void __user *buffer, size_t *length,
 		loff_t *ppos);
 #endif
-#ifdef CONFIG_SCHED_DEBUG
+#ifdef CONFIG_SCHED_DEBUG // CONFIG_SCHED_DEBUG=y
+// ARM10C 20150606
 static inline unsigned int get_sysctl_timer_migration(void)
 {
+	// sysctl_timer_migration: 1
 	return sysctl_timer_migration;
+	// return 1
 }
 #else
 static inline unsigned int get_sysctl_timer_migration(void)

@@ -109,6 +109,7 @@ void start_bandwidth_timer(struct hrtimer *period_timer, ktime_t period)
 	}
 }
 
+// ARM10C 20150606
 DEFINE_MUTEX(sched_domains_mutex);
 // ARM10C 20140830
 // DEFINE_PER_CPU_SHARED_ALIGNED(struct rq, runqueues):
@@ -580,8 +581,8 @@ void resched_cpu(int cpu)
 	raw_spin_unlock_irqrestore(&rq->lock, flags);
 }
 
-#ifdef CONFIG_SMP
-#ifdef CONFIG_NO_HZ_COMMON
+#ifdef CONFIG_SMP // CONFIG_SMP=y
+#ifdef CONFIG_NO_HZ_COMMON // CONFIG_NO_HZ_COMMON=y
 /*
  * In the semi idle case, use the nearest busy cpu for migrating timers
  * from an idle cpu.  This is good for power-savings.
@@ -590,14 +591,27 @@ void resched_cpu(int cpu)
  * selecting an idle cpu will add more delays to the timers than intended
  * (as that cpu's timer base may not be uptodate wrt jiffies etc).
  */
+// ARM10C 20150606
 int get_nohz_timer_target(void)
 {
+	// smp_processor_id(): 0
 	int cpu = smp_processor_id();
+	// cpu: 0
+
 	int i;
 	struct sched_domain *sd;
 
 	rcu_read_lock();
+
+	// rcu_read_lock에서 한일:
+	// (&init_task)->rcu_read_lock_nesting: 1
+
+	// cpu_rq(0)->sd: ([pcp0] &runqueues)->sd: NULL,
+	// rcu_dereference_check_sched_domain(([pcp0] &runqueues)->sd): ([pcp0] &runqueues)->sd,
+	// sd: ([pcp0] &runqueues)->sd: NULL
 	for_each_domain(cpu, sd) {
+	// for (sd = rcu_dereference_check_sched_domain(cpu_rq(0)->sd); sd; sd = sd->parent)
+
 		for_each_cpu(i, sched_domain_span(sd)) {
 			if (!idle_cpu(i)) {
 				cpu = i;
@@ -607,7 +621,13 @@ int get_nohz_timer_target(void)
 	}
 unlock:
 	rcu_read_unlock();
+
+	// rcu_read_unlock에서 한일:
+	// (&init_task)->rcu_read_lock_nesting: 0
+
+	// cpu: 0
 	return cpu;
+	// return 0
 }
 /*
  * When add_timer_on() enqueues a timer into the timer wheel of an
@@ -3064,22 +3084,32 @@ EXPORT_SYMBOL(task_nice);
  *
  * Return: 1 if the CPU is currently idle. 0 otherwise.
  */
+// ARM10C 20150606
+// this_cpu: 0
 int idle_cpu(int cpu)
 {
+	// cpu: 0, cpu_rq(0): [pcp0] &runqueues
 	struct rq *rq = cpu_rq(cpu);
+	// rq: [pcp0] &runqueues
 
+	// rq->curr: [pcp0] (&runqueues)->curr: &init_task,
+	// rq->idle: [pcp0] (&runqueues)->idle: &init_task
 	if (rq->curr != rq->idle)
 		return 0;
 
+	// rq->nr_running: [pcp0] (&runqueues)->nr_running: 0
 	if (rq->nr_running)
 		return 0;
 
-#ifdef CONFIG_SMP
+#ifdef CONFIG_SMP // CONFIG_SMP=y
+	// &rq->wake_list: [pcp0] &(&runqueues)->wake_list,
+	// llist_empty([pcp0] &(&runqueues)->wake_list): 1
 	if (!llist_empty(&rq->wake_list))
 		return 0;
 #endif
 
 	return 1;
+	// return 1
 }
 
 /**
@@ -6388,6 +6418,8 @@ void __init sched_init_smp(void)
 }
 #endif /* CONFIG_SMP */
 
+// ARM10C 20150606
+// const_debug: __read_mostly
 const_debug unsigned int sysctl_timer_migration = 1;
 
 int in_sched_functions(unsigned long addr)

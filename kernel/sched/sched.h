@@ -413,6 +413,7 @@ extern struct root_domain def_root_domain;
  */
 // ARM10C 20140830
 // ARM10C 20140913
+// ARM10C 20150606
 struct rq {
 	/* runqueue lock: */
 	raw_spinlock_t lock;
@@ -580,6 +581,7 @@ DECLARE_PER_CPU(struct rq, runqueues);
 //  	} while (0)
 //  	(&(runqueues) + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋);
 // })
+// ARM10C 20150606
 #define cpu_rq(cpu)		(&per_cpu(runqueues, (cpu)))
 #define this_rq()		(&__get_cpu_var(runqueues))
 #define task_rq(p)		cpu_rq(task_cpu(p))
@@ -604,6 +606,11 @@ extern int migrate_swap(struct task_struct *, struct task_struct *);
 
 #ifdef CONFIG_SMP
 
+// ARM10C 20150606
+// rcu_dereference_check(([pcp0] &runqueues)->sd, 0): ([pcp0] &runqueues)->sd
+//
+// cpu_rq(0)->sd: ([pcp0] &runqueues)->sd: NULL, lockdep_is_held(&sched_domains_mutex): 0
+// #define rcu_dereference_check_sched_domain(([pcp0] &runqueues)->sd): ([pcp0] &runqueues)->sd
 #define rcu_dereference_check_sched_domain(p) \
 	rcu_dereference_check((p), \
 			      lockdep_is_held(&sched_domains_mutex))
@@ -615,6 +622,9 @@ extern int migrate_swap(struct task_struct *, struct task_struct *);
  * The domain tree of any CPU may only be accessed from within
  * preempt-disabled sections.
  */
+// ARM10C 20150606
+// #define for_each_domain(0, sd):
+// for (sd = rcu_dereference_check_sched_domain(cpu_rq(0)->sd); sd; sd = sd->parent)
 #define for_each_domain(cpu, __sd) \
 	for (__sd = rcu_dereference_check_sched_domain(cpu_rq(cpu)->sd); \
 			__sd; __sd = __sd->parent)
@@ -807,8 +817,10 @@ static inline void __set_task_cpu(struct task_struct *p, unsigned int cpu)
 /*
  * Tunables that become constants when CONFIG_SCHED_DEBUG is off:
  */
-#ifdef CONFIG_SCHED_DEBUG
+#ifdef CONFIG_SCHED_DEBUG // CONFIG_SCHED_DEBUG=y
 # include <linux/static_key.h>
+// ARM10C 20150606
+// const_debug: __read_mostly
 # define const_debug __read_mostly
 #else
 # define const_debug const

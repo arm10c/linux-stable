@@ -3506,11 +3506,17 @@ __lock_release(struct lockdep_map *lock, int nested, unsigned long ip)
 	check_chain_key(curr);
 }
 
+// ARM10C 20150606
+// lock: &(&sched_domains_mutex)->dep_map
 static int __lock_is_held(struct lockdep_map *lock)
 {
+	// current: &init_task
 	struct task_struct *curr = current;
+	// curr: &init_task
+
 	int i;
 
+	// curr->lockdep_depth: (&init_task)->lockdep_depth: 0
 	for (i = 0; i < curr->lockdep_depth; i++) {
 		struct held_lock *hlock = curr->held_locks + i;
 
@@ -3519,13 +3525,16 @@ static int __lock_is_held(struct lockdep_map *lock)
 	}
 
 	return 0;
+	// return 0
 }
 
 /*
  * Check whether we follow the irq-flags state precisely:
  */
+// ARM10C 20150606
 static void check_flags(unsigned long flags)
 {
+// CONFIG_PROVE_LOCKING=n, CONFIG_DEBUG_LOCKDEP=n, CONFIG_TRACE_IRQFLAGS=n
 #if defined(CONFIG_PROVE_LOCKING) && defined(CONFIG_DEBUG_LOCKDEP) && \
     defined(CONFIG_TRACE_IRQFLAGS)
 	if (!debug_locks)
@@ -3623,23 +3632,46 @@ void lock_release(struct lockdep_map *lock, int nested,
 }
 EXPORT_SYMBOL_GPL(lock_release);
 
+// ARM10C 20150606
+// &(&sched_domains_mutex)->dep_map
 int lock_is_held(struct lockdep_map *lock)
 {
 	unsigned long flags;
 	int ret = 0;
+	// ret: 0
 
+	// current->lockdep_recursion: (&init_task)->lockdep_recursion: 0
 	if (unlikely(current->lockdep_recursion))
 		return 1; /* avoid false negative lockdep_assert_held() */
 
 	raw_local_irq_save(flags);
-	check_flags(flags);
 
+	// raw_local_irq_save에서 한일:
+	// flags에 cpsr을 저장하고 interrupt disable 함
+
+	check_flags(flags); // null function
+
+	// current->lockdep_recursion: (&init_task)->lockdep_recursion: 0
 	current->lockdep_recursion = 1;
+	// current->lockdep_recursion: (&init_task)->lockdep_recursion: 1
+
+	// lock: &(&sched_domains_mutex)->dep_map,
+	// __lock_is_held(&(&sched_domains_mutex)->dep_map): 0
 	ret = __lock_is_held(lock);
+	// ret: 0
+
+	// current->lockdep_recursion: (&init_task)->lockdep_recursion: 1
 	current->lockdep_recursion = 0;
+	// current->lockdep_recursion: (&init_task)->lockdep_recursion: 0
+
 	raw_local_irq_restore(flags);
 
+	// raw_local_irq_restore에서 한일:
+	// flags에 저장된 cpsr을 복원하고 interrupt enable 함
+
+	// ret: 0
 	return ret;
+	// return 0
 }
 EXPORT_SYMBOL_GPL(lock_is_held);
 

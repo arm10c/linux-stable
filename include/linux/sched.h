@@ -820,6 +820,7 @@ extern int sched_domain_level_max;
 struct sched_group;
 
 // ARM10C 20140913
+// ARM10C 20150606
 struct sched_domain {
 	/* These fields must be setup */
 	struct sched_domain *parent;	/* top domain must be null terminated */
@@ -1061,6 +1062,7 @@ enum perf_event_task_context {
 // ARM10C 20140315
 // ARM10C 20140913
 // ARM10C 20140920
+// ARM10C 20150606
 struct task_struct {
 	volatile long state;	/* -1 unrunnable, 0 runnable, >0 stopped */
 	void *stack;
