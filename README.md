@@ -1,6 +1,8 @@
 #IAMROOT.ORG Kernel스터디10차(ARM)
 
 #HISTORY
+* 104th (2015/06/06) week [104차](https://github.com/hephaex/kernel_review/blob/master/a10c_104.md)
+ - sched_clock_postinit();
 * 103th (2015/05/30) week [103차](https://github.com/hephaex/kernel_review/blob/master/a10c_103.md)
  - sched_clock_postinit();
 * 102th (2015/05/23) week [102차](https://github.com/hephaex/kernel_review/blob/master/a10c_102.md)
