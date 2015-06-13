@@ -694,10 +694,17 @@ hrtimer_force_reprogram(struct hrtimer_cpu_base *cpu_base, int skip_equal)
  *
  * Called with interrupts disabled and base->cpu_base.lock held
  */
+// ARM10C 20150613
+// timer: &sched_clock_timer, base: [pcp0] &(&hrtimer_bases)->clock_base[0]
 static int hrtimer_reprogram(struct hrtimer *timer,
 			     struct hrtimer_clock_base *base)
 {
+	// &__get_cpu_var(hrtimer_bases): [pcp0] &hrtimer_bases
 	struct hrtimer_cpu_base *cpu_base = &__get_cpu_var(hrtimer_bases);
+	// cpu_base: [pcp0] &hrtimer_bases
+
+	// timer: &sched_clock_timer, hrtimer_get_expires(&sched_clock_timer): 0x42C1D83B9ACA00
+	// base->offset: [pcp0] (&(&hrtimer_bases)->clock_base[0])->offset
 	ktime_t expires = ktime_sub(hrtimer_get_expires(timer), base->offset);
 	int res;
 
@@ -766,9 +773,13 @@ static inline void hrtimer_init_hres(struct hrtimer_cpu_base *base)
  * check happens. The timer gets enqueued into the rbtree. The reprogramming
  * and expiry check is done in the hrtimer_interrupt or in the softirq.
  */
+// ARM10C 20150613
+// timer: &sched_clock_timer, new_base: [pcp0] &(&hrtimer_bases)->clock_base[0]
 static inline int hrtimer_enqueue_reprogram(struct hrtimer *timer,
 					    struct hrtimer_clock_base *base)
 {
+	// base->cpu_base->hres_active: [pcp0] (&(&hrtimer_bases)->clock_base[0])->cpu_base->hres_active: 0
+	// timer: &sched_clock_timer, base: [pcp0] &(&hrtimer_bases)->clock_base[0]
 	return base->cpu_base->hres_active && hrtimer_reprogram(timer, base);
 }
 
@@ -996,18 +1007,38 @@ static int enqueue_hrtimer(struct hrtimer *timer,
 	// timer: &sched_clock_timer
 	debug_activate(timer); // null function
 
-	// &base->active: [pcp0] &(&(&hrtimer_bases)->clock_base[0])->active,
+	// &base->active: [pcp0] &(&(&hrtimer_bases)->clock_base[0])->active
 	// &timer->node: &(&sched_clock_timer)->node
 	timerqueue_add(&base->active, &timer->node);
+
+	// timerqueue_add에서 한읾;
+	// (&(&(&sched_clock_timer)->node)->node)->__rb_parent_color: NULL
+	// (&(&(&sched_clock_timer)->node)->node)->rb_left: NULL
+	// (&(&(&sched_clock_timer)->node)->node)->rb_right: NULL
+	// [pcp0] (&(&(&hrtimer_bases)->clock_base[0])->active)->head.rb_node: &(&(&sched_clock_timer)->node)->node
+	//
+	// [pcp0] &(&(&(&hrtimer_bases)->clock_base[0])->active)->head 에 RB Tree 형태로
+	// &(&(&sched_clock_timer)->node)->node 를 추가함
+	//
+	// [pcp0] &(&(&(&hrtimer_bases)->clock_base[0])->active)->next: &(&sched_clock_timer)->node
+
+	// base->cpu_base->active_bases: [pcp0] (&(&hrtimer_bases)->clock_base[0])->cpu_base->active_bases: 0
+	// base->index: [pcp0] (&(&hrtimer_bases)->clock_base[0])->index: 0
 	base->cpu_base->active_bases |= 1 << base->index;
+	// base->cpu_base->active_bases: [pcp0] (&(&hrtimer_bases)->clock_base[0])->cpu_base->active_bases: 1
 
 	/*
 	 * HRTIMER_STATE_ENQUEUED is or'ed to the current state to preserve the
 	 * state of a possibly running callback.
 	 */
+	// timer->state: (&sched_clock_timer)->state: 0, HRTIMER_STATE_ENQUEUED: 0x01
 	timer->state |= HRTIMER_STATE_ENQUEUED;
+	// timer->state: (&sched_clock_timer)->state: 0x01
 
+	// &timer->node: &(&sched_clock_timer)->node,
+	// base->active.next: [pcp0] (&(&hrtimer_bases)->clock_base[0])->active.next: &(&sched_clock_timer)->node
 	return (&timer->node == base->active.next);
+	// return 1
 }
 
 /*
@@ -1151,7 +1182,25 @@ int __hrtimer_start_range_ns(struct hrtimer *timer, ktime_t tim,
 	timer_stats_hrtimer_set_start_info(timer); // null function
 
 	// timer: &sched_clock_timer, new_base: [pcp0] &(&hrtimer_bases)->clock_base[0]
+	// enqueue_hrtimer(&sched_clock_timer, [pcp0] &(&hrtimer_bases)->clock_base[0]): 1
 	leftmost = enqueue_hrtimer(timer, new_base);
+	// leftmost: 1
+
+	// enqueue_hrtimer에서 한일:
+	// (&(&(&sched_clock_timer)->node)->node)->__rb_parent_color: NULL
+	// (&(&(&sched_clock_timer)->node)->node)->rb_left: NULL
+	// (&(&(&sched_clock_timer)->node)->node)->rb_right: NULL
+	// [pcp0] (&(&(&hrtimer_bases)->clock_base[0])->active)->head.rb_node: &(&(&sched_clock_timer)->node)->node
+	//
+	// [pcp0] &(&(&(&hrtimer_bases)->clock_base[0])->active)->head 에 RB Tree 형태로
+	// &(&(&sched_clock_timer)->node)->node 를 추가함
+	//
+	// [pcp0] &(&(&(&hrtimer_bases)->clock_base[0])->active)->next: &(&sched_clock_timer)->node
+	// [pcp0] (&(&hrtimer_bases)->clock_base[0])->cpu_base->active_bases: 1
+	//
+	// (&sched_clock_timer)->state: 0x01
+
+// 2015/06/13 종료
 
 	/*
 	 * Only allow reprogramming if the new base is on this CPU.
@@ -1159,6 +1208,9 @@ int __hrtimer_start_range_ns(struct hrtimer *timer, ktime_t tim,
 	 *
 	 * XXX send_remote_softirq() ?
 	 */
+	// leftmost: 1, new_base->cpu_base: [pcp0] (&(&hrtimer_bases)->clock_base[0])->cpu_base: [pcp0] &hrtimer_bases,
+	// &__get_cpu_var(hrtimer_bases): [pcp0] &hrtimer_bases
+	// timer: &sched_clock_timer, new_base: [pcp0] &(&hrtimer_bases)->clock_base[0]
 	if (leftmost && new_base->cpu_base == &__get_cpu_var(hrtimer_bases)
 		&& hrtimer_enqueue_reprogram(timer, new_base)) {
 		if (wakeup) {

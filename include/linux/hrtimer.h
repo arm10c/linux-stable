@@ -86,6 +86,7 @@ enum hrtimer_restart {
  */
 #define HRTIMER_STATE_INACTIVE	0x00
 // ARM10C 20150606
+// ARM10C 20150613
 // HRTIMER_STATE_ENQUEUED: 0x01
 #define HRTIMER_STATE_ENQUEUED	0x01
 #define HRTIMER_STATE_CALLBACK	0x02
@@ -156,6 +157,7 @@ struct hrtimer_sleeper {
  */
 // ARM10C 20150103
 // ARM10C 20150606
+// ARM10C 20150613
 struct hrtimer_clock_base {
 	struct hrtimer_cpu_base	*cpu_base;
 	int			index;
@@ -199,6 +201,7 @@ enum  hrtimer_base_type {
 // ARM10C 20140830
 // ARM10C 20150103
 // ARM10C 20150606
+// ARM10C 20150613
 struct hrtimer_cpu_base {
 	raw_spinlock_t			lock;
 	unsigned int			active_bases;
@@ -260,9 +263,13 @@ static inline void hrtimer_add_expires_ns(struct hrtimer *timer, u64 ns)
 	timer->_softexpires = ktime_add_ns(timer->_softexpires, ns);
 }
 
+// ARM10C 20150613
+// timer: &sched_clock_timer
 static inline ktime_t hrtimer_get_expires(const struct hrtimer *timer)
 {
+	// timer->node.expires: (&sched_clock_timer)->node.expires: 0x42C1D83B9ACA00
 	return timer->node.expires;
+	// return 0x42C1D83B9ACA00
 }
 
 static inline ktime_t hrtimer_get_softexpires(const struct hrtimer *timer)
