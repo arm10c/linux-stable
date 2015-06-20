@@ -20,6 +20,7 @@
 // ARM10C 20140222
 // ARM10C 20141025
 // ARM10C 20141122
+// ARM10C 20150620
 // -MAX_ERRNO: 0xFFFFF001
 #define IS_ERR_VALUE(x) unlikely((x) >= (unsigned long)-MAX_ERRNO)
 

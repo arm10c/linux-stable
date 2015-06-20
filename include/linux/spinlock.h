@@ -257,6 +257,7 @@ static inline void do_raw_spin_unlock(raw_spinlock_t *lock) __releases(lock)
 
 // ARM10C 20150103
 // ARM10C 20150516
+// ARM10C 20150620
 #define raw_spin_unlock_irqrestore(lock, flags)		\
 	do {							\
 		typecheck(unsigned long, flags);		\

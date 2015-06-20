@@ -59,9 +59,10 @@ void init_rt_bandwidth(struct rt_bandwidth *rt_b, u64 period, u64 runtime)
 	// CLOCK_MONOTONIC: 1, HRTIMER_MODE_REL: 1
 	hrtimer_init(&rt_b->rt_period_timer,
 			CLOCK_MONOTONIC, HRTIMER_MODE_REL);
+
 	// hrtimer_init 한일:
 	// (&def_rt_bandwidth)->rt_period_timer의 값을 0으로 초기화
-	// &(&def_rt_bandwidth)->rt_period_timer)->base: &hrtimer_bases->clock_base[0]
+	// &(&def_rt_bandwidth)->rt_period_timer)->base: [pcp0] &(&hrtimer_bases)->clock_base[0]
 	// RB Tree의 (&(&(&def_rt_bandwidth)->rt_period_timer)->node)->node 를 초기화
 
 	// &rt_b->rt_period_timer.function: &(&def_rt_bandwidth)->rt_period_timer.function

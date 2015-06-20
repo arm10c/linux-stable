@@ -1011,6 +1011,7 @@ do {									\
 # endif
 // ARM10C 20140412
 // pcp: (&boot_pageset)->vm_stat_diff[0]
+// ARM10C 20150620
 # define __this_cpu_read(pcp)	__pcpu_size_call_return(__this_cpu_read_, (pcp))
 #endif
 

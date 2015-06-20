@@ -16,6 +16,7 @@ extern seqlock_t jiffies_lock;
 #define TICK_DO_TIMER_BOOT	-2
 
 // ARM10C 20150523
+// ARM10C 20150620
 // DECLARE_PER_CPU(struct tick_device, tick_cpu_device):
 // extern __attribute__((section(".data..percpu" ""))) __typeof__(struct tick_device) tick_cpu_device
 DECLARE_PER_CPU(struct tick_device, tick_cpu_device);
@@ -45,6 +46,7 @@ extern ssize_t sysfs_get_uname(const char *buf, char *dst, size_t cnt);
 extern void tick_setup_oneshot(struct clock_event_device *newdev,
 			       void (*handler)(struct clock_event_device *),
 			       ktime_t nextevt);
+// ARM10C 20150620
 extern int tick_program_event(ktime_t expires, int force);
 // ARM10C 20150509
 extern void tick_oneshot_notify(void);

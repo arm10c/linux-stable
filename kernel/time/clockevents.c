@@ -412,6 +412,8 @@ static int clockevents_program_min_delta(struct clock_event_device *dev)
  *
  * Returns 0 on success, -ETIME when the event is in the past.
  */
+// ARM10C 20150620
+// dev: [pcp0] tick_cpu_device.evtdev: [pcp0] &(&percpu_mct_tick)->evt, expires.tv64: 0x42C1D83B9ACA00, force: 0
 int clockevents_program_event(struct clock_event_device *dev, ktime_t expires,
 			      bool force)
 {
@@ -419,23 +421,36 @@ int clockevents_program_event(struct clock_event_device *dev, ktime_t expires,
 	int64_t delta;
 	int rc;
 
+	// expires.tv64: 0x42C1D83B9ACA00
 	if (unlikely(expires.tv64 < 0)) {
 		WARN_ON_ONCE(1);
 		return -ETIME;
 	}
 
+	// dev->next_event: [pcp0] (&(&percpu_mct_tick)->evt)->next_event.tv64: 0x7FFFFFFFFFFFFFFF
+	// expires.tv64: 0x42C1D83B9ACA00
 	dev->next_event = expires;
+	// dev->next_event: [pcp0] (&(&percpu_mct_tick)->evt)->next_event.tv64: 0x42C1D83B9ACA00
 
+	// dev->mode: [pcp0] (&(&percpu_mct_tick)->evt)->mode: 2, CLOCK_EVT_MODE_SHUTDOWN: 1
 	if (dev->mode == CLOCK_EVT_MODE_SHUTDOWN)
 		return 0;
 
 	/* Shortcut for clockevent devices that can deal with ktime. */
+	// dev->features: [pcp0] (&(&percpu_mct_tick)->evt)->features: 0x3, CLOCK_EVT_FEAT_KTIME: 0x000004
 	if (dev->features & CLOCK_EVT_FEAT_KTIME)
 		return dev->set_next_ktime(expires, dev);
 
+	// expires.tv64: 0x42C1D83B9ACA00, ktime_get(): (ktime_t) { .tv64 = 0}
+	// ktime_sub(0x42C1D83B9ACA00, 0): 0x42C1D83B9ACA00, ktime_to_ns(0x42C1D83B9ACA00): 0xF8B0A4C7F3A00
 	delta = ktime_to_ns(ktime_sub(expires, ktime_get()));
+	// delta: 0xF8B0A4C7F3A00
+
+	// delta: 0xF8B0A4C7F3A00
 	if (delta <= 0)
+		// force: 0, ETIME: 62
 		return force ? clockevents_program_min_delta(dev) : -ETIME;
+		// return -62
 
 	delta = min(delta, (int64_t) dev->max_delta_ns);
 	delta = max(delta, (int64_t) dev->min_delta_ns);

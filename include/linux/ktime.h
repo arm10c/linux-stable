@@ -99,6 +99,8 @@ static inline ktime_t ktime_set(const long secs, const unsigned long nsecs)
 /* Subtract two ktime_t variables. rem = lhs -rhs: */
 // ARM10C 20150613
 // 0x42C1D83B9ACA00, base->offset: [pcp0] (&(&hrtimer_bases)->clock_base[0])->offset
+// ARM10C 20150620
+// expires.tv64: 0x42C1D83B9ACA00, ktime_get(): (ktime_t) { .tv64 = 0}
 #define ktime_sub(lhs, rhs) \
 		({ (ktime_t){ .tv64 = (lhs).tv64 - (rhs).tv64 }; })
 
@@ -304,9 +306,13 @@ static inline struct timeval ktime_to_timeval(const ktime_t kt)
  *
  * Return: The scalar nanoseconds representation of @kt.
  */
+// ARM10C 20150620
+// 0x42C1D83B9ACA00
 static inline s64 ktime_to_ns(const ktime_t kt)
 {
+	// kt.tv.sec: 0x42C1D8, NSEC_PER_SEC: 1000000000L, kt.tv.nsec: 0x3B9ACA00
 	return (s64) kt.tv.sec * NSEC_PER_SEC + kt.tv.nsec;
+	// return 0xF8B0A4C7F3A00
 }
 
 #endif	/* !((BITS_PER_LONG == 64) || defined(CONFIG_KTIME_SCALAR)) */
