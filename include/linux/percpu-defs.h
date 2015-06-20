@@ -210,6 +210,18 @@
 // __attribute__((section(".data..percpu" "..shared_aligned"))
 // __typeof__(struct rq) runqueues
 // __attribute__((__aligned__(64)))
+//
+// ARM10C 20150620
+// DEFINE_PER_CPU_SHARED_ALIGNED(struct call_single_queue, call_single_queue):
+// __attribute__((section(".data..percpu" "..shared_aligned"))
+// __typeof__(struct call_single_queue) call_single_queue
+// __attribute__((__aligned__(64)))
+//
+// ARM10C 20150620
+// DEFINE_PER_CPU_SHARED_ALIGNED(struct call_function_data, cfd_data):
+// __attribute__((section(".data..percpu" "..shared_aligned"))
+// __typeof__(struct call_function_data) cfd_data
+// __attribute__((__aligned__(64)))
 #define DEFINE_PER_CPU_SHARED_ALIGNED(type, name)			\
 	DEFINE_PER_CPU_SECTION(type, name, PER_CPU_SHARED_ALIGNED_SECTION) \
 	____cacheline_aligned_in_smp

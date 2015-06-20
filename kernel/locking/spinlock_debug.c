@@ -13,21 +13,34 @@
 #include <linux/delay.h>
 #include <linux/export.h>
 
+// ARM10C 20150620
+// &q->lock: [pcp0] &(&call_single_queue)->lock
 void __raw_spin_lock_init(raw_spinlock_t *lock, const char *name,
 			  struct lock_class_key *key)
 {
-// CONFIG_DEBUG_LOCK_ALLOC = n
-#ifdef CONFIG_DEBUG_LOCK_ALLOC
+#ifdef CONFIG_DEBUG_LOCK_ALLOC // CONFIG_DEBUG_LOCK_ALLOC=n
 	/*
 	 * Make sure we are not reinitializing a held lock:
 	 */
 	debug_check_no_locks_freed((void *)lock, sizeof(*lock));
 	lockdep_init_map(&lock->dep_map, name, key, 0);
 #endif
-	lock->raw_lock = (arch_spinlock_t)__ARCH_SPIN_LOCK_UNLOCKED;// = (arch_spinlock_t){ { 0 } }
-	lock->magic = SPINLOCK_MAGIC;//0xdead4ead
-	lock->owner = SPINLOCK_OWNER_INIT; // ((void *)-1L) = 0xffffffff
+	// lock->raw_lock: [pcp0] (&(&call_single_queue)->lock)->raw_lock,
+	// __ARCH_SPIN_LOCK_UNLOCKED: { { 0 } }
+	lock->raw_lock = (arch_spinlock_t)__ARCH_SPIN_LOCK_UNLOCKED;
+	// lock->raw_lock: [pcp0] (&(&call_single_queue)->lock)->raw_lock: { { 0 } }
+
+	// lock->magic: [pcp0] (&(&call_single_queue)->lock)->magic, SPINLOCK_MAGIC: 0xdead4ead
+	lock->magic = SPINLOCK_MAGIC;
+	// lock->magic: [pcp0] (&(&call_single_queue)->lock)->magic: 0xdead4ead
+
+	// lock->owner: [pcp0] (&(&call_single_queue)->lock)->owner, SPINLOCK_OWNER_INIT: 0xffffffff
+	lock->owner = SPINLOCK_OWNER_INIT;
+	// lock->owner: [pcp0] (&(&call_single_queue)->lock)->owner: 0xffffffff
+
+	// lock->owner_cpu: [pcp0] (&(&call_single_queue)->lock)->owner_cpu
 	lock->owner_cpu = -1;
+	// lock->owner_cpu: [pcp0] (&(&call_single_queue)->lock)->owner_cpu: 0xffffffff
 }
 
 EXPORT_SYMBOL(__raw_spin_lock_init);
