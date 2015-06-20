@@ -36,7 +36,7 @@ enum profile_type {
 	PROFILE_MUNMAP
 };
 
-#ifdef CONFIG_PROFILING
+#ifdef CONFIG_PROFILING // CONFIG_PROFILING=n
 
 extern int prof_on __read_mostly;
 
@@ -88,6 +88,7 @@ struct pt_regs;
 
 #define prof_on 0
 
+// ARM10C 20150620
 static inline int profile_init(void)
 {
 	return 0;

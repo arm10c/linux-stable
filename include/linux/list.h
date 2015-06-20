@@ -37,6 +37,8 @@
 // ARM10C 20140809
 // ARM10C 20141004
 // ARM10C 20150103
+// ARM10C 20150620
+// &q->list: [pcp0] &(&call_single_queue)->list
 static inline void INIT_LIST_HEAD(struct list_head *list)
 {
 	list->next = list;

@@ -33,6 +33,7 @@
    in the below functions as appropriate in their own <asm/topology.h> file. */
 #ifndef cpu_to_node
 // ARM10C 20140308
+// ARM10C 20150620
 // cpu_to_node(0): 0
 #define cpu_to_node(cpu)	((void)(cpu),0)
 #endif

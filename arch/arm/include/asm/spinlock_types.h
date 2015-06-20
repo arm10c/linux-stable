@@ -10,6 +10,7 @@
 // ARM10C 20140125
 // ARM10C 20140315
 // ARM10C 20140419
+// ARM10C 20150620
 // sizeof(arch_spinlock_t) : 4 byte
 typedef struct {
 	union {
@@ -27,6 +28,8 @@ typedef struct {
 } arch_spinlock_t;
 
 // ARM10C 20140315
+// ARM10C 20150620
+// __ARCH_SPIN_LOCK_UNLOCKED: { { 0 } }
 #define __ARCH_SPIN_LOCK_UNLOCKED	{ { 0 } }
 
 typedef struct {

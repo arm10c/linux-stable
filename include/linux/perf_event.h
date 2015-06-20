@@ -525,7 +525,7 @@ struct perf_output_handle {
 	int				page;
 };
 
-#ifdef CONFIG_PERF_EVENTS
+#ifdef CONFIG_PERF_EVENTS // CONFIG_PERF_EVENTS=n
 
 extern int perf_pmu_register(struct pmu *pmu, const char *name, int type);
 extern void perf_pmu_unregister(struct pmu *pmu);
@@ -801,6 +801,7 @@ static inline int perf_unregister_guest_info_callbacks
 static inline void perf_event_mmap(struct vm_area_struct *vma)		{ }
 static inline void perf_event_comm(struct task_struct *tsk)		{ }
 static inline void perf_event_fork(struct task_struct *tsk)		{ }
+// ARM10C 20150620
 static inline void perf_event_init(void)				{ }
 static inline int  perf_swevent_get_recursion_context(void)		{ return -1; }
 static inline void perf_swevent_put_recursion_context(int rctx)		{ }

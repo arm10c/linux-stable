@@ -38,9 +38,12 @@ typedef struct raw_spinlock {
 } raw_spinlock_t;
 
 // ARM10C 20140315
+// ARM10C 20150620
+// SPINLOCK_MAGIC: 0xdead4ead
 #define SPINLOCK_MAGIC		0xdead4ead
 
 // ARM10C 20140315
+// ARM10C 20150620
 // SPINLOCK_OWNER_INIT: 0xffffffff
 #define SPINLOCK_OWNER_INIT	((void *)-1L)
 

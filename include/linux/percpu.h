@@ -220,6 +220,9 @@ extern phys_addr_t per_cpu_ptr_to_phys(void *addr);
 
 // ARM10C 20141004
 // unsigned int
+// ARM10C 20150620
+// struct call_single_data
+// sizeof(struct call_single_data): 18 bytes, __alignof__(struct call_single_data): 24
 #define alloc_percpu(type)	\
 	(typeof(type) __percpu *)__alloc_percpu(sizeof(type), __alignof__(type))
 

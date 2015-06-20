@@ -7675,6 +7675,7 @@ void __init kmem_cache_init(void)
 	// "SLUB: HWalign=64, Order=0-3, MinObjects=0," " CPUs=4, Nodes=1"
 }
 
+// ARM10C 20150620
 void __init kmem_cache_init_late(void)
 {
 }

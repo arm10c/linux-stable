@@ -81,14 +81,21 @@ enum {
 	CPU_PRI_WORKQUEUE_DOWN	= -5,
 };
 
+// ARM10C 20150620
+// CPU_ONLINE: 0x0002
 #define CPU_ONLINE		0x0002 /* CPU (unsigned)v is up */
 // ARM10C 20140927
 // ARM10C 20150103
+// ARM10C 20150620
 // CPU_UP_PREPARE: 0x0003
 #define CPU_UP_PREPARE		0x0003 /* CPU (unsigned)v coming up */
+// ARM10C 20150620
+// CPU_UP_CANCELED: 0x0004
 #define CPU_UP_CANCELED		0x0004 /* CPU (unsigned)v NOT coming up */
 #define CPU_DOWN_PREPARE	0x0005 /* CPU (unsigned)v going down */
 #define CPU_DOWN_FAILED		0x0006 /* CPU (unsigned)v NOT going down */
+// ARM10C 20150620
+// CPU_DEAD: 0x0007
 #define CPU_DEAD		0x0007 /* CPU (unsigned)v dead */
 #define CPU_DYING		0x0008 /* CPU (unsigned)v not running any task,
 					* not handling interrupts, soon dead.
@@ -105,13 +112,27 @@ enum {
 /* Used for CPU hotplug events occurring while tasks are frozen due to a suspend
  * operation in progress
  */
+// ARM10C 20150620
+// CPU_TASKS_FROZEN: 0x0010
 #define CPU_TASKS_FROZEN	0x0010
 
+// ARM10C 20150620
+// CPU_ONLINE: 0x0002
+// CPU_TASKS_FROZEN: 0x0010
+// CPU_ONLINE_FROZEN: 0x12
 #define CPU_ONLINE_FROZEN	(CPU_ONLINE | CPU_TASKS_FROZEN)
+// ARM10C 20150620
+// CPU_UP_PREPARE: 0x0003
+// CPU_TASKS_FROZEN: 0x0010
+// CPU_UP_PREPARE_FROZEN: 0x13
 #define CPU_UP_PREPARE_FROZEN	(CPU_UP_PREPARE | CPU_TASKS_FROZEN)
 #define CPU_UP_CANCELED_FROZEN	(CPU_UP_CANCELED | CPU_TASKS_FROZEN)
 #define CPU_DOWN_PREPARE_FROZEN	(CPU_DOWN_PREPARE | CPU_TASKS_FROZEN)
 #define CPU_DOWN_FAILED_FROZEN	(CPU_DOWN_FAILED | CPU_TASKS_FROZEN)
+// ARM10C 20150620
+// CPU_DEAD: 0x0007
+// CPU_TASKS_FROZEN: 0x0010
+// CPU_DEAD_FROZEN: 0x17
 #define CPU_DEAD_FROZEN		(CPU_DEAD | CPU_TASKS_FROZEN)
 #define CPU_DYING_FROZEN	(CPU_DYING | CPU_TASKS_FROZEN)
 #define CPU_STARTING_FROZEN	(CPU_STARTING | CPU_TASKS_FROZEN)
@@ -171,6 +192,7 @@ extern void unregister_cpu_notifier(struct notifier_block *nb);
 // ARM10C 20141129
 // ARM10C 20150103
 // ARM10C 20150404
+// ARM10C 20150620
 extern int register_cpu_notifier(struct notifier_block *nb);
 #else
 static inline int register_cpu_notifier(struct notifier_block *nb)

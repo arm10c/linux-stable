@@ -29,6 +29,7 @@
 # define lockdep_softirq_exit()	do { current->softirq_context--; } while (0)
 # define INIT_TRACE_IRQFLAGS	.softirqs_enabled = 1,
 #else
+// ARM10C 20150620
 # define trace_hardirqs_on()		do { } while (0)    // ARM10C this 
 // ARM10C 20140412
 // ARM10C 20150523
@@ -59,6 +60,7 @@
  * Wrap the arch provided IRQ routines to provide appropriate checks.
  */
 #define raw_local_irq_disable()		arch_local_irq_disable()
+// ARM10C 20150620
 #define raw_local_irq_enable()		arch_local_irq_enable()
 // ARM10C 20150411
 // ARM10C 20150523
@@ -100,6 +102,7 @@
  * if !TRACE_IRQFLAGS.
  */
 #ifdef CONFIG_TRACE_IRQFLAGS_SUPPORT	// ARM10C Y 
+ // ARM10C 20150620
 #define local_irq_enable() \
 	do { trace_hardirqs_on(); raw_local_irq_enable(); } while (0)
 #define local_irq_disable() \

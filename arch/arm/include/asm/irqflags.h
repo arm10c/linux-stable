@@ -40,6 +40,7 @@ static inline unsigned long arch_local_irq_save(void)
 	return flags;
 }
 
+// ARM10C 20150620
 static inline void arch_local_irq_enable(void)
 {
 	asm volatile(

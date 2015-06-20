@@ -20,52 +20,96 @@ enum {
 	CSD_FLAG_WAIT		= 0x02,
 };
 
+// ARM10C 20150620
 struct call_function_data {
 	struct call_single_data	__percpu *csd;
 	cpumask_var_t		cpumask;
 	cpumask_var_t		cpumask_ipi;
 };
 
+// ARM10C 20150620
+// DEFINE_PER_CPU_SHARED_ALIGNED(struct call_function_data, cfd_data):
+// __attribute__((section(".data..percpu" "..shared_aligned"))
+// __typeof__(struct call_function_data) cfd_data
+// __attribute__((__aligned__(64)))
 static DEFINE_PER_CPU_SHARED_ALIGNED(struct call_function_data, cfd_data);
 
+// ARM10C 20150620
 struct call_single_queue {
 	struct list_head	list;
 	raw_spinlock_t		lock;
 };
 
+// ARM10C 20150620
+// #define DEFINE_PER_CPU_SHARED_ALIGNED(struct call_single_queue, call_single_queue):
+// __attribute__((section(".data..percpu" "..shared_aligned"))
+// __typeof__(struct call_single_queue) call_single_queue
+// __attribute__((__aligned__(64)))
 static DEFINE_PER_CPU_SHARED_ALIGNED(struct call_single_queue, call_single_queue);
 
+// ARM10C 20150620
+// &hotplug_cfd_notifier, CPU_UP_PREPARE: 0x0003, cpu: 0
 static int
 hotplug_cfd(struct notifier_block *nfb, unsigned long action, void *hcpu)
 {
+	// hcpu: 0
 	long cpu = (long)hcpu;
-	struct call_function_data *cfd = &per_cpu(cfd_data, cpu);
+	// cpu: 0
 
+	// cpu: 0, &per_cpu(cfd_data, cpu): [pcp0] &cfd_data
+	struct call_function_data *cfd = &per_cpu(cfd_data, cpu);
+	// cfd: [pcp0] &cfd_data
+
+	// action: 0x3
 	switch (action) {
-	case CPU_UP_PREPARE:
-	case CPU_UP_PREPARE_FROZEN:
+	case CPU_UP_PREPARE:        // CPU_UP_PREPARE: 0x3
+	case CPU_UP_PREPARE_FROZEN: // CPU_UP_PREPARE_FROZEN: 0x13
+		// &cfd->cpumask: [pcp0] &(&cfd_data)->cpumask, GFP_KERNEL: 0xD0
+		// cpu: 0, cpu_to_node(0): 0
+		// zalloc_cpumask_var_node([pcp0] &(&cfd_data)->cpumask, 0xD0, 0): true
 		if (!zalloc_cpumask_var_node(&cfd->cpumask, GFP_KERNEL,
 				cpu_to_node(cpu)))
 			return notifier_from_errno(-ENOMEM);
+
+		// zalloc_cpumask_var_node에서 한일:
+		// [pcp0] (&cfd_data)->cpumask.bits[0]: 0
+
+		// &cfd->cpumask_ipi: [pcp0] &(&cfd_data)->cpumask_ipi, GFP_KERNEL: 0xD0
+		// cpu: 0, cpu_to_node(0): 0
+		// zalloc_cpumask_var_node([pcp0] &(&cfd_data)->cpumask_ipi, 0xD0, 0): true
 		if (!zalloc_cpumask_var_node(&cfd->cpumask_ipi, GFP_KERNEL,
 				cpu_to_node(cpu))) {
 			free_cpumask_var(cfd->cpumask);
 			return notifier_from_errno(-ENOMEM);
 		}
+
+		// zalloc_cpumask_var_node에서 한일:
+		// [pcp0] (&cfd_data)->cpumask_ipi.bits[0]: 0
+
+		// NOTE:
+		// pcp 공간인 kmem_cache#26-o0 의 24 byte 메모리 주소 할당
+		// "[pcp] kmem_cache#26-o0 (24B)" 주석을 간소화함
+
+		// cfd->csd: [pcp0] &(&cfd_data)->csd, sizeof(struct call_single_data): 18 bytes
+		// alloc_percpu([pcp0] &(&cfd_data)->csd, 18): pcp 공간인 kmem_cache#26-o0 의 24 byte 메모리 주소 할당
 		cfd->csd = alloc_percpu(struct call_single_data);
+		// cfd->csd: [pcp0] &(&cfd_data)->csd: [pcp] kmem_cache#26-o0 (24B)
+
+		// cfd->csd: [pcp0] &(&cfd_data)->csd: [pcp] kmem_cache#26-o0 (24B)
 		if (!cfd->csd) {
 			free_cpumask_var(cfd->cpumask_ipi);
 			free_cpumask_var(cfd->cpumask);
 			return notifier_from_errno(-ENOMEM);
 		}
 		break;
+		// break 수행
 
-#ifdef CONFIG_HOTPLUG_CPU
-	case CPU_UP_CANCELED:
-	case CPU_UP_CANCELED_FROZEN:
+#ifdef CONFIG_HOTPLUG_CPU // CONFIG_HOTPLUG_CPU=y
+	case CPU_UP_CANCELED:       // CPU_UP_CANCELED: 0x0004
+	case CPU_UP_CANCELED_FROZEN:// CPU_ONLINE_FROZEN: 0x12
 
-	case CPU_DEAD:
-	case CPU_DEAD_FROZEN:
+	case CPU_DEAD:              // CPU_DEAD: 0x0007
+	case CPU_DEAD_FROZEN:       // CPU_DEAD_FROZEN: 0x17
 		free_cpumask_var(cfd->cpumask);
 		free_cpumask_var(cfd->cpumask_ipi);
 		free_percpu(cfd->csd);
@@ -73,27 +117,71 @@ hotplug_cfd(struct notifier_block *nfb, unsigned long action, void *hcpu)
 #endif
 	};
 
+	// NOTIFY_OK: 0x0001
 	return NOTIFY_OK;
+	// return 0x1
 }
 
+// ARM10C 20150620
 static struct notifier_block hotplug_cfd_notifier = {
 	.notifier_call		= hotplug_cfd,
 };
 
+// ARM10C 20150620
 void __init call_function_init(void)
 {
+	// smp_processor_id(): 0
 	void *cpu = (void *)(long)smp_processor_id();
+	// cpu: 0
+
 	int i;
 
+	// nr_cpu_ids: 4
 	for_each_possible_cpu(i) {
-		struct call_single_queue *q = &per_cpu(call_single_queue, i);
+	// for ((i) = -1; (i) = cpumask_next((i), (cpu_possible_mask)), (i) < nr_cpu_ids; )
 
+		// i: 0, &per_cpu(call_single_queue, 0): [pcp0] &call_single_queue
+		struct call_single_queue *q = &per_cpu(call_single_queue, i);
+		// q: [pcp0] &call_single_queue
+
+		// &q->lock: [pcp0] &(&call_single_queue)->lock
 		raw_spin_lock_init(&q->lock);
+
+		// raw_spin_lock_init에서 한일:
+		// [pcp0] (&(&call_single_queue)->lock)->raw_lock: { { 0 } }
+		// [pcp0] (&(&call_single_queue)->lock)->magic: 0xdead4ead
+		// [pcp0] (&(&call_single_queue)->lock)->owner: 0xffffffff
+		// [pcp0] (&(&call_single_queue)->lock)->owner_cpu: 0xffffffff
+
+		// &q->list: [pcp0] &(&call_single_queue)->list
 		INIT_LIST_HEAD(&q->list);
+
+		// INIT_LIST_HEAD에서 한일:
+		// [pcp0] (&(&call_single_queue)->list)->next: [pcp0] &(&call_single_queue)->list
+		// [pcp0] (&(&call_single_queue)->list)->prev: [pcp0] &(&call_single_queue)->list
+
+		// i: 1...3 까지 루프 수행
 	}
 
+	// CPU_UP_PREPARE: 0x0003, cpu: 0
+	// hotplug_cfd(&hotplug_cfd_notifier, 0x0003, 0): 0x1
 	hotplug_cfd(&hotplug_cfd_notifier, CPU_UP_PREPARE, cpu);
+
+	// NOTE:
+	// pcp 공간인 kmem_cache#26-o0 의 24 byte 메모리 주소 할당
+	// "[pcp] kmem_cache#26-o0 (24B)" 주석을 간소화함
+
+	// hotplug_cfd에서 한일:
+	// [pcp0] (&cfd_data)->cpumask.bits[0]: 0
+	// [pcp0] (&cfd_data)->cpumask_ipi.bits[0]: 0
+	// [pcp0] &(&cfd_data)->csd: [pcp] kmem_cache#26-o0 (24B)
+
 	register_cpu_notifier(&hotplug_cfd_notifier);
+
+	// register_cpu_notifier(&hotplug_cfd_notifier) 에서 한일:
+	//
+	// (&cpu_chain)->head: &hotplug_cfd_notifier
+	// (&hotplug_cfd_notifier)->next은 (&exynos4_mct_cpu_nb)->next로 대입
 }
 
 /*

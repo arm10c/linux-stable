@@ -14,8 +14,12 @@
 
 extern void cpu_idle(void);
 
+// ARM10C 20150620
 typedef void (*smp_call_func_t)(void *info);
+
 // ARM10C 20140913
+// ARM10C 20150620
+// sizeof(struct call_single_data): 18 bytes
 struct call_single_data {
 	struct list_head list;
 	smp_call_func_t func;
@@ -53,7 +57,7 @@ void on_each_cpu_cond(bool (*cond_func)(int cpu, void *info),
 void __smp_call_function_single(int cpuid, struct call_single_data *data,
 				int wait);
 
-#ifdef CONFIG_SMP
+#ifdef CONFIG_SMP // CONFIG_SMP=y
 
 #include <linux/preempt.h>
 #include <linux/kernel.h>
@@ -107,6 +111,7 @@ void kick_all_cpus_sync(void);
 /*
  * Generic and arch helpers
  */
+// ARM10C 20150620
 void __init call_function_init(void);
 void generic_smp_call_function_single_interrupt(void);
 #define generic_smp_call_function_interrupt \
@@ -182,6 +187,7 @@ static inline void kick_all_cpus_sync(void) {  }
 // ARM10C 20150404
 // ARM10C 20150411
 // ARM10C 20150606
+// ARM10C 20150620
 // debug_smp_processor_id(): 0
 // smp_processor_id(): 0
 # define smp_processor_id() debug_smp_processor_id()

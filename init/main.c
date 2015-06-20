@@ -110,6 +110,7 @@ extern void tc_init(void);
  * operations which are not allowed with IRQ disabled are allowed while the
  * flag is set.
  */
+// ARM10C 20150620
 bool early_boot_irqs_disabled __read_mostly;
 
 // ARM10C 20140308
@@ -582,8 +583,10 @@ asmlinkage void __init start_kernel(void)
 	cgroup_init_early();
 
 	local_irq_disable();
-	// IRQ를 disable한다.
+	// IRQ를 disable 함
+
 	early_boot_irqs_disabled = true;
+	// early_boot_irqs_disabled: true
 
 /*
  * Interrupts are still disabled. Do necessary setups, then
@@ -750,14 +753,26 @@ asmlinkage void __init start_kernel(void)
 	sched_clock_postinit();
 	// sched_clock_timer을 초기화 수행
 
-	perf_event_init();
-	profile_init();
+	perf_event_init(); // null function
+	profile_init(); // null function
 	call_function_init();
-	WARN(!irqs_disabled(), "Interrupts were enabled early\n");
-	early_boot_irqs_disabled = false;
-	local_irq_enable();
+	// 각 cpu core에서 사용할 call_single_queue를 맴버값 초기화
+	// cfd_data 맴버값을 초기화하고 pcp에서 사용할 메모리 공간 할당
+	// cpu_chain에 hotplug_cfd_notifier 를 등록함
 
-	kmem_cache_init_late();
+	// irqs_disabled(): 1
+	WARN(!irqs_disabled(), "Interrupts were enabled early\n");
+
+	// early_boot_irqs_disabled: true
+	early_boot_irqs_disabled = false;
+	// early_boot_irqs_disabled: false
+
+	local_irq_enable();
+	// IRQ를 enable 함
+
+	kmem_cache_init_late(); // null function
+
+// 2015/06/20 종료
 
 	/*
 	 * HACK ALERT! This is early. We're enabling the console before

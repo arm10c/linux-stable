@@ -41,6 +41,7 @@ typedef struct cpumask { DECLARE_BITMAP(bits, NR_CPUS); } cpumask_t;
 // ARM10C 20140927
 // ARM10C 20150328
 // ARM10C 20150523
+// ARM10C 20150620
 // nr_cpu_ids: 4
 extern int nr_cpu_ids;
 #endif
@@ -401,13 +402,21 @@ static inline void cpumask_setall(struct cpumask *dstp)
 // *mask: (&(&(&def_root_domain)->cpupri)->pri_to_cpu[0])->mask
 // ARM10C 20141004
 // *mask: (kmem_cache#28-o0)->irq_data.affinity
+// ARM10C 20150620
+// *mask: [pcp0] (&cfd_data)->cpumask
+// ARM10C 20150620
+// *mask: [pcp0] (&cfd_data)->cpumask_ipi
 static inline void cpumask_clear(struct cpumask *dstp)
 {
 	// dstp: &(&(&(&def_root_domain)->cpupri)->pri_to_cpu[0])->mask, nr_cpumask_bits: 4
 	// dstp: (kmem_cache#28-o0)->irq_data.affinity, nr_cpumask_bits: 4
+	// dstp: [pcp0] (&cfd_data)->cpumask, nr_cpumask_bits: 4
+	// dstp: [pcp0] (&cfd_data)->cpumask_ipi, nr_cpumask_bits: 4
 	bitmap_zero(cpumask_bits(dstp), nr_cpumask_bits);
 	// &(&(&(&def_root_domain)->cpupri)->pri_to_cpu[0])->mask.bit[0]: 0
 	// (kmem_cache#28-o0)->irq_data.affinity.bits[0]: 0
+	// [pcp0] (&cfd_data)->cpumask.bits[0]: 0
+	// [pcp0] (&cfd_data)->cpumask_ipi.bits[0]: 0
 }
 
 /**
@@ -895,14 +904,25 @@ static inline bool zalloc_cpumask_var(cpumask_var_t *mask, gfp_t flags)
 
 // ARM10C 20141004
 // &desc->irq_data.affinity: &(kmem_cache#28-o0)->irq_data.affinity, gfp: GFP_KERNEL: 0xD0, node: 0
+// ARM10C 20150620
+// &cfd->cpumask: [pcp0] &(&cfd_data)->cpumask, GFP_KERNEL: 0xD0, cpu_to_node(0): 0
+// ARM10C 20150620
+// &cfd->cpumask_ipi: [pcp0] &(&cfd_data)->cpumask_ipi, GFP_KERNEL: 0xD0, cpu_to_node(0): 0
 static inline bool zalloc_cpumask_var_node(cpumask_var_t *mask, gfp_t flags,
 					  int node)
 {
 	// *mask: (kmem_cache#28-o0)->irq_data.affinity
+	// *mask: [pcp0] (&cfd_data)->cpumask
+	// *mask: [pcp0] (&cfd_data)->cpumask_ipi
 	cpumask_clear(*mask);
 	// (kmem_cache#28-o0)->irq_data.affinity.bits[0]: 0
+	// [pcp0] (&cfd_data)->cpumask.bits[0]: 0
+	// [pcp0] (&cfd_data)->cpumask_ipi.bits[0]: 0
 
 	return true;
+	// return true
+	// return true
+	// return true
 }
 
 static inline void alloc_bootmem_cpumask_var(cpumask_var_t *mask)
@@ -935,6 +955,7 @@ extern const DECLARE_BITMAP(cpu_all_bits, NR_CPUS);
 // ARM10C 20141004
 // ARM10C 20150103
 // ARM10C 20150523
+// ARM10C 20150620
 // #define for_each_cpu(i, cpu_possible_mask)
 //	for ((i) = -1; (i) = cpumask_next((i), (cpu_possible_mask)), (i) < nr_cpu_ids; )
 #define for_each_possible_cpu(cpu) for_each_cpu((cpu), cpu_possible_mask)

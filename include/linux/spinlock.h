@@ -91,12 +91,13 @@
 #endif
 
 // ARM10C 20130914
-// CONFIG_DEBUG_SPINLOCK = y
-#ifdef CONFIG_DEBUG_SPINLOCK
+#ifdef CONFIG_DEBUG_SPINLOCK // CONFIG_DEBUG_SPINLOCK=y
   extern void __raw_spin_lock_init(raw_spinlock_t *lock, const char *name,
 				   struct lock_class_key *key);
 // ARM10C 20140830
 // &rt_b->rt_runtime_lock: &(&def_rt_bandwidth)->rt_runtime_lock
+// ARM10C 20150620
+// &q->lock: [pcp0] &(&call_single_queue)->lock
 # define raw_spin_lock_init(lock)				\
 do {								\
 	static struct lock_class_key __key;	/* struct lock_class_key { }; */	\
