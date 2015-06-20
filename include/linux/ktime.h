@@ -97,6 +97,8 @@ static inline ktime_t ktime_set(const long secs, const unsigned long nsecs)
 }
 
 /* Subtract two ktime_t variables. rem = lhs -rhs: */
+// ARM10C 20150613
+// 0x42C1D83B9ACA00, base->offset: [pcp0] (&(&hrtimer_bases)->clock_base[0])->offset
 #define ktime_sub(lhs, rhs) \
 		({ (ktime_t){ .tv64 = (lhs).tv64 - (rhs).tv64 }; })
 

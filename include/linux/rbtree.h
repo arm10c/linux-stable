@@ -124,21 +124,29 @@ static inline void rb_link_node(struct rb_node * node, struct rb_node * parent,
 {
 	// node->__rb_parent_color: (kmem_cache#30-o9)->rb_node.__rb_parent_color, parent: NULL
 	// ((GIC#0)->rb_node)->__rb_parent_color, parent: (SYSC)->rb_node
+	// node->__rb_parent_color: (&(&(&sched_clock_timer)->node)->node)->__rb_parent_color, parent: NULL
 	node->__rb_parent_color = (unsigned long)parent;
 	// node->__rb_parent_color: (kmem_cache#30-o9)->rb_node.__rb_parent_color: NULL
 	// ((GIC#0)->rb_node)->__rb_parent_color: (SYSC)->rb_node
+	// node->__rb_parent_color: (&(&(&sched_clock_timer)->node)->node)->__rb_parent_color: NULL
 
 	node->rb_left = node->rb_right = NULL;
 	// node->rb_left: (kmem_cache#30-o9)->rb_node.rb_left: NULL
 	// node->rb_right: (kmem_cache#30-o9)->rb_node.rb_right: NULL
 	// ((GIC#0)->rb_node)->rb_left: ((GIC#0)->rb_node).rb_left: NULL
 	// ((GIC#0)->rb_node)->rb_right: ((GIC#0)->rb_node).rb_right: NULL
+	// node->rb_left: (&(&(&sched_clock_timer)->node)->node)->rb_left: NULL
+	// node->rb_right: (&(&(&sched_clock_timer)->node)->node)->rb_right: NULL
 
 	// *rb_link: vmap_area_root.rb_node, node: &(kmem_cache#30-o9)->rb_node
 	// *rb_link: (SYSC node)->rb_left, node: &(GIC#0)->rb_node
+	// *rb_link: [pcp0] (&(&(&hrtimer_bases)->clock_base[0])->active)->head.rb_node,
+	// node: &(&(&sched_clock_timer)->node)->node
 	*rb_link = node;
 	// vmap_area_root.rb_node: &(kmem_cache#30-o9)->rb_node
 	// (SYSC node)->rb_left: &(GIC#0)->rb_node
+	// *rb_link: [pcp0] (&(&(&hrtimer_bases)->clock_base[0])->active)->head.rb_node:
+	// &(&(&sched_clock_timer)->node)->node
 }
 
 #define rb_entry_safe(ptr, type, member) \

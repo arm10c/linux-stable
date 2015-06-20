@@ -66,14 +66,34 @@ void timerqueue_add(struct timerqueue_head *head, struct timerqueue_node *node)
 	}
 
 // 2015/06/06 종료
+// 2015/06/13 시작
 
 	// &node->node: &(&(&sched_clock_timer)->node)->node, parent: NULL,
 	// p: [pcp0] &(&(&(&hrtimer_bases)->clock_base[0])->active)->head.rb_node
 	rb_link_node(&node->node, parent, p);
+
+	// rb_link_node 에서 한일:
+	// (&(&(&sched_clock_timer)->node)->node)->__rb_parent_color: NULL
+	// (&(&(&sched_clock_timer)->node)->node)->rb_left: NULL
+	// (&(&(&sched_clock_timer)->node)->node)->rb_right: NULL
+	// [pcp0] (&(&(&hrtimer_bases)->clock_base[0])->active)->head.rb_node: &(&(&sched_clock_timer)->node)->node
+
+	// &node->node: &(&(&sched_clock_timer)->node)->node,
+	// &head->head: [pcp0] &(&(&(&hrtimer_bases)->clock_base[0])->active)->head
 	rb_insert_color(&node->node, &head->head);
 
+	// rb_insert_color에서 한일:
+	// [pcp0] &(&(&(&hrtimer_bases)->clock_base[0])->active)->head 에 RB Tree 형태로
+	// &(&(&sched_clock_timer)->node)->node 를 추가함
+
+	// head->next: [pcp0] &(&(&(&hrtimer_bases)->clock_base[0])->active)->next: NULL,
+	// node->expires.tv64: &(&(&sched_clock_timer)->node)->expires.tv64: 0x42C1D83B9ACA00,
+	// head->next->expires.tv64: [pcp0] &(&(&(&hrtimer_bases)->clock_base[0])->active)->next->expires.tv64
 	if (!head->next || node->expires.tv64 < head->next->expires.tv64)
+		// head->next: [pcp0] &(&(&(&hrtimer_bases)->clock_base[0])->active)->next: NULL,
+		// node: &(&sched_clock_timer)->node
 		head->next = node;
+		// head->next: [pcp0] &(&(&(&hrtimer_bases)->clock_base[0])->active)->next: &(&sched_clock_timer)->node
 }
 EXPORT_SYMBOL_GPL(timerqueue_add);
 
