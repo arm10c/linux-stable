@@ -32,6 +32,8 @@
 #define	EBFONT		59	/* Bad font file format */
 #define	ENOSTR		60	/* Device not a stream */
 #define	ENODATA		61	/* No data available */
+// ARM10C 20150620
+// ETIME: 62
 #define	ETIME		62	/* Timer expired */
 #define	ENOSR		63	/* Out of streams resources */
 #define	ENONET		64	/* Machine is not on the network */

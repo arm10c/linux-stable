@@ -517,9 +517,10 @@ static void init_rq_hrtick(struct rq *rq)
 
 	// &rq->hrtick_timer: &(&runqueues)->hrtick_timer, CLOCK_MONOTONIC: 1, HRTIMER_MODE_REL: 1
 	hrtimer_init(&rq->hrtick_timer, CLOCK_MONOTONIC, HRTIMER_MODE_REL);
+	
 	// hrtimer_init(hrtick_timer) 한일:
 	// (&runqueues)->hrtick_timer의 값을 0으로 초기화
-	// (&(&runqueues)->hrtick_timer)->base: &hrtimer_bases->clock_base[0]
+	// (&(&runqueues)->hrtick_timer)->base: [pcp0] &(&hrtimer_bases)->clock_base[0]
 	// RB Tree의 (&(&(&runqueues)->hrtick_timer)->node)->node 를 초기화
 
 	// &rq->hrtick_timer.function: &(&runqueues)->hrtick_timerhrtick_timer.function
@@ -6486,6 +6487,7 @@ void __init sched_init(void)
 
 #ifdef CONFIG_SMP // CONFIG_SMP=y
 	init_defrootdomain();
+
 	// def_root_domain의 맴버 값을 초기화 수행
 	// (&(&(&def_root_domain)->cpupri)->pri_to_cpu[0 ... 101])->count: 0
 	// (&(&(&def_root_domain)->cpupri)->pri_to_cpu[0 ... 101])->mask.bit[0]: 0
@@ -6496,12 +6498,13 @@ void __init sched_init(void)
 	// global_rt_period(): 1000000000, global_rt_runtime(): 950000000
 	init_rt_bandwidth(&def_rt_bandwidth,
 			global_rt_period(), global_rt_runtime());
+
 	// init_rt_bandwidth에서 한일:
 	// (&def_rt_bandwidth)->rt_period: 1000000000
 	// (&def_rt_bandwidth)->rt_runtime: 950000000
 	// &(&def_rt_bandwidth)->rt_runtime_lock을 사용한 spinlock 초기화
 	// (&def_rt_bandwidth)->rt_period_timer의 값을 0으로 초기화
-	// &(&def_rt_bandwidth)->rt_period_timer)->base: &hrtimer_bases->clock_base[0]
+	// &(&def_rt_bandwidth)->rt_period_timer)->base: [pcp0] &(&hrtimer_bases)->clock_base[0]
 	// (&(&(&def_rt_bandwidth)->rt_period_timer)->node)->node의 RB Tree의 초기화
 	// &(&def_rt_bandwidth)->rt_period_timer.function: sched_rt_period_timer
 
@@ -6557,6 +6560,7 @@ void __init sched_init(void)
 
 		// [pcp0] &rq->cfs: &(&runqueues)->cfs
 		init_cfs_rq(&rq->cfs);
+
 		// init_cfs_rq 에서 한일:
 		// (&(&runqueues)->cfs)->tasks_timeline: (struct rb_root) { NULL, }
 		// (&(&runqueues)->cfs)->min_vruntime: 0xFFFFFFFFFFF00000
@@ -6566,6 +6570,7 @@ void __init sched_init(void)
 
 		// [pcp0] &rq->rt: &(&runqueues)->rt, rq: (&runqueues)
 		init_rt_rq(&rq->rt, rq);
+
 		// init_rt_rq 에서 한일:
 		// (&(&(&runqueues)->rt)->active)->bitmap의 0 ... 99 bit를 클리어
 		// (&(&(&runqueues)->rt)->active)->queue[0 ... 99] 의 리스트 초기화
@@ -6689,6 +6694,7 @@ void __init sched_init(void)
 
 		// [pcp0] rq: &runqueues
 		rq_attach_root(rq, &def_root_domain);
+
 		// rq_attach_root에서 한일:
 		// (&def_root_domain)->span: 1
 		// (&runqueues)->rd: &def_root_domain
@@ -6705,13 +6711,14 @@ void __init sched_init(void)
 #endif
 		// [pcp0] rq: &runqueues
 		init_rq_hrtick(rq);
+
 		// init_rq_hrtick에서 한일:
 		// (&runqueues)->hrtick_csd_pending: 0
 		// (&runqueues)->hrtick_csd.flags: 0
 		// (&runqueues)->hrtick_csd.func: __hrtick_start
 		// (&runqueues)->hrtick_csd.info: &runqueues
 		// (&runqueues)->hrtick_timer의 값을 0으로 초기화
-		// (&(&runqueues)->hrtick_timer)->base: &hrtimer_bases->clock_base[0]
+		// (&(&runqueues)->hrtick_timer)->base: [pcp0] &(&hrtimer_bases)->clock_base[0]
 		// RB Tree의 (&(&(&runqueues)->hrtick_timer)->node)->node 를 초기화
 		// &rq->hrtick_timer.function: &(&runqueues)->hrtick_timerhrtick_timer.function: hrtick
 
@@ -6723,6 +6730,7 @@ void __init sched_init(void)
 	}
 
 	set_load_weight(&init_task);
+
 	// set_load_weight에서 한일:
 	// (&(&init_task)->se.load)->weight: 1024
 	// (&(&init_task)->se.load)->inv_weight: 4194304
@@ -6733,6 +6741,7 @@ void __init sched_init(void)
 
 #ifdef CONFIG_RT_MUTEXES // CONFIG_RT_MUTEXES=y
 	plist_head_init(&init_task.pi_waiters);
+
 	// plist_head_init에서 한일:
 	// (&init_task.pi_waiters)->node_list 리스트 초기화
 #endif
@@ -6755,6 +6764,7 @@ void __init sched_init(void)
 	 */
 	// current: &init_task, smp_processor_id(): 0
 	init_idle(current, smp_processor_id());
+
 	// init_idle에서 한일:
 	// (&init_task)->on_rq: 0
 	// (&init_task)->se.on_rq: 0
@@ -6808,6 +6818,7 @@ void __init sched_init(void)
 	// [pcp0] idle_threads: &init_task
 #endif
 	init_sched_fair_class();
+
 	// init_sched_fair_class가 한일:
 	// softirq_vec[7].action: run_rebalance_domains
 	// nohz.next_balance: -30000 (0xFFFFFFFFFFFF8AD0)

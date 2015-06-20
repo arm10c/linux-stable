@@ -24,11 +24,18 @@
 /**
  * tick_program_event
  */
+// ARM10C 20150620
+// expires.tv64: 0x42C1D83B9ACA00, 0
 int tick_program_event(ktime_t expires, int force)
 {
+	// __this_cpu_read(tick_cpu_device.evtdev): [pcp0] tick_cpu_device.evtdev: [pcp0] &(&percpu_mct_tick)->evt
 	struct clock_event_device *dev = __this_cpu_read(tick_cpu_device.evtdev);
+	// dev: [pcp0] tick_cpu_device.evtdev: [pcp0] &(&percpu_mct_tick)->evt
 
+	// dev: [pcp0] tick_cpu_device.evtdev: [pcp0] &(&percpu_mct_tick)->evt, expires.tv64: 0x42C1D83B9ACA00, force: 0
+	// clockevents_program_event([pcp0] &(&percpu_mct_tick)->evt, 0x42C1D83B9ACA00, 0): -62
 	return clockevents_program_event(dev, expires, force);
+	// return -62
 }
 
 /**

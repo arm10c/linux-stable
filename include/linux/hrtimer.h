@@ -89,6 +89,8 @@ enum hrtimer_restart {
 // ARM10C 20150613
 // HRTIMER_STATE_ENQUEUED: 0x01
 #define HRTIMER_STATE_ENQUEUED	0x01
+// ARM10C 20150620
+// HRTIMER_STATE_CALLBACK: 0x02
 #define HRTIMER_STATE_CALLBACK	0x02
 #define HRTIMER_STATE_MIGRATE	0x04
 
@@ -277,9 +279,13 @@ static inline ktime_t hrtimer_get_softexpires(const struct hrtimer *timer)
 	return timer->_softexpires;
 }
 
+// ARM10C 20150620
+// timer: &sched_clock_timer
 static inline s64 hrtimer_get_expires_tv64(const struct hrtimer *timer)
 {
+	// timer->node.expires: (&sched_clock_timer)->node.expires: 0x42C1D83B9ACA00
 	return timer->node.expires.tv64;
+	// return 0x42C1D83B9ACA00
 }
 static inline s64 hrtimer_get_softexpires_tv64(const struct hrtimer *timer)
 {
@@ -455,9 +461,13 @@ static inline int hrtimer_is_queued(struct hrtimer *timer)
  * Helper function to check, whether the timer is running the callback
  * function
  */
+// ARM10C 20150620
+// timer: &sched_clock_timer
 static inline int hrtimer_callback_running(struct hrtimer *timer)
 {
+	// (&sched_clock_timer)->state: 0, HRTIMER_STATE_CALLBACK: 0x02
 	return timer->state & HRTIMER_STATE_CALLBACK;
+	// return 0
 }
 
 /* Forward a hrtimer so it expires after now: */

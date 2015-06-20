@@ -37,6 +37,7 @@ struct module;
 // ARM10C 20150418
 // ARM10C 20150509
 // ARM10C 20150523
+// ARM10C 20150620
 enum clock_event_mode {
 	// CLOCK_EVT_MODE_UNUSED: 0
 	CLOCK_EVT_MODE_UNUSED = 0,
@@ -63,6 +64,8 @@ enum clock_event_mode {
 // ARM10C 20150523
 // CLOCK_EVT_FEAT_ONESHOT: 0x000002
 #define CLOCK_EVT_FEAT_ONESHOT		0x000002
+// ARM10C 20150620
+// CLOCK_EVT_FEAT_KTIME: 0x000004
 #define CLOCK_EVT_FEAT_KTIME		0x000004
 /*
  * x86(64) specific misfeatures:
@@ -117,6 +120,7 @@ enum clock_event_mode {
 // ARM10C 20150418
 // ARM10C 20150509
 // ARM10C 20150523
+// ARM10C 20150620
 struct clock_event_device {
 	void			(*event_handler)(struct clock_event_device *);
 	int			(*set_next_event)(unsigned long evt,

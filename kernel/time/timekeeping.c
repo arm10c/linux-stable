@@ -470,6 +470,7 @@ EXPORT_SYMBOL(getnstimeofday);
 
 // ARM10C 20150418
 // ARM10C 20150606
+// ARM10C 20150620
 ktime_t ktime_get(void)
 {
 	struct timekeeper *tk = &timekeeper;

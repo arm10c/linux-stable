@@ -351,7 +351,7 @@ void __init sched_clock_postinit(void)
 
 	// hrtimer_init에서 한일:
 	// sched_clock_timer의 값을 0으로 초기화
-	// (&sched_clock_timer)->base: &hrtimer_bases->clock_base[0]
+	// (&sched_clock_timer)->base: [pcp0] &(&hrtimer_bases)->clock_base[0]
 	// RB Tree의 &(&sched_clock_timer)->node 를 초기화
 
 	sched_clock_timer.function = sched_clock_poll;
@@ -362,6 +362,23 @@ void __init sched_clock_postinit(void)
 
 	// cd.wrap_kt: 0x42C1D83B9ACA00, HRTIMER_MODE_REL: 1
 	hrtimer_start(&sched_clock_timer, cd.wrap_kt, HRTIMER_MODE_REL);
+
+	// hrtimer_start에서 한일:
+	// (&sched_clock_timer)->_softexpires: 0x42C1D83B9ACA00
+	// (&sched_clock_timer)->node.expires: 0x42C1D83B9ACA00
+	//
+	// (&(&(&sched_clock_timer)->node)->node)->__rb_parent_color: NULL
+	// (&(&(&sched_clock_timer)->node)->node)->rb_left: NULL
+	// (&(&(&sched_clock_timer)->node)->node)->rb_right: NULL
+	// [pcp0] (&(&(&hrtimer_bases)->clock_base[0])->active)->head.rb_node: &(&(&sched_clock_timer)->node)->node
+	//
+	// [pcp0] &(&(&(&hrtimer_bases)->clock_base[0])->active)->head 에 RB Tree 형태로
+	// &(&(&sched_clock_timer)->node)->node 를 추가함
+	//
+	// [pcp0] &(&(&(&hrtimer_bases)->clock_base[0])->active)->next: &(&sched_clock_timer)->node
+	// [pcp0] (&(&hrtimer_bases)->clock_base[0])->cpu_base->active_bases: 1
+	//
+	// (&sched_clock_timer)->state: 0x01
 }
 
 static int sched_clock_suspend(void)
