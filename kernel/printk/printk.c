@@ -2234,6 +2234,8 @@ early_param("keep_bootcon", keep_bootcon_setup);
  *  - Once a "real" console is registered, any attempt to register a
  *    bootconsoles will be rejected
  */
+// ARM10C 20150627
+// &s3c24xx_serial_console
 void register_console(struct console *newcon)
 {
 	int i;

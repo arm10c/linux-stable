@@ -5,9 +5,13 @@
  * 'tty.h' defines some structures used by tty_io.c and some defines.
  */
 
+// ARM10C 20150627
+// NR_LDISCS: 30
 #define NR_LDISCS		30
 
 /* line disciplines */
+// ARM10C 20150627
+// N_TTY: 0
 #define N_TTY		0
 #define N_SLIP		1
 #define N_MOUSE		2

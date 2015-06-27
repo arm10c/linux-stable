@@ -2474,6 +2474,7 @@ static void n_tty_fasync(struct tty_struct *tty, int on)
 	}
 }
 
+// ARM10C 20150627
 struct tty_ldisc_ops tty_ldisc_N_TTY = {
 	.magic           = TTY_LDISC_MAGIC,
 	.name            = "n_tty",

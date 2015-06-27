@@ -3484,6 +3484,7 @@ void tty_default_fops(struct file_operations *fops)
  * Just do some early initializations, and do the complex setup
  * later.
  */
+// ARM10C 20150627
 void __init console_init(void)
 {
 	initcall_t *call;
@@ -3491,12 +3492,22 @@ void __init console_init(void)
 	/* Setup the default TTY line discipline. */
 	tty_ldisc_begin();
 
+	// tty_ldisc_begin에서 한일:
+	// tty_ldiscs[0]: &tty_ldisc_N_TTY
+	// (&tty_ldisc_N_TTY)->num: 0
+	// (&tty_ldisc_N_TTY)->refcount: 0
+
 	/*
 	 * set up the console device so that later boot sequences can
 	 * inform about problems etc..
 	 */
 	call = __con_initcall_start;
+	// call: &__con_initcall_start
+
+	// call: &__con_initcall_start
 	while (call < __con_initcall_end) {
+		// call:__initcall_s3c24xx_serial_console_init:
+		// s3c24xx_serial_console_init
 		(*call)();
 		call++;
 	}

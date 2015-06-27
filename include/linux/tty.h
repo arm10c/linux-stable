@@ -329,7 +329,7 @@ static inline void tty_set_flow_change(struct tty_struct *tty, int val)
 	smp_mb();
 }
 
-#ifdef CONFIG_TTY
+#ifdef CONFIG_TTY // CONFIG_TTY=y
 extern void console_init(void);
 extern void tty_kref_put(struct tty_struct *tty);
 extern struct pid *tty_get_pgrp(struct tty_struct *tty);

@@ -163,6 +163,8 @@ static inline ktime_t timeval_to_ktime(struct timeval tv)
 #define ktime_to_timeval(kt)		ns_to_timeval((kt).tv64)
 
 /* Convert ktime_t to nanoseconds - NOP in the scalar storage format: */
+// ARM10C 20150620
+// 0x42C1D83B9ACA00
 #define ktime_to_ns(kt)			((kt).tv64)
 
 #else	/* !((BITS_PER_LONG == 64) || defined(CONFIG_KTIME_SCALAR)) */
@@ -306,13 +308,9 @@ static inline struct timeval ktime_to_timeval(const ktime_t kt)
  *
  * Return: The scalar nanoseconds representation of @kt.
  */
-// ARM10C 20150620
-// 0x42C1D83B9ACA00
 static inline s64 ktime_to_ns(const ktime_t kt)
 {
-	// kt.tv.sec: 0x42C1D8, NSEC_PER_SEC: 1000000000L, kt.tv.nsec: 0x3B9ACA00
 	return (s64) kt.tv.sec * NSEC_PER_SEC + kt.tv.nsec;
-	// return 0xF8B0A4C7F3A00
 }
 
 #endif	/* !((BITS_PER_LONG == 64) || defined(CONFIG_KTIME_SCALAR)) */

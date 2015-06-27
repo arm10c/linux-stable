@@ -773,6 +773,7 @@ asmlinkage void __init start_kernel(void)
 	kmem_cache_init_late(); // null function
 
 // 2015/06/20 종료
+// 2015/06/27 시작
 
 	/*
 	 * HACK ALERT! This is early. We're enabling the console before
