@@ -899,10 +899,12 @@ s3c24xx_serial_verify_port(struct uart_port *port, struct serial_struct *ser)
 }
 
 
-#ifdef CONFIG_SERIAL_SAMSUNG_CONSOLE
+#ifdef CONFIG_SERIAL_SAMSUNG_CONSOLE // CONFIG_SERIAL_SAMSUNG_CONSOLE=y
 
+// ARM10C 20150627
 static struct console s3c24xx_serial_console;
 
+// ARM10C 20150627
 static int __init s3c24xx_serial_console_init(void)
 {
 	register_console(&s3c24xx_serial_console);

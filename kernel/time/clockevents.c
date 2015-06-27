@@ -442,20 +442,32 @@ int clockevents_program_event(struct clock_event_device *dev, ktime_t expires,
 		return dev->set_next_ktime(expires, dev);
 
 	// expires.tv64: 0x42C1D83B9ACA00, ktime_get(): (ktime_t) { .tv64 = 0}
-	// ktime_sub(0x42C1D83B9ACA00, 0): 0x42C1D83B9ACA00, ktime_to_ns(0x42C1D83B9ACA00): 0xF8B0A4C7F3A00
+	// ktime_sub(0x42C1D83B9ACA00, 0): 0x42C1D83B9ACA00, ktime_to_ns(0x42C1D83B9ACA00): 0x42C1D83B9ACA00
 	delta = ktime_to_ns(ktime_sub(expires, ktime_get()));
-	// delta: 0xF8B0A4C7F3A00
+	// delta: 0x42C1D83B9ACA00
 
-	// delta: 0xF8B0A4C7F3A00
+	// delta: 0x42C1D83B9ACA00
 	if (delta <= 0)
-		// force: 0, ETIME: 62
 		return force ? clockevents_program_min_delta(dev) : -ETIME;
-		// return -62
 
+	// delta: 0x42C1D83B9ACA00, dev->max_delta_ns: [pcp0] (&(&percpu_mct_tick)->evt)->max_delta_ns: 0x29AAAAA444
+	// min(0x42C1D83B9ACA00, 0x29AAAAA444): 0x29AAAAA444
 	delta = min(delta, (int64_t) dev->max_delta_ns);
-	delta = max(delta, (int64_t) dev->min_delta_ns);
+	// delta: 0x29AAAAA444
 
+	// delta: 0x29AAAAA444, dev->min_delta_ns: [pcp0] (&(&percpu_mct_tick)->evt)->min_delta_ns: 0x4E2
+	// max(0x29AAAAA444, 0x4E2): 0x29AAAAA444
+	delta = max(delta, (int64_t) dev->min_delta_ns);
+	// delta: 0x29AAAAA444
+
+	// delta: 0x29AAAAA444, dev->mult: [pcp0] (&(&percpu_mct_tick)->evt)->mult: 0x3126E98
+	// dev->shift: [pcp0] (&(&percpu_mct_tick)->evt)->shift: 32
 	clc = ((unsigned long long) delta * dev->mult) >> dev->shift;
+	// clc: 0x1FFF
+
+	// clc: 0x1FFF, dev: [pcp0] &(&percpu_mct_tick)->evt
+	// dev->set_next_event: [pcp0] (&(&percpu_mct_tick)->evt)->set_next_event: exynos4_tick_set_next_event
+	// exynos4_tick_set_next_event(0x1FFF, [pcp0] &(&percpu_mct_tick)->evt):
 	rc = dev->set_next_event((unsigned long) clc, dev);
 
 	return (rc && force) ? clockevents_program_min_delta(dev) : rc;

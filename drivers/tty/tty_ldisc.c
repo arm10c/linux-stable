@@ -44,8 +44,11 @@ enum {
  *	callers who will do ldisc lookups and cannot sleep.
  */
 
+// ARM10C 20150627
 static DEFINE_RAW_SPINLOCK(tty_ldiscs_lock);
 /* Line disc dispatch table */
+// ARM10C 20150627
+// NR_LDISCS: 30
 static struct tty_ldisc_ops *tty_ldiscs[NR_LDISCS];
 
 /**
@@ -61,21 +64,43 @@ static struct tty_ldisc_ops *tty_ldiscs[NR_LDISCS];
  *		takes tty_ldiscs_lock to guard against ldisc races
  */
 
+// ARM10C 20150627
+// N_TTY: 0, &tty_ldisc_N_TTY
 int tty_register_ldisc(int disc, struct tty_ldisc_ops *new_ldisc)
 {
 	unsigned long flags;
 	int ret = 0;
+	// ret: 0
 
+	// disc: 0, N_TTY: 0, NR_LDISCS: 30
 	if (disc < N_TTY || disc >= NR_LDISCS)
 		return -EINVAL;
 
 	raw_spin_lock_irqsave(&tty_ldiscs_lock, flags);
+
+	// raw_spin_lock_irqsave에서 한일:
+	// &tty_ldiscs_lock 을 사용하여 spin lock을 수행하고 cpsr을 flags에 저장함
+
+	// disc: 0, new_ldisc: &tty_ldisc_N_TTY
 	tty_ldiscs[disc] = new_ldisc;
+	// tty_ldiscs[0]: &tty_ldisc_N_TTY
+
+	// new_ldisc->num: (&tty_ldisc_N_TTY)->num, disc: 0
 	new_ldisc->num = disc;
+	// new_ldisc->num: (&tty_ldisc_N_TTY)->num: 0
+
+	// new_ldisc->refcount: (&tty_ldisc_N_TTY)->refcount
 	new_ldisc->refcount = 0;
+	// new_ldisc->refcount: (&tty_ldisc_N_TTY)->refcount: 0
+
 	raw_spin_unlock_irqrestore(&tty_ldiscs_lock, flags);
 
+	// raw_spin_unlock_irqrestore에서 한일:
+	// &tty_ldiscs_lock 을 사용하여 spin unlock을 수행하고 flags에 저장된 cpsr을 복원함
+
+	// ret: 0
 	return ret;
+	// return 0
 }
 EXPORT_SYMBOL(tty_register_ldisc);
 
@@ -821,8 +846,15 @@ void tty_ldisc_deinit(struct tty_struct *tty)
 	tty->ldisc = NULL;
 }
 
+// ARM10C 20150627
 void tty_ldisc_begin(void)
 {
 	/* Setup the default TTY line discipline. */
+	// N_TTY 0
 	(void) tty_register_ldisc(N_TTY, &tty_ldisc_N_TTY);
+
+	// tty_register_ldisc에서 한일:
+	// tty_ldiscs[0]: &tty_ldisc_N_TTY
+	// (&tty_ldisc_N_TTY)->num: 0
+	// (&tty_ldisc_N_TTY)->refcount: 0
 }

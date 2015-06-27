@@ -172,6 +172,7 @@ extern int ldsem_down_write_nested(struct ld_semaphore *sem, int subclass,
 #endif
 
 
+// ARM10C 20150627
 struct tty_ldisc_ops {
 	int	magic;
 	char	*name;

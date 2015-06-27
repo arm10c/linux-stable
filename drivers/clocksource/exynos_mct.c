@@ -163,6 +163,7 @@ static int mct_irqs[MCT_NR_IRQS];
 // ARM10C 20150321
 // ARM10C 20150404
 // ARM10C 20150411
+// ARM10C 20150620
 struct mct_clock_event_device {
 	struct clock_event_device evt;
 	unsigned long base;
@@ -769,6 +770,7 @@ static void exynos4_clockevent_init(void)
 
 // ARM10C 20150321
 // ARM10C 20150418
+// ARM10C 20150620
 static DEFINE_PER_CPU(struct mct_clock_event_device, percpu_mct_tick);
 
 /* Clock event handling */
@@ -814,6 +816,8 @@ static void exynos4_mct_tick_stop(struct mct_clock_event_device *mevt)
 
 // ARM10C 20150509
 // cycles_per_jiffy: 120000 (0x1D4C0), mevt: [pcp0] &percpu_mct_tick
+// ARM10C 20150620
+// cycles: 0x1FFF, mevt: [pcp0] &percpu_mct_tick
 static void exynos4_mct_tick_start(unsigned long cycles,
 				   struct mct_clock_event_device *mevt)
 {
@@ -877,11 +881,16 @@ static void exynos4_mct_tick_start(unsigned long cycles,
 }
 
 // ARM10C 20150404
+// ARM10C 20150620
+// clc: 0x1FFF, dev: [pcp0] &(&percpu_mct_tick)->evt
 static int exynos4_tick_set_next_event(unsigned long cycles,
 				       struct clock_event_device *evt)
 {
+	// this_cpu_ptr(&percpu_mct_tick): [pcp0] &percpu_mct_tick
 	struct mct_clock_event_device *mevt = this_cpu_ptr(&percpu_mct_tick);
+	// mevt: [pcp0] &percpu_mct_tick
 
+	// cycles: 0x1FFF, mevt: [pcp0] &percpu_mct_tick
 	exynos4_mct_tick_start(cycles, mevt);
 
 	return 0;

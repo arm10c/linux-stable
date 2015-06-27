@@ -465,7 +465,7 @@ static inline int hrtimer_is_queued(struct hrtimer *timer)
 // timer: &sched_clock_timer
 static inline int hrtimer_callback_running(struct hrtimer *timer)
 {
-	// (&sched_clock_timer)->state: 0, HRTIMER_STATE_CALLBACK: 0x02
+	// (&sched_clock_timer)->state: 1, HRTIMER_STATE_CALLBACK: 0x02
 	return timer->state & HRTIMER_STATE_CALLBACK;
 	// return 0
 }

@@ -142,9 +142,11 @@
 /*
  * Used for initialization calls..
  */
+// ARM10C 20150627
 typedef int (*initcall_t)(void);
 typedef void (*exitcall_t)(void);
 
+// ARM10C 20150627
 extern initcall_t __con_initcall_start[], __con_initcall_end[];
 extern initcall_t __security_initcall_start[], __security_initcall_end[];
 
@@ -224,6 +226,7 @@ extern bool initcall_debug;
 #define __exitcall(fn) \
 	static exitcall_t __exitcall_##fn __exit_call = fn
 
+// ARM10C 20150627
 #define console_initcall(fn) \
 	static initcall_t __initcall_##fn \
 	__used __section(.con_initcall.init) = fn
