@@ -82,6 +82,7 @@ EXPORT_SYMBOL(oops_in_progress);
  * driver system.
  */
 static DEFINE_SEMAPHORE(console_sem);
+// ARM10C 20150627
 struct console *console_drivers;
 EXPORT_SYMBOL_GPL(console_drivers);
 
@@ -110,11 +111,17 @@ static struct console *exclusive_console;
  *	Array of consoles built from command line options (console=)
  */
 
+// ARM10C 20150627
+// MAX_CMDLINECONSOLES: 8
 #define MAX_CMDLINECONSOLES 8
 
+// ARM10C 20150627
+// MAX_CMDLINECONSOLES: 8
 static struct console_cmdline console_cmdline[MAX_CMDLINECONSOLES];
 
+// ARM10C 20150627
 static int selected_console = -1;
+// ARM10C 20150627
 static int preferred_console = -1;
 int console_set_on_cmdline;
 EXPORT_SYMBOL(console_set_on_cmdline);
@@ -2241,8 +2248,11 @@ void register_console(struct console *newcon)
 	int i;
 	unsigned long flags;
 	struct console *bcon = NULL;
+	// bcon: NULL
+
 	struct console_cmdline *c;
 
+	// console_drivers: NULL
 	if (console_drivers)
 		for_each_console(bcon)
 			if (WARN(bcon == newcon,
@@ -2254,6 +2264,7 @@ void register_console(struct console *newcon)
 	 * before we register a new CON_BOOT console, make sure we don't
 	 * already have a valid console
 	 */
+	// console_drivers: NULL, newcon->flags: (&s3c24xx_serial_console)->flags: 1, CON_BOOT: 8
 	if (console_drivers && newcon->flags & CON_BOOT) {
 		/* find the last or real console */
 		for_each_console(bcon) {
@@ -2265,12 +2276,17 @@ void register_console(struct console *newcon)
 		}
 	}
 
+	// console_drivers: NULL
 	if (console_drivers && console_drivers->flags & CON_BOOT)
 		bcon = console_drivers;
 
+	// preferred_console: -1, bcon: NULL, console_drivers: NULL
 	if (preferred_console < 0 || bcon || !console_drivers)
+		// selected_console: -1
 		preferred_console = selected_console;
+		// preferred_console: -1
 
+	// newcon->early_setup: (&s3c24xx_serial_console)->early_setup: NULL
 	if (newcon->early_setup)
 		newcon->early_setup();
 
@@ -2279,9 +2295,17 @@ void register_console(struct console *newcon)
 	 *	didn't select a console we take the first one
 	 *	that registers here.
 	 */
+	// preferred_console: -1
 	if (preferred_console < 0) {
+		// newcon->index: (&s3c24xx_serial_console)->index: -1
 		if (newcon->index < 0)
+			// newcon->index: (&s3c24xx_serial_console)->index: -1
 			newcon->index = 0;
+			// newcon->index: (&s3c24xx_serial_console)->index: 0
+
+		// newcon->setup: (&s3c24xx_serial_console)->setup: s3c24xx_serial_console_setup
+		// newcon: &s3c24xx_serial_console
+		// s3c24xx_serial_console_setup(&s3c24xx_serial_console, NULL): -19
 		if (newcon->setup == NULL ||
 		    newcon->setup(newcon, NULL) == 0) {
 			newcon->flags |= CON_ENABLED;
@@ -2296,6 +2320,7 @@ void register_console(struct console *newcon)
 	 *	See if this console matches one we selected on
 	 *	the command line.
 	 */
+	// MAX_CMDLINECONSOLES: 8, c->name[0]: console_cmdline[0].name[0]: NULL
 	for (i = 0, c = console_cmdline;
 	     i < MAX_CMDLINECONSOLES && c->name[0];
 	     i++, c++) {
@@ -2322,8 +2347,10 @@ void register_console(struct console *newcon)
 		break;
 	}
 
+	// newcon->flags: (&s3c24xx_serial_console)->flags: 1, CON_ENABLED: 4
 	if (!(newcon->flags & CON_ENABLED))
 		return;
+		// return 수행
 
 	/*
 	 * If we have a bootconsole, and are switching to a real console,

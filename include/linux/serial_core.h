@@ -113,6 +113,7 @@ struct uart_icount {
 
 typedef unsigned int __bitwise__ upf_t;
 
+// ARM10C 20150627
 struct uart_port {
 	spinlock_t		lock;			/* port lock */
 	unsigned long		iobase;			/* in/out[bwl] */
@@ -148,7 +149,7 @@ struct uart_port {
 	struct uart_icount	icount;			/* statistics */
 
 	struct console		*cons;			/* struct console, if any */
-#if defined(CONFIG_SERIAL_CORE_CONSOLE) || defined(SUPPORT_SYSRQ)
+#if defined(CONFIG_SERIAL_CORE_CONSOLE) || defined(SUPPORT_SYSRQ) // CONFIG_SERIAL_CORE_CONSOLE=y
 	unsigned long		sysrq;			/* sysrq timeout */
 #endif
 

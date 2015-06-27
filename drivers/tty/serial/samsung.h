@@ -38,6 +38,7 @@ struct s3c24xx_serial_drv_data {
 	unsigned int			fifosize[CONFIG_SERIAL_SAMSUNG_UARTS];
 };
 
+// ARM10C 20150627
 struct s3c24xx_uart_port {
 	unsigned char			rx_claimed;
 	unsigned char			tx_claimed;
@@ -96,5 +97,6 @@ static void dbg(const char *fmt, ...)
 }
 
 #else
+// ARM10C 20150627
 #define dbg(x...) do { } while (0)
 #endif

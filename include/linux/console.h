@@ -110,9 +110,15 @@ static inline int con_debug_leave(void)
  * when the first real console is registered.  This is for early-printk drivers.
  */
 
+// ARM10C 20150627
+// CON_PRINTBUFFER: 1
 #define CON_PRINTBUFFER	(1)
 #define CON_CONSDEV	(2) /* Last on the command line */
+// ARM10C 20150627
+// CON_ENABLED: 4
 #define CON_ENABLED	(4)
+// ARM10C 20150627
+// CON_BOOT: 8
 #define CON_BOOT	(8)
 #define CON_ANYTIME	(16) /* Safe to call when cpu is offline */
 #define CON_BRL		(32) /* Used for a braille device */
