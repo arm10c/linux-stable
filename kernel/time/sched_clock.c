@@ -379,6 +379,25 @@ void __init sched_clock_postinit(void)
 	// [pcp0] (&(&hrtimer_bases)->clock_base[0])->cpu_base->active_bases: 1
 	//
 	// (&sched_clock_timer)->state: 0x01
+	//
+	// [pcp0] (&(&percpu_mct_tick)->evt)->next_event.tv64: 0x42C1D83B9ACA00
+	//
+	// timer control register L0_TCON 값을 읽어 timer start, timer interrupt 설정을
+	// 동작하지 않도록 변경함
+	// L0_TCON 값이 0 으로 가정하였으므로 timer는 동작하지 않은 상태임
+	//
+	// register L_ICNTB 에 0x80001FFF write함
+	// local timer 0 의 interrupt count buffer 값을 120000 (0x1FFF) write 하고
+	// interrupt manual update를 enable 시킴
+	//
+	// register L_INT_ENB 에 0x1 write함
+	// local timer 0 의 ICNTEIE 값을 0x1을 write 하여 L0_INTCNT 값이 0 이 되었을 때
+	// interrupt counter expired interrupt 가 발생하도록 함
+	//
+	// register L_TCON 에 0x7 write함
+	// local timer 0 의 interrupt type을 interval mode로 설정하고 interrupt, timer 를 start 시킴
+	//
+	// [pcp0] (&hrtimer_bases)->expires_next: 0x42C1D83B9ACA00
 }
 
 static int sched_clock_suspend(void)

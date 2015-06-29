@@ -750,16 +750,37 @@ static int hrtimer_reprogram(struct hrtimer *timer,
 	 * Clockevents returns -ETIME, when the event was in the past.
 	 */
 	// expires.tv64: 0x42C1D83B9ACA00, tick_program_event(0x42C1D83B9ACA00, 0): -62
+	// tick_program_event(0x42C1D83B9ACA00, 0): 0
 	res = tick_program_event(expires, 0);
-	// res: -62
+	// res: 0
 
-	// res: -62, IS_ERR_VALUE(-62): 1
+	// tick_program_event에서 한일:
+	// [pcp0] (&(&percpu_mct_tick)->evt)->next_event.tv64: 0x42C1D83B9ACA00
+	//
+	// timer control register L0_TCON 값을 읽어 timer start, timer interrupt 설정을
+	// 동작하지 않도록 변경함
+	// L0_TCON 값이 0 으로 가정하였으므로 timer는 동작하지 않은 상태임
+	//
+	// register L_ICNTB 에 0x80001FFF write함
+	// local timer 0 의 interrupt count buffer 값을 120000 (0x1FFF) write 하고
+	// interrupt manual update를 enable 시킴
+	//
+	// register L_INT_ENB 에 0x1 write함
+	// local timer 0 의 ICNTEIE 값을 0x1을 write 하여 L0_INTCNT 값이 0 이 되었을 때
+	// interrupt counter expired interrupt 가 발생하도록 함
+	//
+	// register L_TCON 에 0x7 write함
+	// local timer 0 의 interrupt type을 interval mode로 설정하고 interrupt, timer 를 start 시킴
+
+	// res: 0, IS_ERR_VALUE(0): 0
 	if (!IS_ERR_VALUE(res))
+		// cpu_base->expires_next: [pcp0] (&hrtimer_bases)->expires_next, expires.tv64: 0x42C1D83B9ACA00
 		cpu_base->expires_next = expires;
+		// cpu_base->expires_next: [pcp0] (&hrtimer_bases)->expires_next: 0x42C1D83B9ACA00
 
-	// res: -62
+	// res: 0
 	return res;
-	// return -62
+	// return 0
 }
 
 /*
@@ -792,9 +813,29 @@ static inline int hrtimer_enqueue_reprogram(struct hrtimer *timer,
 {
 	// base->cpu_base->hres_active: [pcp0] (&(&hrtimer_bases)->clock_base[0])->cpu_base->hres_active: 0
 	// timer: &sched_clock_timer, base: [pcp0] &(&hrtimer_bases)->clock_base[0],
-	// hrtimer_reprogram(&sched_clock_timer, [pcp0] &(&hrtimer_bases)->clock_base[0]): -62
+	// hrtimer_reprogram(&sched_clock_timer, [pcp0] &(&hrtimer_bases)->clock_base[0]): 0
 	return base->cpu_base->hres_active && hrtimer_reprogram(timer, base);
 	// return 0
+
+	// hrtimer_reprogram에서 한일:
+	// [pcp0] (&(&percpu_mct_tick)->evt)->next_event.tv64: 0x42C1D83B9ACA00
+	//
+	// timer control register L0_TCON 값을 읽어 timer start, timer interrupt 설정을
+	// 동작하지 않도록 변경함
+	// L0_TCON 값이 0 으로 가정하였으므로 timer는 동작하지 않은 상태임
+	//
+	// register L_ICNTB 에 0x80001FFF write함
+	// local timer 0 의 interrupt count buffer 값을 120000 (0x1FFF) write 하고
+	// interrupt manual update를 enable 시킴
+	//
+	// register L_INT_ENB 에 0x1 write함
+	// local timer 0 의 ICNTEIE 값을 0x1을 write 하여 L0_INTCNT 값이 0 이 되었을 때
+	// interrupt counter expired interrupt 가 발생하도록 함
+	//
+	// register L_TCON 에 0x7 write함
+	// local timer 0 의 interrupt type을 interval mode로 설정하고 interrupt, timer 를 start 시킴
+	//
+	// [pcp0] (&hrtimer_bases)->expires_next: 0x42C1D83B9ACA00
 }
 
 static inline ktime_t hrtimer_update_base(struct hrtimer_cpu_base *base)
@@ -1251,6 +1292,26 @@ int __hrtimer_start_range_ns(struct hrtimer *timer, ktime_t tim,
 		}
 	}
 
+	// hrtimer_enqueue_reprogram에서 한일:
+	// [pcp0] (&(&percpu_mct_tick)->evt)->next_event.tv64: 0x42C1D83B9ACA00
+	//
+	// timer control register L0_TCON 값을 읽어 timer start, timer interrupt 설정을
+	// 동작하지 않도록 변경함
+	// L0_TCON 값이 0 으로 가정하였으므로 timer는 동작하지 않은 상태임
+	//
+	// register L_ICNTB 에 0x80001FFF write함
+	// local timer 0 의 interrupt count buffer 값을 120000 (0x1FFF) write 하고
+	// interrupt manual update를 enable 시킴
+	//
+	// register L_INT_ENB 에 0x1 write함
+	// local timer 0 의 ICNTEIE 값을 0x1을 write 하여 L0_INTCNT 값이 0 이 되었을 때
+	// interrupt counter expired interrupt 가 발생하도록 함
+	//
+	// register L_TCON 에 0x7 write함
+	// local timer 0 의 interrupt type을 interval mode로 설정하고 interrupt, timer 를 start 시킴
+	//
+	// [pcp0] (&hrtimer_bases)->expires_next: 0x42C1D83B9ACA00
+
 	// timer: &sched_clock_timer
 	unlock_hrtimer_base(timer, &flags);
 
@@ -1318,6 +1379,25 @@ hrtimer_start(struct hrtimer *timer, ktime_t tim, const enum hrtimer_mode mode)
 	// [pcp0] (&(&hrtimer_bases)->clock_base[0])->cpu_base->active_bases: 1
 	//
 	// (&sched_clock_timer)->state: 0x01
+	//
+	// [pcp0] (&(&percpu_mct_tick)->evt)->next_event.tv64: 0x42C1D83B9ACA00
+	//
+	// timer control register L0_TCON 값을 읽어 timer start, timer interrupt 설정을
+	// 동작하지 않도록 변경함
+	// L0_TCON 값이 0 으로 가정하였으므로 timer는 동작하지 않은 상태임
+	//
+	// register L_ICNTB 에 0x80001FFF write함
+	// local timer 0 의 interrupt count buffer 값을 120000 (0x1FFF) write 하고
+	// interrupt manual update를 enable 시킴
+	//
+	// register L_INT_ENB 에 0x1 write함
+	// local timer 0 의 ICNTEIE 값을 0x1을 write 하여 L0_INTCNT 값이 0 이 되었을 때
+	// interrupt counter expired interrupt 가 발생하도록 함
+	//
+	// register L_TCON 에 0x7 write함
+	// local timer 0 의 interrupt type을 interval mode로 설정하고 interrupt, timer 를 start 시킴
+	//
+	// [pcp0] (&hrtimer_bases)->expires_next: 0x42C1D83B9ACA00
 }
 EXPORT_SYMBOL_GPL(hrtimer_start);
 
