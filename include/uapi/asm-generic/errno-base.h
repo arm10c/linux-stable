@@ -26,6 +26,8 @@
 // EEXIST: 17
 #define	EEXIST		17	/* File exists */
 #define	EXDEV		18	/* Cross-device link */
+// ARM10C 20150627
+// ENODEV: 19
 #define	ENODEV		19	/* No such device */
 #define	ENOTDIR		20	/* Not a directory */
 #define	EISDIR		21	/* Is a directory */

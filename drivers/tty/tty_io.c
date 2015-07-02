@@ -3504,6 +3504,8 @@ void __init console_init(void)
 	call = __con_initcall_start;
 	// call: &__con_initcall_start
 
+// 2015/06/27 종료
+
 	// call: &__con_initcall_start
 	while (call < __con_initcall_end) {
 		// call:__initcall_s3c24xx_serial_console_init:

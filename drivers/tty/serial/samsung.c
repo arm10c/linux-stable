@@ -957,6 +957,8 @@ static struct uart_driver s3c24xx_uart_drv = {
 	.minor		= S3C24XX_SERIAL_MINOR,
 };
 
+// ARM10C 20150627
+// CONFIG_SERIAL_SAMSUNG_UARTS: 4
 static struct s3c24xx_uart_port s3c24xx_serial_ports[CONFIG_SERIAL_SAMSUNG_UARTS] = {
 	[0] = {
 		.port = {
@@ -1381,7 +1383,7 @@ static const struct dev_pm_ops s3c24xx_serial_pm_ops = {
 
 /* Console code */
 
-#ifdef CONFIG_SERIAL_SAMSUNG_CONSOLE
+#ifdef CONFIG_SERIAL_SAMSUNG_CONSOLE // CONFIG_SERIAL_SAMSUNG_CONSOLE=y
 
 static struct uart_port *cons_uart;
 
@@ -1536,29 +1538,46 @@ s3c24xx_serial_get_options(struct uart_port *port, int *baud,
 
 }
 
+// ARM10C 20150627
+// newcon: &s3c24xx_serial_console, NULL
 static int __init
 s3c24xx_serial_console_setup(struct console *co, char *options)
 {
 	struct uart_port *port;
 	int baud = 9600;
-	int bits = 8;
-	int parity = 'n';
-	int flow = 'n';
+	// baud: 9600
 
+	int bits = 8;
+	// bits: 8
+
+	int parity = 'n';
+	// parity: 'n'
+
+	int flow = 'n';
+	// flow: 'n'
+
+	// co: &s3c24xx_serial_console, co->index: (&s3c24xx_serial_console)->index: 0,
+	// options: NULL
 	dbg("s3c24xx_serial_console_setup: co=%p (%d), %s\n",
-	    co, co->index, options);
+	    co, co->index, options); // null function
 
 	/* is this a valid port */
 
+	// co->index: (&s3c24xx_serial_console)->index: 0, CONFIG_SERIAL_SAMSUNG_UARTS: 4
 	if (co->index == -1 || co->index >= CONFIG_SERIAL_SAMSUNG_UARTS)
 		co->index = 0;
 
+	// co->index: (&s3c24xx_serial_console)->index: 0
 	port = &s3c24xx_serial_ports[co->index].port;
+	// port: &s3c24xx_serial_ports[0].port
 
 	/* is the port configured? */
 
+	// port->mapbase: (&s3c24xx_serial_ports[0].port)->mapbase: NULL
 	if (port->mapbase == 0x0)
+		// ENODEV: 19
 		return -ENODEV;
+		// return -19
 
 	cons_uart = port;
 
@@ -1579,9 +1598,11 @@ s3c24xx_serial_console_setup(struct console *co, char *options)
 	return uart_set_options(port, co, baud, parity, bits, flow);
 }
 
+// ARM10C 20150627
 static struct console s3c24xx_serial_console = {
 	.name		= S3C24XX_SERIAL_NAME,
 	.device		= uart_console_device,
+	// CON_PRINTBUFFER: 1
 	.flags		= CON_PRINTBUFFER,
 	.index		= -1,
 	.write		= s3c24xx_serial_console_write,
