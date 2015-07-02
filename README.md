@@ -1,7 +1,8 @@
 #IAMROOT.ORG Kernel스터디10차(ARM)
 
 #HISTORY
-review/
+* 107th (2015/06/27) week [107차](https://github.com/hephaex/kernel_review/blob/master/a10c_107.md)
+ - console_init()
 * 106th (2015/06/20) week [106차](https://github.com/hephaex/kernel_review/blob/master/a10c_106.md)
  - sched_clock_postinit();
  - perf_event_init();
