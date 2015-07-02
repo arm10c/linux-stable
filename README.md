@@ -1,6 +1,15 @@
 #IAMROOT.ORG Kernel스터디10차(ARM)
 
 #HISTORY
+review/
+* 106th (2015/06/20) week [106차](https://github.com/hephaex/kernel_review/blob/master/a10c_106.md)
+ - sched_clock_postinit();
+ - perf_event_init();
+ - profile_init();
+ - call_function_init();
+ - irqs_disabled()
+ - local_irq_enable();
+ - kmem_cache_init_late();
 * 105th (2015/06/13) week [105차](https://github.com/hephaex/kernel_review/blob/master/a10c_105.md)
  - sched_clock_postinit();
 * 104th (2015/06/06) week [104차](https://github.com/hephaex/kernel_review/blob/master/a10c_104.md)
