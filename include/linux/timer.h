@@ -9,6 +9,7 @@
 
 struct tvec_base;
 
+// ARM10C 20150704
 struct timer_list {
 	/*
 	 * All fields that change during normal runtime grouped to the
@@ -23,19 +24,19 @@ struct timer_list {
 
 	int slack;
 
-#ifdef CONFIG_TIMER_STATS
+#ifdef CONFIG_TIMER_STATS // CONFIG_TIMER_STATS=n
 	int start_pid;
 	void *start_site;
 	char start_comm[16];
 #endif
-#ifdef CONFIG_LOCKDEP
+#ifdef CONFIG_LOCKDEP // CONFIG_LOCKDEP=n
 	struct lockdep_map lockdep_map;
 #endif
 };
 
 extern struct tvec_base boot_tvec_bases;
 
-#ifdef CONFIG_LOCKDEP
+#ifdef CONFIG_LOCKDEP // CONFIG_LOCKDEP=n
 /*
  * NB: because we have to copy the lockdep_map, setting the lockdep_map key
  * (second argument) here is required, otherwise it could be initialised to
@@ -45,6 +46,8 @@ extern struct tvec_base boot_tvec_bases;
 #define __TIMER_LOCKDEP_MAP_INITIALIZER(_kn)				\
 	.lockdep_map = STATIC_LOCKDEP_MAP_INIT(_kn, &_kn),
 #else
+// ARM10C 20150704
+// #define __TIMER_LOCKDEP_MAP_INITIALIZER(__FILE__ ":" __stringify(__LINE__)):
 #define __TIMER_LOCKDEP_MAP_INITIALIZER(_kn)
 #endif
 
@@ -72,6 +75,19 @@ extern struct tvec_base boot_tvec_bases;
 // TIMER_FLAG_MASK: 0x3LU
 #define TIMER_FLAG_MASK			0x3LU
 
+// ARM10C 20150704
+// TIMER_ENTRY_STATIC: ((void *) 0x74737461)
+// __TIMER_LOCKDEP_MAP_INITIALIZER(__FILE__ ":" __stringify(__LINE__)):
+//
+// #define __TIMER_INITIALIZER((blank_screen_t), (0), (0), 0):
+// {
+//     .entry = { .prev = ((void *) 0x74737461) },
+//     .function = (blank_screen_t),
+//     .expires = (0),
+//     .data = (0),
+//     .base = (void *)((unsigned long)&boot_tvec_bases + (0)),
+//     .slack = -1
+// }
 #define __TIMER_INITIALIZER(_function, _expires, _data, _flags) { \
 		.entry = { .prev = TIMER_ENTRY_STATIC },	\
 		.function = (_function),			\
@@ -83,12 +99,53 @@ extern struct tvec_base boot_tvec_bases;
 			__FILE__ ":" __stringify(__LINE__))	\
 	}
 
+// ARM10C 20150704
+// __TIMER_INITIALIZER((blank_screen_t), (0), (0), 0):
+// {
+//     .entry = { .prev = ((void *) 0x74737461) },
+//     .function = (blank_screen_t),
+//     .expires = (0),
+//     .data = (0),
+//     .base = (void *)((unsigned long)&boot_tvec_bases + (0)),
+//     .slack = -1
+// }
+//
+// #define TIMER_INITIALIZER(blank_screen_t, 0, 0):
+// {
+//     .entry = { .prev = ((void *) 0x74737461) },
+//     .function = (blank_screen_t),
+//     .expires = (0),
+//     .data = (0),
+//     .base = (void *)((unsigned long)&boot_tvec_bases + (0)),
+//     .slack = -1
+// }
 #define TIMER_INITIALIZER(_function, _expires, _data)		\
 	__TIMER_INITIALIZER((_function), (_expires), (_data), 0)
 
 #define TIMER_DEFERRED_INITIALIZER(_function, _expires, _data)	\
 	__TIMER_INITIALIZER((_function), (_expires), (_data), TIMER_DEFERRABLE)
 
+// ARM10C 20150704
+// TIMER_INITIALIZER(blank_screen_t, 0, 0):
+// {
+//     .entry = { .prev = ((void *) 0x74737461) },
+//     .function = (blank_screen_t),
+//     .expires = (0),
+//     .data = (0),
+//     .base = (void *)((unsigned long)&boot_tvec_bases + (0)),
+//     .slack = -1
+// }
+//
+// #define DEFINE_TIMER(console_timer, blank_screen_t, 0, 0):
+// struct timer_list console_timer =
+// {
+//     .entry = { .prev = ((void *) 0x74737461) },
+//     .function = (blank_screen_t),
+//     .expires = (0),
+//     .data = (0),
+//     .base = (void *)((unsigned long)&boot_tvec_bases + (0)),
+//     .slack = -1
+// }
 #define DEFINE_TIMER(_name, _function, _expires, _data)		\
 	struct timer_list _name =				\
 		TIMER_INITIALIZER(_function, _expires, _data)

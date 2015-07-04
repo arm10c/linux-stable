@@ -20,6 +20,7 @@ struct vt_struct;
 
 #define NPAR 16
 
+// ARM10C 20150704
 struct vc_data {
 	struct tty_port port;			/* Upper level data */
 

@@ -35,6 +35,8 @@ _braille_console_setup(char **str, char **brl_options)
 	// return NULL
 }
 
+// ARM10C 20150704
+// newcon: &s3c24xx_serial_console, c: &console_cmdline[0]
 static inline int
 _braille_register_console(struct console *console, struct console_cmdline *c)
 {

@@ -37,6 +37,8 @@
  * Magic number "tsta" to indicate a static timer initializer
  * for the object debugging code.
  */
+// ARM10C 20150704
+// TIMER_ENTRY_STATIC: ((void *) 0x74737461)
 #define TIMER_ENTRY_STATIC	((void *) 0x74737461)
 
 /********** mm/debug-pagealloc.c **********/

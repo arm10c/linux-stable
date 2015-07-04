@@ -19,6 +19,31 @@ struct semaphore {
 	struct list_head	wait_list;
 };
 
+// ARM10C 20150704
+// __RAW_SPIN_LOCK_UNLOCKED((console_sem).lock):
+// (raw_spinlock_t)
+// {
+//    .raw_lock = { { 0 } },
+//    .magic = 0xdead4ead,
+//    .owner_cpu = -1,
+//    .owner = 0xffffffff,
+// }
+//
+// LIST_HEAD_INIT((console_sem).wait_list):
+// { &(console_sem.wait_list), &(console_sem.wait_list) }
+//
+// #define __SEMAPHORE_INITIALIZER(console_sem, 1):
+// {
+//    .lock =
+//    {
+//       .raw_lock = { { 0 } },
+//       .magic = 0xdead4ead,
+//       .owner_cpu = -1,
+//       .owner = 0xffffffff,
+//    },
+//    .count = 1,
+//    .wait_list = { &(console_sem.wait_list), &(console_sem.wait_list) },
+// }
 #define __SEMAPHORE_INITIALIZER(name, n)				\
 {									\
 	.lock		= __RAW_SPIN_LOCK_UNLOCKED((name).lock),	\
@@ -26,6 +51,33 @@ struct semaphore {
 	.wait_list	= LIST_HEAD_INIT((name).wait_list),		\
 }
 
+// ARM10C 20150704
+// __SEMAPHORE_INITIALIZER(console_sem, 1):
+// {
+//    .lock =
+//    {
+//       .raw_lock = { { 0 } },
+//       .magic = 0xdead4ead,
+//       .owner_cpu = -1,
+//       .owner = 0xffffffff,
+//    },
+//    .count = 1,
+//    .wait_list = { &(console_sem.wait_list), &(console_sem.wait_list) },
+// }
+//
+// #define DEFINE_SEMAPHORE(console_sem):
+// struct semaphore console_sem =
+// {
+//    .lock =
+//    {
+//       .raw_lock = { { 0 } },
+//       .magic = 0xdead4ead,
+//       .owner_cpu = -1,
+//       .owner = 0xffffffff,
+//    },
+//    .count = 1,
+//    .wait_list = { &(console_sem.wait_list), &(console_sem.wait_list) },
+// }
 #define DEFINE_SEMAPHORE(name)	\
 	struct semaphore name = __SEMAPHORE_INITIALIZER(name, 1)
 

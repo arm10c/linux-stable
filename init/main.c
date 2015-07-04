@@ -189,6 +189,9 @@ static int __init obsolete_checksetup(char *line)
 
 	p = __setup_start;
 	do {
+		// NOTE:
+		// __setup_console_setup의 경우의 코드를 분석
+
 		// p->str: __setup_console_setup.str: "console=", strlen("console="): 8
 		int n = strlen(p->str);
 		// n: 8

@@ -20,6 +20,7 @@
 // ARM10C 20131116
 // ARM10C 20131130
 // ARM10C 20140315
+// ARM10C 20150704
 // LIST_HEAD_INIT(cpu_add_remove_lock.wait_list):
 // { &(cpu_add_remove_lock.wait_list), &(cpu_add_remove_lock.wait_list) }
 #define LIST_HEAD_INIT(name) { &(name), &(name) }

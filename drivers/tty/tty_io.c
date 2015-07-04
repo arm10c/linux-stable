@@ -3509,7 +3509,8 @@ void __init console_init(void)
 
 	// call: &__con_initcall_start
 	while (call < __con_initcall_end) {
-		// call:__initcall_s3c24xx_serial_console_init:
+		// call: __initcall_con_init: con_init
+		// call: __initcall_s3c24xx_serial_console_init:
 		// s3c24xx_serial_console_init
 		(*call)();
 		call++;

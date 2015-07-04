@@ -81,12 +81,26 @@ EXPORT_SYMBOL(oops_in_progress);
  * provides serialisation for access to the entire console
  * driver system.
  */
+// ARM10C 20150704
+// DEFINE_SEMAPHORE(console_sem):
+// struct semaphore console_sem =
+// {
+//    .lock =
+//    {
+//       .raw_lock = { { 0 } },
+//       .magic = 0xdead4ead,
+//       .owner_cpu = -1,
+//       .owner = 0xffffffff,
+//    },
+//    .count = 1,
+//    .wait_list = { &(console_sem.wait_list), &(console_sem.wait_list) },
+// }
 static DEFINE_SEMAPHORE(console_sem);
 // ARM10C 20150627
 struct console *console_drivers;
 EXPORT_SYMBOL_GPL(console_drivers);
 
-#ifdef CONFIG_LOCKDEP
+#ifdef CONFIG_LOCKDEP // CONFIG_LOCKDEP=n
 static struct lockdep_map console_lock_dep_map = {
 	.name = "console_lock"
 };
@@ -100,6 +114,7 @@ static struct lockdep_map console_lock_dep_map = {
  * path in the console code where we end up in places I want
  * locked without the console sempahore held
  */
+// ARM10C 20150704
 static int console_locked, console_suspended;
 
 /*
@@ -123,10 +138,12 @@ static struct console_cmdline console_cmdline[MAX_CMDLINECONSOLES];
 static int selected_console = -1;
 // ARM10C 20150627
 static int preferred_console = -1;
+// ARM10C 20150627
 int console_set_on_cmdline;
 EXPORT_SYMBOL(console_set_on_cmdline);
 
 /* Flag: console code may call schedule() */
+// ARM10C 20150704
 static int console_may_schedule;
 
 /*
@@ -2011,16 +2028,27 @@ static int console_cpu_notify(struct notifier_block *self,
  *
  * Can sleep, returns nothing.
  */
+// ARM10C 20150704
 void console_lock(void)
 {
-	might_sleep();
+	might_sleep(); // null function
 
 	down(&console_sem);
+
+	// down에서 한일:
+	// (&console_sem)->count: 0
+
+	// console_suspended: 0
 	if (console_suspended)
 		return;
+
 	console_locked = 1;
+	// console_locked: 1
+
 	console_may_schedule = 1;
-	mutex_acquire(&console_lock_dep_map, 0, 0, _RET_IP_);
+	// console_may_schedule: 1
+
+	mutex_acquire(&console_lock_dep_map, 0, 0, _RET_IP_); // null function
 }
 EXPORT_SYMBOL(console_lock);
 
@@ -2345,9 +2373,9 @@ void register_console(struct console *newcon)
 
 	// preferred_console: -1, bcon: NULL, console_drivers: NULL
 	if (preferred_console < 0 || bcon || !console_drivers)
-		// selected_console: -1
+		// selected_console: 0
 		preferred_console = selected_console;
-		// preferred_console: -1
+		// preferred_console: 0
 
 	// newcon->early_setup: (&s3c24xx_serial_console)->early_setup: NULL
 	if (newcon->early_setup)
@@ -2358,17 +2386,12 @@ void register_console(struct console *newcon)
 	 *	didn't select a console we take the first one
 	 *	that registers here.
 	 */
-	// preferred_console: -1
+	// s3c24xx_serial_console_setup(&s3c24xx_serial_console, NULL): -19
+	// preferred_console: 0
 	if (preferred_console < 0) {
-		// newcon->index: (&s3c24xx_serial_console)->index: -1
 		if (newcon->index < 0)
-			// newcon->index: (&s3c24xx_serial_console)->index: -1
 			newcon->index = 0;
-			// newcon->index: (&s3c24xx_serial_console)->index: 0
 
-		// newcon->setup: (&s3c24xx_serial_console)->setup: s3c24xx_serial_console_setup
-		// newcon: &s3c24xx_serial_console
-		// s3c24xx_serial_console_setup(&s3c24xx_serial_console, NULL): -19
 		if (newcon->setup == NULL ||
 		    newcon->setup(newcon, NULL) == 0) {
 			newcon->flags |= CON_ENABLED;
@@ -2383,24 +2406,42 @@ void register_console(struct console *newcon)
 	 *	See if this console matches one we selected on
 	 *	the command line.
 	 */
-	// MAX_CMDLINECONSOLES: 8, c->name[0]: console_cmdline[0].name[0]: NULL
+	// MAX_CMDLINECONSOLES: 8, c->name[0]: console_cmdline[0].name[0]: 't'
 	for (i = 0, c = console_cmdline;
 	     i < MAX_CMDLINECONSOLES && c->name[0];
 	     i++, c++) {
+		// c->name: console_cmdline[0].name: "ttySAC",
+		// newcon->name (&s3c24xx_serial_console)->name: "ttySAC"
+		// strcmp("ttySAC", "ttySAC"): 0
 		if (strcmp(c->name, newcon->name) != 0)
 			continue;
+
+		// newcon->index: (&s3c24xx_serial_console)->index: -1,
+		// c->index: console_cmdline[0].index: 2
 		if (newcon->index >= 0 &&
 		    newcon->index != c->index)
 			continue;
-		if (newcon->index < 0)
-			newcon->index = c->index;
 
+		// newcon->index: (&s3c24xx_serial_console)->index: -1
+		if (newcon->index < 0)
+			// newcon->index: (&s3c24xx_serial_console)->index: -1,
+			// c->index: console_cmdline[0].index: 2
+			newcon->index = c->index;
+			// newcon->index: (&s3c24xx_serial_console)->index: 2
+
+		// newcon: &s3c24xx_serial_console, c: &console_cmdline[0]
+		// _braille_register_console(&s3c24xx_serial_console, &console_cmdline[0]): 0
 		if (_braille_register_console(newcon, c))
 			return;
 
+		// newcon->setup: (&s3c24xx_serial_console)->setup: s3c24xx_serial_console_setup
+		// newcon: &s3c24xx_serial_console, i: 0, c: console_cmdline[0].options: "115200"
+		// s3c24xx_serial_console_setup(&s3c24xx_serial_console, "115200"): -19
 		if (newcon->setup &&
 		    newcon->setup(newcon, console_cmdline[i].options) != 0)
 			break;
+			// break 수행
+
 		newcon->flags |= CON_ENABLED;
 		newcon->index = c->index;
 		if (i == selected_console) {

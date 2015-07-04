@@ -103,12 +103,17 @@
 #include <linux/kdb.h>
 #include <linux/ctype.h>
 
+// ARM10C 20150704
+// MAX_NR_CON_DRIVER: 16
 #define MAX_NR_CON_DRIVER 16
 
 #define CON_DRIVER_FLAG_MODULE 1
+// ARM10C 20150704
+// CON_DRIVER_FLAG_INIT: 2
 #define CON_DRIVER_FLAG_INIT   2
 #define CON_DRIVER_FLAG_ATTR   4
 
+// ARM10C 20150704
 struct con_driver {
 	const struct consw *con;
 	const char *desc;
@@ -119,8 +124,11 @@ struct con_driver {
 	int flag;
 };
 
+// ARM10C 20150704
+// MAX_NR_CON_DRIVER: 16
 static struct con_driver registered_con_driver[MAX_NR_CON_DRIVER];
 // ARM10C 20140215
+// ARM10C 20150704
 const struct consw *conswitchp;
 
 /* A bitmap for codes <32. A bit of 1 indicates that the code
@@ -140,6 +148,8 @@ const struct consw *conswitchp;
 struct vc vc_cons [MAX_NR_CONSOLES];
 
 #ifndef VT_SINGLE_DRIVER
+// ARM10C 20150704
+// MAX_NR_CONSOLES: 63
 static const struct consw *con_driver_map[MAX_NR_CONSOLES];
 #endif
 
@@ -177,6 +187,8 @@ int console_blanked;
 
 static int vesa_blank_mode; /* 0:none 1:suspendV 2:suspendH 3:powerdown */
 static int vesa_off_interval;
+// ARM10C 20150704
+// blankinterval: 600
 static int blankinterval = 10*60;
 core_param(consoleblank, blankinterval, int, 0444);
 
@@ -223,11 +235,26 @@ static int scrollback_delta;
  */
 int (*console_blank_hook)(int);
 
+// ARM10C 20150704
+// DEFINE_TIMER(console_timer, blank_screen_t, 0, 0):
+// struct timer_list console_timer =
+// {
+//     .entry = { .prev = ((void *) 0x74737461) },
+//     .function = (blank_screen_t),
+//     .expires = (0),
+//     .data = (0),
+//     .base = (void *)((unsigned long)&boot_tvec_bases + (0)),
+//     .slack = -1
+// }
 static DEFINE_TIMER(console_timer, blank_screen_t, 0, 0);
+// ARM10C 20150704
 static int blank_state;
 static int blank_timer_expired;
+
+// ARM10C 20150704
 enum {
 	blank_off = 0,
+	// blank_normal_wait: 1
 	blank_normal_wait,
 	blank_vesa_wait,
 };
@@ -2860,40 +2887,92 @@ static void vc_init(struct vc_data *vc, unsigned int rows,
  * the appropriate escape-sequence.
  */
 
+// ARM10C 20150704
 static int __init con_init(void)
 {
 	const char *display_desc = NULL;
+	// display_desc: NULL
+
 	struct vc_data *vc;
 	unsigned int currcons = 0, i;
+	// currcons: 0
 
 	console_lock();
 
+	// console_lock에서 한일:
+	// (&console_sem)->count: 0
+	// console_locked: 1
+	// console_may_schedule: 1
+
+	// conswitchp: &dummy_con
 	if (conswitchp)
+		// conswitchp->con_startup: (&dummy_con)->con_startup: dummycon_startup
+		// dummycon_startup(): &"dummy device"
 		display_desc = conswitchp->con_startup();
+		// display_desc: &"dummy device"
+
+	// display_desc: &"dummy device"
 	if (!display_desc) {
 		fg_console = 0;
 		console_unlock();
 		return 0;
 	}
 
+	// MAX_NR_CON_DRIVER: 16
 	for (i = 0; i < MAX_NR_CON_DRIVER; i++) {
+		// i: 0
 		struct con_driver *con_driver = &registered_con_driver[i];
+		// con_driver: &registered_con_driver[0]
 
+		// con_driver->con: (&registered_con_driver[0])->con: NULL
 		if (con_driver->con == NULL) {
+			// con_driver->con: (&registered_con_driver[0])->con, conswitchp: &dummy_con
 			con_driver->con = conswitchp;
+			// con_driver->con: (&registered_con_driver[0])->con: &dummy_con
+
+			// con_driver->desc: (&registered_con_driver[0])->desc, display_desc: &"dummy device"
 			con_driver->desc = display_desc;
+			// con_driver->desc: (&registered_con_driver[0])->desc: &"dummy device"
+
+			// con_driver->flag: (&registered_con_driver[0])->flag, CON_DRIVER_FLAG_INIT: 2
 			con_driver->flag = CON_DRIVER_FLAG_INIT;
+			// con_driver->flag: (&registered_con_driver[0])->flag: 2
+
+			// con_driver->first: (&registered_con_driver[0])->first
 			con_driver->first = 0;
+			// con_driver->first: (&registered_con_driver[0])->first: 0
+
+			// con_driver->last: (&registered_con_driver[0])->last, MAX_NR_CONSOLES: 63
 			con_driver->last = MAX_NR_CONSOLES - 1;
+			// con_driver->last: (&registered_con_driver[0])->last: 62
+
 			break;
+			// break 수행
 		}
 	}
 
+	// MAX_NR_CONSOLES: 63
 	for (i = 0; i < MAX_NR_CONSOLES; i++)
+		// i: 0, conswitchp: &dummy_con
 		con_driver_map[i] = conswitchp;
+		// con_driver_map[0]: &dummy_con
 
+		// i: 1...62 loop 수행
+
+	// blankinterval: 600
 	if (blankinterval) {
+		// blank_normal_wait: 1
 		blank_state = blank_normal_wait;
+		// blank_state: 1
+
+		// NOTE:
+		// jiffies은 interrupt enable이 되었기 때문에
+		// 실시간으로 변하는 값이므로 현재 시간값을 알수 없음
+		// jiffiex: xx_64 로 주석을 작성하도록 함
+
+// 2015/07/04 종료
+
+		// jiffies: xx_64, blankinterval: 600, HZ: 100
 		mod_timer(&console_timer, jiffies + (blankinterval * HZ));
 	}
 

@@ -821,16 +821,21 @@ EXPORT_SYMBOL(mod_timer_pending);
  *   4) use the bitmask to round down the maximum time, so that all last
  *      bits are zeros
  */
+// ARM10C 20150704
+// timer: &console_timer, expires: xx_64 + 6000
 static inline
 unsigned long apply_slack(struct timer_list *timer, unsigned long expires)
 {
 	unsigned long expires_limit, mask;
 	int bit;
 
+	// timer->slack: (&console_timer)->slack: -1
 	if (timer->slack >= 0) {
 		expires_limit = expires + timer->slack;
 	} else {
+		// expires: xx_64 + 6000, jiffies: xx_64
 		long delta = expires - jiffies;
+		// delta: 6000 + xx_64
 
 		if (delta < 256)
 			return expires;
@@ -870,8 +875,11 @@ unsigned long apply_slack(struct timer_list *timer, unsigned long expires)
  * (ie. mod_timer() of an inactive timer returns 0, mod_timer() of an
  * active timer returns 1.)
  */
+// ARM10C 20150704
+// &console_timer, jiffies: xx_64 + 6000
 int mod_timer(struct timer_list *timer, unsigned long expires)
 {
+	// timer: &console_timer, expires: xx_64 + 6000
 	expires = apply_slack(timer, expires);
 
 	/*

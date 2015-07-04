@@ -55,6 +55,8 @@
 
 /* UART name and device definitions */
 
+// ARM10C 20150704
+// S3C24XX_SERIAL_NAME: "ttySAC"
 #define S3C24XX_SERIAL_NAME	"ttySAC"
 #define S3C24XX_SERIAL_MAJOR	204
 #define S3C24XX_SERIAL_MINOR	64
@@ -958,6 +960,7 @@ static struct uart_driver s3c24xx_uart_drv = {
 };
 
 // ARM10C 20150627
+// ARM10C 20150704
 // CONFIG_SERIAL_SAMSUNG_UARTS: 4
 static struct s3c24xx_uart_port s3c24xx_serial_ports[CONFIG_SERIAL_SAMSUNG_UARTS] = {
 	[0] = {
@@ -982,7 +985,7 @@ static struct s3c24xx_uart_port s3c24xx_serial_ports[CONFIG_SERIAL_SAMSUNG_UARTS
 			.line		= 1,
 		}
 	},
-#if CONFIG_SERIAL_SAMSUNG_UARTS > 2
+#if CONFIG_SERIAL_SAMSUNG_UARTS > 2 // CONFIG_SERIAL_SAMSUNG_UARTS: 4
 
 	[2] = {
 		.port = {
@@ -1538,8 +1541,8 @@ s3c24xx_serial_get_options(struct uart_port *port, int *baud,
 
 }
 
-// ARM10C 20150627
-// newcon: &s3c24xx_serial_console, NULL
+// ARM10C 20150704
+// &s3c24xx_serial_console, "115200"
 static int __init
 s3c24xx_serial_console_setup(struct console *co, char *options)
 {
@@ -1557,23 +1560,23 @@ s3c24xx_serial_console_setup(struct console *co, char *options)
 	// flow: 'n'
 
 	// co: &s3c24xx_serial_console, co->index: (&s3c24xx_serial_console)->index: 0,
-	// options: NULL
+	// options: "115200"
 	dbg("s3c24xx_serial_console_setup: co=%p (%d), %s\n",
 	    co, co->index, options); // null function
 
 	/* is this a valid port */
 
-	// co->index: (&s3c24xx_serial_console)->index: 0, CONFIG_SERIAL_SAMSUNG_UARTS: 4
+	// co->index: (&s3c24xx_serial_console)->index: 2, CONFIG_SERIAL_SAMSUNG_UARTS: 4
 	if (co->index == -1 || co->index >= CONFIG_SERIAL_SAMSUNG_UARTS)
 		co->index = 0;
 
-	// co->index: (&s3c24xx_serial_console)->index: 0
+	// co->index: (&s3c24xx_serial_console)->index: 2
 	port = &s3c24xx_serial_ports[co->index].port;
-	// port: &s3c24xx_serial_ports[0].port
+	// port: &s3c24xx_serial_ports[2].port
 
 	/* is the port configured? */
 
-	// port->mapbase: (&s3c24xx_serial_ports[0].port)->mapbase: NULL
+	// port->mapbase: (&s3c24xx_serial_ports[2].port)->mapbase: NULL
 	if (port->mapbase == 0x0)
 		// ENODEV: 19
 		return -ENODEV;
@@ -1600,6 +1603,7 @@ s3c24xx_serial_console_setup(struct console *co, char *options)
 
 // ARM10C 20150627
 static struct console s3c24xx_serial_console = {
+	// S3C24XX_SERIAL_NAME: "ttySAC"
 	.name		= S3C24XX_SERIAL_NAME,
 	.device		= uart_console_device,
 	// CON_PRINTBUFFER: 1

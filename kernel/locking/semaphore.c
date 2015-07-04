@@ -50,16 +50,31 @@ static noinline void __up(struct semaphore *sem);
  * Use of this function is deprecated, please use down_interruptible() or
  * down_killable() instead.
  */
+// ARM10C 20150704
+// &console_sem
 void down(struct semaphore *sem)
 {
 	unsigned long flags;
 
+	// &sem->lock: &(&console_sem)->lock
 	raw_spin_lock_irqsave(&sem->lock, flags);
+
+	// raw_spin_lock_irqsave에서 한일:
+	// &(&console_sem)->lock을 사용하여 spin lock을 수행하고 cpsr을 flags에 저장
+
+	// sem->count: (&console_sem)->count: 1
 	if (likely(sem->count > 0))
+		// sem->count: (&console_sem)->count: 1
 		sem->count--;
+		// sem->count: (&console_sem)->count: 0
 	else
 		__down(sem);
+
+	// &sem->lock: &(&console_sem)->lock
 	raw_spin_unlock_irqrestore(&sem->lock, flags);
+
+	// raw_spin_unlock_irqrestore에서 한일:
+	// &(&console_sem)->lock을 사용하여 spin unlock을 수행하고 flags에 저장된 cpsr을 복원
 }
 EXPORT_SYMBOL(down);
 

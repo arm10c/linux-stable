@@ -29,9 +29,11 @@
 #define DUMMY_ROWS	25
 #endif
 
+// ARM10C 20150704
 static const char *dummycon_startup(void)
 {
     return "dummy device";
+    // return &"dummy device"
 }
 
 static void dummycon_init(struct vc_data *vc, int init)
@@ -58,6 +60,7 @@ static int dummycon_dummy(void)
  */
 
 // ARM10C 20140215
+// ARM10C 20150704
 // DUMMY: 0
 const struct consw dummy_con = {
     .owner =		THIS_MODULE,

@@ -210,6 +210,7 @@ extern int _cond_resched(void);
 				   int preempt_offset) { }
 // ARM10C 20140315
 // ARM10C 20140920
+// ARM10C 20150704
 // might_resched(): NULL function
 # define might_sleep() do { might_resched(); } while (0)
 #endif
