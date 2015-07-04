@@ -1,7 +1,7 @@
 #ifndef _PRINTK_BRAILLE_H
 #define _PRINTK_BRAILLE_H
 
-#ifdef CONFIG_A11Y_BRAILLE_CONSOLE
+#ifdef CONFIG_A11Y_BRAILLE_CONSOLE // CONFIG_A11Y_BRAILLE_CONSOLE=n
 
 static inline void
 braille_set_options(struct console_cmdline *c, char *brl_options)
@@ -20,15 +20,19 @@ _braille_unregister_console(struct console *console);
 
 #else
 
+// ARM10C 20150627
+// c: console_cmdline[0], brl_options: NULL
 static inline void
 braille_set_options(struct console_cmdline *c, char *brl_options)
 {
 }
 
+// ARM10C 20150627
 static inline char *
 _braille_console_setup(char **str, char **brl_options)
 {
 	return NULL;
+	// return NULL
 }
 
 static inline int

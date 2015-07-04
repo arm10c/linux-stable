@@ -68,8 +68,11 @@ EXPORT_SYMBOL(simple_strtoull);
  *
  * This function is obsolete. Please use kstrtoul instead.
  */
+// ARM10C 20150627
+// "2,11", NULL, 10
 unsigned long simple_strtoul(const char *cp, char **endp, unsigned int base)
 {
+	// cp: "2,11", endp: NULL, base: 10
 	return simple_strtoull(cp, endp, base);
 }
 EXPORT_SYMBOL(simple_strtoul);

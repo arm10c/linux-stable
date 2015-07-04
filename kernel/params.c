@@ -69,6 +69,8 @@ static char dash2underscore(char c)
 }
 
 // ARM10C 20131019
+// ARM10C 20150627
+// line: "console=ttySAC2,115200", p->str: __setup_console_setup.str: "console=", n: 8
 bool parameqn(const char *a, const char *b, size_t n)
 {
 	size_t i;
@@ -87,8 +89,12 @@ bool parameq(const char *a, const char *b)
 }
 
 // ARM10C 20131019
-// parse_one( param, val, "early options", "NULL, 0, 0, 0, do_early_param);
+// param: "console", val: "ttySAC2,115200", doing: "early options",
+// params: NULL, num: 0, min_level, 0, max_level: 0, unknown: do_early_param
 // ARM10C 20140322
+// ARM10C 20150627
+// param: "console", val: "ttySAC2,115200", doing: "Booting kernel",
+// params: __start___param, num: 120, min_level, -1, max_level: -1, unknown: unknown_bootoption
 static int parse_one(char *param,
 		     char *val,
 		     const char *doing,
@@ -103,7 +109,10 @@ static int parse_one(char *param,
 	int err;
 
 	/* Find parameter */
+	// num_params: 0
+	// num_params: 120
 	for (i = 0; i < num_params; i++) {
+		// i: 0, param: "console", params[0].name
 		if (parameq(param, params[i].name)) {
 			if (params[i].level < min_level
 			    || params[i].level > max_level)
@@ -119,13 +128,34 @@ static int parse_one(char *param,
 			mutex_unlock(&param_lock);
 			return err;
 		}
+		// i: 1...120 루프 수행
 	}
+	// 위 루프 수행 결과 param: "console"과 동일한 param이 없음
 
+	// handle_unknown: do_early_param
+	// handle_unknown: unknown_bootoption
 	if (handle_unknown) {
-		// 출력값 
-		// doing early options: console='ttySAC2,115200'
+		// doing: "early options", param: "console", val: "ttySAC2,115200"
+		// doing: "Booting kernel", param: "console", val: "ttySAC2,115200"
 		pr_debug("doing %s: %s='%s'\n", doing, param, val);
+		// "doing early options: console=ttySAC2,115200\n"
+		// "doing Booting kernel: console=ttySAC2,115200\n"
+
+		// handle_unknown: do_early_param
+		// param: "console", val: "ttySAC2,115200", doing: "early options"
+		// do_early_param("console", "ttySAC2,115200", "early options"): 0
+		// handle_unknown: unknown_bootoption
+		// param: "console", val: "ttySAC2,115200", doing: "Booting kernel"
+		// unknown_bootoption("console", "ttySAC2,115200", "Booting kernel"): 0
 		return handle_unknown(param, val, doing);
+		// return 0
+
+		// unknown_bootoption에서 한일:
+		// selected_console: 0
+		// console_cmdline[0].name: "ttySAC"
+		// console_cmdline[0].options: "115200"
+		// console_cmdline[0].index: 2
+		// console_set_on_cmdline: 1
 	}
 
 	pr_debug("Unknown argument '%s'\n", param);
@@ -135,13 +165,23 @@ static int parse_one(char *param,
 /* You can use " around spaces, but can't escape ". */
 /* Hyphens and underscores equivalent in parameter names. */
 // ARM10C 20131019
-// "console=ttySAC2,115200 init=/linuxrc"
+// args: "console=ttySAC2,115200 init=/linuxrc", &param, &val
+// ARM10C 20150627
+// args: "console=ttySAC2,115200 init=/linuxrc", &param, &val
 static char *next_arg(char *args, char **param, char **val)
 {
 	unsigned int i, equals = 0;
+	// equal: 0
+	// equal: 0
+
 	int in_quote = 0, quoted = 0;
+	// in_quote: 0, quoted: 0
+	// in_quote: 0, quoted: 0
+
 	char *next;
 
+	// *args: 'c'
+	// *args: 'c'
 	if (*args == '"') {
 		args++;
 		in_quote = 1;
@@ -150,46 +190,116 @@ static char *next_arg(char *args, char **param, char **val)
 
 	// equals 값은 "=" string index 값
 	for (i = 0; args[i]; i++) {
+		// i: 0, args[0]: 'c', isspace('c'): 0, in_quote: 0
+		// i: 1, args[1]: 'o', isspace('o'): 0, in_quote: 0
+		// i: 2, args[2]: 'n', isspace('n'): 0, in_quote: 0
+		// i: 3, args[3]: 's', isspace('s'): 0, in_quote: 0
+		// i: 4, args[4]: 'o', isspace('o'): 0, in_quote: 0
+		// i: 5, args[5]: 'l', isspace('l'): 0, in_quote: 0
+		// i: 6, args[6]: 'e', isspace('e'): 0, in_quote: 0
+		// i: 7, args[7]: '=', isspace('='): 0, in_quote: 0
+		// ...
+		// i: 22, args[22]: ' ', isspace(' '): 1, in_quote: 0
 		if (isspace(args[i]) && !in_quote)
 			break;
+			// break 수행
+
+		// equals: 0
+		// equals: 0
+		// equals: 0
+		// equals: 0
+		// equals: 0
+		// equals: 0
+		// equals: 0
+		// equals: 0
+		// ...
+		// equals: 0
 		if (equals == 0) {
+			// i: 0, args[0]: 'c'
+			// i: 1, args[1]: 'o'
+			// i: 2, args[2]: 'n'
+			// i: 3, args[3]: 's'
+			// i: 4, args[4]: 'o'
+			// i: 5, args[5]: 'l'
+			// i: 6, args[6]: 'e'
+			// i: 7, args[7]: '='
+			// ...
+			// i: 21, args[21]: '0'
 			if (args[i] == '=')
+				// equals: 0, i: 7
 				equals = i;
+				// equals: 7
 		}
+
+		// i: 0, args[0]: 'c'
+		// i: 1, args[1]: 'o'
+		// i: 2, args[2]: 'n'
+		// i: 3, args[3]: 's'
+		// i: 4, args[4]: 'o'
+		// i: 5, args[5]: 'l'
+		// i: 6, args[6]: 'e'
+		// i: 7, args[7]: '='
+		// ...
+		// i: 21, args[21]: '0'
 		if (args[i] == '"')
 			in_quote = !in_quote;
+
+		// i: 7...22 까지 루프 수행
 	}
 
+	// *param: param, args: "console=ttySAC2,115200 init=/linuxrc"
 	*param = args;
+	// *param: param: "console=ttySAC2,115200 init=/linuxrc"
+
+	// equals: 7
 	if (!equals)
 		*val = NULL;
 	else {
+		// equals: 7, args[7]: '='
 		args[equals] = '\0';
+		// args[7]: '\0'
+
+		// *val: val, args: "console\0ttySAC2,115200 init=/linuxrc", equals: 7
 		*val = args + equals + 1;
+		// *val: val: "ttySAC2,115200 init=/linuxrc"
 
 		/* Don't include quotes in value. */
+		// **val: *val: 't'
 		if (**val == '"') {
 			(*val)++;
 			if (args[i-1] == '"')
 				args[i-1] = '\0';
 		}
+
+		// quoted: 0, i: 22, arg[21]: '0'
 		if (quoted && args[i-1] == '"')
 			args[i-1] = '\0';
 	}
 
+	// i: 22, arg[22]: ' '
 	if (args[i]) {
+		// i: 22, arg[22]: ' '
 		args[i] = '\0';
+		// arg[22]: '\0'
+
+		// args: "console\0ttySAC2,115200\0init=/linuxrc", i: 22
 		next = args + i + 1;
+		// next: "init=/linuxrc"
 	} else
 		next = args + i;
 
 	/* Chew up trailing spaces. */
+	// next: "init=/linuxrc"
 	return skip_spaces(next);
+	// return "init=/linuxrc"
 }
 
 /* Args looks like "foo=bar,bar2 baz=fuz wiz". */
 // ARM10C 20131019
 // parse_args("early options", cmdline, NULL, 0, 0, 0, do_early_param);
+// ARM10C 20150627
+// "Booting kernel", "console=ttySAC2,115200 init=/linuxrc",
+// __start___param, 120, -1, -1, &unknown_bootoption
 int parse_args(const char *doing,
 	       char *args,
 	       const struct kernel_param *params,
@@ -202,26 +312,62 @@ int parse_args(const char *doing,
 
 	/* Chew leading spaces */
 	// string의 앞 공백 제거
+	// args: "console=ttySAC2,115200 init=/linuxrc"
+	// args: "console=ttySAC2,115200 init=/linuxrc"
 	args = skip_spaces(args);
+	// args: "console=ttySAC2,115200 init=/linuxrc"
+	// args: "console=ttySAC2,115200 init=/linuxrc"
 
 	// dtb 에서 복사된 값
 	// "console=ttySAC2,115200 init=/linuxrc" 이 args 값임
+	// args: "console=ttySAC2,115200 init=/linuxrc"
 	if (*args)
+		// doing: "early options", args: "console=ttySAC2,115200 init=/linuxrc"
+		// doing: "Booting kernel", args: "console=ttySAC2,115200 init=/linuxrc"
 		pr_debug("doing %s, parsing ARGS: '%s'\n", doing, args);
+		// "doing early options, parsing ARGS: 'console=ttySAC2,115200 init=/linuxrc'\n"
+		// "doing Booting kernel, parsing ARGS: 'console=ttySAC2,115200 init=/linuxrc'\n"
 
+	// args: "console=ttySAC2,115200 init=/linuxrc"
+	// args: "console=ttySAC2,115200 init=/linuxrc"
 	while (*args) {
 		int ret;
 		int irq_was_disabled;
 
+		// args: "console=ttySAC2,115200 init=/linuxrc"
+		// next_arg("console=ttySAC2,115200 init=/linuxrc", &param, &val): "init=/linuxrc"
+		// args: "console=ttySAC2,115200 init=/linuxrc"
+		// next_arg("console=ttySAC2,115200 init=/linuxrc", &param, &val): "init=/linuxrc"
 		args = next_arg(args, &param, &val);
+		// args: "init=/linuxrc", param: "console", val: "ttySAC2,115200"
+		// args: "init=/linuxrc", param: "console", val: "ttySAC2,115200"
+
+		// irqs_disabled(): 1
+		// irqs_disabled(): 1
 		irq_was_disabled = irqs_disabled();
+		// irq_was_disabled: 1
+		// irq_was_disabled: 1
+
+		// param: "console", val: "ttySAC2,115200", doing: "early options",
+		// params: NULL, num: 0, min_level, 0, max_level: 0, unknown: do_early_param
+		// parse_one("console", "ttySAC2,115200", "early options", NULL, 0, 0, 0, do_early_param): 0
+		// param: "console", val: "ttySAC2,115200", doing: "Booting kernel",
+		// params: __start___param, num: 120, min_level, -1, max_level: -1, unknown: unknown_bootoption
+		// parse_one("console", "ttySAC2,115200", "Booting kernel", __start___param, 120, -1, -1, unknown_bootoption): 0
 		ret = parse_one(param, val, doing, params, num,
 				min_level, max_level, unknown);
+		// ret: 0
+		// ret: 0
+
 		// irq 값이 바뀌었는지 확인
+		// irq_was_disabled: 1, irqs_disabled(): 1
+		// irq_was_disabled: 1, irqs_disabled(): 1
 		if (irq_was_disabled && !irqs_disabled())
 			pr_warn("%s: option '%s' enabled irq's!\n",
 				doing, param);
 
+		// ret: 0
+		// ret: 0
 		switch (ret) {
 		case -ENOENT:
 			pr_err("%s: Unknown parameter `%s'\n", doing, param);
@@ -232,6 +378,8 @@ int parse_args(const char *doing,
 			return ret;
 		case 0:
 			break;
+			// break 수행
+			// break 수행
 		default:
 			pr_err("%s: `%s' invalid for parameter `%s'\n",
 			       doing, val ?: "", param);
@@ -241,6 +389,8 @@ int parse_args(const char *doing,
 
 	/* All parsed OK. */
 	return 0;
+	// return 0
+	// return 0
 }
 
 /* Lazy bastard, eh? */

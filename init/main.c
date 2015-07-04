@@ -179,15 +179,27 @@ static const char *panic_later, *panic_param;
 // ARM10C 20131019
 extern const struct obs_kernel_param __setup_start[], __setup_end[];
 
+// ARM10C 20150627
+// param: "console=ttySAC2,115200"
 static int __init obsolete_checksetup(char *line)
 {
 	const struct obs_kernel_param *p;
 	int had_early_param = 0;
+	// had_early_param: 0
 
 	p = __setup_start;
 	do {
+		// p->str: __setup_console_setup.str: "console=", strlen("console="): 8
 		int n = strlen(p->str);
+		// n: 8
+
+		// line: "console=ttySAC2,115200", p->str: __setup_console_setup.str: "console=", n: 8
+		// parameqn("console=ttySAC2,115200", "console=", 8): true
 		if (parameqn(line, p->str, n)) {
+			// p->early: __setup_console_setup.early: 0,
+			// p->setup_func: __setup_console_setup.setup_func: console_setup
+			// line: "console=ttySAC2,115200", n: 8
+			// console_setup("ttySAC2,115200"): 1
 			if (p->early) {
 				/* Already done in parse_early_param?
 				 * (Needs exact match on param part).
@@ -201,6 +213,14 @@ static int __init obsolete_checksetup(char *line)
 				return 1;
 			} else if (p->setup_func(line + n))
 				return 1;
+				// return 1
+
+				// console_setup에서 한일:
+				// selected_console: 0
+				// console_cmdline[0].name: "ttySAC"
+				// console_cmdline[0].options: "115200"
+				// console_cmdline[0].index: 2
+				// console_set_on_cmdline: 1
 		}
 		p++;
 	} while (p < __setup_end);
@@ -253,12 +273,17 @@ static int __init loglevel(char *str)
 early_param("loglevel", loglevel);
 
 /* Change NUL term back to "=", to make "param" the whole string. */
+// ARM10C 20150627
+// param: "console", val: "ttySAC2,115200", unused: "Booting kernel"
 static int __init repair_env_string(char *param, char *val, const char *unused)
 {
+	// val: "ttySAC2,115200"
 	if (val) {
 		/* param=val or param="val"? */
+		// val: "ttySAC2,115200", param: "console", strlen("console"): 7
 		if (val == param+strlen(param)+1)
 			val[-1] = '=';
+			// param: "console=ttySAC2,115200"
 		else if (val == param+strlen(param)+2) {
 			val[-2] = '=';
 			memmove(val-1, val, strlen(val)+1);
@@ -267,6 +292,7 @@ static int __init repair_env_string(char *param, char *val, const char *unused)
 			BUG();
 	}
 	return 0;
+	// return 0
 }
 
 /*
@@ -274,13 +300,29 @@ static int __init repair_env_string(char *param, char *val, const char *unused)
  * unused parameters (modprobe will find them in /proc/cmdline).
  */
 // ARM10C 20140322
+// ARM10C 20150627
+// param: "console", val: "ttySAC2,115200", doing: "Booting kernel"
 static int __init unknown_bootoption(char *param, char *val, const char *unused)
 {
+	// param: "console", val: "ttySAC2,115200", unused: "Booting kernel"
 	repair_env_string(param, val, unused);
 
+	// repair_env_string에서 한일:
+	// param: "console=ttySAC2,115200"
+
 	/* Handle obsolete-style parameters */
+	// param: "console=ttySAC2,115200"
+	// obsolete_checksetup("console=ttySAC2,115200"): 1
 	if (obsolete_checksetup(param))
 		return 0;
+		// return 0
+
+	// obsolete_checksetup에서 한일:
+	// selected_console: 0
+	// console_cmdline[0].name: "ttySAC"
+	// console_cmdline[0].options: "115200"
+	// console_cmdline[0].index: 2
+	// console_set_on_cmdline: 1
 
 	/* Unused module parameter. */
 	if (strchr(param, '.') && (!val || strchr(param, '.') < val))
@@ -421,11 +463,13 @@ static noinline void __init_refok rest_init(void)
 
 /* Check for early params. */
 // ARM10C 20131019
+// param: "console", val: "ttySAC2,115200", doing: "early options"
 static int __init do_early_param(char *param, char *val, const char *unused)
 {
 	const struct obs_kernel_param *p;
 
 	for (p = __setup_start; p < __setup_end; p++) {
+		// param: "console"
 		if ((p->early && parameq(param, p->str)) ||
 		    (strcmp(param, "console") == 0 &&
 		     strcmp(p->str, "earlycon") == 0)
@@ -434,8 +478,11 @@ static int __init do_early_param(char *param, char *val, const char *unused)
 				pr_warn("Malformed early option '%s'\n", param);
 		}
 	}
+	// 위 loop 수행 결과 만족하는 조건이 없음
+
 	/* We accept everything at this stage. */
 	return 0;
+	// return 0
 }
 
 // ARM10C 20131019

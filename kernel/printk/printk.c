@@ -1768,6 +1768,8 @@ asmlinkage void early_printk(const char *fmt, ...)
 }
 #endif
 
+// ARM10C 20150627
+// buf: "ttySAC", idx: 2, options: "115200", brl_options: NULL
 static int __add_preferred_console(char *name, int idx, char *options,
 				   char *brl_options)
 {
@@ -1778,6 +1780,7 @@ static int __add_preferred_console(char *name, int idx, char *options,
 	 *	See if this tty is not yet registered, and
 	 *	if we have a slot free.
 	 */
+	// MAX_CMDLINECONSOLES: 8, c->name[0]: console_cmdline[0].name[0]: NULL
 	for (i = 0, c = console_cmdline;
 	     i < MAX_CMDLINECONSOLES && c->name[0];
 	     i++, c++) {
@@ -1787,56 +1790,116 @@ static int __add_preferred_console(char *name, int idx, char *options,
 			return 0;
 		}
 	}
+
+	// i: 0, MAX_CMDLINECONSOLES: 8
 	if (i == MAX_CMDLINECONSOLES)
 		return -E2BIG;
-	if (!brl_options)
-		selected_console = i;
-	strlcpy(c->name, name, sizeof(c->name));
-	c->options = options;
-	braille_set_options(c, brl_options);
 
+	// brl_options: NULL
+	if (!brl_options)
+		// i: 0
+		selected_console = i;
+		// selected_console: 0
+
+	// c->name[0]: console_cmdline[0].name, name: "ttySAC", sizeof(console_cmdline[0].name): 8
+	strlcpy(c->name, name, sizeof(c->name));
+	// c->name[0]: console_cmdline[0].name: "ttySAC"
+
+	// c->options: console_cmdline[0].options, options: "115200"
+	c->options = options;
+	// c->options: console_cmdline[0].options: "115200"
+
+	// c: console_cmdline[0], brl_options: NULL
+	braille_set_options(c, brl_options); // null function
+
+	// c->index: console_cmdline[0].index, idx: 2
 	c->index = idx;
+	// c->index: console_cmdline[0].index: 2
+
 	return 0;
+	// return 0
 }
 /*
  * Set up a list of consoles.  Called from init/main.c
  */
+// ARM10C 20150627
+// "ttySAC2,115200"
 static int __init console_setup(char *str)
 {
+	// sizeof(console_cmdline[0].name): 8
 	char buf[sizeof(console_cmdline[0].name) + 4]; /* 4 for index */
 	char *s, *options, *brl_options = NULL;
+	// brl_options: NULL
+
 	int idx;
 
+	// &str: &"ttySAC2,115200", &brl_options: &NULL
+	// _braille_console_setup(&"ttySAC2,115200", &NULL): NULL
 	if (_braille_console_setup(&str, &brl_options))
 		return 1;
 
 	/*
 	 * Decode str into name, index, options.
 	 */
+	// str[0]: 't'
 	if (str[0] >= '0' && str[0] <= '9') {
 		strcpy(buf, "ttyS");
 		strncpy(buf + 4, str, sizeof(buf) - 5);
 	} else {
+		// str: "ttySAC2,115200", sizeof(buf): 12
 		strncpy(buf, str, sizeof(buf) - 1);
+		// buf: "ttySAC2,115"
 	}
+	// sizeof(buf): 12
 	buf[sizeof(buf) - 1] = 0;
+	// buf: "ttySAC2,11"
+
+	// str: "ttySAC2,115200", strchr("ttySAC2,115200", ','): ",115200"
 	if ((options = strchr(str, ',')) != NULL)
+		// options: ",115200"
 		*(options++) = 0;
+		// options: "115200"
 #ifdef __sparc__
 	if (!strcmp(str, "ttya"))
 		strcpy(buf, "ttyS0");
 	if (!strcmp(str, "ttyb"))
 		strcpy(buf, "ttyS1");
 #endif
+	// buf: "ttySAC2,11"
 	for (s = buf; *s; s++)
+		// *s: 't'
+		// *s: 't'
+		// *s: 'y'
+		// *s: 'S'
+		// *s: 'A'
+		// *s: 'C'
+		// *s: '2'
 		if ((*s >= '0' && *s <= '9') || *s == ',')
 			break;
-	idx = simple_strtoul(s, NULL, 10);
-	*s = 0;
+			// break 수행
 
+	// s: "2,11", simple_strtoul("2,11", NULL, 10): 2
+	idx = simple_strtoul(s, NULL, 10);
+	// idx: 2
+
+	// *s: '2'
+	*s = 0;
+	// buf: "ttySAC"
+
+	// buf: "ttySAC", idx: 2, options: "115200", brl_options: NULL
 	__add_preferred_console(buf, idx, options, brl_options);
+
+	// __add_preferred_console에서 한일:
+	// selected_console: 0
+	// console_cmdline[0].name: "ttySAC"
+	// console_cmdline[0].options: "115200"
+	// console_cmdline[0].index: 2
+
 	console_set_on_cmdline = 1;
+	// console_set_on_cmdline: 1
+
 	return 1;
+	// return 1
 }
 __setup("console=", console_setup);
 

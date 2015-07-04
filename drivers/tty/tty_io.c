@@ -3505,6 +3505,7 @@ void __init console_init(void)
 	// call: &__con_initcall_start
 
 // 2015/06/27 종료
+// 2015/07/04 시작
 
 	// call: &__con_initcall_start
 	while (call < __con_initcall_end) {
