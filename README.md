@@ -1,6 +1,19 @@
-#IAMROOT.ORG Kernel스터디10차(ARM)
+# Kernel study a10c(ARM)
 
-#HISTORY
+# The Linux Kernel review for ARMv7 3.13.0 (exynos 5420)
+* Community name: kernel study a10th C team
+* Target Soc    : Samsung Exynos 5420 (ARMv7 A7&A15)
+* Kernel version: Linux kernel 3.13.x
+  - 1st: 3.9.6
+  - 2nd: 3.10.x
+  - 3th: 3.11.x
+  - current : 3.13.x
+  
+# HISTORY
+* 108th (2015/07/04) week [108차](https://github.com/hephaex/kernel_review/blob/master/a10c_108.md)
+ - parse_args() 복습
+ - console_init()->con_init()
+ - console_init()->s3c24xx_serial_console_init()
 * 107th (2015/06/27) week [107차](https://github.com/hephaex/kernel_review/blob/master/a10c_107.md)
  - console_init()
 * 106th (2015/06/20) week [106차](https://github.com/hephaex/kernel_review/blob/master/a10c_106.md)
@@ -155,11 +168,4 @@
  - 리눅스 커널 내부구조 (처음  ~ p. 88)
 =======
 
-# The Linux Kernel review for ARMv7 3.13.0 (exynos 5420)
-* Community name: IAMROOT.ORG ARM kernel study 10th C team
-* Target Soc    : Samsung Exynos 5420 (ARMv7 A7&A15)
-* Kernel version: Linux kernel 3.13.x
-  - 1st: 3.9.6
-  - 2nd: 3.10.x
-  - 3th: 3.11.x
-  - current : 3.13.x
+
