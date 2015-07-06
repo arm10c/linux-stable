@@ -1,9 +1,9 @@
 # Kernel study a10c(ARM)
 
-# The Linux Kernel review for ARMv7 3.13.0 (exynos 5420)
-* Community name: kernel study a10th C team
-* Target Soc    : Samsung Exynos 5420 (ARMv7 A7&A15)
-* Kernel version: Linux kernel 3.13.x
+##### The Linux Kernel review for ARMv7 3.13.0 (exynos 5420)
+##### Community name: kernel study a10th C team
+##### Target Soc    : Samsung Exynos 5420 (ARMv7 A7&A15)
+##### Kernel version: Linux kernel 3.13.x
   - 1st: 3.9.6
   - 2nd: 3.10.x
   - 3th: 3.11.x
