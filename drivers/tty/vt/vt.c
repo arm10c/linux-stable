@@ -2974,8 +2974,24 @@ static int __init con_init(void)
 // 2015/07/11 시작
 
 		// jiffies: xx_64, blankinterval: 600, HZ: 100
+		// mod_timera(&console_timer, xx_64 + 60000): 0
 		mod_timer(&console_timer, jiffies + (blankinterval * HZ));
+
+		// mod_timer에서 한일:
+		// (&console_timer)->expires: xx_64 + 60000
+		//
+		// NOTE:
+		// idx의 값을 가정하고 분석, xx_64은 0이라 보고
+		// idx값이 90000의 값을 가진것으로 분석 진행
+		// 계산값 xx_64 + 90000 0 보다 크다고 가정하고 분석 진행
+		// FIXME:
+		// TVR_SIZE: 256 값이 왜 256 인지??
+		//
+		// &(&boot_tvec_bases)->tv3.vec[3]에 &(&console_timer)->entry을 tail에 연결
+		// (&boot_tvec_bases)->active_timers: 1
 	}
+
+// 2015/07/11 종료
 
 	for (currcons = 0; currcons < MIN_NR_CONSOLES; currcons++) {
 		vc_cons[currcons].d = vc = kzalloc(sizeof(struct vc_data), GFP_NOWAIT);

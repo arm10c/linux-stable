@@ -112,6 +112,8 @@ static inline void list_add(struct list_head *new, struct list_head *head)
 // list_add_tail(&svm->list, &curr_svm->list);
 // ARM10C 20140315
 // list_add_tail(&waiter.list, &(&cpu_add_remove_lock)->wait_list);
+// ARM10C 20150711
+// &timer->entry: &(&console_timer)->entry, vec: &(&boot_tvec_bases)->tv3.vec[3]
 static inline void list_add_tail(struct list_head *new, struct list_head *head)
 {
 	// new: &waiter.list, head->prev: (&(&cpu_add_remove_lock)->wait_list)->prev

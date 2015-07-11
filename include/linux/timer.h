@@ -68,6 +68,8 @@ extern struct tvec_base boot_tvec_bases;
  * workqueue locking issues. It's not meant for executing random crap
  * with interrupts disabled. Abuse is monitored!
  */
+// ARM10C 20150711
+// TIMER_DEFERRABLE: 0x1
 #define TIMER_DEFERRABLE		0x1LU
 #define TIMER_IRQSAFE			0x2LU
 

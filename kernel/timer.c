@@ -66,20 +66,27 @@ EXPORT_SYMBOL(jiffies_64);
  * per-CPU timer vector definitions:
  */
 // ARM10C 20150103
+// ARM10C 20150711
 // CONFIG_BASE_SMALL: 0
 // TVN_BITS: 6
 #define TVN_BITS (CONFIG_BASE_SMALL ? 4 : 6)
 // ARM10C 20150103
+// ARM10C 20150711
 // CONFIG_BASE_SMALL: 0
 // TVR_BITS: 8
 #define TVR_BITS (CONFIG_BASE_SMALL ? 6 : 8)
 // ARM10C 20150103
+// ARM10C 20150711
 // TVN_SIZE: 64
 #define TVN_SIZE (1 << TVN_BITS)
 // ARM10C 20150103
+// ARM10C 20150711
 // TVR_BITS: 8
 // TVR_SIZE: 256
 #define TVR_SIZE (1 << TVR_BITS)
+// ARM10C 20150711
+// TVN_SIZE: 64
+// TVN_MASK: 0x3f
 #define TVN_MASK (TVN_SIZE - 1)
 #define TVR_MASK (TVR_SIZE - 1)
 #define MAX_TVAL ((unsigned long)((1ULL << (TVR_BITS + 4*TVN_BITS)) - 1))
@@ -90,7 +97,9 @@ struct tvec {
 	struct list_head vec[TVN_SIZE];
 };
 
+// ARM10C 20150711
 struct tvec_root {
+	// TVR_SIZE: 256
 	struct list_head vec[TVR_SIZE];
 };
 
@@ -113,12 +122,20 @@ struct tvec_base {
 // ARM10C 20150711
 struct tvec_base boot_tvec_bases;
 EXPORT_SYMBOL(boot_tvec_bases);
+// ARM10C 20150711
+// DEFINE_PER_CPU(struct tvec_base *, tvec_bases):
+// __attribute__((section(".data..percpu" "")))
+//__typeof__(struct tvec_base *) tvec_bases
 static DEFINE_PER_CPU(struct tvec_base *, tvec_bases) = &boot_tvec_bases;
 
 /* Functions below help us manage 'deferrable' flag */
+// ARM10C 20150711
+// timer->base: (&console_timer)->base: &boot_tvec_bases
 static inline unsigned int tbase_get_deferrable(struct tvec_base *base)
 {
+	// base: &boot_tvec_bases, TIMER_DEFERRABLE: 0x1
 	return ((unsigned int)(unsigned long)base & TIMER_DEFERRABLE);
+	// return 0
 }
 
 static inline unsigned int tbase_get_irqsafe(struct tvec_base *base)
@@ -364,13 +381,29 @@ void set_timer_slack(struct timer_list *timer, int slack_hz)
 }
 EXPORT_SYMBOL_GPL(set_timer_slack);
 
+// ARM10C 20150711
+// base: &boot_tvec_bases, timer: &console_timer
 static void
 __internal_add_timer(struct tvec_base *base, struct timer_list *timer)
 {
+	// timer->expires: (&console_timer)->expires: xx_64 + 60000
 	unsigned long expires = timer->expires;
+	// expires: xx_64 + 60000
+
+	// expires: xx_64 + 60000, base->timer_jiffies: -30000 (0xFFFFFFFFFFFF8AD0)
 	unsigned long idx = expires - base->timer_jiffies;
+	// idx: xx_64 + 90000
+
 	struct list_head *vec;
 
+	// NOTE:
+	// idx의 값을 가정하고 분석, xx_64은 0이라 보고
+	// idx값이 90000의 값을 가진것으로 분석 진행
+
+	// FIXME:
+	// TVR_SIZE: 256 값이 왜 256 인지??
+
+	// idx: 90000, TVR_SIZE: 256, TVR_BITS: 8, TVN_BITS: 6
 	if (idx < TVR_SIZE) {
 		int i = expires & TVR_MASK;
 		vec = base->tv1.vec + i;
@@ -378,8 +411,17 @@ __internal_add_timer(struct tvec_base *base, struct timer_list *timer)
 		int i = (expires >> TVR_BITS) & TVN_MASK;
 		vec = base->tv2.vec + i;
 	} else if (idx < 1 << (TVR_BITS + 2 * TVN_BITS)) {
+		// NOTE:
+		// xx_64은 0이라 가정하고
+		// expires값이 60000의 값을 가진것으로 분석 진행
+
+		// expires: 60000, TVR_BITS: 8, TVN_BITS: 6, TVN_MASK: 0x3f
 		int i = (expires >> (TVR_BITS + TVN_BITS)) & TVN_MASK;
+		// i: 3
+
+		// base->tv3.vec: (&boot_tvec_bases)->tv3.vec, i: 3
 		vec = base->tv3.vec + i;
+		// vec: &(&boot_tvec_bases)->tv3.vec[3]
 	} else if (idx < 1 << (TVR_BITS + 3 * TVN_BITS)) {
 		int i = (expires >> (TVR_BITS + 2 * TVN_BITS)) & TVN_MASK;
 		vec = base->tv4.vec + i;
@@ -405,19 +447,47 @@ __internal_add_timer(struct tvec_base *base, struct timer_list *timer)
 	/*
 	 * Timers are FIFO:
 	 */
+	// &timer->entry: &(&console_timer)->entry, vec: &(&boot_tvec_bases)->tv3.vec[3]
 	list_add_tail(&timer->entry, vec);
+
+	// list_add_tail에서 한일:
+	// &(&boot_tvec_bases)->tv3.vec[3]에 &(&console_timer)->entry을 tail에 연결
 }
 
+// ARM10C 20150711
+// base: &boot_tvec_bases, timer: &console_timer
 static void internal_add_timer(struct tvec_base *base, struct timer_list *timer)
 {
+	// base: &boot_tvec_bases, timer: &console_timer
 	__internal_add_timer(base, timer);
+
+	// __internal_add_timer에서 한일:
+	// NOTE:
+	// idx의 값을 가정하고 분석, xx_64은 0이라 보고
+	// idx값이 90000의 값을 가진것으로 분석 진행
+	// FIXME:
+	// TVR_SIZE: 256 값이 왜 256 인지??
+	//
+	// &(&boot_tvec_bases)->tv3.vec[3]에 &(&console_timer)->entry을 tail에 연결
+
 	/*
 	 * Update base->active_timers and base->next_timer
 	 */
+	// timer->base: (&console_timer)->base: &boot_tvec_bases
+	// tbase_get_deferrable(&boot_tvec_bases): 0
 	if (!tbase_get_deferrable(timer->base)) {
+		// NOTE:
+		// 계산값 xx_64 + 90000 0 보다 크다고 가정하고 분석 진행
+
+		// timer->expires: (&console_timer)->expires: xx_64 + 60000,
+		// base->next_timer: (&boot_tvec_bases)->next_timer: -30000 (0xFFFFFFFFFFFF8AD0)
+		// time_before(xx_64 + 60000, -30000): 0
 		if (time_before(timer->expires, base->next_timer))
 			base->next_timer = timer->expires;
+
+		// base->active_timers: (&boot_tvec_bases)->active_timers: 0
 		base->active_timers++;
+		// base->active_timers: (&boot_tvec_bases)->active_timers: 1
 	}
 }
 
@@ -818,8 +888,11 @@ __mod_timer(struct timer_list *timer, unsigned long expires,
 		cpu = get_nohz_timer_target();
 		// cpu: 0
 #endif
+	// cpu: 0, per_cpu(tvec_bases, 0): [pcp0] tvec_bases: &boot_tvec_bases
 	new_base = per_cpu(tvec_bases, cpu);
+	// new_base: &boot_tvec_bases
 
+	// base: &boot_tvec_bases, new_base: &boot_tvec_bases
 	if (base != new_base) {
 		/*
 		 * We are trying to schedule the timer on the local CPU.
@@ -838,13 +911,33 @@ __mod_timer(struct timer_list *timer, unsigned long expires,
 		}
 	}
 
+	// timer->expires: (&console_timer)->expires: 0, expires: xx_64 + 60000
 	timer->expires = expires;
+	// timer->expires: (&console_timer)->expires: xx_64 + 60000
+
+	// base: &boot_tvec_bases, timer: &console_timer
 	internal_add_timer(base, timer);
+
+	// internal_add_timer에서 한일:
+	// NOTE:
+	// idx의 값을 가정하고 분석, xx_64은 0이라 보고
+	// idx값이 90000의 값을 가진것으로 분석 진행
+	// 계산값 xx_64 + 90000 0 보다 크다고 가정하고 분석 진행
+	// FIXME:
+	// TVR_SIZE: 256 값이 왜 256 인지??
+	//
+	// &(&boot_tvec_bases)->tv3.vec[3]에 &(&console_timer)->entry을 tail에 연결
+	// (&boot_tvec_bases)->active_timers: 1
 
 out_unlock:
 	spin_unlock_irqrestore(&base->lock, flags);
 
+	// spin_unlock_irqrestore에서 한일:
+	// &(&boot_tvec_bases)->lock을 사용하여 spin unlock을 수행하고 flags에 저장된 cpsr을 복원
+
+	// ret: 0
 	return ret;
+	// return 0
 }
 
 /**
@@ -950,7 +1043,21 @@ int mod_timer(struct timer_list *timer, unsigned long expires)
 		return 1;
 
 	// timer: &console_timer, expires: xx_64 + 60000, TIMER_NOT_PINNED: 0
+	// __mod_timer(&console_timer, xx_64 + 60000, false, 0): 0
 	return __mod_timer(timer, expires, false, TIMER_NOT_PINNED);
+
+	// __mod_timer에서 한일:
+	// (&console_timer)->expires: xx_64 + 60000
+	//
+	// NOTE:
+	// idx의 값을 가정하고 분석, xx_64은 0이라 보고
+	// idx값이 90000의 값을 가진것으로 분석 진행
+	// 계산값 xx_64 + 90000 0 보다 크다고 가정하고 분석 진행
+	// FIXME:
+	// TVR_SIZE: 256 값이 왜 256 인지??
+	//
+	// &(&boot_tvec_bases)->tv3.vec[3]에 &(&console_timer)->entry을 tail에 연결
+	// (&boot_tvec_bases)->active_timers: 1
 }
 EXPORT_SYMBOL(mod_timer);
 

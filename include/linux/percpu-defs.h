@@ -169,6 +169,10 @@
 // DEFINE_PER_CPU(struct mct_clock_event_device, percpu_mct_tick):
 //	__attribute__((section(".data..percpu" "")))
 //	__typeof__(struct mct_clock_event_device) percpu_mct_tick
+// ARM10C 20150711
+// DEFINE_PER_CPU(struct tvec_base *, tvec_bases):
+//	__attribute__((section(".data..percpu" "")))
+//	__typeof__(struct tvec_base *) tvec_bases
 #define DEFINE_PER_CPU(type, name)					\
 	DEFINE_PER_CPU_SECTION(type, name, "")
 
