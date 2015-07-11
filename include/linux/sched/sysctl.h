@@ -64,6 +64,7 @@ int sched_proc_update_handler(struct ctl_table *table, int write,
 #endif
 #ifdef CONFIG_SCHED_DEBUG // CONFIG_SCHED_DEBUG=y
 // ARM10C 20150606
+// ARM10C 20150711
 static inline unsigned int get_sysctl_timer_migration(void)
 {
 	// sysctl_timer_migration: 1

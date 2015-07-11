@@ -359,6 +359,8 @@ static inline void spin_lock_irq(spinlock_t *lock)
 	raw_spin_lock_irq(&lock->rlock);
 }
 
+// ARM10C 20150711
+// &base->lock: &(&boot_tvec_bases)->lock: *flags: flags
 #define spin_lock_irqsave(lock, flags)				\
 do {								\
 	raw_spin_lock_irqsave(spinlock_check(lock), flags);	\

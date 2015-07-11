@@ -95,6 +95,7 @@ struct tvec_root {
 };
 
 // ARM10C 20150103
+// ARM10C 20150711
 struct tvec_base {
 	spinlock_t lock;
 	struct timer_list *running_timer;
@@ -109,6 +110,7 @@ struct tvec_base {
 } ____cacheline_aligned;
 
 // ARM10C 20150103
+// ARM10C 20150711
 struct tvec_base boot_tvec_bases;
 EXPORT_SYMBOL(boot_tvec_bases);
 static DEFINE_PER_CPU(struct tvec_base *, tvec_bases) = &boot_tvec_bases;
@@ -124,9 +126,13 @@ static inline unsigned int tbase_get_irqsafe(struct tvec_base *base)
 	return ((unsigned int)(unsigned long)base & TIMER_IRQSAFE);
 }
 
+// ARM10C 20150711
+// prelock_base: &boot_tvec_bases
 static inline struct tvec_base *tbase_get_base(struct tvec_base *base)
 {
+	// base: &boot_tvec_bases, TIMER_FLAG_MASK: 0x3
 	return ((struct tvec_base *)((unsigned long)base & ~TIMER_FLAG_MASK));
+	// return &boot_tvec_bases
 }
 
 static inline void
@@ -694,11 +700,15 @@ detach_expired_timer(struct timer_list *timer, struct tvec_base *base)
 		base->active_timers--;
 }
 
+// ARM10C 20150711
+// timer: &console_timer, base: &boot_tvec_bases, false
 static int detach_if_pending(struct timer_list *timer, struct tvec_base *base,
 			     bool clear_pending)
 {
+	// timer: &console_timer, timer_pending(&console_timer): 0
 	if (!timer_pending(timer))
 		return 0;
+		// return 0
 
 	detach_timer(timer, clear_pending);
 	if (!tbase_get_deferrable(timer->base)) {
@@ -721,6 +731,8 @@ static int detach_if_pending(struct timer_list *timer, struct tvec_base *base,
  * possible to set timer->base = NULL and drop the lock: the timer remains
  * locked.
  */
+// ARM10C 20150711
+// timer: &console_timer, &flags
 static struct tvec_base *lock_timer_base(struct timer_list *timer,
 					unsigned long *flags)
 	__acquires(timer->base->lock)
@@ -728,12 +740,29 @@ static struct tvec_base *lock_timer_base(struct timer_list *timer,
 	struct tvec_base *base;
 
 	for (;;) {
+		// timer->base: (&console_timer)->base: &boot_tvec_bases
 		struct tvec_base *prelock_base = timer->base;
+		// prelock_base: &boot_tvec_bases
+
+		// prelock_base: &boot_tvec_bases
+		// tbase_get_base(&boot_tvec_bases): &boot_tvec_bases
 		base = tbase_get_base(prelock_base);
+		// base: &boot_tvec_bases
+
+		// base: &boot_tvec_bases
 		if (likely(base != NULL)) {
+			// &base->lock: &(&boot_tvec_bases)->lock, *flags: flags
 			spin_lock_irqsave(&base->lock, *flags);
+
+			// spin_lock_irqsave에서 한일:
+			// &(&boot_tvec_bases)->lock을 사용하여 spinlock을 수행하고 cpsr을 flags을 저장
+
+			// prelock_base: &boot_tvec_bases, timer->base: (&console_timer)->base: &boot_tvec_bases
 			if (likely(prelock_base == timer->base))
+				// base: &boot_tvec_bases
 				return base;
+				// return &boot_tvec_bases
+
 			/* The timer has migrated to another CPU */
 			spin_unlock_irqrestore(&base->lock, *flags);
 		}
@@ -741,6 +770,8 @@ static struct tvec_base *lock_timer_base(struct timer_list *timer,
 	}
 }
 
+// ARM10C 20150711
+// timer: &console_timer, expires: xx_64 + 60000, false, TIMER_NOT_PINNED: 0
 static inline int
 __mod_timer(struct timer_list *timer, unsigned long expires,
 						bool pending_only, int pinned)
@@ -748,23 +779,44 @@ __mod_timer(struct timer_list *timer, unsigned long expires,
 	struct tvec_base *base, *new_base;
 	unsigned long flags;
 	int ret = 0 , cpu;
+	// ret: 0
 
-	timer_stats_timer_set_start_info(timer);
+	// timer: &console_timer
+	timer_stats_timer_set_start_info(timer); // null function
+
+	// timer->function: (&console_timer)->function: blank_screen_t
 	BUG_ON(!timer->function);
 
+	// timer: &console_timer
+	// lock_timer_base(&console_timer, &flags): &boot_tvec_bases
 	base = lock_timer_base(timer, &flags);
+	// base: &boot_tvec_bases
 
+	// lock_timer_base에서 한일:
+	// &(&boot_tvec_bases)->lock을 사용하여 spinlock을 수행하고 cpsr을 flags을 저장
+
+	// timer: &console_timer, base: &boot_tvec_bases
+	// detach_if_pending(&console_timer, &boot_tvec_bases, false): 0
 	ret = detach_if_pending(timer, base, false);
+	// ret: 0
+
+	// ret: 0, pending_only: false
 	if (!ret && pending_only)
 		goto out_unlock;
 
-	debug_activate(timer, expires);
+	// timer: &console_timer, expires: xx_64 + 60000
+	debug_activate(timer, expires); // null function
 
+	// smp_processor_id(): 0
 	cpu = smp_processor_id();
+	// cpu: 0
 
-#if defined(CONFIG_NO_HZ_COMMON) && defined(CONFIG_SMP)
+#if defined(CONFIG_NO_HZ_COMMON) && defined(CONFIG_SMP) // CONFIG_NO_HZ_COMMON=y, CONFIG_SMP=y
+	// pinned: 0, get_sysctl_timer_migration(): 1, cpu: 0, idle_cpu(0): 1
 	if (!pinned && get_sysctl_timer_migration() && idle_cpu(cpu))
+		// get_nohz_timer_target(): 0
 		cpu = get_nohz_timer_target();
+		// cpu: 0
 #endif
 	new_base = per_cpu(tvec_bases, cpu);
 
@@ -822,7 +874,7 @@ EXPORT_SYMBOL(mod_timer_pending);
  *      bits are zeros
  */
 // ARM10C 20150704
-// timer: &console_timer, expires: xx_64 + 6000
+// timer: &console_timer, expires: xx_64 + 60000
 static inline
 unsigned long apply_slack(struct timer_list *timer, unsigned long expires)
 {
@@ -833,9 +885,9 @@ unsigned long apply_slack(struct timer_list *timer, unsigned long expires)
 	if (timer->slack >= 0) {
 		expires_limit = expires + timer->slack;
 	} else {
-		// expires: xx_64 + 6000, jiffies: xx_64
+		// expires: xx_64 + 60000, jiffies: xx_64
 		long delta = expires - jiffies;
-		// delta: 6000 + xx_64
+		// delta: 60000 + xx_64
 
 		if (delta < 256)
 			return expires;
@@ -876,20 +928,28 @@ unsigned long apply_slack(struct timer_list *timer, unsigned long expires)
  * active timer returns 1.)
  */
 // ARM10C 20150704
-// &console_timer, jiffies: xx_64 + 6000
+// &console_timer, jiffies: xx_64 + 60000
 int mod_timer(struct timer_list *timer, unsigned long expires)
 {
-	// timer: &console_timer, expires: xx_64 + 6000
+	// timer: &console_timer, expires: xx_64 + 60000
+	// apply_slack(&console_timer, xx_64 + 60000): xx_64 + 60000
 	expires = apply_slack(timer, expires);
+	// expires: xx_64 + 60000
+
+	// apply_slack에서 한일:
+	// timer의 expires 값을 효율적으로 보정하여 리턴
 
 	/*
 	 * This is a common optimization triggered by the
 	 * networking code - if the timer is re-modified
 	 * to be the same thing then just return:
 	 */
+	// timer: &console_timer, timer_pending(&console_timer): 0,
+	// timer->expires: (&console_timer)->expires: 0, expires: xx_64 + 60000
 	if (timer_pending(timer) && timer->expires == expires)
 		return 1;
 
+	// timer: &console_timer, expires: xx_64 + 60000, TIMER_NOT_PINNED: 0
 	return __mod_timer(timer, expires, false, TIMER_NOT_PINNED);
 }
 EXPORT_SYMBOL(mod_timer);

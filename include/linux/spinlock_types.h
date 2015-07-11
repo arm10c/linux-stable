@@ -24,7 +24,7 @@
 // ARM10C 20140830
 // sizeof(raw_spinlock_t) : 16byte
 typedef struct raw_spinlock {
-	arch_spinlock_t raw_lock; 
+	arch_spinlock_t raw_lock;
 #ifdef CONFIG_GENERIC_LOCKBREAK // CONFIG_GENERIC_LOCKBREAK=n
 	unsigned int break_lock;
 #endif

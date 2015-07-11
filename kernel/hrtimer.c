@@ -582,6 +582,8 @@ debug_init(struct hrtimer *timer, clockid_t clockid,
 
 // ARM10C 20150606
 // timer: &sched_clock_timer
+// ARM10C 20150711
+// timer: &console_timer, expires: xx_64 + 60000
 static inline void debug_activate(struct hrtimer *timer)
 {
 	// timer: &sched_clock_timer

@@ -22,10 +22,12 @@
 
 
 // ARM10C 20131005
+// ARM10C 20150711
 #define BUG() _BUG(__FILE__, __LINE__, BUG_INSTR_VALUE)
+// ARM10C 20150711
 #define _BUG(file, line, value) __BUG(file, line, value)
 
-#ifdef CONFIG_DEBUG_BUGVERBOSE
+#ifdef CONFIG_DEBUG_BUGVERBOSE // CONFIG_DEBUG_BUGVERBOSE=y
 
 /*
  * The extra indirection is to ensure that the __FILE__ string comes through
@@ -35,6 +37,7 @@
  */
 
 // ARM10C 20131005
+// ARM10C 20150711
 #define __BUG(__file, __line, __value)				\
 do {								\
 	asm volatile("1:\t" BUG_INSTR(__value) "\n"  \

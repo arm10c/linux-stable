@@ -41,6 +41,7 @@ extern void __chk_io_ptr(const volatile void __iomem *);
 # define __must_hold(x)
 // ARM10C 20140405
 // ARM10C 20140913
+// ARM10C 20150711
 # define __acquires(x)
 // ARM10C 20140412
 # define __releases(x)

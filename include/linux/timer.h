@@ -72,6 +72,7 @@ extern struct tvec_base boot_tvec_bases;
 #define TIMER_IRQSAFE			0x2LU
 
 // ARM10C 20150103
+// ARM10C 20150711
 // TIMER_FLAG_MASK: 0x3LU
 #define TIMER_FLAG_MASK			0x3LU
 
@@ -225,9 +226,13 @@ static inline void init_timer_on_stack_key(struct timer_list *timer,
  *
  * return value: 1 if the timer is pending, 0 if not.
  */
+// ARM10C 20150711
+// timer: &console_timer
 static inline int timer_pending(const struct timer_list * timer)
 {
+	// timer->entry.next: (&console_timer)->entry.next: NULL
 	return timer->entry.next != NULL;
+	// return 0
 }
 
 extern void add_timer_on(struct timer_list *timer, int cpu);
@@ -238,6 +243,8 @@ extern int mod_timer_pinned(struct timer_list *timer, unsigned long expires);
 
 extern void set_timer_slack(struct timer_list *time, int slack_hz);
 
+// ARM10C 20150711
+// TIMER_NOT_PINNED: 0
 #define TIMER_NOT_PINNED	0
 #define TIMER_PINNED		1
 /*
@@ -288,6 +295,8 @@ static inline void init_timer_stats(void)
 {
 }
 
+// ARM10C 20150711
+// timer: &console_timer
 static inline void timer_stats_timer_set_start_info(struct timer_list *timer)
 {
 }

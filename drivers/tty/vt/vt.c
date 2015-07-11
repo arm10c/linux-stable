@@ -2971,6 +2971,7 @@ static int __init con_init(void)
 		// jiffiex: xx_64 로 주석을 작성하도록 함
 
 // 2015/07/04 종료
+// 2015/07/11 시작
 
 		// jiffies: xx_64, blankinterval: 600, HZ: 100
 		mod_timer(&console_timer, jiffies + (blankinterval * HZ));

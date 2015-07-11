@@ -593,6 +593,7 @@ void resched_cpu(int cpu)
  * (as that cpu's timer base may not be uptodate wrt jiffies etc).
  */
 // ARM10C 20150606
+// ARM10C 20150711
 int get_nohz_timer_target(void)
 {
 	// smp_processor_id(): 0
@@ -3087,6 +3088,8 @@ EXPORT_SYMBOL(task_nice);
  */
 // ARM10C 20150606
 // this_cpu: 0
+// ARM10C 20150711
+// cpu: 0
 int idle_cpu(int cpu)
 {
 	// cpu: 0, cpu_rq(0): [pcp0] &runqueues
@@ -6420,6 +6423,7 @@ void __init sched_init_smp(void)
 #endif /* CONFIG_SMP */
 
 // ARM10C 20150606
+// ARM10C 20150711
 // const_debug: __read_mostly
 const_debug unsigned int sysctl_timer_migration = 1;
 
