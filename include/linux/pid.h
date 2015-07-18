@@ -54,6 +54,7 @@ struct upid {
 	struct hlist_node pid_chain;
 };
 
+// ARM10C 20150718
 struct pid
 {
 	atomic_t count;

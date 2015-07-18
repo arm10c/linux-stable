@@ -98,6 +98,8 @@
 // &rt_b->rt_runtime_lock: &(&def_rt_bandwidth)->rt_runtime_lock
 // ARM10C 20150620
 // &q->lock: [pcp0] &(&call_single_queue)->lock
+// ARM10C 20150718
+// &(_lock)->rlock: &(&(&(&(&(kmem_cache#25-oX)->port)->buf)->lock)->wait_lock)->rlock
 # define raw_spin_lock_init(lock)				\
 do {								\
 	static struct lock_class_key __key;	/* struct lock_class_key { }; */	\
@@ -308,6 +310,7 @@ static inline void do_raw_spin_unlock(raw_spinlock_t *lock) __releases(lock)
  */
 
 // ARM10C 20130914
+// ARM10C 20150718
 // DESC: 이 함수는 inline함수를 사용해서 인자가 spinlock_t*인지
 //       컴파일 타임에 확인하는 트릭을 사용하고 있다.
 static inline raw_spinlock_t *spinlock_check(spinlock_t *lock)
@@ -318,6 +321,10 @@ static inline raw_spinlock_t *spinlock_check(spinlock_t *lock)
 // ARM10C 20130914
 // ARM10C 20140809
 // ARM10C 20150103
+// ARM10C 20150718
+// &lock->wait_lock: &(&(&(&(kmem_cache#25-oX)->port)->buf)->lock)->wait_lock
+// ARM10C 20150718
+// &port->lock: &(&(kmem_cache#25-oX)->port)->lock
 #define spin_lock_init(_lock)				\
 do {							\
 	spinlock_check(_lock);				\

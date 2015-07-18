@@ -16,6 +16,7 @@
 struct workqueue_struct;
 
 struct work_struct;
+// ARM10C 20150718
 typedef void (*work_func_t)(struct work_struct *work);
 void delayed_work_timer_fn(unsigned long __data);
 
@@ -110,16 +111,19 @@ enum {
 };
 
 // ARM10C 20140809
+// ARM10C 20150718
+// sizeof(struct work_struct): 16 bytes
 struct work_struct {
 	atomic_long_t data;
 	struct list_head entry;
 	work_func_t func;
-#ifdef CONFIG_LOCKDEP
+#ifdef CONFIG_LOCKDEP // CONFIG_LOCKDEP=n
 	struct lockdep_map lockdep_map;
 #endif
 };
 
 // ARM10C 20140809
+// ARM10C 20150718
 // WORK_STRUCT_NO_POOL: 0xFFFFFFE0
 // ATOMIC_LONG_INIT(0xFFFFFFE0): { 0xFFFFFFE0 }
 // WORK_DATA_INIT(): { 0xFFFFFFE0 }
@@ -199,6 +203,8 @@ struct execute_work {
  */
 // ARM10C 20140809
 // p->wq: (&vfree_deferred + __per_cpu_offset[0])->wq, free_work, 0
+// ARM10C 20150718
+// &vc_cons[0].SAK_work, vc_SAK
 #define PREPARE_WORK(_work, _func)					\
 	do {								\
 		(_work)->func = (_func);				\
@@ -216,6 +222,7 @@ static inline unsigned int work_static(struct work_struct *work)
 }
 #else
 // ARM10C 20140809
+// ARM10C 20150718
 static inline void __init_work(struct work_struct *work, int onstack) { }
 static inline void destroy_work_on_stack(struct work_struct *work) { }
 static inline unsigned int work_static(struct work_struct *work) { return 0; }
@@ -241,7 +248,24 @@ static inline unsigned int work_static(struct work_struct *work) { return 0; }
 	} while (0)
 #else
 // ARM10C 20140809
+// WORK_DATA_INIT(): { 0xFFFFFFE0 }
+//
 // p->wq: (&vfree_deferred + __per_cpu_offset[0])->wq, free_work, 0
+// ARM10C 20150718
+// __init_work(&vc_cons[0].SAK_work, 0):
+//
+// INIT_LIST_HEAD(&(&vc_cons[0].SAK_work)->entry):
+// (&(&vc_cons[0].SAK_work)->entry)->next: &(&vc_cons[0].SAK_work)->entry
+// (&(&vc_cons[0].SAK_work)->entry)->prev: &(&vc_cons[0].SAK_work)->entry
+//
+// PREPARE_WORK(&vc_cons[0].SAK_work, vc_SAK):
+// (&vc_cons[0].SAK_work)->func: vc_SAK
+//
+// #define __INIT_WORK(&vc_cons[0].SAK_work, vc_SAK, 0):
+// (&vc_cons[0].SAK_work)->data: { 0xFFFFFFE0 }
+// (&(&vc_cons[0].SAK_work)->entry)->next: &(&vc_cons[0].SAK_work)->entry
+// (&(&vc_cons[0].SAK_work)->entry)->prev: &(&vc_cons[0].SAK_work)->entry
+// (&vc_cons[0].SAK_work)->func: vc_SAK
 #define __INIT_WORK(_work, _func, _onstack)				\
 	do {								\
 		__init_work((_work), _onstack);				\
@@ -253,6 +277,25 @@ static inline unsigned int work_static(struct work_struct *work) { return 0; }
 
 // ARM10C 20140809
 // p->wq: (&vfree_deferred + __per_cpu_offset[0])->wq, free_work
+// ARM10C 20150718
+// __INIT_WORK(&vc_cons[0].SAK_work, vc_SAK, 0):
+// (&vc_cons[0].SAK_work)->data: { 0xFFFFFFE0 }
+// (&(&vc_cons[0].SAK_work)->entry)->next: &(&vc_cons[0].SAK_work)->entry
+// (&(&vc_cons[0].SAK_work)->entry)->prev: &(&vc_cons[0].SAK_work)->entry
+// (&vc_cons[0].SAK_work)->func: vc_SAK
+//
+// #define INIT_WORK(&vc_cons[0].SAK_work, vc_SAK):
+// (&vc_cons[0].SAK_work)->data: { 0xFFFFFFE0 }
+// (&(&vc_cons[0].SAK_work)->entry)->next: &(&vc_cons[0].SAK_work)->entry
+// (&(&vc_cons[0].SAK_work)->entry)->prev: &(&vc_cons[0].SAK_work)->entry
+// (&vc_cons[0].SAK_work)->func: vc_SAK
+//
+// ARM10C 20150718
+// #define INIT_WORK(&(&(&(kmem_cache#25-oX)->port)->buf)->work, flush_to_ldisc):
+// (&(&(&(kmem_cache#25-oX)->port)->buf)->work)->data: { 0xFFFFFFE0 }
+// (&(&(&(kmem_cache#25-oX)->port)->buf)->work)->entry)->next: &(&(&(&(kmem_cache#25-oX)->port)->buf)->work)->entry
+// (&(&(&(kmem_cache#25-oX)->port)->buf)->work)->entry)->prev: &(&(&(&(kmem_cache#25-oX)->port)->buf)->work)->entry
+// (&(&(&(kmem_cache#25-oX)->port)->buf)->work)->func: flush_to_ldisc
 #define INIT_WORK(_work, _func)						\
 	do {								\
 		__INIT_WORK((_work), (_func), 0);			\

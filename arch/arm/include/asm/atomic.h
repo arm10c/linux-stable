@@ -39,6 +39,12 @@
 // atomic_set(&(&cpu_add_remove_lock)->count, 1): (((&(&cpu_add_remove_lock)->count)->counter) = (1))
 // ARM10C 20150117
 // &(&prepare_lock)->count: -1
+// ARM10C 20150718
+// &lock->count: &(&(&(&(kmem_cache#25-oX)->port)->buf)->lock)->count, 1
+// ARM10C 20150718
+// &buf->memory_used: &(&(&(kmem_cache#25-oX)->port)->buf)->memory_used, 0
+// ARM10C 20150718
+// &buf->priority: &(&(&(kmem_cache#25-oX)->port)->buf)->priority, 0
 #define atomic_set(v,i)	(((v)->counter) = (i))
 
 #if __LINUX_ARM_ARCH__ >= 6

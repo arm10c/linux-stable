@@ -145,6 +145,8 @@ const struct consw *conswitchp;
 #define DEFAULT_BELL_PITCH	750
 #define DEFAULT_BELL_DURATION	(HZ/8)
 
+// ARM10C 20150718
+// MIN_NR_CONSOLES: 1
 struct vc vc_cons [MAX_NR_CONSOLES];
 
 #ifndef VT_SINGLE_DRIVER
@@ -2992,11 +2994,86 @@ static int __init con_init(void)
 	}
 
 // 2015/07/11 종료
+// 2015/07/18 시작
 
+	// MIN_NR_CONSOLES: 1
 	for (currcons = 0; currcons < MIN_NR_CONSOLES; currcons++) {
+		// currcons: 0, sizeof(struct vc_data): 653 bytes, GFP_NOWAIT: 0
+		// kzalloc(653, GFP_NOWAIT: 0): kmem_cache#25-oX
 		vc_cons[currcons].d = vc = kzalloc(sizeof(struct vc_data), GFP_NOWAIT);
+		// vc_cons[0].d: kmem_cache#25-oX, vc: kmem_cache#25-oX
+
+		// currcons: 0,
 		INIT_WORK(&vc_cons[currcons].SAK_work, vc_SAK);
+
+		// INIT_WORK에서 한일:
+		// (&vc_cons[0].SAK_work)->data: { 0xFFFFFFE0 }
+		// (&(&vc_cons[0].SAK_work)->entry)->next: &(&vc_cons[0].SAK_work)->entry
+		// (&(&vc_cons[0].SAK_work)->entry)->prev: &(&vc_cons[0].SAK_work)->entry
+		// (&vc_cons[0].SAK_work)->func: vc_SAK
+
+		// &vc->port: &(kmem_cache#25-oX)->port
 		tty_port_init(&vc->port);
+
+		// tty_port_init에서 한일:
+		// struct tty_port 의 맴버값들을 초기화 수행
+		//
+		// (&(&(&(kmem_cache#25-oX)->port)->buf)->lock)->count: 1
+		// (&(&(&(&(&(kmem_cache#25-oX)->port)->buf)->lock)->wait_lock)->rlock)->raw_lock: { { 0 } }
+		// (&(&(&(&(&(kmem_cache#25-oX)->port)->buf)->lock)->wait_lock)->rlock)->magic: 0xdead4ead
+		// (&(&(&(&(&(kmem_cache#25-oX)->port)->buf)->lock)->wait_lock)->rlock)->owner: 0xffffffff
+		// (&(&(&(&(&(kmem_cache#25-oX)->port)->buf)->lock)->wait_lock)->rlock)->owner_cpu: 0xffffffff
+		// (&(&(&(&(kmem_cache#25-oX)->port)->buf)->lock)->wait_list)->next: &(&(&(&(kmem_cache#25-oX)->port)->buf)->lock)->wait_list
+		// (&(&(&(&(kmem_cache#25-oX)->port)->buf)->lock)->wait_list)->prev: &(&(&(&(kmem_cache#25-oX)->port)->buf)->lock)->wait_list
+		// (&(&(&(kmem_cache#25-oX)->port)->buf)->lock)->onwer: NULL
+		// (&(&(&(kmem_cache#25-oX)->port)->buf)->lock)->magic: &(&(&(kmem_cache#25-oX)->port)->buf)->lock
+		// (&(&(&(kmem_cache#25-oX)->port)->buf)->sentinel)->used: 0
+		// (&(&(&(kmem_cache#25-oX)->port)->buf)->sentinel)->size: 0
+		// (&(&(&(kmem_cache#25-oX)->port)->buf)->sentinel)->next: NULL
+		// (&(&(&(kmem_cache#25-oX)->port)->buf)->sentinel)->commit: 0
+		// (&(&(&(kmem_cache#25-oX)->port)->buf)->sentinel)->read: 0
+		// (&(&(kmem_cache#25-oX)->port)->buf)->head: &(&(&(kmem_cache#25-oX)->port)->buf)->sentinel
+		// (&(&(kmem_cache#25-oX)->port)->buf)->tail: &(&(&(kmem_cache#25-oX)->port)->buf)->sentinel
+		// (&(&(&(kmem_cache#25-oX)->port)->buf)->free)->first: NULL
+		// (&(&(kmem_cache#25-oX)->port)->buf)->memory_used: 0
+		// (&(&(kmem_cache#25-oX)->port)->buf)->priority: 0
+		// (&(&(&(kmem_cache#25-oX)->port)->buf)->work)->data: { 0xFFFFFFE0 }
+		// (&(&(&(kmem_cache#25-oX)->port)->buf)->work)->entry)->next: &(&(&(&(kmem_cache#25-oX)->port)->buf)->work)->entry
+		// (&(&(&(kmem_cache#25-oX)->port)->buf)->work)->entry)->prev: &(&(&(&(kmem_cache#25-oX)->port)->buf)->work)->entry
+		// (&(&(&(kmem_cache#25-oX)->port)->buf)->work)->func: flush_to_ldisc
+		// &(&(&(kmem_cache#25-oX)->port)->open_wait)->lock을 사용한 spinlock 초기화
+		// &(&(&(kmem_cache#25-oX)->port)->open_wait)->task_list를 사용한 list 초기화
+		// &(&(&(kmem_cache#25-oX)->port)->close_wait)->lock을 사용한 spinlock 초기화
+		// &(&(&(kmem_cache#25-oX)->port)->close_wait)->task_list를 사용한 list 초기화
+		// &(&(&(kmem_cache#25-oX)->port)->delta_msr_wait)->lock을 사용한 spinlock 초기화
+		// &(&(&(kmem_cache#25-oX)->port)->delta_msr_wait)->task_list를 사용한 list 초기화
+		// (&(&(kmem_cache#25-oX)->port)->mutex)->count: 1
+		// (&(&(kmem_cache#25-oX)->port)->mutex)->wait_lock)->rlock)->raw_lock: { { 0 } }
+		// (&(&(kmem_cache#25-oX)->port)->mutex)->wait_lock)->rlock)->magic: 0xdead4ead
+		// (&(&(kmem_cache#25-oX)->port)->mutex)->wait_lock)->rlock)->owner: 0xffffffff
+		// (&(&(kmem_cache#25-oX)->port)->mutex)->wait_lock)->rlock)->owner_cpu: 0xffffffff
+		// (&(&(kmem_cache#25-oX)->port)->mutex)->wait_list)->next: &(&(&(&(kmem_cache#25-oX)->port)->buf)->lock)->wait_list
+		// (&(&(kmem_cache#25-oX)->port)->mutex)->wait_list)->prev: &(&(&(&(kmem_cache#25-oX)->port)->buf)->lock)->wait_list
+		// (&(&(kmem_cache#25-oX)->port)->mutex)->onwer: NULL
+		// (&(&(kmem_cache#25-oX)->port)->mutex)->magic: &(&(&(kmem_cache#25-oX)->port)->buf)->lock
+		// (&(&(kmem_cache#25-oX)->port)->buf_mutex)->count: 1
+		// (&(&(kmem_cache#25-oX)->port)->buf_mutex)->wait_lock)->rlock)->raw_lock: { { 0 } }
+		// (&(&(kmem_cache#25-oX)->port)->buf_mutex)->wait_lock)->rlock)->magic: 0xdead4ead
+		// (&(&(kmem_cache#25-oX)->port)->buf_mutex)->wait_lock)->rlock)->owner: 0xffffffff
+		// (&(&(kmem_cache#25-oX)->port)->buf_mutex)->wait_lock)->rlock)->owner_cpu: 0xffffffff
+		// (&(&(kmem_cache#25-oX)->port)->buf_mutex)->wait_list)->next: &(&(&(&(kmem_cache#25-oX)->port)->buf)->lock)->wait_list
+		// (&(&(kmem_cache#25-oX)->port)->buf_mutex)->wait_list)->prev: &(&(&(&(kmem_cache#25-oX)->port)->buf)->lock)->wait_list
+		// (&(&(kmem_cache#25-oX)->port)->buf_mutex)->onwer: NULL
+		// (&(&(kmem_cache#25-oX)->port)->buf_mutex)->magic: &(&(&(kmem_cache#25-oX)->port)->buf)->lock
+		// (&(&(&(&(kmem_cache#25-oX)->port)->lock)->wait_lock)->rlock)->raw_lock: { { 0 } }
+		// (&(&(&(&(kmem_cache#25-oX)->port)->lock)->wait_lock)->rlock)->magic: 0xdead4ead
+		// (&(&(&(&(kmem_cache#25-oX)->port)->lock)->wait_lock)->rlock)->owner: 0xffffffff
+		// (&(&(&(&(kmem_cache#25-oX)->port)->lock)->wait_lock)->rlock)->owner_cpu: 0xffffffff
+		//
+		// (&(kmem_cache#25-oX)->port)->close_delay: 50
+		// (&(kmem_cache#25-oX)->port)->closing_wait: 3000
+		// (&(&(kmem_cache#25-oX)->port)->kref)->refcount: 1
+
 		visual_init(vc, currcons, 1);
 		vc->vc_screenbuf = kzalloc(vc->vc_screenbuf_size, GFP_NOWAIT);
 		vc_init(vc, vc->vc_rows, vc->vc_cols,

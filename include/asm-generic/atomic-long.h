@@ -139,6 +139,7 @@ static inline long atomic_long_add_unless(atomic_long_t *l, long a, long u)
 #else  /*  BITS_PER_LONG == 64  */
 
 // ARM10C 20140419
+// ARM10C 20150718
 typedef atomic_t atomic_long_t;
 
 // ARM10C 20140809

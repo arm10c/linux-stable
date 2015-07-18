@@ -6,6 +6,8 @@
  * These constants are also useful for user-level apps (e.g., VC
  * resizing).
  */
+// ARM10C 20150718
+// MIN_NR_CONSOLES: 1
 #define MIN_NR_CONSOLES 1       /* must be at least 1 */
 // ARM10C 20150704
 // MAX_NR_CONSOLES: 63
@@ -18,6 +20,8 @@
 
 #define VT_OPENQRY	0x5600	/* find available vt */
 
+// ARM10C 20150718
+// sizeof(struct vt_mode): 8 bytes
 struct vt_mode {
 	char mode;		/* vt mode */
 	char waitv;		/* if set, hang on writes if not active */

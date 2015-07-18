@@ -123,17 +123,23 @@ void debug_mutex_unlock(struct mutex *lock)
 	// lock->owner: (&cpu_add_remove_lock)->owner: NULL 로 설정
 }
 
+// ARM10C 20150718
+// lock: &(&(&(kmem_cache#25-oX)->port)->buf)->lock, name: "&buf->lock", key: &__key
 void debug_mutex_init(struct mutex *lock, const char *name,
 		      struct lock_class_key *key)
 {
-#ifdef CONFIG_DEBUG_LOCK_ALLOC
+#ifdef CONFIG_DEBUG_LOCK_ALLOC // CONFIG_DEBUG_LOCK_ALLOC=n
 	/*
 	 * Make sure we are not reinitializing a held lock:
 	 */
 	debug_check_no_locks_freed((void *)lock, sizeof(*lock));
 	lockdep_init_map(&lock->dep_map, name, key, 0);
 #endif
+	// lock->magic: (&(&(&(kmem_cache#25-oX)->port)->buf)->lock)->magic,
+	// lock: &(&(&(kmem_cache#25-oX)->port)->buf)->lock
 	lock->magic = lock;
+	// lock->magic: (&(&(&(kmem_cache#25-oX)->port)->buf)->lock)->magic:
+	// &(&(&(kmem_cache#25-oX)->port)->buf)->lock
 }
 
 /***

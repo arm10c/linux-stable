@@ -42,11 +42,15 @@ static inline void mutex_set_owner(struct mutex *lock)
 
 // ARM10C 20140322
 // lock: &cpu_add_remove_lock
+// ARM10C 20150718
+// lock: &(&(&(kmem_cache#25-oX)->port)->buf)->lock
 static inline void mutex_clear_owner(struct mutex *lock)
 {
 	// lock->onwer: (&cpu_add_remove_lock)->onwer: init_task
+	// lock->onwer: (&(&(&(kmem_cache#25-oX)->port)->buf)->lock)->onwer
 	lock->owner = NULL;
 	// lock->onwer: (&cpu_add_remove_lock)->onwer: NULL
+	// lock->onwer: (&(&(&(kmem_cache#25-oX)->port)->buf)->lock)->onwer: NULL
 }
 
 // ARM10C 20140315

@@ -40,6 +40,10 @@
 // ARM10C 20150103
 // ARM10C 20150620
 // &q->list: [pcp0] &(&call_single_queue)->list
+// ARM10C 20150718
+// &(&vc_cons[0].SAK_work)->entry
+// ARM10C 20150718
+// &lock->wait_list: &(&(&(&(kmem_cache#25-oX)->port)->buf)->lock)->wait_list
 static inline void INIT_LIST_HEAD(struct list_head *list)
 {
 	list->next = list;

@@ -22,6 +22,8 @@
 #include <linux/spinlock.h>
 
 // ARM10C 20140607
+// ARM10C 20150718
+// sizeof(struct kref): 4 bytes
 struct kref {
 	atomic_t refcount;
 };
@@ -31,6 +33,8 @@ struct kref {
  * @kref: object in question.
  */
 // ARM10C 20140208
+// ARM10C 20150718
+// &port->kref: &(&(kmem_cache#25-oX)->port)->kref
 static inline void kref_init(struct kref *kref)
 {
 	atomic_set(&kref->refcount, 1);

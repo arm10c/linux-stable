@@ -15,6 +15,8 @@
 
 // ARM10C 20150620
 // &q->lock: [pcp0] &(&call_single_queue)->lock
+// ARM10C 20150718
+// &(&(&(&(&(kmem_cache#25-oX)->port)->buf)->lock)->wait_lock)->rlock, "&(_lock)->rlock", &__key
 void __raw_spin_lock_init(raw_spinlock_t *lock, const char *name,
 			  struct lock_class_key *key)
 {
@@ -27,20 +29,29 @@ void __raw_spin_lock_init(raw_spinlock_t *lock, const char *name,
 #endif
 	// lock->raw_lock: [pcp0] (&(&call_single_queue)->lock)->raw_lock,
 	// __ARCH_SPIN_LOCK_UNLOCKED: { { 0 } }
+	// lock->raw_lock: (&(&(&(&(&(kmem_cache#25-oX)->port)->buf)->lock)->wait_lock)->rlock)->raw_lock,
+	// __ARCH_SPIN_LOCK_UNLOCKED: { { 0 } }
 	lock->raw_lock = (arch_spinlock_t)__ARCH_SPIN_LOCK_UNLOCKED;
 	// lock->raw_lock: [pcp0] (&(&call_single_queue)->lock)->raw_lock: { { 0 } }
+	// lock->raw_lock: (&(&(&(&(&(kmem_cache#25-oX)->port)->buf)->lock)->wait_lock)->rlock)->raw_lock: { { 0 } }
 
 	// lock->magic: [pcp0] (&(&call_single_queue)->lock)->magic, SPINLOCK_MAGIC: 0xdead4ead
+	// lock->magic: (&(&(&(&(&(kmem_cache#25-oX)->port)->buf)->lock)->wait_lock)->rlock)->magic, SPINLOCK_MAGIC: 0xdead4ead
 	lock->magic = SPINLOCK_MAGIC;
 	// lock->magic: [pcp0] (&(&call_single_queue)->lock)->magic: 0xdead4ead
+	// lock->magic: (&(&(&(&(&(kmem_cache#25-oX)->port)->buf)->lock)->wait_lock)->rlock)->magic: 0xdead4ead
 
 	// lock->owner: [pcp0] (&(&call_single_queue)->lock)->owner, SPINLOCK_OWNER_INIT: 0xffffffff
+	// lock->owner: (&(&(&(&(&(kmem_cache#25-oX)->port)->buf)->lock)->wait_lock)->rlock)->owner, SPINLOCK_OWNER_INIT: 0xffffffff
 	lock->owner = SPINLOCK_OWNER_INIT;
 	// lock->owner: [pcp0] (&(&call_single_queue)->lock)->owner: 0xffffffff
+	// lock->owner: (&(&(&(&(&(kmem_cache#25-oX)->port)->buf)->lock)->wait_lock)->rlock)->owner: 0xffffffff
 
 	// lock->owner_cpu: [pcp0] (&(&call_single_queue)->lock)->owner_cpu
+	// lock->owner_cpu: (&(&(&(&(&(kmem_cache#25-oX)->port)->buf)->lock)->wait_lock)->rlock)->owner_cpu
 	lock->owner_cpu = -1;
 	// lock->owner_cpu: [pcp0] (&(&call_single_queue)->lock)->owner_cpu: 0xffffffff
+	// lock->owner_cpu: (&(&(&(&(&(kmem_cache#25-oX)->port)->buf)->lock)->wait_lock)->rlock)->owner_cpu: 0xffffffff
 }
 
 EXPORT_SYMBOL(__raw_spin_lock_init);

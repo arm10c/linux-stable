@@ -1009,6 +1009,8 @@ static inline void *kmem_cache_zalloc(struct kmem_cache *k, gfp_t flags)
 // sizeof(struct clk_gate): 18 bytes, GFP_KERNEL: 0xD0
 // ARM10C 20150509
 // sizeof(struct irqaction): 48 bytes, GFP_KERNEL: 0xD0
+// ARM10C 20150718
+// sizeof(struct vc_data): 653 bytes, GFP_NOWAIT: 0
 static inline void *kzalloc(size_t size, gfp_t flags)
 {
 	// size: 512, GFP_KERNEL: 0xD0, __GFP_ZERO: 0x8000u

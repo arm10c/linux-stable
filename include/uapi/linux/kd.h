@@ -163,6 +163,8 @@ struct console_font_op {
 	unsigned char __user *data;	/* font data with height fixed to 32 */
 };
 
+// ARM10C 20150718
+// sizeof(struct console_font): 16 bytes
 struct console_font {
 	unsigned int width, height;	/* font size */
 	unsigned int charcount;

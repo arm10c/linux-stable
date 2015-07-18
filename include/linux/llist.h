@@ -58,10 +58,13 @@
 #include <linux/kernel.h>
 #include <asm/cmpxchg.h>
 
+// ARM10C 20150718
+// sizeof(struct llist_head): 4 bytes
 struct llist_head {
 	struct llist_node *first;
 };
 
+// ARM10C 20150718
 struct llist_node {
 	struct llist_node *next;
 };
@@ -76,6 +79,8 @@ struct llist_node {
 // ARM10C 20140726
 // p->list: (&vfree_deferred + __per_cpu_offset[0])->list
 // ARM10C 20140809
+// ARM10C 20150718
+// &buf->free: &(&(&(kmem_cache#25-oX)->port)->buf)->free
 static inline void init_llist_head(struct llist_head *list)
 {
 	// list->first: ((&vfree_deferred + __per_cpu_offset[0])->list)->first

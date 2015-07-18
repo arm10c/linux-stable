@@ -48,6 +48,8 @@
  */
 // ARM10C 20140315
 // ARM10C 20150117
+// ARM10C 20150718
+// sizeof(struct mutex): 40 bytes
 struct mutex {
 	/* 1: unlocked, 0: locked, negative: locked, possible waiters */
 	atomic_t		count;
@@ -82,8 +84,9 @@ struct mutex_waiter {
 #endif
 };
 
-#ifdef CONFIG_DEBUG_MUTEXES // define 
+#ifdef CONFIG_DEBUG_MUTEXES // CONFIG_DEBUG_MUTEXES=y
 // ARM10C 20140315
+// ARM10C 20150718
 # include <linux/mutex-debug.h>
 #else
 # define __DEBUG_MUTEX_INITIALIZER(lockname)

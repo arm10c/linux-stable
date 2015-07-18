@@ -15,6 +15,12 @@
 #define __DEBUG_MUTEX_INITIALIZER(lockname)				\
 	, .magic = &lockname
 
+// ARM10C 20150718
+// &buf->lock: &(&(&(kmem_cache#25-oX)->port)->buf)->lock
+// ARM10C 20150718
+// &port->mutex: &(&(kmem_cache#25-oX)->port)->mutex
+// ARM10C 20150718
+// &port->buf_mutex: &(&(kmem_cache#25-oX)->port)->buf_mutex
 #define mutex_init(mutex)						\
 do {									\
 	static struct lock_class_key __key;				\

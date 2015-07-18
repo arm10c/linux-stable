@@ -30,6 +30,8 @@
  */
 #define __DISABLED_CHAR '\0'
 
+// ARM10C 20150718
+// sizeof(struct tty_buffer): 24 bytes
 struct tty_buffer {
 	union {
 		struct tty_buffer *next;
@@ -53,6 +55,8 @@ static inline char *flag_buf_ptr(struct tty_buffer *b, int ofs)
 	return (char *)char_buf_ptr(b, ofs) + b->size;
 }
 
+// ARM10C 20150718
+// sizeof(struct tty_bufhead): 100 bytes
 struct tty_bufhead {
 	struct tty_buffer *head;	/* Queue head */
 	struct work_struct work;
@@ -189,6 +193,8 @@ struct tty_port_operations {
 	void (*destruct)(struct tty_port *port);
 };
 	
+// ARM10C 20150718
+// sizeof(struct tty_port): 313 bytes
 struct tty_port {
 	struct tty_bufhead	buf;		/* Locked internally */
 	struct tty_struct	*tty;		/* Back pointer */
@@ -228,6 +234,7 @@ struct tty_port {
 
 struct tty_operations;
 
+// ARM10C 20150718
 struct tty_struct {
 	int	magic;
 	struct kref kref;

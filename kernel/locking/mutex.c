@@ -50,18 +50,53 @@
 // MUTEX_SHOW_NO_WAITER(&cpu_add_remove_lock): 1
 #define	MUTEX_SHOW_NO_WAITER(mutex)	(atomic_read(&(mutex)->count) >= 0)
 
+// ARM10C 20150718
+// &buf->lock: &(&(&(kmem_cache#25-oX)->port)->buf)->lock, "&buf->lock", &__key
+// ARM10C 20150718
+// ARM10C 20150718
+// &port->mutex: &(&(kmem_cache#25-oX)->port)->mutex, "&port->mutex", &__key
+// ARM10C 20150718
+// &port->buf_mutex: &(&(kmem_cache#25-oX)->port)->buf_mutex, "&port->buf_mutex", &__key
 void
 __mutex_init(struct mutex *lock, const char *name, struct lock_class_key *key)
 {
+	// &lock->count: &(&(&(&(kmem_cache#25-oX)->port)->buf)->lock)->count
 	atomic_set(&lock->count, 1);
+
+	// atomic_set에서 한일:
+	// (&(&(&(kmem_cache#25-oX)->port)->buf)->lock)->count: 1
+
+	// &lock->wait_lock: &(&(&(&(kmem_cache#25-oX)->port)->buf)->lock)->wait_lock
 	spin_lock_init(&lock->wait_lock);
+
+	// spin_lock_init에서 한일:
+	// (&(&(&(&(&(kmem_cache#25-oX)->port)->buf)->lock)->wait_lock)->rlock)->raw_lock: { { 0 } }
+	// (&(&(&(&(&(kmem_cache#25-oX)->port)->buf)->lock)->wait_lock)->rlock)->magic: 0xdead4ead
+	// (&(&(&(&(&(kmem_cache#25-oX)->port)->buf)->lock)->wait_lock)->rlock)->owner: 0xffffffff
+	// (&(&(&(&(&(kmem_cache#25-oX)->port)->buf)->lock)->wait_lock)->rlock)->owner_cpu: 0xffffffff
+
+	// &lock->wait_list: &(&(&(&(kmem_cache#25-oX)->port)->buf)->lock)->wait_list
 	INIT_LIST_HEAD(&lock->wait_list);
+
+	// INIT_LIST_HEAD에서 한일:
+	// (&(&(&(&(kmem_cache#25-oX)->port)->buf)->lock)->wait_list)->next: &(&(&(&(kmem_cache#25-oX)->port)->buf)->lock)->wait_list
+	// (&(&(&(&(kmem_cache#25-oX)->port)->buf)->lock)->wait_list)->prev: &(&(&(&(kmem_cache#25-oX)->port)->buf)->lock)->wait_list
+
+	// lock: &(&(&(kmem_cache#25-oX)->port)->buf)->lock
 	mutex_clear_owner(lock);
-#ifdef CONFIG_MUTEX_SPIN_ON_OWNER
+
+	// mutex_clear_owner에서 한일:
+	// (&(&(&(kmem_cache#25-oX)->port)->buf)->lock)->onwer: NULL
+
+#ifdef CONFIG_MUTEX_SPIN_ON_OWNER // CONFIG_MUTEX_SPIN_ON_OWNER=n
 	lock->spin_mlock = NULL;
 #endif
 
+	// lock: &(&(&(kmem_cache#25-oX)->port)->buf)->lock, name: "&buf->lock", key: &__key
 	debug_mutex_init(lock, name, key);
+
+	// debug_mutex_init에서 한일:
+	// (&(&(&(kmem_cache#25-oX)->port)->buf)->lock)->magic: &(&(&(kmem_cache#25-oX)->port)->buf)->lock
 }
 
 EXPORT_SYMBOL(__mutex_init);

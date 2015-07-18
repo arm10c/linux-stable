@@ -14,23 +14,34 @@
 // &rsp->gp_wq: &(&rcu_bh_state)->gp_wq, "&rsp->gp_wq", &__key
 // ARM10C 20150509
 // &desc->wait_for_threads: &(kmem_cache#28-oX (irq 152))->wait_for_threads, "&desc->wait_for_threads", &__key
+// ARM10C 20150718
+// &port->open_wait: &(&(kmem_cache#25-oX)->port)->open_wait, "&port->open_wait", &__key
+// ARM10C 20150718
+// &port->close_wait: &(&(kmem_cache#25-oX)->port)->close_wait, "&port->close_wait", &__key
+// ARM10C 20150718
+// &port->delta_msr_wait: &(&(kmem_cache#25-oX)->port)->delta_msr_wait, "&port->delta_msr_wait", &__key
 void __init_waitqueue_head(wait_queue_head_t *q, const char *name, struct lock_class_key *key)
 {
 	// &q->lock: &(&(&rcu_bh_state)->gp_wq)->lock
 	// &q->lock: &(&(kmem_cache#28-oX (irq 152))->wait_for_threads)->lock
+	// &q->lock: &(&(&(kmem_cache#25-oX)->port)->open_wait)->lock
 	spin_lock_init(&q->lock);
 	// &q->lock: &(&(&rcu_bh_state)->gp_wq)->lock을 사용한 spinlock 초기화
 	// &q->lock: &(&(kmem_cache#28-oX (irq 152))->wait_for_threads)->lock을 사용한 spinlock 초기화
+	// &q->lock: &(&(&(kmem_cache#25-oX)->port)->open_wait)->lock을 사용한 spinlock 초기화
 
 	// &q->lock: &(&(&rcu_bh_state)->gp_wq)->lock, key: &__key, name: "&rsp->gp_wq"
 	// &q->lock: &(&(kmem_cache#28-oX (irq 152))->wait_for_threads)->lock, key: &__key, name: "&desc->wait_for_threads"
+	// &q->lock: &(&(&(kmem_cache#25-oX)->port)->open_wait)->lock, key: &__key, name: "&port->open_wait"
 	lockdep_set_class_and_name(&q->lock, key, name); // null function
 
 	// &q->task_list: &(&(&rcu_bh_state)->gp_wq)->task_list
 	// &q->task_list: &(&(kmem_cache#28-oX (irq 152))->wait_for_threads)->task_list
+	// &q->task_list: &(&(&(kmem_cache#25-oX)->port)->open_wait)->task_list
 	INIT_LIST_HEAD(&q->task_list);
 	// &q->task_list: &(&(&rcu_bh_state)->gp_wq)->task_list를 사용한 list 초기화
 	// &q->task_list: &(&(kmem_cache#28-oX (irq 152))->wait_for_threads)->task_list를 사용한 list 초기화
+	// &q->task_list: &(&(&(kmem_cache#25-oX)->port)->open_wait)->task_list를 사용한 list 초기화
 }
 
 EXPORT_SYMBOL(__init_waitqueue_head);

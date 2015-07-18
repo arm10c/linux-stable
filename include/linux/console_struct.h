@@ -18,9 +18,13 @@
 
 struct vt_struct;
 
+// ARM10C 20150718
+// NPAR: 16
 #define NPAR 16
 
 // ARM10C 20150704
+// ARM10C 20150718
+// sizeof(struct vc_data): 653 bytes
 struct vc_data {
 	struct tty_port port;			/* Upper level data */
 
@@ -58,6 +62,7 @@ struct vc_data {
 	unsigned short	vc_video_erase_char;	/* Background erase character */
 	/* VT terminal data */
 	unsigned int	vc_state;		/* Escape sequence parser state */
+	// NPAR: 16
 	unsigned int	vc_npar,vc_par[NPAR];	/* Parameters of current escape sequence */
 	/* data for manual vt switching */
 	struct vt_mode	vt_mode;
@@ -111,6 +116,7 @@ struct vc_data {
 	/* additional information is in vt_kern.h */
 };
 
+// ARM10C 20150718
 struct vc {
 	struct vc_data *d;
 	struct work_struct SAK_work;

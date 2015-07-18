@@ -18,19 +18,115 @@
 #include <linux/delay.h>
 #include <linux/module.h>
 
+// ARM10C 20150718
+// &vc->port: &(kmem_cache#25-oX)->port
 void tty_port_init(struct tty_port *port)
 {
+	// port: &(kmem_cache#25-oX)->port, sizeof(struct tty_port): 313 bytes
 	memset(port, 0, sizeof(*port));
+
+	// memset에서 한일:
+	// &(kmem_cache#25-oX)->port의 맴버 값을 전부 0으로 초기화함
+
+	// port: &(kmem_cache#25-oX)->port
 	tty_buffer_init(port);
+
+	// tty_buffer_init에서 한일:
+	// (&(&(&(kmem_cache#25-oX)->port)->buf)->lock)->count: 1
+	// (&(&(&(&(&(kmem_cache#25-oX)->port)->buf)->lock)->wait_lock)->rlock)->raw_lock: { { 0 } }
+	// (&(&(&(&(&(kmem_cache#25-oX)->port)->buf)->lock)->wait_lock)->rlock)->magic: 0xdead4ead
+	// (&(&(&(&(&(kmem_cache#25-oX)->port)->buf)->lock)->wait_lock)->rlock)->owner: 0xffffffff
+	// (&(&(&(&(&(kmem_cache#25-oX)->port)->buf)->lock)->wait_lock)->rlock)->owner_cpu: 0xffffffff
+	// (&(&(&(&(kmem_cache#25-oX)->port)->buf)->lock)->wait_list)->next: &(&(&(&(kmem_cache#25-oX)->port)->buf)->lock)->wait_list
+	// (&(&(&(&(kmem_cache#25-oX)->port)->buf)->lock)->wait_list)->prev: &(&(&(&(kmem_cache#25-oX)->port)->buf)->lock)->wait_list
+	// (&(&(&(kmem_cache#25-oX)->port)->buf)->lock)->onwer: NULL
+	// (&(&(&(kmem_cache#25-oX)->port)->buf)->lock)->magic: &(&(&(kmem_cache#25-oX)->port)->buf)->lock
+	// (&(&(&(kmem_cache#25-oX)->port)->buf)->sentinel)->used: 0
+	// (&(&(&(kmem_cache#25-oX)->port)->buf)->sentinel)->size: 0
+	// (&(&(&(kmem_cache#25-oX)->port)->buf)->sentinel)->next: NULL
+	// (&(&(&(kmem_cache#25-oX)->port)->buf)->sentinel)->commit: 0
+	// (&(&(&(kmem_cache#25-oX)->port)->buf)->sentinel)->read: 0
+	// (&(&(kmem_cache#25-oX)->port)->buf)->head: &(&(&(kmem_cache#25-oX)->port)->buf)->sentinel
+	// (&(&(kmem_cache#25-oX)->port)->buf)->tail: &(&(&(kmem_cache#25-oX)->port)->buf)->sentinel
+	// (&(&(&(kmem_cache#25-oX)->port)->buf)->free)->first: NULL
+	// (&(&(kmem_cache#25-oX)->port)->buf)->memory_used: 0
+	// (&(&(kmem_cache#25-oX)->port)->buf)->priority: 0
+	// (&(&(&(kmem_cache#25-oX)->port)->buf)->work)->data: { 0xFFFFFFE0 }
+	// (&(&(&(kmem_cache#25-oX)->port)->buf)->work)->entry)->next: &(&(&(&(kmem_cache#25-oX)->port)->buf)->work)->entry
+	// (&(&(&(kmem_cache#25-oX)->port)->buf)->work)->entry)->prev: &(&(&(&(kmem_cache#25-oX)->port)->buf)->work)->entry
+	// (&(&(&(kmem_cache#25-oX)->port)->buf)->work)->func: flush_to_ldisc
+
+	// &port->open_wait: &(&(kmem_cache#25-oX)->port)->open_wait
 	init_waitqueue_head(&port->open_wait);
+
+	// init_waitqueue_head에서 한일:
+	// &(&(&(kmem_cache#25-oX)->port)->open_wait)->lock을 사용한 spinlock 초기화
+	// &(&(&(kmem_cache#25-oX)->port)->open_wait)->task_list를 사용한 list 초기화
+
+	// &port->close_wait: &(&(kmem_cache#25-oX)->port)->close_wait
 	init_waitqueue_head(&port->close_wait);
+
+	// init_waitqueue_head에서 한일:
+	// &(&(&(kmem_cache#25-oX)->port)->close_wait)->lock을 사용한 spinlock 초기화
+	// &(&(&(kmem_cache#25-oX)->port)->close_wait)->task_list를 사용한 list 초기화
+
+	// &port->delta_msr_wait: &(&(kmem_cache#25-oX)->port)->delta_msr_wait
 	init_waitqueue_head(&port->delta_msr_wait);
+
+	// init_waitqueue_head에서 한일:
+	// &(&(&(kmem_cache#25-oX)->port)->delta_msr_wait)->lock을 사용한 spinlock 초기화
+	// &(&(&(kmem_cache#25-oX)->port)->delta_msr_wait)->task_list를 사용한 list 초기화
+
+	// &port->mutex: &(&(kmem_cache#25-oX)->port)->mutex
 	mutex_init(&port->mutex);
+
+	// mutex_init에서 한일:
+	// (&(&(kmem_cache#25-oX)->port)->mutex)->count: 1
+	// (&(&(kmem_cache#25-oX)->port)->mutex)->wait_lock)->rlock)->raw_lock: { { 0 } }
+	// (&(&(kmem_cache#25-oX)->port)->mutex)->wait_lock)->rlock)->magic: 0xdead4ead
+	// (&(&(kmem_cache#25-oX)->port)->mutex)->wait_lock)->rlock)->owner: 0xffffffff
+	// (&(&(kmem_cache#25-oX)->port)->mutex)->wait_lock)->rlock)->owner_cpu: 0xffffffff
+	// (&(&(kmem_cache#25-oX)->port)->mutex)->wait_list)->next: &(&(&(&(kmem_cache#25-oX)->port)->buf)->lock)->wait_list
+	// (&(&(kmem_cache#25-oX)->port)->mutex)->wait_list)->prev: &(&(&(&(kmem_cache#25-oX)->port)->buf)->lock)->wait_list
+	// (&(&(kmem_cache#25-oX)->port)->mutex)->onwer: NULL
+	// (&(&(kmem_cache#25-oX)->port)->mutex)->magic: &(&(&(kmem_cache#25-oX)->port)->buf)->lock
+
+	// &port->buf_mutex: &(&(kmem_cache#25-oX)->port)->buf_mutex
 	mutex_init(&port->buf_mutex);
+
+	// mutex_init에서 한일:
+	// (&(&(kmem_cache#25-oX)->port)->buf_mutex)->count: 1
+	// (&(&(kmem_cache#25-oX)->port)->buf_mutex)->wait_lock)->rlock)->raw_lock: { { 0 } }
+	// (&(&(kmem_cache#25-oX)->port)->buf_mutex)->wait_lock)->rlock)->magic: 0xdead4ead
+	// (&(&(kmem_cache#25-oX)->port)->buf_mutex)->wait_lock)->rlock)->owner: 0xffffffff
+	// (&(&(kmem_cache#25-oX)->port)->buf_mutex)->wait_lock)->rlock)->owner_cpu: 0xffffffff
+	// (&(&(kmem_cache#25-oX)->port)->buf_mutex)->wait_list)->next: &(&(&(&(kmem_cache#25-oX)->port)->buf)->lock)->wait_list
+	// (&(&(kmem_cache#25-oX)->port)->buf_mutex)->wait_list)->prev: &(&(&(&(kmem_cache#25-oX)->port)->buf)->lock)->wait_list
+	// (&(&(kmem_cache#25-oX)->port)->buf_mutex)->onwer: NULL
+	// (&(&(kmem_cache#25-oX)->port)->buf_mutex)->magic: &(&(&(kmem_cache#25-oX)->port)->buf)->lock
+
+	// &port->lock: &(&(kmem_cache#25-oX)->port)->lock
 	spin_lock_init(&port->lock);
+
+	// spin_lock_init에서 한일:
+	// (&(&(&(&(kmem_cache#25-oX)->port)->lock)->wait_lock)->rlock)->raw_lock: { { 0 } }
+	// (&(&(&(&(kmem_cache#25-oX)->port)->lock)->wait_lock)->rlock)->magic: 0xdead4ead
+	// (&(&(&(&(kmem_cache#25-oX)->port)->lock)->wait_lock)->rlock)->owner: 0xffffffff
+	// (&(&(&(&(kmem_cache#25-oX)->port)->lock)->wait_lock)->rlock)->owner_cpu: 0xffffffff
+
+	// port->close_delay: (&(kmem_cache#25-oX)->port)->close_delay, HZ: 100
 	port->close_delay = (50 * HZ) / 100;
+	// port->close_delay: (&(kmem_cache#25-oX)->port)->close_delay: 50
+
+	// port->closing_wait: (&(kmem_cache#25-oX)->port)->closing_wait, HZ: 100
 	port->closing_wait = (3000 * HZ) / 100;
+	// port->closing_wait: (&(kmem_cache#25-oX)->port)->closing_wait: 3000
+
+	// &port->kref: &(&(kmem_cache#25-oX)->port)->kref
 	kref_init(&port->kref);
+
+	// kref_init에서 한일:
+	// (&(&(kmem_cache#25-oX)->port)->kref)->refcount: 1
 }
 EXPORT_SYMBOL(tty_port_init);
 

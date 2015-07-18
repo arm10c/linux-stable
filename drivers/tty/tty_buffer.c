@@ -93,13 +93,29 @@ int tty_buffer_space_avail(struct tty_port *port)
 	return max(space, 0);
 }
 
+// ARM10C 20150718
+// &buf->sentinel: &(&(&(kmem_cache#25-oX)->port)->buf)->sentinel, 0
 static void tty_buffer_reset(struct tty_buffer *p, size_t size)
 {
+	// p->used: (&(&(&(kmem_cache#25-oX)->port)->buf)->sentinel)->used
 	p->used = 0;
+	// p->used: (&(&(&(kmem_cache#25-oX)->port)->buf)->sentinel)->used: 0
+
+	// p->size: (&(&(&(kmem_cache#25-oX)->port)->buf)->sentinel)->size, size: 0
 	p->size = size;
+	// p->size: (&(&(&(kmem_cache#25-oX)->port)->buf)->sentinel)->size: 0
+
+	// p->next: (&(&(&(kmem_cache#25-oX)->port)->buf)->sentinel)->next
 	p->next = NULL;
+	// p->next: (&(&(&(kmem_cache#25-oX)->port)->buf)->sentinel)->next: NULL
+
+	// p->commit: (&(&(&(kmem_cache#25-oX)->port)->buf)->sentinel)->commit
 	p->commit = 0;
+	// p->commit: (&(&(&(kmem_cache#25-oX)->port)->buf)->sentinel)->commit: 0
+
+	// p->read: (&(&(&(kmem_cache#25-oX)->port)->buf)->sentinel)->read
 	p->read = 0;
+	// p->read: (&(&(&(kmem_cache#25-oX)->port)->buf)->sentinel)->read: 0
 }
 
 /**
@@ -430,6 +446,7 @@ receive_buf(struct tty_struct *tty, struct tty_buffer *head, int count)
  *		 'consumer'
  */
 
+// ARM10C 20150718
 static void flush_to_ldisc(struct work_struct *work)
 {
 	struct tty_port *port = container_of(work, struct tty_port, buf.work);
@@ -512,16 +529,72 @@ EXPORT_SYMBOL(tty_flip_buffer_push);
  *	Must be called before the other tty buffer functions are used.
  */
 
+// ARM10C 20150718
+// port: &(kmem_cache#25-oX)->port
 void tty_buffer_init(struct tty_port *port)
 {
+	// &port->buf: &(&(kmem_cache#25-oX)->port)->buf
 	struct tty_bufhead *buf = &port->buf;
+	// buf: &(&(kmem_cache#25-oX)->port)->buf
 
+	// &buf->lock: &(&(&(kmem_cache#25-oX)->port)->buf)->lock
 	mutex_init(&buf->lock);
+
+	// mutex_init에서 한일:
+	// (&(&(&(kmem_cache#25-oX)->port)->buf)->lock)->count: 1
+	// (&(&(&(&(&(kmem_cache#25-oX)->port)->buf)->lock)->wait_lock)->rlock)->raw_lock: { { 0 } }
+	// (&(&(&(&(&(kmem_cache#25-oX)->port)->buf)->lock)->wait_lock)->rlock)->magic: 0xdead4ead
+	// (&(&(&(&(&(kmem_cache#25-oX)->port)->buf)->lock)->wait_lock)->rlock)->owner: 0xffffffff
+	// (&(&(&(&(&(kmem_cache#25-oX)->port)->buf)->lock)->wait_lock)->rlock)->owner_cpu: 0xffffffff
+	// (&(&(&(&(kmem_cache#25-oX)->port)->buf)->lock)->wait_list)->next: &(&(&(&(kmem_cache#25-oX)->port)->buf)->lock)->wait_list
+	// (&(&(&(&(kmem_cache#25-oX)->port)->buf)->lock)->wait_list)->prev: &(&(&(&(kmem_cache#25-oX)->port)->buf)->lock)->wait_list
+	// (&(&(&(kmem_cache#25-oX)->port)->buf)->lock)->onwer: NULL
+	// (&(&(&(kmem_cache#25-oX)->port)->buf)->lock)->magic: &(&(&(kmem_cache#25-oX)->port)->buf)->lock
+
+	// &buf->sentinel: &(&(&(kmem_cache#25-oX)->port)->buf)->sentinel
 	tty_buffer_reset(&buf->sentinel, 0);
+
+	// tty_buffer_reset에서 한일:
+	// (&(&(&(kmem_cache#25-oX)->port)->buf)->sentinel)->used: 0
+	// (&(&(&(kmem_cache#25-oX)->port)->buf)->sentinel)->size: 0
+	// (&(&(&(kmem_cache#25-oX)->port)->buf)->sentinel)->next: NULL
+	// (&(&(&(kmem_cache#25-oX)->port)->buf)->sentinel)->commit: 0
+	// (&(&(&(kmem_cache#25-oX)->port)->buf)->sentinel)->read: 0
+
+	// buf->head: (&(&(kmem_cache#25-oX)->port)->buf)->head,
+	// &buf->sentinel: &(&(&(kmem_cache#25-oX)->port)->buf)->sentinel
 	buf->head = &buf->sentinel;
+	// buf->head: (&(&(kmem_cache#25-oX)->port)->buf)->head: &(&(&(kmem_cache#25-oX)->port)->buf)->sentinel
+
+	// buf->tail: (&(&(kmem_cache#25-oX)->port)->buf)->tail,
+	// &buf->sentinel: &(&(&(kmem_cache#25-oX)->port)->buf)->sentinel
 	buf->tail = &buf->sentinel;
+	// buf->tail: (&(&(kmem_cache#25-oX)->port)->buf)->tail: &(&(&(kmem_cache#25-oX)->port)->buf)->sentinel
+
+	// &buf->free: &(&(&(kmem_cache#25-oX)->port)->buf)->free
 	init_llist_head(&buf->free);
+
+	// init_llist_head에서 한일:
+	// (&(&(&(kmem_cache#25-oX)->port)->buf)->free)->first: NULL
+
+	// &buf->memory_used: &(&(&(kmem_cache#25-oX)->port)->buf)->memory_used
 	atomic_set(&buf->memory_used, 0);
+
+	// atomic_set에서 한일:
+	// (&(&(kmem_cache#25-oX)->port)->buf)->memory_used: 0
+
+	// &buf->priority: &(&(&(kmem_cache#25-oX)->port)->buf)->priority
 	atomic_set(&buf->priority, 0);
+
+	// atomic_set에서 한일:
+	// (&(&(kmem_cache#25-oX)->port)->buf)->priority: 0
+
+	// &buf->work: &(&(&(kmem_cache#25-oX)->port)->buf)->work
 	INIT_WORK(&buf->work, flush_to_ldisc);
+
+	// INIT_WORK에서 한일:
+	// (&(&(&(kmem_cache#25-oX)->port)->buf)->work)->data: { 0xFFFFFFE0 }
+	// (&(&(&(kmem_cache#25-oX)->port)->buf)->work)->entry)->next: &(&(&(&(kmem_cache#25-oX)->port)->buf)->work)->entry
+	// (&(&(&(kmem_cache#25-oX)->port)->buf)->work)->entry)->prev: &(&(&(&(kmem_cache#25-oX)->port)->buf)->work)->entry
+	// (&(&(&(kmem_cache#25-oX)->port)->buf)->work)->func: flush_to_ldisc
 }

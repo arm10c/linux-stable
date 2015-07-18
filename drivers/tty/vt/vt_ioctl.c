@@ -1062,6 +1062,7 @@ void reset_vc(struct vc_data *vc)
 		reset_palette(vc);
 }
 
+// ARM10C 20150718
 void vc_SAK(struct work_struct *work)
 {
 	struct vc *vc_con =

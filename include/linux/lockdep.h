@@ -428,6 +428,7 @@ static inline void lockdep_on(void)
 // ARM10C 20140111
 // ARM10C 20140927
 // ARM10C 20141004
+// ARM10C 20150718
 struct lock_class_key { };
 
 #define lockdep_depth(tsk)	(0)
