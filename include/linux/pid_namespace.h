@@ -20,6 +20,7 @@ struct pidmap {
 
 struct bsd_acct_struct;
 
+// ARM10C 20150718
 struct pid_namespace {
 	struct kref kref;
 	struct pidmap pidmap[PIDMAP_ENTRIES];
@@ -30,11 +31,11 @@ struct pid_namespace {
 	struct kmem_cache *pid_cachep;
 	unsigned int level;
 	struct pid_namespace *parent;
-#ifdef CONFIG_PROC_FS
+#ifdef CONFIG_PROC_FS // CONFIG_PROC_FS=y
 	struct vfsmount *proc_mnt;
 	struct dentry *proc_self;
 #endif
-#ifdef CONFIG_BSD_PROCESS_ACCT
+#ifdef CONFIG_BSD_PROCESS_ACCT // CONFIG_BSD_PROCESS_ACCT=n
 	struct bsd_acct_struct *bacct;
 #endif
 	struct user_namespace *user_ns;

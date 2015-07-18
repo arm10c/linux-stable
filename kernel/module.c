@@ -937,8 +937,11 @@ static ssize_t show_refcnt(struct module_attribute *mattr,
 static struct module_attribute modinfo_refcnt =
 	__ATTR(refcnt, 0444, show_refcnt, NULL);
 
+// ARM10C 20150718
+// vc->vc_sw->owner: ((kmem_cache#25-oX)->vc_sw)->owner: (&dummy_con)->owner: NULL
 void __module_get(struct module *module)
 {
+	// module: (&dummy_con)->owner: NULL
 	if (module) {
 		preempt_disable();
 		__this_cpu_inc(module->refptr->incs);

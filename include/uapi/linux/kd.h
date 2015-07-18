@@ -41,7 +41,11 @@ struct consolefontdesc {
 #define KDDISABIO	0x4B37	/* disable i/o to video board */
 
 #define KDSETMODE	0x4B3A	/* set text/graphics mode */
+// ARM10C 20150718
+// KD_TEXT: 0x00
 #define		KD_TEXT		0x00
+// ARM10C 20150718
+// KD_GRAPHICS: 0x01
 #define		KD_GRAPHICS	0x01
 #define		KD_TEXT0	0x02	/* obsolete */
 #define		KD_TEXT1	0x03	/* obsolete */

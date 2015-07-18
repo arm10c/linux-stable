@@ -105,6 +105,7 @@
 // ARM10C 20141025
 // ARM10C 20141227
 // ARM10C 20150321
+// ARM10C 20150718
 // in_interrupt(): 0
 #define in_interrupt()		(irq_count())
 #define in_serving_softirq()	(softirq_count() & SOFTIRQ_OFFSET)

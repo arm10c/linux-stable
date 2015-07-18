@@ -41,6 +41,8 @@ extern struct module __this_module;
 #else
 /*
 // ARM10C 20141115
+// ARM10C 20150718
+// THIS_MODULE: NULL
 */
 #define THIS_MODULE ((struct module *)0)
 #endif

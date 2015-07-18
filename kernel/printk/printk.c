@@ -73,6 +73,7 @@ int console_printk[4] = {
  * their unblank() callback or not. So let's export it.
  */
 // ARM10C 20140315
+// ARM10C 20150718
 int oops_in_progress;
 EXPORT_SYMBOL(oops_in_progress);
 
@@ -115,6 +116,7 @@ static struct lockdep_map console_lock_dep_map = {
  * locked without the console sempahore held
  */
 // ARM10C 20150704
+// ARM10C 20150718
 static int console_locked, console_suspended;
 
 /*
@@ -2075,6 +2077,7 @@ int console_trylock(void)
 }
 EXPORT_SYMBOL(console_trylock);
 
+// ARM10C 20150718
 int is_console_locked(void)
 {
 	return console_locked;

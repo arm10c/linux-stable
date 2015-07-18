@@ -234,12 +234,16 @@ int next_pidmap(struct pid_namespace *pid_ns, unsigned int last)
 	return -1;
 }
 
+// ARM10C 20150718
+// vc->vt_pid: (kmem_cache#25-oX)->vt_pid: NULL
 void put_pid(struct pid *pid)
 {
 	struct pid_namespace *ns;
 
+	// vc->vt_pid: (kmem_cache#25-oX)->vt_pid: NULL
 	if (!pid)
 		return;
+		// return 수행
 
 	ns = pid->numbers[pid->level].ns;
 	if ((atomic_read(&pid->count) == 1) ||

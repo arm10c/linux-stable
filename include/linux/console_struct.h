@@ -141,6 +141,12 @@ extern void vc_SAK(struct work_struct *work);
 
 #define CUR_DEFAULT CUR_UNDERLINE
 
+// ARM10C 20150718
+// vc: kmem_cache#25-oX
+// (kmem_cache#25-oX)->vc_display_fg: &master_display_fg
+//
+// #define CON_IS_VISIBLE(kmem_cache#25-oX):
+// (&master_display_fg == kmem_cache#25-oX)
 #define CON_IS_VISIBLE(conp) (*conp->vc_display_fg == conp)
 
 #endif /* _LINUX_CONSOLE_STRUCT_H */

@@ -151,6 +151,7 @@ struct vc vc_cons [MAX_NR_CONSOLES];
 
 #ifndef VT_SINGLE_DRIVER
 // ARM10C 20150704
+// ARM10C 20150718
 // MAX_NR_CONSOLES: 63
 static const struct consw *con_driver_map[MAX_NR_CONSOLES];
 #endif
@@ -170,6 +171,7 @@ static void blank_screen_t(unsigned long dummy);
 static void set_palette(struct vc_data *vc);
 
 static int printable;		/* Is console ready for printing? */
+// ARM10C 20150718
 int default_utf8 = true;
 module_param(default_utf8, int, S_IRUGO | S_IWUSR);
 int global_cursor_default = -1;
@@ -217,6 +219,7 @@ static int saved_console_blanked;
  * appropriately. Unless the low-level driver supplies its own display_fg
  * variable, we use this one for the "master display".
  */
+// ARM10C 20150718
 static struct vc_data *master_display_fg;
 
 /*
@@ -643,17 +646,41 @@ static void set_cursor(struct vc_data *vc)
 		hide_cursor(vc);
 }
 
+// ARM10C 20150718
+// vc: kmem_cache#25-oX
 static void set_origin(struct vc_data *vc)
 {
 	WARN_CONSOLE_UNLOCKED();
 
+	// vc: kmem_cache#25-oX
+	// CON_IS_VISIBLE(kmem_cache#25-oX): 0
+	// vc->vc_sw: (kmem_cache#25-oX)->vc_sw: &dummy_con,
+	// vc->vc_sw->con_set_origin: (&dummy_con)->con_set_origin: NULL
 	if (!CON_IS_VISIBLE(vc) ||
 	    !vc->vc_sw->con_set_origin ||
 	    !vc->vc_sw->con_set_origin(vc))
+		// vc->vc_origin: (kmem_cache#25-oX)->vc_origin,
+		// vc->vc_screenbuf: (kmem_cache#25-oX)->vc_screenbuf: kmem_cache#22-oX
 		vc->vc_origin = (unsigned long)vc->vc_screenbuf;
+		// vc->vc_origin: (kmem_cache#25-oX)->vc_origin: kmem_cache#22-oX
+
+	// vc->vc_visible_origin: (kmem_cache#25-oX)->vc_visible_origin,
+	// vc->vc_origin: (kmem_cache#25-oX)->vc_origin: kmem_cache#22-oX
 	vc->vc_visible_origin = vc->vc_origin;
+	// vc->vc_visible_origin: (kmem_cache#25-oX)->vc_visible_origin: kmem_cache#22-oX
+
+	// vc->vc_scr_end: (kmem_cache#25-oX)->vc_scr_end,
+	// vc->vc_origin: (kmem_cache#25-oX)->vc_origin: kmem_cache#22-oX,
+	// vc->vc_screenbuf_size: (kmem_cache#25-oX)->vc_screenbuf_size: 4800
 	vc->vc_scr_end = vc->vc_origin + vc->vc_screenbuf_size;
+	// vc->vc_scr_end: (kmem_cache#25-oX)->vc_scr_end: kmem_cache#22-oX + 4800
+
+	// vc->vc_pos: (kmem_cache#25-oX)->vc_pos,
+	// vc->vc_origin: (kmem_cache#25-oX)->vc_origin: kmem_cache#22-oX,
+	// vc->vc_size_row: (kmem_cache#25-oX)->vc_size_row: 160,
+	// vc->vc_y: (kmem_cache#25-oX)->vc_y: 0, vc->vc_x: (kmem_cache#25-oX)->vc_x: 0
 	vc->vc_pos = vc->vc_origin + vc->vc_size_row * vc->vc_y + 2 * vc->vc_x;
+	// vc->vc_pos: (kmem_cache#25-oX)->vc_pos: kmem_cache#22-oX + 160
 }
 
 static inline void save_screen(struct vc_data *vc)
@@ -751,31 +778,92 @@ int vc_cons_allocated(unsigned int i)
 	return (i < MAX_NR_CONSOLES && vc_cons[i].d);
 }
 
+// ARM10C 20150718
+// vc: kmem_cache#25-oX, currcons: 0, 1
 static void visual_init(struct vc_data *vc, int num, int init)
 {
 	/* ++Geert: vc->vc_sw->con_init determines console size */
+	// vc->vc_sw: (kmem_cache#25-oX)->vc_sw: NULL
 	if (vc->vc_sw)
 		module_put(vc->vc_sw->owner);
+
+	// vc->vc_sw: (kmem_cache#25-oX)->vc_sw: NULL, conswitchp: &dummy_con
 	vc->vc_sw = conswitchp;
+	// vc->vc_sw: (kmem_cache#25-oX)->vc_sw: &dummy_con
+
 #ifndef VT_SINGLE_DRIVER
+	// num: 0, con_driver_map[0]: &dummy_con
 	if (con_driver_map[num])
+		// vc->vc_sw: (kmem_cache#25-oX)->vc_sw: &dummy_con, con_driver_map[0]: &dummy_con
 		vc->vc_sw = con_driver_map[num];
+		// vc->vc_sw: (kmem_cache#25-oX)->vc_sw: &dummy_con
 #endif
+	// vc->vc_sw->owner: ((kmem_cache#25-oX)->vc_sw)->owner: (&dummy_con)->owner: NULL
 	__module_get(vc->vc_sw->owner);
+
+	// vc->vc_num: (kmem_cache#25-oX)->vc_num, num: 0
 	vc->vc_num = num;
+	// vc->vc_num: (kmem_cache#25-oX)->vc_num: 0
+
+	// vc->vc_display_fg: (kmem_cache#25-oX)->vc_display_fg
 	vc->vc_display_fg = &master_display_fg;
+	// vc->vc_display_fg: (kmem_cache#25-oX)->vc_display_fg: &master_display_fg
+
+	// vc->vc_uni_pagedir_loc: (kmem_cache#25-oX)->vc_uni_pagedir_loc,
+	// &vc->vc_uni_pagedir: &(kmem_cache#25-oX)->vc_uni_pagedir
 	vc->vc_uni_pagedir_loc = &vc->vc_uni_pagedir;
+	// vc->vc_uni_pagedir_loc: (kmem_cache#25-oX)->vc_uni_pagedir_loc: &(kmem_cache#25-oX)->vc_uni_pagedir
+
+	// vc->vc_uni_pagedir: (kmem_cache#25-oX)->vc_uni_pagedir
 	vc->vc_uni_pagedir = 0;
+	// vc->vc_uni_pagedir: (kmem_cache#25-oX)->vc_uni_pagedir: 0
+
+	// vc->vc_hi_font_mask: (kmem_cache#25-oX)->vc_hi_font_mask
 	vc->vc_hi_font_mask = 0;
+	// vc->vc_hi_font_mask: (kmem_cache#25-oX)->vc_hi_font_mask: 0
+
+	// vc->vc_complement_mask: (kmem_cache#25-oX)->vc_complement_mask
 	vc->vc_complement_mask = 0;
+	// vc->vc_complement_mask: (kmem_cache#25-oX)->vc_complement_mask: 0
+
+	// vc->vc_can_do_color: (kmem_cache#25-oX)->vc_can_do_color
 	vc->vc_can_do_color = 0;
+	// vc->vc_can_do_color: (kmem_cache#25-oX)->vc_can_do_color: 0
+
+	// vc->vc_panic_force_write: (kmem_cache#25-oX)->vc_panic_force_write
 	vc->vc_panic_force_write = false;
+	// vc->vc_panic_force_write: (kmem_cache#25-oX)->vc_panic_force_write: 0
+
+	// vc->vc_sw->con_init: ((kmem_cache#25-oX)->vc_sw)->con_init: dummycon_init
+	// vc: kmem_cache#25-oX, init: 1
+	// dummycon_init(kmem_cache#25-oX, 1)
 	vc->vc_sw->con_init(vc, init);
+
+	// dummycon_init에서 한일:
+	// (kmem_cache#25-oX)->vc_can_do_color: 1
+	// (kmem_cache#25-oX)->vc_cols: 80
+	// (kmem_cache#25-oX)->vc_rows: 30
+
+	// vc->vc_complement_mask: (kmem_cache#25-oX)->vc_complement_mask: 0
 	if (!vc->vc_complement_mask)
+		// vc->vc_complement_mask: (kmem_cache#25-oX)->vc_complement_mask: 0
+		// vc->vc_can_do_color: (kmem_cache#25-oX)->vc_can_do_color: 0
 		vc->vc_complement_mask = vc->vc_can_do_color ? 0x7700 : 0x0800;
+		// vc->vc_complement_mask: (kmem_cache#25-oX)->vc_complement_mask: 0x0800
+
+	// vc->vc_s_complement_mask: (kmem_cache#25-oX)->vc_s_complement_mask,
+	// vc->vc_complement_mask: (kmem_cache#25-oX)->vc_complement_mask: 0x0800
 	vc->vc_s_complement_mask = vc->vc_complement_mask;
+	// vc->vc_s_complement_mask: (kmem_cache#25-oX)->vc_s_complement_mask: 0x0800
+
+	// vc->vc_size_row: (kmem_cache#25-oX)->vc_size_row, (kmem_cache#25-oX)->vc_cols: 80
 	vc->vc_size_row = vc->vc_cols << 1;
+	// vc->vc_size_row: (kmem_cache#25-oX)->vc_size_row: 160
+
+	// vc->vc_screenbuf_size: (kmem_cache#25-oX)->vc_screenbuf_size,
+	// vc->vc_rows: (kmem_cache#25-oX)->vc_rows: 30, vc->vc_size_row: (kmem_cache#25-oX)->vc_size_row: 160
 	vc->vc_screenbuf_size = vc->vc_rows * vc->vc_size_row;
+	// vc->vc_screenbuf_size: (kmem_cache#25-oX)->vc_screenbuf_size: 4800
 }
 
 int vc_allocate(unsigned int currcons)	/* return 0 on success */
@@ -1055,14 +1143,18 @@ struct vc_data *vc_deallocate(unsigned int currcons)
 #define VT100ID "\033[?1;2c"
 #define VT102ID "\033[?6c"
 
+// ARM10C 20150718
 unsigned char color_table[] = { 0, 4, 2, 6, 1, 5, 3, 7,
 				       8,12,10,14, 9,13,11,15 };
 
 /* the default colour table, for VGA+ colour systems */
+// ARM10C 20150718
 int default_red[] = {0x00,0xaa,0x00,0xaa,0x00,0xaa,0x00,0xaa,
     0x55,0xff,0x55,0xff,0x55,0xff,0x55,0xff};
+// ARM10C 20150718
 int default_grn[] = {0x00,0x00,0xaa,0x55,0x00,0x00,0xaa,0xaa,
     0x55,0x55,0xff,0xff,0x55,0x55,0xff,0xff};
+// ARM10C 20150718
 int default_blu[] = {0x00,0x00,0x00,0x00,0xaa,0xaa,0xaa,0xaa,
     0x55,0x55,0x55,0x55,0xff,0xff,0xff,0xff};
 
@@ -2857,19 +2949,63 @@ module_param_named(color, default_color, int, S_IRUGO | S_IWUSR);
 module_param_named(italic, default_italic_color, int, S_IRUGO | S_IWUSR);
 module_param_named(underline, default_underline_color, int, S_IRUGO | S_IWUSR);
 
+// ARM10C 20150718
+// kmem_cache#25-oX, 30, 80, 1
 static void vc_init(struct vc_data *vc, unsigned int rows,
 		    unsigned int cols, int do_clear)
 {
 	int j, k ;
 
+	// vc->vc_cols: (kmem_cache#25-oX)->vc_cols, cols: 80
 	vc->vc_cols = cols;
-	vc->vc_rows = rows;
-	vc->vc_size_row = cols << 1;
-	vc->vc_screenbuf_size = vc->vc_rows * vc->vc_size_row;
+	// vc->vc_cols: (kmem_cache#25-oX)->vc_cols: 80
 
+	// vc->vc_rows: (kmem_cache#25-oX)->vc_rows, rows: 30
+	vc->vc_rows = rows;
+	// vc->vc_rows: (kmem_cache#25-oX)->vc_rows: 30
+
+	// vc->vc_size_row: (kmem_cache#25-oX)->vc_size_row, cols: 80
+	vc->vc_size_row = cols << 1;
+	// vc->vc_size_row: (kmem_cache#25-oX)->vc_size_row: 160
+
+	// vc->vc_screenbuf_size: (kmem_cache#25-oX)->vc_screenbuf_size,
+	// vc->vc_rows: (kmem_cache#25-oX)->vc_rows: 30,
+	// vc->vc_size_row: (kmem_cache#25-oX)->vc_size_row: 160
+	vc->vc_screenbuf_size = vc->vc_rows * vc->vc_size_row;
+	// vc->vc_screenbuf_size: (kmem_cache#25-oX)->vc_screenbuf_size: 4800
+
+	// vc: kmem_cache#25-oX
 	set_origin(vc);
+
+	// set_origin에서 한일:
+	// (kmem_cache#25-oX)->vc_origin: kmem_cache#22-oX
+	// (kmem_cache#25-oX)->vc_visible_origin: kmem_cache#22-oX
+	// (kmem_cache#25-oX)->vc_scr_end: kmem_cache#22-oX + 4800
+	// (kmem_cache#25-oX)->vc_pos: kmem_cache#22-oX + 160
+
+	// (kmem_cache#25-oX)->vc_pos: kmem_cache#22-oX + 160,
+	// (kmem_cache#25-oX)->vc_origin: kmem_cache#22-oX
 	vc->vc_pos = vc->vc_origin;
+	// (kmem_cache#25-oX)->vc_pos: kmem_cache#22-oX
+
+	// vc: kmem_cache#25-oX
 	reset_vc(vc);
+
+	// reset_vc에서 한일:
+	// (kmem_cache#25-oX)->vc_mode: 0x00
+	// kbd_table[0].kbdmode: 3
+	// (kmem_cache#25-oX)->vt_mode.mode: 0x00
+	// (kmem_cache#25-oX)->vt_mode.waitv: 0
+	// (kmem_cache#25-oX)->vt_mode.relsig: 0
+	// (kmem_cache#25-oX)->vt_mode.acqsig: 0
+	// (kmem_cache#25-oX)->vt_mode.frsig: 0
+	// (kmem_cache#25-oX)->vt_pid: NULL
+	// (kmem_cache#25-oX)->vt_newvt: -1
+	// FIXME: 정래 필요
+	// (kmem_cache#25-oX)->vc_palette[0]: 0x00
+	// (kmem_cache#25-oX)->vc_palette[1]: 0x00
+	// (kmem_cache#25-oX)->vc_palette[2]: 0x00
+
 	for (j=k=0; j<16; j++) {
 		vc->vc_palette[k++] = default_red[j] ;
 		vc->vc_palette[k++] = default_grn[j] ;
@@ -3074,11 +3210,43 @@ static int __init con_init(void)
 		// (&(kmem_cache#25-oX)->port)->closing_wait: 3000
 		// (&(&(kmem_cache#25-oX)->port)->kref)->refcount: 1
 
+		// vc: kmem_cache#25-oX, currcons: 0
 		visual_init(vc, currcons, 1);
+
+		// visual_init에서 한일:
+		// (kmem_cache#25-oX)->vc_sw: &dummy_con
+		// (kmem_cache#25-oX)->vc_num: 0
+		// (kmem_cache#25-oX)->vc_display_fg: &master_display_fg
+		// (kmem_cache#25-oX)->vc_uni_pagedir_loc: &(kmem_cache#25-oX)->vc_uni_pagedir
+		// (kmem_cache#25-oX)->vc_uni_pagedir: 0
+		// (kmem_cache#25-oX)->vc_hi_font_mask: 0
+		// (kmem_cache#25-oX)->vc_complement_mask: 0
+		// (kmem_cache#25-oX)->vc_can_do_color: 0
+		// (kmem_cache#25-oX)->vc_panic_force_write: 0
+		// (kmem_cache#25-oX)->vc_can_do_color: 1
+		// (kmem_cache#25-oX)->vc_cols: 80
+		// (kmem_cache#25-oX)->vc_rows: 30
+		// (kmem_cache#25-oX)->vc_complement_mask: 0x0800
+		// (kmem_cache#25-oX)->vc_size_row: 160
+		// (kmem_cache#25-oX)->vc_screenbuf_size: 4800
+
+		// vc->vc_screenbuf: (kmem_cache#25-oX)->vc_screenbuf,
+		// vc->vc_screenbuf_size: (kmem_cache#25-oX)->vc_screenbuf_size: 4800, GFP_NOWAIT: 0
+		// kzalloc(4800, GFP_NOWAIT: 0): kmem_cache#22-oX
 		vc->vc_screenbuf = kzalloc(vc->vc_screenbuf_size, GFP_NOWAIT);
+		// vc->vc_screenbuf: (kmem_cache#25-oX)->vc_screenbuf: kmem_cache#22-oX
+
+		// vc: kmem_cache#25-oX, vc->vc_rows: (kmem_cache#25-oX)->vc_rows: 30
+		// vc->vc_cols: (kmem_cache#25-oX)->vc_cols: 80, currcons: 0
+		// vc->vc_sw: (kmem_cache#25-oX)->vc_sw: &dummy_con,
+		// vc->vc_sw->con_save_screen: (&dummy_con)->con_save_screen: NULL
+		// vc_init(kmem_cache#25-oX, 30, 80, 1)
 		vc_init(vc, vc->vc_rows, vc->vc_cols,
 			currcons || !vc->vc_sw->con_save_screen);
 	}
+
+// 2015/07/18 종료
+
 	currcons = fg_console = 0;
 	master_display_fg = vc = vc_cons[currcons].d;
 	set_origin(vc);
@@ -4026,11 +4194,17 @@ void poke_blanked_console(void)
  *	Palettes
  */
 
+// ARM10C 20150718
+// vc: kmem_cache#25-oX
 static void set_palette(struct vc_data *vc)
 {
 	WARN_CONSOLE_UNLOCKED();
 
+	// vc->vc_mode: (kmem_cache#25-oX)->vc_mode: 0x00, KD_GRAPHICS: 0x01
 	if (vc->vc_mode != KD_GRAPHICS)
+		// vc->vc_sw: (kmem_cache#25-oX)->vc_sw: &dummy_con
+		// (&dummy_con)->con_set_palette: dummycon_dummy, vc: kmem_cache#25-oX
+		// dummycon_dummy(kmem_cache#25-oX, color_table)
 		vc->vc_sw->con_set_palette(vc, color_table);
 }
 
@@ -4087,14 +4261,35 @@ int con_get_cmap(unsigned char __user *arg)
 	return 0;
 }
 
+// ARM10C 20150718
+// vc: kmem_cache#25-oX
 void reset_palette(struct vc_data *vc)
 {
 	int j, k;
 	for (j=k=0; j<16; j++) {
+		// j: 0, k: 0, vc->vc_palette[0]: (kmem_cache#25-oX)->vc_palette[0], default_red[0]: 0x00
 		vc->vc_palette[k++] = default_red[j];
+		// vc->vc_palette[0]: (kmem_cache#25-oX)->vc_palette[0]: 0x00
+
+		// j: 0, k: 1, vc->vc_palette[1]: (kmem_cache#25-oX)->vc_palette[1], default_grn[0]: 0x00
 		vc->vc_palette[k++] = default_grn[j];
+		// vc->vc_palette[1]: (kmem_cache#25-oX)->vc_palette[1]: 0x00
+
+		// j: 0, k: 2, vc->vc_palette[2]: (kmem_cache#25-oX)->vc_palette[2], default_blu[0]: 0x00
 		vc->vc_palette[k++] = default_blu[j];
+		// vc->vc_palette[2]: (kmem_cache#25-oX)->vc_palette[2]: 0x00
+
+		// j: 1...15 loop 수행
 	}
+
+	// FIXME: 정래 필요
+	// 위 loop의 수행 결과
+	// vc->vc_palette[0]: (kmem_cache#25-oX)->vc_palette[0]: 0x00
+	// vc->vc_palette[1]: (kmem_cache#25-oX)->vc_palette[1]: 0x00
+	// vc->vc_palette[2]: (kmem_cache#25-oX)->vc_palette[2]: 0x00
+	// ....
+
+	// vc: kmem_cache#25-oX
 	set_palette(vc);
 }
 

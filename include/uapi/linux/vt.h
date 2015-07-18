@@ -10,6 +10,7 @@
 // MIN_NR_CONSOLES: 1
 #define MIN_NR_CONSOLES 1       /* must be at least 1 */
 // ARM10C 20150704
+// ARM10C 20150718
 // MAX_NR_CONSOLES: 63
 #define MAX_NR_CONSOLES	63	/* serial lines start at 64 */
 #define MAX_NR_USER_CONSOLES 63	/* must be root to allocate above this */
@@ -31,6 +32,8 @@ struct vt_mode {
 };
 #define VT_GETMODE	0x5601	/* get mode of active vt */
 #define VT_SETMODE	0x5602	/* set mode of active vt */
+// ARM10C 20150718
+// VT_AUTO: 0x00
 #define		VT_AUTO		0x00	/* auto vt switching */
 #define		VT_PROCESS	0x01	/* process controls switching */
 #define		VT_ACKACQ	0x02	/* acknowledge switch */

@@ -21,6 +21,7 @@ extern int funcbufsize, funcbufleft;
  *
  * Note: lockstate is used as index in the array key_map.
  */
+// ARM10C 20150718
 struct kbd_struct {
 
 	unsigned char lockstate;
@@ -48,9 +49,13 @@ struct kbd_struct {
 #define VC_KANALOCK	3	/* kanalock mode */
 
 	unsigned char kbdmode:3;	/* one 3-bit value */
+// ARM10C 20150718
+// VC_XLATE: 0
 #define VC_XLATE	0	/* translate keycodes using keymap */
 #define VC_MEDIUMRAW	1	/* medium raw (keycode) mode */
 #define VC_RAW		2	/* raw (scancode) mode */
+// ARM10C 20150718
+// VC_UNICODE: 3
 #define VC_UNICODE	3	/* Unicode mode */
 #define VC_OFF		4	/* disabled mode */
 

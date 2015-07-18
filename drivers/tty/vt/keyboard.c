@@ -105,6 +105,8 @@ struct vt_spawn_console vt_spawn_con = {
  * Internal Data.
  */
 
+// ARM10C 20150718
+// MAX_NR_CONSOLES: 63
 static struct kbd_struct kbd_table[MAX_NR_CONSOLES];
 static struct kbd_struct *kbd = kbd_table;
 
@@ -118,6 +120,7 @@ static const int max_vals[] = {
 static const int NR_TYPES = ARRAY_SIZE(max_vals);
 
 static struct input_handler kbd_handler;
+// ARM10C 20150718
 static DEFINE_SPINLOCK(kbd_event_lock);
 static DEFINE_SPINLOCK(led_lock);
 static unsigned long key_down[BITS_TO_LONGS(KEY_CNT)];	/* keyboard key bitmap */
@@ -2062,13 +2065,25 @@ int vt_do_kdgkbmeta(int console)
  *
  *	Restore the unicode console state to its default
  */
+// ARM10C 20150718
+// vc->vc_num: (kmem_cache#25-oX)->vc_num: 0
 void vt_reset_unicode(int console)
 {
 	unsigned long flags;
 
 	spin_lock_irqsave(&kbd_event_lock, flags);
+
+	// spin_lock_irqsave에서 한일:
+	// &kbd_event_lock을 사용하여 spin lock을 수행하고 cpsr을 flags에 저장함
+
+	// console: 0, default_utf8: true, VC_UNICODE: 3, VC_XLATE: 0
 	kbd_table[console].kbdmode = default_utf8 ? VC_UNICODE : VC_XLATE;
+	// kbd_table[0].kbdmode: 3
+
 	spin_unlock_irqrestore(&kbd_event_lock, flags);
+
+	// spin_unlock_irqrestore에서 한일:
+	// &kbd_event_lock을 사용하여 spin unlock을 수행하고 flags에 저장된 cpsr을 복원함
 }
 
 /**

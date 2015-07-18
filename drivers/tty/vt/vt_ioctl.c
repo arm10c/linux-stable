@@ -1046,20 +1046,61 @@ out:
 	return ret;
 }
 
+// ARM10C 20150718
+// vc: kmem_cache#25-oX
 void reset_vc(struct vc_data *vc)
 {
+	// vc->vc_mode: (kmem_cache#25-oX)->vc_mode, KD_TEXT: 0x00
 	vc->vc_mode = KD_TEXT;
+	// vc->vc_mode: (kmem_cache#25-oX)->vc_mode: 0x00
+
+	// vc->vc_num: (kmem_cache#25-oX)->vc_num: 0
 	vt_reset_unicode(vc->vc_num);
+
+	// vt_reset_unicode에서 한일:
+	// kbd_table[0].kbdmode: 3
+
+	// vc->vt_mode.mode: (kmem_cache#25-oX)->vt_mode.mode, VT_AUTO: 0x00
 	vc->vt_mode.mode = VT_AUTO;
+	// vc->vt_mode.mode: (kmem_cache#25-oX)->vt_mode.mode: 0x00
+
+	// vc->vt_mode.waitv: (kmem_cache#25-oX)->vt_mode.waitv
 	vc->vt_mode.waitv = 0;
+	// vc->vt_mode.waitv: (kmem_cache#25-oX)->vt_mode.waitv: 0
+
+	// vc->vt_mode.relsig: (kmem_cache#25-oX)->vt_mode.relsig
 	vc->vt_mode.relsig = 0;
+	// vc->vt_mode.relsig: (kmem_cache#25-oX)->vt_mode.relsig: 0
+
+	// vc->vt_mode.acqsig: (kmem_cache#25-oX)->vt_mode.acqsig
 	vc->vt_mode.acqsig = 0;
+	// vc->vt_mode.acqsig: (kmem_cache#25-oX)->vt_mode.acqsig: 0
+
+	// vc->vt_mode.frsig: (kmem_cache#25-oX)->vt_mode.frsig
 	vc->vt_mode.frsig = 0;
+	// vc->vt_mode.frsig: (kmem_cache#25-oX)->vt_mode.frsig: 0
+
+	// vc->vt_pid: (kmem_cache#25-oX)->vt_pid: NULL
 	put_pid(vc->vt_pid);
+
+	// vc->vt_pid: (kmem_cache#25-oX)->vt_pid: NULL
 	vc->vt_pid = NULL;
+	// vc->vt_pid: (kmem_cache#25-oX)->vt_pid: NULL
+
+	// vc->vt_newvt: (kmem_cache#25-oX)->vt_newvt
 	vc->vt_newvt = -1;
+	// vc->vt_newvt: (kmem_cache#25-oX)->vt_newvt: -1
+
+	// in_interrupt(): 0
 	if (!in_interrupt())    /* Via keyboard.c:SAK() - akpm */
+		// vc: kmem_cache#25-oX
 		reset_palette(vc);
+
+		// FIXME: 정래 필요
+		// reset_palette에서 한일:
+		// vc->vc_palette[0]: (kmem_cache#25-oX)->vc_palette[0]: 0x00
+		// vc->vc_palette[1]: (kmem_cache#25-oX)->vc_palette[1]: 0x00
+		// vc->vc_palette[2]: (kmem_cache#25-oX)->vc_palette[2]: 0x00
 }
 
 // ARM10C 20150718

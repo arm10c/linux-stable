@@ -30,6 +30,7 @@ struct tty_struct;
 
 // ARM10C 20140215
 // ARM10C 20150704
+// ARM10C 20150718
 struct consw {
 	struct module *owner;
 	const char *(*con_startup)(void);
@@ -186,6 +187,8 @@ void vcs_remove_sysfs(int index);
 
 /* Some debug stub to catch some of the obvious races in the VT code */
 #if 1
+// ARM10C 20150718
+// is_console_locked(): 1
 #define WARN_CONSOLE_UNLOCKED()	WARN_ON(!is_console_locked() && !oops_in_progress)
 #else
 #define WARN_CONSOLE_UNLOCKED()
