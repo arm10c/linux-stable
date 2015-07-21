@@ -19,6 +19,8 @@
 #endif
 
 #ifndef VT_BUF_HAVE_RW
+// ARM10C 20150718
+// c: 0x120, s: kmem_cache#22-oX
 #define scr_writew(val, addr) (*(addr) = (val))
 #define scr_readw(addr) (*(addr))
 #define scr_memcpyw(d, s, c) memcpy(d, s, c)
@@ -28,11 +30,32 @@
 #endif
 
 #ifndef VT_BUF_HAVE_MEMSETW
+// ARM10C 20150718
+// start: kmem_cache#22-oX,
+// vc->vc_video_erase_char: (kmem_cache#25-oX)->vc_video_erase_char: 0x120, 4800
 static inline void scr_memsetw(u16 *s, u16 c, unsigned int count)
 {
+	// count: 4800
 	count /= 2;
+	// count: 2400
+
+	// count: 2400
 	while (count--)
+		// c: 0x120, s: kmem_cache#22-oX
 		scr_writew(c, s++);
+
+		// scr_writew에서 한일:
+		// *(kmem_cache#22-oX): 0x120
+		
+		// count: 2399...1 까지 루프 수행
+	
+	// 위 loop에서 한일:
+	// *(kmem_cache#22-oX + 0): 0x120
+	// *(kmem_cache#22-oX + 1): 0x120
+	// *(kmem_cache#22-oX + 2): 0x120
+	// *(kmem_cache#22-oX + 3): 0x120
+	// ...
+	// *(kmem_cache#22-oX + 2399): 0x120
 }
 #endif
 

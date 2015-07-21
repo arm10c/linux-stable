@@ -38,6 +38,8 @@ struct kbd_struct {
 	unsigned char slockstate; 	/* for `sticky' Shift, Ctrl, etc. */
 
 	unsigned char ledmode:1;
+// ARM10C 20150718
+// LED_SHOW_FLAGS: 0
 #define LED_SHOW_FLAGS 0        /* traditional state */
 #define LED_SHOW_IOCTL 1        /* only change leds upon ioctl */
 
@@ -60,9 +62,17 @@ struct kbd_struct {
 #define VC_OFF		4	/* disabled mode */
 
 	unsigned char modeflags:5;
+// ARM10C 20150718
+// VC_APPLIC: 0
 #define VC_APPLIC	0	/* application key mode */
+// ARM10C 20150718
+// VC_CKMODE: 1
 #define VC_CKMODE	1	/* cursor key mode */
+// ARM10C 20150718
+// VC_REPEAT: 2
 #define VC_REPEAT	2	/* keyboard repeat */
+// ARM10C 20150718
+// VC_CRLF: 3
 #define VC_CRLF		3	/* 0 - enter sends CR, 1 - enter sends CRLF */
 #define VC_META		4	/* 0 - meta, 1 - meta=prefix with ESC */
 };
@@ -94,9 +104,13 @@ static inline int vc_kbd_led(struct kbd_struct * kbd, int flag)
 	return ((kbd->ledflagstate >> flag) & 1);
 }
 
+// ARM10C 20150718
+// kbd: &kbd_table[0], VC_REPEAT: 2
 static inline void set_vc_kbd_mode(struct kbd_struct * kbd, int flag)
 {
+	// kbd->modeflags: (&kbd_table[0])->modeflags: 0, flag: 2
 	kbd->modeflags |= 1 << flag;
+	// kbd->modeflags: (&kbd_table[0])->modeflags: 0x4
 }
 
 static inline void set_vc_kbd_led(struct kbd_struct * kbd, int flag)
@@ -104,9 +118,21 @@ static inline void set_vc_kbd_led(struct kbd_struct * kbd, int flag)
 	kbd->ledflagstate |= 1 << flag;
 }
 
+// ARM10C 20150718
+// kbd: &kbd_table[0], VC_CKMODE: 1
+// ARM10C 20150718
+// kbd: &kbd_table[0], VC_APPLIC: 0
+// ARM10C 20150718
+// kbd: &kbd_table[0], VC_CRLF: 3
 static inline void clr_vc_kbd_mode(struct kbd_struct * kbd, int flag)
 {
+	// kbd->modeflags: (&kbd_table[0])->modeflags: 0x4, flag: 1
+	// kbd->modeflags: (&kbd_table[0])->modeflags: 0x4, flag: 0
+	// kbd->modeflags: (&kbd_table[0])->modeflags: 0x4, flag: 3
 	kbd->modeflags &= ~(1 << flag);
+	// kbd->modeflags: (&kbd_table[0])->modeflags: 0x4
+	// kbd->modeflags: (&kbd_table[0])->modeflags: 0x4
+	// kbd->modeflags: (&kbd_table[0])->modeflags: 0x4
 }
 
 static inline void clr_vc_kbd_led(struct kbd_struct * kbd, int flag)

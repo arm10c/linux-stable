@@ -142,7 +142,12 @@ const struct consw *conswitchp;
 /*
  * Here is the default bell parameters: 750HZ, 1/8th of a second
  */
+// ARM10C 20150718
+// DEFAULT_BELL_PITCH: 750
 #define DEFAULT_BELL_PITCH	750
+// ARM10C 20150718
+// HZ: 100
+// DEFAULT_BELL_DURATION: 12
 #define DEFAULT_BELL_DURATION	(HZ/8)
 
 // ARM10C 20150718
@@ -174,6 +179,7 @@ static int printable;		/* Is console ready for printing? */
 // ARM10C 20150718
 int default_utf8 = true;
 module_param(default_utf8, int, S_IRUGO | S_IWUSR);
+// ARM10C 20150718
 int global_cursor_default = -1;
 module_param(global_cursor_default, int, S_IRUGO | S_IWUSR);
 
@@ -187,6 +193,7 @@ module_param(cur_default, int, S_IRUGO | S_IWUSR);
 static int ignore_poke;
 
 int do_poke_blanked_console;
+// ARM10C 20150718
 int console_blanked;
 
 static int vesa_blank_mode; /* 0:none 1:suspendV 2:suspendH 3:powerdown */
@@ -309,6 +316,8 @@ static void notify_update(struct vc_data *vc)
 #ifdef VT_BUF_VRAM_ONLY
 #define DO_UPDATE(vc)	0
 #else
+// ARM10C 20150718
+// vc: kmem_cache#25-oX
 #define DO_UPDATE(vc)	(CON_IS_VISIBLE(vc) && !console_blanked)
 #endif
 
@@ -433,9 +442,12 @@ void update_region(struct vc_data *vc, unsigned long start, int count)
 
 /* Structure of attributes is hardware-dependent */
 
+// ARM10C 20150718
+// kmem_cache#25-oX, 7, 1, 0, 0, 0, 0
 static u8 build_attr(struct vc_data *vc, u8 _color, u8 _intensity, u8 _blink,
     u8 _underline, u8 _reverse, u8 _italic)
 {
+	// vc->vc_sw: (kmem_cache#25-oX)->vc_sw: &dummy_con, (&dummy_con)->con_build_attr: NULL
 	if (vc->vc_sw->con_build_attr)
 		return vc->vc_sw->con_build_attr(vc, _color, _intensity,
 		       _blink, _underline, _reverse, _italic);
@@ -452,13 +464,20 @@ static u8 build_attr(struct vc_data *vc, u8 _color, u8 _intensity, u8 _blink,
  *  Bit 7   : blink
  */
 	{
+	// _color: 7
 	u8 a = _color;
+	// a: 7
+
+	// vc->vc_sw: (kmem_cache#25-oX)->vc_sw: &dummy_con, (&dummy_con)->vc_can_do_color: NULL
 	if (!vc->vc_can_do_color)
+		// _intensity: 1, _italic: 0, _underline: 0, _reverse: 0, _blink: 0
 		return _intensity |
 		       (_italic ? 2 : 0) |
 		       (_underline ? 4 : 0) |
 		       (_reverse ? 8 : 0) |
 		       (_blink ? 0x80 : 0);
+		// return 1
+
 	if (_italic)
 		a = (a & 0xF0) | vc->vc_itcolor;
 	else if (_underline)
@@ -480,12 +499,27 @@ static u8 build_attr(struct vc_data *vc, u8 _color, u8 _intensity, u8 _blink,
 #endif
 }
 
+// ARM10C 20150718
+// vc: kmem_cache#25-oX
 static void update_attr(struct vc_data *vc)
 {
+	// vc->vc_attr: (kmem_cache#25-oX)->vc_attr,
+	// vc: kmem_cache#25-oX, vc->vc_color: (kmem_cache#25-oX)->vc_color: 7,
+	// vc->vc_intensity: (kmem_cache#25-oX)->vc_intensity: 1, vc->vc_blink: (kmem_cache#25-oX)->vc_blink: 0
+	// vc->vc_underline: (kmem_cache#25-oX)->vc_underline: 0, vc->vc_reverse: (kmem_cache#25-oX)->vc_reverse: 0
+	// vc->vc_decscnm: (kmem_cache#25-oX)->vc_decscnm: 0, vc->vc_italic: (kmem_cache#25-oX)->vc_italic: 0
+	// build_attr(kmem_cache#25-oX, 7, 1, 0, 0, 0, 0): 1
 	vc->vc_attr = build_attr(vc, vc->vc_color, vc->vc_intensity,
 	              vc->vc_blink, vc->vc_underline,
 	              vc->vc_reverse ^ vc->vc_decscnm, vc->vc_italic);
+	// vc->vc_attr: (kmem_cache#25-oX)->vc_attr: 1
+
+	// vc->vc_video_erase_char: (kmem_cache#25-oX)->vc_video_erase_char,
+	// vc: kmem_cache#25-oX, vc->vc_color: (kmem_cache#25-oX)->vc_color: 7,
+	// vc->vc_blink: (kmem_cache#25-oX)->vc_blink: 0, vc->vc_decscnm: (kmem_cache#25-oX)->vc_decscnm: 0
+	// build_attr(kmem_cache#25-oX, 7, 1, 0, 0, 0, 0): 1, ' ': 0x20
 	vc->vc_video_erase_char = (build_attr(vc, vc->vc_color, 1, vc->vc_blink, 0, vc->vc_decscnm, 0) << 8) | ' ';
+	// vc->vc_video_erase_char: (kmem_cache#25-oX)->vc_video_erase_char: 0x120
 }
 
 /* Note: inverting the screen twice should revert to the original state */
@@ -1167,34 +1201,58 @@ module_param_array(default_blu, int, NULL, S_IRUGO | S_IWUSR);
  * might also be negative. If the given position is out of
  * bounds, the cursor is placed at the nearest margin.
  */
+// ARM10C 20150718
+// vc: kmem_cache#25-oX, 0, 0
 static void gotoxy(struct vc_data *vc, int new_x, int new_y)
 {
 	int min_y, max_y;
 
+	// new_x: 0
 	if (new_x < 0)
 		vc->vc_x = 0;
 	else {
+		// new_x: 0, vc->vc_cols: (kmem_cache#25-oX)->vc_cols: 80
 		if (new_x >= vc->vc_cols)
 			vc->vc_x = vc->vc_cols - 1;
 		else
+			// vc->vc_x: (kmem_cache#25-oX)->vc_x, new_x: 0
 			vc->vc_x = new_x;
+			// vc->vc_x: (kmem_cache#25-oX)->vc_x: 0
 	}
 
+	// vc->vc_decom: (kmem_cache#25-oX)->vc_decom: 0
  	if (vc->vc_decom) {
 		min_y = vc->vc_top;
 		max_y = vc->vc_bottom;
 	} else {
 		min_y = 0;
+		// min_y: 0
+
+		// vc->vc_rows: (kmem_cache#25-oX)->vc_rows: 30
 		max_y = vc->vc_rows;
+		// max_y: 30
 	}
+
+	// new_y: 0, min_y: 0, max_y: 30
 	if (new_y < min_y)
 		vc->vc_y = min_y;
 	else if (new_y >= max_y)
 		vc->vc_y = max_y - 1;
 	else
+		// vc->vc_y: (kmem_cache#25-oX)->vc_y, new_y: 0
 		vc->vc_y = new_y;
+		// vc->vc_y: (kmem_cache#25-oX)->vc_y: 0
+
+	// vc->vc_pos: (kmem_cache#25-oX)->vc_pos,
+	// vc->vc_origin: (kmem_cache#25-oX)->vc_origin: kmem_cache#22-oX, vc->vc_y: (kmem_cache#25-oX)->vc_y: 0,
+	// vc->vc_size_row: (kmem_cache#25-oX)->vc_size_row: 160, vc->vc_x: (kmem_cache#25-oX)->vc_x: 0
 	vc->vc_pos = vc->vc_origin + vc->vc_y * vc->vc_size_row + (vc->vc_x<<1);
+	// vc->vc_pos: (kmem_cache#25-oX)->vc_pos: kmem_cache#22-oX
+
+	// vc->vc_need_wrap: (kmem_cache#25-oX)->vc_need_wrap
 	vc->vc_need_wrap = 0;
+	// vc->vc_need_wrap: (kmem_cache#25-oX)->vc_need_wrap: 0
+
 }
 
 /* for absolute user moves, when decom is set */
@@ -1268,11 +1326,14 @@ static inline void del(struct vc_data *vc)
 	/* ignored */
 }
 
+// ARM10C 20150718
+// vc: kmem_cache#25-oX, 2
 static void csi_J(struct vc_data *vc, int vpar)
 {
 	unsigned int count;
 	unsigned short * start;
 
+	// vpar: 2
 	switch (vpar) {
 		case 0:	/* erase from cursor to end of display */
 			count = (vc->vc_scr_end - vc->vc_pos) >> 1;
@@ -1290,16 +1351,39 @@ static void csi_J(struct vc_data *vc, int vpar)
 				update_screen(vc);
 			/* fall through */
 		case 2: /* erase whole display */
+			// vc->vc_cols: (kmem_cache#25-oX)->vc_cols: 80,
+			// vc->vc_rows: (kmem_cache#25-oX)->vc_rows: 30
 			count = vc->vc_cols * vc->vc_rows;
+			// count: 2400
+
+			// vc->vc_origin: (kmem_cache#25-oX)->vc_origin: kmem_cache#22-oX
 			start = (unsigned short *)vc->vc_origin;
+			// start: kmem_cache#22-oX
 			break;
+			// break 수행
 		default:
 			return;
 	}
+
+	// start: kmem_cache#22-oX,
+	// vc->vc_video_erase_char: (kmem_cache#25-oX)->vc_video_erase_char: 0x120, count: 2400
 	scr_memsetw(start, vc->vc_video_erase_char, 2 * count);
+
+	// scr_memsetw에서 한일:
+	// *(kmem_cache#22-oX + 0): 0x120
+	// *(kmem_cache#22-oX + 1): 0x120
+	// *(kmem_cache#22-oX + 2): 0x120
+	// *(kmem_cache#22-oX + 3): 0x120
+	// ...
+	// *(kmem_cache#22-oX + 2399): 0x120
+
+	// vc: kmem_cache#25-oX, DO_UPDATE(kmem_cache#25-oX): 0
 	if (DO_UPDATE(vc))
 		do_update_region(vc, (unsigned long) start, count);
+
+	// vc->vc_need_wrap: (kmem_cache#25-oX)->vc_need_wrap
 	vc->vc_need_wrap = 0;
+	// vc->vc_need_wrap: (kmem_cache#25-oX)->vc_need_wrap: 0
 }
 
 static void csi_K(struct vc_data *vc, int vpar)
@@ -1343,14 +1427,34 @@ static void csi_X(struct vc_data *vc, int vpar) /* erase the following vpar posi
 	vc->vc_need_wrap = 0;
 }
 
+// ARM10C 20150718
+// vc: kmem_cache#25-oX
 static void default_attr(struct vc_data *vc)
 {
+	// vc->vc_intensity: (kmem_cache#25-oX)->vc_intensity
 	vc->vc_intensity = 1;
+	// vc->vc_intensity: (kmem_cache#25-oX)->vc_intensity: 1
+
+	// vc->vc_italic: (kmem_cache#25-oX)->vc_italic
 	vc->vc_italic = 0;
+	// vc->vc_italic: (kmem_cache#25-oX)->vc_italic: 0
+
+	// vc->vc_underline: (kmem_cache#25-oX)->vc_underline
 	vc->vc_underline = 0;
+	// vc->vc_underline: (kmem_cache#25-oX)->vc_underline: 0
+
+	// vc->vc_reverse: (kmem_cache#25-oX)->vc_reverse
 	vc->vc_reverse = 0;
+	// vc->vc_reverse: (kmem_cache#25-oX)->vc_reverse: 0
+
+	// vc->vc_blink: (kmem_cache#25-oX)->vc_blink
 	vc->vc_blink = 0;
+	// vc->vc_blink: (kmem_cache#25-oX)->vc_blink: 0
+
+	// vc->vc_color: (kmem_cache#25-oX)->vc_color,
+	// vc->vc_def_color: (kmem_cache#25-oX)->vc_def_color: 7
 	vc->vc_color = vc->vc_def_color;
+	// vc->vc_color: (kmem_cache#25-oX)->vc_color: 7
 }
 
 /* console_lock is held */
@@ -1679,19 +1783,64 @@ static void csi_M(struct vc_data *vc, unsigned int nr)
 }
 
 /* console_lock is held (except via vc_init->reset_terminal */
+// ARM10C 20150718
+// vc: kmem_cache#25-oX
 static void save_cur(struct vc_data *vc)
 {
+	// vc->vc_saved_x: (kmem_cache#25-oX)->vc_saved_x,
+	// vc->vc_x: (kmem_cache#25-oX)->vc_x: 0
 	vc->vc_saved_x		= vc->vc_x;
+	// vc->vc_saved_x: (kmem_cache#25-oX)->vc_saved_x: 0
+
+	// vc->vc_saved_y: (kmem_cache#25-oX)->vc_saved_y,
+	// vc->vc_y: (kmem_cache#25-oX)->vc_y: 0
 	vc->vc_saved_y		= vc->vc_y;
+	// vc->vc_saved_y: (kmem_cache#25-oX)->vc_saved_y: 0
+
+	// vc->vc_s_intensity: (kmem_cache#25-oX)->vc_s_intensity,
+	// vc->vc_intensity: (kmem_cache#25-oX)->vc_intensity: 1
 	vc->vc_s_intensity	= vc->vc_intensity;
+	// vc->vc_s_intensity: (kmem_cache#25-oX)->vc_s_intensity: 1
+
+	// vc->vc_s_italic: (kmem_cache#25-oX)->vc_s_italic,
+	// vc->vc_italic: (kmem_cache#25-oX)->vc_italic: 0
 	vc->vc_s_italic         = vc->vc_italic;
+	// vc->vc_s_italic: (kmem_cache#25-oX)->vc_s_italic: 0
+
+	// vc->vc_s_underline: (kmem_cache#25-oX)->vc_s_underline,
+	// vc->vc_underline: (kmem_cache#25-oX)->vc_underline: 0
 	vc->vc_s_underline	= vc->vc_underline;
+	// vc->vc_s_underline: (kmem_cache#25-oX)->vc_s_underline: 0
+
+	// vc->vc_s_blink: (kmem_cache#25-oX)->vc_s_blink,
+	// vc->vc_blink: (kmem_cache#25-oX)->vc_blink: 0
 	vc->vc_s_blink		= vc->vc_blink;
+	// vc->vc_s_blink: (kmem_cache#25-oX)->vc_s_blink: 0
+
+	// vc->vc_s_reverse: (kmem_cache#25-oX)->vc_s_reverse,
+	// vc->vc_reverse: (kmem_cache#25-oX)->vc_reverse: 0
 	vc->vc_s_reverse	= vc->vc_reverse;
+	// vc->vc_s_reverse: (kmem_cache#25-oX)->vc_s_reverse: 0
+
+	// vc->vc_s_charset: (kmem_cache#25-oX)->vc_s_charset,
+	// vc->vc_charset: (kmem_cache#25-oX)->vc_charset
 	vc->vc_s_charset	= vc->vc_charset;
+	// vc->vc_s_charset: (kmem_cache#25-oX)->vc_s_charset: 0
+
+	// vc->vc_s_color: (kmem_cache#25-oX)->vc_s_color,
+	// vc->vc_color: (kmem_cache#25-oX)->vc_color: 7
 	vc->vc_s_color		= vc->vc_color;
+	// vc->vc_s_color: (kmem_cache#25-oX)->vc_s_color: 7
+
+	// vc->vc_saved_G0: (kmem_cache#25-oX)->vc_saved_G0,
+	// vc->vc_G0_charset: (kmem_cache#25-oX)->vc_G0_charset
 	vc->vc_saved_G0		= vc->vc_G0_charset;
+	// vc->vc_saved_G0: (kmem_cache#25-oX)->vc_saved_G0: 0
+
+	// vc->vc_saved_G1: (kmem_cache#25-oX)->vc_saved_G1,
+	// vc->vc_G1_charset: (kmem_cache#25-oX)->vc_G1_charset
 	vc->vc_saved_G1		= vc->vc_G1_charset;
+	// vc->vc_saved_G1: (kmem_cache#25-oX)->vc_saved_G1: 1
 }
 
 /* console_lock is held */
@@ -1712,59 +1861,201 @@ static void restore_cur(struct vc_data *vc)
 	vc->vc_need_wrap = 0;
 }
 
+// ARM10C 20150718
+// ESnormal: 0
 enum { ESnormal, ESesc, ESsquare, ESgetpars, ESgotpars, ESfunckey,
 	EShash, ESsetG0, ESsetG1, ESpercent, ESignore, ESnonstd,
 	ESpalette };
 
 /* console_lock is held (except via vc_init()) */
+// ARM10C 20150718
+// vc: kmem_cache#25-oX, do_clear: 1
 static void reset_terminal(struct vc_data *vc, int do_clear)
 {
+	// vc->vc_top: (kmem_cache#25-oX)->vc_top
 	vc->vc_top		= 0;
+	// vc->vc_top: (kmem_cache#25-oX)->vc_top: 0
+
+	// vc->vc_bottom: (kmem_cache#25-oX)->vc_bottom,
+	// vc->vc_rows: (kmem_cache#25-oX)->vc_rows: 30
 	vc->vc_bottom		= vc->vc_rows;
+	// vc->vc_bottom: (kmem_cache#25-oX)->vc_bottom: 30
+
+	// vc->vc_state: (kmem_cache#25-oX)->vc_state, ESnormal: 0
 	vc->vc_state		= ESnormal;
+	// vc->vc_state: (kmem_cache#25-oX)->vc_state: 0
+
+	// vc->vc_ques: (kmem_cache#25-oX)->vc_ques
 	vc->vc_ques		= 0;
+	// vc->vc_ques: (kmem_cache#25-oX)->vc_ques: 0
+
+	// vc->vc_translate: (kmem_cache#25-oX)->vc_translate,
+	// LAT1_MAP: 0, vc: kmem_cache#25-oX
+	// set_translate(0, kmem_cache#25-oX): &translations[0]
 	vc->vc_translate	= set_translate(LAT1_MAP, vc);
+	// vc->vc_translate: (kmem_cache#25-oX)->vc_translate: &translations[0]
+
+	// set_translate에서 한일:
+	// inv_translate[0]: 0
+
+	// vc->vc_G0_charset: (kmem_cache#25-oX)->vc_G0_charset, LAT1_MAP: 0
 	vc->vc_G0_charset	= LAT1_MAP;
+	// vc->vc_G0_charset: (kmem_cache#25-oX)->vc_G0_charset: 0
+
+	// vc->vc_G1_charset: (kmem_cache#25-oX)->vc_G1_charset, GRAF_MAP: 1
 	vc->vc_G1_charset	= GRAF_MAP;
+	// vc->vc_G1_charset: (kmem_cache#25-oX)->vc_G1_charset: 1
+
+	// vc->vc_charset: (kmem_cache#25-oX)->vc_charset
 	vc->vc_charset		= 0;
+	// vc->vc_charset: (kmem_cache#25-oX)->vc_charset: 0
+
+	// vc->vc_need_wrap: (kmem_cache#25-oX)->vc_need_wrap
 	vc->vc_need_wrap	= 0;
+	// vc->vc_need_wrap: (kmem_cache#25-oX)->vc_need_wrap: 0
+
+	// vc->vc_report_mouse: (kmem_cache#25-oX)->vc_report_mouse
 	vc->vc_report_mouse	= 0;
+	// vc->vc_report_mouse: (kmem_cache#25-oX)->vc_report_mouse: 0
+
+	// vc->vc_utf: (kmem_cache#25-oX)->vc_utf, default_utf8: true
 	vc->vc_utf              = default_utf8;
+	// vc->vc_utf: (kmem_cache#25-oX)->vc_utf: true
+
+	// vc->vc_utf_count: (kmem_cache#25-oX)->vc_utf_count
 	vc->vc_utf_count	= 0;
+	// vc->vc_utf_count: (kmem_cache#25-oX)->vc_utf_count: 0
 
+
+	// vc->vc_disp_ctrl: (kmem_cache#25-oX)->vc_disp_ctrl
 	vc->vc_disp_ctrl	= 0;
+	// vc->vc_disp_ctrl: (kmem_cache#25-oX)->vc_disp_ctrl: 0
+
+	// vc->vc_toggle_meta: (kmem_cache#25-oX)->vc_toggle_meta
 	vc->vc_toggle_meta	= 0;
+	// vc->vc_toggle_meta: (kmem_cache#25-oX)->vc_toggle_meta: 0
 
+
+	// vc->vc_decscnm: (kmem_cache#25-oX)->vc_decscnm
 	vc->vc_decscnm		= 0;
-	vc->vc_decom		= 0;
-	vc->vc_decawm		= 1;
-	vc->vc_deccm		= global_cursor_default;
-	vc->vc_decim		= 0;
+	// vc->vc_decscnm: (kmem_cache#25-oX)->vc_decscnm: 0
 
+	// vc->vc_decom: (kmem_cache#25-oX)->vc_decom
+	vc->vc_decom		= 0;
+	// vc->vc_decom: (kmem_cache#25-oX)->vc_decom: 0
+
+	// vc->vc_decawm: (kmem_cache#25-oX)->vc_decawm
+	vc->vc_decawm		= 1;
+	// vc->vc_decawm: (kmem_cache#25-oX)->vc_decawm: 1
+
+	// vc->vc_deccm: (kmem_cache#25-oX)->vc_deccm, global_cursor_default: -1
+	vc->vc_deccm		= global_cursor_default;
+	// vc->vc_deccm: (kmem_cache#25-oX)->vc_deccm: -1
+
+	// vc->vc_decim: (kmem_cache#25-oX)->vc_decim
+	vc->vc_decim		= 0;
+	// vc->vc_decim: (kmem_cache#25-oX)->vc_decim: 0
+
+
+	// vc->vc_num: (kmem_cache#25-oX)->vc_num: 0
 	vt_reset_keyboard(vc->vc_num);
 
-	vc->vc_cursor_type = cur_default;
-	vc->vc_complement_mask = vc->vc_s_complement_mask;
+	// vt_reset_keyboard에서 한일:
+	// (&kbd_table[0])->modeflags: 0x4
+	// (&kbd_table[0])->lockstate: 0
+	// (&kbd_table[0])->slockstate: 0
+	// (&kbd_table[0])->ledmode: 0
+	// (&kbd_table[0])->ledflagstate: 0
 
+	// vc->vc_cursor_type: (kmem_cache#25-oX)->vc_cursor_type
+	vc->vc_cursor_type = cur_default;
+	// vc->vc_cursor_type: (kmem_cache#25-oX)->vc_cursor_type
+
+	// vc->vc_complement_mask: (kmem_cache#25-oX)->vc_complement_mask
+	vc->vc_complement_mask = vc->vc_s_complement_mask;
+	// vc->vc_complement_mask: (kmem_cache#25-oX)->vc_complement_mask
+
+
+	// vc: kmem_cache#25-oX
 	default_attr(vc);
+
+	// default_attr에서 한일:
+	// (kmem_cache#25-oX)->vc_intensity: 1
+	// (kmem_cache#25-oX)->vc_italic: 0
+	// (kmem_cache#25-oX)->vc_underline: 0
+	// (kmem_cache#25-oX)->vc_reverse: 0
+	// (kmem_cache#25-oX)->vc_blink: 0
+	// (kmem_cache#25-oX)->vc_color: 7
+
+	// vc: kmem_cache#25-oX
 	update_attr(vc);
 
+	// update_attr에서 한일:
+	// (kmem_cache#25-oX)->vc_attr: 1
+	// (kmem_cache#25-oX)->vc_video_erase_char: 0x120
+
+	// vc->vc_tab_stop[0]: (kmem_cache#25-oX)->vc_tab_stop[0]
 	vc->vc_tab_stop[0]	= 0x01010100;
+	// vc->vc_tab_stop[0]: (kmem_cache#25-oX)->vc_tab_stop[0]: 0x01010100
+
 	vc->vc_tab_stop[1]	=
 	vc->vc_tab_stop[2]	=
 	vc->vc_tab_stop[3]	=
 	vc->vc_tab_stop[4]	=
 	vc->vc_tab_stop[5]	=
 	vc->vc_tab_stop[6]	=
+
+	// vc->vc_tab_stop[7]: (kmem_cache#25-oX)->vc_tab_stop[7]
 	vc->vc_tab_stop[7]	= 0x01010101;
+	// vc->vc_tab_stop[7]: (kmem_cache#25-oX)->vc_tab_stop[7]: 0x01010101
 
+	// vc->vc_bell_pitch: (kmem_cache#25-oX)->vc_bell_pitch, DEFAULT_BELL_PITCH: 750
 	vc->vc_bell_pitch = DEFAULT_BELL_PITCH;
-	vc->vc_bell_duration = DEFAULT_BELL_DURATION;
+	// vc->vc_bell_pitch: (kmem_cache#25-oX)->vc_bell_pitch: 750
 
+	// vc->vc_bell_duration: (kmem_cache#25-oX)->vc_bell_duration, DEFAULT_BELL_DURATION: 12
+	vc->vc_bell_duration = DEFAULT_BELL_DURATION;
+	// vc->vc_bell_duration: (kmem_cache#25-oX)->vc_bell_duration: 12
+
+
+	// vc: kmem_cache#25-oX
 	gotoxy(vc, 0, 0);
+
+	// gotoxy에서 한일:
+	// (kmem_cache#25-oX)->vc_x: 0
+	// (kmem_cache#25-oX)->vc_y: 0
+	// (kmem_cache#25-oX)->vc_pos: kmem_cache#22-oX
+	// (kmem_cache#25-oX)->vc_need_wrap: 0
+
+	// vc: kmem_cache#25-oX
 	save_cur(vc);
+
+	// save_cur에서 한일:
+	// (kmem_cache#25-oX)->vc_saved_x: 0
+	// (kmem_cache#25-oX)->vc_saved_y: 0
+	// (kmem_cache#25-oX)->vc_s_intensity: 1
+	// (kmem_cache#25-oX)->vc_s_italic: 0
+	// (kmem_cache#25-oX)->vc_s_underline: 0
+	// (kmem_cache#25-oX)->vc_s_blink: 0
+	// (kmem_cache#25-oX)->vc_s_reverse: 0
+	// (kmem_cache#25-oX)->vc_s_charset: 0
+	// (kmem_cache#25-oX)->vc_s_color: 7
+	// (kmem_cache#25-oX)->vc_saved_G0: 0
+	// (kmem_cache#25-oX)->vc_saved_G1: 1
+
+	// do_clear: 1
 	if (do_clear)
-	    csi_J(vc, 2);
+		// vc: kmem_cache#25-oX
+		csi_J(vc, 2);
+		
+		// csi_J에서 한일:
+		// *(kmem_cache#22-oX + 0): 0x120
+		// *(kmem_cache#22-oX + 1): 0x120
+		// *(kmem_cache#22-oX + 2): 0x120
+		// *(kmem_cache#22-oX + 3): 0x120
+		// ...
+		// *(kmem_cache#22-oX + 2399): 0x120
+		// (kmem_cache#25-oX)->vc_need_wrap: 0
 }
 
 /* console_lock is held */
@@ -2942,8 +3233,11 @@ static void con_shutdown(struct tty_struct *tty)
 	console_unlock();
 }
 
+// ARM10C 20150718
 static int default_color           = 7; /* white */
+// ARM10C 20150718
 static int default_italic_color    = 2; // green (ASCII)
+// ARM10C 20150718
 static int default_underline_color = 3; // cyan (ASCII)
 module_param_named(color, default_color, int, S_IRUGO | S_IWUSR);
 module_param_named(italic, default_italic_color, int, S_IRUGO | S_IWUSR);
@@ -3001,22 +3295,211 @@ static void vc_init(struct vc_data *vc, unsigned int rows,
 	// (kmem_cache#25-oX)->vt_mode.frsig: 0
 	// (kmem_cache#25-oX)->vt_pid: NULL
 	// (kmem_cache#25-oX)->vt_newvt: -1
-	// FIXME: 정래 필요
-	// (kmem_cache#25-oX)->vc_palette[0]: 0x00
-	// (kmem_cache#25-oX)->vc_palette[1]: 0x00
-	// (kmem_cache#25-oX)->vc_palette[2]: 0x00
+	// (kmem_cache#25-oX)->vc_palette[0]:  0x00
+	// (kmem_cache#25-oX)->vc_palette[1]:  0x00
+	// (kmem_cache#25-oX)->vc_palette[2]:  0x00
+	// (kmem_cache#25-oX)->vc_palette[3]:  0xaa
+	// (kmem_cache#25-oX)->vc_palette[4]:  0x00
+	// (kmem_cache#25-oX)->vc_palette[5]:  0x00
+	// (kmem_cache#25-oX)->vc_palette[6]:  0x00
+	// (kmem_cache#25-oX)->vc_palette[7]:  0xaa
+	// (kmem_cache#25-oX)->vc_palette[8]:  0x00
+	// (kmem_cache#25-oX)->vc_palette[9]:  0xaa
+	// (kmem_cache#25-oX)->vc_palette[10]: 0x55
+	// (kmem_cache#25-oX)->vc_palette[11]: 0x00
+	// (kmem_cache#25-oX)->vc_palette[12]: 0x00
+	// (kmem_cache#25-oX)->vc_palette[13]: 0x00
+	// (kmem_cache#25-oX)->vc_palette[14]: 0xaa
+	// (kmem_cache#25-oX)->vc_palette[15]: 0xaa
+	// (kmem_cache#25-oX)->vc_palette[16]: 0x00
+	// (kmem_cache#25-oX)->vc_palette[17]: 0xaa
+	// (kmem_cache#25-oX)->vc_palette[18]: 0x00
+	// (kmem_cache#25-oX)->vc_palette[19]: 0xaa
+	// (kmem_cache#25-oX)->vc_palette[20]: 0xaa
+	// (kmem_cache#25-oX)->vc_palette[21]: 0xaa
+	// (kmem_cache#25-oX)->vc_palette[22]: 0xaa
+	// (kmem_cache#25-oX)->vc_palette[23]: 0xaa
+	// (kmem_cache#25-oX)->vc_palette[24]: 0x55
+	// (kmem_cache#25-oX)->vc_palette[25]: 0x55
+	// (kmem_cache#25-oX)->vc_palette[26]: 0x55
+	// (kmem_cache#25-oX)->vc_palette[27]: 0xff
+	// (kmem_cache#25-oX)->vc_palette[28]: 0x55
+	// (kmem_cache#25-oX)->vc_palette[29]: 0x55
+	// (kmem_cache#25-oX)->vc_palette[30]: 0x55
+	// (kmem_cache#25-oX)->vc_palette[31]: 0xff
+	// (kmem_cache#25-oX)->vc_palette[32]: 0x55
+	// (kmem_cache#25-oX)->vc_palette[33]: 0xff
+	// (kmem_cache#25-oX)->vc_palette[34]: 0xff
+	// (kmem_cache#25-oX)->vc_palette[35]: 0x55
+	// (kmem_cache#25-oX)->vc_palette[36]: 0x55
+	// (kmem_cache#25-oX)->vc_palette[37]: 0x55
+	// (kmem_cache#25-oX)->vc_palette[38]: 0xff
+	// (kmem_cache#25-oX)->vc_palette[39]: 0xff
+	// (kmem_cache#25-oX)->vc_palette[40]: 0x55
+	// (kmem_cache#25-oX)->vc_palette[41]: 0xff
+	// (kmem_cache#25-oX)->vc_palette[42]: 0x55
+	// (kmem_cache#25-oX)->vc_palette[43]: 0xff
+	// (kmem_cache#25-oX)->vc_palette[44]: 0xff
+	// (kmem_cache#25-oX)->vc_palette[45]: 0xff
+	// (kmem_cache#25-oX)->vc_palette[46]: 0xff
+	// (kmem_cache#25-oX)->vc_palette[47]: 0xff
 
 	for (j=k=0; j<16; j++) {
+		// j: 0, k: 0, vc->vc_palette[0]: (kmem_cache#25-oX)->vc_palette[0], default_red[0]: 0x00
 		vc->vc_palette[k++] = default_red[j] ;
+		// vc->vc_palette[0]: (kmem_cache#25-oX)->vc_palette[0]: 0x00
+
+		// j: 0, k: 1, vc->vc_palette[1]: (kmem_cache#25-oX)->vc_palette[1], default_grn[0]: 0x00
 		vc->vc_palette[k++] = default_grn[j] ;
+		// vc->vc_palette[1]: (kmem_cache#25-oX)->vc_palette[1]: 0x00
+
+		// j: 0, k: 2, vc->vc_palette[2]: (kmem_cache#25-oX)->vc_palette[2], default_blu[0]: 0x00
 		vc->vc_palette[k++] = default_blu[j] ;
+		// vc->vc_palette[2]: (kmem_cache#25-oX)->vc_palette[2]: 0x00
+
+		// j: 1...15 loop 수행
 	}
+
+	// 위 loop의 수행 결과
+	// vc->vc_palette[0]:  (kmem_cache#25-oX)->vc_palette[0]:  0x00
+	// vc->vc_palette[1]:  (kmem_cache#25-oX)->vc_palette[1]:  0x00
+	// vc->vc_palette[2]:  (kmem_cache#25-oX)->vc_palette[2]:  0x00
+	// vc->vc_palette[3]:  (kmem_cache#25-oX)->vc_palette[3]:  0xaa
+	// vc->vc_palette[4]:  (kmem_cache#25-oX)->vc_palette[4]:  0x00
+	// vc->vc_palette[5]:  (kmem_cache#25-oX)->vc_palette[5]:  0x00
+	// vc->vc_palette[6]:  (kmem_cache#25-oX)->vc_palette[6]:  0x00
+	// vc->vc_palette[7]:  (kmem_cache#25-oX)->vc_palette[7]:  0xaa
+	// vc->vc_palette[8]:  (kmem_cache#25-oX)->vc_palette[8]:  0x00
+	// vc->vc_palette[9]:  (kmem_cache#25-oX)->vc_palette[9]:  0xaa
+	// vc->vc_palette[10]: (kmem_cache#25-oX)->vc_palette[10]: 0x55
+	// vc->vc_palette[11]: (kmem_cache#25-oX)->vc_palette[11]: 0x00
+	// vc->vc_palette[12]: (kmem_cache#25-oX)->vc_palette[12]: 0x00
+	// vc->vc_palette[13]: (kmem_cache#25-oX)->vc_palette[13]: 0x00
+	// vc->vc_palette[14]: (kmem_cache#25-oX)->vc_palette[14]: 0xaa
+	// vc->vc_palette[15]: (kmem_cache#25-oX)->vc_palette[15]: 0xaa
+	// vc->vc_palette[16]: (kmem_cache#25-oX)->vc_palette[16]: 0x00
+	// vc->vc_palette[17]: (kmem_cache#25-oX)->vc_palette[17]: 0xaa
+	// vc->vc_palette[18]: (kmem_cache#25-oX)->vc_palette[18]: 0x00
+	// vc->vc_palette[19]: (kmem_cache#25-oX)->vc_palette[19]: 0xaa
+	// vc->vc_palette[20]: (kmem_cache#25-oX)->vc_palette[20]: 0xaa
+	// vc->vc_palette[21]: (kmem_cache#25-oX)->vc_palette[21]: 0xaa
+	// vc->vc_palette[22]: (kmem_cache#25-oX)->vc_palette[22]: 0xaa
+	// vc->vc_palette[23]: (kmem_cache#25-oX)->vc_palette[23]: 0xaa
+	// vc->vc_palette[24]: (kmem_cache#25-oX)->vc_palette[24]: 0x55
+	// vc->vc_palette[25]: (kmem_cache#25-oX)->vc_palette[25]: 0x55
+	// vc->vc_palette[26]: (kmem_cache#25-oX)->vc_palette[26]: 0x55
+	// vc->vc_palette[27]: (kmem_cache#25-oX)->vc_palette[27]: 0xff
+	// vc->vc_palette[28]: (kmem_cache#25-oX)->vc_palette[28]: 0x55
+	// vc->vc_palette[29]: (kmem_cache#25-oX)->vc_palette[29]: 0x55
+	// vc->vc_palette[30]: (kmem_cache#25-oX)->vc_palette[30]: 0x55
+	// vc->vc_palette[31]: (kmem_cache#25-oX)->vc_palette[31]: 0xff
+	// vc->vc_palette[32]: (kmem_cache#25-oX)->vc_palette[32]: 0x55
+	// vc->vc_palette[33]: (kmem_cache#25-oX)->vc_palette[33]: 0xff
+	// vc->vc_palette[34]: (kmem_cache#25-oX)->vc_palette[34]: 0xff
+	// vc->vc_palette[35]: (kmem_cache#25-oX)->vc_palette[35]: 0x55
+	// vc->vc_palette[36]: (kmem_cache#25-oX)->vc_palette[36]: 0x55
+	// vc->vc_palette[37]: (kmem_cache#25-oX)->vc_palette[37]: 0x55
+	// vc->vc_palette[38]: (kmem_cache#25-oX)->vc_palette[38]: 0xff
+	// vc->vc_palette[39]: (kmem_cache#25-oX)->vc_palette[39]: 0xff
+	// vc->vc_palette[40]: (kmem_cache#25-oX)->vc_palette[40]: 0x55
+	// vc->vc_palette[41]: (kmem_cache#25-oX)->vc_palette[41]: 0xff
+	// vc->vc_palette[42]: (kmem_cache#25-oX)->vc_palette[42]: 0x55
+	// vc->vc_palette[43]: (kmem_cache#25-oX)->vc_palette[43]: 0xff
+	// vc->vc_palette[44]: (kmem_cache#25-oX)->vc_palette[44]: 0xff
+	// vc->vc_palette[45]: (kmem_cache#25-oX)->vc_palette[45]: 0xff
+	// vc->vc_palette[46]: (kmem_cache#25-oX)->vc_palette[46]: 0xff
+	// vc->vc_palette[47]: (kmem_cache#25-oX)->vc_palette[47]: 0xff
+
+	// vc->vc_def_color: (kmem_cache#25-oX)->vc_def_color, default_color: 7
 	vc->vc_def_color       = default_color;
+	// vc->vc_def_color: (kmem_cache#25-oX)->vc_def_color: 7
+
+	// vc->vc_ulcolor: (kmem_cache#25-oX)->vc_ulcolor, default_underline_color: 3
 	vc->vc_ulcolor         = default_underline_color;
+	// vc->vc_ulcolor: (kmem_cache#25-oX)->vc_ulcolor: 3
+
+	// vc->vc_itcolor: (kmem_cache#25-oX)->vc_itcolor, default_italic_color: 2
 	vc->vc_itcolor         = default_italic_color;
+	// vc->vc_itcolor: (kmem_cache#25-oX)->vc_itcolor: 2
+
+	// vc->vc_halfcolor: (kmem_cache#25-oX)->vc_halfcolor
 	vc->vc_halfcolor       = 0x08;   /* grey */
+	// vc->vc_halfcolor: (kmem_cache#25-oX)->vc_halfcolor: 0x08
+
+	// &vc->paste_wait: &(kmem_cache#25-oX)->paste_wait
 	init_waitqueue_head(&vc->paste_wait);
+
+	// init_waitqueue_head에서 한일:
+	// &(&(kmem_cache#25-oX)->paste_wait)->lock을 사용한 spinlock 초기화
+	// &(&(kmem_cache#25-oX)->paste_wait)->task_list를 사용한 list 초기화
+
+	// vc: kmem_cache#25-oX, do_clear: 1
 	reset_terminal(vc, do_clear);
+
+	// reset_terminal에서 한일:
+	// (kmem_cache#25-oX)->vc_top: 0
+	// (kmem_cache#25-oX)->vc_bottom: 30
+	// (kmem_cache#25-oX)->vc_state: 0
+	// (kmem_cache#25-oX)->vc_ques: 0
+	// (kmem_cache#25-oX)->vc_translate: &translations[0]
+	// inv_translate[0]: 0
+	// (kmem_cache#25-oX)->vc_G0_charset: 0
+	// (kmem_cache#25-oX)->vc_G1_charset: 1
+	// (kmem_cache#25-oX)->vc_charset: 0
+	// (kmem_cache#25-oX)->vc_need_wrap: 0
+	// (kmem_cache#25-oX)->vc_report_mouse: 0
+	// (kmem_cache#25-oX)->vc_utf: true
+	// (kmem_cache#25-oX)->vc_utf_count: 0
+	// (kmem_cache#25-oX)->vc_disp_ctrl: 0
+	// (kmem_cache#25-oX)->vc_toggle_meta: 0
+	// (kmem_cache#25-oX)->vc_decscnm: 0
+	// (kmem_cache#25-oX)->vc_decom: 0
+	// (kmem_cache#25-oX)->vc_decawm: 1
+	// (kmem_cache#25-oX)->vc_deccm: -1
+	// (kmem_cache#25-oX)->vc_decim: 0
+	// (kmem_cache#25-oX)->vc_cursor_type
+	// (kmem_cache#25-oX)->vc_complement_mask
+	// (kmem_cache#25-oX)->vc_intensity: 1
+	// (kmem_cache#25-oX)->vc_italic: 0
+	// (kmem_cache#25-oX)->vc_underline: 0
+	// (kmem_cache#25-oX)->vc_reverse: 0
+	// (kmem_cache#25-oX)->vc_blink: 0
+	// (kmem_cache#25-oX)->vc_color: 7
+	// (kmem_cache#25-oX)->vc_attr: 1
+	// (kmem_cache#25-oX)->vc_video_erase_char: 0x120
+	// (kmem_cache#25-oX)->vc_tab_stop[0]: 0x01010100
+	// (kmem_cache#25-oX)->vc_tab_stop[7]: 0x01010101
+	// (kmem_cache#25-oX)->vc_bell_pitch: 750
+	// (kmem_cache#25-oX)->vc_bell_duration: 12
+	// (kmem_cache#25-oX)->vc_x: 0
+	// (kmem_cache#25-oX)->vc_y: 0
+	// (kmem_cache#25-oX)->vc_pos: kmem_cache#22-oX
+	// (kmem_cache#25-oX)->vc_need_wrap: 0
+	// (kmem_cache#25-oX)->vc_saved_x: 0
+	// (kmem_cache#25-oX)->vc_saved_y: 0
+	// (kmem_cache#25-oX)->vc_s_intensity: 1
+	// (kmem_cache#25-oX)->vc_s_italic: 0
+	// (kmem_cache#25-oX)->vc_s_underline: 0
+	// (kmem_cache#25-oX)->vc_s_blink: 0
+	// (kmem_cache#25-oX)->vc_s_reverse: 0
+	// (kmem_cache#25-oX)->vc_s_charset: 0
+	// (kmem_cache#25-oX)->vc_s_color: 7
+	// (kmem_cache#25-oX)->vc_saved_G0: 0
+	// (kmem_cache#25-oX)->vc_saved_G1: 1
+	// (kmem_cache#25-oX)->vc_need_wrap: 0
+	//
+	// (&kbd_table[0])->modeflags: 0x4
+	// (&kbd_table[0])->lockstate: 0
+	// (&kbd_table[0])->slockstate: 0
+	// (&kbd_table[0])->ledmode: 0
+	// (&kbd_table[0])->ledflagstate: 0
+	//
+	// *(kmem_cache#22-oX + 0): 0x120
+	// *(kmem_cache#22-oX + 1): 0x120
+	// *(kmem_cache#22-oX + 2): 0x120
+	// *(kmem_cache#22-oX + 3): 0x120
+	// ...
+	// *(kmem_cache#22-oX + 2399): 0x120
 }
 
 /*
@@ -3243,6 +3726,144 @@ static int __init con_init(void)
 		// vc_init(kmem_cache#25-oX, 30, 80, 1)
 		vc_init(vc, vc->vc_rows, vc->vc_cols,
 			currcons || !vc->vc_sw->con_save_screen);
+
+		// vc_init에서 한일:
+		// (kmem_cache#25-oX)->vc_cols: 80
+		// (kmem_cache#25-oX)->vc_rows: 30
+		// (kmem_cache#25-oX)->vc_size_row: 160
+		// (kmem_cache#25-oX)->vc_screenbuf_size: 4800
+		// (kmem_cache#25-oX)->vc_origin: kmem_cache#22-oX
+		// (kmem_cache#25-oX)->vc_visible_origin: kmem_cache#22-oX
+		// (kmem_cache#25-oX)->vc_scr_end: kmem_cache#22-oX + 4800
+		// (kmem_cache#25-oX)->vc_pos: kmem_cache#22-oX + 160
+		// (kmem_cache#25-oX)->vc_pos: kmem_cache#22-oX
+		// (kmem_cache#25-oX)->vc_mode: 0x00
+		// (kmem_cache#25-oX)->vt_mode.mode: 0x00
+		// (kmem_cache#25-oX)->vt_mode.waitv: 0
+		// (kmem_cache#25-oX)->vt_mode.relsig: 0
+		// (kmem_cache#25-oX)->vt_mode.acqsig: 0
+		// (kmem_cache#25-oX)->vt_mode.frsig: 0
+		// (kmem_cache#25-oX)->vt_pid: NULL
+		// (kmem_cache#25-oX)->vt_newvt: -1
+		// (kmem_cache#25-oX)->vc_palette[0]:  0x00
+		// (kmem_cache#25-oX)->vc_palette[1]:  0x00
+		// (kmem_cache#25-oX)->vc_palette[2]:  0x00
+		// (kmem_cache#25-oX)->vc_palette[3]:  0xaa
+		// (kmem_cache#25-oX)->vc_palette[4]:  0x00
+		// (kmem_cache#25-oX)->vc_palette[5]:  0x00
+		// (kmem_cache#25-oX)->vc_palette[6]:  0x00
+		// (kmem_cache#25-oX)->vc_palette[7]:  0xaa
+		// (kmem_cache#25-oX)->vc_palette[8]:  0x00
+		// (kmem_cache#25-oX)->vc_palette[9]:  0xaa
+		// (kmem_cache#25-oX)->vc_palette[10]: 0x55
+		// (kmem_cache#25-oX)->vc_palette[11]: 0x00
+		// (kmem_cache#25-oX)->vc_palette[12]: 0x00
+		// (kmem_cache#25-oX)->vc_palette[13]: 0x00
+		// (kmem_cache#25-oX)->vc_palette[14]: 0xaa
+		// (kmem_cache#25-oX)->vc_palette[15]: 0xaa
+		// (kmem_cache#25-oX)->vc_palette[16]: 0x00
+		// (kmem_cache#25-oX)->vc_palette[17]: 0xaa
+		// (kmem_cache#25-oX)->vc_palette[18]: 0x00
+		// (kmem_cache#25-oX)->vc_palette[19]: 0xaa
+		// (kmem_cache#25-oX)->vc_palette[20]: 0xaa
+		// (kmem_cache#25-oX)->vc_palette[21]: 0xaa
+		// (kmem_cache#25-oX)->vc_palette[22]: 0xaa
+		// (kmem_cache#25-oX)->vc_palette[23]: 0xaa
+		// (kmem_cache#25-oX)->vc_palette[24]: 0x55
+		// (kmem_cache#25-oX)->vc_palette[25]: 0x55
+		// (kmem_cache#25-oX)->vc_palette[26]: 0x55
+		// (kmem_cache#25-oX)->vc_palette[27]: 0xff
+		// (kmem_cache#25-oX)->vc_palette[28]: 0x55
+		// (kmem_cache#25-oX)->vc_palette[29]: 0x55
+		// (kmem_cache#25-oX)->vc_palette[30]: 0x55
+		// (kmem_cache#25-oX)->vc_palette[31]: 0xff
+		// (kmem_cache#25-oX)->vc_palette[32]: 0x55
+		// (kmem_cache#25-oX)->vc_palette[33]: 0xff
+		// (kmem_cache#25-oX)->vc_palette[34]: 0xff
+		// (kmem_cache#25-oX)->vc_palette[35]: 0x55
+		// (kmem_cache#25-oX)->vc_palette[36]: 0x55
+		// (kmem_cache#25-oX)->vc_palette[37]: 0x55
+		// (kmem_cache#25-oX)->vc_palette[38]: 0xff
+		// (kmem_cache#25-oX)->vc_palette[39]: 0xff
+		// (kmem_cache#25-oX)->vc_palette[40]: 0x55
+		// (kmem_cache#25-oX)->vc_palette[41]: 0xff
+		// (kmem_cache#25-oX)->vc_palette[42]: 0x55
+		// (kmem_cache#25-oX)->vc_palette[43]: 0xff
+		// (kmem_cache#25-oX)->vc_palette[44]: 0xff
+		// (kmem_cache#25-oX)->vc_palette[45]: 0xff
+		// (kmem_cache#25-oX)->vc_palette[46]: 0xff
+		// (kmem_cache#25-oX)->vc_palette[47]: 0xff
+		// (kmem_cache#25-oX)->vc_def_color: 7
+		// (kmem_cache#25-oX)->vc_ulcolor: 3
+		// (kmem_cache#25-oX)->vc_itcolor: 2
+		// (kmem_cache#25-oX)->vc_halfcolor: 0x08
+		// (kmem_cache#25-oX)->vc_top: 0
+		// (kmem_cache#25-oX)->vc_bottom: 30
+		// (kmem_cache#25-oX)->vc_state: 0
+		// (kmem_cache#25-oX)->vc_ques: 0
+		// (kmem_cache#25-oX)->vc_translate: &translations[0]
+		// (kmem_cache#25-oX)->vc_G0_charset: 0
+		// (kmem_cache#25-oX)->vc_G1_charset: 1
+		// (kmem_cache#25-oX)->vc_charset: 0
+		// (kmem_cache#25-oX)->vc_need_wrap: 0
+		// (kmem_cache#25-oX)->vc_report_mouse: 0
+		// (kmem_cache#25-oX)->vc_utf: true
+		// (kmem_cache#25-oX)->vc_utf_count: 0
+		// (kmem_cache#25-oX)->vc_disp_ctrl: 0
+		// (kmem_cache#25-oX)->vc_toggle_meta: 0
+		// (kmem_cache#25-oX)->vc_decscnm: 0
+		// (kmem_cache#25-oX)->vc_decom: 0
+		// (kmem_cache#25-oX)->vc_decawm: 1
+		// (kmem_cache#25-oX)->vc_deccm: -1
+		// (kmem_cache#25-oX)->vc_decim: 0
+		// (kmem_cache#25-oX)->vc_cursor_type
+		// (kmem_cache#25-oX)->vc_complement_mask
+		// (kmem_cache#25-oX)->vc_intensity: 1
+		// (kmem_cache#25-oX)->vc_italic: 0
+		// (kmem_cache#25-oX)->vc_underline: 0
+		// (kmem_cache#25-oX)->vc_reverse: 0
+		// (kmem_cache#25-oX)->vc_blink: 0
+		// (kmem_cache#25-oX)->vc_color: 7
+		// (kmem_cache#25-oX)->vc_attr: 1
+		// (kmem_cache#25-oX)->vc_video_erase_char: 0x120
+		// (kmem_cache#25-oX)->vc_tab_stop[0]: 0x01010100
+		// (kmem_cache#25-oX)->vc_tab_stop[7]: 0x01010101
+		// (kmem_cache#25-oX)->vc_bell_pitch: 750
+		// (kmem_cache#25-oX)->vc_bell_duration: 12
+		// (kmem_cache#25-oX)->vc_x: 0
+		// (kmem_cache#25-oX)->vc_y: 0
+		// (kmem_cache#25-oX)->vc_pos: kmem_cache#22-oX
+		// (kmem_cache#25-oX)->vc_need_wrap: 0
+		// (kmem_cache#25-oX)->vc_saved_x: 0
+		// (kmem_cache#25-oX)->vc_saved_y: 0
+		// (kmem_cache#25-oX)->vc_s_intensity: 1
+		// (kmem_cache#25-oX)->vc_s_italic: 0
+		// (kmem_cache#25-oX)->vc_s_underline: 0
+		// (kmem_cache#25-oX)->vc_s_blink: 0
+		// (kmem_cache#25-oX)->vc_s_reverse: 0
+		// (kmem_cache#25-oX)->vc_s_charset: 0
+		// (kmem_cache#25-oX)->vc_s_color: 7
+		// (kmem_cache#25-oX)->vc_saved_G0: 0
+		// (kmem_cache#25-oX)->vc_saved_G1: 1
+		// (kmem_cache#25-oX)->vc_need_wrap: 0
+		//
+		// &(&(kmem_cache#25-oX)->paste_wait)->lock을 사용한 spinlock 초기화
+		// &(&(kmem_cache#25-oX)->paste_wait)->task_list를 사용한 list 초기화
+		//
+		// inv_translate[0]: 0
+		// kbd_table[0].kbdmode: 3
+		// (&kbd_table[0])->modeflags: 0x4
+		// (&kbd_table[0])->lockstate: 0
+		// (&kbd_table[0])->slockstate: 0
+		// (&kbd_table[0])->ledmode: 0
+		// (&kbd_table[0])->ledflagstate: 0
+		//
+		// *(kmem_cache#22-oX + 0): 0x120
+		// *(kmem_cache#22-oX + 1): 0x120
+		// *(kmem_cache#22-oX + 2): 0x120
+		// *(kmem_cache#22-oX + 3): 0x120
+		// ...
+		// *(kmem_cache#22-oX + 2399): 0x120
 	}
 
 // 2015/07/18 종료
@@ -4204,7 +4825,7 @@ static void set_palette(struct vc_data *vc)
 	if (vc->vc_mode != KD_GRAPHICS)
 		// vc->vc_sw: (kmem_cache#25-oX)->vc_sw: &dummy_con
 		// (&dummy_con)->con_set_palette: dummycon_dummy, vc: kmem_cache#25-oX
-		// dummycon_dummy(kmem_cache#25-oX, color_table)
+		// dummycon_dummy(kmem_cache#25-oX, color_table): 0
 		vc->vc_sw->con_set_palette(vc, color_table);
 }
 
@@ -4282,14 +4903,58 @@ void reset_palette(struct vc_data *vc)
 		// j: 1...15 loop 수행
 	}
 
-	// FIXME: 정래 필요
 	// 위 loop의 수행 결과
-	// vc->vc_palette[0]: (kmem_cache#25-oX)->vc_palette[0]: 0x00
-	// vc->vc_palette[1]: (kmem_cache#25-oX)->vc_palette[1]: 0x00
-	// vc->vc_palette[2]: (kmem_cache#25-oX)->vc_palette[2]: 0x00
-	// ....
+	// vc->vc_palette[0]:  (kmem_cache#25-oX)->vc_palette[0]:  0x00
+	// vc->vc_palette[1]:  (kmem_cache#25-oX)->vc_palette[1]:  0x00
+	// vc->vc_palette[2]:  (kmem_cache#25-oX)->vc_palette[2]:  0x00
+	// vc->vc_palette[3]:  (kmem_cache#25-oX)->vc_palette[3]:  0xaa
+	// vc->vc_palette[4]:  (kmem_cache#25-oX)->vc_palette[4]:  0x00
+	// vc->vc_palette[5]:  (kmem_cache#25-oX)->vc_palette[5]:  0x00
+	// vc->vc_palette[6]:  (kmem_cache#25-oX)->vc_palette[6]:  0x00
+	// vc->vc_palette[7]:  (kmem_cache#25-oX)->vc_palette[7]:  0xaa
+	// vc->vc_palette[8]:  (kmem_cache#25-oX)->vc_palette[8]:  0x00
+	// vc->vc_palette[9]:  (kmem_cache#25-oX)->vc_palette[9]:  0xaa
+	// vc->vc_palette[10]: (kmem_cache#25-oX)->vc_palette[10]: 0x55
+	// vc->vc_palette[11]: (kmem_cache#25-oX)->vc_palette[11]: 0x00
+	// vc->vc_palette[12]: (kmem_cache#25-oX)->vc_palette[12]: 0x00
+	// vc->vc_palette[13]: (kmem_cache#25-oX)->vc_palette[13]: 0x00
+	// vc->vc_palette[14]: (kmem_cache#25-oX)->vc_palette[14]: 0xaa
+	// vc->vc_palette[15]: (kmem_cache#25-oX)->vc_palette[15]: 0xaa
+	// vc->vc_palette[16]: (kmem_cache#25-oX)->vc_palette[16]: 0x00
+	// vc->vc_palette[17]: (kmem_cache#25-oX)->vc_palette[17]: 0xaa
+	// vc->vc_palette[18]: (kmem_cache#25-oX)->vc_palette[18]: 0x00
+	// vc->vc_palette[19]: (kmem_cache#25-oX)->vc_palette[19]: 0xaa
+	// vc->vc_palette[20]: (kmem_cache#25-oX)->vc_palette[20]: 0xaa
+	// vc->vc_palette[21]: (kmem_cache#25-oX)->vc_palette[21]: 0xaa
+	// vc->vc_palette[22]: (kmem_cache#25-oX)->vc_palette[22]: 0xaa
+	// vc->vc_palette[23]: (kmem_cache#25-oX)->vc_palette[23]: 0xaa
+	// vc->vc_palette[24]: (kmem_cache#25-oX)->vc_palette[24]: 0x55
+	// vc->vc_palette[25]: (kmem_cache#25-oX)->vc_palette[25]: 0x55
+	// vc->vc_palette[26]: (kmem_cache#25-oX)->vc_palette[26]: 0x55
+	// vc->vc_palette[27]: (kmem_cache#25-oX)->vc_palette[27]: 0xff
+	// vc->vc_palette[28]: (kmem_cache#25-oX)->vc_palette[28]: 0x55
+	// vc->vc_palette[29]: (kmem_cache#25-oX)->vc_palette[29]: 0x55
+	// vc->vc_palette[30]: (kmem_cache#25-oX)->vc_palette[30]: 0x55
+	// vc->vc_palette[31]: (kmem_cache#25-oX)->vc_palette[31]: 0xff
+	// vc->vc_palette[32]: (kmem_cache#25-oX)->vc_palette[32]: 0x55
+	// vc->vc_palette[33]: (kmem_cache#25-oX)->vc_palette[33]: 0xff
+	// vc->vc_palette[34]: (kmem_cache#25-oX)->vc_palette[34]: 0xff
+	// vc->vc_palette[35]: (kmem_cache#25-oX)->vc_palette[35]: 0x55
+	// vc->vc_palette[36]: (kmem_cache#25-oX)->vc_palette[36]: 0x55
+	// vc->vc_palette[37]: (kmem_cache#25-oX)->vc_palette[37]: 0x55
+	// vc->vc_palette[38]: (kmem_cache#25-oX)->vc_palette[38]: 0xff
+	// vc->vc_palette[39]: (kmem_cache#25-oX)->vc_palette[39]: 0xff
+	// vc->vc_palette[40]: (kmem_cache#25-oX)->vc_palette[40]: 0x55
+	// vc->vc_palette[41]: (kmem_cache#25-oX)->vc_palette[41]: 0xff
+	// vc->vc_palette[42]: (kmem_cache#25-oX)->vc_palette[42]: 0x55
+	// vc->vc_palette[43]: (kmem_cache#25-oX)->vc_palette[43]: 0xff
+	// vc->vc_palette[44]: (kmem_cache#25-oX)->vc_palette[44]: 0xff
+	// vc->vc_palette[45]: (kmem_cache#25-oX)->vc_palette[45]: 0xff
+	// vc->vc_palette[46]: (kmem_cache#25-oX)->vc_palette[46]: 0xff
+	// vc->vc_palette[47]: (kmem_cache#25-oX)->vc_palette[47]: 0xff
 
 	// vc: kmem_cache#25-oX
+	// set_palette(kmem_cache#25-oX)
 	set_palette(vc);
 }
 

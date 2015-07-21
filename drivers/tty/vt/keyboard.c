@@ -122,6 +122,7 @@ static const int NR_TYPES = ARRAY_SIZE(max_vals);
 static struct input_handler kbd_handler;
 // ARM10C 20150718
 static DEFINE_SPINLOCK(kbd_event_lock);
+// ARM10C 20150718
 static DEFINE_SPINLOCK(led_lock);
 static unsigned long key_down[BITS_TO_LONGS(KEY_CNT)];	/* keyboard key bitmap */
 static unsigned char shift_down[NR_SHIFT];		/* shift state counters.. */
@@ -2105,25 +2106,78 @@ int vt_get_shift_state(void)
  *	Reset the keyboard bits for a console as part of a general console
  *	reset event
  */
+// ARM10C 20150718
+// vc->vc_num: (kmem_cache#25-oX)->vc_num: 0
 void vt_reset_keyboard(int console)
 {
+	// console: 0
 	struct kbd_struct * kbd = kbd_table + console;
+	// kbd: &kbd_table[0]
+
 	unsigned long flags;
 
 	spin_lock_irqsave(&kbd_event_lock, flags);
+
+	// spin_lock_irqsave에서 한일:
+	// &kbd_event_lock을 사용하여 spin lock을 수행하고 cpsr을 flags에 저장함
+
+	// kbd: &kbd_table[0], VC_REPEAT: 2
 	set_vc_kbd_mode(kbd, VC_REPEAT);
+
+	// set_vc_kbd_mode에서 한일:
+	// (&kbd_table[0])->modeflags: 0x4
+
+	// kbd: &kbd_table[0], VC_CKMODE: 1
 	clr_vc_kbd_mode(kbd, VC_CKMODE);
+
+	// clr_vc_kbd_mode에서 한일:
+	// (&kbd_table[0])->modeflags: 0x4
+
+	// kbd: &kbd_table[0], VC_APPLIC: 0
 	clr_vc_kbd_mode(kbd, VC_APPLIC);
+
+	// clr_vc_kbd_mode에서 한일:
+	// (&kbd_table[0])->modeflags: 0x4
+
+	// kbd: &kbd_table[0], VC_CRLF: 3
 	clr_vc_kbd_mode(kbd, VC_CRLF);
+
+	// clr_vc_kbd_mode에서 한일:
+	// (&kbd_table[0])->modeflags: 0x4
+
+	// kbd->lockstate: (&kbd_table[0])->lockstate
 	kbd->lockstate = 0;
+	// kbd->lockstate: (&kbd_table[0])->lockstate: 0
+
+	// kbd->slockstate: (&kbd_table[0])->slockstate
 	kbd->slockstate = 0;
+	// kbd->slockstate: (&kbd_table[0])->slockstate: 0
+
 	spin_lock(&led_lock);
+
+	// spin_lock에서 한일:
+	// &led_lock을 사용하여 spin lock을 수행
+
+	// kbd->ledmode: (&kbd_table[0])->ledmode, LED_SHOW_FLAGS: 0
 	kbd->ledmode = LED_SHOW_FLAGS;
+	// kbd->ledmode: (&kbd_table[0])->ledmode: 0
+
+	// kbd->ledflagstate: (&kbd_table[0])->ledflagstate,
+	// kbd->default_ledflagstate: (&kbd_table[0])->default_ledflagstate: 0
 	kbd->ledflagstate = kbd->default_ledflagstate;
+	// kbd->ledflagstate: (&kbd_table[0])->ledflagstate: 0
+
 	spin_unlock(&led_lock);
+
+	// spin_unlock에서 한일:
+	// &led_lock을 사용하여 spin unlock을 수행
+
 	/* do not do set_leds here because this causes an endless tasklet loop
 	   when the keyboard hasn't been initialized yet */
 	spin_unlock_irqrestore(&kbd_event_lock, flags);
+
+	// spin_unlock_irqrestore에서 한일:
+	// &kbd_event_lock을 사용하여 spin unlock을 수행하고 flags에 저장된 cpsr을 복원함
 }
 
 /**

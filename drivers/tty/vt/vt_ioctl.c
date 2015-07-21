@@ -1094,13 +1094,58 @@ void reset_vc(struct vc_data *vc)
 	// in_interrupt(): 0
 	if (!in_interrupt())    /* Via keyboard.c:SAK() - akpm */
 		// vc: kmem_cache#25-oX
+		// reset_palette(kmem_cache#25-oX)
 		reset_palette(vc);
 
-		// FIXME: 정래 필요
 		// reset_palette에서 한일:
-		// vc->vc_palette[0]: (kmem_cache#25-oX)->vc_palette[0]: 0x00
-		// vc->vc_palette[1]: (kmem_cache#25-oX)->vc_palette[1]: 0x00
-		// vc->vc_palette[2]: (kmem_cache#25-oX)->vc_palette[2]: 0x00
+		// (kmem_cache#25-oX)->vc_palette[0]:  0x00
+		// (kmem_cache#25-oX)->vc_palette[1]:  0x00
+		// (kmem_cache#25-oX)->vc_palette[2]:  0x00
+		// (kmem_cache#25-oX)->vc_palette[3]:  0xaa
+		// (kmem_cache#25-oX)->vc_palette[4]:  0x00
+		// (kmem_cache#25-oX)->vc_palette[5]:  0x00
+		// (kmem_cache#25-oX)->vc_palette[6]:  0x00
+		// (kmem_cache#25-oX)->vc_palette[7]:  0xaa
+		// (kmem_cache#25-oX)->vc_palette[8]:  0x00
+		// (kmem_cache#25-oX)->vc_palette[9]:  0xaa
+		// (kmem_cache#25-oX)->vc_palette[10]: 0x55
+		// (kmem_cache#25-oX)->vc_palette[11]: 0x00
+		// (kmem_cache#25-oX)->vc_palette[12]: 0x00
+		// (kmem_cache#25-oX)->vc_palette[13]: 0x00
+		// (kmem_cache#25-oX)->vc_palette[14]: 0xaa
+		// (kmem_cache#25-oX)->vc_palette[15]: 0xaa
+		// (kmem_cache#25-oX)->vc_palette[16]: 0x00
+		// (kmem_cache#25-oX)->vc_palette[17]: 0xaa
+		// (kmem_cache#25-oX)->vc_palette[18]: 0x00
+		// (kmem_cache#25-oX)->vc_palette[19]: 0xaa
+		// (kmem_cache#25-oX)->vc_palette[20]: 0xaa
+		// (kmem_cache#25-oX)->vc_palette[21]: 0xaa
+		// (kmem_cache#25-oX)->vc_palette[22]: 0xaa
+		// (kmem_cache#25-oX)->vc_palette[23]: 0xaa
+		// (kmem_cache#25-oX)->vc_palette[24]: 0x55
+		// (kmem_cache#25-oX)->vc_palette[25]: 0x55
+		// (kmem_cache#25-oX)->vc_palette[26]: 0x55
+		// (kmem_cache#25-oX)->vc_palette[27]: 0xff
+		// (kmem_cache#25-oX)->vc_palette[28]: 0x55
+		// (kmem_cache#25-oX)->vc_palette[29]: 0x55
+		// (kmem_cache#25-oX)->vc_palette[30]: 0x55
+		// (kmem_cache#25-oX)->vc_palette[31]: 0xff
+		// (kmem_cache#25-oX)->vc_palette[32]: 0x55
+		// (kmem_cache#25-oX)->vc_palette[33]: 0xff
+		// (kmem_cache#25-oX)->vc_palette[34]: 0xff
+		// (kmem_cache#25-oX)->vc_palette[35]: 0x55
+		// (kmem_cache#25-oX)->vc_palette[36]: 0x55
+		// (kmem_cache#25-oX)->vc_palette[37]: 0x55
+		// (kmem_cache#25-oX)->vc_palette[38]: 0xff
+		// (kmem_cache#25-oX)->vc_palette[39]: 0xff
+		// (kmem_cache#25-oX)->vc_palette[40]: 0x55
+		// (kmem_cache#25-oX)->vc_palette[41]: 0xff
+		// (kmem_cache#25-oX)->vc_palette[42]: 0x55
+		// (kmem_cache#25-oX)->vc_palette[43]: 0xff
+		// (kmem_cache#25-oX)->vc_palette[44]: 0xff
+		// (kmem_cache#25-oX)->vc_palette[45]: 0xff
+		// (kmem_cache#25-oX)->vc_palette[46]: 0xff
+		// (kmem_cache#25-oX)->vc_palette[47]: 0xff
 }
 
 // ARM10C 20150718

@@ -20,6 +20,8 @@
 // &port->close_wait: &(&(kmem_cache#25-oX)->port)->close_wait, "&port->close_wait", &__key
 // ARM10C 20150718
 // &port->delta_msr_wait: &(&(kmem_cache#25-oX)->port)->delta_msr_wait, "&port->delta_msr_wait", &__key
+// ARM10C 20150718
+// &vc->paste_wait: &(kmem_cache#25-oX)->paste_wait, "&vc->paste_wait", &__key
 void __init_waitqueue_head(wait_queue_head_t *q, const char *name, struct lock_class_key *key)
 {
 	// &q->lock: &(&(&rcu_bh_state)->gp_wq)->lock

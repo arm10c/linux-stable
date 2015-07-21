@@ -89,6 +89,8 @@ extern void __init_waitqueue_head(wait_queue_head_t *q, const char *name, struct
 // &port->close_wait: &(&(kmem_cache#25-oX)->port)->close_wait
 // ARM10C 20150718
 // &port->delta_msr_wait: &(&(kmem_cache#25-oX)->port)->delta_msr_wait
+// ARM10C 20150718
+// &vc->paste_wait: &(kmem_cache#25-oX)->paste_wait
 #define init_waitqueue_head(q)				\
 	do {						\
 		static struct lock_class_key __key;	\

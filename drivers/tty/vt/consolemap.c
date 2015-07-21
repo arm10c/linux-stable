@@ -23,6 +23,7 @@
 #include <linux/consolemap.h>
 #include <linux/vt_kern.h>
 
+// ARM10C 20150718
 static unsigned short translations[][256] = {
   /* 8-bit Latin-1 mapped to Unicode -- trivial mapping */
   {
@@ -171,6 +172,8 @@ static unsigned short translations[][256] = {
 
 #define MAX_GLYPH 512		/* Max possible glyph value */
 
+// ARM10C 20150718
+// MAX_NR_CONSOLES: 63
 static int inv_translate[MAX_NR_CONSOLES];
 
 struct uni_pagedir {
@@ -243,10 +246,17 @@ static void set_inverse_trans_unicode(struct vc_data *conp,
 	}
 }
 
+// ARM10C 20150718
+// LAT1_MAP: 0, vc: kmem_cache#25-oX
 unsigned short *set_translate(int m, struct vc_data *vc)
 {
+	// vc->vc_num: (kmem_cache#25-oX)->vc_num: 0, m: 0
 	inv_translate[vc->vc_num] = m;
+	// inv_translate[0]: 0
+
+	// m: 0, translations[0]
 	return translations[m];
+	// return &translations[0]
 }
 
 /*
