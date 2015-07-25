@@ -74,6 +74,7 @@ int console_printk[4] = {
  */
 // ARM10C 20140315
 // ARM10C 20150718
+// ARM10C 20150725
 int oops_in_progress;
 EXPORT_SYMBOL(oops_in_progress);
 
@@ -83,6 +84,7 @@ EXPORT_SYMBOL(oops_in_progress);
  * driver system.
  */
 // ARM10C 20150704
+// ARM10C 20150725
 // DEFINE_SEMAPHORE(console_sem):
 // struct semaphore console_sem =
 // {
@@ -117,11 +119,13 @@ static struct lockdep_map console_lock_dep_map = {
  */
 // ARM10C 20150704
 // ARM10C 20150718
+// ARM10C 20150725
 static int console_locked, console_suspended;
 
 /*
  * If exclusive_console is non-NULL then only this console is to be printed to.
  */
+// ARM10C 20150725
 static struct console *exclusive_console;
 
 /*
@@ -146,6 +150,7 @@ EXPORT_SYMBOL(console_set_on_cmdline);
 
 /* Flag: console code may call schedule() */
 // ARM10C 20150704
+// ARM10C 20150725
 static int console_may_schedule;
 
 /*
@@ -222,6 +227,7 @@ enum log_flags {
 	LOG_CONT	= 8,	/* text is a fragment of a continuation line */
 };
 
+// ARM10C 20150725
 struct printk_log {
 	u64 ts_nsec;		/* timestamp in nanoseconds */
 	u16 len;		/* length of entire record */
@@ -236,9 +242,19 @@ struct printk_log {
  * The logbuf_lock protects kmsg buffer, indices, counters. It is also
  * used in interesting ways to provide interlocking in console_unlock();
  */
+// ARM10C 20150725
+// #define DEFINE_RAW_SPINLOCK(logbuf_lock):
+// raw_spinlock_t logbuf_lock =
+// (raw_spinlock_t)
+// {
+//    .raw_lock = { { 0 } },
+//    .magic = 0xdead4ead,
+//    .owner_cpu = -1,
+//    .owner = 0xffffffff,
+// }
 static DEFINE_RAW_SPINLOCK(logbuf_lock);
 
-#ifdef CONFIG_PRINTK
+#ifdef CONFIG_PRINTK // CONFIG_PRINTK=y
 DECLARE_WAIT_QUEUE_HEAD(log_wait);
 /* the next printk record to read by syslog(READ) or /proc/kmsg */
 static u64 syslog_seq;
@@ -247,14 +263,17 @@ static enum log_flags syslog_prev;
 static size_t syslog_partial;
 
 /* index and sequence number of the first record stored in the buffer */
+// ARM10C 20150725
 static u64 log_first_seq;
 static u32 log_first_idx;
 
 /* index and sequence number of the next record to store in the buffer */
+// ARM10C 20150725
 static u64 log_next_seq;
 static u32 log_next_idx;
 
 /* the next printk record to write to the console */
+// ARM10C 20150725
 static u64 console_seq;
 static u32 console_idx;
 static enum log_flags console_prev;
@@ -263,7 +282,12 @@ static enum log_flags console_prev;
 static u64 clear_seq;
 static u32 clear_idx;
 
+// ARM10C 20150725
+// PREFIX_MAX: 32
 #define PREFIX_MAX		32
+// ARM10C 20150725
+// PREFIX_MAX: 32
+// LOG_LINE_MAX: 992
 #define LOG_LINE_MAX		1024 - PREFIX_MAX
 
 /* record buffer */
@@ -1431,6 +1455,7 @@ static inline void printk_delay(void)
  * though, are printed immediately to the consoles to ensure everything has
  * reached the console in case of a kernel crash.
  */
+// ARM10C 20150725
 static struct cont {
 	char buf[LOG_LINE_MAX];
 	size_t len;			/* length == 0 means unused buffer */
@@ -2062,18 +2087,34 @@ EXPORT_SYMBOL(console_lock);
  *
  * returns 1 on success, and 0 on failure to acquire the lock.
  */
+// ARM10C 20150725
 int console_trylock(void)
 {
+	// down_trylock(&console_sem): 0
 	if (down_trylock(&console_sem))
 		return 0;
+
+	// down_trylocka에서 한일:
+	// sem->count: (&console_sem)->count: 0
+
+	// console_suspended: 0
 	if (console_suspended) {
 		up(&console_sem);
 		return 0;
 	}
+
+	// console_locked: 0
 	console_locked = 1;
+	// console_locked: 1
+
+	// console_may_schedule: 0
 	console_may_schedule = 0;
-	mutex_acquire(&console_lock_dep_map, 0, 1, _RET_IP_);
+	// console_may_schedule: 0
+
+	mutex_acquire(&console_lock_dep_map, 0, 1, _RET_IP_); // null function
+
 	return 1;
+	// return 1
 }
 EXPORT_SYMBOL(console_trylock);
 
@@ -2083,6 +2124,8 @@ int is_console_locked(void)
 	return console_locked;
 }
 
+// ARM10C 20150725
+// text, sizeof(text): 1024
 static void console_cont_flush(char *text, size_t size)
 {
 	unsigned long flags;
@@ -2090,8 +2133,13 @@ static void console_cont_flush(char *text, size_t size)
 
 	raw_spin_lock_irqsave(&logbuf_lock, flags);
 
+	// raw_spin_lock_irqsave에서 한일:
+	// &logbuf_lock을 사용하여 spinlock을 설정하고 cpsr을 flags에 저장
+
+	// cont.len: 0
 	if (!cont.len)
 		goto out;
+		// symbol out 으로 이동
 
 	/*
 	 * We still queue earlier records, likely because the console was
@@ -2110,6 +2158,9 @@ static void console_cont_flush(char *text, size_t size)
 	return;
 out:
 	raw_spin_unlock_irqrestore(&logbuf_lock, flags);
+
+	// raw_spin_unlock_irqrestore에서 한일:
+	// &logbuf_lock을 사용한 spinlock 해재하고 flags에 저장된 cpsr을 복원
 }
 
 /**
@@ -2126,22 +2177,30 @@ out:
  *
  * console_unlock(); may be called from any context.
  */
+// ARM10C 20150725
 void console_unlock(void)
 {
+	// LOG_LINE_MAX: 992, PREFIX_MAX: 32
 	static char text[LOG_LINE_MAX + PREFIX_MAX];
 	static u64 seen_seq;
 	unsigned long flags;
 	bool wake_klogd = false;
+	// wake_klogd: 0
+
 	bool retry;
 
+	// console_suspended: 0
 	if (console_suspended) {
 		up(&console_sem);
 		return;
 	}
 
+	// console_may_schedule: 1
 	console_may_schedule = 0;
+	// console_may_schedule: 0
 
 	/* flush buffered message fragment immediately to console */
+	// sizeof(text): 1024
 	console_cont_flush(text, sizeof(text));
 again:
 	for (;;) {
@@ -2150,11 +2209,17 @@ again:
 		int level;
 
 		raw_spin_lock_irqsave(&logbuf_lock, flags);
+
+		// raw_spin_lock_irqsave에서 한일:
+		// &logbuf_lock을 사용하여 spinlock을 설정하고 cpsr을 flags에 저장
+
+		// seen_seq: 0, log_next_seq: 0
 		if (seen_seq != log_next_seq) {
 			wake_klogd = true;
 			seen_seq = log_next_seq;
 		}
 
+		// console_seq: 0, log_first_seq: 0
 		if (console_seq < log_first_seq) {
 			/* messages are gone, move to first one */
 			console_seq = log_first_seq;
@@ -2162,8 +2227,10 @@ again:
 			console_prev = 0;
 		}
 skip:
+		// console_seq: 0, log_next_seq: 0
 		if (console_seq == log_next_seq)
 			break;
+			// break 수행
 
 		msg = log_from_idx(console_idx);
 		if (msg->flags & LOG_NOCONS) {
@@ -2196,16 +2263,26 @@ skip:
 		start_critical_timings();
 		local_irq_restore(flags);
 	}
+	// console_locked: 1
 	console_locked = 0;
-	mutex_release(&console_lock_dep_map, 1, _RET_IP_);
+	// console_locked: 0
+
+	mutex_release(&console_lock_dep_map, 1, _RET_IP_); // null function
 
 	/* Release the exclusive_console once it is used */
+	// exclusive_console: NULL
 	if (unlikely(exclusive_console))
 		exclusive_console = NULL;
 
 	raw_spin_unlock(&logbuf_lock);
 
+	// raw_spin_unlock에서 한일:
+	// &logbuf_lock을 사용하여 unspinlock을 수행
+
 	up(&console_sem);
+
+	// up에서 한일:
+	// (&console_sem)->count: 1
 
 	/*
 	 * Someone could have filled up the buffer again, so re-check if there's
@@ -2214,12 +2291,29 @@ skip:
 	 * flush, no worries.
 	 */
 	raw_spin_lock(&logbuf_lock);
+
+	// raw_spin_lock에서 한일:
+	// &logbuf_lock 를 사용하여 spin lock 수행
+
+	// console_seq: 0, log_next_seq: 0
 	retry = console_seq != log_next_seq;
+	// retry: 0
+
 	raw_spin_unlock_irqrestore(&logbuf_lock, flags);
 
+	// raw_spin_unlock_irqrestore에서 한일:
+	// &logbuf_lock 를 사용하여 spin lock 수행하고 flags에 저장된 cpsr을 복원
+
+	// retry: 0, console_trylock(): 1
 	if (retry && console_trylock())
 		goto again;
 
+	// console_trylock에서 한일:
+	// (&console_sem)->count: 0
+	// console_locked: 0
+	// console_may_schedule: 0
+
+	// wake_klogd: 0
 	if (wake_klogd)
 		wake_up_klogd();
 }

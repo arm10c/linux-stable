@@ -33,6 +33,7 @@ static int pause_on_oops;
 static int pause_on_oops_flag;
 static DEFINE_SPINLOCK(pause_on_oops_lock);
 
+// ARM10C 20150725
 int panic_timeout;
 EXPORT_SYMBOL_GPL(panic_timeout);
 

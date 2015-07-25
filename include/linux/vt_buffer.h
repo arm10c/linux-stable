@@ -21,7 +21,11 @@
 #ifndef VT_BUF_HAVE_RW
 // ARM10C 20150718
 // c: 0x120, s: kmem_cache#22-oX
+// ARM10C 20150725
+// softcursor_original: 0, vc->vc_pos: (kmem_cache#25-oX)->vc_pos: kmem_cache#22-oX
 #define scr_writew(val, addr) (*(addr) = (val))
+// ARM10C 20150725
+// vc->vc_pos: (kmem_cache#25-oX)->vc_pos: kmem_cache#22-oX
 #define scr_readw(addr) (*(addr))
 #define scr_memcpyw(d, s, c) memcpy(d, s, c)
 #define scr_memmovew(d, s, c) memmove(d, s, c)
@@ -33,6 +37,8 @@
 // ARM10C 20150718
 // start: kmem_cache#22-oX,
 // vc->vc_video_erase_char: (kmem_cache#25-oX)->vc_video_erase_char: 0x120, 4800
+// ARM10C 20150725
+// vc->vc_video_erase_char: (kmem_cache#25-oX)->vc_video_erase_char: 0x120, count: 2400
 static inline void scr_memsetw(u16 *s, u16 c, unsigned int count)
 {
 	// count: 4800

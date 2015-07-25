@@ -65,12 +65,15 @@ static void dummycon_init(struct vc_data *vc, int init)
 
 // ARM10C 20150718
 // vc: kmem_cache#25-oX, color_table
+// ARM10C 20150725
+// vc: kmem_cache#25-oX, CM_ERASE: 2
 static int dummycon_dummy(void)
 {
     return 0;
 }
 
 // ARM10C 20150718
+// ARM10C 20150725
 // DUMMY: (void *)dummycon_dummy
 #define DUMMY	(void *)dummycon_dummy
 

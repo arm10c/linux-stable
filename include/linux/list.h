@@ -289,6 +289,7 @@ static inline int list_is_last(const struct list_head *list,
 // ARM10C 20150117
 // ARM10C 20150509
 // ARM10C 20150523
+// ARM10C 20150725
 static inline int list_empty(const struct list_head *head)
 {
 	// head->next: waiter->list->next, head: waiter->list

@@ -195,6 +195,8 @@ static inline void do_raw_spin_unlock(raw_spinlock_t *lock) __releases(lock)
 // ARM10C 20140405
 // ARM10C 20140517
 // &lock->rlock: &(&contig_page_data->node_zones[0].lock)->rlock
+// ARM10C 20150725
+// &logbuf_lock
 #define raw_spin_lock(lock)	_raw_spin_lock(lock)
 
 #ifdef CONFIG_DEBUG_LOCK_ALLOC
@@ -221,6 +223,8 @@ static inline void do_raw_spin_unlock(raw_spinlock_t *lock) __releases(lock)
 // &base->cpu_base->lock: (&hrtimer_bases->clock_base[0])->cpu_base->lock, flags: &flags
 // ARM10C 20150704
 // &sem->lock: &(&console_sem)->lock
+// ARM10C 20150725
+// &logbuf_lock, flags
 #define raw_spin_lock_irqsave(lock, flags)			\
 	do {						\
 		typecheck(unsigned long, flags);	\
@@ -257,6 +261,8 @@ static inline void do_raw_spin_unlock(raw_spinlock_t *lock) __releases(lock)
 #define raw_spin_lock_irq(lock)		_raw_spin_lock_irq(lock)
 #define raw_spin_lock_bh(lock)		_raw_spin_lock_bh(lock)
 // ARM10C 20140412
+// ARM10C 20150725
+// &logbuf_lock
 #define raw_spin_unlock(lock)		_raw_spin_unlock(lock)
 #define raw_spin_unlock_irq(lock)	_raw_spin_unlock_irq(lock)
 

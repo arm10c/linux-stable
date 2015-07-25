@@ -131,6 +131,8 @@ extern void vc_SAK(struct work_struct *work);
 
 #define CUR_DEF		0
 #define CUR_NONE	1
+// ARM10C 20150718
+// CUR_UNDERLINE: 2
 #define CUR_UNDERLINE	2
 #define CUR_LOWER_THIRD	3
 #define CUR_LOWER_HALF	4
@@ -139,6 +141,9 @@ extern void vc_SAK(struct work_struct *work);
 #define CUR_HWMASK	0x0f
 #define CUR_SWMASK	0xfff0
 
+// ARM10C 20150718
+// CUR_UNDERLINE: 2
+// CUR_DEFAULT: 2
 #define CUR_DEFAULT CUR_UNDERLINE
 
 // ARM10C 20150718

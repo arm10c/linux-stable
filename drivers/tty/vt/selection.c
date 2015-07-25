@@ -34,6 +34,7 @@ extern void poke_blanked_console(void);
 /* FIXME: all this needs locking */
 /* Variables for selection control. */
 /* Use a dynamic buffer, instead of static (Dec 1994) */
+// ARM10C 20150725
 struct vc_data *sel_cons;		/* must not be deallocated */
 static int use_unicode;
 static volatile int sel_start = -1; 	/* cleared by clear_selection */

@@ -384,8 +384,11 @@ static inline void lockdep_on(void)
 // &lock->dep_map: &(&prepare_lock)->dep_map, 0, 1, 0, 1NULL, _RET_IP_
 // ARM10C 20150704
 // &console_lock_dep_map, 0, 0, NULL, _RET_IP_
+// ARM10C 20150725
+// &console_lock_dep_map, 0, 0, NULL, _RET_IP_
 # define lock_acquire(l, s, t, r, c, n, i)	do { } while (0)
 // ARM10C 20150103
+// ARM10C 20150725
 # define lock_release(l, n, i)			do { } while (0)
 # define lock_set_class(l, n, k, s, i)		do { } while (0)
 # define lock_set_subclass(l, s, i)		do { } while (0)
@@ -517,6 +520,8 @@ static inline void print_irqtrace_events(struct task_struct *curr)
 // &lock->dep_map: &(&prepare_lock)->dep_map, 0, 1, NULL, _RET_IP_
 // ARM10C 20150704
 // &console_lock_dep_map, 0, 0, NULL, _RET_IP_
+// ARM10C 20150725
+// &console_lock_dep_map, 0, 0, NULL, _RET_IP_
  #define lock_acquire_exclusive(l, s, t, n, i)		lock_acquire(l, s, t, 0, 1, n, i)
  #define lock_acquire_shared(l, s, t, n, i)		lock_acquire(l, s, t, 1, 1, n, i)
  #define lock_acquire_shared_recursive(l, s, t, n, i)	lock_acquire(l, s, t, 2, 1, n, i)
@@ -545,10 +550,13 @@ static inline void print_irqtrace_events(struct task_struct *curr)
 // &lock->dep_map: &(&prepare_lock)->dep_map, 0, 1, _RET_IP_
 // ARM10C 20150704
 // &console_lock_dep_map, 0, 0, _RET_IP_
+// ARM10C 20150725
+// &console_lock_dep_map, 0, 1, _RET_IP_
 #define mutex_acquire(l, s, t, i)		lock_acquire_exclusive(l, s, t, NULL, i)
 // ARM10C 20140315
 #define mutex_acquire_nest(l, s, t, n, i)	lock_acquire_exclusive(l, s, t, n, i)
 // ARM10C 20140322
+// ARM10C 20150725
 #define mutex_release(l, n, i)			lock_release(l, n, i)
 
 #define rwsem_acquire(l, s, t, i)		lock_acquire_exclusive(l, s, t, NULL, i)

@@ -45,6 +45,7 @@ struct consolefontdesc {
 // KD_TEXT: 0x00
 #define		KD_TEXT		0x00
 // ARM10C 20150718
+// ARM10C 20150725
 // KD_GRAPHICS: 0x01
 #define		KD_GRAPHICS	0x01
 #define		KD_TEXT0	0x02	/* obsolete */

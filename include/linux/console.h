@@ -100,7 +100,11 @@ static inline int con_debug_leave(void)
 #define SM_DOWN     (2)
 
 /* cursor */
+// ARM10C 20150725
+// CM_DRAW: 1
 #define CM_DRAW     (1)
+// ARM10C 20150725
+// CM_ERASE: 2
 #define CM_ERASE    (2)
 #define CM_MOVE     (3)
 
@@ -126,6 +130,7 @@ static inline int con_debug_leave(void)
 #define CON_BRL		(32) /* Used for a braille device */
 
 // ARM10C 20150627
+// ARM10C 20150725
 struct console {
 	char	name[16];
 	void	(*write)(struct console *, const char *, unsigned);
@@ -188,6 +193,7 @@ void vcs_remove_sysfs(int index);
 /* Some debug stub to catch some of the obvious races in the VT code */
 #if 1
 // ARM10C 20150718
+// ARM10C 20150725
 // is_console_locked(): 1
 #define WARN_CONSOLE_UNLOCKED()	WARN_ON(!is_console_locked() && !oops_in_progress)
 #else

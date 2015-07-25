@@ -142,18 +142,37 @@ EXPORT_SYMBOL(down_killable);
  * Unlike mutex_trylock, this function can be used from interrupt context,
  * and the semaphore can be released by any task or interrupt.
  */
+// ARM10C 20150725
+// &console_sem
 int down_trylock(struct semaphore *sem)
 {
 	unsigned long flags;
 	int count;
 
+	// &sem->lock: &(&console_sem)->lock
 	raw_spin_lock_irqsave(&sem->lock, flags);
+
+	// raw_spin_lock_irqsave에서 한일:
+	// &(&console_sem)->lock를 사용하여 spin lock을 수행하고 cpsr을 flag에 저장함
+
+	// sem->count: (&console_sem)->count: 1
 	count = sem->count - 1;
+	// count: 0
+
+	// count: 0
 	if (likely(count >= 0))
+		// sem->count: (&console_sem)->count: 1, count: 0
 		sem->count = count;
+		// sem->count: (&console_sem)->count: 0
+
 	raw_spin_unlock_irqrestore(&sem->lock, flags);
 
+	// raw_spin_unlock_irqrestore에서 한일:
+	// &(&console_sem)->lock를 사용하여 spin unlock을 수행하고 flag에 저장된 cpsr을 복원
+
+	// count: 0
 	return (count < 0);
+	// return 0
 }
 EXPORT_SYMBOL(down_trylock);
 
@@ -190,16 +209,32 @@ EXPORT_SYMBOL(down_timeout);
  * Release the semaphore.  Unlike mutexes, up() may be called from any
  * context and even by tasks which have never called down().
  */
+// ARM10C 20150725
+// &console_sem
 void up(struct semaphore *sem)
 {
 	unsigned long flags;
 
+	// &sem->lock: &(&console_sem)->lock
 	raw_spin_lock_irqsave(&sem->lock, flags);
+
+	// raw_spin_lock_irqsave에서 한일:
+	// &(&console_sem)->lock을 사용하여 spin lock을 수행하고 cpsr을 flags에 저장함
+
+	// &sem->wait_list: &(&console_sem)->wait_list,
+	// list_empty(&(&console_sem)->wait_list): 1
 	if (likely(list_empty(&sem->wait_list)))
+		// sem->count: (&console_sem)->count: 0
 		sem->count++;
+		// sem->count: (&console_sem)->count: 1
 	else
 		__up(sem);
+
+	// &sem->lock: &(&console_sem)->lock
 	raw_spin_unlock_irqrestore(&sem->lock, flags);
+
+	// raw_spin_lock_irqsave에서 한일:
+	// &(&console_sem)->lock을 사용하여 spin unlock을 수행하고 flags에 저장된 cpsr을 복원
 }
 EXPORT_SYMBOL(up);
 

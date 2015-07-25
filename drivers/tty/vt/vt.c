@@ -183,6 +183,8 @@ module_param(default_utf8, int, S_IRUGO | S_IWUSR);
 int global_cursor_default = -1;
 module_param(global_cursor_default, int, S_IRUGO | S_IWUSR);
 
+// ARM10C 20150718
+// CUR_DEFAULT: 2
 static int cur_default = CUR_DEFAULT;
 module_param(cur_default, int, S_IRUGO | S_IWUSR);
 
@@ -194,6 +196,7 @@ static int ignore_poke;
 
 int do_poke_blanked_console;
 // ARM10C 20150718
+// ARM10C 20150725
 int console_blanked;
 
 static int vesa_blank_mode; /* 0:none 1:suspendV 2:suspendH 3:powerdown */
@@ -211,6 +214,7 @@ static DECLARE_WORK(console_work, console_callback);
  * want_console is the console we want to switch to,
  * saved_* variants are for save/restore around kernel debugger enter/leave
  */
+// ARM10C 20150725
 int fg_console;
 int last_console;
 int want_console = -1;
@@ -227,6 +231,7 @@ static int saved_console_blanked;
  * variable, we use this one for the "master display".
  */
 // ARM10C 20150718
+// ARM10C 20150725
 static struct vc_data *master_display_fg;
 
 /*
@@ -311,12 +316,16 @@ static void notify_update(struct vc_data *vc)
  *	Low-Level Functions
  */
 
+// ARM10C 20150725
+// vc: kmem_cache#25-oX
 #define IS_FG(vc)	((vc)->vc_num == fg_console)
 
 #ifdef VT_BUF_VRAM_ONLY
 #define DO_UPDATE(vc)	0
 #else
 // ARM10C 20150718
+// vc: kmem_cache#25-oX
+// ARM10C 20150725
 // vc: kmem_cache#25-oX
 #define DO_UPDATE(vc)	(CON_IS_VISIBLE(vc) && !console_blanked)
 #endif
@@ -627,14 +636,26 @@ static void delete_char(struct vc_data *vc, unsigned int nr)
 			vc->vc_cols - vc->vc_x);
 }
 
+// ARM10C 20150725
 static int softcursor_original;
 
+// ARM10C 20150725
+// vc: kmem_cache#25-oX
 static void add_softcursor(struct vc_data *vc)
 {
+	// vc->vc_pos: (kmem_cache#25-oX)->vc_pos: kmem_cache#22-oX
+	// scr_readw(kmem_cache#22-oX): *(kmem_cache#22-oX): 0
 	int i = scr_readw((u16 *) vc->vc_pos);
-	u32 type = vc->vc_cursor_type;
+	// i: 0
 
+	// vc->vc_cursor_type: (kmem_cache#25-oX)->vc_cursor_type: 2
+	u32 type = vc->vc_cursor_type;
+	// type: 2
+
+	// type: 2
 	if (! (type & 0x10)) return;
+	// return 수행
+
 	if (softcursor_original != -1) return;
 	softcursor_original = i;
 	i |= ((type >> 8) & 0xff00 );
@@ -646,41 +667,81 @@ static void add_softcursor(struct vc_data *vc)
 		vc->vc_sw->con_putc(vc, i, vc->vc_y, vc->vc_x);
 }
 
+// ARM10C 20150725
+// vc: kmem_cache#25-oX
 static void hide_softcursor(struct vc_data *vc)
 {
+	// softcursor_original: 0
 	if (softcursor_original != -1) {
+		// softcursor_original: 0, vc->vc_pos: (kmem_cache#25-oX)->vc_pos: kmem_cache#22-oX
 		scr_writew(softcursor_original, (u16 *)vc->vc_pos);
+
+		// scr_writew에서 한일:
+		// *(kmem_cache#22-oX): 0
+
+		// vc: kmem_cache#25-oX, DO_UPDATE(kmem_cache#25-oX): 0
 		if (DO_UPDATE(vc))
 			vc->vc_sw->con_putc(vc, softcursor_original,
 					vc->vc_y, vc->vc_x);
+		// softcursor_original: 0
 		softcursor_original = -1;
+		// softcursor_original: -1
 	}
 }
 
+// ARM10C 20150725
+// vc: kmem_cache#25-oX
 static void hide_cursor(struct vc_data *vc)
 {
+	// vc: kmem_cache#25-oX, sel_cons: NULL
 	if (vc == sel_cons)
 		clear_selection();
+
+	// vc->vc_sw: (kmem_cache#25-oX)->vc_sw: &dummy_con,
+	// vc->vc_sw->con_cursor: (&dummy_con)->con_cursor: dummycon_dummy
+	// vc: kmem_cache#25-oX, CM_ERASE: 2
 	vc->vc_sw->con_cursor(vc, CM_ERASE);
+
+	// vc: kmem_cache#25-oX
 	hide_softcursor(vc);
+
+	// hide_softcursor에서 한일:
+	// *(kmem_cache#22-oX): 0
+	// softcursor_original: -1
 }
 
+// ARM10C 20150725
+// vc: kmem_cache#25-oX
 static void set_cursor(struct vc_data *vc)
 {
+	// vc: kmem_cache#25-oX, IS_FG(kmem_cache#25-oX): 1, console_blanked: 0
+	// vc->vc_mode: (kmem_cache#25-oX)->vc_mode: 0x00, KD_GRAPHICS: 0x01
 	if (!IS_FG(vc) || console_blanked ||
 	    vc->vc_mode == KD_GRAPHICS)
 		return;
+
+	// vc->vc_deccm: (kmem_cache#25-oX)->vc_deccm: -1
 	if (vc->vc_deccm) {
+		// vc: kmem_cache#25-oX, sel_cons: NULL
 		if (vc == sel_cons)
 			clear_selection();
+
+		// vc: kmem_cache#25-oX
 		add_softcursor(vc);
+
+		// vc->vc_cursor_type: (kmem_cache#25-oX)->vc_cursor_type: 2
 		if ((vc->vc_cursor_type & 0x0f) != 1)
+			// vc->vc_sw: (kmem_cache#25-oX)->vc_sw: &dummy_con,
+			// vc->vc_sw->con_cursor: (&dummy_con)->con_cursor: dummycon_dummy
+			// vc: kmem_cache#25-oX, CM_DRAW: 1
 			vc->vc_sw->con_cursor(vc, CM_DRAW);
 	} else
 		hide_cursor(vc);
 }
 
 // ARM10C 20150718
+// vc: kmem_cache#25-oX
+// ARM10C 20150725
 // vc: kmem_cache#25-oX
 static void set_origin(struct vc_data *vc)
 {
@@ -717,10 +778,14 @@ static void set_origin(struct vc_data *vc)
 	// vc->vc_pos: (kmem_cache#25-oX)->vc_pos: kmem_cache#22-oX + 160
 }
 
+// ARM10C 20150725
+// vc: kmem_cache#25-oX
 static inline void save_screen(struct vc_data *vc)
 {
 	WARN_CONSOLE_UNLOCKED();
 
+	// vc->vc_sw: (kmem_cache#25-oX)->vc_sw: &dummy_con,
+	// vc->vc_sw->con_save_screen: (&dummy_con)->con_save_screen: NULL
 	if (vc->vc_sw->con_save_screen)
 		vc->vc_sw->con_save_screen(vc);
 }
@@ -740,18 +805,23 @@ void clear_buffer_attributes(struct vc_data *vc)
 	}
 }
 
+// ARM10C 20150725
+// vc: kmem_cache#25-oX, 0
 void redraw_screen(struct vc_data *vc, int is_switch)
 {
 	int redraw = 0;
+	// redraw: 0
 
 	WARN_CONSOLE_UNLOCKED();
 
+	// vc: kmem_cache#25-oX
 	if (!vc) {
 		/* strange ... */
 		/* printk("redraw_screen: tty %d not allocated ??\n", new_console+1); */
 		return;
 	}
 
+	// is_switch: 0
 	if (is_switch) {
 		struct vc_data *old_vc = vc_cons[fg_console].d;
 		if (old_vc == vc)
@@ -768,16 +838,41 @@ void redraw_screen(struct vc_data *vc, int is_switch)
 		if (tty0dev)
 			sysfs_notify(&tty0dev->kobj, NULL, "active");
 	} else {
+		// vc: kmem_cache#25-oX
 		hide_cursor(vc);
+
+		// hide_cursor에서 한일:
+		// *(kmem_cache#22-oX): 0
+		// softcursor_original: -1
+
 		redraw = 1;
+		// redraw: 1
 	}
 
+	// redraw: 1
 	if (redraw) {
 		int update;
-		int old_was_color = vc->vc_can_do_color;
 
+		// vc->vc_can_do_color: (kmem_cache#25-oX)->vc_can_do_color: 1
+		int old_was_color = vc->vc_can_do_color;
+		// old_was_color: 1
+
+		// vc: kmem_cache#25-oX
 		set_origin(vc);
+
+		// set_origin에서 한일:
+		// (kmem_cache#25-oX)->vc_origin: kmem_cache#22-oX
+		// (kmem_cache#25-oX)->vc_visible_origin: kmem_cache#22-oX
+		// (kmem_cache#25-oX)->vc_scr_end: kmem_cache#22-oX + 4800
+		// (kmem_cache#25-oX)->vc_pos: kmem_cache#22-oX + 160
+
+		// vc: kmem_cache#25-oX
+		// vc->vc_sw: (kmem_cache#25-oX)->vc_sw: &dummy_con, (&dummy_con)->con_switch: dummycon_dummy,
+		// dummycon_dummy(kmem_cache#25-oX): 0
 		update = vc->vc_sw->con_switch(vc);
+		// update: 0
+
+		// vc: kmem_cache#25-oX
 		set_palette(vc);
 		/*
 		 * If console changed from mono<->color, the best we can do
@@ -785,17 +880,24 @@ void redraw_screen(struct vc_data *vc, int is_switch)
 		 * rebuilding new attributes from the old buffer is not doable
 		 * without overly complex code.
 		 */
+		// old_was_color: 1, vc->vc_can_do_color: (kmem_cache#25-oX)->vc_can_do_color: 1
 		if (old_was_color != vc->vc_can_do_color) {
 			update_attr(vc);
 			clear_buffer_attributes(vc);
 		}
 
 		/* Forcibly update if we're panicing */
+		// update: 0, vc->vc_mode: (kmem_cache#25-oX)->vc_mode: 0x00, KD_GRAPHICS: 0x01
+		// vc: kmem_cache#25-oX, vt_force_oops_output(kmem_cache#25-oX): 0
 		if ((update && vc->vc_mode != KD_GRAPHICS) ||
 		    vt_force_oops_output(vc))
 			do_update_region(vc, vc->vc_origin, vc->vc_screenbuf_size / 2);
 	}
+
+	// vc: kmem_cache#25-oX
 	set_cursor(vc);
+
+	// is_switch: 0
 	if (is_switch) {
 		set_leds();
 		compute_shiftstate();
@@ -1203,6 +1305,8 @@ module_param_array(default_blu, int, NULL, S_IRUGO | S_IWUSR);
  */
 // ARM10C 20150718
 // vc: kmem_cache#25-oX, 0, 0
+// ARM10C 20150725
+// vc: kmem_cache#25-oX, vc->vc_x: (kmem_cache#25-oX)->vc_x: 0, vc->vc_y: (kmem_cache#25-oX)->vc_y: 0
 static void gotoxy(struct vc_data *vc, int new_x, int new_y)
 {
 	int min_y, max_y;
@@ -1328,17 +1432,28 @@ static inline void del(struct vc_data *vc)
 
 // ARM10C 20150718
 // vc: kmem_cache#25-oX, 2
+// ARM10C 20150725
+// vc: kmem_cache#25-oX, 0
 static void csi_J(struct vc_data *vc, int vpar)
 {
 	unsigned int count;
 	unsigned short * start;
 
 	// vpar: 2
+	// vpar: 0
 	switch (vpar) {
 		case 0:	/* erase from cursor to end of display */
+			// vc->vc_scr_end: (kmem_cache#25-oX)->vc_scr_end: kmem_cache#22-oX + 4800
+			// vc->vc_pos: (kmem_cache#25-oX)->vc_pos: kmem_cache#22-oX
 			count = (vc->vc_scr_end - vc->vc_pos) >> 1;
+			// count: 2400
+
+			// vc->vc_pos: (kmem_cache#25-oX)->vc_pos: kmem_cache#22-oX
 			start = (unsigned short *)vc->vc_pos;
+			// start: kmem_cache#22-oX
+
 			break;
+			// break 수행
 		case 1:	/* erase from start to cursor */
 			count = ((vc->vc_pos - vc->vc_origin) >> 1) + 1;
 			start = (unsigned short *)vc->vc_origin;
@@ -1367,6 +1482,8 @@ static void csi_J(struct vc_data *vc, int vpar)
 
 	// start: kmem_cache#22-oX,
 	// vc->vc_video_erase_char: (kmem_cache#25-oX)->vc_video_erase_char: 0x120, count: 2400
+	// start: kmem_cache#22-oX,
+	// vc->vc_video_erase_char: (kmem_cache#25-oX)->vc_video_erase_char: 0x120, count: 2400
 	scr_memsetw(start, vc->vc_video_erase_char, 2 * count);
 
 	// scr_memsetw에서 한일:
@@ -1377,12 +1494,23 @@ static void csi_J(struct vc_data *vc, int vpar)
 	// ...
 	// *(kmem_cache#22-oX + 2399): 0x120
 
+	// scr_memsetw에서 한일:
+	// *(kmem_cache#22-oX + 0): 0x120
+	// *(kmem_cache#22-oX + 1): 0x120
+	// *(kmem_cache#22-oX + 2): 0x120
+	// *(kmem_cache#22-oX + 3): 0x120
+	// ...
+	// *(kmem_cache#22-oX + 2399): 0x120
+
+	// vc: kmem_cache#25-oX, DO_UPDATE(kmem_cache#25-oX): 0
 	// vc: kmem_cache#25-oX, DO_UPDATE(kmem_cache#25-oX): 0
 	if (DO_UPDATE(vc))
 		do_update_region(vc, (unsigned long) start, count);
 
 	// vc->vc_need_wrap: (kmem_cache#25-oX)->vc_need_wrap
+	// vc->vc_need_wrap: (kmem_cache#25-oX)->vc_need_wrap
 	vc->vc_need_wrap = 0;
+	// vc->vc_need_wrap: (kmem_cache#25-oX)->vc_need_wrap: 0
 	// vc->vc_need_wrap: (kmem_cache#25-oX)->vc_need_wrap: 0
 }
 
@@ -1967,13 +2095,14 @@ static void reset_terminal(struct vc_data *vc, int do_clear)
 	// (&kbd_table[0])->ledmode: 0
 	// (&kbd_table[0])->ledflagstate: 0
 
-	// vc->vc_cursor_type: (kmem_cache#25-oX)->vc_cursor_type
+	// vc->vc_cursor_type: (kmem_cache#25-oX)->vc_cursor_type, cur_default: 2
 	vc->vc_cursor_type = cur_default;
-	// vc->vc_cursor_type: (kmem_cache#25-oX)->vc_cursor_type
+	// vc->vc_cursor_type: (kmem_cache#25-oX)->vc_cursor_type: 2
 
-	// vc->vc_complement_mask: (kmem_cache#25-oX)->vc_complement_mask
+	// vc->vc_complement_mask: (kmem_cache#25-oX)->vc_complement_mask,
+	// vc->vc_s_complement_mask: (kmem_cache#25-oX)->vc_s_complement_mask: 0x0800
 	vc->vc_complement_mask = vc->vc_s_complement_mask;
-	// vc->vc_complement_mask: (kmem_cache#25-oX)->vc_complement_mask
+	// vc->vc_complement_mask: (kmem_cache#25-oX)->vc_complement_mask: 0x0800
 
 
 	// vc: kmem_cache#25-oX
@@ -3457,8 +3586,8 @@ static void vc_init(struct vc_data *vc, unsigned int rows,
 	// (kmem_cache#25-oX)->vc_decawm: 1
 	// (kmem_cache#25-oX)->vc_deccm: -1
 	// (kmem_cache#25-oX)->vc_decim: 0
-	// (kmem_cache#25-oX)->vc_cursor_type
-	// (kmem_cache#25-oX)->vc_complement_mask
+	// (kmem_cache#25-oX)->vc_cursor_type: 2
+	// (kmem_cache#25-oX)->vc_complement_mask: 0x0800
 	// (kmem_cache#25-oX)->vc_intensity: 1
 	// (kmem_cache#25-oX)->vc_italic: 0
 	// (kmem_cache#25-oX)->vc_underline: 0
@@ -3867,20 +3996,78 @@ static int __init con_init(void)
 	}
 
 // 2015/07/18 종료
+// 2015/07/25 시작
 
 	currcons = fg_console = 0;
+	// currcons: 0, fg_console: 0
+
+	// currcons: 0, vc_cons[0].d: kmem_cache#25-oX, vc: kmem_cache#25-oX
 	master_display_fg = vc = vc_cons[currcons].d;
+	// master_display_fg: kmem_cache#25-oX, vc: kmem_cache#25-oX
+	
+	// vc: kmem_cache#25-oX
 	set_origin(vc);
+
+	// set_origin에서 한일:
+	// (kmem_cache#25-oX)->vc_origin: kmem_cache#22-oX
+	// (kmem_cache#25-oX)->vc_visible_origin: kmem_cache#22-oX
+	// (kmem_cache#25-oX)->vc_scr_end: kmem_cache#22-oX + 4800
+	// (kmem_cache#25-oX)->vc_pos: kmem_cache#22-oX + 160
+
+	// vc: kmem_cache#25-oX
 	save_screen(vc);
+
+	// vc: kmem_cache#25-oX, vc->vc_x: (kmem_cache#25-oX)->vc_x: 0, vc->vc_y: (kmem_cache#25-oX)->vc_y: 0
 	gotoxy(vc, vc->vc_x, vc->vc_y);
+
+	// gotoxy에서 한일:
+	// (kmem_cache#25-oX)->vc_x: 0
+	// (kmem_cache#25-oX)->vc_y: 0
+	// (kmem_cache#25-oX)->vc_pos: kmem_cache#22-oX
+	// (kmem_cache#25-oX)->vc_need_wrap: 0
+
+	// vc: kmem_cache#25-oX
 	csi_J(vc, 0);
+
+	// csi_J에서 한일:
+	// *(kmem_cache#22-oX + 0): 0x120
+	// *(kmem_cache#22-oX + 1): 0x120
+	// *(kmem_cache#22-oX + 2): 0x120
+	// *(kmem_cache#22-oX + 3): 0x120
+	// ...
+	// *(kmem_cache#22-oX + 2399): 0x120
+	// (kmem_cache#25-oX)->vc_need_wrap: 0
+
+	// vc: kmem_cache#25-oX
 	update_screen(vc);
+
+	// update_screen에서 한일:
+	// *(kmem_cache#22-oX): 0
+	// softcursor_original: -1
+	// (kmem_cache#25-oX)->vc_origin: kmem_cache#22-oX
+	// (kmem_cache#25-oX)->vc_visible_origin: kmem_cache#22-oX
+	// (kmem_cache#25-oX)->vc_scr_end: kmem_cache#22-oX + 4800
+	// (kmem_cache#25-oX)->vc_pos: kmem_cache#22-oX + 160
+
+	// vc->vc_can_do_color: (kmem_cache#25-oX)->vc_can_do_color: 1,
+	// display_desc: &"dummy device",
+	// vc->vc_cols: (kmem_cache#25-oX)->vc_cols: 80,
+	// vc->vc_rows: (kmem_cache#25-oX)->vc_rows: 30
 	pr_info("Console: %s %s %dx%d\n",
 		vc->vc_can_do_color ? "colour" : "mono",
 		display_desc, vc->vc_cols, vc->vc_rows);
+	// "Console: colour dummy device 80x30\n"
+
 	printable = 1;
+	// printable: 1
 
 	console_unlock();
+
+	// console_unlock에서 한일
+	// console_may_schedule: 0
+	// console_locked: 0
+	// console_may_schedule: 0
+	// (&console_sem)->count: 1
 
 #ifdef CONFIG_VT_CONSOLE
 	register_console(&vt_console_driver);
@@ -4816,6 +5003,8 @@ void poke_blanked_console(void)
  */
 
 // ARM10C 20150718
+// vc: kmem_cache#25-oX
+// ARM10C 20150725
 // vc: kmem_cache#25-oX
 static void set_palette(struct vc_data *vc)
 {

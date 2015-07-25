@@ -50,6 +50,8 @@ void scrollfront(struct vc_data *vc, int lines);
 void clear_buffer_attributes(struct vc_data *vc);
 void update_region(struct vc_data *vc, unsigned long start, int count);
 void redraw_screen(struct vc_data *vc, int is_switch);
+// ARM10C 20150725
+// vc: kmem_cache#25-oX
 #define update_screen(x) redraw_screen(x, 0)
 #define switch_screen(x) redraw_screen(x, 1)
 
@@ -135,11 +137,16 @@ extern int do_unbind_con_driver(const struct consw *csw, int first, int last,
 			     int deflt);
 int vty_init(const struct file_operations *console_fops);
 
+// ARM10C 20150725
+// vc: kmem_cache#25-oX
 static inline bool vt_force_oops_output(struct vc_data *vc)
 {
+	// oops_in_progress: 0, vc->vc_panic_force_write: (kmem_cache#25-oX)->vc_panic_force_write: 0,
+	// panic_timeout: 0
 	if (oops_in_progress && vc->vc_panic_force_write  && panic_timeout >= 0)
 		return true;
 	return false;
+	// return false
 }
 
 extern char vt_dont_switch;
