@@ -117,6 +117,7 @@ static inline int con_debug_leave(void)
  */
 
 // ARM10C 20150627
+// ARM10C 20150725
 // CON_PRINTBUFFER: 1
 #define CON_PRINTBUFFER	(1)
 #define CON_CONSDEV	(2) /* Last on the command line */

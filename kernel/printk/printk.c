@@ -100,6 +100,7 @@ EXPORT_SYMBOL(oops_in_progress);
 // }
 static DEFINE_SEMAPHORE(console_sem);
 // ARM10C 20150627
+// ARM10C 20150725
 struct console *console_drivers;
 EXPORT_SYMBOL_GPL(console_drivers);
 
@@ -2308,9 +2309,13 @@ skip:
 	if (retry && console_trylock())
 		goto again;
 
+	// FIXME:
+	// console_trylock 을 수행하지 않아야 할 것으로 보임
+	// 수행이 안된것으로 가정하고 분석을 질행, 추후에 확인 필요
+	//
 	// console_trylock에서 한일:
 	// (&console_sem)->count: 0
-	// console_locked: 0
+	// console_locked: 1
 	// console_may_schedule: 0
 
 	// wake_klogd: 0
@@ -2431,15 +2436,19 @@ early_param("keep_bootcon", keep_bootcon_setup);
  */
 // ARM10C 20150627
 // &s3c24xx_serial_console
+// ARM10C 20150725
+// &vt_console_driver
 void register_console(struct console *newcon)
 {
 	int i;
 	unsigned long flags;
 	struct console *bcon = NULL;
 	// bcon: NULL
+	// bcon: NULL
 
 	struct console_cmdline *c;
 
+	// console_drivers: NULL
 	// console_drivers: NULL
 	if (console_drivers)
 		for_each_console(bcon)
@@ -2453,6 +2462,7 @@ void register_console(struct console *newcon)
 	 * already have a valid console
 	 */
 	// console_drivers: NULL, newcon->flags: (&s3c24xx_serial_console)->flags: 1, CON_BOOT: 8
+	// console_drivers: NULL, newcon->flags: (&vt_console_driver)->flags: 1, CON_BOOT: 8
 	if (console_drivers && newcon->flags & CON_BOOT) {
 		/* find the last or real console */
 		for_each_console(bcon) {
@@ -2465,16 +2475,21 @@ void register_console(struct console *newcon)
 	}
 
 	// console_drivers: NULL
+	// console_drivers: NULL
 	if (console_drivers && console_drivers->flags & CON_BOOT)
 		bcon = console_drivers;
 
 	// preferred_console: -1, bcon: NULL, console_drivers: NULL
+	// preferred_console: -1, bcon: NULL, console_drivers: NULL
 	if (preferred_console < 0 || bcon || !console_drivers)
+		// selected_console: 0
 		// selected_console: 0
 		preferred_console = selected_console;
 		// preferred_console: 0
+		// preferred_console: 0
 
 	// newcon->early_setup: (&s3c24xx_serial_console)->early_setup: NULL
+	// newcon->early_setup: ((&vt_console_driver)->early_setup: NULL
 	if (newcon->early_setup)
 		newcon->early_setup();
 
@@ -2483,7 +2498,7 @@ void register_console(struct console *newcon)
 	 *	didn't select a console we take the first one
 	 *	that registers here.
 	 */
-	// s3c24xx_serial_console_setup(&s3c24xx_serial_console, NULL): -19
+	// preferred_console: 0
 	// preferred_console: 0
 	if (preferred_console < 0) {
 		if (newcon->index < 0)

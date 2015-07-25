@@ -831,6 +831,9 @@ asmlinkage void __init start_kernel(void)
 	 * this. But we do want output early, in case something goes wrong.
 	 */
 	console_init();
+
+// 2015/07/25 종료
+
 	if (panic_later)
 		panic(panic_later, panic_param);
 

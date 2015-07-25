@@ -2941,7 +2941,7 @@ int set_console(int nr)
 
 struct tty_driver *console_driver;
 
-#ifdef CONFIG_VT_CONSOLE
+#ifdef CONFIG_VT_CONSOLE // CONFIG_VT_CONSOLE=y
 
 /**
  * vt_kmsg_redirect() - Sets/gets the kernel message console
@@ -3078,11 +3078,13 @@ static struct tty_driver *vt_console_device(struct console *c, int *index)
 	return console_driver;
 }
 
+// ARM10C 20150725
 static struct console vt_console_driver = {
 	.name		= "tty",
 	.write		= vt_console_print,
 	.device		= vt_console_device,
 	.unblank	= unblank_screen,
+	// CON_PRINTBUFFER: 1
 	.flags		= CON_PRINTBUFFER,
 	.index		= -1,
 };
@@ -4069,7 +4071,7 @@ static int __init con_init(void)
 	// console_may_schedule: 0
 	// (&console_sem)->count: 1
 
-#ifdef CONFIG_VT_CONSOLE
+#ifdef CONFIG_VT_CONSOLE // CONFIG_VT_CONSOLE=y
 	register_console(&vt_console_driver);
 #endif
 	return 0;

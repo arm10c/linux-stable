@@ -3515,6 +3515,15 @@ void __init console_init(void)
 		(*call)();
 		call++;
 	}
+
+	// FIXME:
+	// 동작이 정상적으로 초기화 되지 않고 에러로 빠지는 것으로 보임
+
+	// TODO:
+	// 보드로 console 로그를 사용하여 동작 확인필요
+
+	// NOTE:
+	// 초기값이 불명확 하여 console로 확인할때 까지 skip 함
 }
 
 static char *tty_devnode(struct device *dev, umode_t *mode)
