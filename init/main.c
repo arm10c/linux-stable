@@ -174,6 +174,7 @@ __setup("reset_devices", set_reset_devices);
 
 static const char * argv_init[MAX_INIT_ARGS+2] = { "init", NULL, };
 const char * envp_init[MAX_INIT_ENVS+2] = { "HOME=/", "TERM=linux", NULL, };
+// ARM10C 20150801
 static const char *panic_later, *panic_param;
 
 // ARM10C 20131019
@@ -833,20 +834,23 @@ asmlinkage void __init start_kernel(void)
 	console_init();
 
 // 2015/07/25 종료
+// 2015/08/01 시작
 
+	// panic_later: NULL
 	if (panic_later)
 		panic(panic_later, panic_param);
 
-	lockdep_info();
+	lockdep_info(); // null function
 
 	/*
 	 * Need to run this when irqs are enabled, because it wants
 	 * to self-test [hard/soft]-irqs on/off lock inversion bugs
 	 * too:
 	 */
-	locking_selftest();
+	locking_selftest(); // null function
 
-#ifdef CONFIG_BLK_DEV_INITRD
+#ifdef CONFIG_BLK_DEV_INITRD // CONFIG_BLK_DEV_INITRD=y
+	// initrd_start: NULL, initrd_below_start_ok: 0
 	if (initrd_start && !initrd_below_start_ok &&
 	    page_to_pfn(virt_to_page((void *)initrd_start)) < min_low_pfn) {
 		pr_crit("initrd overwritten (0x%08lx < 0x%08lx) - disabling it.\n",
@@ -855,6 +859,9 @@ asmlinkage void __init start_kernel(void)
 		initrd_start = 0;
 	}
 #endif
+
+// 2015/08/01 종료
+
 	page_cgroup_init();
 	debug_objects_mem_init();
 	kmemleak_init();

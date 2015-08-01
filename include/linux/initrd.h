@@ -11,10 +11,12 @@ extern int rd_prompt;
 extern int rd_image_start;
 
 /* 1 if it is not an error if initrd_start < memory_start */
+// ARM10C 20150801
 extern int initrd_below_start_ok;
 
 /* free_initrd_mem always gets called with the next two as arguments.. */
 // ARM10C 20131026
+// ARM10C 20150801
 extern unsigned long initrd_start, initrd_end;
 extern void free_initrd_mem(unsigned long, unsigned long);
 
