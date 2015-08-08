@@ -45,6 +45,8 @@
 // &buf->memory_used: &(&(&(kmem_cache#25-oX)->port)->buf)->memory_used, 0
 // ARM10C 20150718
 // &buf->priority: &(&(&(kmem_cache#25-oX)->port)->buf)->priority, 0
+// ARM10C 20150808
+// &init_css_set.refcount, 1
 #define atomic_set(v,i)	(((v)->counter) = (i))
 
 #if __LINUX_ARM_ARCH__ >= 6

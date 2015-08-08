@@ -20,6 +20,7 @@
 #ifdef CONFIG_SPARSE_RCU_POINTER // CONFIG_SPARSE_RCU_POINT=n
 # define __rcu		__attribute__((noderef, address_space(4)))
 #else
+// ARM10C 20150808
 # define __rcu
 #endif
 extern void __chk_user_ptr(const volatile void __user *);
@@ -31,6 +32,7 @@ extern void __chk_io_ptr(const volatile void __iomem *);
 # define __safe
 // ARM10C 20140322
 // ARM10C 20150606
+// ARM10C 20150808
 # define __force
 # define __nocast
 // ARM10C 20140215

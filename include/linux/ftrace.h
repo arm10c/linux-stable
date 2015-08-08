@@ -675,7 +675,7 @@ struct ftrace_graph_ret {
 typedef void (*trace_func_graph_ret_t)(struct ftrace_graph_ret *); /* return */
 typedef int (*trace_func_graph_ent_t)(struct ftrace_graph_ent *); /* entry */
 
-#ifdef CONFIG_FUNCTION_GRAPH_TRACER
+#ifdef CONFIG_FUNCTION_GRAPH_TRACER // CONFIG_FUNCTION_GRAPH_TRACER=n
 
 /* for init task */
 #define INIT_FTRACE_GRAPH		.ret_stack = NULL,
@@ -757,6 +757,7 @@ static inline void unpause_graph_tracing(void)
 
 #define __notrace_funcgraph
 #define __irq_entry
+// ARM10C 20150808
 #define INIT_FTRACE_GRAPH
 
 static inline void ftrace_graph_init_task(struct task_struct *t) { }
@@ -830,7 +831,9 @@ extern enum ftrace_dump_mode ftrace_dump_on_oops;
 extern void disable_trace_on_warning(void);
 extern int __disable_trace_on_warning;
 
-#ifdef CONFIG_PREEMPT
+#ifdef CONFIG_PREEMPT // CONFIG_PREEMPT=y
+// ARM10C 20150808
+// INIT_TRACE_RECURSION: .trace_recursion = 0,
 #define INIT_TRACE_RECURSION		.trace_recursion = 0,
 #endif
 

@@ -57,6 +57,8 @@
 // &port->mutex: &(&(kmem_cache#25-oX)->port)->mutex, "&port->mutex", &__key
 // ARM10C 20150718
 // &port->buf_mutex: &(&(kmem_cache#25-oX)->port)->buf_mutex, "&port->buf_mutex", &__key
+// ARM10C 20150808
+// &cgrp->pidlist_mutex: &(&(&cgroup_dummy_root)->top_cgroup)->pidlist_mutex, "&cgrp->pidlist_mutex", &__key
 void
 __mutex_init(struct mutex *lock, const char *name, struct lock_class_key *key)
 {

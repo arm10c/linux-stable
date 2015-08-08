@@ -331,6 +331,12 @@ static inline raw_spinlock_t *spinlock_check(spinlock_t *lock)
 // &lock->wait_lock: &(&(&(&(kmem_cache#25-oX)->port)->buf)->lock)->wait_lock
 // ARM10C 20150718
 // &port->lock: &(&(kmem_cache#25-oX)->port)->lock
+// ARM10C 20150808
+// &cgrp->event_list_lock: &(&(&cgroup_dummy_root)->top_cgroup)->event_list_lock
+// ARM10C 20150808
+// &xattrs->lock: &(&(&(&cgroup_dummy_root)->top_cgroup)->xattrs)->lock
+// ARM10C 20150808
+// &idp->lock: &(&(&cgroup_dummy_root)->cgroup_idr)->lock
 #define spin_lock_init(_lock)				\
 do {							\
 	spinlock_check(_lock);				\

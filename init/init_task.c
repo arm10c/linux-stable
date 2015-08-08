@@ -17,6 +17,7 @@ static struct sighand_struct init_sighand = INIT_SIGHAND(init_sighand);
 /* Initial task structure */
 // ARM10C 20140315
 // ARM10C 20140913
+// ARM10C 20150808
 struct task_struct init_task = INIT_TASK(init_task);
 EXPORT_SYMBOL(init_task);
 

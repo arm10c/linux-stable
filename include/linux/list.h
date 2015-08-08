@@ -44,6 +44,26 @@
 // &(&vc_cons[0].SAK_work)->entry
 // ARM10C 20150718
 // &lock->wait_list: &(&(&(&(kmem_cache#25-oX)->port)->buf)->lock)->wait_list
+// ARM10C 20150808
+// &init_css_set.cgrp_links
+// ARM10C 20150808
+// &init_css_set.tasks
+// ARM10C 20150808
+// &root->subsys_list: &(&cgroup_dummy_root)->subsys_list
+// ARM10C 20150808
+// &root->root_list: &(&cgroup_dummy_root)->root_list
+// ARM10C 20150808
+// &cgrp->sibling: &(&(&cgroup_dummy_root)->top_cgroup)->sibling
+// ARM10C 20150808
+// &cgrp->children: &(&(&cgroup_dummy_root)->top_cgroup)->children
+// ARM10C 20150808
+// &cgrp->files: &(&(&cgroup_dummy_root)->top_cgroup)->files
+// ARM10C 20150808
+// &cgrp->release_list: &(&(&cgroup_dummy_root)->top_cgroup)->release_list
+// ARM10C 20150808
+// &cgrp->event_list: &(&(&cgroup_dummy_root)->top_cgroup)->event_list
+// ARM10C 20150808
+// &xattrs->head: (&(&(&cgroup_dummy_root)->top_cgroup)->xattrs)->head
 static inline void INIT_LIST_HEAD(struct list_head *list)
 {
 	list->next = list;
@@ -778,10 +798,19 @@ static inline void list_splice_tail_init(struct list_head *list,
 #define HLIST_HEAD_INIT { .first = NULL }
 #define HLIST_HEAD(name) struct hlist_head name = {  .first = NULL }
 #define INIT_HLIST_HEAD(ptr) ((ptr)->first = NULL)
+
+// ARM10C 20150808
+// &init_css_set.hlist
 static inline void INIT_HLIST_NODE(struct hlist_node *h)
 {
+
+	// h->next: (&init_css_set.hlist)->next
 	h->next = NULL;
+	// h->next: (&init_css_set.hlist)->next: NULL
+
+	// h->pprev: (&init_css_set.hlist)->pprev
 	h->pprev = NULL;
+	// h->pprev: (&init_css_set.hlist)->pprev: NULL
 }
 
 static inline int hlist_unhashed(const struct hlist_node *h)

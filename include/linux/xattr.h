@@ -67,10 +67,25 @@ struct simple_xattr {
 /*
  * initialize the simple_xattrs structure
  */
+// ARM10C 20150808
+// &cgrp->xattrs: &(&(&cgroup_dummy_root)->top_cgroup)->xattrs
 static inline void simple_xattrs_init(struct simple_xattrs *xattrs)
 {
+	// &xattrs->head: &(&(&(&cgroup_dummy_root)->top_cgroup)->xattrs)->head
 	INIT_LIST_HEAD(&xattrs->head);
+
+	// INIT_LIST_HEAD에서 한일:
+	// (&(&(&(&cgroup_dummy_root)->top_cgroup)->xattrs)->head)->next: &(&(&(&cgroup_dummy_root)->top_cgroup)->xattrs)->head
+	// (&(&(&(&cgroup_dummy_root)->top_cgroup)->xattrs)->head)->prev: &(&(&(&cgroup_dummy_root)->top_cgroup)->xattrs)->head
+
+	// &xattrs->lock: &(&(&(&cgroup_dummy_root)->top_cgroup)->xattrs)->lock
 	spin_lock_init(&xattrs->lock);
+
+	// spin_lock_init에서 한일:
+	// (&(&(&(&cgroup_dummy_root)->top_cgroup)->xattrs)->lock)->raw_lock: { { 0 } }
+	// (&(&(&(&cgroup_dummy_root)->top_cgroup)->xattrs)->lock)->magic: 0xdead4ead
+	// (&(&(&(&cgroup_dummy_root)->top_cgroup)->xattrs)->lock)->owner: 0xffffffff
+	// (&(&(&(&cgroup_dummy_root)->top_cgroup)->xattrs)->lock)->owner_cpu: 0xffffffff
 }
 
 /*

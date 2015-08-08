@@ -114,6 +114,7 @@ static struct cgroup_subsys *cgroup_subsys[CGROUP_SUBSYS_COUNT] = {
  * unattached - it never has more than a single cgroup, and all tasks are
  * part of that cgroup.
  */
+// ARM10C 20150808
 static struct cgroupfs_root cgroup_dummy_root;
 
 /* dummy_top is a shorthand for the dummy hierarchy's top cgroup */
@@ -174,6 +175,7 @@ static int cgroup_root_count;
  */
 static DEFINE_IDR(cgroup_hierarchy_idr);
 
+// ARM10C 20150808
 static struct cgroup_name root_cgroup_name = { .name = "/" };
 
 /*
@@ -361,6 +363,7 @@ struct cgrp_cset_link {
  * haven't been created.
  */
 
+// ARM10C 20150808
 static struct css_set init_css_set;
 static struct cgrp_cset_link init_cgrp_cset_link;
 
@@ -370,6 +373,7 @@ static struct cgrp_cset_link init_cgrp_cset_link;
  * css_task_iter_start().
  */
 static DEFINE_RWLOCK(css_set_lock);
+// ARM10C 20150808
 static int css_set_count;
 
 /*
@@ -1352,32 +1356,183 @@ static const struct super_operations cgroup_ops = {
 	.remount_fs = cgroup_remount,
 };
 
+// ARM10C 20150808
+// cgrp: &(&cgroup_dummy_root)->top_cgroup
 static void init_cgroup_housekeeping(struct cgroup *cgrp)
 {
+	// &cgrp->sibling: &(&(&cgroup_dummy_root)->top_cgroup)->sibling
 	INIT_LIST_HEAD(&cgrp->sibling);
+
+	// INIT_LIST_HEAD에서 한일:
+	// (&(&(&cgroup_dummy_root)->top_cgroup)->sibling)->next: &(&(&cgroup_dummy_root)->top_cgroup)->sibling
+	// (&(&(&cgroup_dummy_root)->top_cgroup)->sibling)->prev: &(&(&cgroup_dummy_root)->top_cgroup)->sibling
+
+	// &cgrp->children: &(&(&cgroup_dummy_root)->top_cgroup)->children
 	INIT_LIST_HEAD(&cgrp->children);
+
+	// INIT_LIST_HEAD에서 한일:
+	// (&(&(&cgroup_dummy_root)->top_cgroup)->children)->next: &(&(&cgroup_dummy_root)->top_cgroup)->children
+	// (&(&(&cgroup_dummy_root)->top_cgroup)->children)->prev: &(&(&cgroup_dummy_root)->top_cgroup)->children
+
+	// &cgrp->files: &(&(&cgroup_dummy_root)->top_cgroup)->files
 	INIT_LIST_HEAD(&cgrp->files);
+
+	// INIT_LIST_HEAD에서 한일:
+	// (&(&(&cgroup_dummy_root)->top_cgroup)->files)->next: &(&(&cgroup_dummy_root)->top_cgroup)->files
+	// (&(&(&cgroup_dummy_root)->top_cgroup)->files)->prev: &(&(&cgroup_dummy_root)->top_cgroup)->files
+
+	// &cgrp->cset_links: &(&(&cgroup_dummy_root)->top_cgroup)->cset_links
 	INIT_LIST_HEAD(&cgrp->cset_links);
+
+	// INIT_LIST_HEAD에서 한일:
+	// (&(&(&cgroup_dummy_root)->top_cgroup)->cset_links)->next: &(&(&cgroup_dummy_root)->top_cgroup)->cset_links
+	// (&(&(&cgroup_dummy_root)->top_cgroup)->cset_links)->prev: &(&(&cgroup_dummy_root)->top_cgroup)->cset_links
+
+	// &cgrp->release_list: &(&(&cgroup_dummy_root)->top_cgroup)->release_list
 	INIT_LIST_HEAD(&cgrp->release_list);
+
+	// INIT_LIST_HEAD에서 한일:
+	// (&(&(&cgroup_dummy_root)->top_cgroup)->release_list)->next: &(&(&cgroup_dummy_root)->top_cgroup)->release_list
+	// (&(&(&cgroup_dummy_root)->top_cgroup)->release_list)->prev: &(&(&cgroup_dummy_root)->top_cgroup)->release_list
+
+	// &cgrp->pidlists: &(&(&cgroup_dummy_root)->top_cgroup)->pidlists
 	INIT_LIST_HEAD(&cgrp->pidlists);
+
+	// INIT_LIST_HEAD에서 한일:
+	// (&(&(&cgroup_dummy_root)->top_cgroup)->pidlists)->next: &(&(&cgroup_dummy_root)->top_cgroup)->pidlists
+	// (&(&(&cgroup_dummy_root)->top_cgroup)->pidlists)->prev: &(&(&cgroup_dummy_root)->top_cgroup)->pidlists
+
+	// &cgrp->pidlist_mutex: &(&(&cgroup_dummy_root)->top_cgroup)->pidlist_mutex
 	mutex_init(&cgrp->pidlist_mutex);
+
+	// mutex_init에서 한일:
+	// (&(&(&cgroup_dummy_root)->top_cgroup)->pidlist_mutex)->count: 1
+	// (&(&(&cgroup_dummy_root)->top_cgroup)->pidlist_mutex)->wait_lock)->rlock)->raw_lock: { { 0 } }
+	// (&(&(&cgroup_dummy_root)->top_cgroup)->pidlist_mutex)->wait_lock)->rlock)->magic: 0xdead4ead
+	// (&(&(&cgroup_dummy_root)->top_cgroup)->pidlist_mutex)->wait_lock)->rlock)->owner: 0xffffffff
+	// (&(&(&cgroup_dummy_root)->top_cgroup)->pidlist_mutex)->wait_lock)->rlock)->owner_cpu: 0xffffffff
+	// (&(&(&(&cgroup_dummy_root)->top_cgroup)->pidlist_mutex)->wait_list)->next: &(&(&(&cgroup_dummy_root)->top_cgroup)->pidlist_mutex)->wait_list
+	// (&(&(&(&cgroup_dummy_root)->top_cgroup)->pidlist_mutex)->wait_list)->prev: &(&(&(&cgroup_dummy_root)->top_cgroup)->pidlist_mutex)->wait_list
+	// (&(&(&cgroup_dummy_root)->top_cgroup)->pidlist_mutex)->onwer: NULL
+	// (&(&(&cgroup_dummy_root)->top_cgroup)->pidlist_mutex)->magic: &(&(&cgroup_dummy_root)->top_cgroup)->pidlist_mutex
+
+	// cgrp->dummy_css.cgroup: (&(&cgroup_dummy_root)->top_cgroup)->dummy_css.cgroup,
+	// cgrp: &(&cgroup_dummy_root)->top_cgroup
 	cgrp->dummy_css.cgroup = cgrp;
+	// cgrp->dummy_css.cgroup: (&(&cgroup_dummy_root)->top_cgroup)->dummy_css.cgroup: &(&cgroup_dummy_root)->top_cgroup
+
+	// &cgrp->event_list: &(&(&cgroup_dummy_root)->top_cgroup)->event_list
 	INIT_LIST_HEAD(&cgrp->event_list);
+
+	// INIT_LIST_HEAD에서 한일:
+	// (&(&(&cgroup_dummy_root)->top_cgroup)->event_list)->next: &(&(&cgroup_dummy_root)->top_cgroup)->event_list
+	// (&(&(&cgroup_dummy_root)->top_cgroup)->event_list)->prev: &(&(&cgroup_dummy_root)->top_cgroup)->event_list
+
+	// &cgrp->event_list_lock: &(&(&cgroup_dummy_root)->top_cgroup)->event_list_lock
 	spin_lock_init(&cgrp->event_list_lock);
+
+	// spin_lock_init에서 한일:
+	// (&(&(&cgroup_dummy_root)->top_cgroup)->event_list_lock)->raw_lock: { { 0 } }
+	// (&(&(&cgroup_dummy_root)->top_cgroup)->event_list_lock)->magic: 0xdead4ead
+	// (&(&(&cgroup_dummy_root)->top_cgroup)->event_list_lock)->owner: 0xffffffff
+	// (&(&(&cgroup_dummy_root)->top_cgroup)->event_list_lock)->owner_cpu: 0xffffffff
+
+	// &cgrp->xattrs: &(&(&cgroup_dummy_root)->top_cgroup)->xattrs
 	simple_xattrs_init(&cgrp->xattrs);
+
+	// simple_xattrs_init에서 한일:
+	// (&(&(&(&cgroup_dummy_root)->top_cgroup)->xattrs)->head)->next: &(&(&(&cgroup_dummy_root)->top_cgroup)->xattrs)->head
+	// (&(&(&(&cgroup_dummy_root)->top_cgroup)->xattrs)->head)->prev: &(&(&(&cgroup_dummy_root)->top_cgroup)->xattrs)->head
+	// (&(&(&(&cgroup_dummy_root)->top_cgroup)->xattrs)->lock)->raw_lock: { { 0 } }
+	// (&(&(&(&cgroup_dummy_root)->top_cgroup)->xattrs)->lock)->magic: 0xdead4ead
+	// (&(&(&(&cgroup_dummy_root)->top_cgroup)->xattrs)->lock)->owner: 0xffffffff
+	// (&(&(&(&cgroup_dummy_root)->top_cgroup)->xattrs)->lock)->owner_cpu: 0xffffffff
 }
 
+// ARM10C 20150808
+// &cgroup_dummy_root
 static void init_cgroup_root(struct cgroupfs_root *root)
 {
+	// &root->top_cgroup: &(&cgroup_dummy_root)->top_cgroup
 	struct cgroup *cgrp = &root->top_cgroup;
+	// cgrp: &(&cgroup_dummy_root)->top_cgroup
 
+	// &root->subsys_list: &(&cgroup_dummy_root)->subsys_list
 	INIT_LIST_HEAD(&root->subsys_list);
+
+	// INIT_LIST_HEAD에서 한일:
+	// (&(&cgroup_dummy_root)->subsys_list)->next: &(&cgroup_dummy_root)->subsys_list
+	// (&(&cgroup_dummy_root)->subsys_list)->prev: &(&cgroup_dummy_root)->subsys_list
+
+	// &root->root_list: &(&cgroup_dummy_root)->root_list
 	INIT_LIST_HEAD(&root->root_list);
+
+	// INIT_LIST_HEAD에서 한일:
+	// (&(&cgroup_dummy_root)->root_list)->next: &(&cgroup_dummy_root)->root_list
+	// (&(&cgroup_dummy_root)->root_list)->prev: &(&cgroup_dummy_root)->root_list
+
+	// root->number_of_cgroups: (&cgroup_dummy_root)->number_of_cgroups
 	root->number_of_cgroups = 1;
+	// root->number_of_cgroups: (&cgroup_dummy_root)->number_of_cgroups: 1
+
+	// cgrp->root: (&(&cgroup_dummy_root)->top_cgroup)->root, root: &cgroup_dummy_root
 	cgrp->root = root;
+	// cgrp->root: (&(&cgroup_dummy_root)->top_cgroup)->root: &cgroup_dummy_root
+
+	// cgrp->name: (&(&cgroup_dummy_root)->top_cgroup)->name
 	RCU_INIT_POINTER(cgrp->name, &root_cgroup_name);
+
+	// RCU_INIT_POINTER에서 한일:
+	// (&(&cgroup_dummy_root)->top_cgroup)->name: (struct cgroup_name *)(&root_cgroup_name)
+
+	// cgrp: &(&cgroup_dummy_root)->top_cgroup
 	init_cgroup_housekeeping(cgrp);
+
+	// init_cgroup_housekeeping에서 한일:
+	// (&(&(&cgroup_dummy_root)->top_cgroup)->sibling)->next: &(&(&cgroup_dummy_root)->top_cgroup)->sibling
+	// (&(&(&cgroup_dummy_root)->top_cgroup)->sibling)->prev: &(&(&cgroup_dummy_root)->top_cgroup)->sibling
+	// (&(&(&cgroup_dummy_root)->top_cgroup)->children)->next: &(&(&cgroup_dummy_root)->top_cgroup)->children
+	// (&(&(&cgroup_dummy_root)->top_cgroup)->children)->prev: &(&(&cgroup_dummy_root)->top_cgroup)->children
+	// (&(&(&cgroup_dummy_root)->top_cgroup)->files)->next: &(&(&cgroup_dummy_root)->top_cgroup)->files
+	// (&(&(&cgroup_dummy_root)->top_cgroup)->files)->prev: &(&(&cgroup_dummy_root)->top_cgroup)->files
+	// (&(&(&cgroup_dummy_root)->top_cgroup)->cset_links)->next: &(&(&cgroup_dummy_root)->top_cgroup)->cset_links
+	// (&(&(&cgroup_dummy_root)->top_cgroup)->cset_links)->prev: &(&(&cgroup_dummy_root)->top_cgroup)->cset_links
+	// (&(&(&cgroup_dummy_root)->top_cgroup)->release_list)->next: &(&(&cgroup_dummy_root)->top_cgroup)->release_list
+	// (&(&(&cgroup_dummy_root)->top_cgroup)->release_list)->prev: &(&(&cgroup_dummy_root)->top_cgroup)->release_list
+	// (&(&(&cgroup_dummy_root)->top_cgroup)->pidlists)->next: &(&(&cgroup_dummy_root)->top_cgroup)->pidlists
+	// (&(&(&cgroup_dummy_root)->top_cgroup)->pidlists)->prev: &(&(&cgroup_dummy_root)->top_cgroup)->pidlists
+	// (&(&(&cgroup_dummy_root)->top_cgroup)->event_list)->next: &(&(&cgroup_dummy_root)->top_cgroup)->event_list
+	// (&(&(&cgroup_dummy_root)->top_cgroup)->event_list)->prev: &(&(&cgroup_dummy_root)->top_cgroup)->event_list
+	// (&(&(&cgroup_dummy_root)->top_cgroup)->pidlist_mutex)->count: 1
+	// (&(&(&cgroup_dummy_root)->top_cgroup)->pidlist_mutex)->wait_lock)->rlock)->raw_lock: { { 0 } }
+	// (&(&(&cgroup_dummy_root)->top_cgroup)->pidlist_mutex)->wait_lock)->rlock)->magic: 0xdead4ead
+	// (&(&(&cgroup_dummy_root)->top_cgroup)->pidlist_mutex)->wait_lock)->rlock)->owner: 0xffffffff
+	// (&(&(&cgroup_dummy_root)->top_cgroup)->pidlist_mutex)->wait_lock)->rlock)->owner_cpu: 0xffffffff
+	// (&(&(&(&cgroup_dummy_root)->top_cgroup)->pidlist_mutex)->wait_list)->next: &(&(&(&cgroup_dummy_root)->top_cgroup)->pidlist_mutex)->wait_list
+	// (&(&(&(&cgroup_dummy_root)->top_cgroup)->pidlist_mutex)->wait_list)->prev: &(&(&(&cgroup_dummy_root)->top_cgroup)->pidlist_mutex)->wait_list
+	// (&(&(&cgroup_dummy_root)->top_cgroup)->pidlist_mutex)->onwer: NULL
+	// (&(&(&cgroup_dummy_root)->top_cgroup)->pidlist_mutex)->magic: &(&(&cgroup_dummy_root)->top_cgroup)->pidlist_mutex
+	// (&(&(&cgroup_dummy_root)->top_cgroup)->event_list_lock)->raw_lock: { { 0 } }
+	// (&(&(&cgroup_dummy_root)->top_cgroup)->event_list_lock)->magic: 0xdead4ead
+	// (&(&(&cgroup_dummy_root)->top_cgroup)->event_list_lock)->owner: 0xffffffff
+	// (&(&(&cgroup_dummy_root)->top_cgroup)->event_list_lock)->owner_cpu: 0xffffffff
+	// (&(&(&(&cgroup_dummy_root)->top_cgroup)->xattrs)->head)->next: &(&(&(&cgroup_dummy_root)->top_cgroup)->xattrs)->head
+	// (&(&(&(&cgroup_dummy_root)->top_cgroup)->xattrs)->head)->prev: &(&(&(&cgroup_dummy_root)->top_cgroup)->xattrs)->head
+	// (&(&(&(&cgroup_dummy_root)->top_cgroup)->xattrs)->lock)->raw_lock: { { 0 } }
+	// (&(&(&(&cgroup_dummy_root)->top_cgroup)->xattrs)->lock)->magic: 0xdead4ead
+	// (&(&(&(&cgroup_dummy_root)->top_cgroup)->xattrs)->lock)->owner: 0xffffffff
+	// (&(&(&(&cgroup_dummy_root)->top_cgroup)->xattrs)->lock)->owner_cpu: 0xffffffff
+	// (&(&cgroup_dummy_root)->top_cgroup)->dummy_css.cgroup: &(&cgroup_dummy_root)->top_cgroup
+
+	// &root->cgroup_idr: &(&cgroup_dummy_root)->cgroup_idr
 	idr_init(&root->cgroup_idr);
+
+	// idr_init에서 한일:
+	// (&cgroup_dummy_root)->cgroup_idr의 맵버값을 0으로 초기화 수행
+	// (&(&(&cgroup_dummy_root)->cgroup_idr)->lock)->raw_lock: { { 0 } }
+	// (&(&(&cgroup_dummy_root)->cgroup_idr)->lock)->magic: 0xdead4ead
+	// (&(&(&cgroup_dummy_root)->cgroup_idr)->lock)->owner: 0xffffffff
+	// (&(&(&cgroup_dummy_root)->cgroup_idr)->lock)->owner_cpu: 0xffffffff
 }
 
 static int cgroup_init_root_id(struct cgroupfs_root *root, int start, int end)
@@ -4994,19 +5149,99 @@ EXPORT_SYMBOL_GPL(cgroup_unload_subsys);
  * Initialize cgroups at system boot, and initialize any
  * subsystems that request early init.
  */
+// ARM10C 20150808
 int __init cgroup_init_early(void)
 {
 	struct cgroup_subsys *ss;
 	int i;
 
 	atomic_set(&init_css_set.refcount, 1);
+
+	// atomic_set에서 한일:
+	// init_css_set.refcount: 1
+
 	INIT_LIST_HEAD(&init_css_set.cgrp_links);
+
+	// INIT_LIST_HEAD에서 한일:
+	// (&init_css_set.cgrp_links)->next: &init_css_set.cgrp_links
+	// (&init_css_set.cgrp_links)->prev: &init_css_set.cgrp_links
+
 	INIT_LIST_HEAD(&init_css_set.tasks);
+
+	// INIT_LIST_HEAD에서 한일:
+	// (&init_css_set.tasks)->next: &init_css_set.tasks
+	// (&init_css_set.tasks)->prev: &init_css_set.tasks
+
 	INIT_HLIST_NODE(&init_css_set.hlist);
+
+	// INIT_HLIST_NODE에서 한일:
+	// (&init_css_set.hlist)->next: NULL
+	// (&init_css_set.hlist)->pprev: NULL
+
 	css_set_count = 1;
+	// css_set_count: 1
+
 	init_cgroup_root(&cgroup_dummy_root);
+
+	// init_cgroup_root에서 한일:
+	// (&(&cgroup_dummy_root)->subsys_list)->next: &(&cgroup_dummy_root)->subsys_list
+	// (&(&cgroup_dummy_root)->subsys_list)->prev: &(&cgroup_dummy_root)->subsys_list
+	// (&(&cgroup_dummy_root)->root_list)->next: &(&cgroup_dummy_root)->root_list
+	// (&(&cgroup_dummy_root)->root_list)->prev: &(&cgroup_dummy_root)->root_list
+	// (&(&(&cgroup_dummy_root)->top_cgroup)->sibling)->next: &(&(&cgroup_dummy_root)->top_cgroup)->sibling
+	// (&(&(&cgroup_dummy_root)->top_cgroup)->sibling)->prev: &(&(&cgroup_dummy_root)->top_cgroup)->sibling
+	// (&(&(&cgroup_dummy_root)->top_cgroup)->children)->next: &(&(&cgroup_dummy_root)->top_cgroup)->children
+	// (&(&(&cgroup_dummy_root)->top_cgroup)->children)->prev: &(&(&cgroup_dummy_root)->top_cgroup)->children
+	// (&(&(&cgroup_dummy_root)->top_cgroup)->files)->next: &(&(&cgroup_dummy_root)->top_cgroup)->files
+	// (&(&(&cgroup_dummy_root)->top_cgroup)->files)->prev: &(&(&cgroup_dummy_root)->top_cgroup)->files
+	// (&(&(&cgroup_dummy_root)->top_cgroup)->cset_links)->next: &(&(&cgroup_dummy_root)->top_cgroup)->cset_links
+	// (&(&(&cgroup_dummy_root)->top_cgroup)->cset_links)->prev: &(&(&cgroup_dummy_root)->top_cgroup)->cset_links
+	// (&(&(&cgroup_dummy_root)->top_cgroup)->release_list)->next: &(&(&cgroup_dummy_root)->top_cgroup)->release_list
+	// (&(&(&cgroup_dummy_root)->top_cgroup)->release_list)->prev: &(&(&cgroup_dummy_root)->top_cgroup)->release_list
+	// (&(&(&cgroup_dummy_root)->top_cgroup)->pidlists)->next: &(&(&cgroup_dummy_root)->top_cgroup)->pidlists
+	// (&(&(&cgroup_dummy_root)->top_cgroup)->pidlists)->prev: &(&(&cgroup_dummy_root)->top_cgroup)->pidlists
+	// (&(&(&cgroup_dummy_root)->top_cgroup)->event_list)->next: &(&(&cgroup_dummy_root)->top_cgroup)->event_list
+	// (&(&(&cgroup_dummy_root)->top_cgroup)->event_list)->prev: &(&(&cgroup_dummy_root)->top_cgroup)->event_list
+	// (&(&(&cgroup_dummy_root)->top_cgroup)->pidlist_mutex)->count: 1
+	// (&(&(&cgroup_dummy_root)->top_cgroup)->pidlist_mutex)->wait_lock)->rlock)->raw_lock: { { 0 } }
+	// (&(&(&cgroup_dummy_root)->top_cgroup)->pidlist_mutex)->wait_lock)->rlock)->magic: 0xdead4ead
+	// (&(&(&cgroup_dummy_root)->top_cgroup)->pidlist_mutex)->wait_lock)->rlock)->owner: 0xffffffff
+	// (&(&(&cgroup_dummy_root)->top_cgroup)->pidlist_mutex)->wait_lock)->rlock)->owner_cpu: 0xffffffff
+	// (&(&(&(&cgroup_dummy_root)->top_cgroup)->pidlist_mutex)->wait_list)->next: &(&(&(&cgroup_dummy_root)->top_cgroup)->pidlist_mutex)->wait_list
+	// (&(&(&(&cgroup_dummy_root)->top_cgroup)->pidlist_mutex)->wait_list)->prev: &(&(&(&cgroup_dummy_root)->top_cgroup)->pidlist_mutex)->wait_list
+	// (&(&(&cgroup_dummy_root)->top_cgroup)->pidlist_mutex)->onwer: NULL
+	// (&(&(&cgroup_dummy_root)->top_cgroup)->pidlist_mutex)->magic: &(&(&cgroup_dummy_root)->top_cgroup)->pidlist_mutex
+	// (&(&(&cgroup_dummy_root)->top_cgroup)->event_list_lock)->raw_lock: { { 0 } }
+	// (&(&(&cgroup_dummy_root)->top_cgroup)->event_list_lock)->magic: 0xdead4ead
+	// (&(&(&cgroup_dummy_root)->top_cgroup)->event_list_lock)->owner: 0xffffffff
+	// (&(&(&cgroup_dummy_root)->top_cgroup)->event_list_lock)->owner_cpu: 0xffffffff
+	// (&(&(&(&cgroup_dummy_root)->top_cgroup)->xattrs)->head)->next: &(&(&(&cgroup_dummy_root)->top_cgroup)->xattrs)->head
+	// (&(&(&(&cgroup_dummy_root)->top_cgroup)->xattrs)->head)->prev: &(&(&(&cgroup_dummy_root)->top_cgroup)->xattrs)->head
+	// (&(&(&(&cgroup_dummy_root)->top_cgroup)->xattrs)->lock)->raw_lock: { { 0 } }
+	// (&(&(&(&cgroup_dummy_root)->top_cgroup)->xattrs)->lock)->magic: 0xdead4ead
+	// (&(&(&(&cgroup_dummy_root)->top_cgroup)->xattrs)->lock)->owner: 0xffffffff
+	// (&(&(&(&cgroup_dummy_root)->top_cgroup)->xattrs)->lock)->owner_cpu: 0xffffffff
+	//
+	// (&(&cgroup_dummy_root)->top_cgroup)->dummy_css.cgroup: &(&cgroup_dummy_root)->top_cgroup
+	// (&(&cgroup_dummy_root)->top_cgroup)->root: &cgroup_dummy_root
+	// (&(&cgroup_dummy_root)->top_cgroup)->name: (struct cgroup_name *)(&root_cgroup_name)
+	// (&cgroup_dummy_root)->number_of_cgroups: 1
+	//
+	// (&cgroup_dummy_root)->cgroup_idr의 맵버값을 0으로 초기화 수행
+	// (&(&(&cgroup_dummy_root)->cgroup_idr)->lock)->raw_lock: { { 0 } }
+	// (&(&(&cgroup_dummy_root)->cgroup_idr)->lock)->magic: 0xdead4ead
+	// (&(&(&cgroup_dummy_root)->cgroup_idr)->lock)->owner: 0xffffffff
+	// (&(&(&cgroup_dummy_root)->cgroup_idr)->lock)->owner_cpu: 0xffffffff
+
 	cgroup_root_count = 1;
+	// cgroup_root_count: 1
+
 	RCU_INIT_POINTER(init_task.cgroups, &init_css_set);
+
+	// RCU_INIT_POINTER에서 한일:
+	// (&(&cgroup_dummy_root)->top_cgroup)->name: (struct cgroup_name *)(&root_cgroup_name)
+
+// 2015/08/08 종료
 
 	init_cgrp_cset_link.cset = &init_css_set;
 	init_cgrp_cset_link.cgrp = cgroup_dummy_top;

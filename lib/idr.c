@@ -867,10 +867,24 @@ void __init idr_init_cache(void)
  * This function is use to set up the handle (@idp) that you will pass
  * to the rest of the functions.
  */
+// ARM10C 20150808
+// &root->cgroup_idr: &(&cgroup_dummy_root)->cgroup_idr
 void idr_init(struct idr *idp)
 {
+	// idp: &(&cgroup_dummy_root)->cgroup_idr, sizeof(struct idr): 40 bytes
 	memset(idp, 0, sizeof(struct idr));
+
+	// memset에서 한일:
+	// (&cgroup_dummy_root)->cgroup_idr의 맵버값을 0으로 초기화 수행
+
+	// &idp->lock: &(&(&cgroup_dummy_root)->cgroup_idr)->lock
 	spin_lock_init(&idp->lock);
+
+	// spin_lock_init에서 한일:
+	// (&(&(&cgroup_dummy_root)->cgroup_idr)->lock)->raw_lock: { { 0 } }
+	// (&(&(&cgroup_dummy_root)->cgroup_idr)->lock)->magic: 0xdead4ead
+	// (&(&(&cgroup_dummy_root)->cgroup_idr)->lock)->owner: 0xffffffff
+	// (&(&(&cgroup_dummy_root)->cgroup_idr)->lock)->owner_cpu: 0xffffffff
 }
 EXPORT_SYMBOL(idr_init);
 

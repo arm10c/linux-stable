@@ -156,6 +156,7 @@ enum {
 	CGRP_SANE_BEHAVIOR,
 };
 
+// ARM10C 20150808
 struct cgroup_name {
 	struct rcu_head rcu_head;
 	char name[];
@@ -313,6 +314,7 @@ enum {
  * associated with a superblock to form an active hierarchy.  This is
  * internal to cgroup core.  Don't access directly from controllers.
  */
+// ARM10C 20150808
 struct cgroupfs_root {
 	struct super_block *sb;
 
@@ -355,6 +357,7 @@ struct cgroupfs_root {
  * set for a task.
  */
 
+// ARM10C 20150808
 struct css_set {
 
 	/* Reference count */
@@ -593,6 +596,7 @@ int cgroup_taskset_size(struct cgroup_taskset *tset);
  * See Documentation/cgroups/cgroups.txt for details
  */
 
+// ARM10C 20150808
 struct cgroup_subsys {
 	struct cgroup_subsys_state *(*css_alloc)(struct cgroup_subsys_state *parent_css);
 	int (*css_online)(struct cgroup_subsys_state *css);

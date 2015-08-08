@@ -861,6 +861,7 @@ asmlinkage void __init start_kernel(void)
 #endif
 
 // 2015/08/01 종료
+// 2015/08/08 시작
 
 	page_cgroup_init();
 	debug_objects_mem_init();

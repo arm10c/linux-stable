@@ -1103,6 +1103,8 @@ static inline notrace void rcu_read_unlock_sched_notrace(void)
  * external-to-structure pointer -after- you have completely initialized
  * the reader-accessible portions of the linked structure.
  */
+// ARM10C 20150808
+// cgrp->name: (&(&cgroup_dummy_root)->top_cgroup)->name, &root_cgroup_name
 #define RCU_INIT_POINTER(p, v) \
 	do { \
 		p = (typeof(*v) __force __rcu *)(v); \

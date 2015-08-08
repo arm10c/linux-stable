@@ -422,6 +422,7 @@ static inline void lockdep_on(void)
  * #ifdef the call himself.
  */
 
+// ARM10C 20150808
 # define INIT_LOCKDEP
 # define lockdep_reset()		do { debug_locks = 1; } while (0)
 # define lockdep_free_key_range(start, size)	do { } while (0)

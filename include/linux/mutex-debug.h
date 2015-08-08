@@ -21,6 +21,8 @@
 // &port->mutex: &(&(kmem_cache#25-oX)->port)->mutex
 // ARM10C 20150718
 // &port->buf_mutex: &(&(kmem_cache#25-oX)->port)->buf_mutex
+// ARM10C 20150808
+// &cgrp->pidlist_mutex: &(&(&cgroup_dummy_root)->top_cgroup)->pidlist_mutex
 #define mutex_init(mutex)						\
 do {									\
 	static struct lock_class_key __key;				\

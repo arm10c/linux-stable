@@ -47,6 +47,8 @@ struct idr_layer {
 	struct rcu_head		rcu_head;
 };
 
+// ARM10C 20150808
+// sizeof(struct idr): 40 bytes
 struct idr {
 	struct idr_layer __rcu	*hint;	/* the last layer allocated from */
 	struct idr_layer __rcu	*top;

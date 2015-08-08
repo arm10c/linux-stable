@@ -92,11 +92,12 @@ extern struct group_info init_groups;
 	.pid = &init_struct_pid,				\
 }
 
-#ifdef CONFIG_AUDITSYSCALL
+#ifdef CONFIG_AUDITSYSCALL // CONFIG_AUDITSYSCALL=n
 #define INIT_IDS \
 	.loginuid = INVALID_UID, \
 	.sessionid = -1,
 #else
+// ARM10C 20150808
 #define INIT_IDS
 #endif
 
@@ -134,12 +135,13 @@ extern struct task_group root_task_group;
 # define INIT_CGROUP_SCHED(tsk)
 #endif
 
-#ifdef CONFIG_PERF_EVENTS
+#ifdef CONFIG_PERF_EVENTS // CONFIG_PERF_EVENTS=n
 # define INIT_PERF_EVENTS(tsk)						\
 	.perf_event_mutex = 						\
 		 __MUTEX_INITIALIZER(tsk.perf_event_mutex),		\
 	.perf_event_list = LIST_HEAD_INIT(tsk.perf_event_list),
 #else
+// ARM10C 20150808
 # define INIT_PERF_EVENTS(tsk)
 #endif
 
@@ -167,6 +169,74 @@ extern struct task_group root_task_group;
 // PF_KTHREAD: 0x00200000
 // MAX_PRIO: 140
 // SCHED_NORMAL: 0
+// ARM10C 20150808
+// INIT_TRACE_RECURSION: .trace_recursion = 0,
+//
+// #define INIT_TASK(init_task):
+// {
+//	.state		= 0,
+//	.stack		= &init_thread_info,
+//	.usage		= ATOMIC_INIT(2),
+//	.flags		= PF_KTHREAD,
+//	.prio		= MAX_PRIO-20,
+//	.static_prio	= MAX_PRIO-20,
+//	.normal_prio	= MAX_PRIO-20,
+//	.policy		= SCHED_NORMAL,
+//	.cpus_allowed	= CPU_MASK_ALL,
+//	.nr_cpus_allowed= NR_CPUS,
+//	.mm		= NULL,
+//	.active_mm	= &init_mm,
+//	.se		= {
+//		.group_node 	= LIST_HEAD_INIT(init_task.se.group_node),
+//	},
+//	.rt		= {
+//		.run_list	= LIST_HEAD_INIT(init_task.rt.run_list),
+//		.time_slice	= RR_TIMESLICE,
+//	},
+//	.tasks		= LIST_HEAD_INIT(init_task.tasks),
+//	INIT_PUSHABLE_TASKS(init_task)
+//	INIT_CGROUP_SCHED(init_task)
+//	.ptraced	= LIST_HEAD_INIT(init_task.ptraced),
+//	.ptrace_entry	= LIST_HEAD_INIT(init_task.ptrace_entry),
+//	.real_parent	= &init_task,
+//	.parent		= &init_task,
+//	.children	= LIST_HEAD_INIT(init_task.children),
+//	.sibling	= LIST_HEAD_INIT(init_task.sibling),
+//	.group_leader	= &init_task,
+//	RCU_POINTER_INITIALIZER(real_cred, &init_cred),
+//	RCU_POINTER_INITIALIZER(cred, &init_cred),
+//	.comm		= INIT_TASK_COMM,
+//	.thread		= INIT_THREAD,
+//	.fs		= &init_fs,
+//	.files		= &init_files,
+//	.signal		= &init_signals,
+//	.sighand	= &init_sighand,
+//	.nsproxy	= &init_nsproxy,
+//	.pending	= {
+//		.list = LIST_HEAD_INIT(init_task.pending.list),
+//		.signal = {{0}}},
+//	.blocked	= {{0}},
+//	.alloc_lock	= __SPIN_LOCK_UNLOCKED(init_task.alloc_lock),
+//	.journal_info	= NULL,
+//	.cpu_timers	= INIT_CPU_TIMERS(init_task.cpu_timers),
+//	.pi_lock	= __RAW_SPIN_LOCK_UNLOCKED(init_task.pi_lock),
+//	.timer_slack_ns = 50000,
+//	.pids = {
+//		[PIDTYPE_PID]  = INIT_PID_LINK(PIDTYPE_PID),
+//		[PIDTYPE_PGID] = INIT_PID_LINK(PIDTYPE_PGID),
+//		[PIDTYPE_SID]  = INIT_PID_LINK(PIDTYPE_SID),
+//	},
+//	.thread_group	= LIST_HEAD_INIT(init_task.thread_group),
+//	INIT_IDS
+//	INIT_PERF_EVENTS(init_task)
+//	INIT_TRACE_IRQFLAGS
+//	INIT_LOCKDEP
+//	INIT_FTRACE_GRAPH
+//	INIT_TRACE_RECURSION
+//	INIT_TASK_RCU_PREEMPT(init_task)
+//	INIT_CPUSET_SEQ(init_task)
+//	INIT_VTIME(init_task)
+// }
 #define INIT_TASK(tsk)							\
 {									\
 	.state		= 0,						\
