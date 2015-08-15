@@ -5276,6 +5276,8 @@ int __init cgroup_init_early(void)
 	// (&init_cgrp_cset_link.cgrp_link)->prev: &init_css_set.cgrp_links
 	// (&init_css_set.cgrp_links)->next: &init_cgrp_cset_link.cgrp_link
 
+// 2015/08/15 종료
+
 	/* at bootup time, we don't worry about modular subsystems */
 	for_each_builtin_subsys(ss, i) {
 		BUG_ON(!ss->name);
