@@ -162,6 +162,7 @@ struct cgroup_name {
 	char name[];
 };
 
+// ARM10C 20150815
 struct cgroup {
 	unsigned long flags;		/* "unsigned long" so bitops work */
 

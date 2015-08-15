@@ -126,6 +126,15 @@ typedef struct raw_spinlock {
 //    .owner_cpu = -1,
 //    .owner = 0xffffffff,
 // }
+// ARM10C 20150808
+// #define __RAW_SPIN_LOCK_UNLOCKED(init_task.pi_lock):
+// (raw_spinlock_t)
+// {
+//    .raw_lock = { { 0 } },
+//    .magic = 0xdead4ead,
+//    .owner_cpu = -1,
+//    .owner = 0xffffffff,
+// }
 #define __RAW_SPIN_LOCK_UNLOCKED(lockname)	\
 	(raw_spinlock_t) __RAW_SPIN_LOCK_INITIALIZER(lockname)
 
@@ -202,6 +211,17 @@ typedef struct spinlock {
 //	} }
 //
 // #define __SPIN_LOCK_UNLOCKED(cpu_add_remove_lock.wait_lock):
+//	(spinlock_t )
+//	{ { .rlock =
+//	    {
+//	      .raw_lock = { { 0 } },
+//	      .magic = 0xdead4ead,
+//	      .owner_cpu = -1,
+//	      .owner = 0xffffffff,
+//	    }
+//	} }
+// ARM10C 20150808
+// #define __SPIN_LOCK_UNLOCKED(init_task.alloc_lock):
 //	(spinlock_t )
 //	{ { .rlock =
 //	    {

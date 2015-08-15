@@ -443,6 +443,7 @@ void __init files_defer_init(void)
 			     -BITS_PER_LONG;
 }
 
+// ARM10C 20150808
 struct files_struct init_files = {
 	.count		= ATOMIC_INIT(1),
 	.fdt		= &init_files.fdtab,

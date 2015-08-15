@@ -17,8 +17,7 @@ extern int prove_locking;
 extern int lock_stat;
 
 // ARM10C 20130914
-// CONFIG_LOCKDEP = n
-#ifdef CONFIG_LOCKDEP
+#ifdef CONFIG_LOCKDEP // CONFIG_LOCKDEP=n
 
 #include <linux/linkage.h>
 #include <linux/list.h>

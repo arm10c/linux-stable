@@ -118,6 +118,8 @@ static struct cgroup_subsys *cgroup_subsys[CGROUP_SUBSYS_COUNT] = {
 static struct cgroupfs_root cgroup_dummy_root;
 
 /* dummy_top is a shorthand for the dummy hierarchy's top cgroup */
+// ARM10C 20150815
+// cgroup_dummy_top: &cgroup_dummy_root.top_cgroup
 static struct cgroup * const cgroup_dummy_top = &cgroup_dummy_root.top_cgroup;
 
 /*
@@ -344,6 +346,7 @@ static void check_for_release(struct cgroup *cgrp);
  * which exists for each association and allows traversing the associations
  * from both sides.
  */
+// ARM10C 20150815
 struct cgrp_cset_link {
 	/* the cgroup and css_set this link associates */
 	struct cgroup		*cgrp;
@@ -364,7 +367,9 @@ struct cgrp_cset_link {
  */
 
 // ARM10C 20150808
+// ARM10C 20150815
 static struct css_set init_css_set;
+// ARM10C 20150815
 static struct cgrp_cset_link init_cgrp_cset_link;
 
 /*
@@ -5242,11 +5247,34 @@ int __init cgroup_init_early(void)
 	// (&(&cgroup_dummy_root)->top_cgroup)->name: (struct cgroup_name *)(&root_cgroup_name)
 
 // 2015/08/08 종료
+// 2015/08/15 시작
 
 	init_cgrp_cset_link.cset = &init_css_set;
+	// init_cgrp_cset_link.cset: &init_css_set
+
+	// cgroup_dummy_top: &cgroup_dummy_root.top_cgroup
 	init_cgrp_cset_link.cgrp = cgroup_dummy_top;
+	// init_cgrp_cset_link.cgrp: &cgroup_dummy_root.top_cgroup
+
 	list_add(&init_cgrp_cset_link.cset_link, &cgroup_dummy_top->cset_links);
+
+	// list_add에서 한일:
+	// list의 HEAD인 &cgroup_dummy_top->cset_links에 &init_cgrp_cset_link.cset_link 추가
+	//
+	// (&cgroup_dummy_top->cset_links)->prev: &init_cgrp_cset_link.cset_link
+	// (&init_cgrp_cset_link.cset_link)->next: &cgroup_dummy_top->cset_links
+	// (&init_cgrp_cset_link.cset_link)->prev: &cgroup_dummy_top->cset_links
+	// (&cgroup_dummy_top->cset_links)->next: &init_cgrp_cset_link.cset_link
+
 	list_add(&init_cgrp_cset_link.cgrp_link, &init_css_set.cgrp_links);
+
+	// list_add에서 한일:
+	// list의 HEAD인 &init_css_set.cgrp_links에 &init_cgrp_cset_link.cgrp_link 추가
+	//
+	// (&init_css_set.cgrp_links)->prev: &init_cgrp_cset_link.cgrp_link
+	// (&init_cgrp_cset_link.cgrp_link)->next: &init_css_set.cgrp_links
+	// (&init_cgrp_cset_link.cgrp_link)->prev: &init_css_set.cgrp_links
+	// (&init_css_set.cgrp_links)->next: &init_cgrp_cset_link.cgrp_link
 
 	/* at bootup time, we don't worry about modular subsystems */
 	for_each_builtin_subsys(ss, i) {

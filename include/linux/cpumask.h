@@ -1050,11 +1050,25 @@ static inline const struct cpumask *get_cpu_mask(unsigned int cpu)
 #ifndef CONFIG_DISABLE_OBSOLETE_CPUMASK_FUNCTIONS
 #define cpumask_of_cpu(cpu) (*get_cpu_mask(cpu))
 
+// ARM10C 20150808
+// NR_CPUS: 4
+// BITMAP_LAST_WORD_MASK(4): 0xf
+//
+// CPU_MASK_LAST_WORD: 0xf
 #define CPU_MASK_LAST_WORD BITMAP_LAST_WORD_MASK(NR_CPUS)
 
-#if NR_CPUS <= BITS_PER_LONG
+#if NR_CPUS <= BITS_PER_LONG // NR_CPUS: 4, BITS_PER_LONG: 32
 
 // ARM10C 20130831
+// ARM10C 20150808
+// NR_CPUS: 4
+// BITS_TO_LONGS(4): 1
+// CPU_MASK_LAST_WORD: 0xf
+//
+// #define CPU_MASK_ALL:
+// (cpumask_t) { {
+// 	[0] = 0xf
+// } }
 #define CPU_MASK_ALL							\
 (cpumask_t) { {								\
 	[BITS_TO_LONGS(NR_CPUS)-1] = CPU_MASK_LAST_WORD			\

@@ -34,6 +34,7 @@
  * Scheduling policies
  */
 // ARM10C 20140913
+// ARM10C 20150808
 // SCHED_NORMAL: 0
 #define SCHED_NORMAL		0
 #define SCHED_FIFO		1

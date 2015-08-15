@@ -1115,6 +1115,11 @@ static inline notrace void rcu_read_unlock_sched_notrace(void)
  *
  * GCC-style initialization for an RCU-protected pointer in a structure field.
  */
+// ARM10C 20150808
+// #define RCU_POINTER_INITIALIZER(real_cred, &init_cred):
+// 		.real_cred = (typeof(*&init_cred) __force __rcu *)(&init_cred)
+// #define RCU_POINTER_INITIALIZER(cred, &init_cred):
+// 		.cred = (typeof(*&init_cred) __force __rcu *)(&init_cred)
 #define RCU_POINTER_INITIALIZER(p, v) \
 		.p = (typeof(*v) __force __rcu *)(v)
 

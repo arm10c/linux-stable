@@ -11,13 +11,124 @@
 #include <asm/pgtable.h>
 #include <asm/uaccess.h>
 
+// ARM10C 20150808
 static struct signal_struct init_signals = INIT_SIGNALS(init_signals);
+// ARM10C 20150808
 static struct sighand_struct init_sighand = INIT_SIGHAND(init_sighand);
 
 /* Initial task structure */
 // ARM10C 20140315
 // ARM10C 20140913
 // ARM10C 20150808
+// INIT_TASK(init_task):
+// {
+//    .state            = 0,
+//    .stack            = &init_thread_info,
+//    .usage            = { (2) },
+//    .flags            = 0x00200000,
+//    .prio             = 120,
+//    .static_prio      = 120,
+//    .normal_prio      = 120,
+//    .policy           = 0,
+//    .cpus_allowed     = (cpumask_t) { { [0] = 0xf } },
+//    .nr_cpus_allowed  = 4,
+//    .mm               = NULL,
+//    .active_mm        = &init_mm,
+//    .se               = {
+//        .group_node = { &(init_task.se.group_node), &(init_task.se.group_node) }
+//    },
+//    .rt               = {
+//        .run_list     = { &(init_task.rt.run_list), &(init_task.rt.run_list) },
+//        .time_slice   = 10,
+//    },
+//    .tasks            = { &(init_task.tasks), &(init_task.tasks) },
+//    .pushable_tasks   =
+//    {
+//        .prio  = (140),
+//        .prio_list = { &((init_task.pushable_tasks).prio_list), &((init_task.pushable_tasks).prio_list) },
+//        .node_list = { &((init_task.pushable_tasks).node_list), &((init_task.pushable_tasks).node_list) },
+//    },
+//    .sched_task_group = &root_task_group,
+//    .ptraced          = { &(init_task.ptraced), &(init_task.ptraced) },
+//    .ptrace_entry     = { &(init_task.ptrace_entry), &(init_task.ptrace_entry) },
+//    .real_parent      = &init_task,
+//    .parent           = &init_task,
+//    .children         = { &(init_task.children), &(init_task.children) },
+//    .sibling          = { &(init_task.sibling), &(init_task.sibling) },
+//    .group_leader     = &init_task,
+//    .real_cred        = (typeof(*&init_cred) __force __rcu *)(&init_cred),
+//    .cred             = (typeof(*&init_cred) __force __rcu *)(&init_cred),
+//    .comm             = "swapper",
+//    .thread           = {},
+//    .fs               = &init_fs,
+//    .files            = &init_files,
+//    .signal           = &init_signals,
+//    .sighand          = &init_sighand,
+//    .nsproxy          = &init_nsproxy,
+//    .pending          = {
+//        .list = { &(init_task.pending.list), &(init_task.pending.list) },
+//        .signal = {{0}}
+//    },
+//    .blocked          = {{0}},
+//    .alloc_lock       =
+//    (spinlock_t )
+//    { { .rlock =
+//        {
+//          .raw_lock = { { 0 } },
+//          .magic = 0xdead4ead,
+//          .owner_cpu = -1,
+//          .owner = 0xffffffff,
+//        }
+//    } },
+//    .journal_info     = NULL,
+//    .cpu_timers       =
+//    {
+//        { &(init_task.cpu_timers[0]), &(init_task.cpu_timers[0]) },
+//        { &(init_task.cpu_timers[1]), &(init_task.cpu_timers[1]) },
+//        { &(init_task.cpu_timers[2]), &(init_task.cpu_timers[2]) },
+//    },
+//    .pi_lock          =
+//    (raw_spinlock_t)
+//    {
+//       .raw_lock = { { 0 } },
+//       .magic = 0xdead4ead,
+//       .owner_cpu = -1,
+//       .owner = 0xffffffff,
+//    },
+//    .timer_slack_ns   = 50000,
+//    .pids             = {
+//        [0]  =
+//        {
+//            .node = {
+//                .next = NULL,
+//                .pprev = NULL,
+//            },
+//            .pid = &init_struct_pid,
+//        },
+//        [1]  =
+//        {
+//            .node = {
+//                .next = NULL,
+//                .pprev = NULL,
+//            },
+//            .pid = &init_struct_pid,
+//        },
+//        [2]  =
+//        {
+//            .node = {
+//                .next = NULL,
+//                .pprev = NULL,
+//            },
+//            .pid = &init_struct_pid,
+//        },
+//    },
+//    .thread_group     = { &(init_task.thread_group), &(init_task.thread_group) },
+//    .trace_recursion  = 0,
+//    .rcu_read_lock_nesting = 0,
+//    .rcu_read_unlock_special = 0,
+//    .rcu_node_entry   = { &(init_task.rcu_node_entry), &(init_task.rcu_node_entry) },
+//    .rcu_blocked_node = NULL,
+// }
 struct task_struct init_task = INIT_TASK(init_task);
 EXPORT_SYMBOL(init_task);
 

@@ -102,6 +102,19 @@ struct plist_node {
  * @node:	struct plist_node variable name
  * @__prio:	initial node priority
  */
+// ARM10C 20150808
+// PLIST_NODE_INIT(init_task.pushable_tasks, 140):
+// LIST_HEAD_INIT((init_task.pushable_tasks).prio_list):
+// { &((init_task.pushable_tasks).prio_list), &((init_task.pushable_tasks).prio_list) }
+// LIST_HEAD_INIT((init_task.pushable_tasks).node_list):
+// { &((init_task.pushable_tasks).node_list), &((init_task.pushable_tasks).node_list) }
+//
+// #define PLIST_NODE_INIT(init_task.pushable_tasks, 140):
+// {
+// 	.prio  = (140),
+// 	.prio_list = { &((init_task.pushable_tasks).prio_list), &((init_task.pushable_tasks).prio_list) },
+// 	.node_list = { &((init_task.pushable_tasks).node_list), &((init_task.pushable_tasks).node_list) },
+// }
 #define PLIST_NODE_INIT(node, __prio)			\
 {							\
 	.prio  = (__prio),				\

@@ -45,6 +45,7 @@ struct thread_struct {
 	struct debug_info	debug;
 };
 
+// ARM10C 20150808
 #define INIT_THREAD  {	}
 
 #ifdef CONFIG_MMU

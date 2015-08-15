@@ -158,6 +158,7 @@ int current_umask(void)
 EXPORT_SYMBOL(current_umask);
 
 /* to be mentioned only in INIT_TASK */
+// ARM10C 20150808
 struct fs_struct init_fs = {
 	.users		= 1,
 	.lock		= __SPIN_LOCK_UNLOCKED(init_fs.lock),

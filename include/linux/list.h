@@ -23,6 +23,51 @@
 // ARM10C 20150704
 // LIST_HEAD_INIT(cpu_add_remove_lock.wait_list):
 // { &(cpu_add_remove_lock.wait_list), &(cpu_add_remove_lock.wait_list) }
+// ARM10C 20150808
+// LIST_HEAD_INIT(init_task.rcu_node_entry):
+// { &(init_task.rcu_node_entry), &(init_task.rcu_node_entry) }
+// ARM10C 20150808
+// LIST_HEAD_INIT(init_task.se.group_node):
+// { &(init_task.se.group_node), &(init_task.se.group_node) }
+// ARM10C 20150808
+// LIST_HEAD_INIT(init_task.rt.run_list):
+// { &(init_task.rt.run_list), &(init_task.rt.run_list) }
+// ARM10C 20150808
+// LIST_HEAD_INIT(init_task.tasks):
+// { &(init_task.tasks), &(init_task.tasks) }
+// ARM10C 20150808
+// LIST_HEAD_INIT(init_task.ptraced):
+// { &(init_task.ptraced), &(init_task.ptraced) }
+// ARM10C 20150808
+// LIST_HEAD_INIT(init_task.ptrace_entry):
+// { &(init_task.ptrace_entry), &(init_task.ptrace_entry) }
+// ARM10C 20150808
+// LIST_HEAD_INIT(init_task.children):
+// { &(init_task.children), &(init_task.children) }
+// ARM10C 20150808
+// LIST_HEAD_INIT(init_task.sibling):
+// { &(init_task.sibling), &(init_task.sibling) }
+// ARM10C 20150808
+// LIST_HEAD_INIT(init_task.pending.list):
+// { &(init_task.pending.list), &(init_task.pending.list) }
+// ARM10C 20150808
+// LIST_HEAD_INIT(init_task.thread_group):
+// { &(init_task.thread_group), &(init_task.thread_group) }
+// ARM10C 20150808
+// LIST_HEAD_INIT((init_task.pushable_tasks).prio_list):
+// { &((init_task.pushable_tasks).prio_list), &((init_task.pushable_tasks).prio_list) }
+// ARM10C 20150808
+// LIST_HEAD_INIT((init_task.pushable_tasks).node_list):
+// { &((init_task.pushable_tasks).node_list), &((init_task.pushable_tasks).node_list) }
+// ARM10C 20150808
+// LIST_HEAD_INIT(init_task.cpu_timers[0]):
+// { &(init_task.cpu_timers[0]), &(init_task.cpu_timers[0]) }
+// ARM10C 20150808
+// LIST_HEAD_INIT(init_task.cpu_timers[1]):
+// { &(init_task.cpu_timers[1]), &(init_task.cpu_timers[1]) }
+// ARM10C 20150808
+// LIST_HEAD_INIT(init_task.cpu_timers[2]):
+// { &(init_task.cpu_timers[2]), &(init_task.cpu_timers[2]) }
 #define LIST_HEAD_INIT(name) { &(name), &(name) }
 
 // ARM10C 20131116
@@ -83,6 +128,10 @@ static inline void INIT_LIST_HEAD(struct list_head *list)
 // new: &dchunk->list, prev: &pcpu_slot[11], next: &pcpu_slot[11]->next(&pcpu_slot[11])
 // ARM10C 20140315
 // __list_add(&waiter.list, (&(&cpu_add_remove_lock)->wait_list)->prev, &(&cpu_add_remove_lock)->wait_list)
+// ARM10C 20150815
+// &init_cgrp_cset_link.cset_link, &cgroup_dummy_top->cset_links, &cgroup_dummy_top->cset_links
+// ARM10C 20150815
+// &init_cgrp_cset_link.cgrp_link, &init_css_set.cgrp_links, &cgroup_dummy_top->cset_links
 static inline void __list_add(struct list_head *new,
 			      struct list_head *prev,
 			      struct list_head *next)
@@ -118,6 +167,10 @@ extern void __list_add(struct list_head *new,
 // &cs->list: &(&mct_frc)->list, entry: &clocksource_list
 // ARM10C 20150523
 // &dev->list: (&mct_comp_device)->list, &clockevent_devices
+// ARM10C 20150815
+// &init_cgrp_cset_link.cset_link, &cgroup_dummy_top->cset_links
+// ARM10C 20150815
+// &init_cgrp_cset_link.cgrp_link, &init_css_set.cgrp_links
 static inline void list_add(struct list_head *new, struct list_head *head)
 {
 	__list_add(new, head, head->next);

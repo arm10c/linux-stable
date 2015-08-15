@@ -157,6 +157,8 @@ extern int bitmap_ord_to_pos(const unsigned long *bitmap, int n, int bits);
 // ARM10C 20150418
 // ARM10C 20150523
 // nbits: 4, BITMAP_LAST_WORD_MASK(4): 0xF
+// ARM10C 20150808
+// NR_CPUS: 4
 #define BITMAP_LAST_WORD_MASK(nbits)					\
 (									\
 	((nbits) % BITS_PER_LONG) ?					\

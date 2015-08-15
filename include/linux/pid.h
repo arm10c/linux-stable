@@ -3,10 +3,14 @@
 
 #include <linux/rcupdate.h>
 
+// ARM10C 20150808
 enum pid_type
 {
+	// PIDTYPE_PID: 0
 	PIDTYPE_PID,
+	// PIDTYPE_PGID: 1
 	PIDTYPE_PGID,
+	// PIDTYPE_SID: 2
 	PIDTYPE_SID,
 	PIDTYPE_MAX
 };

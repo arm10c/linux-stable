@@ -14,7 +14,23 @@
 #include <net/net_namespace.h>
 #include <linux/sched/rt.h>
 
-#ifdef CONFIG_SMP
+#ifdef CONFIG_SMP // CONFIG_SMP=y
+// ARM10C 20150808
+// MAX_PRIO: 140
+// PLIST_NODE_INIT(init_task.pushable_tasks, 140):
+// {
+// 	.prio  = (140),
+// 	.prio_list = { &((init_task.pushable_tasks).prio_list), &((init_task.pushable_tasks).prio_list) },
+// 	.node_list = { &((init_task.pushable_tasks).node_list), &((init_task.pushable_tasks).node_list) },
+// }
+//
+// #define INIT_PUSHABLE_TASKS(init_task):
+//	.pushable_tasks =
+//	{
+//		.prio  = (140),
+//		.prio_list = { &((init_task.pushable_tasks).prio_list), &((init_task.pushable_tasks).prio_list) },
+//		.node_list = { &((init_task.pushable_tasks).node_list), &((init_task.pushable_tasks).node_list) },
+//	},
 # define INIT_PUSHABLE_TASKS(tsk)					\
 	.pushable_tasks = PLIST_NODE_INIT(tsk.pushable_tasks, MAX_PRIO),
 #else
@@ -31,10 +47,11 @@ extern struct fs_struct init_fs;
 #define INIT_GROUP_RWSEM(sig)
 #endif
 
-#ifdef CONFIG_CPUSETS
+#ifdef CONFIG_CPUSETS // CONFIG_CPUSETS=n
 #define INIT_CPUSET_SEQ(tsk)							\
 	.mems_allowed_seq = SEQCNT_ZERO(tsk.mems_allowed_seq),
 #else
+// ARM10C 20150808
 #define INIT_CPUSET_SEQ(tsk)
 #endif
 
@@ -83,6 +100,33 @@ extern struct group_info init_groups;
 	}, }								\
 }
 
+// ARM10C 20150808
+// #define INIT_PID_LINK(PIDTYPE_PID):
+// {
+// 	.node = {
+// 		.next = NULL,
+// 		.pprev = NULL,
+// 	},
+// 	.pid = &init_struct_pid,
+// }
+// ARM10C 20150808
+// #define INIT_PID_LINK(PIDTYPE_PGID):
+// {
+// 	.node = {
+// 		.next = NULL,
+// 		.pprev = NULL,
+// 	},
+// 	.pid = &init_struct_pid,
+// }
+// ARM10C 20150808
+// #define INIT_PID_LINK(PIDTYPE_SID):
+// {
+// 	.node = {
+// 		.next = NULL,
+// 		.pprev = NULL,
+// 	},
+// 	.pid = &init_struct_pid,
+// }
 #define INIT_PID_LINK(type) 					\
 {								\
 	.node = {						\
@@ -101,19 +145,34 @@ extern struct group_info init_groups;
 #define INIT_IDS
 #endif
 
-#ifdef CONFIG_RCU_BOOST
+#ifdef CONFIG_RCU_BOOST // CONFIG_RCU_BOOST=n
 #define INIT_TASK_RCU_BOOST()						\
 	.rcu_boost_mutex = NULL,
 #else
+// ARM10C 20150808
 #define INIT_TASK_RCU_BOOST()
 #endif
-#ifdef CONFIG_TREE_PREEMPT_RCU
+#ifdef CONFIG_TREE_PREEMPT_RCU // CONFIG_TREE_PREEMPT_RCU=y
+// ARM10C 20150808
+// #define INIT_TASK_RCU_TREE_PREEMPT():
+//	.rcu_blocked_node = NULL,
 #define INIT_TASK_RCU_TREE_PREEMPT()					\
 	.rcu_blocked_node = NULL,
 #else
 #define INIT_TASK_RCU_TREE_PREEMPT(tsk)
 #endif
 #ifdef CONFIG_PREEMPT_RCU // CONFIG_PREEMPT_RCU=y
+// ARM10C 20150808
+// LIST_HEAD_INIT(init_task.rcu_node_entry):
+// { &(init_task.rcu_node_entry), &(init_task.rcu_node_entry) }
+// INIT_TASK_RCU_TREE_PREEMPT():
+// .rcu_blocked_node = NULL,
+//
+// #define INIT_TASK_RCU_PREEMPT(init_task):
+// 	.rcu_read_lock_nesting = 0,
+// 	.rcu_read_unlock_special = 0,
+// 	.rcu_node_entry = { &(init_task.rcu_node_entry), &(init_task.rcu_node_entry) },
+// 	.rcu_blocked_node = NULL,
 #define INIT_TASK_RCU_PREEMPT(tsk)					\
 	.rcu_read_lock_nesting = 0,					\
 	.rcu_read_unlock_special = 0,					\
@@ -128,7 +187,10 @@ extern struct cred init_cred;
 
 extern struct task_group root_task_group;
 
-#ifdef CONFIG_CGROUP_SCHED
+#ifdef CONFIG_CGROUP_SCHED // CONFIG_CGROUP_SCHED=y
+// ARM10C 20150808
+// #define INIT_CGROUP_SCHED(init_task):
+// 	.sched_task_group = &root_task_group,
 # define INIT_CGROUP_SCHED(tsk)						\
 	.sched_task_group = &root_task_group,
 #else
@@ -145,16 +207,18 @@ extern struct task_group root_task_group;
 # define INIT_PERF_EVENTS(tsk)
 #endif
 
-#ifdef CONFIG_VIRT_CPU_ACCOUNTING_GEN
+#ifdef CONFIG_VIRT_CPU_ACCOUNTING_GEN // CONFIG_VIRT_CPU_ACCOUNTING_GEN=n
 # define INIT_VTIME(tsk)						\
 	.vtime_seqlock = __SEQLOCK_UNLOCKED(tsk.vtime_seqlock),	\
 	.vtime_snap = 0,				\
 	.vtime_snap_whence = VTIME_SYS,
 #else
+// ARM10C 20150808
 # define INIT_VTIME(tsk)
 #endif
 
 // ARM10C 20140913
+// ARM10C 20150808
 // INIT_TASK_COMM: "swapper"
 #define INIT_TASK_COMM "swapper"
 
@@ -170,72 +234,212 @@ extern struct task_group root_task_group;
 // MAX_PRIO: 140
 // SCHED_NORMAL: 0
 // ARM10C 20150808
+// ATOMIC_INIT(2): { (2) }
+// PF_KTHREAD: 0x00200000
+// MAX_PRIO: 140
+// SCHED_NORMAL: 0
+// CPU_MASK_ALL: (cpumask_t) { { [0] = 0xf } }
+// NR_CPUS: 4
+// LIST_HEAD_INIT(init_task.se.group_node):
+// { &(init_task.se.group_node), &(init_task.se.group_node) }
+// LIST_HEAD_INIT(init_task.rt.run_list):
+// { &(init_task.rt.run_list), &(init_task.rt.run_list) }
+// RR_TIMESLICE: 10
+// LIST_HEAD_INIT(init_task.tasks):
+// { &(init_task.tasks), &(init_task.tasks) }
+// INIT_PUSHABLE_TASKS(init_task):
+// .pushable_tasks =
+// {
+//     .prio  = (140),
+//     .prio_list = { &((init_task.pushable_tasks).prio_list), &((init_task.pushable_tasks).prio_list) },
+//     .node_list = { &((init_task.pushable_tasks).node_list), &((init_task.pushable_tasks).node_list) },
+// },
+// INIT_CGROUP_SCHED(init_task):
+// .sched_task_group = &root_task_group,
+// LIST_HEAD_INIT(init_task.ptraced):
+// { &(init_task.ptraced), &(init_task.ptraced) }
+// LIST_HEAD_INIT(init_task.ptrace_entry):
+// { &(init_task.ptrace_entry), &(init_task.ptrace_entry) }
+// LIST_HEAD_INIT(init_task.children):
+// { &(init_task.children), &(init_task.children) }
+// LIST_HEAD_INIT(init_task.sibling):
+// { &(init_task.sibling), &(init_task.sibling) }
+// RCU_POINTER_INITIALIZER(real_cred, &init_cred):
+// .real_cred = (typeof(*&init_cred) __force __rcu *)(&init_cred)
+// RCU_POINTER_INITIALIZER(cred, &init_cred):
+// .cred = (typeof(*&init_cred) __force __rcu *)(&init_cred)
+// INIT_TASK_COMM: "swapper"
+// INIT_THREAD: {}
+// LIST_HEAD_INIT(init_task.pending.list):
+// { &(init_task.pending.list), &(init_task.pending.list) }
+// __SPIN_LOCK_UNLOCKED(init_task.alloc_lock):
+// (spinlock_t )
+// { { .rlock =
+//     {
+//       .raw_lock = { { 0 } },
+//       .magic = 0xdead4ead,
+//       .owner_cpu = -1,
+//       .owner = 0xffffffff,
+//     }
+// } }
+// INIT_CPU_TIMERS(init_task.cpu_timers):
+// {
+//     { &(init_task.cpu_timers[0]), &(init_task.cpu_timers[0]) },
+//     { &(init_task.cpu_timers[1]), &(init_task.cpu_timers[1]) },
+//     { &(init_task.cpu_timers[2]), &(init_task.cpu_timers[2]) },
+// }
+// __RAW_SPIN_LOCK_UNLOCKED(init_task.pi_lock):
+// (raw_spinlock_t)
+// {
+//    .raw_lock = { { 0 } },
+//    .magic = 0xdead4ead,
+//    .owner_cpu = -1,
+//    .owner = 0xffffffff,
+// }
+// PIDTYPE_PID: 0
+// PIDTYPE_PGID: 1
+// PIDTYPE_SID: 2
+// INIT_PID_LINK(PIDTYPE_PID):
+// {
+//     .node = {
+//         .next = NULL,
+//         .pprev = NULL,
+//     },
+//     .pid = &init_struct_pid,
+// }
+// INIT_PID_LINK(PIDTYPE_PGID):
+// {
+//     .node = {
+//         .next = NULL,
+//         .pprev = NULL,
+//     },
+//     .pid = &init_struct_pid,
+// }
+// INIT_PID_LINK(PIDTYPE_SID):
+// {
+//     .node = {
+//         .next = NULL,
+//         .pprev = NULL,
+//     },
+//     .pid = &init_struct_pid,
+// }
+// LIST_HEAD_INIT(init_task.thread_group):
+// { &(init_task.thread_group), &(init_task.thread_group) }
 // INIT_TRACE_RECURSION: .trace_recursion = 0,
+// INIT_TASK_RCU_PREEMPT(init_task):
+// .rcu_read_lock_nesting = 0,
+// .rcu_read_unlock_special = 0,
+// .rcu_node_entry = { &(init_task.rcu_node_entry), &(init_task.rcu_node_entry) },
+// .rcu_blocked_node = NULL,
 //
 // #define INIT_TASK(init_task):
 // {
-//	.state		= 0,
-//	.stack		= &init_thread_info,
-//	.usage		= ATOMIC_INIT(2),
-//	.flags		= PF_KTHREAD,
-//	.prio		= MAX_PRIO-20,
-//	.static_prio	= MAX_PRIO-20,
-//	.normal_prio	= MAX_PRIO-20,
-//	.policy		= SCHED_NORMAL,
-//	.cpus_allowed	= CPU_MASK_ALL,
-//	.nr_cpus_allowed= NR_CPUS,
-//	.mm		= NULL,
-//	.active_mm	= &init_mm,
-//	.se		= {
-//		.group_node 	= LIST_HEAD_INIT(init_task.se.group_node),
-//	},
-//	.rt		= {
-//		.run_list	= LIST_HEAD_INIT(init_task.rt.run_list),
-//		.time_slice	= RR_TIMESLICE,
-//	},
-//	.tasks		= LIST_HEAD_INIT(init_task.tasks),
-//	INIT_PUSHABLE_TASKS(init_task)
-//	INIT_CGROUP_SCHED(init_task)
-//	.ptraced	= LIST_HEAD_INIT(init_task.ptraced),
-//	.ptrace_entry	= LIST_HEAD_INIT(init_task.ptrace_entry),
-//	.real_parent	= &init_task,
-//	.parent		= &init_task,
-//	.children	= LIST_HEAD_INIT(init_task.children),
-//	.sibling	= LIST_HEAD_INIT(init_task.sibling),
-//	.group_leader	= &init_task,
-//	RCU_POINTER_INITIALIZER(real_cred, &init_cred),
-//	RCU_POINTER_INITIALIZER(cred, &init_cred),
-//	.comm		= INIT_TASK_COMM,
-//	.thread		= INIT_THREAD,
-//	.fs		= &init_fs,
-//	.files		= &init_files,
-//	.signal		= &init_signals,
-//	.sighand	= &init_sighand,
-//	.nsproxy	= &init_nsproxy,
-//	.pending	= {
-//		.list = LIST_HEAD_INIT(init_task.pending.list),
-//		.signal = {{0}}},
-//	.blocked	= {{0}},
-//	.alloc_lock	= __SPIN_LOCK_UNLOCKED(init_task.alloc_lock),
-//	.journal_info	= NULL,
-//	.cpu_timers	= INIT_CPU_TIMERS(init_task.cpu_timers),
-//	.pi_lock	= __RAW_SPIN_LOCK_UNLOCKED(init_task.pi_lock),
-//	.timer_slack_ns = 50000,
-//	.pids = {
-//		[PIDTYPE_PID]  = INIT_PID_LINK(PIDTYPE_PID),
-//		[PIDTYPE_PGID] = INIT_PID_LINK(PIDTYPE_PGID),
-//		[PIDTYPE_SID]  = INIT_PID_LINK(PIDTYPE_SID),
-//	},
-//	.thread_group	= LIST_HEAD_INIT(init_task.thread_group),
-//	INIT_IDS
-//	INIT_PERF_EVENTS(init_task)
-//	INIT_TRACE_IRQFLAGS
-//	INIT_LOCKDEP
-//	INIT_FTRACE_GRAPH
-//	INIT_TRACE_RECURSION
-//	INIT_TASK_RCU_PREEMPT(init_task)
-//	INIT_CPUSET_SEQ(init_task)
-//	INIT_VTIME(init_task)
+//    .state            = 0,
+//    .stack            = &init_thread_info,
+//    .usage            = { (2) },
+//    .flags            = 0x00200000,
+//    .prio             = 120,
+//    .static_prio      = 120,
+//    .normal_prio      = 120,
+//    .policy           = 0,
+//    .cpus_allowed     = (cpumask_t) { { [0] = 0xf } },
+//    .nr_cpus_allowed  = 4,
+//    .mm               = NULL,
+//    .active_mm        = &init_mm,
+//    .se               = {
+//        .group_node = { &(init_task.se.group_node), &(init_task.se.group_node) }
+//    },
+//    .rt               = {
+//        .run_list     = { &(init_task.rt.run_list), &(init_task.rt.run_list) },
+//        .time_slice   = 10,
+//    },
+//    .tasks            = { &(init_task.tasks), &(init_task.tasks) },
+//    .pushable_tasks   =
+//    {
+//        .prio  = (140),
+//        .prio_list = { &((init_task.pushable_tasks).prio_list), &((init_task.pushable_tasks).prio_list) },
+//        .node_list = { &((init_task.pushable_tasks).node_list), &((init_task.pushable_tasks).node_list) },
+//    },
+//    .sched_task_group = &root_task_group,
+//    .ptraced          = { &(init_task.ptraced), &(init_task.ptraced) },
+//    .ptrace_entry     = { &(init_task.ptrace_entry), &(init_task.ptrace_entry) },
+//    .real_parent      = &init_task,
+//    .parent           = &init_task,
+//    .children         = { &(init_task.children), &(init_task.children) },
+//    .sibling          = { &(init_task.sibling), &(init_task.sibling) },
+//    .group_leader     = &init_task,
+//    .real_cred        = (typeof(*&init_cred) __force __rcu *)(&init_cred),
+//    .cred             = (typeof(*&init_cred) __force __rcu *)(&init_cred),
+//    .comm             = "swapper",
+//    .thread           = {},
+//    .fs               = &init_fs,
+//    .files            = &init_files,
+//    .signal           = &init_signals,
+//    .sighand          = &init_sighand,
+//    .nsproxy          = &init_nsproxy,
+//    .pending          = {
+//        .list = { &(init_task.pending.list), &(init_task.pending.list) },
+//        .signal = {{0}}
+//    },
+//    .blocked          = {{0}},
+//    .alloc_lock       =
+//    (spinlock_t )
+//    { { .rlock =
+//        {
+//          .raw_lock = { { 0 } },
+//          .magic = 0xdead4ead,
+//          .owner_cpu = -1,
+//          .owner = 0xffffffff,
+//        }
+//    } },
+//    .journal_info     = NULL,
+//    .cpu_timers       =
+//    {
+//        { &(init_task.cpu_timers[0]), &(init_task.cpu_timers[0]) },
+//        { &(init_task.cpu_timers[1]), &(init_task.cpu_timers[1]) },
+//        { &(init_task.cpu_timers[2]), &(init_task.cpu_timers[2]) },
+//    },
+//    .pi_lock          =
+//    (raw_spinlock_t)
+//    {
+//       .raw_lock = { { 0 } },
+//       .magic = 0xdead4ead,
+//       .owner_cpu = -1,
+//       .owner = 0xffffffff,
+//    },
+//    .timer_slack_ns   = 50000,
+//    .pids             = {
+//        [0]  =
+//        {
+//            .node = {
+//                .next = NULL,
+//                .pprev = NULL,
+//            },
+//            .pid = &init_struct_pid,
+//        },
+//        [1]  =
+//        {
+//            .node = {
+//                .next = NULL,
+//                .pprev = NULL,
+//            },
+//            .pid = &init_struct_pid,
+//        },
+//        [2]  =
+//        {
+//            .node = {
+//                .next = NULL,
+//                .pprev = NULL,
+//            },
+//            .pid = &init_struct_pid,
+//        },
+//    },
+//    .thread_group     = { &(init_task.thread_group), &(init_task.thread_group) },
+//    .trace_recursion  = 0,
+//    .rcu_read_lock_nesting = 0,
+//    .rcu_read_unlock_special = 0,
+//    .rcu_node_entry   = { &(init_task.rcu_node_entry), &(init_task.rcu_node_entry) },
+//    .rcu_blocked_node = NULL,
 // }
 #define INIT_TASK(tsk)							\
 {									\
@@ -304,6 +508,20 @@ extern struct task_group root_task_group;
 }
 
 
+// ARM10C 20150808
+// LIST_HEAD_INIT(init_task.cpu_timers[0]):
+// { &(init_task.cpu_timers[0]), &(init_task.cpu_timers[0]) }
+// LIST_HEAD_INIT(init_task.cpu_timers[1]):
+// { &(init_task.cpu_timers[1]), &(init_task.cpu_timers[1]) }
+// LIST_HEAD_INIT(init_task.cpu_timers[2]):
+// { &(init_task.cpu_timers[2]), &(init_task.cpu_timers[2]) }
+//
+// #define INIT_CPU_TIMERS(init_task.cpu_timers):
+// {
+// 	{ &(init_task.cpu_timers[0]), &(init_task.cpu_timers[0]) },
+// 	{ &(init_task.cpu_timers[1]), &(init_task.cpu_timers[1]) },
+// 	{ &(init_task.cpu_timers[2]), &(init_task.cpu_timers[2]) },
+// }
 #define INIT_CPU_TIMERS(cpu_timers)					\
 {									\
 	LIST_HEAD_INIT(cpu_timers[0]),					\

@@ -24,6 +24,7 @@
 #define MAX_RT_PRIO		MAX_USER_RT_PRIO
 
 // ARM10C 20140510
+// ARM10C 20150808
 // MAX_RT_PRIO: 100
 // MAX_PRIO: 140
 #define MAX_PRIO		(MAX_RT_PRIO + 40)
@@ -76,6 +77,9 @@ extern void normalize_rt_tasks(void);
  * default timeslice is 100 msecs (used only for SCHED_RR tasks).
  * Timeslices get refilled after they expire.
  */
+// ARM10C 20150808
+// HZ: 100
+// RR_TIMESLICE: 10
 #define RR_TIMESLICE		(100 * HZ / 1000)
 
 #endif /* _SCHED_RT_H */
