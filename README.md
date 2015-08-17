@@ -10,6 +10,24 @@
   - current : 3.13.x
   
 # HISTORY
+* 114th (2015/08/15) week [114차](https://github.com/hephaex/kernel_review/blob/master/a10c_114.md)
+ - cgorup 초기 초기화 분석
+ - cgroup_early_init()
+* 113th (2015/08/08) week [113차](https://github.com/hephaex/kernel_review/blob/master/a10c_113.md)
+ - cgorup 초기 초기화 분석
+ - cgroup_early_init()
+* 112th (2015/08/01) week [112차](https://github.com/hephaex/kernel_review/blob/master/a10c_112.md)
+ - cgroup 에 대한 이야기
+ - LXC와 Docker 기술
+ - SS의 G6의 kernel config 를 참조하여 cgroup config를 설정.
+ - config 추가: Reference/exynos7420-zerolte_kor_skc_defconfig
+ - pageconsole_init()
+* 111th (2015/07/25) week [111차](https://github.com/hephaex/kernel_review/blob/master/a10c_111.md)
+ - console_init()
+  - con_init()
+* 110th (2015/07/18) week [110차](https://github.com/hephaex/kernel_review/blob/master/a10c_110.md)
+ - console_init()
+  - con_init()
 * 109th (2015/07/11) week [109차](https://github.com/hephaex/kernel_review/blob/master/a10c_109.md)
  - console_init()
   - con_init()
