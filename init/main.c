@@ -632,6 +632,7 @@ asmlinkage void __init start_kernel(void)
 	boot_init_stack_canary();
 
 	cgroup_init_early();
+	// cgroup 를 사용하기 위한 cgroup_dummy_root, cgroup_subsys 의 구조체 초기화 수행
 
 	local_irq_disable();
 	// IRQ를 disable 함
@@ -863,9 +864,12 @@ asmlinkage void __init start_kernel(void)
 // 2015/08/01 종료
 // 2015/08/08 시작
 
-	page_cgroup_init();
-	debug_objects_mem_init();
-	kmemleak_init();
+	page_cgroup_init(); // null function
+	debug_objects_mem_init(); // null function
+	kmemleak_init(); // null function
+
+// 2015/08/22 종료
+
 	setup_per_cpu_pageset();
 	numa_policy_init();
 	if (late_time_init)

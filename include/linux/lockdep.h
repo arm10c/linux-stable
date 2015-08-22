@@ -439,6 +439,8 @@ struct lock_class_key { };
 
 #define lockdep_depth(tsk)	(0)
 
+// ARM10C 20150822
+// &cgroup_mutex
 #define lockdep_assert_held(l)			do { (void)(l); } while (0)
 
 #define lockdep_recursing(tsk)			(0)

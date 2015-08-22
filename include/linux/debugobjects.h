@@ -59,7 +59,7 @@ struct debug_obj_descr {
 	int (*fixup_assert_init)(void *addr, enum debug_obj_state state);
 };
 
-#ifdef CONFIG_DEBUG_OBJECTS
+#ifdef CONFIG_DEBUG_OBJECTS // CONFIG_DEBUG_OBJECTS=n
 extern void debug_object_init      (void *addr, struct debug_obj_descr *descr);
 extern void
 debug_object_init_on_stack(void *addr, struct debug_obj_descr *descr);
@@ -97,6 +97,7 @@ static inline void
 debug_object_assert_init(void *addr, struct debug_obj_descr *descr) { }
 
 static inline void debug_objects_early_init(void) { }
+// ARM10C 20150822
 static inline void debug_objects_mem_init(void) { }
 #endif
 

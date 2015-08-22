@@ -474,6 +474,7 @@ static struct cftype files[] = {
 	{ }	/* terminate */
 };
 
+// ARM10C 20150822
 struct cgroup_subsys freezer_subsys = {
 	.name		= "freezer",
 	.css_alloc	= freezer_css_alloc,

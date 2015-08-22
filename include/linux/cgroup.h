@@ -107,8 +107,11 @@ struct cgroup_subsys_state {
 };
 
 /* bits in struct cgroup_subsys_state flags field */
+// ARM10C 20150822
 enum {
+	// CSS_ROOT: 1
 	CSS_ROOT	= (1 << 0), /* this CSS is the root of the subsystem */
+	// CSS_ONLINE: 2
 	CSS_ONLINE	= (1 << 1), /* between ->css_online() and ->css_offline() */
 };
 
@@ -692,10 +695,14 @@ struct cgroup_subsys {
  * Return the parent css of @css.  This function is guaranteed to return
  * non-NULL parent as long as @css isn't the root.
  */
+// ARM10C 20150822
+// css: &root_task_group.css
 static inline
 struct cgroup_subsys_state *css_parent(struct cgroup_subsys_state *css)
 {
+	// css->parent: (&root_task_group.css)->parent: NULL
 	return css->parent;
+	// return NULL
 }
 
 /**

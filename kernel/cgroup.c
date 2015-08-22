@@ -227,6 +227,7 @@ static u64 cgroup_serial_nr_next = 1;
  * extra work in the fork/exit path if none of the subsystems need to
  * be called.
  */
+// ARM10C 20150822
 static int need_forkexit_callback __read_mostly;
 
 static struct cftype cgroup_base_files[];
@@ -250,17 +251,28 @@ static int cgroup_file_release(struct inode *inode, struct file *file);
  */
 // ARM10C 20150822
 // cgroup_dummy_top: &cgroup_dummy_root.top_cgroup, ss: &cpu_cgroup_subsys
+// ARM10C 20150822
+// cgrp: &cgroup_dummy_root.top_cgroup, ss: &cpu_cgroup_subsys
+// ARM10C 20150822
+// cgroup_dummy_top: &cgroup_dummy_root.top_cgroup, ss: &cpuacct_subsys
+// ARM10C 20150822
+// cgrp: &cgroup_dummy_root.top_cgroup, ss: &cpuacct_subsys
 static struct cgroup_subsys_state *cgroup_css(struct cgroup *cgrp,
 					      struct cgroup_subsys *ss)
 {
 	// ss: &cpu_cgroup_subsys
+	// ss: &cpuacct_subsys
 	if (ss)
 		// ss->subsys_id: (&cpu_cgroup_subsys)->subsys_id: 1,
 		// cgrp->subsys[1]: (&cgroup_dummy_root.top_cgroup)->subsys[1]
 		// rcu_dereference_check((&cgroup_dummy_root.top_cgroup)->subsys[1], 0): (&cgroup_dummy_root.top_cgroup)->subsys[1]
+		// ss->subsys_id: (&cpuacct_subsys)->subsys_id: 2,
+		// cgrp->subsys[2]: (&cgroup_dummy_root.top_cgroup)->subsys[2]
+		// rcu_dereference_check((&cgroup_dummy_root.top_cgroup)->subsys[2], 0): (&cgroup_dummy_root.top_cgroup)->subsys[2]
 		return rcu_dereference_check(cgrp->subsys[ss->subsys_id],
 					     lockdep_is_held(&cgroup_mutex));
 		// return (&cgroup_dummy_root.top_cgroup)->subsys[1]
+		// return (&cgroup_dummy_root.top_cgroup)->subsys[2]
 	else
 		return &cgrp->dummy_css;
 }
@@ -408,6 +420,7 @@ struct cgrp_cset_link {
 
 // ARM10C 20150808
 // ARM10C 20150815
+// ARM10C 20150822
 static struct css_set init_css_set;
 // ARM10C 20150815
 static struct cgrp_cset_link init_cgrp_cset_link;
@@ -4482,37 +4495,112 @@ static void css_release(struct percpu_ref *ref)
 
 // ARM10C 20150822
 // css: &root_task_group.css, ss: &cpu_cgroup_subsys, cgroup_dummy_top: &cgroup_dummy_root.top_cgroup
+// ARM10C 20150822
+// css: &root_cpuacct.css, ss: &cpuacct_subsys, cgroup_dummy_top: &cgroup_dummy_root.top_cgroup
 static void init_css(struct cgroup_subsys_state *css, struct cgroup_subsys *ss,
 		     struct cgroup *cgrp)
 {
+	// css->cgroup: (&root_task_group.css)->cgroup, cgrp: &cgroup_dummy_root.top_cgroup
+	// css->cgroup: (&root_cpuacct.css)->cgroup, cgrp: &cgroup_dummy_root.top_cgroup
 	css->cgroup = cgrp;
-	css->ss = ss;
-	css->flags = 0;
+	// css->cgroup: (&root_task_group.css)->cgroup: &cgroup_dummy_root.top_cgroup
+	// css->cgroup: (&root_cpuacct.css)->cgroup: &cgroup_dummy_root.top_cgroup
 
+	// css->ss: (&root_task_group.css)->ss, ss: &cpu_cgroup_subsys
+	// css->ss: (&root_cpuacct.css)->ss, ss: &cpuacct_subsys
+	css->ss = ss;
+	// css->ss: (&root_task_group.css)->ss: &cpu_cgroup_subsys
+	// css->ss: (&root_cpuacct.css)->ss: &cpuacct_subsys
+
+	// css->flags: (&root_task_group.css)->flags
+	// css->flags: (&root_cpuacct.css)->flags
+	css->flags = 0;
+	// css->flags: (&root_task_group.css)->flags: 0
+	// css->flags: (&root_cpuacct.css)->flags: 0
+
+	// cgrp->parent: (&cgroup_dummy_root.top_cgroup)->parent: NULL
+	// cgrp->parent: (&cgroup_dummy_root.top_cgroup)->parent: NULL
 	if (cgrp->parent)
 		css->parent = cgroup_css(cgrp->parent, ss);
 	else
+		// css->flags: (&root_task_group.css)->flags: 0, CSS_ROOT: 1
+		// css->flags: (&root_cpuacct.css)->flags: 0, CSS_ROOT: 1
 		css->flags |= CSS_ROOT;
+		// css->flags: (&root_task_group.css)->flags: 1
+		// css->flags: (&root_cpuacct.css)->flags: 1
 
+	// cgrp: &cgroup_dummy_root.top_cgroup, ss: &cpu_cgroup_subsys
+	// cgroup_css(&cgroup_dummy_root.top_cgroup, &cpu_cgroup_subsys): (&cgroup_dummy_root.top_cgroup)->subsys[1]: NULL
+	// cgrp: &cgroup_dummy_root.top_cgroup, ss: &cpuacct_subsys
+	// cgroup_css(&cgroup_dummy_root.top_cgroup, &cpuacct_subsys): (&cgroup_dummy_root.top_cgroup)->subsys[2]: NULL
 	BUG_ON(cgroup_css(cgrp, ss));
 }
 
 /* invoke ->css_online() on a new CSS and mark it online if successful */
+// ARM10C 20150822
+// css: &root_task_group.css
+// ARM10C 20150822
+// css: &root_cpuacct.css
 static int online_css(struct cgroup_subsys_state *css)
 {
+	// css->ss: (&root_task_group.css)->ss: &cpu_cgroup_subsys
+	// css->ss: (&root_cpuacct.css)->ss: &cpuacct_subsys
 	struct cgroup_subsys *ss = css->ss;
+	// ss: &cpu_cgroup_subsys
+	// ss: &cpuacct_subsys
+
 	int ret = 0;
+	// ret: 0
+	// ret: 0
 
-	lockdep_assert_held(&cgroup_mutex);
+	lockdep_assert_held(&cgroup_mutex); // null function
 
+	// ss->css_online: (&cpu_cgroup_subsys)->css_online: cpu_cgroup_css_online
+	// ss->css_online: (&cpuacct_subsys)->css_online: NULL
 	if (ss->css_online)
+		// ss->css_online: (&cpu_cgroup_subsys)->css_online: cpu_cgroup_css_online,
+		// css: &root_task_group.css
+		// cpu_cgroup_css_online(&root_task_group.css): 0
 		ret = ss->css_online(css);
+		// ret: 0
+
+	// ret: 0
+	// ret: 0
 	if (!ret) {
+		// css->flags: (&root_task_group.css)->flags: 1, CSS_ONLINE: 2
+		// css->flags: (&root_cpuacct.css)->flags: 1, CSS_ONLINE: 2
 		css->flags |= CSS_ONLINE;
+		// css->flags: (&root_task_group.css)->flags: 0x3
+		// css->flags: (&root_cpuacct.css)->flags: 0x3
+
+		// css->cgroup: (&root_task_group.css)->cgroup: &cgroup_dummy_root.top_cgroup
+		// css->cgroup->nr_css: (&cgroup_dummy_root.top_cgroup)->nr_css: 0
+		// css->cgroup: (&root_cpuacct.css)->cgroup: &cgroup_dummy_root.top_cgroup
+		// css->cgroup->nr_css: (&cgroup_dummy_root.top_cgroup)->nr_css: 1
 		css->cgroup->nr_css++;
+		// css->cgroup->nr_css: (&cgroup_dummy_root.top_cgroup)->nr_css: 1
+		// css->cgroup->nr_css: (&cgroup_dummy_root.top_cgroup)->nr_css: 2
+
+		// ss->subsys_id: (&cpu_cgroup_subsys)->subsys_id: 1,
+		// css->cgroup: (&root_task_group.css)->cgroup: &cgroup_dummy_root.top_cgroup
+		// css->cgroup->subsys: (&cgroup_dummy_root.top_cgroup)->subsys[1], css: &root_task_group.css
+		// ss->subsys_id: (&cpuacct_subsys)->subsys_id: 2,
+		// css->cgroup: (&root_cpuacct.css)->cgroup: &cgroup_dummy_root.top_cgroup
+		// css->cgroup->subsys: (&cgroup_dummy_root.top_cgroup)->subsys[2], css: &root_cpuacct.css
 		rcu_assign_pointer(css->cgroup->subsys[ss->subsys_id], css);
+
+		// rcu_assign_pointer에서 한일:
+		// css->cgroup->nr_css: (&cgroup_dummy_root.top_cgroup)->subsys[1]: &root_task_group.css
+
+		// rcu_assign_pointer에서 한일:
+		// css->cgroup->nr_css: (&cgroup_dummy_root.top_cgroup)->subsys[2]: &root_cpuacct.css
 	}
+
+	// ret: 0
+	// ret: 0
 	return ret;
+	// return 0
+	// return 0
 }
 
 /* if the CSS is online, invoke ->css_offline() on it and mark it offline */
@@ -4967,71 +5055,105 @@ static int cgroup_rmdir(struct inode *unused_dir, struct dentry *dentry)
 
 // ARM10C 20150822
 // ss: &cpu_cgroup_subsys
+// ARM10C 20150822
+// ss: &cpuacct_subsys
 static void __init_or_module cgroup_init_cftsets(struct cgroup_subsys *ss)
 {
 	// &ss->cftsets: &(&cpu_cgroup_subsys)->cftsets
+	// &ss->cftsets: &(&cpuacct_subsys)->cftsets
 	INIT_LIST_HEAD(&ss->cftsets);
 
 	// INIT_LIST_HEAD에서 한일:
 	// (&(&cpu_cgroup_subsys)->cftsets)->next: &(&cpu_cgroup_subsys)->cftsets
 	// (&(&cpu_cgroup_subsys)->cftsets)->prev: &(&cpu_cgroup_subsys)->cftsets
 
+	// INIT_LIST_HEAD에서 한일:
+	// (&(&cpuacct_subsys)->cftsets)->next: &(&cpuacct_subsys)->cftsets
+	// (&(&cpuacct_subsys)->cftsets)->prev: &(&cpuacct_subsys)->cftsets
+
 	/*
 	 * base_cftset is embedded in subsys itself, no need to worry about
 	 * deregistration.
 	 */
 	// ss->base_cftypes: (&cpu_cgroup_subsys)->base_cftypes: cpu_files
+	// ss->base_cftypes: (&cpuacct_subsys)->base_cftypes: files
 	if (ss->base_cftypes) {
 		struct cftype *cft;
 
 		// ss->base_cftypes: (&cpu_cgroup_subsys)->base_cftypes: cpu_files
 		// cft: &cpu_files[0], cft->name[0]: (&cpu_files[0])->name[0]: "shares"
+		// ss->base_cftypes: (&cpuacct_subsys)->base_cftypes: files
+		// cft: &files[0], cft->name[0]: (&files[0])->name[0]: "usage"
 		for (cft = ss->base_cftypes; cft->name[0] != '\0'; cft++)
 			// cft: &cpu_files[0], cft->name[0]: (&cpu_files[0])->name[0]: "shares"
 			// cft: &cpu_files[1], cft->name[0]: (&cpu_files[1])->name[0]: "rt_runtime_us"
 			// cft: &cpu_files[2], cft->name[0]: (&cpu_files[2])->name[0]: "rt_period_us"
+			// cft: &files[0], cft->name[0]: (&files[0])->name[0]: "usage"
+			// cft: &files[1], cft->name[0]: (&files[1])->name[0]: "usage_percpu"
+			// cft: &files[2], cft->name[0]: (&files[2])->name[0]: "stat"
 
 			// cft->ss: (&cpu_files[0])->ss, ss: &cpu_cgroup_subsys
 			// cft->ss: (&cpu_files[1])->ss, ss: &cpu_cgroup_subsys
 			// cft->ss: (&cpu_files[2])->ss, ss: &cpu_cgroup_subsys
+			// cft->ss: (&files[0])->ss, ss: &cpuacct_subsys
+			// cft->ss: (&files[1])->ss, ss: &cpuacct_subsys
+			// cft->ss: (&files[2])->ss, ss: &cpuacct_subsys
 			cft->ss = ss;
 			// cft->ss: (&cpu_files[0])->ss: &cpu_cgroup_subsys
 			// cft->ss: (&cpu_files[1])->ss: &cpu_cgroup_subsys
 			// cft->ss: (&cpu_files[2])->ss: &cpu_cgroup_subsys
+			// cft->ss: (&files[0])->ss: &cpuacct_subsys
+			// cft->ss: (&files[1])->ss: &cpuacct_subsys
+			// cft->ss: (&files[2])->ss: &cpuacct_subsys
 
 		// ss->base_cftset.cfts: (&cpu_cgroup_subsys)->base_cftset.cfts,
 		// ss->base_cftypes: (&cpu_cgroup_subsys)->base_cftypes: cpu_files
+		// ss->base_cftset.cfts: (&cpuacct_subsys)->base_cftset.cfts,
+		// ss->base_cftypes: (&cpuacct_subsys)->base_cftypes: files
 		ss->base_cftset.cfts = ss->base_cftypes;
 		// ss->base_cftset.cfts: (&cpu_cgroup_subsys)->base_cftset.cfts: cpu_files
+		// ss->base_cftset.cfts: (&cpuacct_subsys)->base_cftset.cfts: files
 
 		// &ss->base_cftset.node: &(&cpu_cgroup_subsys)->base_cftset.node, &ss->cftsets: &(&cpu_cgroup_subsys)->cftsets
+		// &ss->base_cftset.node: &(&cpuacct_subsys)->base_cftset.node, &ss->cftsets: &(&cpuacct_subsys)->cftsets
 		list_add_tail(&ss->base_cftset.node, &ss->cftsets);
 
 		// list_add_tail에서 한일:
 		// HEAD list인 &(&cpu_cgroup_subsys)->cftsets에 &(&cpu_cgroup_subsys)->base_cftset.node을 tail에 추가
+
+		// list_add_tail에서 한일:
+		// HEAD list인 &(&cpuacct_subsys)->cftsets에 &(&cpuacct_subsys)->base_cftset.node을 tail에 추가
 	}
 }
 
 // ARM10C 20150822
 // ss: &cpu_cgroup_subsys
+// ARM10C 20150822
+// ss: &cpuacct_subsys
 static void __init cgroup_init_subsys(struct cgroup_subsys *ss)
 {
 	struct cgroup_subsys_state *css;
 
 	// ss->name: (&cpu_cgroup_subsys)->name: "cpu"
+	// ss->name: (&cpuacct_subsys)->name: "cpuacct"
 	printk(KERN_INFO "Initializing cgroup subsys %s\n", ss->name);
 	// "Initializing cgroup subsys cpu\n"
+	// "Initializing cgroup subsys cpuacct\n"
 
 	mutex_lock(&cgroup_mutex);
 
 	// mutex_lock에서 한일:
 	// &cgroup_mutex 을 사용하여 mutex lock을 수행
 
+	// mutex_lock에서 한일:
+	// &cgroup_mutex 을 사용하여 mutex lock을 수행
+
 	/* init base cftset */
 	// ss: &cpu_cgroup_subsys
+	// ss: &cpuacct_subsys
 	cgroup_init_cftsets(ss);
 
-	// cgroup_init_cftsets에서 한일:
+	// cgroup_init_cftsets(&cpu_cgroup_subsys)에서 한일:
 	// (&(&cpu_cgroup_subsys)->cftsets)->next: &(&cpu_cgroup_subsys)->cftsets
 	// (&(&cpu_cgroup_subsys)->cftsets)->prev: &(&cpu_cgroup_subsys)->cftsets
 	//
@@ -5042,50 +5164,114 @@ static void __init cgroup_init_subsys(struct cgroup_subsys *ss)
 	//
 	// HEAD list인 &(&cpu_cgroup_subsys)->cftsets에 &(&cpu_cgroup_subsys)->base_cftset.node을 tail에 추가
 
+	// cgroup_init_cftsets(&cpuacct_subsys)에서 한일:
+	// (&(&cpuacct_subsys)->cftsets)->next: &(&cpuacct_subsys)->cftsets
+	// (&(&cpuacct_subsys)->cftsets)->prev: &(&cpuacct_subsys)->cftsets
+	//
+	// (&files[0])->ss: &cpuacct_subsys
+	// (&files[1])->ss: &cpuacct_subsys
+	// (&files[2])->ss: &cpuacct_subsys
+	// (&cpuacct_subsys)->base_cftset.cfts: files
+	//
+	// HEAD list인 &(&cpuacct_subsys)->cftsets에 &(&cpuacct_subsys)->base_cftset.node을 tail에 추가
+
 	/* Create the top cgroup state for this subsystem */
 	// &ss->sibling: &(&cpu_cgroup_subsys)->sibling
+	// &ss->sibling: &(&cpuacct_subsys)->sibling
 	list_add(&ss->sibling, &cgroup_dummy_root.subsys_list);
 
 	// list_add에서 한일:
 	// HEAD list인 &cgroup_dummy_root.subsys_list에 &(&cpu_cgroup_subsys)->sibling을 추가
 
+	// list_add에서 한일:
+	// HEAD list인 &cgroup_dummy_root.subsys_list에 &(&cpuacct_subsys)->sibling을 추가
+
 	// ss->root: (&cpu_cgroup_subsys)->root
+	// ss->root: (&cpuacct_subsys)->root
 	ss->root = &cgroup_dummy_root;
 	// ss->root: (&cpu_cgroup_subsys)->root: &cgroup_dummy_root
+	// ss->root: (&cpuacct_subsys)->root: &cgroup_dummy_root
 
 	// ss->css_alloc: (&cpu_cgroup_subsys)->css_alloc: cpu_cgroup_css_alloc
 	// cgroup_dummy_top: &cgroup_dummy_root.top_cgroup, ss: &cpu_cgroup_subsys
 	// cgroup_css(&cgroup_dummy_root.top_cgroup, &cpu_cgroup_subsys): (&cgroup_dummy_root.top_cgroup)->subsys[1]
 	// cpu_cgroup_css_alloc((&cgroup_dummy_root.top_cgroup)->subsys[1]): &root_task_group.css
+	// ss->css_alloc: (&cpuacct_subsys)->css_alloc: cpuacct_css_alloc
+	// cgroup_dummy_top: &cgroup_dummy_root.top_cgroup, ss: &cpuacct_subsys
+	// cgroup_css(&cgroup_dummy_root.top_cgroup, &cpuacct_subsys): (&cgroup_dummy_root.top_cgroup)->subsys[2]
+	// cpuacct_css_alloc((&cgroup_dummy_root.top_cgroup)->subsys[2]): &root_cpuacct.css
 	css = ss->css_alloc(cgroup_css(cgroup_dummy_top, ss));
 	// css: &root_task_group.css
+	// css: &root_cpuacct.css
 
 	/* We don't handle early failures gracefully */
 	// css: &root_task_group.css, IS_ERR(&root_task_group.css): 0
+	// css: &root_cpuacct.css, IS_ERR(&root_cpuacct.css): 0
 	BUG_ON(IS_ERR(css));
 
 	// css: &root_task_group.css, ss: &cpu_cgroup_subsys, cgroup_dummy_top: &cgroup_dummy_root.top_cgroup
+	// css: &root_cpuacct.css, ss: &cpuacct_subsys, cgroup_dummy_top: &cgroup_dummy_root.top_cgroup
 	init_css(css, ss, cgroup_dummy_top);
+
+	// init_css(&root_task_group.css)에서 한일:
+	// (&root_task_group.css)->cgroup: &cgroup_dummy_root.top_cgroup
+	// (&root_task_group.css)->ss: &cpu_cgroup_subsys
+	// (&root_task_group.css)->flags: 1
+
+	// init_css(&root_cpuacct.css)에서 한일:
+	// (&root_cpuacct.css)->cgroup: &cgroup_dummy_root.top_cgroup
+	// (&root_cpuacct.css)->ss: &cpuacct_subsys
+	// (&root_cpuacct.css)->flags: 1
 
 	/* Update the init_css_set to contain a subsys
 	 * pointer to this state - since the subsystem is
 	 * newly registered, all tasks and hence the
 	 * init_css_set is in the subsystem's top cgroup. */
+	// ss->subsys_id: (&cpu_cgroup_subsys)->subsys_id: 1, css: &root_task_group.css
+	// ss->subsys_id: (&cpuacct_subsys)->subsys_id: 2, css: &root_cpuacct.css
 	init_css_set.subsys[ss->subsys_id] = css;
+	// init_css_set.subsys[1]: &root_task_group.css
+	// init_css_set.subsys[2]: &root_cpuacct.css
 
+	// ss->fork: (&cpu_cgroup_subsys)->fork: NULL, ss->exit: (&cpu_cgroup_subsys)->exit: cpu_cgroup_exit
+	// ss->fork: (&cpuacct_subsys)->fork: NULL, ss->exit: (&cpuacct_subsys)->exit: NULL
 	need_forkexit_callback |= ss->fork || ss->exit;
+	// need_forkexit_callback: 1
+	// need_forkexit_callback: 1
 
 	/* At system boot, before all subsystems have been
 	 * registered, no tasks have been forked, so we don't
 	 * need to invoke fork callbacks here. */
+	// list_empty(&init_task.tasks): 1
+	// list_empty(&init_task.tasks): 1
 	BUG_ON(!list_empty(&init_task.tasks));
 
+	// css: &root_task_group.css, online_css(&root_task_group.css): 0
+	// css: &root_cpuacct.css, online_css(&root_cpuacct.css): 0
 	BUG_ON(online_css(css));
+
+	// online_css(&root_task_group.css)에서 한일:
+	// (&root_task_group.css)->flags: 0x3
+	// (&cgroup_dummy_root.top_cgroup)->nr_css: 1
+	// (&cgroup_dummy_root.top_cgroup)->subsys[1]: &root_task_group.css
+
+	// online_css(&root_cpuacct.css)에서 한일:
+	// (&root_cpuacct.css)->flags: 0x3
+	// (&cgroup_dummy_root.top_cgroup)->nr_css: 2
+	// (&cgroup_dummy_root.top_cgroup)->subsys[2]: &root_cpuacct.css
 
 	mutex_unlock(&cgroup_mutex);
 
+	// mutex_unlock에서 한일:
+	// &cgroup_mutex 을 사용하여 mutex unlock을 수행
+
+	// mutex_unlock에서 한일:
+	// &cgroup_mutex 을 사용하여 mutex unlock을 수행
+
 	/* this function shouldn't be used with modular subsystems, since they
 	 * need to register a subsys_id, among other things */
+	// ss->module: (&cpu_cgroup_subsys)->module: NULL
+	// ss->module: (&cpuacct_subsys)->module: NULL
 	BUG_ON(ss->module);
 }
 
@@ -5391,26 +5577,38 @@ int __init cgroup_init_early(void)
 	// for ((i) = 0; (i) < CGROUP_BUILTIN_SUBSYS_COUNT && (((ss) = cgroup_subsys[i]) || true); (i)++)
 
 		// i: 0, cgroup_subsys[0]: &debug_subsys, ss: &debug_subsys
-		// i: 1, cgroup_subsys[1]: &debug_subsys, ss: &cpu_cgroup_subsys
+		// i: 1, cgroup_subsys[1]: &cpu_cgroup_subsys, ss: &cpu_cgroup_subsys
+		// i: 2, cgroup_subsys[2]: &cpuacct_subsys, ss: &cpuacct_subsys
+		// i: 3, cgroup_subsys[3]: &freezer_subsys, ss: &freezer_subsys
 
 		// ss->name: (&debug_subsys)->name: "debug"
 		// ss->name: (&cpu_cgroup_subsys)->name: "cpu"
+		// ss->name: (&cpuacct_subsys)->name: "cpuacct"
+		// ss->name: (&freezer_subsys)->name: "freezer"
 		BUG_ON(!ss->name);
 
 		// ss->name: (&debug_subsys)->name: "debug", strlen("debug"): 5, MAX_CGROUP_TYPE_NAMELEN: 32
 		// ss->name: (&cpu_cgroup_subsys)->name: "cpu", strlen("cpu"): 3, MAX_CGROUP_TYPE_NAMELEN: 32
+		// ss->name: (&cpuacct_subsys)->name: "cpuacct", strlen("cpuacct"): 7, MAX_CGROUP_TYPE_NAMELEN: 32
+		// ss->name: (&freezer_subsys)->name: "freezer", strlen("freezer"): 7, MAX_CGROUP_TYPE_NAMELEN: 32
 		BUG_ON(strlen(ss->name) > MAX_CGROUP_TYPE_NAMELEN);
 
 		// ss->css_alloc: (&debug_subsys)->css_alloc: debug_css_alloc
 		// ss->css_alloc: (&cpu_cgroup_subsys)->css_alloc: cpu_cgroup_css_alloc
+		// ss->css_alloc: (&cpuacct_subsys)->css_alloc: cpuacct_css_alloc
+		// ss->css_alloc: (&freezer_subsys)->css_alloc: freezer_css_alloc
 		BUG_ON(!ss->css_alloc);
 
 		// ss->css_free: (&debug_subsys)->css_free: debug_css_free
 		// ss->css_free: (&cpu_cgroup_subsys)->css_free: cpu_cgroup_css_free
+		// ss->css_free: (&cpuacct_subsys)->css_free: cpuacct_css_free
+		// ss->css_free: (&freezer_subsys)->css_free: freezer_css_free
 		BUG_ON(!ss->css_free);
 
 		// i: 0, ss->subsys_id: (&debug_subsys)->subsys_id: debug_subsys_id: 0
 		// i: 1, ss->subsys_id: (&cpu_cgroup_subsys)->subsys_id: cpu_cgroup_subsys_id: 1
+		// i: 2, ss->subsys_id: (&cpuacct_subsys)->subsys_id: cpuacct_subsys_id: 2
+		// i: 3, ss->subsys_id: (&cpuacct_subsys)->subsys_id: freezer_subsys_id: 3
 		if (ss->subsys_id != i) {
 			printk(KERN_ERR "cgroup: Subsys %s id == %d\n",
 			       ss->name, ss->subsys_id);
@@ -5419,11 +5617,55 @@ int __init cgroup_init_early(void)
 
 		// ss->early_init: (&debug_subsys)->early_init: 0
 		// ss->early_init: (&cpu_cgroup_subsys)->early_init: 1
+		// ss->early_init: (&cpuacct_subsys)->early_init: 1
+		// ss->early_init: (&freezer_subsys)->early_init: 0
 		if (ss->early_init)
 			// ss: &cpu_cgroup_subsys
+			// ss: &cpuacct_subsys
 			cgroup_init_subsys(ss);
+
+			// cgroup_init_subsys(&cpu_cgroup_subsys) 에서 한일:
+			// (&(&cpu_cgroup_subsys)->cftsets)->next: &(&cpu_cgroup_subsys)->cftsets
+			// (&(&cpu_cgroup_subsys)->cftsets)->prev: &(&cpu_cgroup_subsys)->cftsets
+			//
+			// (&cpu_files[0])->ss: &cpu_cgroup_subsys
+			// (&cpu_files[1])->ss: &cpu_cgroup_subsys
+			// (&cpu_files[2])->ss: &cpu_cgroup_subsys
+			// (&cpu_cgroup_subsys)->base_cftset.cfts: cpu_files
+			//
+			// HEAD list인 &(&cpu_cgroup_subsys)->cftsets에 &(&cpu_cgroup_subsys)->base_cftset.node을 tail에 추가
+			// HEAD list인 &cgroup_dummy_root.subsys_list에 &(&cpu_cgroup_subsys)->sibling을 추가
+			// (&cpu_cgroup_subsys)->root: &cgroup_dummy_root
+			// (&root_task_group.css)->cgroup: &cgroup_dummy_root.top_cgroup
+			// (&root_task_group.css)->ss: &cpu_cgroup_subsys
+			// (&root_task_group.css)->flags: 0x3
+			// init_css_set.subsys[1]: &root_task_group.css
+			// need_forkexit_callback: 1
+			// (&cgroup_dummy_root.top_cgroup)->nr_css: 1
+			// (&cgroup_dummy_root.top_cgroup)->subsys[1]: &root_task_group.css
+
+			// cgroup_init_cftsets(&cpuacct_subsys)에서 한일:
+			// (&(&cpuacct_subsys)->cftsets)->next: &(&cpuacct_subsys)->cftsets
+			// (&(&cpuacct_subsys)->cftsets)->prev: &(&cpuacct_subsys)->cftsets
+			//
+			// (&files[0])->ss: &cpuacct_subsys
+			// (&files[1])->ss: &cpuacct_subsys
+			// (&files[2])->ss: &cpuacct_subsys
+			// (&cpuacct_subsys)->base_cftset.cfts: files
+			//
+			// HEAD list인 &(&cpuacct_subsys)->cftsets에 &(&cpuacct_subsys)->base_cftset.node을 tail에 추가
+			// HEAD list인 &cgroup_dummy_root.subsys_list에 &(&cpuacct_subsys)->sibling을 추가
+			// ss->root: (&cpuacct_subsys)->root: &cgroup_dummy_root
+			// (&root_cpuacct.css)->cgroup: &cgroup_dummy_root.top_cgroup
+			// (&root_cpuacct.css)->ss: &cpuacct_subsys
+			// (&root_cpuacct.css)->flags: 0x3
+			// init_css_set.subsys[2]: &root_cpuacct.css
+			// need_forkexit_callback: 1
+			// (&cgroup_dummy_root.top_cgroup)->nr_css: 2
+			// (&cgroup_dummy_root.top_cgroup)->subsys[2]: &root_cpuacct.css
 	}
 	return 0;
+	// return 0
 }
 
 /**

@@ -863,6 +863,7 @@ static inline void ftrace_dump(enum ftrace_dump_mode oops_dump_mode) { }
 //	(struct mutex *)( (char *)__mptr - offsetof(struct mutex,count) );})
 // ARM10C 20140322
 // ptr : lock_count, type : struct mutex, member : count
+// ARM10C 20150822
 #define container_of(ptr, type, member) ({			\
 	const typeof( ((type *)0)->member ) *__mptr = (ptr);	\
 	(type *)( (char *)__mptr - offsetof(type,member) );})

@@ -26,6 +26,7 @@ enum cpuacct_stat_index {
 };
 
 /* track cpu usage of a group of tasks and its child groups */
+// ARM10C 20150822
 struct cpuacct {
 	struct cgroup_subsys_state css;
 	/* cpuusage holds pointer to a u64-type object on every cpu */
@@ -56,13 +57,17 @@ static struct cpuacct root_cpuacct = {
 };
 
 /* create a new cpu accounting group */
+// ARM10C 20150822
+// (&cgroup_dummy_root.top_cgroup)->subsys[2]
 static struct cgroup_subsys_state *
 cpuacct_css_alloc(struct cgroup_subsys_state *parent_css)
 {
 	struct cpuacct *ca;
 
+	// parent_css: (&cgroup_dummy_root.top_cgroup)->subsys[2]: NULL
 	if (!parent_css)
 		return &root_cpuacct.css;
+		// return &root_cpuacct.css
 
 	ca = kzalloc(sizeof(*ca), GFP_KERNEL);
 	if (!ca)
@@ -87,6 +92,7 @@ out:
 }
 
 /* destroy an existing cpu accounting group */
+// ARM10C 20150822
 static void cpuacct_css_free(struct cgroup_subsys_state *css)
 {
 	struct cpuacct *ca = css_ca(css);
@@ -212,6 +218,7 @@ static int cpuacct_stats_show(struct cgroup_subsys_state *css,
 	return 0;
 }
 
+// ARM10C 20150822
 static struct cftype files[] = {
 	{
 		.name = "usage",
@@ -277,6 +284,7 @@ void cpuacct_account_field(struct task_struct *p, int index, u64 val)
 	rcu_read_unlock();
 }
 
+// ARM10C 20150822
 struct cgroup_subsys cpuacct_subsys = {
 	.name		= "cpuacct",
 	.css_alloc	= cpuacct_css_alloc,

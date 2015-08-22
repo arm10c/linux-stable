@@ -7408,11 +7408,15 @@ int sched_rt_handler(struct ctl_table *table, int write,
 
 // ARM10C 20150822
 // parent_css: (&cgroup_dummy_root.top_cgroup)->subsys[1]
+// ARM10C 20150822
+// css: &root_task_group.css
 static inline struct task_group *css_tg(struct cgroup_subsys_state *css)
 {
 	// css: (&cgroup_dummy_root.top_cgroup)->subsys[1]: NULL
+	// css: &root_task_group.css, container_of(&root_task_group.css, struct task_group, css): &root_task_group
 	return css ? container_of(css, struct task_group, css) : NULL;
 	// return NULL
+	// return &root_task_group
 }
 
 // ARM10C 20150822
@@ -7441,14 +7445,23 @@ cpu_cgroup_css_alloc(struct cgroup_subsys_state *parent_css)
 	return &tg->css;
 }
 
+// ARM10C 20150822
+// &root_task_group.css
 static int cpu_cgroup_css_online(struct cgroup_subsys_state *css)
 {
+	// css: &root_task_group.css, css_tg(&root_task_group.css): &root_task_group
 	struct task_group *tg = css_tg(css);
-	struct task_group *parent = css_tg(css_parent(css));
+	// tg: &root_task_group
 
+	// css: &root_task_group.css, css_parent(&root_task_group.css): NULL
+	struct task_group *parent = css_tg(css_parent(css));
+	// parent: NULL
+
+	// parent: NULL
 	if (parent)
 		sched_online_group(tg, parent);
 	return 0;
+	// return 0
 }
 
 static void cpu_cgroup_css_free(struct cgroup_subsys_state *css)
@@ -7492,6 +7505,7 @@ static void cpu_cgroup_attach(struct cgroup_subsys_state *css,
 		sched_move_task(task);
 }
 
+// ARM10C 20150822
 static void cpu_cgroup_exit(struct cgroup_subsys_state *css,
 			    struct cgroup_subsys_state *old_css,
 			    struct task_struct *task)

@@ -58,6 +58,7 @@ static inline void kmemleak_erase(void **ptr)
 
 #else
 
+// ARM10C 20150822
 static inline void kmemleak_init(void)
 {
 }

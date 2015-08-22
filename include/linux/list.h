@@ -111,6 +111,8 @@
 // &xattrs->head: (&(&(&cgroup_dummy_root)->top_cgroup)->xattrs)->head
 // ARM10C 20150822
 // &ss->cftsets: &(&cpu_cgroup_subsys)->cftsets
+// ARM10C 20150822
+// &ss->cftsets: &(&cpuacct_subsys)->cftsets
 static inline void INIT_LIST_HEAD(struct list_head *list)
 {
 	list->next = list;
@@ -175,6 +177,8 @@ extern void __list_add(struct list_head *new,
 // &init_cgrp_cset_link.cgrp_link, &init_css_set.cgrp_links
 // ARM10C 20150822
 // &ss->sibling: &(&cpu_cgroup_subsys)->sibling, &cgroup_dummy_root.subsys_list
+// ARM10C 20150822
+// &ss->sibling: &(&cpuacct_subsys)->sibling, &cgroup_dummy_root.subsys_list
 static inline void list_add(struct list_head *new, struct list_head *head)
 {
 	__list_add(new, head, head->next);
@@ -197,6 +201,8 @@ static inline void list_add(struct list_head *new, struct list_head *head)
 // &timer->entry: &(&console_timer)->entry, vec: &(&boot_tvec_bases)->tv3.vec[3]
 // ARM10C 20150822
 // &ss->base_cftset.node: &(&cpu_cgroup_subsys)->base_cftset.node, &ss->cftsets: &(&cpu_cgroup_subsys)->cftsets
+// ARM10C 20150822
+// &ss->base_cftset.node: &(&cpuacct_subsys)->base_cftset.node, &ss->cftsets: &(&cpuacct_subsys)->cftsets
 static inline void list_add_tail(struct list_head *new, struct list_head *head)
 {
 	// new: &waiter.list, head->prev: (&(&cpu_add_remove_lock)->wait_list)->prev
@@ -369,6 +375,7 @@ static inline int list_is_last(const struct list_head *list,
 // ARM10C 20150509
 // ARM10C 20150523
 // ARM10C 20150725
+// ARM10C 20150822
 static inline int list_empty(const struct list_head *head)
 {
 	// head->next: waiter->list->next, head: waiter->list

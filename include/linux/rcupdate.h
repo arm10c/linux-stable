@@ -623,6 +623,7 @@ static inline void rcu_preempt_sleep_check(void)
 //	((*((struct list_head __rcu **)(&(&vmap_area_list)->next)))) =
 //	(typeof(*&((GIC))->list) __force rcu *)(&((GIC))->list);
 // } while (0)
+// ARM10C 20150822
 #define __rcu_assign_pointer(p, v, space)	\
 	do { \
 		smp_wmb(); \
@@ -701,6 +702,12 @@ static inline void rcu_preempt_sleep_check(void)
 //
 // cgrp->subsys[1]: (&cgroup_dummy_root.top_cgroup)->subsys[1], 0
 // #define rcu_dereference_check((&cgroup_dummy_root.top_cgroup)->subsys[1], 0): (&cgroup_dummy_root.top_cgroup)->subsys[1]
+// ARM10C 20150822
+// rcu_read_lock_held(): 1
+// __rcu_dereference_check((&cgroup_dummy_root.top_cgroup)->subsys[2], 1): (&cgroup_dummy_root.top_cgroup)->subsys[2]
+//
+// cgrp->subsys[2]: (&cgroup_dummy_root.top_cgroup)->subsys[2], 0
+// #define rcu_dereference_check((&cgroup_dummy_root.top_cgroup)->subsys[2], 0): (&cgroup_dummy_root.top_cgroup)->subsys[2]
 #define rcu_dereference_check(p, c) \
 	__rcu_dereference_check((p), rcu_read_lock_held() || (c), __rcu)
 
@@ -1074,6 +1081,10 @@ static inline notrace void rcu_read_unlock_sched_notrace(void)
 // ARM10C 20141115
 // offset: 1, node->slots[1]: (kmem_cache#20-o1 (RADIX_LSB: 0))->slots[1],
 // slot: kmem_cache#20-o2
+// ARM10C 20150822
+// css->cgroup->nr_css: (&cgroup_dummy_root.top_cgroup)->subsys[1], css: &root_task_group.css
+// ARM10C 20150822
+// css->cgroup->nr_css: (&cgroup_dummy_root.top_cgroup)->subsys[2], css: &root_cpuacct.css
 #define rcu_assign_pointer(p, v)		\
 	__rcu_assign_pointer((p), (v), __rcu)
 
