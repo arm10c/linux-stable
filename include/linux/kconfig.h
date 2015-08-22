@@ -17,9 +17,21 @@
  * the last step cherry picks the 2nd arg, we get a zero.
  */
 #define __ARG_PLACEHOLDER_1 0,
+/*
+// ARM10C 20150822
+*/
 #define config_enabled(cfg) _config_enabled(cfg)
+/*
+// ARM10C 20150822
+*/
 #define _config_enabled(value) __config_enabled(__ARG_PLACEHOLDER_##value)
+/*
+// ARM10C 20150822
+*/
 #define __config_enabled(arg1_or_junk) ___config_enabled(arg1_or_junk 1, 0)
+/*
+// ARM10C 20150822
+*/
 #define ___config_enabled(__ignored, val, ...) val
 
 /*
@@ -39,12 +51,18 @@
  * otherwise. For boolean options, this is equivalent to
  * IS_ENABLED(CONFIG_FOO).
  */
+/*
+// ARM10C 20150822
+*/
 #define IS_BUILTIN(option) config_enabled(option)
 
 /*
  * IS_MODULE(CONFIG_FOO) evaluates to 1 if CONFIG_FOO is set to 'm', 0
  * otherwise.
  */
+/*
+// ARM10C 20150822
+*/
 #define IS_MODULE(option) config_enabled(option##_MODULE)
 
 #endif /* __LINUX_KCONFIG_H */

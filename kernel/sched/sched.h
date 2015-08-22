@@ -144,23 +144,24 @@ struct cfs_bandwidth {
 };
 
 /* task group related information */
+// ARM10C 20150822
 struct task_group {
 	struct cgroup_subsys_state css;
 
-#ifdef CONFIG_FAIR_GROUP_SCHED
+#ifdef CONFIG_FAIR_GROUP_SCHED // CONFIG_FAIR_GROUP_SCHED=y
 	/* schedulable entities of this group on each cpu */
 	struct sched_entity **se;
 	/* runqueue "owned" by this group on each cpu */
 	struct cfs_rq **cfs_rq;
 	unsigned long shares;
 
-#ifdef	CONFIG_SMP
+#ifdef	CONFIG_SMP // CONFIG_SMP=y
 	atomic_long_t load_avg;
 	atomic_t runnable_avg;
 #endif
 #endif
 
-#ifdef CONFIG_RT_GROUP_SCHED
+#ifdef CONFIG_RT_GROUP_SCHED // CONFIG_RT_GROUP_SCHED=y
 	struct sched_rt_entity **rt_se;
 	struct rt_rq **rt_rq;
 
@@ -174,7 +175,7 @@ struct task_group {
 	struct list_head siblings;
 	struct list_head children;
 
-#ifdef CONFIG_SCHED_AUTOGROUP
+#ifdef CONFIG_SCHED_AUTOGROUP // CONFIG_SCHED_AUTOGROUP=n
 	struct autogroup *autogroup;
 #endif
 

@@ -340,6 +340,8 @@ extern void lock_release(struct lockdep_map *lock, int nested,
 
 // ARM10C 20150606
 // &sched_domains_mutex, lock_is_held(&(&sched_domains_mutex)->dep_map): 0
+// ARM10C 20150822
+// &cgroup_mutex, lock_is_held(&(&cgroup_mutex)->dep_map): 0
 #define lockdep_is_held(lock)	lock_is_held(&(lock)->dep_map)
 
 extern int lock_is_held(struct lockdep_map *lock);

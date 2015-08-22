@@ -49,22 +49,41 @@ extern int proc_cgroup_show(struct seq_file *, void *);
  * We define ids for builtin subsystems and then modular ones.
  */
 #define SUBSYS(_x) _x ## _subsys_id,
+// ARM10C 20150822
+//
+// cgroup_subsys.h 의 config를 IS_BUILTIN(option) 확장한 결과:
+// SUBSYS(debug): debug_subsys_id,
+// SUBSYS(cpu_cgroup): cpu_cgroup_subsys_id,
+// SUBSYS(cpuacct): cpuacct_subsys_id,
+// SUBSYS(freezer): freezer_subsys_id,
+//
+// cgroup_subsys.h 의 config를 IS_MODULE(option) 확장한 결과:
+// MODULE로 설정된 값은 없음
 enum cgroup_subsys_id {
+// ARM10C 20150822
 #define IS_SUBSYS_ENABLED(option) IS_BUILTIN(option)
 #include <linux/cgroup_subsys.h>
 #undef IS_SUBSYS_ENABLED
+	// debug_subsys_id,
+	// cpu_cgroup_subsys_id,
+	// cpuacct_subsys_id,
+	// freezer_subsys_id,
+	// CGROUP_BUILTIN_SUBSYS_COUNT: 4
 	CGROUP_BUILTIN_SUBSYS_COUNT,
 
+	// __CGROUP_SUBSYS_TEMP_PLACEHOLDER: 3
 	__CGROUP_SUBSYS_TEMP_PLACEHOLDER = CGROUP_BUILTIN_SUBSYS_COUNT - 1,
 
 #define IS_SUBSYS_ENABLED(option) IS_MODULE(option)
 #include <linux/cgroup_subsys.h>
 #undef IS_SUBSYS_ENABLED
+	// CGROUP_SUBSYS_COUNT: 4
 	CGROUP_SUBSYS_COUNT,
 };
 #undef SUBSYS
 
 /* Per-subsystem/per-cgroup state maintained by the system. */
+// ARM10C 20150822
 struct cgroup_subsys_state {
 	/* the cgroup that this css is attached to */
 	struct cgroup *cgroup;
@@ -422,6 +441,7 @@ enum {
 
 #define MAX_CFTYPE_NAME		64
 
+// ARM10C 20150822
 struct cftype {
 	/*
 	 * By convention, the name should begin with the name of the
@@ -598,6 +618,7 @@ int cgroup_taskset_size(struct cgroup_taskset *tset);
  */
 
 // ARM10C 20150808
+// ARM10C 20150822
 struct cgroup_subsys {
 	struct cgroup_subsys_state *(*css_alloc)(struct cgroup_subsys_state *parent_css);
 	int (*css_online)(struct cgroup_subsys_state *css);
@@ -635,6 +656,8 @@ struct cgroup_subsys {
 	bool broken_hierarchy;
 	bool warned_broken_hierarchy;
 
+// ARM10C 20150822
+// MAX_CGROUP_TYPE_NAMELEN: 32
 #define MAX_CGROUP_TYPE_NAMELEN 32
 	const char *name;
 

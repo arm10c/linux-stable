@@ -695,6 +695,12 @@ static inline void rcu_preempt_sleep_check(void)
 //
 // cpu_rq(0)->sd: ([pcp0] &runqueues)->sd: NULL, 0
 // #define rcu_dereference_check(([pcp0] &runqueues)->sd, 0): ([pcp0] &runqueues)->sd
+// ARM10C 20150822
+// rcu_read_lock_held(): 1
+// __rcu_dereference_check((&cgroup_dummy_root.top_cgroup)->subsys[1], 1): (&cgroup_dummy_root.top_cgroup)->subsys[1]
+//
+// cgrp->subsys[1]: (&cgroup_dummy_root.top_cgroup)->subsys[1], 0
+// #define rcu_dereference_check((&cgroup_dummy_root.top_cgroup)->subsys[1], 0): (&cgroup_dummy_root.top_cgroup)->subsys[1]
 #define rcu_dereference_check(p, c) \
 	__rcu_dereference_check((p), rcu_read_lock_held() || (c), __rcu)
 

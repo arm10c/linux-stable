@@ -80,10 +80,28 @@
  * B happens only through cgroup_show_options() and using cgroup_root_mutex
  * breaks it.
  */
-#ifdef CONFIG_PROVE_RCU
+#ifdef CONFIG_PROVE_RCU // CONFIG_PROVE_RCU=n
 DEFINE_MUTEX(cgroup_mutex);
 EXPORT_SYMBOL_GPL(cgroup_mutex);	/* only for lockdep */
 #else
+// ARM10C 20150822
+// DEFINE_MUTEX(cgroup_mutex):
+// struct mutex cgroup_mutex =
+// { .count = { (1) }
+//    , .wait_lock =
+//    (spinlock_t )
+//    { { .rlock =
+//	  {
+//	  .raw_lock = { { 0 } },
+//	  .magic = 0xdead4ead,
+//	  .owner_cpu = -1,
+//	  .owner = 0xffffffff,
+//	  }
+//    } }
+//    , .wait_list =
+//    { &(cgroup_mutex.wait_list), &(cgroup_mutex.wait_list) }
+//    , .magic = &cgroup_mutex
+// }
 static DEFINE_MUTEX(cgroup_mutex);
 #endif
 
@@ -105,8 +123,20 @@ static struct workqueue_struct *cgroup_destroy_wq;
  */
 #define SUBSYS(_x) [_x ## _subsys_id] = &_x ## _subsys,
 #define IS_SUBSYS_ENABLED(option) IS_BUILTIN(option)
+// ARM10C 20150822
+// CGROUP_SUBSYS_COUNT: 4
+//
+// cgroup_subsys.h 의 config를 IS_BUILTIN(option) 확장한 결과:
+// SUBSYS(debug): [debug_subsys_id] = &debug_subsys,
+// SUBSYS(cpu_cgroup): [cpu_cgroup_subsys_id] = &cpu_cgroup_subsys,
+// SUBSYS(cpuacct): [cpuacct_subsys_id] = &cpuacct_subsys,
+// SUBSYS(freezer): [freezer_subsys_id] = &freezer_subsys,
 static struct cgroup_subsys *cgroup_subsys[CGROUP_SUBSYS_COUNT] = {
 #include <linux/cgroup_subsys.h>
+	// [debug_subsys_id] = &debug_subsys,
+	// [cpu_cgroup_subsys_id] = &cpu_cgroup_subsys,
+	// [cpuacct_subsys_id] = &cpuacct_subsys,
+	// [freezer_subsys_id] = &freezer_subsys,
 };
 
 /*
@@ -115,10 +145,12 @@ static struct cgroup_subsys *cgroup_subsys[CGROUP_SUBSYS_COUNT] = {
  * part of that cgroup.
  */
 // ARM10C 20150808
+// ARM10C 20150822
 static struct cgroupfs_root cgroup_dummy_root;
 
 /* dummy_top is a shorthand for the dummy hierarchy's top cgroup */
 // ARM10C 20150815
+// ARM10C 20150822
 // cgroup_dummy_top: &cgroup_dummy_root.top_cgroup
 static struct cgroup * const cgroup_dummy_top = &cgroup_dummy_root.top_cgroup;
 
@@ -216,12 +248,19 @@ static int cgroup_file_release(struct inode *inode, struct file *file);
  * keep accessing it outside the said locks.  This function may return
  * %NULL if @cgrp doesn't have @subsys_id enabled.
  */
+// ARM10C 20150822
+// cgroup_dummy_top: &cgroup_dummy_root.top_cgroup, ss: &cpu_cgroup_subsys
 static struct cgroup_subsys_state *cgroup_css(struct cgroup *cgrp,
 					      struct cgroup_subsys *ss)
 {
+	// ss: &cpu_cgroup_subsys
 	if (ss)
+		// ss->subsys_id: (&cpu_cgroup_subsys)->subsys_id: 1,
+		// cgrp->subsys[1]: (&cgroup_dummy_root.top_cgroup)->subsys[1]
+		// rcu_dereference_check((&cgroup_dummy_root.top_cgroup)->subsys[1], 0): (&cgroup_dummy_root.top_cgroup)->subsys[1]
 		return rcu_dereference_check(cgrp->subsys[ss->subsys_id],
 					     lockdep_is_held(&cgroup_mutex));
+		// return (&cgroup_dummy_root.top_cgroup)->subsys[1]
 	else
 		return &cgrp->dummy_css;
 }
@@ -286,6 +325,7 @@ static int notify_on_release(const struct cgroup *cgrp)
  * Bulit-in subsystems are always present and iteration itself doesn't
  * require any synchronization.
  */
+// ARM10C 20150822
 #define for_each_builtin_subsys(ss, i)					\
 	for ((i) = 0; (i) < CGROUP_BUILTIN_SUBSYS_COUNT &&		\
 	     (((ss) = cgroup_subsys[i]) || true); (i)++)
@@ -4440,6 +4480,8 @@ static void css_release(struct percpu_ref *ref)
 	call_rcu(&css->rcu_head, css_free_rcu_fn);
 }
 
+// ARM10C 20150822
+// css: &root_task_group.css, ss: &cpu_cgroup_subsys, cgroup_dummy_top: &cgroup_dummy_root.top_cgroup
 static void init_css(struct cgroup_subsys_state *css, struct cgroup_subsys *ss,
 		     struct cgroup *cgrp)
 {
@@ -4923,42 +4965,106 @@ static int cgroup_rmdir(struct inode *unused_dir, struct dentry *dentry)
 	return ret;
 }
 
+// ARM10C 20150822
+// ss: &cpu_cgroup_subsys
 static void __init_or_module cgroup_init_cftsets(struct cgroup_subsys *ss)
 {
+	// &ss->cftsets: &(&cpu_cgroup_subsys)->cftsets
 	INIT_LIST_HEAD(&ss->cftsets);
+
+	// INIT_LIST_HEAD에서 한일:
+	// (&(&cpu_cgroup_subsys)->cftsets)->next: &(&cpu_cgroup_subsys)->cftsets
+	// (&(&cpu_cgroup_subsys)->cftsets)->prev: &(&cpu_cgroup_subsys)->cftsets
 
 	/*
 	 * base_cftset is embedded in subsys itself, no need to worry about
 	 * deregistration.
 	 */
+	// ss->base_cftypes: (&cpu_cgroup_subsys)->base_cftypes: cpu_files
 	if (ss->base_cftypes) {
 		struct cftype *cft;
 
+		// ss->base_cftypes: (&cpu_cgroup_subsys)->base_cftypes: cpu_files
+		// cft: &cpu_files[0], cft->name[0]: (&cpu_files[0])->name[0]: "shares"
 		for (cft = ss->base_cftypes; cft->name[0] != '\0'; cft++)
-			cft->ss = ss;
+			// cft: &cpu_files[0], cft->name[0]: (&cpu_files[0])->name[0]: "shares"
+			// cft: &cpu_files[1], cft->name[0]: (&cpu_files[1])->name[0]: "rt_runtime_us"
+			// cft: &cpu_files[2], cft->name[0]: (&cpu_files[2])->name[0]: "rt_period_us"
 
+			// cft->ss: (&cpu_files[0])->ss, ss: &cpu_cgroup_subsys
+			// cft->ss: (&cpu_files[1])->ss, ss: &cpu_cgroup_subsys
+			// cft->ss: (&cpu_files[2])->ss, ss: &cpu_cgroup_subsys
+			cft->ss = ss;
+			// cft->ss: (&cpu_files[0])->ss: &cpu_cgroup_subsys
+			// cft->ss: (&cpu_files[1])->ss: &cpu_cgroup_subsys
+			// cft->ss: (&cpu_files[2])->ss: &cpu_cgroup_subsys
+
+		// ss->base_cftset.cfts: (&cpu_cgroup_subsys)->base_cftset.cfts,
+		// ss->base_cftypes: (&cpu_cgroup_subsys)->base_cftypes: cpu_files
 		ss->base_cftset.cfts = ss->base_cftypes;
+		// ss->base_cftset.cfts: (&cpu_cgroup_subsys)->base_cftset.cfts: cpu_files
+
+		// &ss->base_cftset.node: &(&cpu_cgroup_subsys)->base_cftset.node, &ss->cftsets: &(&cpu_cgroup_subsys)->cftsets
 		list_add_tail(&ss->base_cftset.node, &ss->cftsets);
+
+		// list_add_tail에서 한일:
+		// HEAD list인 &(&cpu_cgroup_subsys)->cftsets에 &(&cpu_cgroup_subsys)->base_cftset.node을 tail에 추가
 	}
 }
 
+// ARM10C 20150822
+// ss: &cpu_cgroup_subsys
 static void __init cgroup_init_subsys(struct cgroup_subsys *ss)
 {
 	struct cgroup_subsys_state *css;
 
+	// ss->name: (&cpu_cgroup_subsys)->name: "cpu"
 	printk(KERN_INFO "Initializing cgroup subsys %s\n", ss->name);
+	// "Initializing cgroup subsys cpu\n"
 
 	mutex_lock(&cgroup_mutex);
 
+	// mutex_lock에서 한일:
+	// &cgroup_mutex 을 사용하여 mutex lock을 수행
+
 	/* init base cftset */
+	// ss: &cpu_cgroup_subsys
 	cgroup_init_cftsets(ss);
 
+	// cgroup_init_cftsets에서 한일:
+	// (&(&cpu_cgroup_subsys)->cftsets)->next: &(&cpu_cgroup_subsys)->cftsets
+	// (&(&cpu_cgroup_subsys)->cftsets)->prev: &(&cpu_cgroup_subsys)->cftsets
+	//
+	// (&cpu_files[0])->ss: &cpu_cgroup_subsys
+	// (&cpu_files[1])->ss: &cpu_cgroup_subsys
+	// (&cpu_files[2])->ss: &cpu_cgroup_subsys
+	// (&cpu_cgroup_subsys)->base_cftset.cfts: cpu_files
+	//
+	// HEAD list인 &(&cpu_cgroup_subsys)->cftsets에 &(&cpu_cgroup_subsys)->base_cftset.node을 tail에 추가
+
 	/* Create the top cgroup state for this subsystem */
+	// &ss->sibling: &(&cpu_cgroup_subsys)->sibling
 	list_add(&ss->sibling, &cgroup_dummy_root.subsys_list);
+
+	// list_add에서 한일:
+	// HEAD list인 &cgroup_dummy_root.subsys_list에 &(&cpu_cgroup_subsys)->sibling을 추가
+
+	// ss->root: (&cpu_cgroup_subsys)->root
 	ss->root = &cgroup_dummy_root;
+	// ss->root: (&cpu_cgroup_subsys)->root: &cgroup_dummy_root
+
+	// ss->css_alloc: (&cpu_cgroup_subsys)->css_alloc: cpu_cgroup_css_alloc
+	// cgroup_dummy_top: &cgroup_dummy_root.top_cgroup, ss: &cpu_cgroup_subsys
+	// cgroup_css(&cgroup_dummy_root.top_cgroup, &cpu_cgroup_subsys): (&cgroup_dummy_root.top_cgroup)->subsys[1]
+	// cpu_cgroup_css_alloc((&cgroup_dummy_root.top_cgroup)->subsys[1]): &root_task_group.css
 	css = ss->css_alloc(cgroup_css(cgroup_dummy_top, ss));
+	// css: &root_task_group.css
+
 	/* We don't handle early failures gracefully */
+	// css: &root_task_group.css, IS_ERR(&root_task_group.css): 0
 	BUG_ON(IS_ERR(css));
+
+	// css: &root_task_group.css, ss: &cpu_cgroup_subsys, cgroup_dummy_top: &cgroup_dummy_root.top_cgroup
 	init_css(css, ss, cgroup_dummy_top);
 
 	/* Update the init_css_set to contain a subsys
@@ -5244,7 +5350,7 @@ int __init cgroup_init_early(void)
 	RCU_INIT_POINTER(init_task.cgroups, &init_css_set);
 
 	// RCU_INIT_POINTER에서 한일:
-	// (&(&cgroup_dummy_root)->top_cgroup)->name: (struct cgroup_name *)(&root_cgroup_name)
+	// init_task.cgroups: (struct css_set *)(&init_css_set)
 
 // 2015/08/08 종료
 // 2015/08/15 시작
@@ -5277,20 +5383,44 @@ int __init cgroup_init_early(void)
 	// (&init_css_set.cgrp_links)->next: &init_cgrp_cset_link.cgrp_link
 
 // 2015/08/15 종료
+// 2015/08/22 시작
 
 	/* at bootup time, we don't worry about modular subsystems */
+	// CGROUP_BUILTIN_SUBSYS_COUNT: 4
 	for_each_builtin_subsys(ss, i) {
+	// for ((i) = 0; (i) < CGROUP_BUILTIN_SUBSYS_COUNT && (((ss) = cgroup_subsys[i]) || true); (i)++)
+
+		// i: 0, cgroup_subsys[0]: &debug_subsys, ss: &debug_subsys
+		// i: 1, cgroup_subsys[1]: &debug_subsys, ss: &cpu_cgroup_subsys
+
+		// ss->name: (&debug_subsys)->name: "debug"
+		// ss->name: (&cpu_cgroup_subsys)->name: "cpu"
 		BUG_ON(!ss->name);
+
+		// ss->name: (&debug_subsys)->name: "debug", strlen("debug"): 5, MAX_CGROUP_TYPE_NAMELEN: 32
+		// ss->name: (&cpu_cgroup_subsys)->name: "cpu", strlen("cpu"): 3, MAX_CGROUP_TYPE_NAMELEN: 32
 		BUG_ON(strlen(ss->name) > MAX_CGROUP_TYPE_NAMELEN);
+
+		// ss->css_alloc: (&debug_subsys)->css_alloc: debug_css_alloc
+		// ss->css_alloc: (&cpu_cgroup_subsys)->css_alloc: cpu_cgroup_css_alloc
 		BUG_ON(!ss->css_alloc);
+
+		// ss->css_free: (&debug_subsys)->css_free: debug_css_free
+		// ss->css_free: (&cpu_cgroup_subsys)->css_free: cpu_cgroup_css_free
 		BUG_ON(!ss->css_free);
+
+		// i: 0, ss->subsys_id: (&debug_subsys)->subsys_id: debug_subsys_id: 0
+		// i: 1, ss->subsys_id: (&cpu_cgroup_subsys)->subsys_id: cpu_cgroup_subsys_id: 1
 		if (ss->subsys_id != i) {
 			printk(KERN_ERR "cgroup: Subsys %s id == %d\n",
 			       ss->name, ss->subsys_id);
 			BUG();
 		}
 
+		// ss->early_init: (&debug_subsys)->early_init: 0
+		// ss->early_init: (&cpu_cgroup_subsys)->early_init: 1
 		if (ss->early_init)
+			// ss: &cpu_cgroup_subsys
 			cgroup_init_subsys(ss);
 	}
 	return 0;
@@ -5797,7 +5927,8 @@ struct cgroup_subsys_state *css_from_id(int id, struct cgroup_subsys *ss)
 	return NULL;
 }
 
-#ifdef CONFIG_CGROUP_DEBUG
+#ifdef CONFIG_CGROUP_DEBUG // CONFIG_CGROUP_DEBUG=y
+// ARM10C 20150822
 static struct cgroup_subsys_state *
 debug_css_alloc(struct cgroup_subsys_state *parent_css)
 {
@@ -5809,6 +5940,7 @@ debug_css_alloc(struct cgroup_subsys_state *parent_css)
 	return css;
 }
 
+// ARM10C 20150822
 static void debug_css_free(struct cgroup_subsys_state *css)
 {
 	kfree(css);
@@ -5928,6 +6060,7 @@ static struct cftype debug_files[] =  {
 	{ }	/* terminate */
 };
 
+// ARM10C 20150822
 struct cgroup_subsys debug_subsys = {
 	.name = "debug",
 	.css_alloc = debug_css_alloc,

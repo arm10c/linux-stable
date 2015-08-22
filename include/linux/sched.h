@@ -1086,7 +1086,7 @@ struct task_struct {
 	const struct sched_class *sched_class;
 	struct sched_entity se;
 	struct sched_rt_entity rt;
-#ifdef CONFIG_CGROUP_SCHED // CONFIG_CGROUP_SCHED=n
+#ifdef CONFIG_CGROUP_SCHED // CONFIG_CGROUP_SCHED=y
 	struct task_group *sched_task_group;
 #endif
 
@@ -1338,7 +1338,7 @@ struct task_struct {
 	int cpuset_mem_spread_rotor;
 	int cpuset_slab_spread_rotor;
 #endif
-#ifdef CONFIG_CGROUPS // CONFIG_CGROUPS=n
+#ifdef CONFIG_CGROUPS // CONFIG_CGROUPS=y
 	/* Control Group info protected by css_set_lock */
 	struct css_set __rcu *cgroups;
 	/* cg_list protected by css_set_lock and tsk->alloc_lock */

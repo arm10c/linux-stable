@@ -109,6 +109,8 @@
 // &cgrp->event_list: &(&(&cgroup_dummy_root)->top_cgroup)->event_list
 // ARM10C 20150808
 // &xattrs->head: (&(&(&cgroup_dummy_root)->top_cgroup)->xattrs)->head
+// ARM10C 20150822
+// &ss->cftsets: &(&cpu_cgroup_subsys)->cftsets
 static inline void INIT_LIST_HEAD(struct list_head *list)
 {
 	list->next = list;
@@ -171,6 +173,8 @@ extern void __list_add(struct list_head *new,
 // &init_cgrp_cset_link.cset_link, &cgroup_dummy_top->cset_links
 // ARM10C 20150815
 // &init_cgrp_cset_link.cgrp_link, &init_css_set.cgrp_links
+// ARM10C 20150822
+// &ss->sibling: &(&cpu_cgroup_subsys)->sibling, &cgroup_dummy_root.subsys_list
 static inline void list_add(struct list_head *new, struct list_head *head)
 {
 	__list_add(new, head, head->next);
@@ -191,6 +195,8 @@ static inline void list_add(struct list_head *new, struct list_head *head)
 // list_add_tail(&waiter.list, &(&cpu_add_remove_lock)->wait_list);
 // ARM10C 20150711
 // &timer->entry: &(&console_timer)->entry, vec: &(&boot_tvec_bases)->tv3.vec[3]
+// ARM10C 20150822
+// &ss->base_cftset.node: &(&cpu_cgroup_subsys)->base_cftset.node, &ss->cftsets: &(&cpu_cgroup_subsys)->cftsets
 static inline void list_add_tail(struct list_head *new, struct list_head *head)
 {
 	// new: &waiter.list, head->prev: (&(&cpu_add_remove_lock)->wait_list)->prev

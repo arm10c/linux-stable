@@ -3634,6 +3634,8 @@ EXPORT_SYMBOL_GPL(lock_release);
 
 // ARM10C 20150606
 // &(&sched_domains_mutex)->dep_map
+// ARM10C 20150822
+// &(&cgroup_mutex)->dep_map
 int lock_is_held(struct lockdep_map *lock)
 {
 	unsigned long flags;

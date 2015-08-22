@@ -103,7 +103,7 @@ __mutex_init(struct mutex *lock, const char *name, struct lock_class_key *key)
 
 EXPORT_SYMBOL(__mutex_init);
 
-#ifndef CONFIG_DEBUG_LOCK_ALLOC
+#ifndef CONFIG_DEBUG_LOCK_ALLOC // CONFIG_DEBUG_LOCK_ALLOC=n
 /*
  * We split the mutex lock/unlock logic into separate fastpath and
  * slowpath functions, to reduce the register pressure on the fastpath.
@@ -137,6 +137,8 @@ __mutex_lock_slowpath(atomic_t *lock_count);
 // ARM10C 20140315
 // lock: &cpu_add_remove_lock
 // __sched: __section__(".sched.text")
+// ARM10C 20150822
+// lock: &cgroup_mutex
 void __sched mutex_lock(struct mutex *lock)
 {
 	might_sleep(); // null function

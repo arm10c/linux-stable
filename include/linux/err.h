@@ -21,6 +21,7 @@
 // ARM10C 20141025
 // ARM10C 20141122
 // ARM10C 20150620
+// ARM10C 20150822
 // -MAX_ERRNO: 0xFFFFF001
 #define IS_ERR_VALUE(x) unlikely((x) >= (unsigned long)-MAX_ERRNO)
 
@@ -47,6 +48,8 @@ static inline long __must_check PTR_ERR(__force const void *ptr)
 // clk: kmem_cache#29-oX (apll)
 // ARM10C 20150328
 // clk: kmem_cache#29-oX (fin_pll)
+// ARM10C 20150822
+// css: &root_task_group.css
 static inline long __must_check IS_ERR(__force const void *ptr)
 {
 	return IS_ERR_VALUE((unsigned long)ptr);

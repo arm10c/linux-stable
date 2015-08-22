@@ -6434,11 +6434,12 @@ int in_sched_functions(unsigned long addr)
 		&& addr < (unsigned long)__sched_text_end);
 }
 
-#ifdef CONFIG_CGROUP_SCHED
+#ifdef CONFIG_CGROUP_SCHED // CONFIG_CGROUP_SCHED=y
 /*
  * Default task group.
  * Every task in system belongs to this group at bootup.
  */
+// ARM10C 20150822
 struct task_group root_task_group;
 LIST_HEAD(task_groups);
 #endif
@@ -7403,22 +7404,34 @@ int sched_rt_handler(struct ctl_table *table, int write,
 	return ret;
 }
 
-#ifdef CONFIG_CGROUP_SCHED
+#ifdef CONFIG_CGROUP_SCHED // CONFIG_CGROUP_SCHED=y
 
+// ARM10C 20150822
+// parent_css: (&cgroup_dummy_root.top_cgroup)->subsys[1]
 static inline struct task_group *css_tg(struct cgroup_subsys_state *css)
 {
+	// css: (&cgroup_dummy_root.top_cgroup)->subsys[1]: NULL
 	return css ? container_of(css, struct task_group, css) : NULL;
+	// return NULL
 }
 
+// ARM10C 20150822
+// (&cgroup_dummy_root.top_cgroup)->subsys[1]
 static struct cgroup_subsys_state *
 cpu_cgroup_css_alloc(struct cgroup_subsys_state *parent_css)
 {
+	// parent_css: (&cgroup_dummy_root.top_cgroup)->subsys[1],
+	// css_tg((&cgroup_dummy_root.top_cgroup)->subsys[1]): NULL
 	struct task_group *parent = css_tg(parent_css);
+	// parent: NULL
+
 	struct task_group *tg;
 
+	// parent: NULL
 	if (!parent) {
 		/* This is early initialization for the top cgroup */
 		return &root_task_group.css;
+		// return &root_task_group.css
 	}
 
 	tg = sched_create_group(parent);
@@ -7776,15 +7789,16 @@ static u64 cpu_rt_period_read_uint(struct cgroup_subsys_state *css,
 }
 #endif /* CONFIG_RT_GROUP_SCHED */
 
+// ARM10C 20150822
 static struct cftype cpu_files[] = {
-#ifdef CONFIG_FAIR_GROUP_SCHED
+#ifdef CONFIG_FAIR_GROUP_SCHED // CONFIG_FAIR_GROUP_SCHED=y
 	{
 		.name = "shares",
 		.read_u64 = cpu_shares_read_u64,
 		.write_u64 = cpu_shares_write_u64,
 	},
 #endif
-#ifdef CONFIG_CFS_BANDWIDTH
+#ifdef CONFIG_CFS_BANDWIDTH // CONFIG_CFS_BANDWIDTH=n
 	{
 		.name = "cfs_quota_us",
 		.read_s64 = cpu_cfs_quota_read_s64,
@@ -7800,7 +7814,7 @@ static struct cftype cpu_files[] = {
 		.read_map = cpu_stats_show,
 	},
 #endif
-#ifdef CONFIG_RT_GROUP_SCHED
+#ifdef CONFIG_RT_GROUP_SCHED // CONFIG_RT_GROUP_SCHED=y
 	{
 		.name = "rt_runtime_us",
 		.read_s64 = cpu_rt_runtime_read,
@@ -7815,6 +7829,7 @@ static struct cftype cpu_files[] = {
 	{ }	/* terminate */
 };
 
+// ARM10C 20150822
 struct cgroup_subsys cpu_cgroup_subsys = {
 	.name		= "cpu",
 	.css_alloc	= cpu_cgroup_css_alloc,
