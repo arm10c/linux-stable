@@ -869,8 +869,11 @@ asmlinkage void __init start_kernel(void)
 	kmemleak_init(); // null function
 
 // 2015/08/22 종료
+// 2015/09/12 시작
 
 	setup_per_cpu_pageset();
+	// per cpu가 사용하는 pageset의 각각의 zone 맴버값 초기화 수행
+
 	numa_policy_init();
 	if (late_time_init)
 		late_time_init();

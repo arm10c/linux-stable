@@ -42,6 +42,7 @@ typedef struct cpumask { DECLARE_BITMAP(bits, NR_CPUS); } cpumask_t;
 // ARM10C 20150328
 // ARM10C 20150523
 // ARM10C 20150620
+// ARM10C 20150912
 // nr_cpu_ids: 4
 extern int nr_cpu_ids;
 #endif
@@ -211,6 +212,7 @@ static inline unsigned int cpumask_first(const struct cpumask *srcp)
 // n: -1, src1p: &cpu_bit_bitmap[1][0]
 // ARM10C 20150523
 // n: -1, src1p: mask
+// ARM10C 20150912
 static inline unsigned int cpumask_next(int n, const struct cpumask *srcp)
 {
 	/* -1 is a legal arg here. */
@@ -956,6 +958,7 @@ extern const DECLARE_BITMAP(cpu_all_bits, NR_CPUS);
 // ARM10C 20150103
 // ARM10C 20150523
 // ARM10C 20150620
+// ARM10C 20150912
 // #define for_each_cpu(i, cpu_possible_mask)
 //	for ((i) = -1; (i) = cpumask_next((i), (cpu_possible_mask)), (i) < nr_cpu_ids; )
 #define for_each_possible_cpu(cpu) for_each_cpu((cpu), cpu_possible_mask)

@@ -201,6 +201,20 @@ extern int __init pcpu_page_first_chunk(size_t reserved_size,
 //  	} while (0)
 //  	(&boot_kmem_cache_node 용 object 주소)->cpu_slab + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋);
 // })
+//
+// ARM10C 20150912
+// zone->pageset: (&(&contig_page_data)->node_zones[0])->pageset, cpu: 0
+//
+// per_cpu_offset((0)): __per_cpu_offset[0]: pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋
+//
+// #define SHIFT_PERCPU_PTR((&(&contig_page_data)->node_zones[0])->pageset, (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋))
+// ({
+//  	do {
+// 	 	const void __percpu *__vpp_verify = (typeof((&(&contig_page_data)->node_zones[0])->pageset))NULL;
+// 	 	(void)__vpp_verify;
+//  	} while (0)
+//  	(&(&contig_page_data)->node_zones[0])->pageset + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋);
+// })
 #define per_cpu_ptr(ptr, cpu)	SHIFT_PERCPU_PTR((ptr), per_cpu_offset((cpu)))
 #else
 #define per_cpu_ptr(ptr, cpu)	({ (void)(cpu); VERIFY_PERCPU_PTR((ptr)); })
@@ -223,6 +237,9 @@ extern phys_addr_t per_cpu_ptr_to_phys(void *addr);
 // ARM10C 20150620
 // struct call_single_data
 // sizeof(struct call_single_data): 18 bytes, __alignof__(struct call_single_data): 24
+// ARM10C 20150912
+// struct per_cpu_pageset
+// sizeof(struct per_cpu_pageset): 66 bytes, __alignof__(struct per_cpu_pageset): 72
 #define alloc_percpu(type)	\
 	(typeof(type) __percpu *)__alloc_percpu(sizeof(type), __alignof__(type))
 

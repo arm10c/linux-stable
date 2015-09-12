@@ -284,6 +284,7 @@ enum zone_watermarks {
 #define high_wmark_pages(z) (z->watermark[WMARK_HIGH])
 
 // ARM10C 20140308
+// ARM10C 20150912
 // sizeof(struct per_cpu_pages): 36 bytes
 struct per_cpu_pages {
 	int count;		/* number of pages in the list */
@@ -298,6 +299,7 @@ struct per_cpu_pages {
 // ARM10C 20140111
 // ARM10C 20140308
 // ARM10C 20140412
+// ARM10C 20150912
 // sizeof(struct per_cpu_pageset): 66 bytes
 struct per_cpu_pageset {
 	struct per_cpu_pages pcp;
@@ -370,6 +372,7 @@ enum zone_type {
 // ARM10C 20140125
 // sizeof(struct zone): 804 bytes
 // ARM10C 20140308
+// ARM10C 20150912
 struct zone {
 	/* Fields commonly accessed by the page allocator */
 
@@ -819,6 +822,7 @@ struct bootmem_data;
 
 // ARM10C 20131207
 // ARM10C 20140308
+// ARM10C 20150912
 typedef struct pglist_data {
 	// MAX_NR_ZONES: 3
 	struct zone node_zones[MAX_NR_ZONES];
@@ -960,6 +964,8 @@ unsigned long __init node_memmap_size_bytes(int, unsigned long, unsigned long);
 // zone: contig_page_data->node_zones[2]
 // zone: contig_page_data->node_zones[1]
 // zone: contig_page_data->node_zones[0]
+// ARM10C 20150912
+// zone: &(&contig_page_data)->node_zones[0]
 static inline int populated_zone(struct zone *zone)
 {
 	// zone->present_pages: contig_page_data->node_zones[2].present_pages: 0
@@ -1082,6 +1088,7 @@ extern struct zone *next_zone(struct zone *zone);
 	     zone;					\
 	     zone = next_zone(zone))
 
+// ARM10C 20150912
 #define for_each_populated_zone(zone)		        \
 	for (zone = (first_online_pgdat())->node_zones; \
 	     zone;					\

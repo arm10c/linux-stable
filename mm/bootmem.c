@@ -25,6 +25,7 @@
 
 #ifndef CONFIG_NEED_MULTIPLE_NODES // CONFIG_NEED_MULTIPLE_NODES=n
 // ARM10C 20131207
+// ARM10C 20150912
 struct pglist_data __refdata contig_page_data = {
 	.bdata = &bootmem_node_data[0]
 };

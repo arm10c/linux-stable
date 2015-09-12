@@ -10,6 +10,7 @@
 #include <linux/mmzone.h>
 
 // ARM10C 20140329
+// ARM10C 20150912
 struct pglist_data *first_online_pgdat(void)
 {
 	// first_online_node: 0
@@ -37,6 +38,7 @@ struct pglist_data *next_online_pgdat(struct pglist_data *pgdat)
 /*
  * next_zone - helper magic for for_each_zone()
  */
+// ARM10C 20150912
 struct zone *next_zone(struct zone *zone)
 {
 	pg_data_t *pgdat = zone->zone_pgdat;
