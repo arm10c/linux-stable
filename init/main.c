@@ -126,6 +126,7 @@ EXPORT_SYMBOL(system_state);
 
 extern void time_init(void);
 /* Default late time init is NULL. archs can override this later. */
+// ARM10C 20150912
 void (*__initdata late_time_init)(void);
 
 /* Untouched command line saved by arch-specific code. */
@@ -874,12 +875,23 @@ asmlinkage void __init start_kernel(void)
 	setup_per_cpu_pageset();
 	// per cpu가 사용하는 pageset의 각각의 zone 맴버값 초기화 수행
 
-	numa_policy_init();
+	numa_policy_init(); // null function
+
+	// late_time_init: NULL
 	if (late_time_init)
 		late_time_init();
+
 	sched_clock_init();
+	// sched_clock_running 값을 1 로 초기화 수행
+
 	calibrate_delay();
+	// BogoMIPS값을 결정하기위한 계산을 수행하고 결과를 출력함
+
 	pidmap_init();
+	// pidmap 을 사용하기 위한 초기화 수행
+
+// 2015/09/12 종료
+
 	anon_vma_init();
 #ifdef CONFIG_X86
 	if (efi_enabled(EFI_RUNTIME_SERVICES))

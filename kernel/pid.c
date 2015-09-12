@@ -48,11 +48,19 @@ static struct hlist_head *pid_hash;
 static unsigned int pidhash_shift = 4;
 struct pid init_struct_pid = INIT_STRUCT_PID;
 
+// ARM10C 20150912
+// PID_MAX_DEFAULT: 0x8000
 int pid_max = PID_MAX_DEFAULT;
 
+// ARM10C 20150912
+// RESERVED_PIDS: 300
 #define RESERVED_PIDS		300
 
+// ARM10C 20150912
+// RESERVED_PIDS: 300
 int pid_max_min = RESERVED_PIDS + 1;
+// ARM10C 20150912
+// PID_MAX_LIMIT: 0x8000
 int pid_max_max = PID_MAX_LIMIT;
 
 static inline int mk_pid(struct pid_namespace *pid_ns,
@@ -70,10 +78,12 @@ static inline int mk_pid(struct pid_namespace *pid_ns,
  * value does not cause lots of bitmaps to be allocated, but
  * the scheme scales to up to 4 million PIDs, runtime.
  */
+// ARM10C 20150912
 struct pid_namespace init_pid_ns = {
 	.kref = {
 		.refcount       = ATOMIC_INIT(2),
 	},
+	// BITS_PER_PAGE: 0x8000, ATOMIC_INIT(0x8000): 0x8000
 	.pidmap = {
 		[ 0 ... PIDMAP_ENTRIES-1] = { ATOMIC_INIT(BITS_PER_PAGE), NULL }
 	},
@@ -595,23 +605,53 @@ void __init pidhash_init(void)
 	// 4096개의 hash 리스트를 만듬
 }
 
+// ARM10C 20150912
 void __init pidmap_init(void)
 {
 	/* Veryify no one has done anything silly */
+	// PID_MAX_LIMIT: 0x8000, PIDNS_HASH_ADDING: 0x80000000
 	BUILD_BUG_ON(PID_MAX_LIMIT >= PIDNS_HASH_ADDING);
 
 	/* bump default and minimum pid_max based on number of cpus */
+	// pid_max: 0x8000, pid_max_max: 0x8000, PIDS_PER_CPU_DEFAULT: 1024,
+	// num_possible_cpus(): 4, max_t(int, 0x8000, 4 * 1024): 0x8000
 	pid_max = min(pid_max_max, max_t(int, pid_max,
 				PIDS_PER_CPU_DEFAULT * num_possible_cpus()));
+	// pid_max: 0x8000
+
+	// pid_max_min: 301, PIDS_PER_CPU_MIN: 8, num_possible_cpus(): 4
+	// max_t(int, 301, 8 * 4): 301
 	pid_max_min = max_t(int, pid_max_min,
 				PIDS_PER_CPU_MIN * num_possible_cpus());
-	pr_info("pid_max: default: %u minimum: %u\n", pid_max, pid_max_min);
+	// pid_max_min: 301
 
+	// pid_max: 0x8000, pid_max_min: 301
+	pr_info("pid_max: default: %u minimum: %u\n", pid_max, pid_max_min);
+	// "pid_max: default: 0x8000 minimum: 0x12d\n"
+
+	// PAGE_SIZE: 0x1000, GFP_KERNEL: 0xD0, kzalloc(0x1000, GFP_KERNEL: 0xD0): kmem_cache#23-oX
 	init_pid_ns.pidmap[0].page = kzalloc(PAGE_SIZE, GFP_KERNEL);
+	// init_pid_ns.pidmap[0].page: kmem_cache#23-oX
+
 	/* Reserve PID 0. We never call free_pidmap(0) */
+	// init_pid_ns.pidmap[0].page: kmem_cache#23-oX
+	// set_bit(0, kmem_cache#23-oX): *(kmem_cache#23-oX): 0x1
 	set_bit(0, init_pid_ns.pidmap[0].page);
+	
+	// set_bit에서 한일:
+	// pid 0의 pidmap의 page map table의 메모리 주소를 가지고 있는 page에
+	// 0 bit 값을 1로 바꾸어 pid 0 의 pidmap을 reserve함
+
+	// init_pid_ns.pidmap[0].nr_free: 0x8000
 	atomic_dec(&init_pid_ns.pidmap[0].nr_free);
 
+	// atomic_dec에서 한일:
+	// init_pid_ns.pidmap[0].nr_free: 0x7fff
+
+	// SLAB_HWCACHE_ALIGN: 0x00002000UL, SLAB_PANIC: 0x00040000UL
+	// KMEM_CACHE(pid, 0x00042000):
+	// kmem_cache_create("pid", sizeof(struct pid), __alignof__(struct pid), (0x00042000), NULL): kmem_cache#19
 	init_pid_ns.pid_cachep = KMEM_CACHE(pid,
 			SLAB_HWCACHE_ALIGN | SLAB_PANIC);
+	// init_pid_ns.pid_cachep: kmem_cache#19
 }

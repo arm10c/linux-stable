@@ -248,6 +248,7 @@ vma_dup_policy(struct vm_area_struct *src, struct vm_area_struct *dst)
 	return 0;
 }
 
+// ARM10C 20150912
 static inline void numa_policy_init(void)
 {
 }

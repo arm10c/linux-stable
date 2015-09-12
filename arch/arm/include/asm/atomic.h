@@ -22,6 +22,7 @@
 // ARM10C 20140315
 // ARM10C 20140809
 // ARM10C 20150808
+// ARM10C 20150912
 #define ATOMIC_INIT(i)	{ (i) }
 
 #ifdef __KERNEL__
@@ -98,6 +99,7 @@ static inline int atomic_add_return(int i, atomic_t *v)
 	return result;
 }
 
+// ARM10C 20150912
 static inline void atomic_sub(int i, atomic_t *v)
 {
 	unsigned long tmp;
@@ -238,6 +240,7 @@ static inline int __atomic_add_unless(atomic_t *v, int a, int u)
 }
 
 #define atomic_inc(v)		atomic_add(1, v)
+// ARM10C 20150912
 #define atomic_dec(v)		atomic_sub(1, v)
 
 #define atomic_inc_and_test(v)	(atomic_add_return(1, v) == 0)

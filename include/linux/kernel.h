@@ -799,6 +799,7 @@ static inline void ftrace_dump(enum ftrace_dump_mode oops_dump_mode) { }
 
 // ARM10C 20131109
 // ARM10C 20140222
+// ARM10C 20150912
 #define max_t(type, x, y) ({			\
 	type __max1 = (x);			\
 	type __max2 = (y);			\

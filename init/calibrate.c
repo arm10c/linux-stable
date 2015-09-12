@@ -11,7 +11,9 @@
 #include <linux/smp.h>
 #include <linux/percpu.h>
 
+// ARM10C 20150912
 unsigned long lpj_fine;
+// ARM10C 20150912
 unsigned long preset_lpj;
 static int __init lpj_setup(char *str)
 {
@@ -183,16 +185,34 @@ static unsigned long calibrate_delay_direct(void)
  */
 #define LPS_PREC 8
 
+// ARM10C 20150912
 static unsigned long calibrate_delay_converge(void)
 {
 	/* First stage - slowly accelerate to find initial bounds */
 	unsigned long lpj, lpj_base, ticks, loopadd, loopadd_base, chop_limit;
 	int trials = 0, band = 0, trial_in_band = 0;
+	// trials: 0, band: 0, trial_in_band: 0
 
 	lpj = (1<<12);
+	// lpj: 0x1000
+	
+	// NOTE:
+	// timer 가 동작중인 상태이므로 jiffies값을 알수 없음
+	// https://wiki.kldp.org/wiki.php/LinuxdocSgml/BogoMips 의 설명과 아래의 주석으로 분석을 대체함
+
+	// BogoMIPS
+	// MIPS는 Millons of Instruction Per Second의 약자이다. 계산 능력을 나타내는 지표로 사용된다.
+	// BogoMIPS는 리누즈 토발즈가 만들어낸 것으로서, 커널은 부팅시에 현 시스템에서 busy loop이
+	// 얼마나 빠른지에 대해 기록한 값이며 Bogo 는 bogus(가짜)를 의미한다.
+	// 이렇게 측정된 bogoMIPS를 가지고 프로세서의 속도를 하며 이것은 전혀 과학적이값은 아니다.
+	// 리누즈에 의하면 이 BogoMIPS값은 다음의 유용성이 있다.
+	// 1.디버깅에 유용
+	// 2.Computer cache와 turbo button 이 제대로 작동하는지 확인할수 있음.
+	// 실제적으로 BogoMIPS는 cpu 가 1 jiffy 동안 수행하는 empty loop의 횟수 값이다.
 
 	/* wait for "start of" clock tick */
 	ticks = jiffies;
+
 	while (ticks == jiffies)
 		; /* nothing */
 	/* Go .. */
@@ -247,6 +267,7 @@ recalibrate:
 	return lpj;
 }
 
+// ARM10C 20150912
 static DEFINE_PER_CPU(unsigned long, cpu_loops_per_jiffy) = { 0 };
 
 /*
@@ -262,12 +283,20 @@ unsigned long __attribute__((weak)) calibrate_delay_is_known(void)
 	return 0;
 }
 
+// ARM10C 20150912
 void calibrate_delay(void)
 {
 	unsigned long lpj;
 	static bool printed;
-	int this_cpu = smp_processor_id();
+	// printed: 0
 
+	// smp_processor_id(): 0
+	int this_cpu = smp_processor_id();
+	// this_cpu: 0
+
+	// this_cpu: 0, per_cpu(cpu_loops_per_jiffy, 0): [pcp0] cpu_loops_per_jiffy: 0,
+	// preset_lpj: 0, printed: 0, lpj_fine: 0
+	// calibrate_delay_is_known(): 0
 	if (per_cpu(cpu_loops_per_jiffy, this_cpu)) {
 		lpj = per_cpu(cpu_loops_per_jiffy, this_cpu);
 		if (!printed)
@@ -289,10 +318,28 @@ void calibrate_delay(void)
 			pr_info("Calibrating delay using timer "
 				"specific routine.. ");
 	} else {
+		// printed: 0
 		if (!printed)
 			pr_info("Calibrating delay loop... ");
+			// "Calibrating delay loop... "
+
 		lpj = calibrate_delay_converge();
 	}
+
+	// NOTE:
+	// timer 가 동작중인 상태이므로 jiffies값을 알수 없음
+	// https://wiki.kldp.org/wiki.php/LinuxdocSgml/BogoMips 의 설명과 아래의 주석으로 분석을 대체함
+
+	// BogoMIPS
+	// MIPS는 Millons of Instruction Per Second의 약자이다. 계산 능력을 나타내는 지표로 사용된다.
+	// BogoMIPS는 리누즈 토발즈가 만들어낸 것으로서, 커널은 부팅시에 현 시스템에서 busy loop이
+	// 얼마나 빠른지에 대해 기록한 값이며 Bogo 는 bogus(가짜)를 의미한다.
+	// 이렇게 측정된 bogoMIPS를 가지고 프로세서의 속도를 하며 이것은 전혀 과학적이값은 아니다.
+	// 리누즈에 의하면 이 BogoMIPS값은 다음의 유용성이 있다.
+	// 1.디버깅에 유용
+	// 2.Computer cache와 turbo button 이 제대로 작동하는지 확인할수 있음.
+	// 실제적으로 BogoMIPS는 cpu 가 1 jiffy 동안 수행하는 empty loop의 횟수 값이다.
+
 	per_cpu(cpu_loops_per_jiffy, this_cpu) = lpj;
 	if (!printed)
 		pr_cont("%lu.%02lu BogoMIPS (lpj=%lu)\n",

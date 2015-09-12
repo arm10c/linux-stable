@@ -35,6 +35,7 @@ struct arm_delay_ops arm_delay_ops = {
 };
 
 static const struct delay_timer *delay_timer;
+// ARM10C 20150912
 static bool delay_calibrated;
 
 int read_current_timer(unsigned long *timer_val)
@@ -86,8 +87,14 @@ void __init register_current_timer_delay(const struct delay_timer *timer)
 	}
 }
 
+// ARM10C 20150912
 unsigned long calibrate_delay_is_known(void)
 {
+	// delay_calibrated: 0
 	delay_calibrated = true;
+	// delay_calibrated: 1
+
+	// lpj_fine: 0
 	return lpj_fine;
+	// return 0
 }

@@ -4,6 +4,7 @@
 #include <linux/rcupdate.h>
 
 // ARM10C 20150808
+// ARM10C 20150912
 enum pid_type
 {
 	// PIDTYPE_PID: 0
@@ -12,6 +13,7 @@ enum pid_type
 	PIDTYPE_PGID,
 	// PIDTYPE_SID: 2
 	PIDTYPE_SID,
+	// PIDTYPE_MAX: 3
 	PIDTYPE_MAX
 };
 
@@ -51,6 +53,8 @@ enum pid_type
  * find_pid_ns() using the int nr and struct pid_namespace *ns.
  */
 
+// ARM10C 20150912
+// sizeof(struct upid): 16 bytes
 struct upid {
 	/* Try to keep pid_chain in the same cacheline as nr for find_vpid */
 	int nr;
@@ -59,11 +63,14 @@ struct upid {
 };
 
 // ARM10C 20150718
+// ARM10C 20150912
+// sizeof(struct pid): 44 bytes
 struct pid
 {
 	atomic_t count;
 	unsigned int level;
 	/* lists of tasks that use this pid */
+	// PIDTYPE_MAX: 3
 	struct hlist_head tasks[PIDTYPE_MAX];
 	struct rcu_head rcu;
 	struct upid numbers[1];

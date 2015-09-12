@@ -31,12 +31,19 @@
 /*
  * This controls the default maximum pid allocated to a process
  */
+// ARM10C 20150912
+// CONFIG_BASE_SMALL: 0
+// PID_MAX_DEFAULT: 0x8000
 #define PID_MAX_DEFAULT (CONFIG_BASE_SMALL ? 0x1000 : 0x8000)
 
 /*
  * A maximum of 4 million PIDs should be enough for a while.
  * [NOTE: PID/TIDs are limited to 2^29 ~= 500+ million, see futex.h.]
  */
+// ARM10C 20150912
+// CONFIG_BASE_SMALL: 0
+// PID_MAX_DEFAULT: 0x8000
+// PID_MAX_LIMIT: 0x8000
 #define PID_MAX_LIMIT (CONFIG_BASE_SMALL ? PAGE_SIZE * 8 : \
 	(sizeof(long) > 4 ? 4 * 1024 * 1024 : PID_MAX_DEFAULT))
 
@@ -46,7 +53,11 @@
  * minimum settable value for pid_max on the running system based
  * on similar defaults.  See kernel/pid.c:pidmap_init() for details.
  */
+// ARM10C 20150912
+// PIDS_PER_CPU_DEFAULT: 1024
 #define PIDS_PER_CPU_DEFAULT	1024
+// ARM10C 20150912
+// PIDS_PER_CPU_MIN: 8
 #define PIDS_PER_CPU_MIN	8
 
 #endif

@@ -224,7 +224,8 @@ struct hlist_head {
 // ARM10C 20140322
 // ARM10C 20150117
 // ARM10C 20150808
-// sizeof : 8
+// ARM10C 20150912
+// sizeof(struct hlist_node): 8 bytes
 struct hlist_node {
 	struct hlist_node *next, **pprev;
 };
@@ -254,6 +255,7 @@ struct callback_head {
 // ARM10C 20140809
 // ARM10C 20140830
 // ARM10C 20140920
+// ARM10C 20150912
 // sizeof(rcu_head): 8 bytes
 #define rcu_head callback_head
 

@@ -79,9 +79,10 @@ unsigned long long __attribute__((weak)) sched_clock(void)
 }
 EXPORT_SYMBOL_GPL(sched_clock);
 
+// ARM10C 20150912
 __read_mostly int sched_clock_running;
 
-#ifdef CONFIG_HAVE_UNSTABLE_SCHED_CLOCK
+#ifdef CONFIG_HAVE_UNSTABLE_SCHED_CLOCK // CONFIG_HAVE_UNSTABLE_SCHED_CLOCK=n
 __read_mostly int sched_clock_stable;
 
 struct sched_clock_data {
@@ -347,9 +348,12 @@ u64 local_clock(void)
 
 #else /* CONFIG_HAVE_UNSTABLE_SCHED_CLOCK */
 
+// ARM10C 20150912
 void sched_clock_init(void)
 {
+	// sched_clock_running: 0
 	sched_clock_running = 1;
+	// sched_clock_running: 1
 }
 
 u64 sched_clock_cpu(int cpu)

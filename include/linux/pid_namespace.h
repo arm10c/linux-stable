@@ -14,6 +14,9 @@ struct pidmap {
        void *page;
 };
 
+// ARM10C 20150912
+// PAGE_SIZE: 0x1000
+// BITS_PER_PAGE: 0x8000
 #define BITS_PER_PAGE		(PAGE_SIZE * 8)
 #define BITS_PER_PAGE_MASK	(BITS_PER_PAGE-1)
 #define PIDMAP_ENTRIES		((PID_MAX_LIMIT+BITS_PER_PAGE-1)/BITS_PER_PAGE)
@@ -21,6 +24,7 @@ struct pidmap {
 struct bsd_acct_struct;
 
 // ARM10C 20150718
+// ARM10C 20150912
 struct pid_namespace {
 	struct kref kref;
 	struct pidmap pidmap[PIDMAP_ENTRIES];
@@ -48,6 +52,8 @@ struct pid_namespace {
 
 extern struct pid_namespace init_pid_ns;
 
+// ARM10C 20150912
+// PIDNS_HASH_ADDING: 0x80000000
 #define PIDNS_HASH_ADDING (1U << 31)
 
 #ifdef CONFIG_PID_NS
