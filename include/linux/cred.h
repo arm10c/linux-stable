@@ -99,9 +99,11 @@ extern int in_egroup_p(kgid_t);
  * temporarily to point to another security context, but normally points to the
  * same context as task->real_cred.
  */
+// ARM10C 20150919
+// sizeof(struct cred): 92 bytes
 struct cred {
 	atomic_t	usage;
-#ifdef CONFIG_DEBUG_CREDENTIALS
+#ifdef CONFIG_DEBUG_CREDENTIALS // CONFIG_DEBUG_CREDENTIALS=n
 	atomic_t	subscribers;	/* number of processes subscribed */
 	void		*put_addr;
 	unsigned	magic;
@@ -121,7 +123,7 @@ struct cred {
 	kernel_cap_t	cap_permitted;	/* caps we're permitted */
 	kernel_cap_t	cap_effective;	/* caps we can actually use */
 	kernel_cap_t	cap_bset;	/* capability bounding set */
-#ifdef CONFIG_KEYS
+#ifdef CONFIG_KEYS // CONFIG_KEYS=n
 	unsigned char	jit_keyring;	/* default keyring to attach requested
 					 * keys to */
 	struct key __rcu *session_keyring; /* keyring inherited over fork */
@@ -129,7 +131,7 @@ struct cred {
 	struct key	*thread_keyring; /* keyring private to this thread */
 	struct key	*request_key_auth; /* assumed request_key authority */
 #endif
-#ifdef CONFIG_SECURITY
+#ifdef CONFIG_SECURITY // CONFIG_SECURITY=n
 	void		*security;	/* subjective LSM security */
 #endif
 	struct user_struct *user;	/* real user ID subscription */

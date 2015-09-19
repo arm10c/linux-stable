@@ -16,6 +16,10 @@
 #include <asm/fpstate.h>
 
 #define THREAD_SIZE_ORDER	1
+/*
+// ARM10C 20150919
+// THREAD_SIZE: 8192
+*/
 #define THREAD_SIZE		8192
 /*
 // ARM10C 20130817

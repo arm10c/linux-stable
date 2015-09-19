@@ -18,7 +18,7 @@
 
 struct rw_semaphore;
 
-#ifdef CONFIG_RWSEM_GENERIC_SPINLOCK
+#ifdef CONFIG_RWSEM_GENERIC_SPINLOCK // CONFIG_RWSEM_GENERIC_SPINLOCK=y
 #include <linux/rwsem-spinlock.h> /* use a generic implementation */
 #else
 /* All arch specific implementations share the same struct */

@@ -137,13 +137,13 @@ void __weak arch_release_thread_info(struct thread_info *ti)
 {
 }
 
-#ifndef CONFIG_ARCH_THREAD_INFO_ALLOCATOR
+#ifndef CONFIG_ARCH_THREAD_INFO_ALLOCATOR // CONFIG_ARCH_THREAD_INFO_ALLOCATOR=n
 
 /*
  * Allocate pages if THREAD_SIZE is >= PAGE_SIZE, otherwise use a
  * kmemcache based allocator.
  */
-# if THREAD_SIZE >= PAGE_SIZE
+# if THREAD_SIZE >= PAGE_SIZE // THREAD_SIZE: 8192, PAGE_SIZE: 0x1000
 static struct thread_info *alloc_thread_info_node(struct task_struct *tsk,
 						  int node)
 {

@@ -558,7 +558,8 @@ void __init __weak smp_setup_processor_id(void)
 {
 }
 
-# if THREAD_SIZE >= PAGE_SIZE
+# if THREAD_SIZE >= PAGE_SIZE // THREAD_SIZE: 8192, PAGE_SIZE: 0x1000
+// ARM10C 20150919
 void __init __weak thread_info_cache_init(void)
 {
 }
@@ -891,14 +892,19 @@ asmlinkage void __init start_kernel(void)
 	// pidmap 을 사용하기 위한 초기화 수행
 
 // 2015/09/12 종료
+// 2015/09/19 시작
 
 	anon_vma_init();
-#ifdef CONFIG_X86
+	// anon vma 를 사용하기 위한 kmem_cache 할당자 초기화 수행
+
+#ifdef CONFIG_X86 // CONFIG_X86=n
 	if (efi_enabled(EFI_RUNTIME_SERVICES))
 		efi_enter_virtual_mode();
 #endif
-	thread_info_cache_init();
+	thread_info_cache_init(); // null function
 	cred_init();
+	// credentials 를 사용하기 위한 kmem_cache 할당자 초기화 수행
+
 	fork_init(totalram_pages);
 	proc_caches_init();
 	buffer_init();

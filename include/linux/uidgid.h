@@ -17,7 +17,7 @@
 struct user_namespace;
 extern struct user_namespace init_user_ns;
 
-#ifdef CONFIG_UIDGID_STRICT_TYPE_CHECKS
+#ifdef CONFIG_UIDGID_STRICT_TYPE_CHECKS // CONFIG_UIDGID_STRICT_TYPE_CHECKS=n
 
 typedef struct {
 	uid_t val;
@@ -43,7 +43,9 @@ static inline gid_t __kgid_val(kgid_t gid)
 
 #else
 
+// ARM10C 20150919
 typedef uid_t kuid_t;
+// ARM10C 20150919
 typedef gid_t kgid_t;
 
 static inline uid_t __kuid_val(kuid_t uid)

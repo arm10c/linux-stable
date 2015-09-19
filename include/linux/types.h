@@ -39,6 +39,7 @@ typedef __kernel_mqd_t		mqd_t;
 
 typedef _Bool			bool;
 
+// ARM10C 20150919
 typedef __kernel_uid32_t	uid_t;
 typedef __kernel_gid32_t	gid_t;
 typedef __kernel_uid16_t        uid16_t;
@@ -194,6 +195,7 @@ typedef unsigned long irq_hw_number_t;
 // ARM10C 20140419
 // ARM10C 20150718
 // ARM10C 20150808
+// ARM10C 20150919
 typedef struct {
 	int counter;
 } atomic_t;
@@ -208,6 +210,7 @@ typedef struct {
 // ARM10C 20131207
 // ARM10C 20150711
 // ARM10C 20150718
+// ARM10C 20150919
 // sizeof(struct list_head) : 8 bytes
 struct list_head {
 	struct list_head *next, *prev;

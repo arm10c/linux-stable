@@ -27,6 +27,7 @@
 	no_printk("[%-5.5s%5u] "FMT"\n", current->comm, current->pid ,##__VA_ARGS__)
 #endif
 
+// ARM10C 20150919
 static struct kmem_cache *cred_jar;
 
 /*
@@ -558,11 +559,15 @@ EXPORT_SYMBOL(revert_creds);
 /*
  * initialise the credentials stuff
  */
+// ARM10C 20150919
 void __init cred_init(void)
 {
 	/* allocate a slab in which we can store credentials */
+	// sizeof(struct cred): 92 bytes, SLAB_HWCACHE_ALIGN: 0x00002000UL, SLAB_PANIC: 0x00040000UL
+	// kmem_cache_create("cred_jar", 92, 0, 0x00042000, NULL): kmem_cache#16
 	cred_jar = kmem_cache_create("cred_jar", sizeof(struct cred),
 				     0, SLAB_HWCACHE_ALIGN|SLAB_PANIC, NULL);
+	// cred_jar: kmem_cache#16
 }
 
 /**

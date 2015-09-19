@@ -35,6 +35,8 @@ struct task_struct;
 #define _LINUX_CAPABILITY_U32S_2     2
 
 #define _LINUX_CAPABILITY_VERSION_3  0x20080522
+// ARM10C 20150919
+// _LINUX_CAPABILITY_U32S_3: 2
 #define _LINUX_CAPABILITY_U32S_3     2
 
 typedef struct __user_cap_header_struct {

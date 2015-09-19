@@ -20,11 +20,13 @@
  * - if activity is -1 then there is one active writer
  * - if wait_list is not empty, then there are processes waiting for the semaphore
  */
+// ARM10C 20150919
+// sizeof(struct rw_semaphore): 28 bytes
 struct rw_semaphore {
 	__s32			activity;
 	raw_spinlock_t		wait_lock;
 	struct list_head	wait_list;
-#ifdef CONFIG_DEBUG_LOCK_ALLOC
+#ifdef CONFIG_DEBUG_LOCK_ALLOC // CONFIG_DEBUG_LOCK_ALLOC=n
 	struct lockdep_map dep_map;
 #endif
 };

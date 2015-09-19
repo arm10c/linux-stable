@@ -24,6 +24,8 @@
  * the anon_vma object itself: we're guaranteed no page can be
  * pointing to this anon_vma once its vma list is empty.
  */
+// ARM10C 20150919
+// sizeof(struct anon_vma): 40 bytes
 struct anon_vma {
 	struct anon_vma *root;		/* Root of this anon_vma tree */
 	struct rw_semaphore rwsem;	/* W: modification, R: walking the list */
@@ -60,13 +62,15 @@ struct anon_vma {
  * The "rb" field indexes on an interval tree the anon_vma_chains
  * which link all the VMAs associated with this anon_vma.
  */
+// ARM10C 20150919
+// sizeof(struct anon_vma_chain): 32 bytes
 struct anon_vma_chain {
 	struct vm_area_struct *vma;
 	struct anon_vma *anon_vma;
 	struct list_head same_vma;   /* locked by mmap_sem & page_table_lock */
 	struct rb_node rb;			/* locked by anon_vma->rwsem */
 	unsigned long rb_subtree_last;
-#ifdef CONFIG_DEBUG_VM_RB
+#ifdef CONFIG_DEBUG_VM_RB // CONFIG_DEBUG_VM_RB=n
 	unsigned long cached_vma_start, cached_vma_last;
 #endif
 };
@@ -82,7 +86,7 @@ enum ttu_flags {
 	TTU_IGNORE_HWPOISON = (1 << 10),/* corrupted page is recoverable */
 };
 
-#ifdef CONFIG_MMU
+#ifdef CONFIG_MMU // CONFIG_MMU=y
 static inline void get_anon_vma(struct anon_vma *anon_vma)
 {
 	atomic_inc(&anon_vma->refcount);
@@ -142,6 +146,7 @@ static inline void anon_vma_unlock_read(struct anon_vma *anon_vma)
 /*
  * anon_vma helper functions.
  */
+// ARM10C 20150919
 void anon_vma_init(void);	/* create anon_vma_cachep */
 int  anon_vma_prepare(struct vm_area_struct *);
 void unlink_anon_vmas(struct vm_area_struct *);

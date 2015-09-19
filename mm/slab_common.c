@@ -213,6 +213,12 @@ unsigned long calculate_alignment(unsigned long flags,
 // name: "radix_tree_node", size: 296, align: 0, flags: 0x00060000UL, ctor: radix_tree_node_ctor
 // ARM10C 20150912
 // name: "pid", size: 44, align: 4, flags: 0x00042000, ctor: NULL
+// ARM10C 20150919
+// name: "anon_vma", size: 40, align: 0, flags: 0x000C0000, ctor: anon_vma_ctor
+// ARM10C 20150919
+// name: "anon_vma_chain", size: 32, align: 4, flags: 0x00040000, ctor: NULL
+// ARM10C 20150919
+// name: "cred_jar", size: 92, align: 0, flags: 0x00042000, ctor: NULL
 struct kmem_cache *
 kmem_cache_create_memcg(struct mem_cgroup *memcg, const char *name, size_t size,
 			size_t align, unsigned long flags, void (*ctor)(void *),
@@ -381,6 +387,12 @@ out_locked:
 // "radix_tree_node", sizeof(struct radix_tree_node): 296 bytes, 0, 0x00060000UL, radix_tree_node_ctor
 // ARM10C 20150912
 // "pid", sizeof(struct pid): 44 bytes, __alignof__(struct pid): 4, (0x00042000), NULL
+// ARM10C 20150919
+// "anon_vma", sizeof(struct anon_vma): 40 bytes, 0, 0x000C0000, anon_vma_ctor
+// ARM10C 20150919
+// "anon_vma_chain", sizeof(struct anon_vma_chain): 32 bytes, __alignof__(struct anon_vma_chain): 4, (0x00040000), NULL
+// ARM10C 20150919
+// "cred_jar", sizeof(struct cred): 92 bytes, 0, 0x00042000, NULL
 struct kmem_cache *
 kmem_cache_create(const char *name, size_t size, size_t align,
 		  unsigned long flags, void (*ctor)(void *))
@@ -391,10 +403,19 @@ kmem_cache_create(const char *name, size_t size, size_t align,
 	// kmem_cache_create_memcg(NULL, "radix_tree_node", 296, 0, 0x00060000UL, radix_tree_node_ctor): kmem_cache#20
 	// name: "pid", size: 44, align: 4, flags: 0x00042000, ctor: NULL
 	// kmem_cache_create_memcg(NULL, "pid", 44, 4, 0x00042000, NULL): kmem_cache#19
+	// name: "anon_vma", size: 40, align: 0, flags: 0x000C0000, ctor: anon_vma_ctor
+	// kmem_cache_create_memcg(NULL, "anon_vma", 40, 0, 0x000C0000, anon_vma_ctor): kmem_cache#18
+	// name: "anon_vma_chain", size: 32, align: 4, flags: 0x00040000, ctor: NULL
+	// kmem_cache_create_memcg(NULL, "anon_vma_chain", 32, 4, 0x00040000, NULL): kmem_cache#17
+	// name: "cred_jar", size: 92, align: 0, flags: 0x00042000, ctor: NULL
+	// kmem_cache_create_memcg(NULL, "cred_jar", 92, 0, 0x00042000, NULL): kmem_cache#16
 	return kmem_cache_create_memcg(NULL, name, size, align, flags, ctor, NULL);
 	// return kmem_cache#21
 	// return kmem_cache#20
 	// return kmem_cache#19
+	// return kmem_cache#18
+	// return kmem_cache#17
+	// return kmem_cache#16
 }
 EXPORT_SYMBOL(kmem_cache_create);
 

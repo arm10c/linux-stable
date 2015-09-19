@@ -62,7 +62,9 @@
 
 #include "internal.h"
 
+// ARM10C 20150919
 static struct kmem_cache *anon_vma_cachep;
+// ARM10C 20150919
 static struct kmem_cache *anon_vma_chain_cachep;
 
 static inline struct anon_vma *anon_vma_alloc(void)
@@ -361,6 +363,7 @@ void unlink_anon_vmas(struct vm_area_struct *vma)
 	}
 }
 
+// ARM10C 20150919
 static void anon_vma_ctor(void *data)
 {
 	struct anon_vma *anon_vma = data;
@@ -370,11 +373,20 @@ static void anon_vma_ctor(void *data)
 	anon_vma->rb_root = RB_ROOT;
 }
 
+// ARM10C 20150919
 void __init anon_vma_init(void)
 {
+	// sizeof(struct anon_vma): 40 bytes, SLAB_DESTROY_BY_RCU: 0x00080000UL, SLAB_PANIC: 0x00040000UL
+	// kmem_cache_create("anon_vma", 40, 0, 0x000C0000, anon_vma_ctor): kmem_cache#18
 	anon_vma_cachep = kmem_cache_create("anon_vma", sizeof(struct anon_vma),
 			0, SLAB_DESTROY_BY_RCU|SLAB_PANIC, anon_vma_ctor);
+	// anon_vma_cachep: kmem_cache#18
+
+	// SLAB_PANIC: 0x00040000UL
+	// KMEM_CACHE(anon_vma_chain, 0x00040000):
+	// kmem_cache_create("anon_vma_chain", sizeof(struct anon_vma_chain), __alignof__(struct anon_vma_chain), (0x00040000), NULL): kmem_cache#17
 	anon_vma_chain_cachep = KMEM_CACHE(anon_vma_chain, SLAB_PANIC);
+	// anon_vma_chain_cachep: kmem_cache#17
 }
 
 /*
