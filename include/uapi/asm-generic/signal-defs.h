@@ -15,6 +15,7 @@
 
 #ifndef __ASSEMBLY__
 typedef void __signalfn_t(int);
+// ARM10C 20150919
 typedef __signalfn_t __user *__sighandler_t;
 
 typedef void __restorefn_t(void);

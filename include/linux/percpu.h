@@ -240,6 +240,8 @@ extern phys_addr_t per_cpu_ptr_to_phys(void *addr);
 // ARM10C 20150912
 // struct per_cpu_pageset
 // sizeof(struct per_cpu_pageset): 66 bytes, __alignof__(struct per_cpu_pageset): 72
+// ARM10C 20150919
+// s32
 #define alloc_percpu(type)	\
 	(typeof(type) __percpu *)__alloc_percpu(sizeof(type), __alignof__(type))
 

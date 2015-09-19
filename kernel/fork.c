@@ -90,6 +90,7 @@
 unsigned long total_forks;	/* Handle normal Linux uptimes. */
 int nr_threads;			/* The idle threads do not count.. */
 
+// ARM10C 20150919
 int max_threads;		/* tunable limit on nr_threads */
 
 DEFINE_PER_CPU(unsigned long, process_counts) = 0;
@@ -119,7 +120,8 @@ void __weak arch_release_task_struct(struct task_struct *tsk)
 {
 }
 
-#ifndef CONFIG_ARCH_TASK_STRUCT_ALLOCATOR
+#ifndef CONFIG_ARCH_TASK_STRUCT_ALLOCATOR // CONFIG_ARCH_TASK_STRUCT_ALLOCATOR=n
+// ARM10C 20150919
 static struct kmem_cache *task_struct_cachep;
 
 static inline struct task_struct *alloc_task_struct_node(int node)
@@ -181,9 +183,11 @@ void thread_info_cache_init(void)
 #endif
 
 /* SLAB cache for signal_struct structures (tsk->signal) */
+// ARM10C 20150919
 static struct kmem_cache *signal_cachep;
 
 /* SLAB cache for sighand_struct structures (tsk->sighand) */
+// ARM10C 20150919
 struct kmem_cache *sighand_cachep;
 
 /* SLAB cache for files_struct structures (tsk->files) */
@@ -247,40 +251,63 @@ void __put_task_struct(struct task_struct *tsk)
 }
 EXPORT_SYMBOL_GPL(__put_task_struct);
 
+// ARM10C 20150919
 void __init __weak arch_task_cache_init(void) { }
 
+// ARM10C 20150919
+// totalram_pages: 총 free된 page 수
 void __init fork_init(unsigned long mempages)
 {
-#ifndef CONFIG_ARCH_TASK_STRUCT_ALLOCATOR
+#ifndef CONFIG_ARCH_TASK_STRUCT_ALLOCATOR // CONFIG_ARCH_TASK_STRUCT_ALLOCATOR=n
 #ifndef ARCH_MIN_TASKALIGN
+// L1_CACHE_BYTES: 64
+// ARCH_MIN_TASKALIGN: 64
 #define ARCH_MIN_TASKALIGN	L1_CACHE_BYTES
 #endif
 	/* create a slab on which task_structs can be allocated */
+	// FIXME:
+	// sizeof(struct task_struct) 계산 필요, 임시로 XXX bytes로 명명함
+
+	// ARCH_MIN_TASKALIGN: 64, SLAB_PANIC: 0x00040000UL, SLAB_NOTRACK: 0x00000000UL, sizeof(struct task_struct): XXX
+	// kmem_cache_create("task_struct", XXX, 64, 0x00040000, NULL): kmem_cache#15
 	task_struct_cachep =
 		kmem_cache_create("task_struct", sizeof(struct task_struct),
 			ARCH_MIN_TASKALIGN, SLAB_PANIC | SLAB_NOTRACK, NULL);
+	// task_struct_cachep: kmem_cache#15
 #endif
 
 	/* do the arch specific task caches init */
-	arch_task_cache_init();
+	arch_task_cache_init(); // null function
 
 	/*
 	 * The default maximum number of threads is set to a safe
 	 * value: the thread structures can take up at most half
 	 * of memory.
 	 */
+	// mempages: 총 free된 page 수, THREAD_SIZE: 0x2000, PAGE_SIZE: 0x1000
 	max_threads = mempages / (8 * THREAD_SIZE / PAGE_SIZE);
+	// max_threads: 총 free된 page 수 / 16
 
 	/*
 	 * we need to allow at least 20 threads to boot a system
 	 */
+	// max_threads: 총 free된 page 수 / 16
 	if (max_threads < 20)
 		max_threads = 20;
 
+	// max_threads: 총 free된 page 수 / 16, RLIMIT_NPROC: 6
 	init_task.signal->rlim[RLIMIT_NPROC].rlim_cur = max_threads/2;
+	// init_task.signal->rlim[6].rlim_cur: 총 free된 page 수 / 32
+
+	// max_threads: 총 free된 page 수 / 16, RLIMIT_NPROC: 6
 	init_task.signal->rlim[RLIMIT_NPROC].rlim_max = max_threads/2;
+	// init_task.signal->rlim[6].rlim_max: 총 free된 page 수 / 32
+
+	// RLIMIT_SIGPENDING: 11
 	init_task.signal->rlim[RLIMIT_SIGPENDING] =
 		init_task.signal->rlim[RLIMIT_NPROC];
+	// init_task.signal->rlim[11].rlim_cur: 총 free된 page 수 / 32
+	// init_task.signal->rlim[11].rlim_max: 총 free된 page 수 / 32
 }
 
 int __attribute__((weak)) arch_dup_task_struct(struct task_struct *dst,
@@ -1698,12 +1725,17 @@ static void sighand_ctor(void *data)
 	init_waitqueue_head(&sighand->signalfd_wqh);
 }
 
+// ARM10C 20150919
 void __init proc_caches_init(void)
 {
+	// sizeof(struct sighand_struct): 1324 bytes, 0xc2000
+	// kmem_cache_create("sighand_cache", 1324, 0, 0xc2000, sighand_ctor): kmem_cache#14
 	sighand_cachep = kmem_cache_create("sighand_cache",
 			sizeof(struct sighand_struct), 0,
 			SLAB_HWCACHE_ALIGN|SLAB_PANIC|SLAB_DESTROY_BY_RCU|
 			SLAB_NOTRACK, sighand_ctor);
+	// sighand_cachep: kmem_cache#14
+
 	signal_cachep = kmem_cache_create("signal_cache",
 			sizeof(struct signal_struct), 0,
 			SLAB_HWCACHE_ALIGN|SLAB_PANIC|SLAB_NOTRACK, NULL);
@@ -1724,7 +1756,22 @@ void __init proc_caches_init(void)
 			sizeof(struct mm_struct), ARCH_MIN_MMSTRUCT_ALIGN,
 			SLAB_HWCACHE_ALIGN|SLAB_PANIC|SLAB_NOTRACK, NULL);
 	vm_area_cachep = KMEM_CACHE(vm_area_struct, SLAB_PANIC);
+
 	mmap_init();
+
+	// mmap_init에서 한일:
+	// (&(&(&(&vm_committed_as)->lock)->wait_lock)->rlock)->raw_lock: { { 0 } }
+	// (&(&(&(&vm_committed_as)->lock)->wait_lock)->rlock)->magic: 0xdead4ead
+	// (&(&(&(&vm_committed_as)->lock)->wait_lock)->rlock)->owner: 0xffffffff
+	// (&(&(&(&vm_committed_as)->lock)->wait_lock)->rlock)->owner_cpu: 0xffffffff
+	// (&(&vm_committed_as)->list)->next: &(&vm_committed_as)->list
+	// (&(&vm_committed_as)->list)->prev: &(&vm_committed_as)->list
+	// (&vm_committed_as)->count: 0
+	// (&vm_committed_as)->counters: kmem_cache#26-o0 에서 할당된 4 bytes 메모리 주소
+	// list head 인 &percpu_counters에 &(&vm_committed_as)->list를 연결함
+
+// 2015/09/19 종료
+
 	nsproxy_cache_init();
 }
 

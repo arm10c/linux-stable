@@ -10,12 +10,27 @@
 #include <linux/module.h>
 #include <linux/debugobjects.h>
 
-#ifdef CONFIG_HOTPLUG_CPU
+#ifdef CONFIG_HOTPLUG_CPU // CONFIG_HOTPLUG_CPU=y
+// ARM10C 20150919
+// LIST_HEAD(percpu_counters):
+// struct list_head percpu_counters =
+// { &(percpu_counters), &(percpu_counters) }
 static LIST_HEAD(percpu_counters);
+// ARM10C 20150919
+// DEFINE_SPINLOCK(percpu_counters_lock):
+// spinlock_t percpu_counters_lock = (spinlock_t )
+// { { .rlock =
+//     {
+//       .raw_lock = { { 0 } },
+//       .magic = 0xdead4ead,
+//       .owner_cpu = -1,
+//       .owner = 0xffffffff,
+//     }
+// } }
 static DEFINE_SPINLOCK(percpu_counters_lock);
 #endif
 
-#ifdef CONFIG_DEBUG_OBJECTS_PERCPU_COUNTER
+#ifdef CONFIG_DEBUG_OBJECTS_PERCPU_COUNTER // CONFIG_DEBUG_OBJECTS_PERCPU_COUNTER=n
 
 static struct debug_obj_descr percpu_counter_debug_descr;
 
@@ -51,6 +66,7 @@ static inline void debug_percpu_counter_deactivate(struct percpu_counter *fbc)
 }
 
 #else	/* CONFIG_DEBUG_OBJECTS_PERCPU_COUNTER */
+// ARM10C 20150919
 static inline void debug_percpu_counter_activate(struct percpu_counter *fbc)
 { }
 static inline void debug_percpu_counter_deactivate(struct percpu_counter *fbc)
@@ -112,23 +128,62 @@ s64 __percpu_counter_sum(struct percpu_counter *fbc)
 }
 EXPORT_SYMBOL(__percpu_counter_sum);
 
+// ARM10C 20150919
+// &vm_committed_as, 0, &__key
 int __percpu_counter_init(struct percpu_counter *fbc, s64 amount,
 			  struct lock_class_key *key)
 {
+	// &fbc->lock: &(&vm_committed_as)->lock
 	raw_spin_lock_init(&fbc->lock);
-	lockdep_set_class(&fbc->lock, key);
+
+	// raw_spin_lock_init에서 한일:
+	// (&(&(&(&vm_committed_as)->lock)->wait_lock)->rlock)->raw_lock: { { 0 } }
+	// (&(&(&(&vm_committed_as)->lock)->wait_lock)->rlock)->magic: 0xdead4ead
+	// (&(&(&(&vm_committed_as)->lock)->wait_lock)->rlock)->owner: 0xffffffff
+	// (&(&(&(&vm_committed_as)->lock)->wait_lock)->rlock)->owner_cpu: 0xffffffff
+
+	// &fbc->lock: &(&vm_committed_as)->lock, key: &__key
+	lockdep_set_class(&fbc->lock, key); // null function
+
+	// fbc->count: (&vm_committed_as)->count, amount: 0
 	fbc->count = amount;
+	// fbc->count: (&vm_committed_as)->count: 0
+
+	// fbc->counters: (&vm_committed_as)->counters,
+	// alloc_percpu(s32): kmem_cache#26-o0 에서 할당된 4 bytes 메모리 주소
 	fbc->counters = alloc_percpu(s32);
+	// fbc->counters: (&vm_committed_as)->counters: kmem_cache#26-o0 에서 할당된 4 bytes 메모리 주소
+
+	// fbc->counters: (&vm_committed_as)->counters: kmem_cache#26-o0 에서 할당된 4 bytes 메모리 주소
 	if (!fbc->counters)
 		return -ENOMEM;
 
-	debug_percpu_counter_activate(fbc);
+	// fbc: &vm_committed_as
+	debug_percpu_counter_activate(fbc); // null function
 
-#ifdef CONFIG_HOTPLUG_CPU
+#ifdef CONFIG_HOTPLUG_CPU // CONFIG_HOTPLUG_CPU=y
+	// &fbc->list: &(&vm_committed_as)->list
 	INIT_LIST_HEAD(&fbc->list);
+
+	// INIT_LIST_HEAD에서 한일:
+	// (&(&vm_committed_as)->list)->next: &(&vm_committed_as)->list
+	// (&(&vm_committed_as)->list)->prev: &(&vm_committed_as)->list
+
 	spin_lock(&percpu_counters_lock);
+
+	// spin_lock에서 한일:
+	// &percpu_counters_lock을 사용한 spin lock 수행
+
+	// &fbc->list: &(&vm_committed_as)->list
 	list_add(&fbc->list, &percpu_counters);
+
+	// list_add에서 한일:
+	// list head 인 &percpu_counters에 &(&vm_committed_as)->list를 연결함
+
 	spin_unlock(&percpu_counters_lock);
+
+	// spin_lock에서 한일:
+	// &percpu_counters_lock을 사용한 spin unlock 수행
 #endif
 	return 0;
 }

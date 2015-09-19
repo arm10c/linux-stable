@@ -95,6 +95,8 @@ typedef unsigned long sigset_t;
 #ifndef __KERNEL__
 /* Here we must cater to libcs that poke about in kernel headers.  */
 
+// ARM10C 20150919
+// sizeof(struct sigaction): 20 bytes
 struct sigaction {
 	union {
 	  __sighandler_t _sa_handler;

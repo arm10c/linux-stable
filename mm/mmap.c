@@ -98,6 +98,7 @@ unsigned long sysctl_admin_reserve_kbytes __read_mostly = 1UL << 13; /* 8MB */
  * Make sure vm_committed_as in one cacheline and not cacheline shared with
  * other variables. It can be updated by several CPUs frequently.
  */
+// ARM10C 20150919
 struct percpu_counter vm_committed_as ____cacheline_aligned_in_smp;
 
 /*
@@ -3126,11 +3127,27 @@ void mm_drop_all_locks(struct mm_struct *mm)
 /*
  * initialise the VMA slab
  */
+// ARM10C 20150919
 void __init mmap_init(void)
 {
 	int ret;
 
+	// percpu_counter_init(&vm_committed_as, 0): 0
 	ret = percpu_counter_init(&vm_committed_as, 0);
+	// ret: 0
+
+	// percpu_counter_init에서 한일:
+	// (&(&(&(&vm_committed_as)->lock)->wait_lock)->rlock)->raw_lock: { { 0 } }
+	// (&(&(&(&vm_committed_as)->lock)->wait_lock)->rlock)->magic: 0xdead4ead
+	// (&(&(&(&vm_committed_as)->lock)->wait_lock)->rlock)->owner: 0xffffffff
+	// (&(&(&(&vm_committed_as)->lock)->wait_lock)->rlock)->owner_cpu: 0xffffffff
+	// (&(&vm_committed_as)->list)->next: &(&vm_committed_as)->list
+	// (&(&vm_committed_as)->list)->prev: &(&vm_committed_as)->list
+	// (&vm_committed_as)->count: 0
+	// (&vm_committed_as)->counters: kmem_cache#26-o0 에서 할당된 4 bytes 메모리 주소
+	// list head 인 &percpu_counters에 &(&vm_committed_as)->list를 연결함
+
+	// ret: 0
 	VM_BUG_ON(ret);
 }
 

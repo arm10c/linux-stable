@@ -17,6 +17,8 @@
 // &q->lock: [pcp0] &(&call_single_queue)->lock
 // ARM10C 20150718
 // &(&(&(&(&(kmem_cache#25-oX)->port)->buf)->lock)->wait_lock)->rlock, "&(_lock)->rlock", &__key
+// ARM10C 20150919
+// &fbc->lock: &(&vm_committed_as)->lock, "&fbc->lock", &__key
 void __raw_spin_lock_init(raw_spinlock_t *lock, const char *name,
 			  struct lock_class_key *key)
 {

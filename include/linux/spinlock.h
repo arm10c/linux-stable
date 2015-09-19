@@ -100,6 +100,8 @@
 // &q->lock: [pcp0] &(&call_single_queue)->lock
 // ARM10C 20150718
 // &(_lock)->rlock: &(&(&(&(&(kmem_cache#25-oX)->port)->buf)->lock)->wait_lock)->rlock
+// ARM10C 20150919
+// &fbc->lock: &(&vm_committed_as)->lock
 # define raw_spin_lock_init(lock)				\
 do {								\
 	static struct lock_class_key __key;	/* struct lock_class_key { }; */	\
@@ -348,6 +350,8 @@ do {							\
 // &zone->lock: &contig_page_data->node_zones[0].lock
 // ARM10C 20140705
 // ARM10C 20150718
+// ARM10C 20150919
+// &percpu_counters_lock
 static inline void spin_lock(spinlock_t *lock)
 {
 	// lock->rlock: (&contig_page_data->node_zones[0].lock)->rlock
@@ -393,6 +397,7 @@ do {									\
 } while (0)
 
 // ARM10C 20140412
+// ARM10C 20150919
 static inline void spin_unlock(spinlock_t *lock)
 {
 	raw_spin_unlock(&lock->rlock);

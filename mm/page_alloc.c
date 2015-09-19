@@ -111,6 +111,7 @@ static DEFINE_SPINLOCK(managed_page_count_lock);
 
 // ARM10C 20140412
 // ARM10C 20140419
+// ARM10C 20150919
 unsigned long totalram_pages __read_mostly;
 unsigned long totalreserve_pages __read_mostly;
 /*

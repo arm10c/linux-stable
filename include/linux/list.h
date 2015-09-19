@@ -73,6 +73,7 @@
 // ARM10C 20131116
 // ARM10C 20131130
 // ARM10C 20141108
+// ARM10C 20150919
 #define LIST_HEAD(name) \
 	struct list_head name = LIST_HEAD_INIT(name)
 
@@ -113,6 +114,8 @@
 // &ss->cftsets: &(&cpu_cgroup_subsys)->cftsets
 // ARM10C 20150822
 // &ss->cftsets: &(&cpuacct_subsys)->cftsets
+// ARM10C 20150919
+// &fbc->list: &(&vm_committed_as)->list
 static inline void INIT_LIST_HEAD(struct list_head *list)
 {
 	list->next = list;
@@ -179,6 +182,8 @@ extern void __list_add(struct list_head *new,
 // &ss->sibling: &(&cpu_cgroup_subsys)->sibling, &cgroup_dummy_root.subsys_list
 // ARM10C 20150822
 // &ss->sibling: &(&cpuacct_subsys)->sibling, &cgroup_dummy_root.subsys_list
+// ARM10C 20150919
+// &fbc->list: &(&vm_committed_as)->list
 static inline void list_add(struct list_head *new, struct list_head *head)
 {
 	__list_add(new, head, head->next);

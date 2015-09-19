@@ -263,9 +263,11 @@ struct sigaction {
 	sigset_t	sa_mask;	/* mask last for extensibility */
 };
 
+// ARM10C 20150919
+// sizeof(struct k_sigaction): 20 bytes
 struct k_sigaction {
 	struct sigaction sa;
-#ifdef __ARCH_HAS_KA_RESTORER
+#ifdef __ARCH_HAS_KA_RESTORER // undefined
 	__sigrestore_t ka_restorer;
 #endif
 };

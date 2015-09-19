@@ -164,6 +164,7 @@ typedef struct raw_spinlock {
 // 여기도 raw_spinlock의 wrapper다.
 // ARM10C 20140315
 // ARM10C 20140419
+// ARM10C 20150919
 // sizeof(spinlock_t) : 16 byte
 typedef struct spinlock {
 	union {
@@ -236,6 +237,7 @@ typedef struct spinlock {
 	(spinlock_t ) __SPIN_LOCK_INITIALIZER(lockname)
 
 // ARM10C 20140531
+// ARM10C 20150919
 #define DEFINE_SPINLOCK(x)	spinlock_t x = __SPIN_LOCK_UNLOCKED(x)
 
 #include <linux/rwlock_types.h>

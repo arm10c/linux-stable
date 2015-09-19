@@ -44,6 +44,7 @@ struct __wait_queue_head {
 // ARM10C 20141004
 // ARM10C 20150509
 // ARM10C 20150718
+// ARM10C 20150919
 // sizeof(wait_queue_head_t): 24 bytes
 typedef struct __wait_queue_head wait_queue_head_t;
 

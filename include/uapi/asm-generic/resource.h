@@ -23,6 +23,8 @@
 #endif
 
 #ifndef RLIMIT_NPROC
+// ARM10C 20150919
+// RLIMIT_NPROC: 6
 # define RLIMIT_NPROC		6	/* max number of processes */
 #endif
 
@@ -39,6 +41,8 @@
 #endif
 
 #define RLIMIT_LOCKS		10	/* maximum file locks held */
+// ARM10C 20150919
+// RLIMIT_SIGPENDING: 11
 #define RLIMIT_SIGPENDING	11	/* max number of pending signals */
 #define RLIMIT_MSGQUEUE		12	/* maximum bytes in POSIX mqueues */
 #define RLIMIT_NICE		13	/* max nice prio allowed to raise to

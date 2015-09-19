@@ -382,8 +382,11 @@ extern int get_dumpable(struct mm_struct *mm);
 
 #define MMF_INIT_MASK		(MMF_DUMPABLE_MASK | MMF_DUMP_FILTER_MASK)
 
+// ARM10C 20150919
+// sizeof(struct sighand_struct): 1324 bytes
 struct sighand_struct {
 	atomic_t		count;
+	// _NSIG: 64
 	struct k_sigaction	action[_NSIG];
 	spinlock_t		siglock;
 	wait_queue_head_t	signalfd_wqh;
@@ -491,6 +494,7 @@ struct autogroup;
  * sighand_struct is always a proper superset of
  * the locking of signal_struct.
  */
+// ARM10C 20150919
 struct signal_struct {
 	atomic_t		sigcnt;
 	atomic_t		live;
@@ -564,7 +568,7 @@ struct signal_struct {
 
 	struct tty_struct *tty; /* NULL if no tty */
 
-#ifdef CONFIG_SCHED_AUTOGROUP
+#ifdef CONFIG_SCHED_AUTOGROUP // CONFIG_SCHED_AUTOGROUP=n
 	struct autogroup *autogroup;
 #endif
 	/*
@@ -576,7 +580,7 @@ struct signal_struct {
 	cputime_t utime, stime, cutime, cstime;
 	cputime_t gtime;
 	cputime_t cgtime;
-#ifndef CONFIG_VIRT_CPU_ACCOUNTING_NATIVE
+#ifndef CONFIG_VIRT_CPU_ACCOUNTING_NATIVE // CONFIG_VIRT_CPU_ACCOUNTING_NATIVE=n
 	struct cputime prev_cputime;
 #endif
 	unsigned long nvcsw, nivcsw, cnvcsw, cnivcsw;
@@ -604,18 +608,18 @@ struct signal_struct {
 	 */
 	struct rlimit rlim[RLIM_NLIMITS];
 
-#ifdef CONFIG_BSD_PROCESS_ACCT
+#ifdef CONFIG_BSD_PROCESS_ACCT // CONFIG_BSD_PROCESS_ACCT=n
 	struct pacct_struct pacct;	/* per-process accounting information */
 #endif
-#ifdef CONFIG_TASKSTATS
+#ifdef CONFIG_TASKSTATS // CONFIG_TASKSTATS=n
 	struct taskstats *stats;
 #endif
-#ifdef CONFIG_AUDIT
+#ifdef CONFIG_AUDIT // CONFIG_AUDIT=n
 	unsigned audit_tty;
 	unsigned audit_tty_log_passwd;
 	struct tty_audit_buf *tty_audit_buf;
 #endif
-#ifdef CONFIG_CGROUPS
+#ifdef CONFIG_CGROUPS // CONFIG_CGROUPS=y
 	/*
 	 * group_rwsem prevents new tasks from entering the threadgroup and
 	 * member tasks from exiting,a more specifically, setting of
@@ -1063,6 +1067,7 @@ enum perf_event_task_context {
 // ARM10C 20140913
 // ARM10C 20140920
 // ARM10C 20150606
+// ARM10C 20150919
 struct task_struct {
 	volatile long state;	/* -1 unrunnable, 0 runnable, >0 stopped */
 	void *stack;

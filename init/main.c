@@ -905,7 +905,11 @@ asmlinkage void __init start_kernel(void)
 	cred_init();
 	// credentials 를 사용하기 위한 kmem_cache 할당자 초기화 수행
 
+	// totalram_pages: 총 free된 page 수
 	fork_init(totalram_pages);
+	// task_struct 를 사용하기 위한 kmem_cache 할당자 초기화 수행
+	// max_threads값을 계산하여 init_task에 threads값의 limit 값 설정함
+
 	proc_caches_init();
 	buffer_init();
 	key_init();
