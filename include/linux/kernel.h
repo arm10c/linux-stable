@@ -19,6 +19,7 @@
 #define SHRT_MAX	((s16)(USHRT_MAX>>1))
 #define SHRT_MIN	((s16)(-SHRT_MAX - 1))
 // ARM10C 20140222
+// ARM10C 20151003
 // INT_MAX 0x7FFFFFFF
 #define INT_MAX		((int)(~0U>>1))
 // ARM10C 20140913

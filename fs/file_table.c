@@ -32,11 +32,14 @@
 #include "internal.h"
 
 /* sysctl tunables... */
+// ARM10C 20151003
 struct files_stat_struct files_stat = {
+	// NR_FILE: 8192
 	.max_files = NR_FILE
 };
 
 /* SLAB cache for file structures */
+// ARM10C 20151003
 static struct kmem_cache *filp_cachep __read_mostly;
 
 static struct percpu_counter nr_files __cacheline_aligned_in_smp;
@@ -344,6 +347,8 @@ void put_filp(struct file *file)
 	}
 }
 
+// ARM10C 20151003
+// mempages: 총 free된 page 수 - XXX
 void __init files_init(unsigned long mempages)
 { 
 	unsigned long n;
@@ -356,8 +361,22 @@ void __init files_init(unsigned long mempages)
 	 * Per default don't use more than 10% of our memory for files. 
 	 */ 
 
+	// mempages: 총 free된 page 수 - XXX, PAGE_SIZE: 0x1000
 	n = (mempages * (PAGE_SIZE / 1024)) / 10;
+	// n: (총 free된 page 수 - XXX) * 4 / 10
+
+	// NOTE:
+	// max_t((총 free된 page 수 - XXX) * 4 / 10, 8192) 의 결과값?
+	// 계산하여 결과를 구하기 힘듬 (총 free된 page 수 - XXX) * 4 / 10 로 가정하고 분석 진행
+
+	// n: (총 free된 page 수 - XXX) * 4 / 10, NR_FILE: 8192
+	// max_t((총 free된 page 수 - XXX) * 4 / 10, 8192): (총 free된 page 수 - XXX) * 4 / 10
 	files_stat.max_files = max_t(unsigned long, n, NR_FILE);
+	// files_stat.max_files: (총 free된 page 수 - XXX) * 4 / 10
+
 	files_defer_init();
+
+// 2015/10/03 종료
+
 	percpu_counter_init(&nr_files, 0);
 } 

@@ -160,7 +160,7 @@ extern int mmap_min_addr_handler(struct ctl_table *table, int write,
 typedef int (*initxattrs) (struct inode *inode,
 			   const struct xattr *xattr_array, void *fs_data);
 
-#ifdef CONFIG_SECURITY
+#ifdef CONFIG_SECURITY // CONFIG_SECURITY=n
 
 struct security_mnt_opts {
 	char **mnt_opts;
@@ -1909,6 +1909,7 @@ static inline void security_free_mnt_opts(struct security_mnt_opts *opts)
  * are just stubbed out, but a few must call the proper capable code.
  */
 
+// ARM10C 20151003
 static inline int security_init(void)
 {
 	return 0;

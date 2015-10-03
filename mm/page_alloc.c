@@ -7229,6 +7229,7 @@ int percpu_pagelist_fraction_sysctl_handler(ctl_table *table, int write,
 }
 
 // ARM10C 20140322
+// ARM10C 20151003
 // HASHDIST_DEFAULT: 0
 // hashdist: 0
 int hashdist = HASHDIST_DEFAULT;

@@ -77,6 +77,7 @@ struct inodes_stat_t inodes_stat;
 static DEFINE_PER_CPU(unsigned long, nr_inodes);
 static DEFINE_PER_CPU(unsigned long, nr_unused);
 
+// ARM10C 20151003
 static struct kmem_cache *inode_cachep __read_mostly;
 
 static long get_nr_inodes(void)
@@ -1787,8 +1788,10 @@ void __init inode_init(void)
 					 init_once);
 
 	/* Hash may have been set up in inode_init_early */
+	// hashdist: 0
 	if (!hashdist)
 		return;
+		// return 수행
 
 	inode_hashtable =
 		alloc_large_system_hash("Inode-cache",

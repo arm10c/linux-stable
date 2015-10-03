@@ -912,9 +912,11 @@ asmlinkage void __init start_kernel(void)
 
 	proc_caches_init();
 	buffer_init();
-	key_init();
-	security_init();
-	dbg_late_init();
+	key_init(); // null funtion
+	security_init(); // null funtion
+	dbg_late_init(); // null funtion
+
+	// totalram_pages: 총 free된 page 수
 	vfs_caches_init(totalram_pages);
 	signals_init();
 	/* rootfs populating might need page-writeback */

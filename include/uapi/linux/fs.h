@@ -42,6 +42,7 @@ struct fstrim_range {
 };
 
 /* And dynamically-tunable limits and defaults: */
+// ARM10C 20151003
 struct files_stat_struct {
 	unsigned long nr_files;		/* read only */
 	unsigned long nr_free_files;	/* read only */
@@ -55,6 +56,8 @@ struct inodes_stat_t {
 };
 
 
+// ARM10C 20151003
+// NR_FILE: 8192
 #define NR_FILE  8192	/* this can well be larger on a larger system */
 
 

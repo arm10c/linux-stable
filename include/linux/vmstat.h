@@ -150,14 +150,20 @@ static inline void zone_page_state_add(long x, struct zone *zone,
 
 // ARM10C 20140419
 // NR_FREE_PAGES: 0
+// ARM10C 20151003
+// NR_FREE_PAGES: 0
 static inline unsigned long global_page_state(enum zone_stat_item item)
 {
+	// item: 0, atomic_long_read(&vm_stat[0]): free pages 수
 	long x = atomic_long_read(&vm_stat[item]);
+	// x: free pages 수
 #ifdef CONFIG_SMP // CONFIG_SMP=y
 	if (x < 0)
 		x = 0;
 #endif
+	// x: free pages 수
 	return x;
+	// return free pages 수
 }
 
 // ARM10C 20140510

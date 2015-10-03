@@ -86,6 +86,7 @@ __cacheline_aligned_in_smp DEFINE_SEQLOCK(rename_lock);
 
 EXPORT_SYMBOL(rename_lock);
 
+// ARM10C 20151003
 static struct kmem_cache *dentry_cache __read_mostly;
 
 /*
@@ -3382,6 +3383,7 @@ static void __init dcache_init_early(void)
 	// 131072개 만큼 hash를 만들었다. 총 hash크기는 512kB이다.
 }
 
+// ARM10C 20151003
 static void __init dcache_init(void)
 {
 	unsigned int loop;
@@ -3395,8 +3397,10 @@ static void __init dcache_init(void)
 		SLAB_RECLAIM_ACCOUNT|SLAB_PANIC|SLAB_MEM_SPREAD);
 
 	/* Hash may have been set up in dcache_init_early */
+	// hashdist: 0
 	if (!hashdist)
 		return;
+		// return 수행
 
 	dentry_hashtable =
 		alloc_large_system_hash("Dentry cache",
@@ -3414,6 +3418,7 @@ static void __init dcache_init(void)
 }
 
 /* SLAB cache for __getname() consumers */
+// ARM10C 20151003
 struct kmem_cache *names_cachep __read_mostly;
 EXPORT_SYMBOL(names_cachep);
 
@@ -3429,6 +3434,8 @@ void __init vfs_caches_init_early(void)
 	// 65536개 만큼 hash를 만들었다. 총 hash크기는 256kB이다.
 }
 
+// ARM10C 20151003
+// totalram_pages: 총 free된 page 수
 void __init vfs_caches_init(unsigned long mempages)
 {
 	unsigned long reserve;
@@ -3436,14 +3443,25 @@ void __init vfs_caches_init(unsigned long mempages)
 	/* Base hash sizes on available memory, with a reserve equal to
            150% of current kernel size */
 
+	// NOTE:
+	// mempages 값과 nr_free_pages() 의 값을 정확히 알 수 없음
+	// 계산된 reserve의 값을 XXX 로 함
+
+	// mempages: 총 free된 page 수, nr_free_pages(): 현재의 free pages 수
 	reserve = min((mempages - nr_free_pages()) * 3/2, mempages - 1);
+	// reserve: XXX
+
+	// mempages: 총 free된 page 수, reserve: XXX
 	mempages -= reserve;
+	// mempages: 총 free된 page 수 - XXX
 
 	names_cachep = kmem_cache_create("names_cache", PATH_MAX, 0,
 			SLAB_HWCACHE_ALIGN|SLAB_PANIC, NULL);
 
 	dcache_init();
 	inode_init();
+
+	// mempages: 총 free된 page 수 - XXX
 	files_init(mempages);
 	mnt_init();
 	bdev_cache_init();

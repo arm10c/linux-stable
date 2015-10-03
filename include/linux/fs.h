@@ -769,6 +769,7 @@ static inline int ra_has_index(struct file_ra_state *ra, pgoff_t index)
 #define FILE_MNT_WRITE_TAKEN	1
 #define FILE_MNT_WRITE_RELEASED	2
 
+// ARM10C 20151003
 struct file {
 	union {
 		struct llist_node	fu_llist;
@@ -793,19 +794,19 @@ struct file {
 	struct file_ra_state	f_ra;
 
 	u64			f_version;
-#ifdef CONFIG_SECURITY
+#ifdef CONFIG_SECURITY // CONFIG_SECURITY=n
 	void			*f_security;
 #endif
 	/* needed for tty driver, and maybe others */
 	void			*private_data;
 
-#ifdef CONFIG_EPOLL
+#ifdef CONFIG_EPOLL // CONFIG_EPOLL=y
 	/* Used by fs/eventpoll.c to link all the hooks to this file */
 	struct list_head	f_ep_links;
 	struct list_head	f_tfile_llink;
 #endif /* #ifdef CONFIG_EPOLL */
 	struct address_space	*f_mapping;
-#ifdef CONFIG_DEBUG_WRITECOUNT
+#ifdef CONFIG_DEBUG_WRITECOUNT // CONFIG_DEBUG_WRITECOUNT=n
 	unsigned long f_mnt_write_state;
 #endif
 };

@@ -35,7 +35,7 @@ typedef uint32_t key_perm_t;
 
 struct key;
 
-#ifdef CONFIG_KEYS
+#ifdef CONFIG_KEYS // CONFIG_KEYS=n
 
 #undef KEY_DEBUGGING
 
@@ -356,6 +356,7 @@ extern void key_init(void);
 #define is_key_possessed(k)		0
 #define key_fsuid_changed(t)		do { } while(0)
 #define key_fsgid_changed(t)		do { } while(0)
+// ARM10C 20151003
 #define key_init()			do { } while(0)
 
 #endif /* CONFIG_KEYS */

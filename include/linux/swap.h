@@ -270,6 +270,9 @@ extern unsigned long nr_free_pagecache_pages(void);
 /* Definition of global_page_state not available yet */
 // ARM10C 20140419
 // NR_FREE_PAGES: 0
+// ARM10C 20151003
+// NR_FREE_PAGES: 0
+// global_page_state(0): free pages 수
 #define nr_free_pages() global_page_state(NR_FREE_PAGES)
 
 

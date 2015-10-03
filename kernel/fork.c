@@ -1771,6 +1771,7 @@ void __init proc_caches_init(void)
 	// list head 인 &percpu_counters에 &(&vm_committed_as)->list를 연결함
 
 // 2015/09/19 종료
+// 2015/10/03 시작
 
 	nsproxy_cache_init();
 }
