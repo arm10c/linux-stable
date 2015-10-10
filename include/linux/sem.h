@@ -23,8 +23,10 @@ struct sem_array {
 	int			complex_count;	/* pending complex operations */
 };
 
-#ifdef CONFIG_SYSVIPC
+#ifdef CONFIG_SYSVIPC // CONFIG_SYSVIPC=y
 
+// ARM10C 20150919
+// sizeof(struct sysv_sem): 4 bytes
 struct sysv_sem {
 	struct sem_undo_list *undo_list;
 };

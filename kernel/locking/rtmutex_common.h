@@ -44,6 +44,7 @@ extern void schedule_rt_mutex_test(struct rt_mutex *lock);
  * @pi_list_entry:	pi node to enqueue into the mutex owner waiters list
  * @task:		task reference to the blocked task
  */
+// ARM10C 20150919
 struct rt_mutex_waiter {
 	struct plist_node	list_entry;
 	struct plist_node	pi_list_entry;

@@ -445,7 +445,7 @@ void __init files_defer_init(void)
 	// min(0x7FFFFFFF, 0x3FFFFFFF): 0x3FFFFFFF, -BITS_PER_LONG: 0xFFFFFFE0
 	sysctl_nr_open_max = min((size_t)INT_MAX, ~(size_t)0/sizeof(void *)) &
 			     -BITS_PER_LONG;
-	// sysctl_nr_open_max: 0X3FFFFFE0
+	// sysctl_nr_open_max: 0x3FFFFFE0
 }
 
 // ARM10C 20150808

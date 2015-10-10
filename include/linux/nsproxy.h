@@ -26,6 +26,8 @@ struct fs_struct;
  * As soon as a single namespace is cloned or unshared, the
  * nsproxy is copied.
  */
+// ARM10C 20151003
+// sizeof(struct nsproxy): 24 bytes
 struct nsproxy {
 	atomic_t count;
 	struct uts_namespace *uts_ns;

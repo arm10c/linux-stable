@@ -1,6 +1,7 @@
 #ifndef _ASM_GENERIC_CPUTIME_JIFFIES_H
 #define _ASM_GENERIC_CPUTIME_JIFFIES_H
 
+// ARM10C 20150919
 typedef unsigned long __nocast cputime_t;
 
 #define cputime_one_jiffy		jiffies_to_cputime(1)

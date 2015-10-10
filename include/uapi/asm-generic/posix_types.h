@@ -25,6 +25,7 @@ typedef unsigned int	__kernel_mode_t;
 #endif
 
 #ifndef __kernel_pid_t
+// ARM10C 20150919
 typedef int		__kernel_pid_t;
 #endif
 
@@ -47,7 +48,9 @@ typedef int		__kernel_daddr_t;
 
 #ifndef __kernel_uid32_t
 // ARM10C 20150919
+// ARM10C 20151003
 typedef unsigned int	__kernel_uid32_t;
+// ARM10C 20151003
 typedef unsigned int	__kernel_gid32_t;
 #endif
 
@@ -87,6 +90,7 @@ typedef struct {
  * anything below here should be completely generic
  */
 typedef __kernel_long_t	__kernel_off_t;
+// ARM10C 20151003
 typedef long long	__kernel_loff_t;
 // ARM10C 20150103
 typedef __kernel_long_t	__kernel_time_t;

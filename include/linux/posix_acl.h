@@ -45,6 +45,7 @@ struct posix_acl_entry {
 	};
 };
 
+// ARM10C 20151003
 struct posix_acl {
 	union {
 		atomic_t		a_refcount;

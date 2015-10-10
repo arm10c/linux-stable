@@ -145,6 +145,7 @@ struct cfs_bandwidth {
 
 /* task group related information */
 // ARM10C 20150822
+// ARM10C 20150919
 struct task_group {
 	struct cgroup_subsys_state css;
 
@@ -342,6 +343,7 @@ static inline int rt_bandwidth_enabled(void)
 /* Real-Time classes' related field in a runqueue: */
 // ARM10C 20140830
 // ARM10C 20140913
+// ARM10C 20151003
 struct rt_rq {
 	struct rt_prio_array active;
 	unsigned int rt_nr_running;
@@ -1065,6 +1067,7 @@ static const u32 prio_to_wmult[40] = {
 #define DEQUEUE_SLEEP		1
 
 // ARM10C 20140913
+// ARM10C 20150919
 struct sched_class {
 	const struct sched_class *next;
 

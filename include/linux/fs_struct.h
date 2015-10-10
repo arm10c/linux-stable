@@ -5,6 +5,8 @@
 #include <linux/spinlock.h>
 #include <linux/seqlock.h>
 
+// ARM10C 20150919
+// sizeof(struct fs_struct): 48 bytes
 struct fs_struct {
 	int users;
 	spinlock_t lock;

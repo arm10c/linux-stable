@@ -140,6 +140,8 @@ static inline long atomic_long_add_unless(atomic_long_t *l, long a, long u)
 
 // ARM10C 20140419
 // ARM10C 20150718
+// ARM10C 20150919
+// ARM10C 20151003
 typedef atomic_t atomic_long_t;
 
 // ARM10C 20140809

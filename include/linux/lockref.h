@@ -17,10 +17,17 @@
 #include <linux/spinlock.h>
 #include <generated/bounds.h>
 
+// ARM10C 20151003
+// IS_ENABLED(CONFIG_ARCH_USE_CMPXCHG_LOCKREF): 1
+// IS_ENABLED(CONFIG_SMP): 1
+// SPINLOCK_SIZE: 16
+// USE_CMPXCHG_LOCKREF: 0
 #define USE_CMPXCHG_LOCKREF \
 	(IS_ENABLED(CONFIG_ARCH_USE_CMPXCHG_LOCKREF) && \
 	 IS_ENABLED(CONFIG_SMP) && SPINLOCK_SIZE <= 4)
 
+// ARM10C 20151003
+// sizeof(struct lockref): 20 bytes
 struct lockref {
 	union {
 #if USE_CMPXCHG_LOCKREF

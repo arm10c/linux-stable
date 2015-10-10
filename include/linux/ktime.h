@@ -46,6 +46,8 @@
 // ARM10C 20140830
 // ARM10C 20150103
 // ARM10C 20150418
+// ARM10C 20150919
+// sizeof(union ktime): 8 bytes
 union ktime {
 	s64	tv64;
 #if BITS_PER_LONG != 64 && !defined(CONFIG_KTIME_SCALAR) // CONFIG_KTIME_SCALAR=y
@@ -62,6 +64,7 @@ union ktime {
 // ARM10C 20140830
 // ARM10C 20150103
 // ARM10C 20150418
+// ARM10C 20150919
 typedef union ktime ktime_t;		/* Kill this */
 
 /*

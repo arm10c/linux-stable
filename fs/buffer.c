@@ -3301,12 +3301,14 @@ SYSCALL_DEFINE2(bdflush, int, func, long, data)
 /*
  * Buffer-head allocation
  */
+// ARM10C 20151003
 static struct kmem_cache *bh_cachep __read_mostly;
 
 /*
  * Once the number of bh's in the machine exceeds this level, we start
  * stripping them in writeback.
  */
+// ARM10C 20151003
 static unsigned long max_buffer_heads;
 
 int buffer_heads_over_limit;
@@ -3369,6 +3371,7 @@ static void buffer_exit_cpu(int cpu)
 	per_cpu(bh_accounting, cpu).nr = 0;
 }
 
+// ARM10C 20151003
 static int buffer_cpu_notify(struct notifier_block *self,
 			      unsigned long action, void *hcpu)
 {
@@ -3421,20 +3424,36 @@ int bh_submit_read(struct buffer_head *bh)
 }
 EXPORT_SYMBOL(bh_submit_read);
 
+// ARM10C 20151003
 void __init buffer_init(void)
 {
 	unsigned long nrpages;
 
+	// sizeof(struct buffer_head): 56 bytes,
+	// SLAB_RECLAIM_ACCOUNT: 0x00020000UL, SLAB_PANIC: 0x00040000UL, SLAB_DESTROY_BY_RCU: 0x00080000UL
+	// kmem_cache_create("buffer_head", 56, 0, 0xE0000, NULL): kmem_cache#7
 	bh_cachep = kmem_cache_create("buffer_head",
 			sizeof(struct buffer_head), 0,
 				(SLAB_RECLAIM_ACCOUNT|SLAB_PANIC|
 				SLAB_MEM_SPREAD),
 				NULL);
+	// bh_cachep: kmem_cache#7
 
 	/*
 	 * Limit the bh occupancy to 10% of ZONE_NORMAL
 	 */
+	// nr_free_buffer_pages(): 0x7f7d6
 	nrpages = (nr_free_buffer_pages() * 10) / 100;
+	// nrpages: 0xcbfb
+
+	// nrpages: 0xcbfb, PAGE_SIZE: 0x1000, sizeof(struct buffer_head): 56 bytes
 	max_buffer_heads = nrpages * (PAGE_SIZE / sizeof(struct buffer_head));
+	// max_buffer_heads: 0x3a2a93
+
 	hotcpu_notifier(buffer_cpu_notify, 0);
+
+	// hotcpu_notifier 에서 한일:
+	//
+	// (&cpu_chain)->head: &buffer_cpu_notify_nb
+	// (&buffer_cpu_notify_nb)->next은 (&hotplug_cfd_notifier)->next로 대입
 }

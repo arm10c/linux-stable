@@ -353,8 +353,12 @@ void __init files_init(unsigned long mempages)
 { 
 	unsigned long n;
 
+	// sizeof(struct file): 160 bytes,
+	// SLAB_HWCACHE_ALIGN: 0x00002000UL, SLAB_PANIC: 0x00040000UL,
+	// kmem_cache_create("filp", 160, 0, 0x42000, NULL): kmem_cache#3
 	filp_cachep = kmem_cache_create("filp", sizeof(struct file), 0,
 			SLAB_HWCACHE_ALIGN | SLAB_PANIC, NULL);
+	// filp_cachep: kmem_cache#3
 
 	/*
 	 * One file with associated inode and dcache is very roughly 1K.
@@ -375,6 +379,9 @@ void __init files_init(unsigned long mempages)
 	// files_stat.max_files: (총 free된 page 수 - XXX) * 4 / 10
 
 	files_defer_init();
+
+	// files_defer_init에서 한일:
+	// sysctl_nr_open_max: 0x3FFFFFE0
 
 // 2015/10/03 종료
 

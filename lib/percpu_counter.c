@@ -186,6 +186,7 @@ int __percpu_counter_init(struct percpu_counter *fbc, s64 amount,
 	// &percpu_counters_lock을 사용한 spin unlock 수행
 #endif
 	return 0;
+	// return 0
 }
 EXPORT_SYMBOL(__percpu_counter_init);
 

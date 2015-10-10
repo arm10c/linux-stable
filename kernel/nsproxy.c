@@ -26,6 +26,7 @@
 #include <linux/file.h>
 #include <linux/syscalls.h>
 
+// ARM10C 20151003
 static struct kmem_cache *nsproxy_cachep;
 
 // ARM10C 20150808
@@ -262,8 +263,14 @@ out:
 	return err;
 }
 
+// ARM10C 20151003
 int __init nsproxy_cache_init(void)
 {
+	// KMEM_CACHE(nsproxy, 0x00040000):
+	// kmem_cache_create("nsproxy", sizeof(struct nsproxy), __alignof__(struct nsproxy), (0x00040000), NULL): kmem_cache#8
 	nsproxy_cachep = KMEM_CACHE(nsproxy, SLAB_PANIC);
+	// nsproxy_cachep: kmem_cache#8
+
 	return 0;
+	// return 0
 }

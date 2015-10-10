@@ -100,6 +100,7 @@ extern int in_egroup_p(kgid_t);
  * same context as task->real_cred.
  */
 // ARM10C 20150919
+// ARM10C 20151003
 // sizeof(struct cred): 92 bytes
 struct cred {
 	atomic_t	usage;

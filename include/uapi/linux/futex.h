@@ -66,6 +66,7 @@ struct robust_list {
  * (When an incompatible change is done, we'll increase the structure
  *  size, which glibc will detect)
  */
+// ARM10C 20150919
 struct robust_list_head {
 	/*
 	 * The head of the list. Points back to itself if empty:

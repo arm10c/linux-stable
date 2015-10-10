@@ -42,6 +42,7 @@
 // ARM10C 20140920
 // ARM10C 20150912
 // ARM10C 20150919
+// ARM10C 20151003
 // SLAB_HWCACHE_ALIGN: 0x00002000UL
 #define SLAB_HWCACHE_ALIGN	0x00002000UL	/* Align objs on cache lines */
 // ARM10C 20140920
@@ -58,6 +59,7 @@
 // ARM10C 20141004
 // ARM10C 20150912
 // ARM10C 20150919
+// ARM10C 20151003
 // SLAB_PANIC: 0x00040000UL
 #define SLAB_PANIC		0x00040000UL	/* Panic if kmem_cache_create() fails */
 /*
@@ -99,8 +101,11 @@
 // ARM10C 20140621
 // ARM10C 20140920
 // ARM10C 20150919
+// ARM10C 20151003
 // SLAB_DESTROY_BY_RCU: 0x00080000UL
 #define SLAB_DESTROY_BY_RCU	0x00080000UL	/* Defer freeing slabs to RCU */
+// ARM10C 20151003
+// SLAB_MEM_SPREAD: 0x00100000UL
 #define SLAB_MEM_SPREAD		0x00100000UL	/* Spread some memory over cpuset */
 // ARM10C 20140419
 // ARM10C 20140920
@@ -143,6 +148,7 @@
 // ARM10C 20140524
 // ARM10C 20140920
 // ARM10C 20141004
+// ARM10C 20151003
 // SLAB_RECLAIM_ACCOUNT: 0x00020000UL
 #define SLAB_RECLAIM_ACCOUNT	0x00020000UL		/* Objects are reclaimable */
 // ARM10C 20140920
@@ -210,6 +216,15 @@ void kmem_cache_free(struct kmem_cache *, void *);
 // ARM10C 20150919
 // #define KMEM_CACHE(anon_vma_chain, 0x00040000):
 // kmem_cache_create("anon_vma_chain", sizeof(struct anon_vma_chain), __alignof__(struct anon_vma_chain), (0x00040000), NULL)
+// ARM10C 20150919
+// #define KMEM_CACHE(vm_area_struct, 0x00040000):
+// kmem_cache_create("vm_area_struct", sizeof(struct vm_area_struct), __alignof__(struct vm_area_struct), (0x00040000), NULL)
+// ARM10C 20151003
+// #define KMEM_CACHE(nsproxy, 0x00040000):
+// kmem_cache_create("nsproxy", sizeof(struct nsproxy), __alignof__(struct nsproxy), (0x00040000), NULL)
+// ARM10C 20151003
+// #define KMEM_CACHE(dentry, 0x160000):
+// kmem_cache_create("dentry", sizeof(struct dentry), __alignof__(struct dentry), (0x160000), NULL)
 #define KMEM_CACHE(__struct, __flags) kmem_cache_create(#__struct,\
 		sizeof(struct __struct), __alignof__(struct __struct),\
 		(__flags), NULL)

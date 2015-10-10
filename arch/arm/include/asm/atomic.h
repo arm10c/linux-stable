@@ -259,7 +259,8 @@ static inline int __atomic_add_unless(atomic_t *v, int a, int u)
 #define smp_mb__before_atomic_inc()	smp_mb()
 #define smp_mb__after_atomic_inc()	smp_mb()
 
-#ifndef CONFIG_GENERIC_ATOMIC64
+#ifndef CONFIG_GENERIC_ATOMIC64 // CONFIG_GENERIC_ATOMIC64=n
+// ARM10C 20150919
 typedef struct {
 	long long counter;
 } atomic64_t;

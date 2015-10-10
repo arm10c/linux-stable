@@ -8,8 +8,9 @@
  * Blame Andrew Morton for all this.
  */
 
+// ARM10C 20150919
 struct task_io_accounting {
-#ifdef CONFIG_TASK_XACCT
+#ifdef CONFIG_TASK_XACCT // CONFIG_TASK_XACCT=n
 	/* bytes read */
 	u64 rchar;
 	/*  bytes written */
@@ -20,7 +21,7 @@ struct task_io_accounting {
 	u64 syscw;
 #endif /* CONFIG_TASK_XACCT */
 
-#ifdef CONFIG_TASK_IO_ACCOUNTING
+#ifdef CONFIG_TASK_IO_ACCOUNTING // CONFIG_TASK_IO_ACCOUNTING=n
 	/*
 	 * The number of bytes which this task has caused to be read from
 	 * storage.

@@ -22,6 +22,8 @@ struct sigqueue {
 /* flags values. */
 #define SIGQUEUE_PREALLOC	1
 
+// ARM10C 20150919
+// sizeof(struct sigpending): 8 bytes
 struct sigpending {
 	struct list_head list;
 	sigset_t signal;

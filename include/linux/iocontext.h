@@ -94,6 +94,7 @@ struct io_cq {
  * I/O subsystem state of the associated processes.  It is refcounted
  * and kmalloc'ed. These could be shared between processes.
  */
+// ARM10C 20150919
 struct io_context {
 	atomic_long_t refcount;
 	atomic_t active_ref;

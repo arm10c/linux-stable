@@ -164,12 +164,19 @@ enum {
 //      { .notifier_call = rcu_cpu_notify, .priority = 0 };
 //	register_cpu_notifier(&rcu_cpu_notify_nb);
 // }
-// // ARM10C 20141004
+// ARM10C 20141004
 // cpu_notifier(radix_tree_callback, 0):
 // {
 //	static struct notifier_block radix_tree_callback_nb =
 //      { .notifier_call = radix_tree_callback, .priority = 0 };
 //	register_cpu_notifier(&radix_tree_callback_nb);
+// }
+// ARM10C 20151003
+// cpu_notifier(buffer_cpu_notify, 0):
+// {
+// 	static struct notifier_block buffer_cpu_notify_nb =
+//      { .notifier_call = buffer_cpu_notify, .priority = 0 };
+// 	register_cpu_notifier(&buffer_cpu_notify_nb);
 // }
 #define cpu_notifier(fn, pri) {					\
 	static struct notifier_block fn##_nb =			\
@@ -193,6 +200,7 @@ extern void unregister_cpu_notifier(struct notifier_block *nb);
 // ARM10C 20150103
 // ARM10C 20150404
 // ARM10C 20150620
+// ARM10C 20151003
 extern int register_cpu_notifier(struct notifier_block *nb);
 #else
 static inline int register_cpu_notifier(struct notifier_block *nb)
@@ -251,6 +259,8 @@ extern void cpu_hotplug_enable(void);
 // fn: page_alloc_cpu_notify, pri: 0
 // ARM10C 20141004
 // radix_tree_callback, 0
+// ARM10C 20151003
+// buffer_cpu_notify, 0
 #define hotcpu_notifier(fn, pri)	cpu_notifier(fn, pri)
 #define register_hotcpu_notifier(nb)	register_cpu_notifier(nb)
 #define unregister_hotcpu_notifier(nb)	unregister_cpu_notifier(nb)

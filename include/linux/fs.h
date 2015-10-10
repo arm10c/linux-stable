@@ -344,6 +344,7 @@ typedef struct {
 typedef int (*read_actor_t)(read_descriptor_t *, struct page *,
 		unsigned long, unsigned long);
 
+// ARM10C 20151003
 struct address_space_operations {
 	int (*writepage)(struct page *page, struct writeback_control *wbc);
 	int (*readpage)(struct file *, struct page *);
@@ -406,6 +407,8 @@ int pagecache_write_end(struct file *, struct address_space *mapping,
 				struct page *page, void *fsdata);
 
 struct backing_dev_info;
+// ARM10C 20151003
+// sizeof(struct address_space): 136 bytes
 struct address_space {
 	struct inode		*host;		/* owner: inode, block_device */
 	struct radix_tree_root	page_tree;	/* radix tree of all pages */
@@ -431,6 +434,7 @@ struct address_space {
 	 */
 struct request_queue;
 
+// ARM10C 20151003
 struct block_device {
 	dev_t			bd_dev;  /* not a kdev_t - it's a search key */
 	int			bd_openers;
@@ -501,7 +505,7 @@ static inline int mapping_writably_mapped(struct address_space *mapping)
 /*
  * Use sequence counter to get consistent i_size on 32-bit processors.
  */
-#if BITS_PER_LONG==32 && defined(CONFIG_SMP)
+#if BITS_PER_LONG==32 && defined(CONFIG_SMP) // BITS_PER_LONG: 32, CONFIG_SMP=y
 #include <linux/seqlock.h>
 #define __NEED_I_SIZE_ORDERED
 #define i_size_ordered_init(inode) seqcount_init(&inode->i_size_seqcount)
@@ -521,6 +525,8 @@ struct posix_acl;
  * the RCU path lookup and 'stat' data) fields at the beginning
  * of the 'struct inode'
  */
+// ARM10C 20151003
+// sizeof(struct inode): 394 bytes
 struct inode {
 	umode_t			i_mode;
 	unsigned short		i_opflags;
@@ -528,7 +534,7 @@ struct inode {
 	kgid_t			i_gid;
 	unsigned int		i_flags;
 
-#ifdef CONFIG_FS_POSIX_ACL
+#ifdef CONFIG_FS_POSIX_ACL // CONFIG_FS_POSIX_ACL=y
 	struct posix_acl	*i_acl;
 	struct posix_acl	*i_default_acl;
 #endif
@@ -537,7 +543,7 @@ struct inode {
 	struct super_block	*i_sb;
 	struct address_space	*i_mapping;
 
-#ifdef CONFIG_SECURITY
+#ifdef CONFIG_SECURITY // CONFIG_SECURITY=n
 	void			*i_security;
 #endif
 
@@ -564,7 +570,7 @@ struct inode {
 	unsigned int		i_blkbits;
 	blkcnt_t		i_blocks;
 
-#ifdef __NEED_I_SIZE_ORDERED
+#ifdef __NEED_I_SIZE_ORDERED // defined
 	seqcount_t		i_size_seqcount;
 #endif
 
@@ -589,7 +595,7 @@ struct inode {
 	const struct file_operations	*i_fop;	/* former ->i_op->default_file_ops */
 	struct file_lock	*i_flock;
 	struct address_space	i_data;
-#ifdef CONFIG_QUOTA
+#ifdef CONFIG_QUOTA // CONFIG_QUOTA=n
 	struct dquot		*i_dquot[MAXQUOTAS];
 #endif
 	struct list_head	i_devices;
@@ -601,12 +607,12 @@ struct inode {
 
 	__u32			i_generation;
 
-#ifdef CONFIG_FSNOTIFY
+#ifdef CONFIG_FSNOTIFY // CONFIG_FSNOTIFY=y
 	__u32			i_fsnotify_mask; /* all events this inode cares about */
 	struct hlist_head	i_fsnotify_marks;
 #endif
 
-#ifdef CONFIG_IMA
+#ifdef CONFIG_IMA // CONFIG_IMA=n
 	atomic_t		i_readcount; /* struct files open RO */
 #endif
 	void			*i_private; /* fs or device private pointer */
@@ -735,6 +741,8 @@ static inline unsigned imajor(const struct inode *inode)
 
 extern struct block_device *I_BDEV(struct inode *inode);
 
+// ARM10C 20151003
+// sizeof(struct fown_struct): 36 bytes
 struct fown_struct {
 	rwlock_t lock;          /* protects pid, uid, euid fields */
 	struct pid *pid;	/* pid or -pgrp where SIGIO should be sent */
@@ -746,6 +754,8 @@ struct fown_struct {
 /*
  * Track a single file's readahead state
  */
+// ARM10C 20151003
+// sizeof(struct file_ra_state): 28 bytes
 struct file_ra_state {
 	pgoff_t start;			/* where readahead started */
 	unsigned int size;		/* # of readahead pages */
@@ -769,7 +779,9 @@ static inline int ra_has_index(struct file_ra_state *ra, pgoff_t index)
 #define FILE_MNT_WRITE_TAKEN	1
 #define FILE_MNT_WRITE_RELEASED	2
 
+// ARM10C 20150919
 // ARM10C 20151003
+// sizeof(struct file): 160 bytes
 struct file {
 	union {
 		struct llist_node	fu_llist;
@@ -949,6 +961,7 @@ int locks_in_grace(struct net *);
  *
  * Obviously, the last two criteria only matter for POSIX locks.
  */
+// ARM10C 20151003
 struct file_lock {
 	struct file_lock *fl_next;	/* singly linked list for this inode  */
 	struct hlist_node fl_link;	/* node in global lists */
@@ -1240,6 +1253,7 @@ struct sb_writers {
 #endif
 };
 
+// ARM10C 20151003
 struct super_block {
 	struct list_head	s_list;		/* Keep this first */
 	dev_t			s_dev;		/* search index; _not_ kdev_t */
@@ -1519,6 +1533,7 @@ struct block_device_operations;
 #define HAVE_COMPAT_IOCTL 1
 #define HAVE_UNLOCKED_IOCTL 1
 
+// ARM10C 20151003
 struct file_operations {
 	struct module *owner;
 	loff_t (*llseek) (struct file *, loff_t, int);
@@ -1550,6 +1565,7 @@ struct file_operations {
 	int (*show_fdinfo)(struct seq_file *m, struct file *f);
 };
 
+// ARM10C 20151003
 struct inode_operations {
 	struct dentry * (*lookup) (struct inode *,struct dentry *, unsigned int);
 	void * (*follow_link) (struct dentry *, struct nameidata *);

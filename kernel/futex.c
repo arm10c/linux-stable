@@ -85,6 +85,7 @@ int __read_mostly futex_cmpxchg_enabled;
 /*
  * Priority Inheritance state:
  */
+// ARM10C 20150919
 struct futex_pi_state {
 	/*
 	 * list of 'owned' pi_state instances - these have to be

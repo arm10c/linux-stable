@@ -3393,8 +3393,13 @@ static void __init dcache_init(void)
 	 * but it is probably not worth it because of the cache nature
 	 * of the dcache. 
 	 */
+	// sizeof(struct dentry): 140 bytes
+	// SLAB_RECLAIM_ACCOUNT: 0x00020000UL, SLAB_PANIC: 0x00040000UL, SLAB_MEM_SPREAD: 0x00100000UL
+	// KMEM_CACHE(dentry, 0x160000):
+	// kmem_cache_create("dentry", sizeof(struct dentry), __alignof__(struct dentry), (0x160000), NULL): kmem_cache#5
 	dentry_cache = KMEM_CACHE(dentry,
 		SLAB_RECLAIM_ACCOUNT|SLAB_PANIC|SLAB_MEM_SPREAD);
+	// dentry_cache: kmem_cache#5
 
 	/* Hash may have been set up in dcache_init_early */
 	// hashdist: 0
@@ -3455,11 +3460,26 @@ void __init vfs_caches_init(unsigned long mempages)
 	mempages -= reserve;
 	// mempages: 총 free된 page 수 - XXX
 
+	// PATH_MAX: 4096
+	// SLAB_HWCACHE_ALIGN: 0x00002000UL, SLAB_PANIC: 0x00040000UL
+	// kmem_cache_create("names_cache", 4096, 0, 0x42000, NULL): kmem_cache#6
 	names_cachep = kmem_cache_create("names_cache", PATH_MAX, 0,
 			SLAB_HWCACHE_ALIGN|SLAB_PANIC, NULL);
+	// names_cachep: kmem_cache#6
 
 	dcache_init();
+
+	// dcache_init에서 한일:
+	//
+	// struct dentry를 위한 kmem_cache 생성
+	// dentry_cache: kmem_cache#5
+
 	inode_init();
+
+	// inode_init에서 한일:
+	//
+	// struct inode를 위한 kmem_cache 생성
+	// inode_cachep: kmem_cache#4
 
 	// mempages: 총 free된 page 수 - XXX
 	files_init(mempages);

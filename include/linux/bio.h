@@ -405,6 +405,8 @@ static inline bool bio_mergeable(struct bio *bio)
  * member of the bio.  The bio_list also caches the last list member to allow
  * fast access to the tail.
  */
+// ARM10C 20150919
+// sizeof(struct bio_list): 8 bytes
 struct bio_list {
 	struct bio *head;
 	struct bio *tail;

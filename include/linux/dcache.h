@@ -28,6 +28,8 @@ struct vfsmount;
 
 /* The hash is always the low bits of hash_len */
 #ifdef __LITTLE_ENDIAN
+// ARM10C 20151003
+// HASH_LEN_DECLARE: u32 hash; u32 len;
  #define HASH_LEN_DECLARE u32 hash; u32 len;
  #define bytemask_from_count(cnt)	(~(~0ul << (cnt)*8))
 #else
@@ -42,9 +44,12 @@ struct vfsmount;
  * hash comes first so it snuggles against d_parent in the
  * dentry.
  */
+// ARM10C 20151003
+// sizeof(struct qstr): 12 bytes
 struct qstr {
 	union {
 		struct {
+			// HASH_LEN_DECLARE: u32 hash; u32 len;
 			HASH_LEN_DECLARE;
 		};
 		u64 hash_len;
@@ -93,10 +98,12 @@ extern unsigned int full_name_hash(const unsigned char *, unsigned int);
  * give reasonable cacheline footprint with larger lines without the
  * large memory footprint increase).
  */
-#ifdef CONFIG_64BIT
+#ifdef CONFIG_64BIT // CONFIG_64BIT=n
 # define DNAME_INLINE_LEN 32 /* 192 bytes */
 #else
-# ifdef CONFIG_SMP
+# ifdef CONFIG_SMP // CONFIG_SMP=y
+// ARM10C 20151003
+// DNAME_INLINE_LEN: 36
 #  define DNAME_INLINE_LEN 36 /* 128 bytes */
 # else
 #  define DNAME_INLINE_LEN 40 /* 128 bytes */
@@ -105,6 +112,8 @@ extern unsigned int full_name_hash(const unsigned char *, unsigned int);
 
 #define d_lock	d_lockref.lock
 
+// ARM10C 20151003
+// sizeof(struct dentry): 140 bytes
 struct dentry {
 	/* RCU lookup touched fields */
 	unsigned int d_flags;		/* protected by d_lock */
@@ -114,6 +123,7 @@ struct dentry {
 	struct qstr d_name;
 	struct inode *d_inode;		/* Where the name belongs to - NULL is
 					 * negative */
+	// DNAME_INLINE_LEN: 36
 	unsigned char d_iname[DNAME_INLINE_LEN];	/* small names */
 
 	/* Ref lookup also touches following */
@@ -147,6 +157,7 @@ enum dentry_d_lock_class
 	DENTRY_D_LOCK_NESTED
 };
 
+// ARM10C 20151003
 struct dentry_operations {
 	int (*d_revalidate)(struct dentry *, unsigned int);
 	int (*d_weak_revalidate)(struct dentry *, unsigned int);

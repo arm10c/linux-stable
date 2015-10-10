@@ -191,15 +191,19 @@ static struct kmem_cache *signal_cachep;
 struct kmem_cache *sighand_cachep;
 
 /* SLAB cache for files_struct structures (tsk->files) */
+// ARM10C 20150919
 struct kmem_cache *files_cachep;
 
 /* SLAB cache for fs_struct structures (tsk->fs) */
+// ARM10C 20150919
 struct kmem_cache *fs_cachep;
 
 /* SLAB cache for vm_area_struct structures */
+// ARM10C 20150919
 struct kmem_cache *vm_area_cachep;
 
 /* SLAB cache for mm_struct structures (tsk->mm) */
+// ARM10C 20150919
 static struct kmem_cache *mm_cachep;
 
 static void account_kernel_stack(struct thread_info *ti, int account)
@@ -265,11 +269,9 @@ void __init fork_init(unsigned long mempages)
 #define ARCH_MIN_TASKALIGN	L1_CACHE_BYTES
 #endif
 	/* create a slab on which task_structs can be allocated */
-	// FIXME:
-	// sizeof(struct task_struct) 계산 필요, 임시로 XXX bytes로 명명함
 
-	// ARCH_MIN_TASKALIGN: 64, SLAB_PANIC: 0x00040000UL, SLAB_NOTRACK: 0x00000000UL, sizeof(struct task_struct): XXX
-	// kmem_cache_create("task_struct", XXX, 64, 0x00040000, NULL): kmem_cache#15
+	// ARCH_MIN_TASKALIGN: 64, SLAB_PANIC: 0x00040000UL, SLAB_NOTRACK: 0x00000000UL, sizeof(struct task_struct): 815 bytes
+	// kmem_cache_create("task_struct", 815, 64, 0x00040000, NULL): kmem_cache#15
 	task_struct_cachep =
 		kmem_cache_create("task_struct", sizeof(struct task_struct),
 			ARCH_MIN_TASKALIGN, SLAB_PANIC | SLAB_NOTRACK, NULL);
@@ -1714,6 +1716,8 @@ SYSCALL_DEFINE5(clone, unsigned long, clone_flags, unsigned long, newsp,
 #endif
 
 #ifndef ARCH_MIN_MMSTRUCT_ALIGN
+// ARM10C 20150919
+// ARCH_MIN_MMSTRUCT_ALIGN: 0
 #define ARCH_MIN_MMSTRUCT_ALIGN 0
 #endif
 
@@ -1728,7 +1732,8 @@ static void sighand_ctor(void *data)
 // ARM10C 20150919
 void __init proc_caches_init(void)
 {
-	// sizeof(struct sighand_struct): 1324 bytes, 0xc2000
+	// sizeof(struct sighand_struct): 1324 bytes,
+	// SLAB_HWCACHE_ALIGN: 0x00002000UL, SLAB_PANIC: 0x00040000UL, SLAB_DESTROY_BY_RCU: 0x00080000UL, SLAB_NOTRACK: 0x00000000UL
 	// kmem_cache_create("sighand_cache", 1324, 0, 0xc2000, sighand_ctor): kmem_cache#14
 	sighand_cachep = kmem_cache_create("sighand_cache",
 			sizeof(struct sighand_struct), 0,
@@ -1736,15 +1741,29 @@ void __init proc_caches_init(void)
 			SLAB_NOTRACK, sighand_ctor);
 	// sighand_cachep: kmem_cache#14
 
+	// sizeof(struct signal_struct): 536 bytes,
+	// SLAB_HWCACHE_ALIGN: 0x00002000UL, SLAB_PANIC: 0x00040000UL, SLAB_NOTRACK: 0x00000000UL
+	// kmem_cache_create("signal_cache", 536, 0, 0x42000, NULL): kmem_cache#13
 	signal_cachep = kmem_cache_create("signal_cache",
 			sizeof(struct signal_struct), 0,
 			SLAB_HWCACHE_ALIGN|SLAB_PANIC|SLAB_NOTRACK, NULL);
+	// signal_cachep: kmem_cache#13
+
+	// sizeof(struct files_struct): 188 bytes,
+	// SLAB_HWCACHE_ALIGN: 0x00002000UL, SLAB_PANIC: 0x00040000UL, SLAB_NOTRACK: 0x00000000UL
+	// kmem_cache_create("files_cache", 188, 0, 0x42000, NULL): kmem_cache#12
 	files_cachep = kmem_cache_create("files_cache",
 			sizeof(struct files_struct), 0,
 			SLAB_HWCACHE_ALIGN|SLAB_PANIC|SLAB_NOTRACK, NULL);
+	// files_cachep: kmem_cache#12
+
+	// sizeof(struct fs_struct): 48 bytes,
+	// SLAB_HWCACHE_ALIGN: 0x00002000UL, SLAB_PANIC: 0x00040000UL, SLAB_NOTRACK: 0x00000000UL
+	// kmem_cache_create("fs_cache", 48, 0, 0x42000, NULL): kmem_cache#11
 	fs_cachep = kmem_cache_create("fs_cache",
 			sizeof(struct fs_struct), 0,
 			SLAB_HWCACHE_ALIGN|SLAB_PANIC|SLAB_NOTRACK, NULL);
+	// fs_cachep: kmem_cache#11
 	/*
 	 * FIXME! The "sizeof(struct mm_struct)" currently includes the
 	 * whole struct cpumask for the OFFSTACK case. We could change
@@ -1752,10 +1771,19 @@ void __init proc_caches_init(void)
 	 * maximum number of CPU's we can ever have.  The cpumask_allocation
 	 * is at the end of the structure, exactly for that reason.
 	 */
+	// sizeof(struct mm_struct): 428 bytes, ARCH_MIN_MMSTRUCT_ALIGN: 0
+	// SLAB_HWCACHE_ALIGN: 0x00002000UL, SLAB_PANIC: 0x00040000UL, SLAB_NOTRACK: 0x00000000UL
+	// kmem_cache_create("mm_struct", 428, 0, 0x42000, NULL): kmem_cache#10
 	mm_cachep = kmem_cache_create("mm_struct",
 			sizeof(struct mm_struct), ARCH_MIN_MMSTRUCT_ALIGN,
 			SLAB_HWCACHE_ALIGN|SLAB_PANIC|SLAB_NOTRACK, NULL);
+	// mm_cachep: kmem_cache#10
+
+	// SLAB_PANIC: 0x00040000UL
+	// KMEM_CACHE(vm_area_struct, 0x00040000):
+	// kmem_cache_create("vm_area_struct", sizeof(struct vm_area_struct), __alignof__(struct vm_area_struct), (0x00040000), NULL): kmem_cache#9
 	vm_area_cachep = KMEM_CACHE(vm_area_struct, SLAB_PANIC);
+	// vm_area_cachep: kmem_cache#9
 
 	mmap_init();
 
@@ -1774,6 +1802,9 @@ void __init proc_caches_init(void)
 // 2015/10/03 시작
 
 	nsproxy_cache_init();
+
+	// nsproxy_cache_init에서 한일:
+	// nsproxy_cachep: kmem_cache#8
 }
 
 /*

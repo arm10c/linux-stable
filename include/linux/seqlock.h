@@ -46,6 +46,7 @@
 // ARM10C 20140913
 // ARM10C 20150103
 // ARM10C 20150418
+// ARM10C 20151003
 typedef struct seqcount {
 	unsigned sequence;
 #ifdef CONFIG_DEBUG_LOCK_ALLOC // CONFIG_DEBUG_LOCK_ALLOC=n

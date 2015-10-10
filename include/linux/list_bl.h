@@ -35,6 +35,8 @@ struct hlist_bl_head {
 	struct hlist_bl_node *first;
 };
 
+// ARM10C 20151003
+// sizeof(struct hlist_bl_node): 8 bytes
 struct hlist_bl_node {
 	struct hlist_bl_node *next, **pprev;
 };

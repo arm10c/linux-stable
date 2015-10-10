@@ -115,6 +115,7 @@ struct vm_area_struct;
 // ARM10C 20140524
 // ARM10C 20140614
 // ARM10C 20141004
+// ARM10C 20151003
 // ___GFP_WAIT: 0x10u
 // __GFP_WAIT: 0x10u
 #define __GFP_WAIT	((__force gfp_t)___GFP_WAIT)	/* Can wait and reschedule? */
@@ -123,10 +124,12 @@ struct vm_area_struct;
 // __GFP_HIGH: 0x20u
 #define __GFP_HIGH	((__force gfp_t)___GFP_HIGH)	/* Should access emergency pools? */
 // ARM10C 20140426
+// ARM10C 20151003
 // ___GFP_IO: 0x40u
 // __GFP_IO: 0x40u
 #define __GFP_IO	((__force gfp_t)___GFP_IO)	/* Can start physical IO? */
 // ARM10C 20140426
+// ARM10C 20151003
 // ___GFP_FS: 0x80u
 // __GFP_FS: 0x80u
 #define __GFP_FS	((__force gfp_t)___GFP_FS)	/* Can call down to low-level FS? */
@@ -179,6 +182,7 @@ struct vm_area_struct;
 							 * set
 							 */
 // ARM10C 20140426
+// ARM10C 20151003
 // ___GFP_HARDWALL: 0x20000u
 // __GFP_HARDWALL: 0x20000u
 #define __GFP_HARDWALL   ((__force gfp_t)___GFP_HARDWALL) /* Enforce hardwall cpuset memory allocs */
@@ -268,6 +272,12 @@ struct vm_area_struct;
 #define GFP_KERNEL	(__GFP_WAIT | __GFP_IO | __GFP_FS)
 #define GFP_TEMPORARY	(__GFP_WAIT | __GFP_IO | __GFP_FS | \
 			 __GFP_RECLAIMABLE)
+// ARM10C 20151003
+// __GFP_WAIT: 0x10u
+// __GFP_IO: 0x40u
+// __GFP_FS: 0x80u
+// __GFP_HARDWALL: 0x20000u
+// GFP_USER: 0x200D0
 #define GFP_USER	(__GFP_WAIT | __GFP_IO | __GFP_FS | __GFP_HARDWALL)
 #define GFP_HIGHUSER	(__GFP_WAIT | __GFP_IO | __GFP_FS | __GFP_HARDWALL | \
 			 __GFP_HIGHMEM)
@@ -499,29 +509,38 @@ static inline int allocflags_to_migratetype(gfp_t gfp_flags)
 // GFP_HIGHUSER_MOVABLE: 0x200DA
 // ARM10C 20140426
 // gfp_mask: 0x201200
+// ARM10C 20151003
+// GFP_USER: 0x200D0
 static inline enum zone_type gfp_zone(gfp_t flags)
 {
 	enum zone_type z;
 	// flags: GFP_HIGHUSER_MOVABLE: 0x200DA, GFP_ZONEMASK: 0xF
 	// flags: 0x201200, GFP_ZONEMASK: 0xF
+	// flags: 0x200D0, GFP_ZONEMASK: 0xF
 	int bit = (__force int) (flags & GFP_ZONEMASK);
 	// bit: 0xA
 	// bit: 0x0
+	// bit: 0x0
 
 	// GFP_ZONE_TABLE: 0x1008, bit: 0xA, ZONES_SHIFT: 2
+	// GFP_ZONE_TABLE: 0x1008, bit: 0x0, ZONES_SHIFT: 2
 	// GFP_ZONE_TABLE: 0x1008, bit: 0x0, ZONES_SHIFT: 2
 	z = (GFP_ZONE_TABLE >> (bit * ZONES_SHIFT)) &
 					 ((1 << ZONES_SHIFT) - 1);
 	// z: 0
 	// z: 0
+	// z: 0
 
 	// GFP_ZONE_BAD: 0xE8E8, bit: 0xA, (GFP_ZONE_BAD >> bit): 0x3A
+	// GFP_ZONE_BAD: 0xE8E8, bit: 0x0, (GFP_ZONE_BAD >> bit): 0xE8E8
 	// GFP_ZONE_BAD: 0xE8E8, bit: 0x0, (GFP_ZONE_BAD >> bit): 0xE8E8
 	VM_BUG_ON((GFP_ZONE_BAD >> bit) & 1);
 
 	// z: 0
 	// z: 0
+	// z: 0
 	return z;
+	// return 0
 	// return 0
 	// return 0
 }

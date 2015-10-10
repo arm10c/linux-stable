@@ -43,6 +43,7 @@ struct pipe_buffer {
  *	@fasync_writers: writer side fasync
  *	@bufs: the circular array of pipe buffers
  **/
+// ARM10C 20150919
 struct pipe_inode_info {
 	struct mutex mutex;
 	wait_queue_head_t wait;

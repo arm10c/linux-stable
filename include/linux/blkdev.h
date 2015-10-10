@@ -3,7 +3,7 @@
 
 #include <linux/sched.h>
 
-#ifdef CONFIG_BLOCK
+#ifdef CONFIG_BLOCK // CONFIG_BLOCK=y
 
 #include <linux/major.h>
 #include <linux/genhd.h>

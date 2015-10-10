@@ -44,8 +44,10 @@ static inline gid_t __kgid_val(kgid_t gid)
 #else
 
 // ARM10C 20150919
+// ARM10C 20151003
 typedef uid_t kuid_t;
 // ARM10C 20150919
+// ARM10C 20151003
 typedef gid_t kgid_t;
 
 static inline uid_t __kuid_val(kuid_t uid)

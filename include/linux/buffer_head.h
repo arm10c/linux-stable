@@ -14,7 +14,7 @@
 #include <linux/wait.h>
 #include <linux/atomic.h>
 
-#ifdef CONFIG_BLOCK
+#ifdef CONFIG_BLOCK // CONFIG_BLOCK=y
 
 enum bh_state_bits {
 	BH_Uptodate,	/* Contains valid data */
@@ -48,6 +48,7 @@ enum bh_state_bits {
 struct page;
 struct buffer_head;
 struct address_space;
+// ARM10C 20151003
 typedef void (bh_end_io_t)(struct buffer_head *bh, int uptodate);
 
 /*
@@ -59,6 +60,8 @@ typedef void (bh_end_io_t)(struct buffer_head *bh, int uptodate);
  * a page (via a page_mapping) and for wrapping bio submission
  * for backward compatibility reasons (e.g. submit_bh).
  */
+// ARM10C 20151003
+// sizeof(struct buffer_head): 56 bytes
 struct buffer_head {
 	unsigned long b_state;		/* buffer state bitmap (see above) */
 	struct buffer_head *b_this_page;/* circular list of page's buffers */

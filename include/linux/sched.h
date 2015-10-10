@@ -203,6 +203,8 @@ extern char ___assert_task_state[1 - 2*!!(
 	set_mb(current->state, (state_value))
 
 /* Task command name length */
+// ARM10C 20150919
+// TASK_COMM_LEN: 16
 #define TASK_COMM_LEN 16
 
 #include <linux/spinlock.h>
@@ -400,6 +402,8 @@ struct pacct_struct {
 	unsigned long		ac_minflt, ac_majflt;
 };
 
+// ARM10C 20150919
+// sizeof(struct cpu_itimer): 8 bytes
 struct cpu_itimer {
 	cputime_t expires;
 	cputime_t incr;
@@ -433,6 +437,8 @@ struct cputime {
  * CPU time want to group these counts together and treat all three
  * of them in parallel.
  */
+// ARM10C 20150919
+// sizeof(struct task_cputime): 16 bytes
 struct task_cputime {
 	cputime_t utime;
 	cputime_t stime;
@@ -478,6 +484,8 @@ struct task_cputime {
  * This structure contains the version of task_cputime, above, that is
  * used for thread group CPU timer calculations.
  */
+// ARM10C 20150919
+// sizeof(struct thread_group_cputimer): 36 bytes
 struct thread_group_cputimer {
 	struct task_cputime cputime;
 	int running;
@@ -495,6 +503,7 @@ struct autogroup;
  * the locking of signal_struct.
  */
 // ARM10C 20150919
+// sizeof(struct signal_struct): 536 bytes
 struct signal_struct {
 	atomic_t		sigcnt;
 	atomic_t		live;
@@ -606,6 +615,7 @@ struct signal_struct {
 	 * protect this instead of the siglock, because they really
 	 * have no need to disable irqs.
 	 */
+	// RLIM_NLIMITS: 16
 	struct rlimit rlim[RLIM_NLIMITS];
 
 #ifdef CONFIG_BSD_PROCESS_ACCT // CONFIG_BSD_PROCESS_ACCT=n
@@ -952,11 +962,14 @@ struct pipe_inode_info;
 struct uts_namespace;
 
 // ARM10C 20140913
+// sizeof(struct load_weight): 8 bytes
 struct load_weight {
 	unsigned long weight;
 	u32 inv_weight;
 };
 
+// ARM10C 20151003
+// sizeof(struct sched_avg): 28 bytes
 struct sched_avg {
 	/*
 	 * These sums represent an infinite geometric series and so are bound
@@ -1006,6 +1019,8 @@ struct sched_statistics {
 #endif
 
 // ARM10C 20140913
+// ARM10C 20150919
+// sizeof(struct sched_entity): 100 bytes
 struct sched_entity {
 	struct load_weight	load;		/* for load-balancing */
 	struct rb_node		run_node;
@@ -1037,6 +1052,8 @@ struct sched_entity {
 #endif
 };
 
+// ARM10C 20151003
+// sizeof(struct sched_rt_entity): 36 bytes
 struct sched_rt_entity {
 	struct list_head run_list;
 	unsigned long timeout;
@@ -1044,7 +1061,7 @@ struct sched_rt_entity {
 	unsigned int time_slice;
 
 	struct sched_rt_entity *back;
-#ifdef CONFIG_RT_GROUP_SCHED
+#ifdef CONFIG_RT_GROUP_SCHED // CONFIG_RT_GROUP_SCHED=y
 	struct sched_rt_entity	*parent;
 	/* rq on which this entity is (to be) queued: */
 	struct rt_rq		*rt_rq;
@@ -1068,6 +1085,7 @@ enum perf_event_task_context {
 // ARM10C 20140920
 // ARM10C 20150606
 // ARM10C 20150919
+// sizeof(struct task_struct): 815 bytes
 struct task_struct {
 	volatile long state;	/* -1 unrunnable, 0 runnable, >0 stopped */
 	void *stack;
@@ -1187,6 +1205,7 @@ struct task_struct {
 	struct list_head ptrace_entry;
 
 	/* PID/PID hash table linkage. */
+	// PIDTYPE_MAX: 3
 	struct pid_link pids[PIDTYPE_MAX];
 	struct list_head thread_group;
 
@@ -1222,6 +1241,7 @@ struct task_struct {
 					 * credentials (COW) */
 	const struct cred __rcu *cred;	/* effective (overridable) subjective task
 					 * credentials (COW) */
+	// TASK_COMM_LEN: 16
 	char comm[TASK_COMM_LEN]; /* executable name excluding path
 				     - access with [gs]et_task_comm (which lock
 				       it with task_lock())

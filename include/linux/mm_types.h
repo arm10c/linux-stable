@@ -17,8 +17,14 @@
 #include <asm/mmu.h>
 
 #ifndef AT_VECTOR_SIZE_ARCH
+// ARM10C 20150919
+// AT_VECTOR_SIZE_ARCH: 0
 #define AT_VECTOR_SIZE_ARCH 0
 #endif
+// ARM10C 20150919
+// AT_VECTOR_SIZE_ARCH: 0
+// AT_VECTOR_SIZE_BASE: 20
+// AT_VECTOR_SIZE: 42
 #define AT_VECTOR_SIZE (2*(AT_VECTOR_SIZE_ARCH + AT_VECTOR_SIZE_BASE + 1))
 
 struct address_space;
@@ -27,6 +33,10 @@ struct address_space;
 // NR_CPUS: 4, CONFIG_SPLIT_PTLOCK_CPUS: 4
 // USE_SPLIT_PTE_PTLOCKS: 1
 #define USE_SPLIT_PTE_PTLOCKS	(NR_CPUS >= CONFIG_SPLIT_PTLOCK_CPUS)
+// ARM10C 20150919
+// USE_SPLIT_PTE_PTLOCKS: 1
+// IS_ENABLED(CONFIG_ARCH_ENABLE_SPLIT_PMD_PTLOCK): 0
+// USE_SPLIT_PMD_PTLOCKS: 0
 #define USE_SPLIT_PMD_PTLOCKS	(USE_SPLIT_PTE_PTLOCKS && \
 		IS_ENABLED(CONFIG_ARCH_ENABLE_SPLIT_PMD_PTLOCK))
 #define ALLOC_SPLIT_PTLOCKS	(SPINLOCK_SIZE > BITS_PER_LONG/8)
@@ -48,6 +58,7 @@ struct address_space;
 // ARM10C 20140329
 // ARM10C 20140621
 // ARM10C 20141129
+// ARM10C 20151003
 // sizeof(struct page): 32 bytes
 struct page {
 	/* First double word block */
@@ -231,9 +242,11 @@ struct page {
 #endif
 ;
 
+// ARM10C 20150919
+// sizeof(struct page_frag): 8 bytes
 struct page_frag {
 	struct page *page;
-#if (BITS_PER_LONG > 32) || (PAGE_SIZE >= 65536)
+#if (BITS_PER_LONG > 32) || (PAGE_SIZE >= 65536) // BITS_PER_LONG: 32, PAGE_SIZE: 0x1000
 	__u32 offset;
 	__u32 size;
 #else
@@ -249,6 +262,7 @@ typedef unsigned long __nocast vm_flags_t;
  * conditions.  These are held in a global tree and are pinned by the VMAs that
  * map parts of them.
  */
+// ARM10C 20150919
 struct vm_region {
 	struct rb_node	vm_rb;		/* link in global region tree */
 	vm_flags_t	vm_flags;	/* VMA vm_flags */
@@ -269,6 +283,8 @@ struct vm_region {
  * space that has a special rule for the page-fault handlers (ie a shared
  * library, the executable area etc).
  */
+// ARM10C 20150919
+// sizeof(struct vm_area_struct): 84 bytes
 struct vm_area_struct {
 	/* The first cache line has the info for VMA tree walking. */
 
@@ -327,10 +343,10 @@ struct vm_area_struct {
 	struct file * vm_file;		/* File we map to (can be NULL). */
 	void * vm_private_data;		/* was vm_pte (shared mem) */
 
-#ifndef CONFIG_MMU
+#ifndef CONFIG_MMU // CONFIG_MMU=y
 	struct vm_region *vm_region;	/* NOMMU mapping region */
 #endif
-#ifdef CONFIG_NUMA
+#ifdef CONFIG_NUMA // CONFIG_NUMA=n
 	struct mempolicy *vm_policy;	/* NUMA policy for the VMA */
 #endif
 };
@@ -346,10 +362,12 @@ struct core_state {
 	struct completion startup;
 };
 
+// ARM10C 20150919
 enum {
 	MM_FILEPAGES,
 	MM_ANONPAGES,
 	MM_SWAPENTS,
+	// NR_MM_COUNTERS: 3
 	NR_MM_COUNTERS
 };
 
@@ -357,13 +375,19 @@ enum {
 // ARM10C 20140920
 #define SPLIT_RSS_COUNTING
 /* per-thread cached information, */
+// ARM10C 20150919
+// sizeof(struct task_rss_stat): 16 bytes
 struct task_rss_stat {
 	int events;	/* for synchronization threshold */
+	// NR_MM_COUNTERS: 3
 	int count[NR_MM_COUNTERS];
 };
 #endif /* USE_SPLIT_PTE_PTLOCKS */
 
+// ARM10C 20150919
+// sizeof(struct mm_rss_stat): 12 bytes
 struct mm_rss_stat {
+	// NR_MM_COUNTERS: 3
 	atomic_long_t count[NR_MM_COUNTERS];
 };
 
@@ -371,11 +395,13 @@ struct kioctx_table;
 
 // ARM10C 20131012
 // ARM10C 20140913
+// ARM10C 20150919
+// sizeof(struct mm_struct): 428 bytes
 struct mm_struct {
 	struct vm_area_struct * mmap;		/* list of VMAs */
 	struct rb_root mm_rb;
 	struct vm_area_struct * mmap_cache;	/* last find_vma result */
-#ifdef CONFIG_MMU
+#ifdef CONFIG_MMU // CONFIG_MMU=y
 	unsigned long (*get_unmapped_area) (struct file *filp,
 				unsigned long addr, unsigned long len,
 				unsigned long pgoff, unsigned long flags);
@@ -413,6 +439,7 @@ struct mm_struct {
 	unsigned long start_brk, brk, start_stack;
 	unsigned long arg_start, arg_end, env_start, env_end;
 
+	// AT_VECTOR_SIZE: 42
 	unsigned long saved_auxv[AT_VECTOR_SIZE]; /* for /proc/PID/auxv */
 
 	/*
@@ -431,11 +458,11 @@ struct mm_struct {
 	unsigned long flags; /* Must use atomic bitops to access the bits */
 
 	struct core_state *core_state; /* coredumping support */
-#ifdef CONFIG_AIO
+#ifdef CONFIG_AIO // CONFIG_AIO=y
 	spinlock_t			ioctx_lock;
 	struct kioctx_table __rcu	*ioctx_table;
 #endif
-#ifdef CONFIG_MM_OWNER
+#ifdef CONFIG_MM_OWNER // CONFIG_MM_OWNER=n
 	/*
 	 * "owner" points to a task that is regarded as the canonical
 	 * user/owner of this mm. All of the following must be true in
@@ -451,16 +478,16 @@ struct mm_struct {
 
 	/* store ref to file /proc/<pid>/exe symlink points to */
 	struct file *exe_file;
-#ifdef CONFIG_MMU_NOTIFIER
+#ifdef CONFIG_MMU_NOTIFIER // CONFIG_MMU_NOTIFIER=n
 	struct mmu_notifier_mm *mmu_notifier_mm;
 #endif
-#if defined(CONFIG_TRANSPARENT_HUGEPAGE) && !USE_SPLIT_PMD_PTLOCKS
+#if defined(CONFIG_TRANSPARENT_HUGEPAGE) && !USE_SPLIT_PMD_PTLOCKS // CONFIG_TRANSPARENT_HUGEPAGE=n, USE_SPLIT_PMD_PTLOCKS: 0
 	pgtable_t pmd_huge_pte; /* protected by page_table_lock */
 #endif
-#ifdef CONFIG_CPUMASK_OFFSTACK
+#ifdef CONFIG_CPUMASK_OFFSTACK // CONFIG_CPUMASK_OFFSTACK=n
 	struct cpumask cpumask_allocation;
 #endif
-#ifdef CONFIG_NUMA_BALANCING
+#ifdef CONFIG_NUMA_BALANCING // CONFIG_NUMA_BALANCING=n
 	/*
 	 * numa_next_scan is the next time that the PTEs will be marked
 	 * pte_numa. NUMA hinting faults will gather statistics and migrate
@@ -474,7 +501,7 @@ struct mm_struct {
 	/* numa_scan_seq prevents two threads setting pte_numa */
 	int numa_scan_seq;
 #endif
-#if defined(CONFIG_NUMA_BALANCING) || defined(CONFIG_COMPACTION)
+#if defined(CONFIG_NUMA_BALANCING) || defined(CONFIG_COMPACTION) // CONFIG_NUMA_BALANCING=n, CONFIG_COMPACTION=y
 	/*
 	 * An operation with batched TLB flushing is going on. Anything that
 	 * can move process memory needs to flush the TLB when moving a

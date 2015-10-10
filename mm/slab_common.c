@@ -220,9 +220,29 @@ unsigned long calculate_alignment(unsigned long flags,
 // ARM10C 20150919
 // NULL, name: "cred_jar", size: 92, align: 0, flags: 0x00042000, ctor: NULL
 // ARM10C 20150919
-// NULL, name: "task_struct", size: XXX, align: 64, flags: 0x00040000, ctor: NULL
+// NULL, name: "task_struct", size: 815, align: 64, flags: 0x00040000, ctor: NULL
 // ARM10C 20150919
 // NULL, name:"sighand_cache", size: 1324, align: 0, flags: 0xc2000, ctor: sighand_ctor
+// ARM10C 20150919
+// NULL, name: "signal_cache", size: 536, align: 0, flags: 0x42000, ctor: NULL
+// ARM10C 20150919
+// NULL, name: "files_cache", size: 188, align: 0, flags: 0x42000, ctor: NULL
+// ARM10C 20150919
+// NULL, name: "fs_cache", size: 48, align: 0, flags: 0x42000, ctor: NULL
+// ARM10C 20150919
+// NULL, name: "mm_struct", size: 428, align: 0, flags: 0x42000, ctor: NULL
+// ARM10C 20151003
+// NULL, name: "nsproxy", size: 24, align: 4, flags: 0x40000, ctor: NULL
+// ARM10C 20151003
+// NULL, name: "buffer_head", size: 56, align: 0, flags: 0xE0000, ctor: NULL
+// ARM10C 20151003
+// NULL, name: "names_cache", size: 4096, align: 0, flags: 0x42000, ctor: NULL
+// ARM10C 20151003
+// NULL, name: "dentry", size: 140, align: 4, flags: 0x160000, ctor: NULL
+// ARM10C 20151003
+// NULL, name: "inode_cache", size: 394, align: 0, flags: 0x160000, ctor: init_once
+// ARM10C 20151003
+// NULL, name: "filp", size: 160, align: 0, flags: 0x42000, ctor: NULL
 struct kmem_cache *
 kmem_cache_create_memcg(struct mem_cgroup *memcg, const char *name, size_t size,
 			size_t align, unsigned long flags, void (*ctor)(void *),
@@ -398,9 +418,31 @@ out_locked:
 // ARM10C 20150919
 // "cred_jar", sizeof(struct cred): 92 bytes, 0, 0x00042000, NULL
 // ARM10C 20150919
-// "task_struct", sizeof(struct task_struct): XXX, 64, 0x00040000, NULL
+// "task_struct", sizeof(struct task_struct): 815 bytes, 64, 0x00040000, NULL
 // ARM10C 20150919
 // "sighand_cache", sizeof(struct sighand_struct): 1324 bytes, 0, 0xc2000, sighand_ctor
+// ARM10C 20150919
+// "signal_cache", sizeof(struct signal_struct): 536 bytes, 0, 0x42000, NULL
+// ARM10C 20150919
+// "files_cache", sizeof(struct files_struct): 188 bytes, 0, 0x42000, NULL
+// ARM10C 20150919
+// "fs_cache", sizeof(struct fs_struct): 48 bytes, 0, 0x42000, NULL
+// ARM10C 20150919
+// "mm_struct", sizeof(struct mm_struct): 428 bytes, 0, 0x42000, NULL
+// ARM10C 20150919
+// "vm_area_struct", sizeof(struct vm_area_struct): 84 bytes, __alignof__(struct vm_area_struct): 4, (0x00040000), NULL
+// ARM10C 20151003
+// "nsproxy", sizeof(struct nsproxy): 24 bytes, __alignof__(struct nsproxy): 4, (0x00040000), NULL
+// ARM10C 20151003
+// "buffer_head", sizeof(struct buffer_head): 56 bytes, 0, 0x000E0000, NULL
+// ARM10C 20151003
+// "names_cache", 4096, 0, 0x42000, NULL
+// ARM10C 20151003
+// "dentry", sizeof(struct dentry): 140 bytes, __alignof__(struct dentry): 4, (0x160000), NULL
+// ARM10C 20151003
+// "inode_cache", sizeof(struct inode): 394 bytes, 0, 0x160000, init_once
+// ARM10C 20151003
+// "filp", sizeof(struct file): 160 bytes, 0, 0x42000, NULL
 struct kmem_cache *
 kmem_cache_create(const char *name, size_t size, size_t align,
 		  unsigned long flags, void (*ctor)(void *))
@@ -417,10 +459,32 @@ kmem_cache_create(const char *name, size_t size, size_t align,
 	// kmem_cache_create_memcg(NULL, "anon_vma_chain", 32, 4, 0x00040000, NULL): kmem_cache#17
 	// name: "cred_jar", size: 92, align: 0, flags: 0x00042000, ctor: NULL
 	// kmem_cache_create_memcg(NULL, "cred_jar", 92, 0, 0x00042000, NULL): kmem_cache#16
-	// name: "task_struct", size: XXX, align: 64, flags: 0x00040000, ctor: NULL
-	// kmem_cache_create_memcg(NULL, "task_struct", XXX, 64, 0x00040000, NULL): kmem_cache#15
+	// name: "task_struct", size: 815, align: 64, flags: 0x00040000, ctor: NULL
+	// kmem_cache_create_memcg(NULL, "task_struct", 815, 64, 0x00040000, NULL): kmem_cache#15
 	// name: "sighand_cache", size: 1324, align: 0, flags: 0xc2000, ctor: sighand_ctor
 	// kmem_cache_create_memcg(NULL, "sighand_cache", 1324, 0, 0xc2000, sighand_ctor): kmem_cache#14
+	// name: "signal_cache", size: 536, align: 0, flags: 0x42000, ctor: NULL
+	// kmem_cache_create_memcg(NULL, "signal_cache", 536, 0, 0x42000, NULL): kmem_cache#13
+	// name: "files_cache", size: 188, align: 0, flags: 0x42000, ctor: NULL
+	// kmem_cache_create_memcg(NULL, "files_cache", 188, 0, 0x42000, NULL): kmem_cache#12
+	// name: "fs_cache", size: 48, align: 0, flags: 0x42000, ctor: NULL
+	// kmem_cache_create_memcg(NULL, "fs_cache", 48, 0, 0x42000, NULL): kmem_cache#11
+	// name: "mm_struct", size: 428, align: 0, flags: 0x42000, ctor: NULL
+	// kmem_cache_create_memcg(NULL, "mm_struct", 428, 0, 0x42000, NULL): kmem_cache#10
+	// name: "vm_area_struct", size: 84, align: 4, flags: 0x40000, ctor: NULL
+	// kmem_cache_create_memcg(NULL, "vm_area_struct", 84, 4, 0x40000, NULL): kmem_cache#9
+	// name: "nsproxy", size: 24, align: 4, flags: 0x40000, ctor: NULL
+	// kmem_cache_create_memcg(NULL, "nsproxy", 24, 4, 0x40000, NULL): kmem_cache#8
+	// name: "buffer_head", size: 56, align: 0, flags: 0xE0000, ctor: NULL
+	// kmem_cache_create_memcg(NULL, "buffer_head", 56, 0, 0xE0000, NULL): kmem_cache#7
+	// name: "names_cache", size: 4096, align: 0, flags: 0x42000, ctor: NULL
+	// kmem_cache_create_memcg(NULL, "names_cache", 4096, 0, 0x42000, NULL): kmem_cache#6
+	// name: "dentry", size: 140, align: 4, flags: 0x160000, ctor: NULL
+	// kmem_cache_create_memcg(NULL, "dentry", 140, 4, 0x160000, NULL): kmem_cache#5
+	// name: "inode_cache", size: 394, align: 0, flags: 0x160000, ctor: init_once
+	// kmem_cache_create_memcg(NULL, "inode_cache", 394, 4, 0x160000, init_once): kmem_cache#4
+	// name: "filp", size: 160, align: 0, flags: 0x42000, ctor: NULL
+	// kmem_cache_create_memcg(NULL, "filp", 160, 0, 0x42000, NULL): kmem_cache#3
 	return kmem_cache_create_memcg(NULL, name, size, align, flags, ctor, NULL);
 	// return kmem_cache#21
 	// return kmem_cache#20
@@ -430,6 +494,17 @@ kmem_cache_create(const char *name, size_t size, size_t align,
 	// return kmem_cache#16
 	// return kmem_cache#15
 	// return kmem_cache#14
+	// return kmem_cache#13
+	// return kmem_cache#12
+	// return kmem_cache#11
+	// return kmem_cache#10
+	// return kmem_cache#9
+	// return kmem_cache#8
+	// return kmem_cache#7
+	// return kmem_cache#6
+	// return kmem_cache#5
+	// return kmem_cache#4
+	// return kmem_cache#3
 }
 EXPORT_SYMBOL(kmem_cache_create);
 

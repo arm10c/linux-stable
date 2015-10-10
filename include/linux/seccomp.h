@@ -3,7 +3,7 @@
 
 #include <uapi/linux/seccomp.h>
 
-#ifdef CONFIG_SECCOMP
+#ifdef CONFIG_SECCOMP // CONFIG_SECCOMP=n
 
 #include <linux/thread_info.h>
 #include <asm/seccomp.h>
@@ -51,6 +51,7 @@ static inline int seccomp_mode(struct seccomp *s)
 
 #include <linux/errno.h>
 
+// ARM10C 20150919
 struct seccomp { };
 struct seccomp_filter { };
 

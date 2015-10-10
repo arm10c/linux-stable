@@ -911,7 +911,12 @@ asmlinkage void __init start_kernel(void)
 	// max_threads값을 계산하여 init_task에 threads값의 limit 값 설정함
 
 	proc_caches_init();
+	// sighand_struct, signal_struct, files_struct, fs_struct, mm_struct, vm_area_struct, nsproxy
+	// 를 사용하기 위한 kmem_cache 할당자 및 percpu list 초기화 수행
+
 	buffer_init();
+	// buffer_head 를 사용하기 위한 kmem_cache 할당자 및 max_buffer_heads 값 초기화 수행
+
 	key_init(); // null funtion
 	security_init(); // null funtion
 	dbg_late_init(); // null funtion

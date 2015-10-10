@@ -19,8 +19,13 @@
  * The default fd array needs to be at least BITS_PER_LONG,
  * as this is the granularity returned by copy_fdset().
  */
+// ARM10C 20150919
+// BITS_PER_LONG: 32
+// NR_OPEN_DEFAULT: 32
 #define NR_OPEN_DEFAULT BITS_PER_LONG
 
+// ARM10C 20150919
+// sizeof(struct fdtable): 24 bytes
 struct fdtable {
 	unsigned int max_fds;
 	struct file __rcu **fd;      /* current fd array */
@@ -42,6 +47,8 @@ static inline bool fd_is_open(int fd, const struct fdtable *fdt)
 /*
  * Open file table structure
  */
+// ARM10C 20150919
+// sizeof(struct files_struct): 188 bytes
 struct files_struct {
   /*
    * read mostly part
@@ -56,6 +63,7 @@ struct files_struct {
 	int next_fd;
 	unsigned long close_on_exec_init[1];
 	unsigned long open_fds_init[1];
+	// NR_OPEN_DEFAULT: 32
 	struct file __rcu * fd_array[NR_OPEN_DEFAULT];
 };
 

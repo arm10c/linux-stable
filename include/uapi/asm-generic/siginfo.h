@@ -45,6 +45,7 @@ typedef union sigval {
 
 #ifndef HAVE_ARCH_SIGINFO_T
 
+// ARM10C 20150919
 typedef struct siginfo {
 	int si_signo;
 	int si_errno;

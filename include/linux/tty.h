@@ -235,6 +235,7 @@ struct tty_port {
 struct tty_operations;
 
 // ARM10C 20150718
+// ARM10C 20150919
 struct tty_struct {
 	int	magic;
 	struct kref kref;

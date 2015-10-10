@@ -114,6 +114,7 @@ typedef struct {
  * current->reclaim_state points to one of these when a task is running
  * memory reclaim
  */
+// ARM10C 20150919
 struct reclaim_state {
 	unsigned long reclaimed_slab;
 };

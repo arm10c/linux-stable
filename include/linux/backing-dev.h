@@ -61,6 +61,8 @@ struct bdi_writeback {
 	spinlock_t list_lock;		/* protects the b_* lists */
 };
 
+// ARM10C 20150919
+// ARM10C 20151003
 struct backing_dev_info {
 	struct list_head bdi_list;
 	unsigned long ra_pages;	/* max readahead in PAGE_CACHE_SIZE units */

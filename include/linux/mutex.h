@@ -49,6 +49,8 @@
 // ARM10C 20140315
 // ARM10C 20150117
 // ARM10C 20150718
+// ARM10C 20150919
+// ARM10C 20151003
 // sizeof(struct mutex): 40 bytes
 struct mutex {
 	/* 1: unlocked, 0: locked, negative: locked, possible waiters */
@@ -75,6 +77,7 @@ struct mutex {
  * which resides on the blocked task's kernel stack:
  */
 // ARM10C 20140315
+// ARM10C 20150919
 // sizeof(struct mutex_waiter): 16 bytes
 struct mutex_waiter {
 	struct list_head	list;

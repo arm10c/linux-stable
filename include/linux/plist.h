@@ -78,10 +78,14 @@
 #include <linux/kernel.h>
 #include <linux/list.h>
 
+// ARM10C 20150919
+// sizeof(struct plist_head): 8 bytes
 struct plist_head {
 	struct list_head node_list;
 };
 
+// ARM10C 20150919
+// sizeof(struct plist_node): 20 bytes
 struct plist_node {
 	int			prio;
 	struct list_head	prio_list;

@@ -3832,6 +3832,8 @@ EXPORT_SYMBOL(free_pages_exact);
  */
 // ARM10C 20140308
 // offset: 0
+// ARM10C 20151003
+// 0
 static unsigned long nr_free_zone_pages(int offset)
 {
 	struct zoneref *z;
@@ -3888,9 +3890,17 @@ static unsigned long nr_free_zone_pages(int offset)
  * nr_free_buffer_pages() counts the number of pages which are beyond the high
  * watermark within ZONE_DMA and ZONE_NORMAL.
  */
+// ARM10C 20151003
 unsigned long nr_free_buffer_pages(void)
 {
+	// NOTE:
+	// nr_free_zone_pages(0): 0x7f7d6 값은 정확한 값이 아님
+	// 이전의 주석 결과 값을 이용하여 진행함
+
+	// GFP_USER: 0x200D0, gfp_zone(0x200D0): 0
+	// nr_free_zone_pages(0): 0x7f7d6
 	return nr_free_zone_pages(gfp_zone(GFP_USER));
+	// return 0x7f7d6
 }
 EXPORT_SYMBOL_GPL(nr_free_buffer_pages);
 

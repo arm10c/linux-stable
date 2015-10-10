@@ -59,7 +59,7 @@ struct uprobe_consumer {
 	struct uprobe_consumer *next;
 };
 
-#ifdef CONFIG_UPROBES
+#ifdef CONFIG_UPROBES // CONFIG_UPROBES=n
 enum uprobe_task_state {
 	UTASK_RUNNING,
 	UTASK_SSTEP,
@@ -135,6 +135,7 @@ extern int  arch_uprobe_exception_notify(struct notifier_block *self, unsigned l
 extern void arch_uprobe_abort_xol(struct arch_uprobe *aup, struct pt_regs *regs);
 extern unsigned long arch_uretprobe_hijack_return_addr(unsigned long trampoline_vaddr, struct pt_regs *regs);
 #else /* !CONFIG_UPROBES */
+// ARM10C 20150919
 struct uprobes_state {
 };
 static inline int

@@ -7,6 +7,8 @@
 #ifndef _STRUCT_TIMESPEC
 #define _STRUCT_TIMESPEC
 // ARM10C 20150103
+// ARM10C 20150919
+// ARM10C 20151003
 // sizeof(struct timespec): 8 bytes
 struct timespec {
 	__kernel_time_t	tv_sec;			/* seconds */

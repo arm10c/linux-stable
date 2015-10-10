@@ -30,12 +30,15 @@
 #define STACK_TOP_MAX	TASK_SIZE
 #endif
 
+// ARM10C 20150919
 struct debug_info {
-#ifdef CONFIG_HAVE_HW_BREAKPOINT
+#ifdef CONFIG_HAVE_HW_BREAKPOINT // CONFIG_HAVE_HW_BREAKPOINT=n
 	struct perf_event	*hbp[ARM_MAX_HBP_SLOTS];
 #endif
 };
 
+// ARM10C 20150919
+// sizeof(struct thread_struct): 12 bytes
 struct thread_struct {
 							/* fault info	  */
 	unsigned long		address;

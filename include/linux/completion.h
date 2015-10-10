@@ -22,6 +22,8 @@
  * reinit_completion(), and macros DECLARE_COMPLETION(),
  * DECLARE_COMPLETION_ONSTACK().
  */
+// ARM10C 20150919
+// sizeof(struct completion): 28 bytes
 struct completion {
 	unsigned int done;
 	wait_queue_head_t wait;

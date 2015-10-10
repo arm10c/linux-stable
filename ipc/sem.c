@@ -133,6 +133,7 @@ struct sem_undo {
 /* sem_undo_list controls shared access to the list of sem_undo structures
  * that may be shared among all a CLONE_SYSVSEM task group.
  */
+// ARM10C 20150919
 struct sem_undo_list {
 	atomic_t		refcnt;
 	spinlock_t		lock;

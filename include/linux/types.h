@@ -20,15 +20,19 @@
 #define DECLARE_BITMAP(name,bits) \
 	unsigned long name[BITS_TO_LONGS(bits)]
 
+// ARM10C 20151003
 typedef __u32 __kernel_dev_t;
 
 typedef __kernel_fd_set		fd_set;
+// ARM10C 20151003
 typedef __kernel_dev_t		dev_t;
 typedef __kernel_ino_t		ino_t;
 typedef __kernel_mode_t		mode_t;
+// ARM10C 20151003
 typedef unsigned short		umode_t;
 typedef __u32			nlink_t;
 typedef __kernel_off_t		off_t;
+// ARM10C 20150919
 typedef __kernel_pid_t		pid_t;
 typedef __kernel_daddr_t	daddr_t;
 typedef __kernel_key_t		key_t;
@@ -40,7 +44,9 @@ typedef __kernel_mqd_t		mqd_t;
 typedef _Bool			bool;
 
 // ARM10C 20150919
+// ARM10C 20151003
 typedef __kernel_uid32_t	uid_t;
+// ARM10C 20151003
 typedef __kernel_gid32_t	gid_t;
 typedef __kernel_uid16_t        uid16_t;
 typedef __kernel_gid16_t        gid16_t;
@@ -54,6 +60,7 @@ typedef __kernel_old_gid_t	old_gid_t;
 #endif /* CONFIG_UID16 */
 
 #if defined(__GNUC__)
+// ARM10C 20151003
 typedef __kernel_loff_t		loff_t;
 #endif
 
@@ -140,8 +147,10 @@ typedef		__s64		int64_t;
  *
  * blkcnt_t is the type of the inode's block count.
  */
-#ifdef CONFIG_LBDAF
+#ifdef CONFIG_LBDAF // CONFIG_LBDAF=y
+// ARM10C 20151003
 typedef u64 sector_t;
+// ARM10C 20151003
 typedef u64 blkcnt_t;
 #else
 typedef unsigned long sector_t;
@@ -153,6 +162,7 @@ typedef unsigned long blkcnt_t;
  * can override it.
  */
 #ifndef pgoff_t
+// ARM10C 20151003
 #define pgoff_t unsigned long
 #endif
 
@@ -170,7 +180,9 @@ typedef u32 dma_addr_t;
 #endif
 // ARM10C 20140426
 typedef unsigned __bitwise__ gfp_t;
+// ARM10C 20151003
 typedef unsigned __bitwise__ fmode_t;
+// ARM10C 20150919
 typedef unsigned __bitwise__ oom_flags_t;
 
 #ifdef CONFIG_PHYS_ADDR_T_64BIT
@@ -196,6 +208,7 @@ typedef unsigned long irq_hw_number_t;
 // ARM10C 20150718
 // ARM10C 20150808
 // ARM10C 20150919
+// ARM10C 20151003
 typedef struct {
 	int counter;
 } atomic_t;
@@ -211,6 +224,7 @@ typedef struct {
 // ARM10C 20150711
 // ARM10C 20150718
 // ARM10C 20150919
+// ARM10C 20151003
 // sizeof(struct list_head) : 8 bytes
 struct list_head {
 	struct list_head *next, *prev;
@@ -259,6 +273,7 @@ struct callback_head {
 // ARM10C 20140830
 // ARM10C 20140920
 // ARM10C 20150912
+// ARM10C 20150919
 // sizeof(rcu_head): 8 bytes
 #define rcu_head callback_head
 

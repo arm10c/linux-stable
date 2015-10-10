@@ -68,6 +68,7 @@ struct coredump_params {
  * This structure defines the functions that are used to load the binary formats that
  * linux accepts.
  */
+// ARM10C 20150919
 struct linux_binfmt {
 	struct list_head lh;
 	struct module *module;

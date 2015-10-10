@@ -65,6 +65,7 @@ struct llist_head {
 };
 
 // ARM10C 20150718
+// ARM10C 20151003
 struct llist_node {
 	struct llist_node *next;
 };

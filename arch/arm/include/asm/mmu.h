@@ -1,10 +1,12 @@
 #ifndef __ARM_MMU_H
 #define __ARM_MMU_H
 
-#ifdef CONFIG_MMU
+#ifdef CONFIG_MMU // CONFIG_MMU=y
 
+// ARM10C 20150919
+// sizeof (struct mm_context_t): 16 bytes
 typedef struct {
-#ifdef CONFIG_CPU_HAS_ASID
+#ifdef CONFIG_CPU_HAS_ASID // CONFIG_CPU_HAS_ASID=y
 	atomic64_t	id;
 #else
 	int		switch_pending;

@@ -39,6 +39,8 @@ struct	rusage {
 	long	ru_nivcsw;		/* involuntary " */
 };
 
+// ARM10C 20150919
+// sizeof(struct rlimit): 8 bytes
 struct rlimit {
 	unsigned long	rlim_cur;
 	unsigned long	rlim_max;

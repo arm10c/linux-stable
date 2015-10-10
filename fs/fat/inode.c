@@ -594,6 +594,7 @@ static void fat_destroy_inode(struct inode *inode)
 	call_rcu(&inode->i_rcu, fat_i_callback);
 }
 
+// ARM10C 20151003
 static void init_once(void *foo)
 {
 	struct msdos_inode_info *ei = (struct msdos_inode_info *)foo;

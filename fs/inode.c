@@ -1775,17 +1775,22 @@ void __init inode_init_early(void)
 	// 65536개 만큼 hash를 만들었다. 총 hash크기는 256kB이다.
 }
 
+// ARM10C 20151003
 void __init inode_init(void)
 {
 	unsigned int loop;
 
 	/* inode slab cache */
+	// sizeof(struct inode): 394 bytes,
+	// SLAB_RECLAIM_ACCOUNT: 0x00020000UL, SLAB_PANIC: 0x00040000UL, SLAB_MEM_SPREAD: 0x00100000UL,
+	// kmem_cache_create("inode_cache", 394, 0, 0x160000, init_once): kmem_cache#4
 	inode_cachep = kmem_cache_create("inode_cache",
 					 sizeof(struct inode),
 					 0,
 					 (SLAB_RECLAIM_ACCOUNT|SLAB_PANIC|
 					 SLAB_MEM_SPREAD),
 					 init_once);
+	// inode_cachep: kmem_cache#4
 
 	/* Hash may have been set up in inode_init_early */
 	// hashdist: 0

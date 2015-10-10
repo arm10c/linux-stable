@@ -8,16 +8,18 @@
  * portions Copyright 2005, Red Hat, Inc., Ingo Molnar
  * Released under the General Public License (GPL).
  */
+// ARM10C 20151003
+// sizeof(struct rwlock_t): 16 bytes
 typedef struct {
 	arch_rwlock_t raw_lock;
-#ifdef CONFIG_GENERIC_LOCKBREAK
+#ifdef CONFIG_GENERIC_LOCKBREAK // CONFIG_GENERIC_LOCKBREAK=n
 	unsigned int break_lock;
 #endif
-#ifdef CONFIG_DEBUG_SPINLOCK
+#ifdef CONFIG_DEBUG_SPINLOCK // CONFIG_DEBUG_SPINLOCK=y
 	unsigned int magic, owner_cpu;
 	void *owner;
 #endif
-#ifdef CONFIG_DEBUG_LOCK_ALLOC
+#ifdef CONFIG_DEBUG_LOCK_ALLOC // CONFIG_DEBUG_LOCK_ALLOC=n
 	struct lockdep_map dep_map;
 #endif
 } rwlock_t;

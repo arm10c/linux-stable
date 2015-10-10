@@ -49,6 +49,8 @@
 					   0-39 for nice level 19 .. -20 */
 #define RLIMIT_RTPRIO		14	/* maximum realtime priority */
 #define RLIMIT_RTTIME		15	/* timeout for RT tasks in us */
+// ARM10C 20150919
+// RLIM_NLIMITS: 16
 #define RLIM_NLIMITS		16
 
 /*

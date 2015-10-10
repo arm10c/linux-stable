@@ -5,6 +5,8 @@
 
 // ARM10C 20150808
 // ARM10C 20150912
+// ARM10C 20150919
+// ARM10C 20151003
 enum pid_type
 {
 	// PIDTYPE_PID: 0
@@ -64,6 +66,8 @@ struct upid {
 
 // ARM10C 20150718
 // ARM10C 20150912
+// ARM10C 20150919
+// ARM10C 20151003
 // sizeof(struct pid): 44 bytes
 struct pid
 {
@@ -78,6 +82,8 @@ struct pid
 
 extern struct pid init_struct_pid;
 
+// ARM10C 20150919
+// sizeof(struct pid_link): 12 bytes
 struct pid_link
 {
 	struct hlist_node node;

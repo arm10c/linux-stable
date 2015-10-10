@@ -54,6 +54,7 @@ typedef struct { pteval_t pgprot; } pgprot_t;
 typedef pteval_t pte_t;
 typedef pmdval_t pmd_t;
 // ARM10C 20131026
+// ARM10C 20150919
 typedef pmdval_t pgd_t[2];
 // ARM10C 20131102
 typedef pteval_t pgprot_t;

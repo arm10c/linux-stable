@@ -221,10 +221,13 @@ void cpu_hotplug_enable(void)
 // &exynos4_mct_cpu_nb
 // ARM10C 20150620
 // &hotplug_cfd_notifier
+// ARM10C 20151003
+// &buffer_cpu_notify_nb
 int __ref register_cpu_notifier(struct notifier_block *nb)
 {
 	int ret;
 	cpu_maps_update_begin();
+	// waiter를 만들어 mutex를 lock을 시도하며 기다리다 가능할 때 mutex lock한다.
 	// waiter를 만들어 mutex를 lock을 시도하며 기다리다 가능할 때 mutex lock한다.
 	// waiter를 만들어 mutex를 lock을 시도하며 기다리다 가능할 때 mutex lock한다.
 	// waiter를 만들어 mutex를 lock을 시도하며 기다리다 가능할 때 mutex lock한다.
@@ -256,7 +259,12 @@ int __ref register_cpu_notifier(struct notifier_block *nb)
 	// raw_notifier_chain_register(&cpu_chain, &exynos4_mct_cpu_nb): 0
 	// &cpu_chain, nb: &hotplug_cfd_notifier
 	// raw_notifier_chain_register(&cpu_chain, &hotplug_cfd_notifier): 0
+	//
+	// &cpu_chain, nb: &buffer_cpu_notify_nb
+	// raw_notifier_chain_register(&cpu_chain, &buffer_cpu_notify_nb): 0
 	ret = raw_notifier_chain_register(&cpu_chain, nb);
+	// ret: 0
+	// ret: 0
 	// ret: 0
 	// ret: 0
 	// ret: 0
@@ -317,7 +325,13 @@ int __ref register_cpu_notifier(struct notifier_block *nb)
 	// (&cpu_chain)->head: &hotplug_cfd_notifier
 	// (&hotplug_cfd_notifier)->next은 (&exynos4_mct_cpu_nb)->next로 대입
 
+	// raw_notifier_chain_register(&buffer_cpu_notify_nb) 에서 한일:
+	//
+	// (&cpu_chain)->head: &buffer_cpu_notify_nb
+	// (&buffer_cpu_notify_nb)->next은 (&hotplug_cfd_notifier)->next로 대입
+
 	cpu_maps_update_done();
+	// mutex를 기다리는(waiter)가 있으면 깨우고 아니면 mutex unlock한다.
 	// mutex를 기다리는(waiter)가 있으면 깨우고 아니면 mutex unlock한다.
 	// mutex를 기다리는(waiter)가 있으면 깨우고 아니면 mutex unlock한다.
 	// mutex를 기다리는(waiter)가 있으면 깨우고 아니면 mutex unlock한다.
@@ -339,7 +353,9 @@ int __ref register_cpu_notifier(struct notifier_block *nb)
 	// ret: 0
 	// ret: 0
 	// ret: 0
+	// ret: 0
 	return ret;
+	// return 0
 	// return 0
 	// return 0
 	// return 0
