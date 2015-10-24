@@ -42,6 +42,7 @@ struct files_stat_struct files_stat = {
 // ARM10C 20151003
 static struct kmem_cache *filp_cachep __read_mostly;
 
+// ARM10C 20151024
 static struct percpu_counter nr_files __cacheline_aligned_in_smp;
 
 static void file_free_rcu(struct rcu_head *head)
@@ -384,6 +385,18 @@ void __init files_init(unsigned long mempages)
 	// sysctl_nr_open_max: 0x3FFFFFE0
 
 // 2015/10/03 종료
+// 2015/10/24 시작
 
 	percpu_counter_init(&nr_files, 0);
+
+	// percpu_counter_init에서 한일:
+	// (&(&(&(&nr_files)->lock)->wait_lock)->rlock)->raw_lock: { { 0 } }
+	// (&(&(&(&nr_files)->lock)->wait_lock)->rlock)->magic: 0xdead4ead
+	// (&(&(&(&nr_files)->lock)->wait_lock)->rlock)->owner: 0xffffffff
+	// (&(&(&(&nr_files)->lock)->wait_lock)->rlock)->owner_cpu: 0xffffffff
+	// (&(&nr_files)->list)->next: &(&nr_files)->list
+	// (&(&nr_files)->list)->prev: &(&nr_files)->list
+	// (&nr_files)->count: 0
+	// (&nr_files)->counters: kmem_cache#26-o0 에서 할당된 4 bytes 메모리 주소
+	// list head 인 &percpu_counters에 &(&nr_files)->list를 연결함
 } 

@@ -3483,6 +3483,23 @@ void __init vfs_caches_init(unsigned long mempages)
 
 	// mempages: 총 free된 page 수 - XXX
 	files_init(mempages);
+
+	// files_init에서 한일:
+	//
+	// filp_cachep: kmem_cache#3
+	// files_stat.max_files: (총 free된 page 수 - XXX) * 4 / 10
+	// sysctl_nr_open_max: 0x3FFFFFE0
+	//
+	// (&(&(&(&nr_files)->lock)->wait_lock)->rlock)->raw_lock: { { 0 } }
+	// (&(&(&(&nr_files)->lock)->wait_lock)->rlock)->magic: 0xdead4ead
+	// (&(&(&(&nr_files)->lock)->wait_lock)->rlock)->owner: 0xffffffff
+	// (&(&(&(&nr_files)->lock)->wait_lock)->rlock)->owner_cpu: 0xffffffff
+	// (&(&nr_files)->list)->next: &(&nr_files)->list
+	// (&(&nr_files)->list)->prev: &(&nr_files)->list
+	// (&nr_files)->count: 0
+	// (&nr_files)->counters: kmem_cache#26-o0 에서 할당된 4 bytes 메모리 주소
+	// list head 인 &percpu_counters에 &(&nr_files)->list를 연결함
+
 	mnt_init();
 	bdev_cache_init();
 	chrdev_init();

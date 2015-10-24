@@ -31,6 +31,8 @@ static inline void set_page_count(struct page *page, int v)
 // page: 0x20000의 해당하는 struct page의 주소
 // ARM10C 20140524
 // page: migratetype이 MIGRATE_UNMOVABLE인 page
+// ARM10C 20151024
+// page: migratetype이 MIGRATE_UNMOVABLE인 order 2의 page의 물리주소
 static inline void set_page_refcounted(struct page *page)
 {
 	// page: 0x20000의 해당하는 struct page의 주소

@@ -243,6 +243,8 @@ unsigned long calculate_alignment(unsigned long flags,
 // NULL, name: "inode_cache", size: 394, align: 0, flags: 0x160000, ctor: init_once
 // ARM10C 20151003
 // NULL, name: "filp", size: 160, align: 0, flags: 0x42000, ctor: NULL
+// ARM10C 20151024
+// NULL, name: "mnt_cache", size: 152, align: 0, flags: 0x42000, ctor: NULL
 struct kmem_cache *
 kmem_cache_create_memcg(struct mem_cgroup *memcg, const char *name, size_t size,
 			size_t align, unsigned long flags, void (*ctor)(void *),
@@ -443,6 +445,8 @@ out_locked:
 // "inode_cache", sizeof(struct inode): 394 bytes, 0, 0x160000, init_once
 // ARM10C 20151003
 // "filp", sizeof(struct file): 160 bytes, 0, 0x42000, NULL
+// ARM10C 20151024
+// "mnt_cache", sizeof(struct mount): 152 bytes, 0, 0x00042000, NULL
 struct kmem_cache *
 kmem_cache_create(const char *name, size_t size, size_t align,
 		  unsigned long flags, void (*ctor)(void *))
@@ -485,6 +489,8 @@ kmem_cache_create(const char *name, size_t size, size_t align,
 	// kmem_cache_create_memcg(NULL, "inode_cache", 394, 4, 0x160000, init_once): kmem_cache#4
 	// name: "filp", size: 160, align: 0, flags: 0x42000, ctor: NULL
 	// kmem_cache_create_memcg(NULL, "filp", 160, 0, 0x42000, NULL): kmem_cache#3
+	// name: "mnt_cache", size: 152, align: 0, flags: 0x42000, ctor: NULL
+	// kmem_cache_create_memcg(NULL, "mnt_cache", 152, 0, 0x42000, NULL): kmem_cache#2
 	return kmem_cache_create_memcg(NULL, name, size, align, flags, ctor, NULL);
 	// return kmem_cache#21
 	// return kmem_cache#20
@@ -505,6 +511,7 @@ kmem_cache_create(const char *name, size_t size, size_t align,
 	// return kmem_cache#5
 	// return kmem_cache#4
 	// return kmem_cache#3
+	// return kmem_cache#2
 }
 EXPORT_SYMBOL(kmem_cache_create);
 

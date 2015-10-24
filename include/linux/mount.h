@@ -52,6 +52,8 @@ struct mnt_namespace;
 #define MNT_DOOMED		0x1000000
 #define MNT_SYNC_UMOUNT		0x2000000
 
+// ARM10C 20151024
+// sizeof(struct vfsmount): 12 bytes
 struct vfsmount {
 	struct dentry *mnt_root;	/* root of the mounted tree */
 	struct super_block *mnt_sb;	/* pointer to superblock */

@@ -13,6 +13,7 @@ struct mnt_namespace {
 	int event;
 };
 
+// ARM10C 20151024
 struct mnt_pcp {
 	int mnt_count;
 	int mnt_writers;
@@ -24,13 +25,15 @@ struct mountpoint {
 	int m_count;
 };
 
+// ARM10C 20151024
+// sizeof(struct mount): 152 bytes
 struct mount {
 	struct hlist_node mnt_hash;
 	struct mount *mnt_parent;
 	struct dentry *mnt_mountpoint;
 	struct vfsmount mnt;
 	struct rcu_head mnt_rcu;
-#ifdef CONFIG_SMP
+#ifdef CONFIG_SMP // CONFIG_SMP=y
 	struct mnt_pcp __percpu *mnt_pcp;
 #else
 	int mnt_count;
@@ -48,7 +51,7 @@ struct mount {
 	struct mount *mnt_master;	/* slave is on master->mnt_slave_list */
 	struct mnt_namespace *mnt_ns;	/* containing namespace */
 	struct mountpoint *mnt_mp;	/* where is it mounted */
-#ifdef CONFIG_FSNOTIFY
+#ifdef CONFIG_FSNOTIFY // CONFIG_FSNOTIFY=y
 	struct hlist_head mnt_fsnotify_marks;
 	__u32 mnt_fsnotify_mask;
 #endif

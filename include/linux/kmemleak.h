@@ -63,6 +63,7 @@ static inline void kmemleak_init(void)
 {
 }
 // ARM10C 20131214
+// ARM10C 20151024
 static inline void kmemleak_alloc(const void *ptr, size_t size, int min_count,
 				  gfp_t gfp)
 {

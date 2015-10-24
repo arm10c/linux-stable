@@ -92,6 +92,7 @@ enum pageflags {
 	PG_tail,		/* A tail page */
 #else
 	// ARM10C 20140125
+	// ARM10C 20151024
 	// PG_compound: 14
 	PG_compound,		/* A compound page */
 #endif
@@ -437,6 +438,7 @@ static inline void ClearPageCompound(struct page *page)
  * pages on the LRU and/or pagecache.
  */
 // ARM10C 20140405
+// ARM10C 20151024
 TESTPAGEFLAG(Compound, compound)
 __SETPAGEFLAG(Head, compound)  __CLEARPAGEFLAG(Head, compound)
 
@@ -472,6 +474,8 @@ static inline int PageHead(struct page *page)
 // page: 0x20000의 해당하는 struct page의 주소
 // ARM10C 20141129
 // page: kmem_cache#30-o11의 page 주소
+// ARM10C 20151024
+// page: migratetype이 MIGRATE_UNMOVABLE인 order 2의 page의 물리주소
 static inline int PageTail(struct page *page)
 {
 	// PG_head_tail_mask: 0x24000

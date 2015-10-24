@@ -225,14 +225,14 @@ typedef struct {
 // ARM10C 20150718
 // ARM10C 20150919
 // ARM10C 20151003
+// ARM10C 20151024
 // sizeof(struct list_head) : 8 bytes
 struct list_head {
 	struct list_head *next, *prev;
 };
 
 // ARM10C 20140322
-// sizeof(struct hlist_head): 4 bytes
-// ARM10C 20140322
+// ARM10C 20151024
 // sizeof(struct hlist_head): 4 bytes
 struct hlist_head {
 	struct hlist_node *first;
@@ -242,6 +242,7 @@ struct hlist_head {
 // ARM10C 20150117
 // ARM10C 20150808
 // ARM10C 20150912
+// ARM10C 20151024
 // sizeof(struct hlist_node): 8 bytes
 struct hlist_node {
 	struct hlist_node *next, **pprev;
@@ -274,6 +275,7 @@ struct callback_head {
 // ARM10C 20140920
 // ARM10C 20150912
 // ARM10C 20150919
+// ARM10C 20151024
 // sizeof(rcu_head): 8 bytes
 #define rcu_head callback_head
 

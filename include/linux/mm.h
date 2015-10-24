@@ -64,6 +64,7 @@ extern unsigned long sysctl_admin_reserve_kbytes;
 // ARM10C 20131109
 // ARM10C 20131207
 // ARM10C 20141025
+// ARM10C 20151024
 #define PAGE_ALIGN(addr) ALIGN(addr, PAGE_SIZE)
 
 /* test whether an address (unsigned long or pointer) is aligned to PAGE_SIZE */
@@ -411,9 +412,12 @@ static inline void compound_unlock_irqrestore(struct page *page,
 
 // ARM10C 20141129
 // page: kmem_cache#30-o11의 page 주소
+// ARM10C 20151024
+// page: migratetype이 MIGRATE_UNMOVABLE인 order 2의 page의 물리주소
 static inline struct page *compound_head(struct page *page)
 {
 	// page: kmem_cache#30-o11의 page 주소
+	// page: migratetype이 MIGRATE_UNMOVABLE인 order 2의 page의 물리주소
 	if (unlikely(PageTail(page))) {
 		struct page *head = page->first_page;
 
@@ -427,8 +431,10 @@ static inline struct page *compound_head(struct page *page)
 			return head;
 	}
 	// page: kmem_cache#30-o11의 page 주소
+	// page: migratetype이 MIGRATE_UNMOVABLE인 order 2의 page의 물리주소
 	return page;
 	// return kmem_cache#30-o11의 page 주소
+	// return migratetype이 MIGRATE_UNMOVABLE인 order 2의 page의 물리주소
 }
 
 /*
@@ -452,9 +458,17 @@ static inline int page_mapcount(struct page *page)
 	// return 0
 }
 
+// ARM10C 20151024
+// page: migratetype이 MIGRATE_UNMOVABLE인 order 2의 page의 물리주소
 static inline int page_count(struct page *page)
 {
+	// page: migratetype이 MIGRATE_UNMOVABLE인 order 2의 page의 물리주소
+	// compound_head(migratetype이 MIGRATE_UNMOVABLE인 order 2의 page의 물리주소):
+	// migratetype이 MIGRATE_UNMOVABLE인 order 2의 page의 물리주소
+	// atomic_read(migratetype이 MIGRATE_UNMOVABLE인 order 2의 page의 _count 값):
+	// migratetype이 MIGRATE_UNMOVABLE인 order 2의 page의 _count 값
 	return atomic_read(&compound_head(page)->_count);
+	// return: migratetype이 MIGRATE_UNMOVABLE인 order 2의 page의 _count 값
 }
 
 static inline void get_huge_page_tail(struct page *page)

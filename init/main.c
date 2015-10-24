@@ -948,6 +948,10 @@ asmlinkage void __init start_kernel(void)
 
 	/* Do the rest non-__init'ed, we're now alive */
 	rest_init();
+
+	// TODO:
+	// kmem_cache 를 사용했던 xxx_init() 함수들 기능이 나오지 않는 부분은
+	// Remind해서 다시 공부 하는 것으로 진행
 }
 
 /* Call all constructor functions linked into the kernel. */

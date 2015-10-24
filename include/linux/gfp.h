@@ -241,6 +241,7 @@ struct vm_area_struct;
 #define GFP_NOWAIT	(GFP_ATOMIC & ~__GFP_HIGH)
 /* GFP_ATOMIC means both !wait (__GFP_WAIT not set) and use emergency pool */
 // ARM10C 20140426
+// ARM10C 20151024
 // __GFP_HIGH: 0x20u
 // GFP_ATOMIC: 0x20u
 #define GFP_ATOMIC	(__GFP_HIGH)

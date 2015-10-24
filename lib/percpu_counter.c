@@ -130,6 +130,8 @@ EXPORT_SYMBOL(__percpu_counter_sum);
 
 // ARM10C 20150919
 // &vm_committed_as, 0, &__key
+// ARM10C 20151024
+// &nr_files, 0, &__key
 int __percpu_counter_init(struct percpu_counter *fbc, s64 amount,
 			  struct lock_class_key *key)
 {

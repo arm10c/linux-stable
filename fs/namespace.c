@@ -27,11 +27,14 @@
 #include "pnode.h"
 #include "internal.h"
 
+// ARM10C 20151024
 static unsigned int m_hash_mask __read_mostly;
+// ARM10C 20151024
 static unsigned int m_hash_shift __read_mostly;
 static unsigned int mp_hash_mask __read_mostly;
 static unsigned int mp_hash_shift __read_mostly;
 
+// ARM10C 20151024
 static __initdata unsigned long mhash_entries;
 static int __init set_mhash_entries(char *str)
 {
@@ -59,8 +62,10 @@ static DEFINE_SPINLOCK(mnt_id_lock);
 static int mnt_id_start = 0;
 static int mnt_group_start = 1;
 
+// ARM10C 20151024
 static struct hlist_head *mount_hashtable __read_mostly;
 static struct hlist_head *mountpoint_hashtable __read_mostly;
+// ARM10C 20151024
 static struct kmem_cache *mnt_cache __read_mostly;
 static DECLARE_RWSEM(namespace_sem);
 
@@ -2816,19 +2821,29 @@ static void __init init_mount_tree(void)
 	set_fs_root(current->fs, &root);
 }
 
+// ARM10C 20151024
 void __init mnt_init(void)
 {
 	unsigned u;
 	int err;
 
+	// sizeof(struct mount): 152 bytes, SLAB_HWCACHE_ALIGN: 0x00002000UL, SLAB_PANIC: 0x00040000UL
+	// kmem_cache_create("mnt_cache", 152, 0, 0x42000, NULL): kmem_cache#2
 	mnt_cache = kmem_cache_create("mnt_cache", sizeof(struct mount),
 			0, SLAB_HWCACHE_ALIGN | SLAB_PANIC, NULL);
+	// mnt_cache: kmem_cache#2
 
+	// sizeof(struct hlist_head): 4 bytes, mhash_entries: 0
+	// alloc_large_system_hash("Mount-cache", 4, 0, 19, 0, &m_hash_shift, &m_hash_mask, 0, 0): 16kB만큼 할당받은 메모리 주소
 	mount_hashtable = alloc_large_system_hash("Mount-cache",
 				sizeof(struct hlist_head),
 				mhash_entries, 19,
 				0,
 				&m_hash_shift, &m_hash_mask, 0, 0);
+	// mount_hashtable: 16kB만큼 할당받은 메모리 주소
+
+// 2015/10/24 종료
+
 	mountpoint_hashtable = alloc_large_system_hash("Mountpoint-cache",
 				sizeof(struct hlist_head),
 				mphash_entries, 19,
