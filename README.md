@@ -10,6 +10,8 @@
   - current : 3.13.x
   
 # HISTORY
+* 120th (2015/10/24) week [120차](https://github.com/hephaex/kernel_review/blob/master/a10c_120.md)
+ - vfs_caches_init()
 * 119th (2015/10/10) week [119차](https://github.com/hephaex/kernel_review/blob/master/a10c_119.md)
  - buffer_init()
    - buffer_head 를 사용하기 위한 kmem_cache 할당자 및 max_buffer_heads 값 초기화 수행
