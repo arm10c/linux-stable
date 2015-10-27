@@ -10,6 +10,33 @@
   - current : 3.13.x
   
 # HISTORY
+* 119th (2015/10/10) week [119차](https://github.com/hephaex/kernel_review/blob/master/a10c_119.md)
+ - buffer_init()
+   - buffer_head 를 사용하기 위한 kmem_cache 할당자 및 max_buffer_heads 값 초기화 수행
+ - key_init()
+   - null funtion()
+ - security_init()
+   - null function()
+ - dbg_late_init()
+   - null function()
+ - vfs_caches_init()
+* 118th (2015/10/03) week [118차](https://github.com/hephaex/kernel_review/blob/master/a10c_118.md)
+ - proc_caches_init() 
+   - sighand_struct, signal_struct, files_struct, fs_struct, mm_struct, vm_area_struct, nsproxy를
+   - 사용하기 위한 kmem_cache 할당자 및 percpu list 초기화 수행 
+* 117th (2015/09/19) week [117차](https://github.com/hephaex/kernel_review/blob/master/a10c_117.md)
+ - anon_vma_init();
+   - anon vma 를 사용하기 위한 kmem_cache 할당자 초기화 수행
+ - thread_info_cache_init();
+   - null function
+ - cred_init();
+   - credentials 를 사용하기 위한 kmem_cache 할당자 초기화 수행
+ - fork_init(totalram_pages);
+   - totalram_pages: 총 free된 page 수
+   - task_struct 를 사용하기 위한 kmem_cache 할당자 초기화 수행
+   - max_threads값을 계산하여 init_task에 threads값의 limit 값 설정함
+* 116th (2015/09/12) week [116차](https://github.com/hephaex/kernel_review/blob/master/a10c_116.md)
+ - pidmap_init()
 * 115th (2015/08/22) week [115차](https://github.com/hephaex/kernel_review/blob/master/a10c_115.md)
  - cgroup_early_init()
  - cgorup 초기 초기화 분석 완료.
