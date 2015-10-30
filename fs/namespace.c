@@ -45,6 +45,7 @@ static int __init set_mhash_entries(char *str)
 }
 __setup("mhash_entries=", set_mhash_entries);
 
+// ARM10C 20151024
 static __initdata unsigned long mphash_entries;
 static int __init set_mphash_entries(char *str)
 {
@@ -64,6 +65,7 @@ static int mnt_group_start = 1;
 
 // ARM10C 20151024
 static struct hlist_head *mount_hashtable __read_mostly;
+// ARM10C 20151024
 static struct hlist_head *mountpoint_hashtable __read_mostly;
 // ARM10C 20151024
 static struct kmem_cache *mnt_cache __read_mostly;
@@ -2842,13 +2844,17 @@ void __init mnt_init(void)
 				&m_hash_shift, &m_hash_mask, 0, 0);
 	// mount_hashtable: 16kB만큼 할당받은 메모리 주소
 
-// 2015/10/24 종료
 
+	// sizeof(struct hlist_head): 4 bytes, mphash_entries: 0
+	// alloc_large_system_hash("Mountpoint-cache", 4, 0, 19, 0, &m_hash_shift, &m_hash_mask, 0, 0): 16kB만큼 할당받은 메모리 주소
 	mountpoint_hashtable = alloc_large_system_hash("Mountpoint-cache",
 				sizeof(struct hlist_head),
 				mphash_entries, 19,
 				0,
 				&mp_hash_shift, &mp_hash_mask, 0, 0);
+	// mountpoint_hashtable: 16kB만큼 할당받은 메모리 주소
+
+// 2015/10/24 종료
 
 	if (!mount_hashtable || !mountpoint_hashtable)
 		panic("Failed to allocate mount hash table\n");

@@ -3812,6 +3812,8 @@ static void *make_alloc_exact(unsigned long addr, unsigned order, size_t size)
  */
 // ARM10C 20151024
 // [mCA] size: 0x4000 (16kB), GFP_ATOMIC: 0x20u
+// ARM10C 20151024
+// [mpCA] size: 0x4000 (16kB), GFP_ATOMIC: 0x20u
 void *alloc_pages_exact(size_t size, gfp_t gfp_mask)
 {
 	// size: 0x4000, get_order(0x4000): 2
@@ -7346,6 +7348,13 @@ __setup("hashdist=", set_hashdist);
 // flags: 0,
 // *_hash_shift : &m_hash_shift, *_hash_mask : &m_hash_mask,
 // low_limit: 0, high_limit: 0
+
+// ARM10C 20151024
+// [mpCA] tablename: "Mountpoint-cache", bucketsize: 4,
+// numentries: 0, scale: 19,
+// flags: 0,
+// *_hash_shift : &mp_hash_shift, *_hash_mask : &mp_hash_mask,
+// low_limit: 0, high_limit: 0
 void *__init alloc_large_system_hash(const char *tablename,
 				     unsigned long bucketsize,
 				     unsigned long numentries,
@@ -7356,92 +7365,108 @@ void *__init alloc_large_system_hash(const char *tablename,
 				     unsigned long low_limit,
 				     unsigned long high_limit)
 {
-	// [PID] high_limit: 4096
-	// [dCA] high_limit: 0
-	// [iCA] high_limit: 0
-	// [mCA] high_limit: 0
+	// [PID]  high_limit: 4096
+	// [dCA]  high_limit: 0
+	// [iCA]  high_limit: 0
+	// [mCA]  high_limit: 0
+	// [mpCA] high_limit: 0
 	unsigned long long max = high_limit;
-	// [PID] max : 4096
-	// [dCA] max : 0
-	// [iCA] max : 0
-	// [mCA] max : 0
+	// [PID]  max : 4096
+	// [dCA]  max : 0
+	// [iCA]  max : 0
+	// [mCA]  max : 0
+	// [mpCA] max : 0
 
 	unsigned long log2qty, size;
 	void *table = NULL;
-	// [PID] table: NULL
-	// [dCA] table: NULL
-	// [iCA] table: NULL
-	// [mCA] table: NULL
+	// [PID]  table: NULL
+	// [dCA]  table: NULL
+	// [iCA]  table: NULL
+	// [mCA]  table: NULL
+	// [mpCA] table: NULL
 
 	/* allow the kernel cmdline to have a say */
-	// [PID] numentries: 0
-	// [dCA] numentries: 0
-	// [iCA] numentries: 0
-	// [mCA] numentries: 0
+	// [PID]  numentries: 0
+	// [dCA]  numentries: 0
+	// [iCA]  numentries: 0
+	// [mCA]  numentries: 0
+	// [mpCA] numentries: 0
 	if (!numentries) {
-		// [PID] numentries : 0 이므로 if문 실행
-		// [dCA] numentries : 0 이므로 if문 실행
-		// [iCA] numentries : 0 이므로 if문 실행
-		// [mCA] numentries : 0 이므로 if문 실행
+		// [PID]  numentries : 0 이므로 if문 실행
+		// [dCA]  numentries : 0 이므로 if문 실행
+		// [iCA]  numentries : 0 이므로 if문 실행
+		// [mCA]  numentries : 0 이므로 if문 실행
+		// [mpCA] numentries : 0 이므로 if문 실행
 
 		/* round applicable memory size up to nearest megabyte */
-		// [PID] static unsigned long __meminitdata nr_kernel_pages
-		// [PID] nr_kernel_pages : 0x2EFD6
-		// [dCA] static unsigned long __meminitdata nr_kernel_pages
-		// [dCA] nr_kernel_pages : 0x2EFD6
-		// [iCA] static unsigned long __meminitdata nr_kernel_pages
-		// [iCA] nr_kernel_pages : 0x2EFD6
-		// [mCA] static unsigned long __meminitdata nr_kernel_pages
-		// [mCA] nr_kernel_pages : 0x2EFD6
+		// [PID]  static unsigned long __meminitdata nr_kernel_pages
+		// [PID]  nr_kernel_pages : 0x2EFD6
+		// [dCA]  static unsigned long __meminitdata nr_kernel_pages
+		// [dCA]  nr_kernel_pages : 0x2EFD6
+		// [iCA]  static unsigned long __meminitdata nr_kernel_pages
+		// [iCA]  nr_kernel_pages : 0x2EFD6
+		// [mCA]  static unsigned long __meminitdata nr_kernel_pages
+		// [mCA]  nr_kernel_pages : 0x2EFD6
+		// [mpCA] static unsigned long __meminitdata nr_kernel_pages
+		// [mpCA] nr_kernel_pages : 0x2EFD6
 		numentries = nr_kernel_pages;
-		// [PID] numentries : 0x2EFD6
-		// [dCA] numentries : 0x2EFD6
-		// [iCA] numentries : 0x2EFD6
-		// [mCA] numentries : 0x2EFD6
+		// [PID]  numentries : 0x2EFD6
+		// [dCA]  numentries : 0x2EFD6
+		// [iCA]  numentries : 0x2EFD6
+		// [mCA]  numentries : 0x2EFD6
+		// [mpCA] numentries : 0x2EFD6
 
 		/* It isn't necessary when PAGE_SIZE >= 1MB */
-		// [PID] PAGE_SHIFT: 12
-		// [dCA] PAGE_SHIFT: 12
-		// [iCA] PAGE_SHIFT: 12
-		// [mCA] PAGE_SHIFT: 12
+		// [PID]  PAGE_SHIFT: 12
+		// [dCA]  PAGE_SHIFT: 12
+		// [iCA]  PAGE_SHIFT: 12
+		// [mCA]  PAGE_SHIFT: 12
+		// [mpCA] PAGE_SHIFT: 12
 		if (PAGE_SHIFT < 20)
-			// [PID] numentries : 0x2EFD6, PAGE_SIZE: 0x1000, (1UL << 20) / 0x1000): 0xFF
-			// [dCA] numentries : 0x2EFD6, PAGE_SIZE: 0x1000, (1UL << 20) / 0x1000): 0xFF
-			// [iCA] numentries : 0x2EFD6, PAGE_SIZE: 0x1000, (1UL << 20) / 0x1000): 0xFF
-			// [mCA] numentries : 0x2EFD6, PAGE_SIZE: 0x1000, (1UL << 20) / 0x1000): 0xFF
+			// [PID]  numentries : 0x2EFD6, PAGE_SIZE: 0x1000, (1UL << 20) / 0x1000): 0xFF
+			// [dCA]  numentries : 0x2EFD6, PAGE_SIZE: 0x1000, (1UL << 20) / 0x1000): 0xFF
+			// [iCA]  numentries : 0x2EFD6, PAGE_SIZE: 0x1000, (1UL << 20) / 0x1000): 0xFF
+			// [mCA]  numentries : 0x2EFD6, PAGE_SIZE: 0x1000, (1UL << 20) / 0x1000): 0xFF
+			// [mpCA] numentries : 0x2EFD6, PAGE_SIZE: 0x1000, (1UL << 20) / 0x1000): 0xFF
 			numentries = round_up(numentries, (1<<20)/PAGE_SIZE);
-			// [PID] numentries : 0x2F000
-			// [dCA] numentries : 0x2F000
-			// [iCA] numentries : 0x2F000
-			// [mCA] numentries : 0x2F000
+			// [PID]  numentries : 0x2F000
+			// [dCA]  numentries : 0x2F000
+			// [iCA]  numentries : 0x2F000
+			// [mCA]  numentries : 0x2F000
+			// [mpCA] numentries : 0x2F000
 
 		/* limit to 1 bucket per 2^scale bytes of low memory */
-		// [PID] scale : (18 > 12), PAGE_SHIFT: 12
-		// [dCA] scale : (13 > 12), PAGE_SHIFT: 12
-		// [iCA] scale : (14 > 12), PAGE_SHIFT: 12
-		// [mCA] scale : (19 > 12), PAGE_SHIFT: 12
+		// [PID]  scale : (18 > 12), PAGE_SHIFT: 12
+		// [dCA]  scale : (13 > 12), PAGE_SHIFT: 12
+		// [iCA]  scale : (14 > 12), PAGE_SHIFT: 12
+		// [mCA]  scale : (19 > 12), PAGE_SHIFT: 12
+		// [mpCA] scale : (19 > 12), PAGE_SHIFT: 12
 		if (scale > PAGE_SHIFT)
-			// [PID] numentries: 0x2F000, scale: 18, PAGE_SHIFT: 12
-			// [dCA] numentries: 0x2F000, scale: 13, PAGE_SHIFT: 12
-			// [iCA] numentries: 0x2F000, scale: 14, PAGE_SHIFT: 12
-			// [mCA] numentries: 0x2F000, scale: 19, PAGE_SHIFT: 12
+			// [PID]  numentries: 0x2F000, scale: 18, PAGE_SHIFT: 12
+			// [dCA]  numentries: 0x2F000, scale: 13, PAGE_SHIFT: 12
+			// [iCA]  numentries: 0x2F000, scale: 14, PAGE_SHIFT: 12
+			// [mCA]  numentries: 0x2F000, scale: 19, PAGE_SHIFT: 12
+			// [mpCA] numentries: 0x2F000, scale: 19, PAGE_SHIFT: 12
 			numentries >>= (scale - PAGE_SHIFT);
-			// [PID] numentries >>= (scale : 18 - PAGE_SHIFT: 12)
-			// [PID] numentries : 0xBC0 : 0x2F000 >> 6:
-			// [dCA] numentries >>= (scale : 13 - PAGE_SHIFT: 12)
-			// [dCA] numentries : 0x17800 : 0x2F000 >> 1:
-			// [iCA] numentries >>= (scale : 14 - PAGE_SHIFT: 12)
-			// [iCA] numentries : 0xBC00 : 0x2F000 >> 2:
-			// [mCA] numentries >>= (scale : 19 - PAGE_SHIFT: 12)
-			// [mCA] numentries : 0x5E0 : 0x2F000 >> 7:
+			// [PID]  numentries >>= (scale : 18 - PAGE_SHIFT: 12)
+			// [PID]  numentries : 0xBC0 : 0x2F000 >> 6:
+			// [dCA]  numentries >>= (scale : 13 - PAGE_SHIFT: 12)
+			// [dCA]  numentries : 0x17800 : 0x2F000 >> 1:
+			// [iCA]  numentries >>= (scale : 14 - PAGE_SHIFT: 12)
+			// [iCA]  numentries : 0xBC00 : 0x2F000 >> 2:
+			// [mCA]  numentries >>= (scale : 19 - PAGE_SHIFT: 12)
+			// [mCA]  numentries : 0x5E0 : 0x2F000 >> 7:
+			// [mpCA] numentries >>= (scale : 19 - PAGE_SHIFT: 12)
+			// [mpCA] numentries : 0x5E0 : 0x2F000 >> 7:
 		else
 			numentries <<= (PAGE_SHIFT - scale);
 
 		/* Make sure we've got at least a 0-order allocation.. */
-		// [PID] unlikely (0x00000002) : flags : 0x00000003 & HASH_SMALL 0x00000002
-		// [dCA] unlikely (0x00000000) : flags : 0x00000001 & HASH_SMALL 0x00000002
-		// [iCA] unlikely (0x00000000) : flags : 0x00000001 & HASH_SMALL 0x00000002
-		// [mCA] unlikely (0x00000000) : flags : 0x00000000 & HASH_SMALL 0x00000002
+		// [PID]  unlikely (0x00000002) : flags : 0x00000003 & HASH_SMALL 0x00000002
+		// [dCA]  unlikely (0x00000000) : flags : 0x00000001 & HASH_SMALL 0x00000002
+		// [iCA]  unlikely (0x00000000) : flags : 0x00000001 & HASH_SMALL 0x00000002
+		// [mCA]  unlikely (0x00000000) : flags : 0x00000000 & HASH_SMALL 0x00000002
+		// [mpCA] unlikely (0x00000000) : flags : 0x00000000 & HASH_SMALL 0x00000002
 		if (unlikely(flags & HASH_SMALL)) {
 			/* Makes no sense without HASH_EARLY */
 		        // [PID] flags : 0x00000003 & HASH_EARLY : 0x00000001
@@ -7453,94 +7478,111 @@ void *__init alloc_large_system_hash(const char *tablename,
 				BUG_ON(!numentries);
 			}
 		} else if (unlikely((numentries * bucketsize) < PAGE_SIZE))
-		// [dCA] unlikely(0x5E000 : (0x17800 * 4) < 0x1000)
-		// [iCA] unlikely(0x2F000 : (0xBC00 * 4) < 0x1000)
-		// [mCA] unlikely(0x2F000 : (0x5E0 * 4) < 0x1000)
+		// [dCA]  unlikely(0x5E000 : (0x17800 * 4) < 0x1000)
+		// [iCA]  unlikely(0x2F000 : (0xBC00 * 4) < 0x1000)
+		// [mCA]  unlikely(0x2F000 : (0x5E0 * 4) < 0x1000)
+		// [mpCA] unlikely(0x2F000 : (0x5E0 * 4) < 0x1000)
 			numentries = PAGE_SIZE / bucketsize;
 	}
 
-	// [PID] numentries : 0xBC0 : 3008
-	// [dCA] numentries : 0x17800 : 96256
-	// [iCA] numentries : 0xBC00 : 48128
-	// [mCA] numentries : 0x5E0 : 1504
+	// [PID]  numentries : 0xBC0 : 3008
+	// [dCA]  numentries : 0x17800 : 96256
+	// [iCA]  numentries : 0xBC00 : 48128
+	// [mCA]  numentries : 0x5E0 : 1504
+	// [mpCA] numentries : 0x5E0 : 1504
 	numentries = roundup_pow_of_two(numentries);
-	// [PID] numentries : 4096
-	// [dCA] numentries : 131072
-	// [iCA] numentries : 65536
-	// [mCA] numentries : 1024
+	// [PID]  numentries : 4096
+	// [dCA]  numentries : 131072
+	// [iCA]  numentries : 65536
+	// [mCA]  numentries : 1024
+	// [mpCA] numentries : 1024
 	
 	/* limit allocation size to 1/16 total memory by default */
-	// [PID] max : 4096
-	// [dCA] max : 0
-	// [iCA] max : 0
-	// [mCA] max : 0
+	// [PID]  max : 4096
+	// [dCA]  max : 0
+	// [iCA]  max : 0
+	// [mCA]  max : 0
+	// [mpCA] max : 0
 	if (max == 0) {
-		// [dCA] nr_all_pages: 0x7EA00, PAGE_SHIFT: 12
-		// [iCA] nr_all_pages: 0x7EA00, PAGE_SHIFT: 12
-		// [mCA] nr_all_pages: 0x7EA00, PAGE_SHIFT: 12
+		// [dCA]  nr_all_pages: 0x7EA00, PAGE_SHIFT: 12
+		// [iCA]  nr_all_pages: 0x7EA00, PAGE_SHIFT: 12
+		// [mCA]  nr_all_pages: 0x7EA00, PAGE_SHIFT: 12
+		// [mpCA] nr_all_pages: 0x7EA00, PAGE_SHIFT: 12
 		max = ((unsigned long long)nr_all_pages << PAGE_SHIFT) >> 4;
-		// [dCA] max = (nr_all_pages : 0x7EA0000 : 0x7EA00000 >> 4 : 0x7EA00  << 12) >> 4
-		// [iCA] max = (nr_all_pages : 0x7EA0000 : 0x7EA00000 >> 4 : 0x7EA00  << 12) >> 4
-		// [mCA] max = (nr_all_pages : 0x7EA0000 : 0x7EA00000 >> 4 : 0x7EA00  << 12) >> 4
+		// [dCA]  max = (nr_all_pages : 0x7EA0000 : 0x7EA00000 >> 4 : 0x7EA00  << 12) >> 4
+		// [iCA]  max = (nr_all_pages : 0x7EA0000 : 0x7EA00000 >> 4 : 0x7EA00  << 12) >> 4
+		// [mCA]  max = (nr_all_pages : 0x7EA0000 : 0x7EA00000 >> 4 : 0x7EA00  << 12) >> 4
+		// [mpCA] max = (nr_all_pages : 0x7EA0000 : 0x7EA00000 >> 4 : 0x7EA00  << 12) >> 4
 
-		// [dCA] max : 0x7EA0000, bucketsize : 4
-		// [iCA] max : 0x7EA0000, bucketsize : 4
-		// [mCA] max : 0x7EA0000, bucketsize : 4
+		// [dCA]  max : 0x7EA0000, bucketsize : 4
+		// [iCA]  max : 0x7EA0000, bucketsize : 4
+		// [mCA]  max : 0x7EA0000, bucketsize : 4
+		// [mpCA] max : 0x7EA0000, bucketsize : 4
 		do_div(max, bucketsize);
-		// [dCA] max : 0x1FA8000
-		// [iCA] max : 0x1FA8000
-		// [mCA] max : 0x1FA8000
+		// [dCA]  max : 0x1FA8000
+		// [iCA]  max : 0x1FA8000
+		// [mCA]  max : 0x1FA8000
+		// [mpCA] max : 0x1FA8000
 	}
 
-	// [PID] max : 4096 : min(4096, 0x80000000ULL)
-	// [dCA] max : 0x1FA8000 : min(0x1FA8000, 0x80000000ULL)
-	// [iCA] max : 0x1FA8000 : min(0x1FA8000, 0x80000000ULL)
-	// [mCA] max : 0x1FA8000 : min(0x1FA8000, 0x80000000ULL)
+	// [PID] max  : 4096 : min(4096, 0x80000000ULL)
+	// [dCA] max  : 0x1FA8000 : min(0x1FA8000, 0x80000000ULL)
+	// [iCA] max  : 0x1FA8000 : min(0x1FA8000, 0x80000000ULL)
+	// [mCA] max  : 0x1FA8000 : min(0x1FA8000, 0x80000000ULL)
+	// [mpCA] max : 0x1FA8000 : min(0x1FA8000, 0x80000000ULL)
 	max = min(max, 0x80000000ULL);
-	// [PID] max : 4096
-	// [dCA] max : 0x1FA8000
-	// [iCA] max : 0x1FA8000
-	// [mCA] max : 0x1FA8000
+	// [PID] max  : 4096
+	// [dCA] max  : 0x1FA8000
+	// [iCA] max  : 0x1FA8000
+	// [mCA] max  : 0x1FA8000
+	// [mpCA] max : 0x1FA8000
 
-	// [PID] numentries :   4096 < 0, low_limit: 0
-	// [dCA] numentries : 131072 < 0, low_limit: 0
-	// [iCA] numentries :  65536 < 0, low_limit: 0
-	// [mCA] numentries :   1024 < 0, low_limit: 0
+	// [PID]  numentries :   4096 < 0, low_limit: 0
+	// [dCA]  numentries : 131072 < 0, low_limit: 0
+	// [iCA]  numentries :  65536 < 0, low_limit: 0
+	// [mCA]  numentries :   1024 < 0, low_limit: 0
+	// [mpCA] numentries :   1024 < 0, low_limit: 0
 	if (numentries < low_limit)
 		numentries = low_limit;
 
- 	// [PID] numentries :   4096 >    4096
-	// [dCA] numentries : 131072 > 33193984 : 0x1FA8000
-	// [iCA] numentries :  65536 > 33193984 : 0x1FA8000
-	// [mCA] numentries :   1024 > 33193984 : 0x1FA8000
+ 	// [PID]  numentries :   4096 >    4096
+	// [dCA]  numentries : 131072 > 33193984 : 0x1FA8000
+	// [iCA]  numentries :  65536 > 33193984 : 0x1FA8000
+	// [mCA]  numentries :   1024 > 33193984 : 0x1FA8000
+	// [mpCA] numentries :   1024 > 33193984 : 0x1FA8000
 	if (numentries > max)
 		numentries = max;
 
-	// [PID] numentries :   4096
-	// [dCA] numentries : 131072
-	// [iCA] numentries :  65536
-	// [mCA] numentries :  1024
+	// [PID]  numentries :   4096
+	// [dCA]  numentries : 131072
+	// [iCA]  numentries :  65536
+	// [mCA]  numentries :  1024
+	// [mpCA] numentries :  1024
 	log2qty = ilog2(numentries);
-	// [PID] log2qty : 12 : ilog2(4096)
-	// [dCA] log2qty : 17 : ilog2(131072)
-	// [iCA] log2qty : 16 : ilog2(65536)
-	// [mCA] log2qty : 12 : ilog2(1024)
+	// [PID]  log2qty : 12 : ilog2(4096)
+	// [dCA]  log2qty : 17 : ilog2(131072)
+	// [iCA]  log2qty : 16 : ilog2(65536)
+	// [mCA]  log2qty : 12 : ilog2(1024)
+	// [mpCA] log2qty : 12 : ilog2(1024)
 	
 	do {
-		// [PID] bucketsize: 4, log2qty : 12
-		// [dCA] bucketsize: 4, log2qty : 17
-		// [iCA] bucketsize: 4, log2qty : 16
-		// [mCA] bucketsize: 4, log2qty : 12
+		// [PID]  bucketsize: 4, log2qty : 12
+		// [dCA]  bucketsize: 4, log2qty : 17
+		// [iCA]  bucketsize: 4, log2qty : 16
+		// [mCA]  bucketsize: 4, log2qty : 12
+		// [mpCA] bucketsize: 4, log2qty : 12
 		size = bucketsize << log2qty;
-		// [PID] size = 0x4000 (16kB) : 4 << 12
-		// [dCA] size = 0x80000 (512kB) : 4 << 17
-		// [iCA] size = 0x40000 (256kB) : 4 << 16
-		// [mCA] size = 0x4000 (16kB) : 4 << 12
+		// [PID]  size = 0x4000 (16kB) : 4 << 12
+		// [dCA]  size = 0x80000 (512kB) : 4 << 17
+		// [iCA]  size = 0x40000 (256kB) : 4 << 16
+		// [mCA]  size = 0x4000 (16kB) : 4 << 12
+		// [mpCA] size = 0x4000 (16kB) : 4 << 12
 
-		// [PID] 0x00000001 : flags : 0x00000003 & HASH_EARLY : 0x00000001, hashdist: 0
-		// [dCA] 0x00000001 : flags : 0x00000001 & HASH_EARLY : 0x00000001, hashdist: 0
-		// [iCA] 0x00000001 : flags : 0x00000001 & HASH_EARLY : 0x00000001, hashdist: 0
-		// [mCA] 0x00000000 : flags : 0x00000001 & HASH_EARLY : 0x00000001, hashdist: 0
+		// [PID]  0x00000001 : flags : 0x00000003 & HASH_EARLY : 0x00000001, hashdist: 0
+		// [dCA]  0x00000001 : flags : 0x00000001 & HASH_EARLY : 0x00000001, hashdist: 0
+		// [iCA]  0x00000001 : flags : 0x00000001 & HASH_EARLY : 0x00000001, hashdist: 0
+		// [mCA]  0x00000000 : flags : 0x00000001 & HASH_EARLY : 0x00000001, hashdist: 0
+		// [mpCA] 0x00000000 : flags : 0x00000001 & HASH_EARLY : 0x00000001, hashdist: 0
 		if (flags & HASH_EARLY)
 			// [PID] size : 0x4000 (16kB)
 			// [dCA] size : 0x80000 (512kB)
@@ -7557,28 +7599,39 @@ void *__init alloc_large_system_hash(const char *tablename,
 			 * some pages at the end of hash table which
 			 * alloc_pages_exact() automatically does
 			 */
-			// [mCA] size: 0x4000 (16kB), get_order(0x4000): 2, MAX_ORDER: 11
+			// [mCA]  size: 0x4000 (16kB), get_order(0x4000): 2, MAX_ORDER: 11
+			// [mpCA] size: 0x4000 (16kB), get_order(0x4000): 2, MAX_ORDER: 11
 			if (get_order(size) < MAX_ORDER) {
-				// [mCA] size: 0x4000 (16kB), GFP_ATOMIC: 0x20u
-				// [mCA] alloc_pages_exact(0x4000, 0x20): migratetype이 MIGRATE_UNMOVABLE인 order 2의 page의 가상주소
+				// [mCA]  size: 0x4000 (16kB), GFP_ATOMIC: 0x20u
+				// [mCA]  alloc_pages_exact(0x4000, 0x20): migratetype이 MIGRATE_UNMOVABLE인 order 2의 page의 가상주소
+				// [mpCA] size: 0x4000 (16kB), GFP_ATOMIC: 0x20u
+				// [mpCA] alloc_pages_exact(0x4000, 0x20): migratetype이 MIGRATE_UNMOVABLE인 order 2의 page의 가상주소
 				table = alloc_pages_exact(size, GFP_ATOMIC);
-				// [mCA] table: migratetype이 MIGRATE_UNMOVABLE인 order 2의 page의 가상주소
+				// [mCA]  table: migratetype이 MIGRATE_UNMOVABLE인 order 2의 page의 가상주소
+				// [mpCA] table: migratetype이 MIGRATE_UNMOVABLE인 order 2의 page의 가상주소
 
 				// [mCA] alloc_pages_exact 에서 한일:
 				// migratetype이 MIGRATE_UNMOVABLE인 order 2의 page의 가상메모리 공간을 할당받고
 				// migratetype이 MIGRATE_UNMOVABLE인 order 2의 page들의 _count를 1로 set (order 2이면 page 4개)
 				// 각각의 page의 _count 값을 바꾸어 page를 split 함
 
-				// [mCA] table: migratetype이 MIGRATE_UNMOVABLE인 order 2의 page의 가상주소, size: 0x4000 (16kB), GFP_ATOMIC: 0x20u
+				// [mpCA] alloc_pages_exact 에서 한일:
+				// migratetype이 MIGRATE_UNMOVABLE인 order 2의 page의 가상메모리 공간을 할당받고
+				// migratetype이 MIGRATE_UNMOVABLE인 order 2의 page들의 _count를 1로 set (order 2이면 page 4개)
+				// 각각의 page의 _count 값을 바꾸어 page를 split 함
+
+				// [mCA]  table: migratetype이 MIGRATE_UNMOVABLE인 order 2의 page의 가상주소, size: 0x4000 (16kB), GFP_ATOMIC: 0x20u
+				// [mpCA] table: migratetype이 MIGRATE_UNMOVABLE인 order 2의 page의 가상주소, size: 0x4000 (16kB), GFP_ATOMIC: 0x20u
 				kmemleak_alloc(table, size, 1, GFP_ATOMIC); // null function
 			}
 		}
 	} while (!table && size > PAGE_SIZE && --log2qty);
 
-	// [PID] table : 16kB만큼 할당받은 메모리 주소
-	// [dCA] table : 512kB만큼 할당받은 메모리 주소
-	// [iCA] table : 256kB만큼 할당받은 메모리 주소
-	// [mCA] table : 16kB만큼 할당받은 메모리 주소
+	// [PID]  table : 16kB만큼 할당받은 메모리 주소
+	// [dCA]  table : 512kB만큼 할당받은 메모리 주소
+	// [iCA]  table : 256kB만큼 할당받은 메모리 주소
+	// [mCA]  table : 16kB만큼 할당받은 메모리 주소
+	// [mpCA] table : 16kB만큼 할당받은 메모리 주소
 	if (!table)
 		panic("Failed to allocate %s hash table\n", tablename);
 
@@ -7587,46 +7640,55 @@ void *__init alloc_large_system_hash(const char *tablename,
 	       (1UL << log2qty),
 	       ilog2(size) - PAGE_SHIFT,
 	       size);
-	// [PID] PID hash table entries: 4096 (order: 2, 4096 bytes)
-	// [dCA] Dentry cache hash table entries: 131072 (order: 7, 524288 bytes)
-	// [iCA] Inode-cache hash table entries: 65536 (order: 6, 262144 bytes)
-	// [mCA] Mount-cache hash table entries: 4096 (order: 2, 4096 bytes)
+	// [PID]  PID hash table entries: 4096 (order: 2, 4096 bytes)
+	// [dCA]  Dentry cache hash table entries: 131072 (order: 7, 524288 bytes)
+	// [iCA]  Inode-cache hash table entries: 65536 (order: 6, 262144 bytes)
+	// [mCA]  Mount-cache hash table entries: 4096 (order: 2, 4096 bytes)
+	// [mpCA] Mountpoint-cache hash table entries: 4096 (order: 2, 4096 bytes)
 
-	// [PID] _hash_shift : NULL아닌 주소
-	// [dCA] _hash_shift : NULL아닌 주소
-	// [iCA] _hash_shift : NULL아닌 주소
-	// [mCA] _hash_shift : &m_hash_shift
+	// [PID]  _hash_shift : NULL아닌 주소
+	// [dCA]  _hash_shift : NULL아닌 주소
+	// [iCA]  _hash_shift : NULL아닌 주소
+	// [mCA]  _hash_shift : &m_hash_shift
+	// [mpCA] _hash_shift : &mp_hash_shift
 	if (_hash_shift)
-		// [PID] log2qty : 12
-		// [dCA] log2qty : 17
-		// [iCA] log2qty : 16
-		// [mCA] log2qty : 12
+		// [PID]  log2qty : 12
+		// [dCA]  log2qty : 17
+		// [iCA]  log2qty : 16
+		// [mCA]  log2qty : 12
+		// [mpCA] log2qty : 12
 		*_hash_shift = log2qty;
-		// [PID] *_hash_shift : 12
-		// [dCA] *_hash_shift : 17
-		// [iCA] *_hash_shift : 16
-		// [mCA] *_hash_shift: m_hash_shift: 12
+		// [PID]  *_hash_shift : 12
+		// [dCA]  *_hash_shift : 17
+		// [iCA]  *_hash_shift : 16
+		// [mCA]  *_hash_shift: m_hash_shift: 12
+		// [mpCA] *_hash_shift: mp_hash_shift: 12
 
-	// [PID] _hash_mask : NULL 이므로 if문은 패스
-	// [mCA] _hash_mask : m_hash_mask
+	// [PID]  _hash_mask : NULL 이므로 if문은 패스
+	// [mCA]  _hash_mask : m_hash_mask
+	// [mpCA] _hash_mask : mp_hash_mask
 	if (_hash_mask)
-		// [dCA] log2qty : 17
-		// [iCA] log2qty : 16
-		// [mCA] log2qty : 12, _hash_mask : m_hash_mask
+		// [dCA]  log2qty : 17
+		// [iCA]  log2qty : 16
+		// [mCA]  log2qty : 12, _hash_mask : m_hash_mask
+		// [mpCA] log2qty : 12, _hash_mask : m_hash_mask
 		*_hash_mask = (1 << log2qty) - 1;
-		// [dCA] *_hash_mask : (131071) 0x1FFFF : (1 << 17 ) - 1
-		// [iCA] *_hash_mask : (65535) 0xFFFF : (1 << 16 ) - 1
-		// [mCA] *_hash_mask : (4095) 0xFFF : (1 << 12 ) - 1
+		// [dCA]  *_hash_mask : (131071) 0x1FFFF : (1 << 17 ) - 1
+		// [iCA]  *_hash_mask : (65535) 0xFFFF : (1 << 16 ) - 1
+		// [mCA]  *_hash_mask : (4095) 0xFFF : (1 << 12 ) - 1
+		// [mpCA] *_hash_mask : (4095) 0xFFF : (1 << 12 ) - 1
 
-	// [PID] table : 16kB만큼 할당받은 메모리 주소
-	// [dCA] table : 512kB만큼 할당받은 메모리 주소
-	// [iCA] table : 256kB만큼 할당받은 메모리 주소
-	// [mCA] table : 16kB만큼 할당받은 메모리 주소
+	// [PID]  table : 16kB만큼 할당받은 메모리 주소
+	// [dCA]  table : 512kB만큼 할당받은 메모리 주소
+	// [iCA]  table : 256kB만큼 할당받은 메모리 주소
+	// [mCA]  table : 16kB만큼 할당받은 메모리 주소
+	// [mpCA] table : 16kB만큼 할당받은 메모리 주소
 	return table;
-	// [PID] return 16kB만큼 할당받은 메모리 주소
-	// [dCA] return 512kB만큼 할당받은 메모리 주소
-	// [iCA] return 256kB만큼 할당받은 메모리 주소
-	// [mCA] return 16kB만큼 할당받은 메모리 주소
+	// [PID]  return 16kB만큼 할당받은 메모리 주소
+	// [dCA]  return 512kB만큼 할당받은 메모리 주소
+	// [iCA]  return 256kB만큼 할당받은 메모리 주소
+	// [mCA]  return 16kB만큼 할당받은 메모리 주소
+	// [mpCA] return 16kB만큼 할당받은 메모리 주소
 }
 
 /* Return a pointer to the bitmap storing bits affecting a block of pages */
