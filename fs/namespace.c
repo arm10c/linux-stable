@@ -64,8 +64,10 @@ static int mnt_id_start = 0;
 static int mnt_group_start = 1;
 
 // ARM10C 20151024
+// ARM10C 20151031
 static struct hlist_head *mount_hashtable __read_mostly;
 // ARM10C 20151024
+// ARM10C 20151031
 static struct hlist_head *mountpoint_hashtable __read_mostly;
 // ARM10C 20151024
 static struct kmem_cache *mnt_cache __read_mostly;
@@ -2855,14 +2857,31 @@ void __init mnt_init(void)
 	// mountpoint_hashtable: 16kB만큼 할당받은 메모리 주소
 
 // 2015/10/24 종료
+// 2015/10/31 시작
 
+	// mount_hashtable: 16kB만큼 할당받은 메모리 주소, mountpoint_hashtable: 16kB만큼 할당받은 메모리 주소
 	if (!mount_hashtable || !mountpoint_hashtable)
 		panic("Failed to allocate mount hash table\n");
 
+	// m_hash_mask: 0xFFF
 	for (u = 0; u <= m_hash_mask; u++)
+		// u: 0
 		INIT_HLIST_HEAD(&mount_hashtable[u]);
+
+		// INIT_HLIST_HEAD 에서 한일:
+		// ((&mount_hashtable[0])->first = NULL)
+
+		// u: 1...4095 까지 loop 수행
+
+	// mp_hash_mask: 0xFFF
 	for (u = 0; u <= mp_hash_mask; u++)
+		// u: 0
 		INIT_HLIST_HEAD(&mountpoint_hashtable[u]);
+
+		// INIT_HLIST_HEAD 에서 한일:
+		// ((&mountpoint_hashtable[0])->first = NULL)
+
+		// u: 1...4095 까지 loop 수행
 
 	err = sysfs_init();
 	if (err)

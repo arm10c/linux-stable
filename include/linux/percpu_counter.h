@@ -39,6 +39,10 @@ int __percpu_counter_init(struct percpu_counter *fbc, s64 amount,
 // &vm_committed_as, 0
 // ARM10C 20151024
 // &nr_files, 0
+// ARM10C 20151031
+// &bdi->bdi_stat[0]: &(&sysfs_backing_dev_info)->bdi_stat[0], 0
+// ARM10C 20151031
+// &pl->events: &(&(&sysfs_backing_dev_info)->completions)->events, 0
 #define percpu_counter_init(fbc, value)					\
 	({								\
 		static struct lock_class_key __key;			\

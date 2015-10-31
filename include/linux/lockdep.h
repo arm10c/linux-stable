@@ -403,6 +403,8 @@ static inline void lockdep_on(void)
 # define lockdep_init()				do { } while (0)
 // ARM10C 20150801
 # define lockdep_info()				do { } while (0)
+// ARM10C 20151031
+// timer->lockdep_map: (&(&(&(&sysfs_backing_dev_info)->wb)->dwork)->timer)->lockdep_map, name: NULL, key: NULL, 0
 # define lockdep_init_map(lock, name, key, sub) \
 		do { (void)(name); (void)(key); } while (0)
 // ARM10C 20150919

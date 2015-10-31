@@ -38,16 +38,20 @@ enum bdi_state {
 
 typedef int (congested_fn)(void *, int);
 
+// ARM10C 20151031
 enum bdi_stat_item {
 	BDI_RECLAIMABLE,
 	BDI_WRITEBACK,
 	BDI_DIRTIED,
 	BDI_WRITTEN,
+	// NR_BDI_STAT_ITEMS: 4
 	NR_BDI_STAT_ITEMS
 };
 
 #define BDI_STAT_BATCH (8*(1+ilog2(nr_cpu_ids)))
 
+// ARM10C 20151031
+// sizeof(struct bdi_writeback): 104 bytes
 struct bdi_writeback {
 	struct backing_dev_info *bdi;	/* our parent bdi */
 	unsigned int nr;
@@ -63,6 +67,7 @@ struct bdi_writeback {
 
 // ARM10C 20150919
 // ARM10C 20151003
+// ARM10C 20151031
 struct backing_dev_info {
 	struct list_head bdi_list;
 	unsigned long ra_pages;	/* max readahead in PAGE_CACHE_SIZE units */
@@ -105,7 +110,7 @@ struct backing_dev_info {
 
 	struct timer_list laptop_mode_wb_timer;
 
-#ifdef CONFIG_DEBUG_FS
+#ifdef CONFIG_DEBUG_FS // CONFIG_DEBUG_FS=n
 	struct dentry *debug_dir;
 	struct dentry *debug_stats;
 #endif

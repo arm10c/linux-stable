@@ -168,16 +168,44 @@ void fprop_fraction_single(struct fprop_global *p,
  */
 #define PROP_BATCH (8*(1+ilog2(nr_cpu_ids)))
 
+// ARM10C 20151031
+// &bdi->completions: &(&sysfs_backing_dev_info)->completions
 int fprop_local_init_percpu(struct fprop_local_percpu *pl)
 {
 	int err;
 
+	// &pl->events: &(&(&sysfs_backing_dev_info)->completions)->events
+	// percpu_counter_init(&(&(&sysfs_backing_dev_info)->completions)->events, 0): 0
 	err = percpu_counter_init(&pl->events, 0);
+	// err: 0
+
+	// percpu_counter_init에서 한일:
+	// (&(&(&(&(&(&sysfs_backing_dev_info)->completions)->events)->lock)->wait_lock)->rlock)->raw_lock: { { 0 } }
+	// (&(&(&(&(&(&sysfs_backing_dev_info)->completions)->events)->lock)->wait_lock)->rlock)->magic: 0xdead4ead
+	// (&(&(&(&(&(&sysfs_backing_dev_info)->completions)->events)->lock)->wait_lock)->rlock)->owner: 0xffffffff
+	// (&(&(&(&(&(&sysfs_backing_dev_info)->completions)->events)->lock)->wait_lock)->rlock)->owner_cpu: 0xffffffff
+	// (&(&(&(&sysfs_backing_dev_info)->completions)->events)->list)->next: &(&(&(&sysfs_backing_dev_info)->completions)->events)->list
+	// (&(&(&(&sysfs_backing_dev_info)->completions)->events)->list)->prev: &(&(&(&sysfs_backing_dev_info)->completions)->events)->list
+	// (&(&(&sysfs_backing_dev_info)->completions)->events)->count: 0
+	// (&(&(&sysfs_backing_dev_info)->completions)->events)->counters: kmem_cache#26-o0 에서 할당된 4 bytes 메모리 주소
+	// list head 인 &percpu_counters에 &(&(&(&sysfs_backing_dev_info)->completions)->events)->list를 연결함
+
+	// err: 0
 	if (err)
 		return err;
+
+	// pl->period: (&(&sysfs_backing_dev_info)->completions)->period
 	pl->period = 0;
+	// pl->period: (&(&sysfs_backing_dev_info)->completions)->period: 0
+
+	// &pl->lock: &(&(&sysfs_backing_dev_info)->completions)->lock
 	raw_spin_lock_init(&pl->lock);
+
+	// raw_spin_lock_init에서 한일:
+	// &(&(&sysfs_backing_dev_info)->completions)->lock을 이용한 spinlock 초기화 수행
+
 	return 0;
+	// return 0
 }
 
 void fprop_local_destroy_percpu(struct fprop_local_percpu *pl)

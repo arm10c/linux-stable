@@ -177,7 +177,7 @@ struct sysfs_ops {
 
 struct sysfs_dirent;
 
-#ifdef CONFIG_SYSFS
+#ifdef CONFIG_SYSFS // CONFIG_SYSFS=y
 
 int sysfs_schedule_callback(struct kobject *kobj, void (*func)(void *),
 			    void *data, struct module *owner);

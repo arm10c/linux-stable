@@ -10,6 +10,7 @@
 struct tvec_base;
 
 // ARM10C 20150704
+// sizeof(struct timer_list): 28 bytes
 struct timer_list {
 	/*
 	 * All fields that change during normal runtime grouped to the
@@ -71,6 +72,8 @@ extern struct tvec_base boot_tvec_bases;
 // ARM10C 20150711
 // TIMER_DEFERRABLE: 0x1
 #define TIMER_DEFERRABLE		0x1LU
+// ARM10C 20151031
+// TIMER_IRQSAFE: 0x2
 #define TIMER_IRQSAFE			0x2LU
 
 // ARM10C 20150103
@@ -171,7 +174,7 @@ static inline void init_timer_on_stack_key(struct timer_list *timer,
 }
 #endif
 
-#ifdef CONFIG_LOCKDEP
+#ifdef CONFIG_LOCKDEP // CONFIG_LOCKDEP=n
 #define __init_timer(_timer, _flags)					\
 	do {								\
 		static struct lock_class_key __key;			\
@@ -184,6 +187,9 @@ static inline void init_timer_on_stack_key(struct timer_list *timer,
 		init_timer_on_stack_key((_timer), (_flags), #_timer, &__key); \
 	} while (0)
 #else
+// ARM10C 20151031
+// #define __init_timer((&(&(&(&sysfs_backing_dev_info)->wb)->dwork)->timer), ((0) | TIMER_IRQSAFE)):
+// init_timer_key(((&(&(&(&sysfs_backing_dev_info)->wb)->dwork)->timer)), (((0) | TIMER_IRQSAFE)), NULL, NULL)
 #define __init_timer(_timer, _flags)					\
 	init_timer_key((_timer), (_flags), NULL, NULL)
 #define __init_timer_on_stack(_timer, _flags)				\
@@ -197,6 +203,16 @@ static inline void init_timer_on_stack_key(struct timer_list *timer,
 #define init_timer_on_stack(timer)					\
 	__init_timer_on_stack((timer), 0)
 
+// ARM10C 20151031
+// __init_timer((&(&(&(&sysfs_backing_dev_info)->wb)->dwork)->timer), ((0) | TIMER_IRQSAFE)):
+// init_timer_key(((&(&(&(&sysfs_backing_dev_info)->wb)->dwork)->timer)), (((0) | TIMER_IRQSAFE)), NULL, NULL)
+//
+// #define __setup_timer(&(&(&(&sysfs_backing_dev_info)->wb)->dwork)->timer, delayed_work_timer_fn, (unsigned long)(&(&(&sysfs_backing_dev_info)->wb)->dwork), (0) | TIMER_IRQSAFE):
+// do {
+//      init_timer_key(((&(&(&(&sysfs_backing_dev_info)->wb)->dwork)->timer)), (((0) | TIMER_IRQSAFE)), NULL, NULL)
+//      (&(&(&(&sysfs_backing_dev_info)->wb)->dwork)->timer)->function = (delayed_work_timer_fn);
+//      (&(&(&(&sysfs_backing_dev_info)->wb)->dwork)->timer)->data = ((unsigned long)(&(&(&sysfs_backing_dev_info)->wb)->dwork));
+// } while (0)
 #define __setup_timer(_timer, _fn, _data, _flags)			\
 	do {								\
 		__init_timer((_timer), (_flags));			\

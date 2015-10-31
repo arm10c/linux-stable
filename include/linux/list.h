@@ -116,6 +116,10 @@
 // &ss->cftsets: &(&cpuacct_subsys)->cftsets
 // ARM10C 20150919
 // &fbc->list: &(&vm_committed_as)->list
+// ARM10C 20151031
+// &bdi->bdi_list: &(&sysfs_backing_dev_info)->bdi_list
+// ARM10C 20151031
+// &wb->b_dirty: &(&(&sysfs_backing_dev_info)->wb)->b_dirty
 static inline void INIT_LIST_HEAD(struct list_head *list)
 {
 	list->next = list;
@@ -868,6 +872,12 @@ static inline void list_splice_tail_init(struct list_head *list,
 
 #define HLIST_HEAD_INIT { .first = NULL }
 #define HLIST_HEAD(name) struct hlist_head name = {  .first = NULL }
+// ARM10C 20151031
+// #define INIT_HLIST_HEAD(&mount_hashtable[0]):
+// ((&mount_hashtable[0])->first = NULL)
+// ARM10C 20151031
+// #define INIT_HLIST_HEAD(&mountpoint_hashtable[0]):
+// ((&mountpoint_hashtable[0])->first = NULL)
 #define INIT_HLIST_HEAD(ptr) ((ptr)->first = NULL)
 
 // ARM10C 20150808

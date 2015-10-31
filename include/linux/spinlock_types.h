@@ -165,6 +165,7 @@ typedef struct raw_spinlock {
 // ARM10C 20140315
 // ARM10C 20140419
 // ARM10C 20150919
+// ARM10C 20151031
 // sizeof(spinlock_t) : 16 byte
 typedef struct spinlock {
 	union {

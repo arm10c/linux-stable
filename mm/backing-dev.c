@@ -421,64 +421,232 @@ void bdi_unregister(struct backing_dev_info *bdi)
 }
 EXPORT_SYMBOL(bdi_unregister);
 
+// ARM10C 20151031
+// &bdi->wb: &(&sysfs_backing_dev_info)->wb, bdi: &sysfs_backing_dev_info
 static void bdi_wb_init(struct bdi_writeback *wb, struct backing_dev_info *bdi)
 {
+	// wb: &(&sysfs_backing_dev_info)->wb, sizeof(struct bdi_writeback): 104 bytes
 	memset(wb, 0, sizeof(*wb));
 
+	// memset에서 한일:
+	// (&sysfs_backing_dev_info)->wb 의 맴버값을 0으로 초기화함
+
+	// wb->bdi: (&(&sysfs_backing_dev_info)->wb)->bdi, bdi: &sysfs_backing_dev_info
 	wb->bdi = bdi;
+	// wb->bdi: (&(&sysfs_backing_dev_info)->wb)->bdi: &sysfs_backing_dev_info
+
+	// NOTE:
+	// jiffies 값은 현재 chip의 timer값으로 동작 중인 상태의 값을 알 수 없음
+	// jiffies: XXX 으로 정의함
+
+	// wb->last_old_flush: (&(&sysfs_backing_dev_info)->wb)->last_old_flush, jiffies: XXX
 	wb->last_old_flush = jiffies;
+	// wb->last_old_flush: (&(&sysfs_backing_dev_info)->wb)->last_old_flush: XXX
+
+	// &wb->b_dirty: &(&(&sysfs_backing_dev_info)->wb)->b_dirty
 	INIT_LIST_HEAD(&wb->b_dirty);
+
+	// INIT_LIST_HEAD에서 한일:
+	// (&(&(&sysfs_backing_dev_info)->wb)->b_dirty)->next: &(&(&sysfs_backing_dev_info)->wb)->b_dirty
+	// (&(&(&sysfs_backing_dev_info)->wb)->b_dirty)->prev: &(&(&sysfs_backing_dev_info)->wb)->b_dirty
+
+	// &wb->b_dirty: &(&(&sysfs_backing_dev_info)->wb)->b_io
 	INIT_LIST_HEAD(&wb->b_io);
+
+	// INIT_LIST_HEAD에서 한일:
+	// (&(&(&sysfs_backing_dev_info)->wb)->b_io)->next: &(&(&sysfs_backing_dev_info)->wb)->b_io
+	// (&(&(&sysfs_backing_dev_info)->wb)->b_io)->prev: &(&(&sysfs_backing_dev_info)->wb)->b_io
+
+	// &wb->b_more_io: &(&(&sysfs_backing_dev_info)->wb)->b_more_io
 	INIT_LIST_HEAD(&wb->b_more_io);
+
+	// INIT_LIST_HEAD에서 한일:
+	// (&(&(&sysfs_backing_dev_info)->wb)->b_more_io)->next: &(&(&sysfs_backing_dev_info)->wb)->b_more_io
+	// (&(&(&sysfs_backing_dev_info)->wb)->b_more_io)->prev: &(&(&sysfs_backing_dev_info)->wb)->b_more_io
+
+	// &wb->list_lock: &(&(&sysfs_backing_dev_info)->wb)->list_lock
 	spin_lock_init(&wb->list_lock);
+
+	// spin_lock_init에서 한일:
+	// &(&(&sysfs_backing_dev_info)->wb)->list_lock 을 이용한 spinlock 초기화 수행
+
+	// &wb->dwork: &(&(&sysfs_backing_dev_info)->wb)->dwork,
+	// INIT_DELAYED_WORK(&(&(&sysfs_backing_dev_info)->wb)->dwork, bdi_writeback_workfn):
+	// do {
+	// 	INIT_WORK(&(&(&(&sysfs_backing_dev_info)->wb)->dwork)->work, (bdi_writeback_workfn));
+	// 	__setup_timer(&(&(&(&sysfs_backing_dev_info)->wb)->dwork)->timer, delayed_work_timer_fn,
+	// 		      (unsigned long)(&(&(&sysfs_backing_dev_info)->wb)->dwork),
+	// 		      (0) | TIMER_IRQSAFE);
+	// } while (0)
 	INIT_DELAYED_WORK(&wb->dwork, bdi_writeback_workfn);
+
+	// INIT_DELAYED_WORK에서 한일:
+	// (&(&(&(&sysfs_backing_dev_info)->wb)->dwork)->work)->data: { 0xFFFFFFE0 }
+	// (&(&(&(&(&sysfs_backing_dev_info)->wb)->dwork)->work)->entry)->next: &(&(&(&(&sysfs_backing_dev_info)->wb)->dwork)->work)->entry
+	// (&(&(&(&(&sysfs_backing_dev_info)->wb)->dwork)->work)->entry)->prev: &(&(&(&(&sysfs_backing_dev_info)->wb)->dwork)->work)->entry
+	// (&(&(&(&sysfs_backing_dev_info)->wb)->dwork)->work)->func: bdi_writeback_workfn
+	// (&(&(&(&sysfs_backing_dev_info)->wb)->dwork)->timer)->entry.next: NULL
+	// (&(&(&(&sysfs_backing_dev_info)->wb)->dwork)->timer)->base: [pcp0] tvec_bases | 0x2
+	// (&(&(&(&sysfs_backing_dev_info)->wb)->dwork)->timer)->slack: -1
+	// (&(&(&(&sysfs_backing_dev_info)->wb)->dwork)->timer)->function = (delayed_work_timer_fn);
+	// (&(&(&(&sysfs_backing_dev_info)->wb)->dwork)->timer)->data = ((unsigned long)(&(&(&sysfs_backing_dev_info)->wb)->dwork));
 }
 
 /*
  * Initial write bandwidth: 100 MB/s
  */
+// ARM10C 20151031
+// PAGE_SHIFT: 12
+// INIT_BW: 0x6400
 #define INIT_BW		(100 << (20 - PAGE_SHIFT))
 
+// ARM10C 20151031
+// &sysfs_backing_dev_info
 int bdi_init(struct backing_dev_info *bdi)
 {
 	int i, err;
 
+	// bdi->dev: (&sysfs_backing_dev_info)->dev
 	bdi->dev = NULL;
+	// bdi->dev: (&sysfs_backing_dev_info)->dev: NULL
 
+	// bdi->min_ratio: (&sysfs_backing_dev_info)->min_ratio
 	bdi->min_ratio = 0;
+	// bdi->min_ratio: (&sysfs_backing_dev_info)->min_ratio: 0
+
+	// bdi->max_ratio: (&sysfs_backing_dev_info)->max_ratio
 	bdi->max_ratio = 100;
+	// bdi->max_ratio: (&sysfs_backing_dev_info)->max_ratio: 100
+
+	// bdi->max_prop_frac: (&sysfs_backing_dev_info)->max_prop_frac, FPROP_FRAC_BASE: 0x400
 	bdi->max_prop_frac = FPROP_FRAC_BASE;
+	// bdi->max_prop_frac: (&sysfs_backing_dev_info)->max_prop_frac: 0x400
+
+	// &bdi->wb_lock: &(&sysfs_backing_dev_info)->wb_lock
 	spin_lock_init(&bdi->wb_lock);
+
+	// spin_lock_init 에서 한일:
+	// &(&sysfs_backing_dev_info)->wb_lock 을 이용한 spinlock 초기화 수행
+
+	// &bdi->bdi_list: &(&sysfs_backing_dev_info)->bdi_list
 	INIT_LIST_HEAD(&bdi->bdi_list);
+
+	// INIT_LIST_HEAD에서 한일:
+	// (&(&sysfs_backing_dev_info)->bdi_list)->next: &(&sysfs_backing_dev_info)->bdi_list
+	// (&(&sysfs_backing_dev_info)->bdi_list)->prev: &(&sysfs_backing_dev_info)->bdi_list
+
+	// &bdi->work_list: &(&sysfs_backing_dev_info)->work_list
 	INIT_LIST_HEAD(&bdi->work_list);
 
+	// INIT_LIST_HEAD에서 한일:
+	// (&(&sysfs_backing_dev_info)->work_list)->next: &(&sysfs_backing_dev_info)->work_list
+	// (&(&sysfs_backing_dev_info)->work_list)->prev: &(&sysfs_backing_dev_info)->work_list
+
+	// &bdi->wb: &(&sysfs_backing_dev_info)->wb, bdi: &sysfs_backing_dev_info
 	bdi_wb_init(&bdi->wb, bdi);
 
+	// bdi_wb_init에서 한일:
+	// (&sysfs_backing_dev_info)->wb 의 맴버값을 0으로 초기화함
+	// (&(&sysfs_backing_dev_info)->wb)->bdi: &sysfs_backing_dev_info
+	// (&(&sysfs_backing_dev_info)->wb)->last_old_flush: XXX
+	// (&(&(&sysfs_backing_dev_info)->wb)->b_dirty)->next: &(&(&sysfs_backing_dev_info)->wb)->b_dirty
+	// (&(&(&sysfs_backing_dev_info)->wb)->b_dirty)->prev: &(&(&sysfs_backing_dev_info)->wb)->b_dirty
+	// (&(&(&sysfs_backing_dev_info)->wb)->b_io)->next: &(&(&sysfs_backing_dev_info)->wb)->b_io
+	// (&(&(&sysfs_backing_dev_info)->wb)->b_io)->prev: &(&(&sysfs_backing_dev_info)->wb)->b_io
+	// (&(&(&sysfs_backing_dev_info)->wb)->b_more_io)->next: &(&(&sysfs_backing_dev_info)->wb)->b_more_io
+	// (&(&(&sysfs_backing_dev_info)->wb)->b_more_io)->prev: &(&(&sysfs_backing_dev_info)->wb)->b_more_io
+	// &(&(&sysfs_backing_dev_info)->wb)->list_lock 을 이용한 spinlock 초기화 수행
+	// (&(&(&(&sysfs_backing_dev_info)->wb)->dwork)->work)->data: { 0xFFFFFFE0 }
+	// (&(&(&(&(&sysfs_backing_dev_info)->wb)->dwork)->work)->entry)->next: &(&(&(&(&sysfs_backing_dev_info)->wb)->dwork)->work)->entry
+	// (&(&(&(&(&sysfs_backing_dev_info)->wb)->dwork)->work)->entry)->prev: &(&(&(&(&sysfs_backing_dev_info)->wb)->dwork)->work)->entry
+	// (&(&(&(&sysfs_backing_dev_info)->wb)->dwork)->work)->func: bdi_writeback_workfn
+	// (&(&(&(&sysfs_backing_dev_info)->wb)->dwork)->timer)->entry.next: NULL
+	// (&(&(&(&sysfs_backing_dev_info)->wb)->dwork)->timer)->base: [pcp0] tvec_bases | 0x2
+	// (&(&(&(&sysfs_backing_dev_info)->wb)->dwork)->timer)->slack: -1
+	// (&(&(&(&sysfs_backing_dev_info)->wb)->dwork)->timer)->function = (delayed_work_timer_fn);
+	// (&(&(&(&sysfs_backing_dev_info)->wb)->dwork)->timer)->data = ((unsigned long)(&(&(&sysfs_backing_dev_info)->wb)->dwork));
+
+	// NR_BDI_STAT_ITEMS: 4
 	for (i = 0; i < NR_BDI_STAT_ITEMS; i++) {
+		// i: 0, &bdi->bdi_stat[0]: &(&sysfs_backing_dev_info)->bdi_stat[0]
+		// percpu_counter_init(&(&sysfs_backing_dev_info)->bdi_stat[0], 0): 0
 		err = percpu_counter_init(&bdi->bdi_stat[i], 0);
+		// err: 0
+
+		// percpu_counter_init에서 한일:
+		// (&(&(&(&(&sysfs_backing_dev_info)->bdi_stat[0])->lock)->wait_lock)->rlock)->raw_lock: { { 0 } }
+		// (&(&(&(&(&sysfs_backing_dev_info)->bdi_stat[0])->lock)->wait_lock)->rlock)->magic: 0xdead4ead
+		// (&(&(&(&(&sysfs_backing_dev_info)->bdi_stat[0])->lock)->wait_lock)->rlock)->owner: 0xffffffff
+		// (&(&(&(&(&sysfs_backing_dev_info)->bdi_stat[0])->lock)->wait_lock)->rlock)->owner_cpu: 0xffffffff
+		// (&(&(&sysfs_backing_dev_info)->bdi_stat[0])->list)->next: &(&(&sysfs_backing_dev_info)->bdi_stat[0])->list
+		// (&(&(&sysfs_backing_dev_info)->bdi_stat[0])->list)->prev: &(&(&sysfs_backing_dev_info)->bdi_stat[0])->list
+		// (&(&sysfs_backing_dev_info)->bdi_stat[0])->count: 0
+		// (&(&sysfs_backing_dev_info)->bdi_stat[0])->counters: kmem_cache#26-o0 에서 할당된 4 bytes 메모리 주소
+		// list head 인 &percpu_counters에 &(&(&sysfs_backing_dev_info)->bdi_stat[0])->list를 연결함
+
+		// err: 0
 		if (err)
 			goto err;
+
+		// i: 1...3 loop 수행
 	}
 
+	// bdi->dirty_exceeded: (&sysfs_backing_dev_info)->dirty_exceeded
 	bdi->dirty_exceeded = 0;
+	// bdi->dirty_exceeded: (&sysfs_backing_dev_info)->dirty_exceeded: 0
 
+	// bdi->bw_time_stamp: (&sysfs_backing_dev_info)->bw_time_stamp, jiffies: XXX
 	bdi->bw_time_stamp = jiffies;
+	// bdi->bw_time_stamp: (&sysfs_backing_dev_info)->bw_time_stamp: XXX
+
+	// bdi->written_stamp: (&sysfs_backing_dev_info)->written_stamp
 	bdi->written_stamp = 0;
+	// bdi->written_stamp: (&sysfs_backing_dev_info)->written_stamp: 0
 
+	// bdi->balanced_dirty_ratelimit: (&sysfs_backing_dev_info)->balanced_dirty_ratelimit, INIT_BW: 0x6400
 	bdi->balanced_dirty_ratelimit = INIT_BW;
+	// bdi->balanced_dirty_ratelimit: (&sysfs_backing_dev_info)->balanced_dirty_ratelimit: 0x6400
+
+	// bdi->dirty_ratelimit: (&sysfs_backing_dev_info)->dirty_ratelimit, INIT_BW: 0x6400
 	bdi->dirty_ratelimit = INIT_BW;
+	// bdi->dirty_ratelimit: (&sysfs_backing_dev_info)->dirty_ratelimit: 0x6400
+
+	// bdi->write_bandwidth: (&sysfs_backing_dev_info)->write_bandwidth, INIT_BW: 0x6400
 	bdi->write_bandwidth = INIT_BW;
+	// bdi->write_bandwidth: (&sysfs_backing_dev_info)->write_bandwidth: 0x6400
+
+	// bdi->avg_write_bandwidth: (&sysfs_backing_dev_info)->avg_write_bandwidth, INIT_BW: 0x6400
 	bdi->avg_write_bandwidth = INIT_BW;
+	// bdi->avg_write_bandwidth: (&sysfs_backing_dev_info)->avg_write_bandwidth: 0x6400
 
+	// &bdi->completions: &(&sysfs_backing_dev_info)->completions
+	// fprop_local_init_percpu(&(&sysfs_backing_dev_info)->completions): 0
 	err = fprop_local_init_percpu(&bdi->completions);
+	// err: 0
 
+	// fprop_local_init_percpu에서 한일:
+	// (&(&(&(&(&(&sysfs_backing_dev_info)->completions)->events)->lock)->wait_lock)->rlock)->raw_lock: { { 0 } }
+	// (&(&(&(&(&(&sysfs_backing_dev_info)->completions)->events)->lock)->wait_lock)->rlock)->magic: 0xdead4ead
+	// (&(&(&(&(&(&sysfs_backing_dev_info)->completions)->events)->lock)->wait_lock)->rlock)->owner: 0xffffffff
+	// (&(&(&(&(&(&sysfs_backing_dev_info)->completions)->events)->lock)->wait_lock)->rlock)->owner_cpu: 0xffffffff
+	// (&(&(&(&sysfs_backing_dev_info)->completions)->events)->list)->next: &(&(&(&sysfs_backing_dev_info)->completions)->events)->list
+	// (&(&(&(&sysfs_backing_dev_info)->completions)->events)->list)->prev: &(&(&(&sysfs_backing_dev_info)->completions)->events)->list
+	// (&(&(&sysfs_backing_dev_info)->completions)->events)->count: 0
+	// (&(&(&sysfs_backing_dev_info)->completions)->events)->counters: kmem_cache#26-o0 에서 할당된 4 bytes 메모리 주소
+	// list head 인 &percpu_counters에 &(&(&(&sysfs_backing_dev_info)->completions)->events)->list를 연결함
+	// (&(&sysfs_backing_dev_info)->completions)->period: 0
+	// &(&(&sysfs_backing_dev_info)->completions)->lock을 이용한 spinlock 초기화 수행
+
+	// err: 0
 	if (err) {
 err:
 		while (i--)
 			percpu_counter_destroy(&bdi->bdi_stat[i]);
 	}
 
+	// err: 0
 	return err;
+	// return 0
 }
 EXPORT_SYMBOL(bdi_init);
 

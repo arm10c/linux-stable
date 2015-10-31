@@ -262,6 +262,7 @@ extern unsigned long __per_cpu_offset[NR_CPUS];
 //  	&(hrtimer_bases) + __my_cpu_offset;
 // })
 // ARM10C 20141206
+// ARM10C 20151031
 #define __this_cpu_ptr(ptr) SHIFT_PERCPU_PTR(ptr, __my_cpu_offset)
 #endif
 #ifdef CONFIG_DEBUG_PREEMPT // CONFIG_DEBUG_PREEMPT=y
@@ -297,6 +298,8 @@ extern unsigned long __per_cpu_offset[NR_CPUS];
 #define __get_cpu_var(var) (*this_cpu_ptr(&(var)))
 // ARM10C 20140830
 // __raw_get_cpu_var(hrtimer_bases): *__this_cpu_ptr(&(hrtimer_bases))
+// ARM10C 20151031
+//__raw_get_cpu_var(tvec_bases): *__this_cpu_ptr(&(tvec_bases))
 #define __raw_get_cpu_var(var) (*__this_cpu_ptr(&(var)))
 
 #ifdef CONFIG_HAVE_SETUP_PER_CPU_AREA

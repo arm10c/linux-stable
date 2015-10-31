@@ -16,6 +16,8 @@
 struct sysfs_open_dirent;
 
 /* type-specific structures for sysfs_dirent->s_* union members */
+// ARM10C 20151031
+// sizeof(struct sysfs_elem_dir): 12 bytes
 struct sysfs_elem_dir {
 	struct kobject		*kobj;
 
@@ -24,10 +26,14 @@ struct sysfs_elem_dir {
 	struct rb_root		children;
 };
 
+// ARM10C 20151031
+// sizeof(struct sysfs_elem_symlink): 4 bytes
 struct sysfs_elem_symlink {
 	struct sysfs_dirent	*target_sd;
 };
 
+// ARM10C 20151031
+// sizeof(struct sysfs_elem_attr): 8 bytes
 struct sysfs_elem_attr {
 	union {
 		struct attribute	*attr;
@@ -50,10 +56,12 @@ struct sysfs_inode_attrs {
  * accessible.  Dereferencing s_elem or any other outer entity
  * requires s_active reference.
  */
+// ARM10C 20151031
+// sizeof(struct sysfs_dirent): 64 bytes
 struct sysfs_dirent {
 	atomic_t		s_count;
 	atomic_t		s_active;
-#ifdef CONFIG_DEBUG_LOCK_ALLOC
+#ifdef CONFIG_DEBUG_LOCK_ALLOC // CONFIG_DEBUG_LOCK_ALLOC=n
 	struct lockdep_map	dep_map;
 #endif
 	struct sysfs_dirent	*s_parent;

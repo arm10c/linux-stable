@@ -105,6 +105,7 @@ struct tvec_root {
 
 // ARM10C 20150103
 // ARM10C 20150711
+// ARM10C 20151031
 struct tvec_base {
 	spinlock_t lock;
 	struct timer_list *running_timer;
@@ -123,6 +124,7 @@ struct tvec_base {
 struct tvec_base boot_tvec_bases;
 EXPORT_SYMBOL(boot_tvec_bases);
 // ARM10C 20150711
+// ARM10C 20151031
 // DEFINE_PER_CPU(struct tvec_base *, tvec_bases):
 // __attribute__((section(".data..percpu" "")))
 //__typeof__(struct tvec_base *) tvec_bases
@@ -519,7 +521,7 @@ static void timer_stats_account_timer(struct timer_list *timer)
 static void timer_stats_account_timer(struct timer_list *timer) {}
 #endif
 
-#ifdef CONFIG_DEBUG_OBJECTS_TIMERS
+#ifdef CONFIG_DEBUG_OBJECTS_TIMERS // CONFIG_DEBUG_OBJECTS_TIMERS=n
 
 static struct debug_obj_descr timer_debug_descr;
 
@@ -685,15 +687,21 @@ void destroy_timer_on_stack(struct timer_list *timer)
 EXPORT_SYMBOL_GPL(destroy_timer_on_stack);
 
 #else
+// ARM10C 20151031
 static inline void debug_timer_init(struct timer_list *timer) { }
 static inline void debug_timer_activate(struct timer_list *timer) { }
 static inline void debug_timer_deactivate(struct timer_list *timer) { }
 static inline void debug_timer_assert_init(struct timer_list *timer) { }
 #endif
 
+// ARM10C 20151031
+// timer: &(&(&(&sysfs_backing_dev_info)->wb)->dwork)->timer
 static inline void debug_init(struct timer_list *timer)
 {
-	debug_timer_init(timer);
+	// timer: &(&(&(&sysfs_backing_dev_info)->wb)->dwork)->timer
+	debug_timer_init(timer); // null function
+
+	// timer: &(&(&(&sysfs_backing_dev_info)->wb)->dwork)->timer
 	trace_timer_init(timer);
 }
 
@@ -715,20 +723,34 @@ static inline void debug_assert_init(struct timer_list *timer)
 	debug_timer_assert_init(timer);
 }
 
+// ARM10C 20151031
+// timer: &(&(&(&sysfs_backing_dev_info)->wb)->dwork)->timer, flags: 0x2, name: NULL, key: NULL
 static void do_init_timer(struct timer_list *timer, unsigned int flags,
 			  const char *name, struct lock_class_key *key)
 {
+	// __raw_get_cpu_var(tvec_bases): [pcp0] tvec_bases
 	struct tvec_base *base = __raw_get_cpu_var(tvec_bases);
+	// base: [pcp0] tvec_bases
 
+	// timer->entry.next: (&(&(&(&sysfs_backing_dev_info)->wb)->dwork)->timer)->entry.next
 	timer->entry.next = NULL;
+	// timer->entry.next: (&(&(&(&sysfs_backing_dev_info)->wb)->dwork)->timer)->entry.next: NULL
+
+	// timer->base: (&(&(&(&sysfs_backing_dev_info)->wb)->dwork)->timer)->base, base: [pcp0] tvec_bases, flags: 0x2
 	timer->base = (void *)((unsigned long)base | flags);
+	// timer->base: (&(&(&(&sysfs_backing_dev_info)->wb)->dwork)->timer)->base: [pcp0] tvec_bases | 0x2
+
+	// timer->slack: (&(&(&(&sysfs_backing_dev_info)->wb)->dwork)->timer)->slack
 	timer->slack = -1;
-#ifdef CONFIG_TIMER_STATS
+	// timer->slack: (&(&(&(&sysfs_backing_dev_info)->wb)->dwork)->timer)->slack: -1
+
+#ifdef CONFIG_TIMER_STATS // CONFIG_TIMER_STATS=n
 	timer->start_site = NULL;
 	timer->start_pid = -1;
 	memset(timer->start_comm, 0, TASK_COMM_LEN);
 #endif
-	lockdep_init_map(&timer->lockdep_map, name, key, 0);
+	// timer->lockdep_map: (&(&(&(&sysfs_backing_dev_info)->wb)->dwork)->timer)->lockdep_map, name: NULL, key: NULL
+	lockdep_init_map(&timer->lockdep_map, name, key, 0); // null function
 }
 
 /**
@@ -742,11 +764,21 @@ static void do_init_timer(struct timer_list *timer, unsigned int flags,
  * init_timer_key() must be done to a timer prior calling *any* of the
  * other timer functions.
  */
+// ARM10C 20151031
+// (&(&(&(&sysfs_backing_dev_info)->wb)->dwork)->timer), ((0) | TIMER_IRQSAFE), NULL, NULL
 void init_timer_key(struct timer_list *timer, unsigned int flags,
 		    const char *name, struct lock_class_key *key)
 {
+	// timer: &(&(&(&sysfs_backing_dev_info)->wb)->dwork)->timer
 	debug_init(timer);
+
+	// timer: &(&(&(&sysfs_backing_dev_info)->wb)->dwork)->timer, flags: 0x2, name: NULL, key: NULL
 	do_init_timer(timer, flags, name, key);
+
+	// do_init_timer에서 한일:
+	// (&(&(&(&sysfs_backing_dev_info)->wb)->dwork)->timer)->entry.next: NULL
+	// (&(&(&(&sysfs_backing_dev_info)->wb)->dwork)->timer)->base: [pcp0] tvec_bases | 0x2
+	// (&(&(&(&sysfs_backing_dev_info)->wb)->dwork)->timer)->slack: -1
 }
 EXPORT_SYMBOL(init_timer_key);
 

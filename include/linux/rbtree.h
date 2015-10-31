@@ -37,6 +37,7 @@
 // ARM10C 20150606
 // ARM10C 20150919
 // ARM10C 20151003
+// ARM10C 20151031
 // sizeof(struct rb_node): 12 bytes
 struct rb_node {
 	unsigned long  __rb_parent_color;

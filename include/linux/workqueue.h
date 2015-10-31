@@ -112,6 +112,7 @@ enum {
 
 // ARM10C 20140809
 // ARM10C 20150718
+// ARM10C 20151031
 // sizeof(struct work_struct): 16 bytes
 struct work_struct {
 	atomic_long_t data;
@@ -131,6 +132,8 @@ struct work_struct {
 #define WORK_DATA_STATIC_INIT()	\
 	ATOMIC_LONG_INIT(WORK_STRUCT_NO_POOL | WORK_STRUCT_STATIC)
 
+// ARM10C 20151031
+// sizeof(struct delayed_work): 52 bytes
 struct delayed_work {
 	struct work_struct work;
 	struct timer_list timer;
@@ -296,6 +299,13 @@ static inline unsigned int work_static(struct work_struct *work) { return 0; }
 // (&(&(&(kmem_cache#25-oX)->port)->buf)->work)->entry)->next: &(&(&(&(kmem_cache#25-oX)->port)->buf)->work)->entry
 // (&(&(&(kmem_cache#25-oX)->port)->buf)->work)->entry)->prev: &(&(&(&(kmem_cache#25-oX)->port)->buf)->work)->entry
 // (&(&(&(kmem_cache#25-oX)->port)->buf)->work)->func: flush_to_ldisc
+//
+// ARM10C 20151031
+// #define INIT_WORK(&(&(&(&sysfs_backing_dev_info)->wb)->dwork)->work, (bdi_writeback_workfn)):
+// (&(&(&(&sysfs_backing_dev_info)->wb)->dwork)->work)->data: { 0xFFFFFFE0 }
+// (&(&(&(&(&sysfs_backing_dev_info)->wb)->dwork)->work)->entry)->next: &(&(&(&(&sysfs_backing_dev_info)->wb)->dwork)->work)->entry
+// (&(&(&(&(&sysfs_backing_dev_info)->wb)->dwork)->work)->entry)->prev: &(&(&(&(&sysfs_backing_dev_info)->wb)->dwork)->work)->entry
+// (&(&(&(&sysfs_backing_dev_info)->wb)->dwork)->work)->func: bdi_writeback_workfn
 #define INIT_WORK(_work, _func)						\
 	do {								\
 		__INIT_WORK((_work), (_func), 0);			\
@@ -306,6 +316,20 @@ static inline unsigned int work_static(struct work_struct *work) { return 0; }
 		__INIT_WORK((_work), (_func), 1);			\
 	} while (0)
 
+// ARM10C 20151031
+// INIT_WORK(&(&wb->dwork)->work, (bdi_writeback_workfn)):
+// (&(&wb->dwork)->work)->data: { 0xFFFFFFE0 }
+// (&(&(&wb->dwork)->work)->entry)->next: &(&(&wb->dwork)->work)->entry
+// (&(&(&wb->dwork)->work)->entry)->prev: &(&(&wb->dwork)->work)->entry
+// (&(&wb->dwork)->work)->func: bdi_writeback_workfn
+//
+// #define __INIT_DELAYED_WORK(&wb->dwork, bdi_writeback_workfn, 0):
+// do {
+// 	INIT_WORK(&(&wb->dwork)->work, (bdi_writeback_workfn));
+// 	__setup_timer(&(&wb->dwork)->timer, delayed_work_timer_fn,
+// 		      (unsigned long)(&wb->dwork),
+// 		      (0) | TIMER_IRQSAFE);
+// } while (0)
 #define __INIT_DELAYED_WORK(_work, _func, _tflags)			\
 	do {								\
 		INIT_WORK(&(_work)->work, (_func));			\
@@ -323,6 +347,22 @@ static inline unsigned int work_static(struct work_struct *work) { return 0; }
 				       (_tflags) | TIMER_IRQSAFE);	\
 	} while (0)
 
+// ARM10C 20151031
+// __INIT_DELAYED_WORK(&(&(&sysfs_backing_dev_info)->wb)->dwork, bdi_writeback_workfn, 0):
+// do {
+// 	INIT_WORK(&(&(&(&sysfs_backing_dev_info)->wb)->dwork)->work, (bdi_writeback_workfn));
+// 	__setup_timer(&(&(&(&sysfs_backing_dev_info)->wb)->dwork)->timer, delayed_work_timer_fn,
+// 		      (unsigned long)(&(&(&sysfs_backing_dev_info)->wb)->dwork),
+// 		      (0) | TIMER_IRQSAFE);
+// } while (0)
+//
+// #define INIT_DELAYED_WORK(&(&(&sysfs_backing_dev_info)->wb)->dwork, bdi_writeback_workfn):
+// do {
+// 	INIT_WORK(&(&(&(&sysfs_backing_dev_info)->wb)->dwork)->work, (bdi_writeback_workfn));
+// 	__setup_timer(&(&(&(&sysfs_backing_dev_info)->wb)->dwork)->timer, delayed_work_timer_fn,
+// 		      (unsigned long)(&(&(&sysfs_backing_dev_info)->wb)->dwork),
+// 		      (0) | TIMER_IRQSAFE);
+// } while (0)
 #define INIT_DELAYED_WORK(_work, _func)					\
 	__INIT_DELAYED_WORK(_work, _func, 0)
 
