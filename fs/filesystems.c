@@ -29,7 +29,18 @@
  *	Once the reference is obtained we can drop the spinlock.
  */
 
+// ARM10C 20151031
 static struct file_system_type *file_systems;
+// ARM10C 20151031
+// DEFINE_RWLOCK(file_systems_lock):
+// rwlock_t file_systems_lock =
+// (rwlock_t)
+// {
+//      .raw_lock = { 0 },
+//      .magic = 0xdeaf1eed,
+//      .owner = 0xffffffff,
+//      .owner_cpu = -1,
+// }
 static DEFINE_RWLOCK(file_systems_lock);
 
 /* WARNING: This can be used only if we _already_ own a reference */
@@ -43,14 +54,21 @@ void put_filesystem(struct file_system_type *fs)
 	module_put(fs->owner);
 }
 
+// ARM10C 20151031
+// fs->name: (&sysfs_fs_type)->name: "sysfs", strlen("sysfs"): 5
 static struct file_system_type **find_filesystem(const char *name, unsigned len)
 {
 	struct file_system_type **p;
+
+	// p: &file_systems, *p: file_systems: NULL
 	for (p=&file_systems; *p; p=&(*p)->next)
 		if (strlen((*p)->name) == len &&
 		    strncmp((*p)->name, name, len) == 0)
 			break;
+
+	// p: &file_systems
 	return p;
+	// return &file_systems
 }
 
 /**
@@ -66,22 +84,48 @@ static struct file_system_type **find_filesystem(const char *name, unsigned len)
  *	unregistered.
  */
  
+// ARM10C 20151031
+// &sysfs_fs_type
 int register_filesystem(struct file_system_type * fs)
 {
 	int res = 0;
+	// res: 0
+
 	struct file_system_type ** p;
 
+	// fs->name: (&sysfs_fs_type)->name: "sysfs"
+	// strchr("sysfs", '.'): NULL
 	BUG_ON(strchr(fs->name, '.'));
+
+	// fs->next: (&sysfs_fs_type)->next: NULL
 	if (fs->next)
 		return -EBUSY;
 	write_lock(&file_systems_lock);
+
+	// write_lock에서 한일:
+	// &file_systems_lock 을 사용한 write lock 수행
+
+	// fs->name: (&sysfs_fs_type)->name: "sysfs", strlen("sysfs"): 5
+	// find_filesystem("sysfs", 5): &file_systems
 	p = find_filesystem(fs->name, strlen(fs->name));
+	// p: &file_systems
+
+	// *p: file_systems: NULL
 	if (*p)
 		res = -EBUSY;
 	else
+		// *p: file_systems: NULL, fs: &sysfs_fs_type
 		*p = fs;
+		// *p: file_systems: &sysfs_fs_type
+
 	write_unlock(&file_systems_lock);
+
+	// write_unlock에서 한일:
+	// &file_systems_lock 을 사용한 write lock 수행
+
+	// res: 0
 	return res;
+	// return 0
 }
 
 EXPORT_SYMBOL(register_filesystem);

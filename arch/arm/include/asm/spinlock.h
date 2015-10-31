@@ -189,6 +189,7 @@ static inline int arch_spin_is_contended(arch_spinlock_t *lock)
 
 // ARM10C 20140125
 // ARM10C 20140405
+// ARM10C 20151031
 static inline void arch_write_lock(arch_rwlock_t *rw)
 {
 	unsigned long tmp;

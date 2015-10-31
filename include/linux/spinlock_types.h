@@ -45,6 +45,7 @@ typedef struct raw_spinlock {
 
 // ARM10C 20140315
 // ARM10C 20150620
+// ARM10C 20151031
 // SPINLOCK_OWNER_INIT: 0xffffffff
 #define SPINLOCK_OWNER_INIT	((void *)-1L)
 
@@ -234,11 +235,45 @@ typedef struct spinlock {
 //	      .owner = 0xffffffff,
 //	    }
 //	} }
+// ARM10C 20151031
+// #define __SPIN_LOCK_UNLOCKED((mnt_id_ida).idr.lock):
+//	(spinlock_t )
+//	{ { .rlock =
+//	    {
+//	      .raw_lock = { { 0 } },
+//	      .magic = 0xdead4ead,
+//	      .owner_cpu = -1,
+//	      .owner = 0xffffffff,
+//	    }
+//	} }
+// ARM10C 20151031
+// #define __SPIN_LOCK_UNLOCKED(mnt_id_lock):
+//	(spinlock_t )
+//	{ { .rlock =
+//	    {
+//	      .raw_lock = { { 0 } },
+//	      .magic = 0xdead4ead,
+//	      .owner_cpu = -1,
+//	      .owner = 0xffffffff,
+//	    }
+//	} }
 #define __SPIN_LOCK_UNLOCKED(lockname) \
 	(spinlock_t ) __SPIN_LOCK_INITIALIZER(lockname)
 
 // ARM10C 20140531
 // ARM10C 20150919
+// ARM10C 20151031
+// #define DEFINE_SPINLOCK(mnt_id_lock):
+// spinlock_t mnt_id_lock =
+// (spinlock_t )
+// { { .rlock =
+//     {
+//       .raw_lock = { { 0 } },
+//       .magic = 0xdead4ead,
+//       .owner_cpu = -1,
+//       .owner = 0xffffffff,
+//     }
+// } }
 #define DEFINE_SPINLOCK(x)	spinlock_t x = __SPIN_LOCK_UNLOCKED(x)
 
 #include <linux/rwlock_types.h>

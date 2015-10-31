@@ -24,6 +24,7 @@
 #include "sysfs.h"
 
 
+// ARM10C 20151031
 static struct vfsmount *sysfs_mnt;
 // ARM10C 20151031
 struct kmem_cache *sysfs_dir_cachep;
@@ -157,6 +158,7 @@ static void sysfs_kill_sb(struct super_block *sb)
 	free_sysfs_super_info(info);
 }
 
+// ARM10C 20151031
 static struct file_system_type sysfs_fs_type = {
 	.name		= "sysfs",
 	.mount		= sysfs_mount,
@@ -247,10 +249,18 @@ int __init sysfs_init(void)
 	// (&(&sysfs_backing_dev_info)->completions)->period: 0
 	// &(&(&sysfs_backing_dev_info)->completions)->lock을 이용한 spinlock 초기화 수행
 
+	// err: 0
 	if (err)
 		goto out_err;
 
+	// register_filesystem(&sysfs_fs_type): 0
 	err = register_filesystem(&sysfs_fs_type);
+	// err: 0
+
+	// register_filesystem에서 한일:
+	// file_systems: &sysfs_fs_type
+
+	// err: 0
 	if (!err) {
 		sysfs_mnt = kern_mount(&sysfs_fs_type);
 		if (IS_ERR(sysfs_mnt)) {

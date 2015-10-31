@@ -292,6 +292,8 @@ EXPORT_SYMBOL(strncmp);
  * @s: The string to be searched
  * @c: The character to search for
  */
+// ARM10C 20151031
+// fs->name: (&sysfs_fs_type)->name: "sysfs", '.'
 char *strchr(const char *s, int c)
 {
 	for (; *s != (char)c; ++s)
@@ -383,6 +385,8 @@ EXPORT_SYMBOL(strim);
  * strlen - Find the length of a string
  * @s: The string to be sized
  */
+// ARM10C 20151031
+// fs->name: (&sysfs_fs_type)->name: "sysfs"
 size_t strlen(const char *s)
 {
 	const char *sc;

@@ -113,6 +113,7 @@ extern unsigned int full_name_hash(const unsigned char *, unsigned int);
 #define d_lock	d_lockref.lock
 
 // ARM10C 20151003
+// ARM10C 20151031
 // sizeof(struct dentry): 140 bytes
 struct dentry {
 	/* RCU lookup touched fields */

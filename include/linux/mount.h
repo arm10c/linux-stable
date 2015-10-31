@@ -53,6 +53,7 @@ struct mnt_namespace;
 #define MNT_SYNC_UMOUNT		0x2000000
 
 // ARM10C 20151024
+// ARM10C 20151031
 // sizeof(struct vfsmount): 12 bytes
 struct vfsmount {
 	struct dentry *mnt_root;	/* root of the mounted tree */

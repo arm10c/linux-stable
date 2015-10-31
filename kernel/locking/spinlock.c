@@ -296,6 +296,8 @@ EXPORT_SYMBOL(_raw_write_trylock);
 
 #ifndef CONFIG_INLINE_WRITE_LOCK // CONFIG_INLINE_WRITE_LOCK=n
 // ARM10C 20140125
+// ARM10C 20151031
+// &file_systems_lock
 void __lockfunc _raw_write_lock(rwlock_t *lock)
 {
 	__raw_write_lock(lock);

@@ -38,16 +38,26 @@
 #include <linux/percpu.h>
 #include <linux/hardirq.h>
 
+// ARM10C 20151031
+// MAX_IDR_SHIFT: 31
 #define MAX_IDR_SHIFT		(sizeof(int) * 8 - 1)
 #define MAX_IDR_BIT		(1U << MAX_IDR_SHIFT)
 
 /* Leave the possibility of an incomplete final layer */
+// ARM10C 20151031
+// MAX_IDR_SHIFT: 31
+// IDR_BITS: 8
+// MAX_IDR_LEVEL: 4
 #define MAX_IDR_LEVEL ((MAX_IDR_SHIFT + IDR_BITS - 1) / IDR_BITS)
 
 /* Number of id_layer structs to leave in free list */
+// ARM10C 20151031
+// MAX_IDR_LEVEL: 4
+// MAX_IDR_FREE: 8
 #define MAX_IDR_FREE (MAX_IDR_LEVEL * 2)
 
 // ARM10C 20140920
+// ARM10C 20151031
 static struct kmem_cache *idr_layer_cache;
 static DEFINE_PER_CPU(struct idr_layer *, idr_preload_head);
 static DEFINE_PER_CPU(int, idr_preload_cnt);
@@ -71,19 +81,44 @@ static int idr_layer_prefix_mask(int layer)
 	return ~idr_max(layer + 1);
 }
 
+// ARM10C 20151031
+// layer_idr: &(&mnt_id_ida)->idr
 static struct idr_layer *get_from_free_list(struct idr *idp)
 {
 	struct idr_layer *p;
 	unsigned long flags;
 
+	// &idp->lock: &(&(&mnt_id_ida)->idr)->lock
 	spin_lock_irqsave(&idp->lock, flags);
+
+	// spin_lock_irqsave에서 한일:
+	// &(&(&mnt_id_ida)->idr)->lock을 사용하여 spin lock 을 수행하고 cpsr을 flag에 저장함
+
+	// idp->id_free: (&(&mnt_id_ida)->idr)->id_free: kmem_cache#21-o7, p: kmem_cache#21-o7
 	if ((p = idp->id_free)) {
+		// idp->id_free: (&(&mnt_id_ida)->idr)->id_free: kmem_cache#21-o7
+		// p->ary[0]: (kmem_cache#21-o7)->ary[0]: NULL
 		idp->id_free = p->ary[0];
+		// idp->id_free: (&(&mnt_id_ida)->idr)->id_free: NULL
+
+		// (&(&mnt_id_ida)->idr)->id_free_cnt: 7
 		idp->id_free_cnt--;
+		// (&(&mnt_id_ida)->idr)->id_free_cnt: 6
+
+		// p->ary[0]: (kmem_cache#21-o7)->ary[0]: NULL
 		p->ary[0] = NULL;
+		// p->ary[0]: (kmem_cache#21-o7)->ary[0]: NULL
 	}
+
+	// &idp->lock: &(&(&mnt_id_ida)->idr)->lock
 	spin_unlock_irqrestore(&idp->lock, flags);
+
+	// spin_unlock_irqrestore에서 한일:
+	// &(&(&mnt_id_ida)->idr)->lock을 사용하여 spin unlock 을 수행하고 flag에 저장된 cpsr을 복원함
+
+	// p: kmem_cache#21-o7
 	return(p);
+	// return kmem_cache#21-o7
 }
 
 /**
@@ -99,13 +134,24 @@ static struct idr_layer *get_from_free_list(struct idr *idp)
  * interface - idr_pre_get() and idr_get_new*() - and will be removed
  * together with per-pool preload buffer.
  */
+// ARM10C 20151031
+// gfp_mask: 0, layer_idr: &(&mnt_id_ida)->idr
 static struct idr_layer *idr_layer_alloc(gfp_t gfp_mask, struct idr *layer_idr)
 {
 	struct idr_layer *new;
 
 	/* this is the old path, bypass to get_from_free_list() */
+	// layer_idr: &(&mnt_id_ida)->idr
 	if (layer_idr)
+		// layer_idr: &(&mnt_id_ida)->idr
+		// get_from_free_list(&(&mnt_id_ida)->idr): kmem_cache#21-o7
 		return get_from_free_list(layer_idr);
+		// return kmem_cache#21-o7
+
+		// get_from_free_list에서 한일:
+		// (&(&mnt_id_ida)->idr)->id_free: NULL
+		// (&(&mnt_id_ida)->idr)->id_free_cnt: 6
+		// (kmem_cache#21-o7)->ary[0]: NULL
 
 	/*
 	 * Try to allocate directly from kmem_cache.  We want to try this
@@ -158,13 +204,25 @@ static inline void free_layer(struct idr *idr, struct idr_layer *p)
 }
 
 /* only called when idp->lock is held */
+// ARM10C 20151031
+// idp: &(&mnt_id_ida)->idr, p: kmem_cache#21-oX
 static void __move_to_free_list(struct idr *idp, struct idr_layer *p)
 {
+	// p->ary[0]: (kmem_cache#21-oX)->ary[0]: NULL, idp->id_free: (&(&mnt_id_ida)->idr)->id_free: NULL
 	p->ary[0] = idp->id_free;
+	// p->ary[0]: (kmem_cache#21-oX)->ary[0]: NULL
+
+	// idp->id_free: (&(&mnt_id_ida)->idr)->id_free: NULL, p: kmem_cache#21-oX
 	idp->id_free = p;
+	// idp->id_free: (&(&mnt_id_ida)->idr)->id_free: kmem_cache#21-oX
+
+	// idp->id_free_cnt: (&(&mnt_id_ida)->idr)->id_free_cnt: 0
 	idp->id_free_cnt++;
+	// idp->id_free_cnt: (&(&mnt_id_ida)->idr)->id_free_cnt: 1
 }
 
+// ARM10C 20151031
+// idp: &(&mnt_id_ida)->idr, new: kmem_cache#21-oX
 static void move_to_free_list(struct idr *idp, struct idr_layer *p)
 {
 	unsigned long flags;
@@ -172,9 +230,24 @@ static void move_to_free_list(struct idr *idp, struct idr_layer *p)
 	/*
 	 * Depends on the return element being zeroed.
 	 */
+	// &idp->lock: &(&(&mnt_id_ida)->idr)->lock
 	spin_lock_irqsave(&idp->lock, flags);
+
+	// spin_lock_irqsave에서 한일:
+	// &(&(&mnt_id_ida)->idr)->lock을 사용하여 spin lock을 수행하고 cpsr을 flags에 저장함
+
+	// idp: &(&mnt_id_ida)->idr, p: kmem_cache#21-oX
 	__move_to_free_list(idp, p);
+
+	// __move_to_free_list에서 한일:
+	// (kmem_cache#21-oX)->ary[0]: NULL
+	// (&(&mnt_id_ida)->idr)->id_free: kmem_cache#21-oX
+	// (&(&mnt_id_ida)->idr)->id_free_cnt: 1
+
 	spin_unlock_irqrestore(&idp->lock, flags);
+
+	// spin_unlock_irqrestore에서 한일:
+	// &(&(&mnt_id_ida)->idr)->lock을 사용하여 spin unlock을 수행하고 flags에 저장된 cpsr을 복원
 }
 
 static void idr_mark_full(struct idr_layer **pa, int id)
@@ -197,16 +270,35 @@ static void idr_mark_full(struct idr_layer **pa, int id)
 	}
 }
 
+// ARM10C 20151031
+// &ida->idr: &(&mnt_id_ida)->idr, gfp_mask: 0xD0
 int __idr_pre_get(struct idr *idp, gfp_t gfp_mask)
 {
+	// idp->id_free_cnt: (&(&mnt_id_ida)->idr)->id_free_cnt: 0, MAX_IDR_FREE: 8
 	while (idp->id_free_cnt < MAX_IDR_FREE) {
 		struct idr_layer *new;
+
+		// idr_layer_cache: kmem_cache#21, gfp_mask: 0xD0
+		// kmem_cache_zalloc(kmem_cache#21, 0xD0): kmem_cache#21-oX
 		new = kmem_cache_zalloc(idr_layer_cache, gfp_mask);
+		// new: kmem_cache#21-oX
+
+		// new: kmem_cache#21-oX
 		if (new == NULL)
 			return (0);
+
+		// idp: &(&mnt_id_ida)->idr, new: kmem_cache#21-oX
 		move_to_free_list(idp, new);
+
+		// move_to_free_list에서 한일:
+		// (kmem_cache#21-oX)->ary[0]: NULL
+		// (&(&mnt_id_ida)->idr)->id_free: kmem_cache#21-oX
+		// (&(&mnt_id_ida)->idr)->id_free_cnt: 1
+
+		// (&(&mnt_id_ida)->idr)->id_free_cnt: 2...7 까지 loop 수행
 	}
 	return 1;
+	// return 1
 }
 EXPORT_SYMBOL(__idr_pre_get);
 
@@ -295,6 +387,8 @@ static int sub_alloc(struct idr *idp, int *starting_id, struct idr_layer **pa,
 	return id;
 }
 
+// ARM10C 20151031
+// &ida->idr: &(&mnt_id_ida)->idr, idr_id: 0, pa, 0, &ida->idr: &(&mnt_id_ida)->idr
 static int idr_get_empty_slot(struct idr *idp, int starting_id,
 			      struct idr_layer **pa, gfp_t gfp_mask,
 			      struct idr *layer_idr)
@@ -303,16 +397,42 @@ static int idr_get_empty_slot(struct idr *idp, int starting_id,
 	int layers, v, id;
 	unsigned long flags;
 
+	// starting_id: 0
 	id = starting_id;
+	// id: 0
+
 build_up:
+	// idp->top: (&(&mnt_id_ida)->idr)->top: NULL
 	p = idp->top;
+	// p: NULL
+
+	// idp->layers: (&(&mnt_id_ida)->idr)->layers: 0
 	layers = idp->layers;
+	// layers: 0
+
+	// p: NULL
 	if (unlikely(!p)) {
+		// gfp_mask: 0, layer_idr: &(&mnt_id_ida)->idr
+		// idr_layer_alloc(0, &(&mnt_id_ida)->idr): kmem_cache#21-o7, p: kmem_cache#21-o7
 		if (!(p = idr_layer_alloc(gfp_mask, layer_idr)))
 			return -ENOMEM;
+
+		// idr_layer_alloc에서 한일:
+		// (&(&mnt_id_ida)->idr)->id_free: NULL
+		// (&(&mnt_id_ida)->idr)->id_free_cnt: 6
+		// (kmem_cache#21-o7)->ary[0]: NULL
+
+		// p->layer: (kmem_cache#21-o7)->layer
 		p->layer = 0;
+		// p->layer: (kmem_cache#21-o7)->layer: 0
+
+		// layers: 0
 		layers = 1;
+		// layers: 1
 	}
+
+// 2015/10/31 종료
+
 	/*
 	 * Add a new layer to the top of the tree if the requested
 	 * id is larger than the currently allocated space.
@@ -901,19 +1021,37 @@ EXPORT_SYMBOL(idr_init);
  * 2007-04-25  written by Tejun Heo <htejun@gmail.com>
  */
 
+// ARM10C 20151031
+// ida: &mnt_id_ida, bitmap: kmem_cache#27-oX
 static void free_bitmap(struct ida *ida, struct ida_bitmap *bitmap)
 {
 	unsigned long flags;
 
+	// ida->free_bitmap: (&mnt_id_ida)->free_bitmap: NULL
 	if (!ida->free_bitmap) {
+		// &ida->idr.lock: (&mnt_id_ida)->idr.lock
 		spin_lock_irqsave(&ida->idr.lock, flags);
+
+		// spin_lock_irqsave에서 한일:
+		// (&mnt_id_ida)->idr.lock을 사용하여 spin lock 을 수행하고 cpsr을 flags에 저장함
+
+		// ida->free_bitmap: (&mnt_id_ida)->free_bitmap: NULL
 		if (!ida->free_bitmap) {
+			// ida->free_bitmap: (&mnt_id_ida)->free_bitmap: NULL, bitmap: kmem_cache#27-oX
 			ida->free_bitmap = bitmap;
+			// ida->free_bitmap: (&mnt_id_ida)->free_bitmap: kmem_cache#27-oX
+
+			// bitmap: kmem_cache#27-oX
 			bitmap = NULL;
+			// bitmap: NULL
 		}
 		spin_unlock_irqrestore(&ida->idr.lock, flags);
+
+		// spin_unlock_irqrestore에서 한일:
+		// (&mnt_id_ida)->idr.lock을 사용하여 spin unlock 을 수행하고 flags에 저장된 cpsr을 복원함
 	}
 
+	// bitmap: NULL
 	kfree(bitmap);
 }
 
@@ -929,24 +1067,45 @@ static void free_bitmap(struct ida *ida, struct ida_bitmap *bitmap)
  * If the system is REALLY out of memory this function returns %0,
  * otherwise %1.
  */
+// ARM10C 20151031
+// &mnt_id_ida, GFP_KERNEL: 0xD0
 int ida_pre_get(struct ida *ida, gfp_t gfp_mask)
 {
 	/* allocate idr_layers */
+	// &ida->idr: &(&mnt_id_ida)->idr, gfp_mask: 0xD0
+	// __idr_pre_get(&(&mnt_id_ida)->idr, 0xD0): 1
 	if (!__idr_pre_get(&ida->idr, gfp_mask))
 		return 0;
 
+	// __idr_pre_get에서 한일:
+	// idr_layer_cache를 사용하여 struct idr_layer 의 메모리 kmem_cache#21-o0...7를 8 개를 할당 받음
+	// (kmem_cache#21-o0...7)->ary[0]: NULL
+	// (&(&mnt_id_ida)->idr)->id_free: kmem_cache#21-o7
+	// (&(&mnt_id_ida)->idr)->id_free_cnt: 7
+
 	/* allocate free_bitmap */
+	// ida->free_bitmap: (&mnt_id_ida)->free_bitmap: NULL
 	if (!ida->free_bitmap) {
 		struct ida_bitmap *bitmap;
 
+		// sizeof(struct ida_bitmap): 172 bytes, gfp_mask: 0xD0
+		// kmalloc(172, 0xD0): kmem_cache#27-oX
 		bitmap = kmalloc(sizeof(struct ida_bitmap), gfp_mask);
+		// bitmap: kmem_cache#27-oX
+
+		// bitmap: kmem_cache#27-oX
 		if (!bitmap)
 			return 0;
 
+		// ida: &mnt_id_ida, bitmap: kmem_cache#27-oX
 		free_bitmap(ida, bitmap);
+
+		// free_bitmap에서 한일:
+		// (&mnt_id_ida)->free_bitmap: kmem_cache#27-oX
 	}
 
 	return 1;
+	// return 1
 }
 EXPORT_SYMBOL(ida_pre_get);
 
@@ -965,17 +1124,28 @@ EXPORT_SYMBOL(ida_pre_get);
  *
  * @p_id returns a value in the range @starting_id ... %0x7fffffff.
  */
+// ARM10C 20151031
+// &mnt_id_ida, mnt_id_start: 0, &mnt->mnt_id: &(kmem_cache#2-oX)->mnt_id
 int ida_get_new_above(struct ida *ida, int starting_id, int *p_id)
 {
+	// MAX_IDR_LEVEL: 4
 	struct idr_layer *pa[MAX_IDR_LEVEL + 1];
 	struct ida_bitmap *bitmap;
 	unsigned long flags;
+
+	// starting_id: 0, IDA_BITMAP_BITS: 1344
 	int idr_id = starting_id / IDA_BITMAP_BITS;
+	// idr_id: 0
+
+	// starting_id: 0, IDA_BITMAP_BITS: 1344
 	int offset = starting_id % IDA_BITMAP_BITS;
+	// offset: 0
+
 	int t, id;
 
  restart:
 	/* get vacant slot */
+	// &ida->idr: &(&mnt_id_ida)->idr, idr_id: 0
 	t = idr_get_empty_slot(&ida->idr, idr_id, pa, 0, &ida->idr);
 	if (t < 0)
 		return t == -ENOMEM ? -EAGAIN : t;

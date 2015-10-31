@@ -207,6 +207,8 @@ static inline void __raw_write_lock_bh(rwlock_t *lock)
 }
 
 // ARM10C 20140125
+// ARM10C 20151031
+// &file_systems_lock
 static inline void __raw_write_lock(rwlock_t *lock)
 {
 	preempt_disable();

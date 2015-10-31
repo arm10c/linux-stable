@@ -394,6 +394,8 @@ extern struct kmem_cache *kmalloc_dma_caches[KMALLOC_SHIFT_HIGH + 1];
 // size: 1076
 // ARM10C 20150110
 // size: 3076
+// ARM10C 20151031
+// size: 172
 static __always_inline int kmalloc_index(size_t size)
 {
 	// size: 512
@@ -404,6 +406,7 @@ static __always_inline int kmalloc_index(size_t size)
 	// size: 52
 	// size: 1076
 	// size: 3076
+	// size: 172
 	if (!size)
 		return 0;
 
@@ -415,6 +418,7 @@ static __always_inline int kmalloc_index(size_t size)
 	// size: 52, KMALLOC_MIN_SIZE: 64
 	// size: 1076, KMALLOC_MIN_SIZE: 64
 	// size: 3076, KMALLOC_MIN_SIZE: 64
+	// size: 172, KMALLOC_MIN_SIZE: 64
 	if (size <= KMALLOC_MIN_SIZE)
 		// KMALLOC_SHIFT_LOW: 6
 		// KMALLOC_SHIFT_LOW: 6
@@ -430,6 +434,7 @@ static __always_inline int kmalloc_index(size_t size)
 	// size: 156, KMALLOC_MIN_SIZE: 64
 	// size: 1076, KMALLOC_MIN_SIZE: 64
 	// size: 3076, KMALLOC_MIN_SIZE: 64
+	// size: 172, KMALLOC_MIN_SIZE: 64
 	if (KMALLOC_MIN_SIZE <= 32 && size > 64 && size <= 96)
 		return 1;
 
@@ -437,6 +442,7 @@ static __always_inline int kmalloc_index(size_t size)
 	// size: 156, KMALLOC_MIN_SIZE: 64
 	// size: 1076, KMALLOC_MIN_SIZE: 64
 	// size: 3076, KMALLOC_MIN_SIZE: 64
+	// size: 172, KMALLOC_MIN_SIZE: 64
 	if (KMALLOC_MIN_SIZE <= 64 && size > 128 && size <= 192)
 		return 2;
 		// return 2
@@ -445,12 +451,15 @@ static __always_inline int kmalloc_index(size_t size)
 	// size: 156
 	// size: 1076
 	// size: 3076
+	// size: 172
 	if (size <=          8) return 3;
 	if (size <=         16) return 4;
 	if (size <=         32) return 5;
 	if (size <=         64) return 6;
 	if (size <=        128) return 7;
+	// size: 172
 	if (size <=        256) return 8;
+	// return 8
 	// size: 512
 	if (size <=        512) return 9;
 	// return 9
@@ -681,17 +690,21 @@ static __always_inline void *kmalloc_large(size_t size, gfp_t flags)
 // size: 16, GFP_KERNEL: 0xD0, __GFP_ZERO: 0x8000u
 // ARM10C 20150110
 // size: 3076, GFP_KERNEL: 0xD0, __GFP_ZERO: 0x8000u
+// ARM10C 20151031
+// sizeof(struct ida_bitmap): 172 bytes, gfp_mask: 0xD0
 static __always_inline void *kmalloc(size_t size, gfp_t flags)
 {
 	// size: 512
 	// size: 52
 	// size: 16
 	// size: 3076
+	// size: 172
 	if (__builtin_constant_p(size)) {
 		// size: 512, KMALLOC_MAX_CACHE_SIZE: 0x2000
 		// size: 52, KMALLOC_MAX_CACHE_SIZE: 0x2000
 		// size: 16, KMALLOC_MAX_CACHE_SIZE: 0x2000
 		// size: 3076, KMALLOC_MAX_CACHE_SIZE: 0x2000
+		// size: 172, KMALLOC_MAX_CACHE_SIZE: 0x2000
 		if (size > KMALLOC_MAX_CACHE_SIZE)
 			return kmalloc_large(size, flags);
 
@@ -700,21 +713,25 @@ static __always_inline void *kmalloc(size_t size, gfp_t flags)
 		// flags: 0x8000, GFP_DMA: 0x01u
 		// flags: 0x80D0, GFP_DMA: 0x01u
 		// flags: 0x80D0, GFP_DMA: 0x01u
+		// flags: 0xD0, GFP_DMA: 0x01u
 		if (!(flags & GFP_DMA)) {
 			// size: 512, kmalloc_index(512): 9
 			// size: 52, kmalloc_index(52): 6
 			// size: 16, kmalloc_index(16): 6
 			// size: 3076, kmalloc_index(3076): 12
+			// size: 172, kmalloc_index(172): 8
 			int index = kmalloc_index(size);
 			// index: 9
 			// index: 6
 			// index: 6
 			// index: 12
+			// index: 8
 
 			// index: 9
 			// index: 6
 			// index: 6
 			// index: 12
+			// index: 8
 			if (!index)
 				return ZERO_SIZE_PTR;
 
@@ -722,12 +739,14 @@ static __always_inline void *kmalloc(size_t size, gfp_t flags)
 			// index: 6, kmalloc_caches[6]: kmem_cache#30, flags: 0x8000, size: 52
 			// index: 6, kmalloc_caches[6]: kmem_cache#30, flags: 0x80D0, size: 16
 			// index: 12, kmalloc_caches[12]: kmem_cache#23, flags: 0x80D0, size: 3076
+			// index: 8, kmalloc_caches[8]: kmem_cache#27->name: flags: 0xD0, size: 172
 			return kmem_cache_alloc_trace(kmalloc_caches[index],
 					flags, size);
 			// return kmem_cache#26-o0
 			// return kmem_cache#30-o9
 			// return kmem_cache#30-o10
 			// return kmem_cache#23-o0
+			// return kmem_cache#27-o0
 		}
 #endif
 	}
@@ -980,6 +999,10 @@ extern void *__kmalloc_node_track_caller(size_t, gfp_t, int, unsigned long);
 // kmem_cache: UNMOVABLE인 page (boot_kmem_cache)의 object의 시작 virtual address, GFP_NOWAIT: 0
 // ARM10C 20140920
 // kmem_cache: kmem_cache#0, GFP_KERNEL: 0xD0
+// ARM10C 20151031
+// mnt_cache: kmem_cache#2, GFP_KERNEL: 0xD0
+// ARM10C 20151031
+// idr_layer_cache: kmem_cache#21, gfp_mask: 0xD0
 static inline void *kmem_cache_zalloc(struct kmem_cache *k, gfp_t flags)
 {
 	// k: &boot_kmem_cache, flags: GFP_NOWAIT: 0, __GFP_ZERO: 0x8000u
@@ -992,13 +1015,18 @@ static inline void *kmem_cache_zalloc(struct kmem_cache *k, gfp_t flags)
 	// kmem_cache_alloc(UNMOVABLE인 page (boot_kmem_cache)의 object의 시작 virtual address, __GFP_ZERO: 0x8000u):
 	// UNMOVABLE인 page (boot_kmem_cache)의 시작 object의 virtual address + 3840
 	// k: kmem_cache#0, flags: GFP_KERNEL: 0xD0, __GFP_ZERO: 0x8000u
-	// kmem_cache_alloc(kmem_cache#0,, __GFP_ZERO: 0x80D0):
-	// kmem_cache#21
+	// kmem_cache_alloc(kmem_cache#0, __GFP_ZERO: 0x80D0): kmem_cache#21
+	// k: kmem_cache#2, flags: GFP_KERNEL: 0xD0
+	// kmem_cache_alloc(kmem_cache#2, 0x80D0): kmem_cache#2-oX
+	// k: kmem_cache#21, flags: GFP_KERNEL: 0xD0
+	// kmem_cache_alloc(kmem_cache#21, 0x80D0): kmem_cache#21-oX
 	return kmem_cache_alloc(k, flags | __GFP_ZERO);
 	// return UNMOVABLE인 page (boot_kmem_cache)의 object의 시작 virtual address
 	// return UNMOVABLE인 page (boot_kmem_cache)의 시작 virtual address + 3968
 	// return UNMOVABLE인 page (boot_kmem_cache)의 시작 object의 virtual address + 3840
 	// return kmem_cache#21
+	// return kmem_cache#2-oX
+	// return kmem_cache#21-oX
 }
 
 /**

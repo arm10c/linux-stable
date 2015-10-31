@@ -65,6 +65,8 @@ do {								\
 #define write_trylock(lock)	__cond_lock(lock, _raw_write_trylock(lock))
 
 // ARM10C 20140125
+// ARM10C 20151031
+// &file_systems_lock
 #define write_lock(lock)	_raw_write_lock(lock)
 #define read_lock(lock)		_raw_read_lock(lock)
 

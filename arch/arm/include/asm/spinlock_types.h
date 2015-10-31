@@ -36,6 +36,8 @@ typedef struct {
 	u32 lock;
 } arch_rwlock_t;
 
+// ARM10C 20151031
+// __ARCH_RW_LOCK_UNLOCKED: { 0 }
 #define __ARCH_RW_LOCK_UNLOCKED		{ 0 }
 
 #endif

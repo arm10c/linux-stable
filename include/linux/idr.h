@@ -24,6 +24,7 @@
  * 1k on 32bit.
  */
 // ARM10C 20140920
+// ARM10C 20151031
 // IDR_BITS: 8
 #define IDR_BITS 8
 // ARM10C 20140920
@@ -33,6 +34,7 @@
 #define IDR_MASK ((1 << IDR_BITS)-1)
 
 // ARM10C 20140920
+// ARM10C 20151031
 // DECLARE_BITMAP(bitmap, 0x100): bitmap[8]
 //
 // sizeof(struct idr_layer): 1076 bytes
@@ -48,6 +50,7 @@ struct idr_layer {
 };
 
 // ARM10C 20150808
+// ARM10C 20151031
 // sizeof(struct idr): 40 bytes
 struct idr {
 	struct idr_layer __rcu	*hint;	/* the last layer allocated from */
@@ -59,6 +62,31 @@ struct idr {
 	spinlock_t		lock;
 };
 
+// ARM10C 20151031
+// __SPIN_LOCK_UNLOCKED((mnt_id_ida).idr.lock):
+// (spinlock_t )
+// { { .rlock =
+//     {
+//       .raw_lock = { { 0 } },
+//       .magic = 0xdead4ead,
+//       .owner_cpu = -1,
+//       .owner = 0xffffffff,
+//     }
+// } }
+//
+// #define IDR_INIT((mnt_id_ida).idr):
+// {
+//      .lock =
+//      (spinlock_t )
+//      { { .rlock =
+//          {
+//            .raw_lock = { { 0 } },
+//            .magic = 0xdead4ead,
+//            .owner_cpu = -1,
+//            .owner = 0xffffffff,
+//          }
+//      } },
+// }
 #define IDR_INIT(name)							\
 {									\
 	.lock			= __SPIN_LOCK_UNLOCKED(name.lock),	\
@@ -215,21 +243,102 @@ static inline void __deprecated idr_remove_all(struct idr *idp)
  * IDA_BITMAP_LONGS is calculated to be one less to accommodate
  * ida_bitmap->nr_busy so that the whole struct fits in 128 bytes.
  */
+// ARM10C 20151031
+// IDA_CHUNK_SIZE: 128
 #define IDA_CHUNK_SIZE		128	/* 128 bytes per chunk */
+// ARM10C 20151031
+// IDA_CHUNK_SIZE: 128
+// IDA_BITMAP_LONGS: 42
 #define IDA_BITMAP_LONGS	(IDA_CHUNK_SIZE / sizeof(long) - 1)
+// ARM10C 20151031
+// IDA_BITMAP_LONGS: 42
+// IDA_BITMAP_BITS: 1344
 #define IDA_BITMAP_BITS 	(IDA_BITMAP_LONGS * sizeof(long) * 8)
 
+// ARM10C 20151031
+// sizeof(struct ida_bitmap): 172 bytes
 struct ida_bitmap {
 	long			nr_busy;
+	// IDA_BITMAP_LONGS: 42
 	unsigned long		bitmap[IDA_BITMAP_LONGS];
 };
 
+// ARM10C 20151031
 struct ida {
 	struct idr		idr;
 	struct ida_bitmap	*free_bitmap;
 };
 
+// ARM10C 20151031
+// IDR_INIT((mnt_id_ida).idr):
+// {
+//      .lock =
+//      (spinlock_t )
+//      { { .rlock =
+//          {
+//            .raw_lock = { { 0 } },
+//            .magic = 0xdead4ead,
+//            .owner_cpu = -1,
+//            .owner = 0xffffffff,
+//          }
+//      } },
+// }
+//
+// #define IDA_INIT(mnt_id_ida):
+// {
+//     .idr =
+//     {
+//         .lock =
+//         (spinlock_t )
+//         { { .rlock =
+//              {
+//                .raw_lock = { { 0 } },
+//                .magic = 0xdead4ead,
+//                .owner_cpu = -1,
+//                .owner = 0xffffffff,
+//              }
+//          } },
+//      }
+//      .free_bitmap = NULL,
+// }
 #define IDA_INIT(name)		{ .idr = IDR_INIT((name).idr), .free_bitmap = NULL, }
+// ARM10C 20151031
+// IDA_INIT(mnt_id_ida):
+// {
+//     .idr =
+//     {
+//         .lock =
+//         (spinlock_t )
+//         { { .rlock =
+//              {
+//                .raw_lock = { { 0 } },
+//                .magic = 0xdead4ead,
+//                .owner_cpu = -1,
+//                .owner = 0xffffffff,
+//              }
+//          } },
+//      }
+//      .free_bitmap = NULL,
+// }
+//
+// #define DEFINE_IDA(mnt_id_ida):
+// struct ida mnt_id_ida =
+// {
+//     .idr =
+//     {
+//         .lock =
+//         (spinlock_t )
+//         { { .rlock =
+//              {
+//                .raw_lock = { { 0 } },
+//                .magic = 0xdead4ead,
+//                .owner_cpu = -1,
+//                .owner = 0xffffffff,
+//              }
+//          } },
+//      }
+//      .free_bitmap = NULL,
+// }
 #define DEFINE_IDA(name)	struct ida name = IDA_INIT(name)
 
 int ida_pre_get(struct ida *ida, gfp_t gfp_mask);

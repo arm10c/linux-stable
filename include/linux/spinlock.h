@@ -395,6 +395,12 @@ static inline void spin_lock_irq(spinlock_t *lock)
 // ARM10C 20150711
 // &base->lock: &(&boot_tvec_bases)->lock: *flags: flags
 // ARM10C 20150718
+// ARM10C 20151031
+// &idp->lock: &(&(&mnt_id_ida)->idr)->lock, flags
+// ARM10C 20151031
+// &ida->idr.lock: (&mnt_id_ida)->idr.lock, flags
+// ARM10C 20151031
+// &idp->lock: &(&(&mnt_id_ida)->idr)->lock, flags
 #define spin_lock_irqsave(lock, flags)				\
 do {								\
 	raw_spin_lock_irqsave(spinlock_check(lock), flags);	\

@@ -57,9 +57,41 @@ static int __init set_mphash_entries(char *str)
 __setup("mphash_entries=", set_mphash_entries);
 
 static int event;
+// ARM10C 20151031
+// DEFINE_IDA(mnt_id_ida):
+// struct ida mnt_id_ida =
+// {
+//     .idr =
+//     {
+//         .lock =
+//         (spinlock_t )
+//         { { .rlock =
+//              {
+//                .raw_lock = { { 0 } },
+//                .magic = 0xdead4ead,
+//                .owner_cpu = -1,
+//                .owner = 0xffffffff,
+//              }
+//          } },
+//      }
+//      .free_bitmap = NULL,
+// }
 static DEFINE_IDA(mnt_id_ida);
 static DEFINE_IDA(mnt_group_ida);
+// ARM10C 20151031
+// DEFINE_SPINLOCK(mnt_id_lock):
+// spinlock_t mnt_id_lock =
+// (spinlock_t )
+// { { .rlock =
+//     {
+//       .raw_lock = { { 0 } },
+//       .magic = 0xdead4ead,
+//       .owner_cpu = -1,
+//       .owner = 0xffffffff,
+//     }
+// } }
 static DEFINE_SPINLOCK(mnt_id_lock);
+// ARM10C 20151031
 static int mnt_id_start = 0;
 static int mnt_group_start = 1;
 
@@ -70,6 +102,7 @@ static struct hlist_head *mount_hashtable __read_mostly;
 // ARM10C 20151031
 static struct hlist_head *mountpoint_hashtable __read_mostly;
 // ARM10C 20151024
+// ARM10C 20151031
 static struct kmem_cache *mnt_cache __read_mostly;
 static DECLARE_RWSEM(namespace_sem);
 
@@ -106,13 +139,31 @@ static inline struct hlist_head *mp_hash(struct dentry *dentry)
  * allocation is serialized by namespace_sem, but we need the spinlock to
  * serialize with freeing.
  */
+// ARM10C 20151031
+// mnt: kmem_cache#2-oX
 static int mnt_alloc_id(struct mount *mnt)
 {
 	int res;
 
 retry:
+	// GFP_KERNEL: 0xD0
 	ida_pre_get(&mnt_id_ida, GFP_KERNEL);
+
+	// ida_pre_get에서 한일:
+	// idr_layer_cache를 사용하여 struct idr_layer 의 메모리 kmem_cache#21-o0...7를 8 개를 할당 받음
+	// (kmem_cache#21-o0...7)->ary[0]: NULL
+	// (&(&mnt_id_ida)->idr)->id_free: kmem_cache#21-o7
+	// (&(&mnt_id_ida)->idr)->id_free_cnt: 7
+	//
+	// struct ida_bitmap 의 메모리 kmem_cache#27-oX 할당 받음
+	// (&mnt_id_ida)->free_bitmap: kmem_cache#27-oX
+
 	spin_lock(&mnt_id_lock);
+
+	// spin_lock에서 한일:
+	// &mnt_id_lock을 이용한 spin lock 수행
+
+	// mnt_id_start: 0, &mnt->mnt_id: &(kmem_cache#2-oX)->mnt_id
 	res = ida_get_new_above(&mnt_id_ida, mnt_id_start, &mnt->mnt_id);
 	if (!res)
 		mnt_id_start = mnt->mnt_id + 1;
@@ -199,12 +250,20 @@ unsigned int mnt_get_count(struct mount *mnt)
 #endif
 }
 
+// ARM10C 20151031
+// name: "sysfs"
 static struct mount *alloc_vfsmnt(const char *name)
 {
+	// mnt_cache: kmem_cache#2, GFP_KERNEL: 0xD0
+	// kmem_cache_zalloc(kmem_cache#2, 0xD0): kmem_cache#2-oX
 	struct mount *mnt = kmem_cache_zalloc(mnt_cache, GFP_KERNEL);
+	// mnt: kmem_cache#2-oX
+
+	// mnt: kmem_cache#2-oX
 	if (mnt) {
 		int err;
 
+		// mnt: kmem_cache#2-oX
 		err = mnt_alloc_id(mnt);
 		if (err)
 			goto out_free_cache;
@@ -839,15 +898,19 @@ static struct mount *skip_mnt_tree(struct mount *p)
 	return p;
 }
 
+// ARM10C 20151031
+// type: &sysfs_fs_type, MS_KERNMOUNT: 0x400000, type->name: (&sysfs_fs_type)->name: "sysfs", data: NULL
 struct vfsmount *
 vfs_kern_mount(struct file_system_type *type, int flags, const char *name, void *data)
 {
 	struct mount *mnt;
 	struct dentry *root;
 
+	// type: &sysfs_fs_type
 	if (!type)
 		return ERR_PTR(-ENODEV);
 
+	// name: "sysfs"
 	mnt = alloc_vfsmnt(name);
 	if (!mnt)
 		return ERR_PTR(-ENOMEM);
@@ -2902,9 +2965,13 @@ void put_mnt_ns(struct mnt_namespace *ns)
 	free_mnt_ns(ns);
 }
 
+// ARM10C 20151031
+// &sysfs_fs_type, NULL
 struct vfsmount *kern_mount_data(struct file_system_type *type, void *data)
 {
 	struct vfsmount *mnt;
+
+	// type: &sysfs_fs_type, MS_KERNMOUNT: 0x400000, type->name: (&sysfs_fs_type)->name: "sysfs", data: NULL
 	mnt = vfs_kern_mount(type, MS_KERNMOUNT, type->name, data);
 	if (!IS_ERR(mnt)) {
 		/*

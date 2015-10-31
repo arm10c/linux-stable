@@ -4855,6 +4855,8 @@ redo:
 // s: kmem_cache#30, gfpflags: GFP_KERNEL: 0xD0, _RET_IP_
 // ARM10C 20141206
 // s: kmem_cache#26, flags: 0x80D0, _RET_IP_
+// ARM10C 20151031
+// s: kmem_cache#2, gfpflags: 0x80D0, _RET_IP_
 static __always_inline void *slab_alloc(struct kmem_cache *s,
 		gfp_t gfpflags, unsigned long addr)
 {
@@ -4904,6 +4906,8 @@ static __always_inline void *slab_alloc(struct kmem_cache *s,
 // s: kmem_cache#28, 0x80D0
 // ARM10C 20141004
 // radix_tree_node_cachep: kmem_cache#20, gfp_mask: GFP_KERNEL: 0xD0
+// ARM10C 20151031
+// kmem_cache#2, 0x80D0
 void *kmem_cache_alloc(struct kmem_cache *s, gfp_t gfpflags)
 {
 	// s: &boot_kmem_cache_node, gfpflags: GFP_KERNEL: 0xD0
@@ -4922,6 +4926,7 @@ void *kmem_cache_alloc(struct kmem_cache *s, gfp_t gfpflags)
 	// s: kmem_cache#30, gfpflags: __GFP_ZERO: 0x8000
 	// slab_alloc(kmem_cache#30, __GFP_ZERO: 0x8000):
 	// UNMOVABLE인 page (kmem_cache#30)의 시작 virtual address
+	// s: kmem_cache#2, gfpflags: 0x80D0
 	void *ret = slab_alloc(s, gfpflags, _RET_IP_);
 	// ret: UNMOVABLE인 page 의 object의 시작 virtual address + 64
 	// ret: UNMOVABLE인 page (boot_kmem_cache)의 object의 시작 virtual address
@@ -4929,6 +4934,7 @@ void *kmem_cache_alloc(struct kmem_cache *s, gfp_t gfpflags)
 	// ret: UNMOVABLE인 page (boot_kmem_cache)의 시작 object의 virtual address + 3840
 	// ret: UNMOVABLE인 page (kmem_cache#26)의 시작 virtual address (kmem_cache#26-o0)
 	// ret: UNMOVABLE인 page (kmem_cache#30)의 시작 virtual address (kmem_cache#30-o9)
+	// ret: UNMOVABLE인 page (kmem_cache#2)의 시작 virtual address (kmem_cache#2-oX)
 
 	// ret: UNMOVABLE인 page 의 object의 시작 virtual address + 64
 	// s->object_size: boot_kmem_cache_node.object_size: 44,
@@ -4954,6 +4960,10 @@ void *kmem_cache_alloc(struct kmem_cache *s, gfp_t gfpflags)
 	// s->object_size: (kmem_cache#30)->object_size: 52,
 	// s->size: (kmem_cache#30)->size: 64,
 	// gfpflags: __GFP_ZERO: 0x8000
+	// ret: kmem_cache#2-oX
+	// s->object_size: (kmem_cache#2)->object_size: 256,
+	// s->size: (kmem_cache#30)->size: 152,
+	// gfpflags: __GFP_ZERO: 0x80D0
 	trace_kmem_cache_alloc(_RET_IP_, ret, s->object_size,
 				s->size, gfpflags);
 
@@ -4963,6 +4973,8 @@ void *kmem_cache_alloc(struct kmem_cache *s, gfp_t gfpflags)
 	// ret: UNMOVABLE인 page (boot_kmem_cache)의 시작 object의 virtual address + 3840
 	// ret: kmem_cache#26-o0
 	// ret: kmem_cache#30-o9
+	// ret: kmem_cache#30-o9
+	// ret: kmem_cache#2-oX
 	return ret;
 	// return UNMOVABLE인 page 의 object의 시작 virtual address + 64
 	// return UNMOVABLE인 page (boot_kmem_cache)의 object의 시작 virtual address
@@ -4970,6 +4982,7 @@ void *kmem_cache_alloc(struct kmem_cache *s, gfp_t gfpflags)
 	// return UNMOVABLE인 page (boot_kmem_cache)의 시작 object의 virtual address + 3840
 	// return kmem_cache#26-o0
 	// return kmem_cache#30-o9
+	// return kmem_cache#2-oX
 }
 EXPORT_SYMBOL(kmem_cache_alloc);
 
@@ -6899,6 +6912,8 @@ EXPORT_SYMBOL(ksize);
 // desc: kmem_cache#30-o11 (cortex_a15_gic)
 // ARM10C 20141220
 // desc: kmem_cache#30-o10 (exynos4210_combiner)
+// ARM10C 20151031
+// bitmap: NULL
 void kfree(const void *x)
 {
 	struct page *page;

@@ -476,6 +476,7 @@ do {								\
 // LOCK_CONTENDED(lock, do_raw_spin_trylock, do_raw_spin_lock);
 // => do_raw_spin_lock(lock)
 // ARM10C 20140517
+// ARM10C 20151031
 #define LOCK_CONTENDED(_lock, try, lock) \
 	lock(_lock)
 

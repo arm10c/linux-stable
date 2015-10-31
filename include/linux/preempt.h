@@ -53,6 +53,7 @@ extern void preempt_count_sub(int val);
 // ARM10C 20140920
 // ARM10C 20141206
 // ARM10C 20150411
+// ARM10C 20151031
 #define preempt_disable()/*ARM10C this*/	\
 do { \
 	preempt_count_inc(); \
