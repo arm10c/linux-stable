@@ -39,6 +39,7 @@
 #include <linux/hardirq.h>
 
 // ARM10C 20151031
+// ARM10C 20151107
 // MAX_IDR_SHIFT: 31
 #define MAX_IDR_SHIFT		(sizeof(int) * 8 - 1)
 #define MAX_IDR_BIT		(1U << MAX_IDR_SHIFT)
@@ -64,11 +65,17 @@ static DEFINE_PER_CPU(int, idr_preload_cnt);
 static DEFINE_SPINLOCK(simple_ida_lock);
 
 /* the maximum ID which can be allocated given idr->layers */
+// ARM10C 20151107
+// layers: 1
 static int idr_max(int layers)
 {
+	// layers: 1, IDR_BITS: 8, MAX_IDR_SHIFT: 31, min_t(int, 8, 31): 8
 	int bits = min_t(int, layers * IDR_BITS, MAX_IDR_SHIFT);
+	// bits: 8
 
+	// bits: 8
 	return (1 << bits) - 1;
+	// return 255
 }
 
 /*
@@ -318,6 +325,8 @@ EXPORT_SYMBOL(__idr_pre_get);
  *  -ENOSPC if the id space is exhausted,
  *  -ENOMEM if more idr_layers need to be allocated.
  */
+// ARM10C 20151107
+// idp: &(&mnt_id_ida)->idr, id: 0, pa, gfp_mask: 0, layer_idr: &(&mnt_id_ida)->idr
 static int sub_alloc(struct idr *idp, int *starting_id, struct idr_layer **pa,
 		     gfp_t gfp_mask, struct idr *layer_idr)
 {
@@ -325,24 +334,53 @@ static int sub_alloc(struct idr *idp, int *starting_id, struct idr_layer **pa,
 	struct idr_layer *p, *new;
 	int l, id, oid;
 
+	// *starting_id: 0
 	id = *starting_id;
+	// id: 0
+
  restart:
+	// idp->top: (&(&mnt_id_ida)->idr)->top: kmem_cache#21-o7 (struct idr_layer)
 	p = idp->top;
+	// p: kmem_cache#21-o7 (struct idr_layer)
+
+	// idp->layers: (&(&mnt_id_ida)->idr)->layers: 1
 	l = idp->layers;
+	// l: 1
+
+	// l: 1
 	pa[l--] = NULL;
+	// pa[1]: NULL, l: 0
+
 	while (1) {
 		/*
 		 * We run around this while until we reach the leaf node...
 		 */
+		// id: 0, IDR_BITS: 8, l: 0, IDR_MASK: 0xFF
 		n = (id >> (IDR_BITS*l)) & IDR_MASK;
+		// n: 0
+
+		// p->bitmap: (kmem_cache#21-o7)->bitmap (struct idr_layer), IDR_SIZE: 0x100, n: 0
+		// find_next_zero_bit((kmem_cache#21-o7)->bitmap (struct idr_layer), 0x100, 0): 0x100
 		m = find_next_zero_bit(p->bitmap, IDR_SIZE, n);
+		// m: 0x100
+
+		// m: 0x100, IDR_SIZE: 0x100
 		if (m == IDR_SIZE) {
 			/* no space available go back to previous layer. */
+			// l: 0
 			l++;
+			// l: 1
+
+			// id: 0
 			oid = id;
+			// oid: 0
+
+			// id: 0, IDR_BITS: 8, l: 1
 			id = (id | ((1 << (IDR_BITS * l)) - 1)) + 1;
+			// id: 0x100
 
 			/* if already at the top layer, we need to grow */
+			// id: 0x100, idp->layers: (&(&mnt_id_ida)->idr)->layers: 1, IDR_BITS: 8
 			if (id >= 1 << (idp->layers * IDR_BITS)) {
 				*starting_id = id;
 				return -EAGAIN;
@@ -432,11 +470,13 @@ build_up:
 	}
 
 // 2015/10/31 종료
+// 2015/11/07 시작
 
 	/*
 	 * Add a new layer to the top of the tree if the requested
 	 * id is larger than the currently allocated space.
 	 */
+	// id: 0, layers: 1, idr_max(1): 255
 	while (id > idr_max(layers)) {
 		layers++;
 		if (!p->count) {
@@ -472,8 +512,21 @@ build_up:
 			__set_bit(0, new->bitmap);
 		p = new;
 	}
+
+	// idp->top: (&(&mnt_id_ida)->idr)->top, p: kmem_cache#21-o7
+	// __rcu_assign_pointer((&(&mnt_id_ida)->idr)->top, kmem_cache#21-o7, __rcu):
+	// do {
+	//      smp_wmb();
+	//      ((&(&mnt_id_ida)->idr)->top) = (typeof(*kmem_cache#21-o7) __force space *)(kmem_cache#21-o7);
+	// } while (0)
 	rcu_assign_pointer(idp->top, p);
+	// ((&(&mnt_id_ida)->idr)->top): (typeof(*kmem_cache#21-o7) __force space *)(kmem_cache#21-o7)
+
+	// idp->layers: (&(&mnt_id_ida)->idr)->layers, layers: 1
 	idp->layers = layers;
+	// idp->layers: (&(&mnt_id_ida)->idr)->layers: 1
+
+	// idp: &(&mnt_id_ida)->idr, id: 0, pa, gfp_mask: 0, layer_idr: &(&mnt_id_ida)->idr
 	v = sub_alloc(idp, &id, pa, gfp_mask, layer_idr);
 	if (v == -EAGAIN)
 		goto build_up;

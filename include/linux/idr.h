@@ -25,18 +25,23 @@
  */
 // ARM10C 20140920
 // ARM10C 20151031
+// ARM10C 20151107
 // IDR_BITS: 8
 #define IDR_BITS 8
 // ARM10C 20140920
+// ARM10C 20151107
 // IDR_BITS: 8
 // IDR_SIZE: 0x100
 #define IDR_SIZE (1 << IDR_BITS)
+// ARM10C 20151107
+// IDR_BITS: 8
+// IDR_MASK: 0xFF
 #define IDR_MASK ((1 << IDR_BITS)-1)
 
 // ARM10C 20140920
 // ARM10C 20151031
+// ARM10C 20151107
 // DECLARE_BITMAP(bitmap, 0x100): bitmap[8]
-//
 // sizeof(struct idr_layer): 1076 bytes
 struct idr_layer {
 	int			prefix;	/* the ID prefix of this idr_layer */

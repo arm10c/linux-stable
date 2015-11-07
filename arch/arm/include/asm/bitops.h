@@ -226,6 +226,8 @@ extern int _find_next_bit_be(const unsigned long *p, int size, int offset);
 // map: allocated_irqs, size: 160, start: 32
 // ARM10C 20141213
 // map: allocated_irqs, size: 8212, start: 160
+// ARM10C 20151107
+// p->bitmap: (kmem_cache#21-o7)->bitmap (struct idr_layer), IDR_SIZE: 0x100, n: 0
 #define find_next_zero_bit(p,sz,off)	_find_next_zero_bit_le(p,sz,off)
 #define find_first_bit(p,sz)		_find_first_bit_le(p,sz)
 // ARM10C 20140215
