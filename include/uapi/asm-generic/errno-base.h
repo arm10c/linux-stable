@@ -15,6 +15,8 @@
 #define	ENOEXEC		 8	/* Exec format error */
 #define	EBADF		 9	/* Bad file number */
 #define	ECHILD		10	/* No child processes */
+// ARM10C 20151107
+// EAGAIN: 11
 #define	EAGAIN		11	/* Try again */
 // ARM10C 20151031
 // ENOMEM: 12

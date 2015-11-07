@@ -164,14 +164,44 @@ retry:
 	// &mnt_id_lock을 이용한 spin lock 수행
 
 	// mnt_id_start: 0, &mnt->mnt_id: &(kmem_cache#2-oX)->mnt_id
+	// ida_get_new_above(&mnt_id_ida, 0, &(kmem_cache#2-oX)->mnt_id): 0
 	res = ida_get_new_above(&mnt_id_ida, mnt_id_start, &mnt->mnt_id);
+	// res: 0
+
+	// ida_get_new_above에서 한일:
+	// (&(&mnt_id_ida)->idr)->id_free: NULL
+	// (&(&mnt_id_ida)->idr)->id_free_cnt: 6
+	// (&(&mnt_id_ida)->idr)->top: kmem_cache#21-o7 (struct idr_layer)
+	// (&(&mnt_id_ida)->idr)->layers: 1
+	// (&mnt_id_ida)->free_bitmap: NULL
+	//
+	// (kmem_cache#21-o7 (struct idr_layer))->ary[0]: NULL
+	// (kmem_cache#21-o7 (struct idr_layer))->layer: 0
+	// (kmem_cache#21-o7 (struct idr_layer))->ary[0]: kmem_cache#27-oX (struct ida_bitmap)
+	// (kmem_cache#21-o7 (struct idr_layer))->count: 1
+	//
+	// (kmem_cache#27-oX (struct ida_bitmap))->bitmap 의 0 bit를 1로 set 수행
+	//
+	// (kmem_cache#2-oX (struct mount))->mnt_id: 0
+
+	// res: 0
 	if (!res)
+		// mnt_id_start: 0, mnt->mnt_id: (kmem_cache#2-oX)->mnt_id: 0
 		mnt_id_start = mnt->mnt_id + 1;
+		// mnt_id_start: 1
+
 	spin_unlock(&mnt_id_lock);
+
+	// spin_unlock에서 한일:
+	// &mnt_id_lock을 이용한 spin unlock 수행
+
+	// res: 0, EAGAIN: 11
 	if (res == -EAGAIN)
 		goto retry;
 
+	// res: 0
 	return res;
+	// return 0
 }
 
 static void mnt_free_id(struct mount *mnt)
@@ -255,24 +285,62 @@ unsigned int mnt_get_count(struct mount *mnt)
 static struct mount *alloc_vfsmnt(const char *name)
 {
 	// mnt_cache: kmem_cache#2, GFP_KERNEL: 0xD0
-	// kmem_cache_zalloc(kmem_cache#2, 0xD0): kmem_cache#2-oX
+	// kmem_cache_zalloc(kmem_cache#2, 0xD0): kmem_cache#2-oX (struct mount)
 	struct mount *mnt = kmem_cache_zalloc(mnt_cache, GFP_KERNEL);
-	// mnt: kmem_cache#2-oX
+	// mnt: kmem_cache#2-oX (struct mount)
 
-	// mnt: kmem_cache#2-oX
+	// mnt: kmem_cache#2-oX (struct mount)
 	if (mnt) {
 		int err;
 
-		// mnt: kmem_cache#2-oX
+		// mnt: kmem_cache#2-oX (struct mount)
+		// mnt_alloc_id(kmem_cache#2-oX (struct mount)): 0
 		err = mnt_alloc_id(mnt);
+		// err: 0
+
+		// mnt_alloc_id에서 한일:
+		// idr_layer_cache를 사용하여 struct idr_layer 의 메모리 kmem_cache#21-o0...7를 8 개를 할당 받음
+		// (kmem_cache#21-o0...7)->ary[0]: NULL
+		// (&(&mnt_id_ida)->idr)->id_free: kmem_cache#21-o7
+		// (&(&mnt_id_ida)->idr)->id_free_cnt: 7
+		//
+		// struct ida_bitmap 의 메모리 kmem_cache#27-oX 할당 받음
+		// (&mnt_id_ida)->free_bitmap: kmem_cache#27-oX
+		//
+		// (&(&mnt_id_ida)->idr)->id_free: NULL
+		// (&(&mnt_id_ida)->idr)->id_free_cnt: 6
+		// (&(&mnt_id_ida)->idr)->top: kmem_cache#21-o7 (struct idr_layer)
+		// (&(&mnt_id_ida)->idr)->layers: 1
+		// (&mnt_id_ida)->free_bitmap: NULL
+		//
+		// (kmem_cache#21-o7 (struct idr_layer))->ary[0]: NULL
+		// (kmem_cache#21-o7 (struct idr_layer))->layer: 0
+		// (kmem_cache#21-o7 (struct idr_layer))->ary[0]: kmem_cache#27-oX (struct ida_bitmap)
+		// (kmem_cache#21-o7 (struct idr_layer))->count: 1
+		//
+		// (kmem_cache#27-oX (struct ida_bitmap))->bitmap 의 0 bit를 1로 set 수행
+		//
+		// (kmem_cache#2-oX (struct mount))->mnt_id: 0
+		//
+		// mnt_id_start: 1
+
+		// err: 0
 		if (err)
 			goto out_free_cache;
 
+		// name: "sysfs"
 		if (name) {
+			// mnt->mnt_devname: (kmem_cache#2-oX (struct mount))->mnt_devname, name: "sysfs", GFP_KERNEL: 0xD0
+			// kstrdup("sysfs", GFP_KERNEL: 0xD0): kmem_cache#30-oX: "sysfs"
 			mnt->mnt_devname = kstrdup(name, GFP_KERNEL);
+			// mnt->mnt_devname: (kmem_cache#2-oX (struct mount))->mnt_devname: kmem_cache#30-oX: "sysfs"
+
+			// mnt->mnt_devname: (kmem_cache#2-oX (struct mount))->mnt_devname: kmem_cache#30-oX: "sysfs"
 			if (!mnt->mnt_devname)
 				goto out_free_id;
 		}
+
+// 2015/11/07 종료
 
 #ifdef CONFIG_SMP
 		mnt->mnt_pcp = alloc_percpu(struct mnt_pcp);

@@ -630,6 +630,12 @@ static inline void rcu_preempt_sleep_check(void)
 //      smp_wmb();
 //      ((&(&mnt_id_ida)->idr)->top) = (typeof(*kmem_cache#21-o7) __force space *)(kmem_cache#21-o7);
 // } while (0)
+// ARM10C 20151107
+// __rcu_assign_pointer((kmem_cache#21-o7 (struct idr_layer))->ary[0], kmem_cache#27-oX (struct ida_bitmap), __rcu):
+// do {
+//      smp_wmb();
+//      ((kmem_cache#21-o7 (struct idr_layer))->ary[0]) = (typeof(*kmem_cache#27-oX (struct ida_bitmap)) __force space *)(kmem_cache#27-oX (struct ida_bitmap));
+// } while (0)
 #define __rcu_assign_pointer(p, v, space)	\
 	do { \
 		smp_wmb(); \
@@ -1093,6 +1099,8 @@ static inline notrace void rcu_read_unlock_sched_notrace(void)
 // css->cgroup->nr_css: (&cgroup_dummy_root.top_cgroup)->subsys[2], css: &root_cpuacct.css
 // ARM10C 20151107
 // idp->top: (&(&mnt_id_ida)->idr)->top, p: kmem_cache#21-o7
+// ARM10C 20151107
+// pa[0]->ary[0]: (kmem_cache#21-o7 (struct idr_layer))->ary[0]: NULL, bitmap: kmem_cache#27-oX (struct ida_bitmap)
 #define rcu_assign_pointer(p, v)		\
 	__rcu_assign_pointer((p), (v), __rcu)
 

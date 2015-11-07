@@ -36,6 +36,8 @@
 // hw->init->name: (&(kmem_cache#30-oX (sclk_spll))->hw)->init->name: "sclk_spll", GFP_KERNEL: 0xD0
 // ARM10C 20150307
 // hw->init->name: (&(kmem_cache#30-oX (sclk_fimd1))->hw)->init->name: "sclk_fimd1", GFP_KERNEL: 0xD0
+// ARM10C 20151107
+// name: "sysfs", GFP_KERNEL: 0xD0
 char *kstrdup(const char *s, gfp_t gfp)
 {
 	size_t len;

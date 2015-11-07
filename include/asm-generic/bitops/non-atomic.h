@@ -13,6 +13,8 @@
  * may be that only one operation succeeds.
  */
 // ARM10C 20140118
+// ARM10C 20151107
+// t: 0, bitmap->bitmap: (kmem_cache#27-oX (struct ida_bitmap))->bitmap
 static inline void __set_bit(int nr, volatile unsigned long *addr)
 {
 	unsigned long mask = BIT_MASK(nr);
