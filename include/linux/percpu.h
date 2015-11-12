@@ -242,6 +242,9 @@ extern phys_addr_t per_cpu_ptr_to_phys(void *addr);
 // sizeof(struct per_cpu_pageset): 66 bytes, __alignof__(struct per_cpu_pageset): 72
 // ARM10C 20150919
 // s32
+// ARM10C 20151107
+// struct mnt_pcp
+// sizeof(struct mnt_pcp): 8 bytes, __alignof__(struct mnt_pcp): 8
 #define alloc_percpu(type)	\
 	(typeof(type) __percpu *)__alloc_percpu(sizeof(type), __alignof__(type))
 
@@ -498,6 +501,22 @@ extern void __bad_size_call_parameter(void);
 // 			__bad_size_call_parameter();break;
 // 	}
 // } while (0)
+//
+// ARM10C 20151107
+// mnt->mnt_pcp->mnt_count: (kmem_cache#2-oX (struct mount))->mnt_pcp->mnt_count, 1
+//
+// #define __pcpu_size_call(this_cpu_add_, variable,1 
+// do {
+// 	__verify_pcpu_ptr(&(variable));
+// 	switch(sizeof(mnt->mnt_pcp->mnt_count)) {
+// 		case 1: this_cpu_add_1(mnt->mnt_pcp->mnt_count, 1);break;
+// 		case 2: this_cpu_add_2(mnt->mnt_pcp->mnt_count, 1);break;
+// 		case 4: this_cpu_add_4(mnt->mnt_pcp->mnt_count, 1);break;
+// 		case 8: this_cpu_add_8(mnt->mnt_pcp->mnt_count, 1);break;
+// 		default:
+// 			__bad_size_call_parameter();break;
+// 	}
+// } while (0)
 #define __pcpu_size_call(stem, variable, ...)				\
 do {									\
 	__verify_pcpu_ptr(&(variable));					\
@@ -598,6 +617,8 @@ do {									\
 # ifndef this_cpu_add_8
 #  define this_cpu_add_8(pcp, val)	_this_cpu_generic_to_op((pcp), (val), +=)
 # endif
+// ARM10C 20151107
+// mnt->mnt_pcp->mnt_count: (kmem_cache#2-oX (struct mount))->mnt_pcp->mnt_count, 1
 # define this_cpu_add(pcp, val)		__pcpu_size_call(this_cpu_add_, (pcp), (val))
 #endif
 

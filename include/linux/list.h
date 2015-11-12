@@ -120,6 +120,20 @@
 // &bdi->bdi_list: &(&sysfs_backing_dev_info)->bdi_list
 // ARM10C 20151031
 // &wb->b_dirty: &(&(&sysfs_backing_dev_info)->wb)->b_dirty
+// ARM10C 20151107
+// mnt->mnt_child: (kmem_cache#2-oX (struct mount))->mnt_child
+// ARM10C 20151107
+// mnt->mnt_mounts: (kmem_cache#2-oX (struct mount))->mnt_mounts
+// ARM10C 20151107
+// mnt->mnt_list: (kmem_cache#2-oX (struct mount))->mnt_list
+// ARM10C 20151107
+// mnt->mnt_expire: (kmem_cache#2-oX (struct mount))->mnt_expire
+// ARM10C 20151107
+// mnt->mnt_share: (kmem_cache#2-oX (struct mount))->mnt_share
+// ARM10C 20151107
+// mnt->mnt_slave_list: (kmem_cache#2-oX (struct mount))->mnt_slave_list
+// ARM10C 20151107
+// mnt->mnt_slave: (kmem_cache#2-oX (struct mount))->mnt_slave
 static inline void INIT_LIST_HEAD(struct list_head *list)
 {
 	list->next = list;
@@ -878,10 +892,14 @@ static inline void list_splice_tail_init(struct list_head *list,
 // ARM10C 20151031
 // #define INIT_HLIST_HEAD(&mountpoint_hashtable[0]):
 // ((&mountpoint_hashtable[0])->first = NULL)
+// ARM10C 20151107
+// mnt->mnt_fsnotify_marks: (kmem_cache#2-oX (struct mount))->mnt_fsnotify_marks
 #define INIT_HLIST_HEAD(ptr) ((ptr)->first = NULL)
 
 // ARM10C 20150808
 // &init_css_set.hlist
+// ARM10C 20151107
+// mnt->mnt_hash: (kmem_cache#2-oX (struct mount))->mnt_hash
 static inline void INIT_HLIST_NODE(struct hlist_node *h)
 {
 

@@ -1273,6 +1273,8 @@ fail_unlock_mutex:
 // __alloc_percpu(66, 72)
 // ARM10C 20150919
 // __alloc_percpu(4 4)
+// ARM10C 20151107
+// __alloc_percpu(8 8)
 void __percpu *__alloc_percpu(size_t size, size_t align)
 {
 	// size: 16, align: 8

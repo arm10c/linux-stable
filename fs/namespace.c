@@ -342,30 +342,92 @@ static struct mount *alloc_vfsmnt(const char *name)
 
 // 2015/11/07 종료
 
-#ifdef CONFIG_SMP
+#ifdef CONFIG_SMP // CONFIG_SMP=y
+		// mnt->mnt_pcp: (kmem_cache#2-oX (struct mount))->mnt_pcp, sizeof(struct mnt_pcp): 8 bytes
+		// alloc_percpu(struct mnt_pcp): kmem_cache#26-o0 에서 할당된 8 bytes 메모리 주소
 		mnt->mnt_pcp = alloc_percpu(struct mnt_pcp);
+		// mnt->mnt_pcp: (kmem_cache#2-oX (struct mount))->mnt_pcp: kmem_cache#26-o0 에서 할당된 8 bytes 메모리 주소
+
+		// mnt->mnt_pcp: (kmem_cache#2-oX (struct mount))->mnt_pcp: kmem_cache#26-o0 에서 할당된 8 bytes 메모리 주소
 		if (!mnt->mnt_pcp)
 			goto out_free_devname;
 
+		// mnt->mnt_pcp->mnt_count: (kmem_cache#2-oX (struct mount))->mnt_pcp->mnt_count
 		this_cpu_add(mnt->mnt_pcp->mnt_count, 1);
+		// [pcp0] mnt->mnt_pcp->mnt_count: (kmem_cache#2-oX (struct mount))->mnt_pcp->mnt_count: 1
 #else
 		mnt->mnt_count = 1;
 		mnt->mnt_writers = 0;
 #endif
 
+		// mnt->mnt_hash: (kmem_cache#2-oX (struct mount))->mnt_hash
 		INIT_HLIST_NODE(&mnt->mnt_hash);
+
+		// INIT_HLIST_NODE에서 한일:
+		// ((kmem_cache#2-oX (struct mount))->mnt_hash)->next: NULL
+		// ((kmem_cache#2-oX (struct mount))->mnt_hash)->pprev: NULL
+
+		// mnt->mnt_child: (kmem_cache#2-oX (struct mount))->mnt_child
 		INIT_LIST_HEAD(&mnt->mnt_child);
+
+		// INIT_LIST_HEAD에서 한일:
+		// ((kmem_cache#2-oX (struct mount))->mnt_child)->next: (kmem_cache#2-oX (struct mount))->mnt_child
+		// ((kmem_cache#2-oX (struct mount))->mnt_child)->prev: (kmem_cache#2-oX (struct mount))->mnt_child
+
+		// mnt->mnt_mounts: (kmem_cache#2-oX (struct mount))->mnt_mounts
 		INIT_LIST_HEAD(&mnt->mnt_mounts);
+
+		// INIT_LIST_HEAD에서 한일:
+		// ((kmem_cache#2-oX (struct mount))->mnt_mounts)->next: (kmem_cache#2-oX (struct mount))->mnt_mounts
+		// ((kmem_cache#2-oX (struct mount))->mnt_mounts)->prev: (kmem_cache#2-oX (struct mount))->mnt_mounts
+		
+		// mnt->mnt_list: (kmem_cache#2-oX (struct mount))->mnt_list
 		INIT_LIST_HEAD(&mnt->mnt_list);
+
+		// INIT_LIST_HEAD에서 한일:
+		// ((kmem_cache#2-oX (struct mount))->mnt_list)->next: (kmem_cache#2-oX (struct mount))->mnt_list
+		// ((kmem_cache#2-oX (struct mount))->mnt_list)->prev: (kmem_cache#2-oX (struct mount))->mnt_list
+
+		// mnt->mnt_expire: (kmem_cache#2-oX (struct mount))->mnt_expire
 		INIT_LIST_HEAD(&mnt->mnt_expire);
+
+		// INIT_LIST_HEAD에서 한일:
+		// ((kmem_cache#2-oX (struct mount))->mnt_expire)->next: (kmem_cache#2-oX (struct mount))->mnt_expire
+		// ((kmem_cache#2-oX (struct mount))->mnt_expire)->prev: (kmem_cache#2-oX (struct mount))->mnt_expire
+
+		// mnt->mnt_share: (kmem_cache#2-oX (struct mount))->mnt_share
 		INIT_LIST_HEAD(&mnt->mnt_share);
+
+		// INIT_LIST_HEAD에서 한일:
+		// ((kmem_cache#2-oX (struct mount))->mnt_share)->next: (kmem_cache#2-oX (struct mount))->mnt_share
+		// ((kmem_cache#2-oX (struct mount))->mnt_share)->prev: (kmem_cache#2-oX (struct mount))->mnt_share
+
+		// mnt->mnt_slave_list: (kmem_cache#2-oX (struct mount))->mnt_slave_list
 		INIT_LIST_HEAD(&mnt->mnt_slave_list);
+
+		// INIT_LIST_HEAD에서 한일:
+		// ((kmem_cache#2-oX (struct mount))->mnt_slave_list)->next: (kmem_cache#2-oX (struct mount))->mnt_slave_list
+		// ((kmem_cache#2-oX (struct mount))->mnt_slave_list)->prev: (kmem_cache#2-oX (struct mount))->mnt_slave_list
+
+		// mnt->mnt_slave: (kmem_cache#2-oX (struct mount))->mnt_slave
 		INIT_LIST_HEAD(&mnt->mnt_slave);
-#ifdef CONFIG_FSNOTIFY
+
+		// INIT_LIST_HEAD에서 한일:
+		// ((kmem_cache#2-oX (struct mount))->mnt_slave)->next: (kmem_cache#2-oX (struct mount))->mnt_slave
+		// ((kmem_cache#2-oX (struct mount))->mnt_slave)->prev: (kmem_cache#2-oX (struct mount))->mnt_slave
+
+#ifdef CONFIG_FSNOTIFY // CONFIG_FSNOTIFY=y
+		// mnt->mnt_fsnotify_marks: (kmem_cache#2-oX (struct mount))->mnt_fsnotify_marks
 		INIT_HLIST_HEAD(&mnt->mnt_fsnotify_marks);
+
+		// INIT_HLIST_HEAD에서 한일:
+		// ((kmem_cache#2-oX (struct mount))->mnt_fsnotify_marks)->first: NULL
 #endif
 	}
+
+	// mnt: kmem_cache#2-oX (struct mount)
 	return mnt;
+	// return kmem_cache#2-oX (struct mount)
 
 #ifdef CONFIG_SMP
 out_free_devname:
@@ -978,10 +1040,65 @@ vfs_kern_mount(struct file_system_type *type, int flags, const char *name, void 
 	if (!type)
 		return ERR_PTR(-ENODEV);
 
-	// name: "sysfs"
+	// name: "sysfs", alloc_vfsmnt("sysfs"): kmem_cache#2-oX (struct mount)
 	mnt = alloc_vfsmnt(name);
+	// mnt: kmem_cache#2-oX (struct mount)
+
+	// alloc_vfsmnt에서 한일:
+	// struct mount의 메모리를 할당 받음 kmem_cache#2-oX (struct mount)
+	//
+	// idr_layer_cache를 사용하여 struct idr_layer 의 메모리 kmem_cache#21-o0...7를 8 개를 할당 받음
+	// (kmem_cache#21-o0...7)->ary[0]: NULL
+	// (&(&mnt_id_ida)->idr)->id_free: kmem_cache#21-o7
+	// (&(&mnt_id_ida)->idr)->id_free_cnt: 7
+	//
+	// struct ida_bitmap 의 메모리 kmem_cache#27-oX 할당 받음
+	// (&mnt_id_ida)->free_bitmap: kmem_cache#27-oX
+	//
+	// (&(&mnt_id_ida)->idr)->id_free: NULL
+	// (&(&mnt_id_ida)->idr)->id_free_cnt: 6
+	// (&(&mnt_id_ida)->idr)->top: kmem_cache#21-o7 (struct idr_layer)
+	// (&(&mnt_id_ida)->idr)->layers: 1
+	// (&mnt_id_ida)->free_bitmap: NULL
+	//
+	// (kmem_cache#21-o7 (struct idr_layer))->ary[0]: NULL
+	// (kmem_cache#21-o7 (struct idr_layer))->layer: 0
+	// (kmem_cache#21-o7 (struct idr_layer))->ary[0]: kmem_cache#27-oX (struct ida_bitmap)
+	// (kmem_cache#21-o7 (struct idr_layer))->count: 1
+	//
+	// (kmem_cache#27-oX (struct ida_bitmap))->bitmap 의 0 bit를 1로 set 수행
+	//
+	// (kmem_cache#2-oX (struct mount))->mnt_id: 0
+	//
+	// mnt_id_start: 1
+	//
+	// (kmem_cache#2-oX (struct mount))->mnt_devname: kmem_cache#30-oX: "sysfs"
+	// (kmem_cache#2-oX (struct mount))->mnt_pcp: kmem_cache#26-o0 에서 할당된 8 bytes 메모리 주소
+	// [pcp0] (kmem_cache#2-oX (struct mount))->mnt_pcp->mnt_count: 1
+	//
+	// ((kmem_cache#2-oX (struct mount))->mnt_hash)->next: NULL
+	// ((kmem_cache#2-oX (struct mount))->mnt_hash)->pprev: NULL
+	// ((kmem_cache#2-oX (struct mount))->mnt_child)->next: (kmem_cache#2-oX (struct mount))->mnt_child
+	// ((kmem_cache#2-oX (struct mount))->mnt_child)->prev: (kmem_cache#2-oX (struct mount))->mnt_child
+	// ((kmem_cache#2-oX (struct mount))->mnt_mounts)->next: (kmem_cache#2-oX (struct mount))->mnt_mounts
+	// ((kmem_cache#2-oX (struct mount))->mnt_mounts)->prev: (kmem_cache#2-oX (struct mount))->mnt_mounts
+	// ((kmem_cache#2-oX (struct mount))->mnt_list)->next: (kmem_cache#2-oX (struct mount))->mnt_list
+	// ((kmem_cache#2-oX (struct mount))->mnt_list)->prev: (kmem_cache#2-oX (struct mount))->mnt_list
+	// ((kmem_cache#2-oX (struct mount))->mnt_expire)->next: (kmem_cache#2-oX (struct mount))->mnt_expire
+	// ((kmem_cache#2-oX (struct mount))->mnt_expire)->prev: (kmem_cache#2-oX (struct mount))->mnt_expire
+	// ((kmem_cache#2-oX (struct mount))->mnt_share)->next: (kmem_cache#2-oX (struct mount))->mnt_share
+	// ((kmem_cache#2-oX (struct mount))->mnt_share)->prev: (kmem_cache#2-oX (struct mount))->mnt_share
+	// ((kmem_cache#2-oX (struct mount))->mnt_slave_list)->next: (kmem_cache#2-oX (struct mount))->mnt_slave_list
+	// ((kmem_cache#2-oX (struct mount))->mnt_slave_list)->prev: (kmem_cache#2-oX (struct mount))->mnt_slave_list
+	// ((kmem_cache#2-oX (struct mount))->mnt_slave)->next: (kmem_cache#2-oX (struct mount))->mnt_slave
+	// ((kmem_cache#2-oX (struct mount))->mnt_slave)->prev: (kmem_cache#2-oX (struct mount))->mnt_slave
+	// ((kmem_cache#2-oX (struct mount))->mnt_fsnotify_marks)->first: NULL
+
+	// mnt: kmem_cache#2-oX (struct mount)
 	if (!mnt)
 		return ERR_PTR(-ENOMEM);
+
+// 2015/11/07 종료
 
 	if (flags & MS_KERNMOUNT)
 		mnt->mnt.mnt_flags = MNT_INTERNAL;

@@ -14,6 +14,8 @@ struct mnt_namespace {
 };
 
 // ARM10C 20151024
+// ARM10C 20151107
+// sizeof(struct mnt_pcp): 8 bytes
 struct mnt_pcp {
 	int mnt_count;
 	int mnt_writers;
