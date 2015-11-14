@@ -692,6 +692,8 @@ static __always_inline void *kmalloc_large(size_t size, gfp_t flags)
 // size: 3076, GFP_KERNEL: 0xD0, __GFP_ZERO: 0x8000u
 // ARM10C 20151031
 // sizeof(struct ida_bitmap): 172 bytes, gfp_mask: 0xD0
+// ARM10C 20151114
+// sizeof(struct ida_bitmap): 172 bytes, gfp_mask: 0x20
 static __always_inline void *kmalloc(size_t size, gfp_t flags)
 {
 	// size: 512
@@ -1003,6 +1005,8 @@ extern void *__kmalloc_node_track_caller(size_t, gfp_t, int, unsigned long);
 // mnt_cache: kmem_cache#2, GFP_KERNEL: 0xD0
 // ARM10C 20151031
 // idr_layer_cache: kmem_cache#21, gfp_mask: 0xD0
+// ARM10C 20151114
+// idr_layer_cache: kmem_cache#21, gfp_mask: 0x20
 static inline void *kmem_cache_zalloc(struct kmem_cache *k, gfp_t flags)
 {
 	// k: &boot_kmem_cache, flags: GFP_NOWAIT: 0, __GFP_ZERO: 0x8000u
@@ -1020,12 +1024,15 @@ static inline void *kmem_cache_zalloc(struct kmem_cache *k, gfp_t flags)
 	// kmem_cache_alloc(kmem_cache#2, 0x80D0): kmem_cache#2-oX
 	// k: kmem_cache#21, flags: GFP_KERNEL: 0xD0
 	// kmem_cache_alloc(kmem_cache#21, 0x80D0): kmem_cache#21-oX
+	// k: kmem_cache#21, flags: GFP_KERNEL: 0x20
+	// kmem_cache_alloc(kmem_cache#21, 0x8020): kmem_cache#21-oX
 	return kmem_cache_alloc(k, flags | __GFP_ZERO);
 	// return UNMOVABLE인 page (boot_kmem_cache)의 object의 시작 virtual address
 	// return UNMOVABLE인 page (boot_kmem_cache)의 시작 virtual address + 3968
 	// return UNMOVABLE인 page (boot_kmem_cache)의 시작 object의 virtual address + 3840
 	// return kmem_cache#21
 	// return kmem_cache#2-oX
+	// return kmem_cache#21-oX
 	// return kmem_cache#21-oX
 }
 
@@ -1072,6 +1079,12 @@ static inline void *kmem_cache_zalloc(struct kmem_cache *k, gfp_t flags)
 // (kmem_cache#25-oX)->vc_screenbuf_size: 4800, GFP_NOWAIT: 0
 // ARM10C 20150912
 // PAGE_SIZE: 0x1000, GFP_KERNEL: 0xD0
+// ARM10C 20151114
+// sizeof(struct sysfs_super_info): 8 bytes, GFP_KERNEL: 0xD0
+// ARM10C 20151114
+// sizeof(struct super_block): 709 bytes, GFP_USER: 0x200D0
+// ARM10C 20151114
+// size: 28, GFP_KERNEL: 0xD0
 static inline void *kzalloc(size_t size, gfp_t flags)
 {
 	// size: 512, GFP_KERNEL: 0xD0, __GFP_ZERO: 0x8000u

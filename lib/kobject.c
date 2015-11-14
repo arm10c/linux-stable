@@ -956,7 +956,21 @@ struct kset *kset_create_and_add(const char *name,
 EXPORT_SYMBOL_GPL(kset_create_and_add);
 
 
+// ARM10C 20151114
+// #define DEFINE_SPINLOCK(kobj_ns_type_lock):
+// spinlock_t kobj_ns_type_lock =
+// (spinlock_t )
+// { { .rlock =
+//     {
+//       .raw_lock = { { 0 } },
+//       .magic = 0xdead4ead,
+//       .owner_cpu = -1,
+//       .owner = 0xffffffff,
+//     }
+// } }
 static DEFINE_SPINLOCK(kobj_ns_type_lock);
+// ARM10C 20151114
+// KOBJ_NS_TYPES: 2
 static const struct kobj_ns_type_operations *kobj_ns_ops_tbl[KOBJ_NS_TYPES];
 
 int kobj_ns_type_register(const struct kobj_ns_type_operations *ops)
@@ -1026,17 +1040,30 @@ bool kobj_ns_current_may_mount(enum kobj_ns_type type)
 	return may_mount;
 }
 
+// ARM10C 20151114
+// type: 0
 void *kobj_ns_grab_current(enum kobj_ns_type type)
 {
 	void *ns = NULL;
+	// ns: NULL
 
 	spin_lock(&kobj_ns_type_lock);
+
+	// spin_lock에서 한일:
+	// &kobj_ns_type_lock 을 사용한 spin lock 수행
+
+	// type: 0, KOBJ_NS_TYPE_NONE: 0, KOBJ_NS_TYPES: 2
 	if ((type > KOBJ_NS_TYPE_NONE) && (type < KOBJ_NS_TYPES) &&
 	    kobj_ns_ops_tbl[type])
 		ns = kobj_ns_ops_tbl[type]->grab_current_ns();
 	spin_unlock(&kobj_ns_type_lock);
 
+	// spin_unlock에서 한일:
+	// &kobj_ns_type_lock 을 사용한 spin unlock 수행
+
+	// ns: NULL
 	return ns;
+	// return NULL
 }
 
 const void *kobj_ns_netlink(enum kobj_ns_type type, struct sock *sk)

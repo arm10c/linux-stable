@@ -387,6 +387,8 @@ static inline void lockdep_on(void)
 // &console_lock_dep_map, 0, 0, NULL, _RET_IP_
 // ARM10C 20150725
 // &console_lock_dep_map, 0, 0, NULL, _RET_IP_
+// ARM10C 20151114
+// &sem->dep_map: &(&(kmem_cache#25-oX (struct super_block))->s_umount)->dep_map, 0, 0, 0, 1, NULL, _RET_IP_
 # define lock_acquire(l, s, t, r, c, n, i)	do { } while (0)
 // ARM10C 20150103
 // ARM10C 20150725
@@ -405,9 +407,17 @@ static inline void lockdep_on(void)
 # define lockdep_info()				do { } while (0)
 // ARM10C 20151031
 // timer->lockdep_map: (&(&(&(&sysfs_backing_dev_info)->wb)->dwork)->timer)->lockdep_map, name: NULL, key: NULL, 0
+// ARM10C 20151114
+// &s->s_writers.lock_map[i]: &(kmem_cache#25-oX (struct super_block))->s_writers.lock_map[0],
+// sb_writers_name[0]: "sb_writers", &type->s_writers_key[i]: &(&sysfs_fs_type)->s_writers_key[0], 0
 # define lockdep_init_map(lock, name, key, sub) \
 		do { (void)(name); (void)(key); } while (0)
 // ARM10C 20150919
+// ARM10C 20151114
+// &s->s_umount: &(kmem_cache#25-oX (struct super_block))->s_umount, &type->s_umount_key: &(&sysfs_fs_type)->s_umount_key
+// ARM10C 20151114
+// &s->s_vfs_rename_mutex: &(kmem_cache#25-oX (struct super_block))->s_vfs_rename_mutex,
+// &type->s_vfs_rename_key: &(&sysfs_fs_type)->s_vfs_rename_key
 # define lockdep_set_class(lock, key)		do { (void)(key); } while (0)
 // ARM10C 20140111
 // ARM10C 20140927
@@ -477,6 +487,7 @@ do {								\
 // => do_raw_spin_lock(lock)
 // ARM10C 20140517
 // ARM10C 20151031
+// ARM10C 20151114
 #define LOCK_CONTENDED(_lock, try, lock) \
 	lock(_lock)
 
@@ -512,6 +523,8 @@ static inline void print_irqtrace_events(struct task_struct *curr)
  * global define can be used. (Subsystems with multiple levels
  * of nesting should define their own lock-nesting subclasses.)
  */
+// ARM10C 20151114
+// SINGLE_DEPTH_NESTING: 1
 #define SINGLE_DEPTH_NESTING			1
 
 /*
@@ -531,6 +544,8 @@ static inline void print_irqtrace_events(struct task_struct *curr)
 // &console_lock_dep_map, 0, 0, NULL, _RET_IP_
 // ARM10C 20150725
 // &console_lock_dep_map, 0, 0, NULL, _RET_IP_
+// ARM10C 20151114
+// &sem->dep_map: &(&(kmem_cache#25-oX (struct super_block))->s_umount)->dep_map, 0, 0, NULL,  _RET_IP_
  #define lock_acquire_exclusive(l, s, t, n, i)		lock_acquire(l, s, t, 0, 1, n, i)
  #define lock_acquire_shared(l, s, t, n, i)		lock_acquire(l, s, t, 1, 1, n, i)
  #define lock_acquire_shared_recursive(l, s, t, n, i)	lock_acquire(l, s, t, 2, 1, n, i)
@@ -568,6 +583,8 @@ static inline void print_irqtrace_events(struct task_struct *curr)
 // ARM10C 20150725
 #define mutex_release(l, n, i)			lock_release(l, n, i)
 
+// ARM10C 20151114
+// &sem->dep_map: &(&(kmem_cache#25-oX (struct super_block))->s_umount)->dep_map, 0, 0, _RET_IP_
 #define rwsem_acquire(l, s, t, i)		lock_acquire_exclusive(l, s, t, NULL, i)
 #define rwsem_acquire_nest(l, s, t, n, i)	lock_acquire_exclusive(l, s, t, n, i)
 #define rwsem_acquire_read(l, s, t, i)		lock_acquire_shared(l, s, t, NULL, i)

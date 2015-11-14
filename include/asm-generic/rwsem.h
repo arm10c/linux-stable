@@ -16,16 +16,27 @@
 /*
  * the semaphore definition
  */
-#ifdef CONFIG_PPC64
+#ifdef CONFIG_PPC64 // CONFIG_PPC64=n
 # define RWSEM_ACTIVE_MASK		0xffffffffL
 #else
+// ARM10C 20151114
+// RWSEM_ACTIVE_MASK: 0x0000ffff
 # define RWSEM_ACTIVE_MASK		0x0000ffffL
 #endif
 
 #define RWSEM_UNLOCKED_VALUE		0x00000000L
+// ARM10C 20151114
+// RWSEM_ACTIVE_BIAS: 0x00000001
 #define RWSEM_ACTIVE_BIAS		0x00000001L
+// ARM10C 20151114
+// RWSEM_ACTIVE_MASK: 0x0000ffff
+// RWSEM_WAITING_BIAS: 0xffff0000
 #define RWSEM_WAITING_BIAS		(-RWSEM_ACTIVE_MASK-1)
 #define RWSEM_ACTIVE_READ_BIAS		RWSEM_ACTIVE_BIAS
+// ARM10C 20151114
+// RWSEM_WAITING_BIAS: 0xffff0000
+// RWSEM_ACTIVE_BIAS: 0x00000001
+// RWSEM_ACTIVE_WRITE_BIAS: 0xffff0001
 #define RWSEM_ACTIVE_WRITE_BIAS		(RWSEM_WAITING_BIAS + RWSEM_ACTIVE_BIAS)
 
 /*
@@ -53,21 +64,39 @@ static inline int __down_read_trylock(struct rw_semaphore *sem)
 /*
  * lock for writing
  */
+// ARM10C 20151114
+// sem: &(kmem_cache#25-oX (struct super_block))->s_umount, 0
 static inline void __down_write_nested(struct rw_semaphore *sem, int subclass)
 {
 	long tmp;
 
+	// RWSEM_ACTIVE_WRITE_BIAS: 0xffff0001,
+	// &sem->count: &(&(kmem_cache#25-oX (struct super_block))->s_umount)->count
+	// atomic_long_add_return(0xffff0001, &(&(kmem_cache#25-oX (struct super_block))->s_umount)->count): 0xffff0001
 	tmp = atomic_long_add_return(RWSEM_ACTIVE_WRITE_BIAS,
 				     (atomic_long_t *)&sem->count);
+	// tmp: 0xffff0001
+
+	// atomic_long_add_return에서 한일:
+	// (&(kmem_cache#25-oX (struct super_block))->s_umount)->count: 0xffff0001
+
+	// tmp: 0xffff0001, RWSEM_ACTIVE_WRITE_BIAS: 0xffff0001
 	if (unlikely(tmp != RWSEM_ACTIVE_WRITE_BIAS))
 		rwsem_down_write_failed(sem);
 }
 
+// ARM10C 20151114
+// __down_write(&(kmem_cache#25-oX (struct super_block))->s_umount)
 static inline void __down_write(struct rw_semaphore *sem)
 {
+	// sem: &(kmem_cache#25-oX (struct super_block))->s_umount
 	__down_write_nested(sem, 0);
+
+	// __down_write_nested에서 한일:
+	// (&(kmem_cache#25-oX (struct super_block))->s_umount)->count: 0xffff0001
 }
 
+// ARM10C 20151114
 static inline int __down_write_trylock(struct rw_semaphore *sem)
 {
 	long tmp;

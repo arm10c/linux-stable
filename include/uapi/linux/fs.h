@@ -87,6 +87,7 @@ struct inodes_stat_t {
 #define MS_SHARED	(1<<20)	/* change to shared */
 #define MS_RELATIME	(1<<21)	/* Update atime relative to mtime/ctime. */
 // ARM10C 20151031
+// ARM10C 20151114
 // MS_KERNMOUNT: 0x400000
 #define MS_KERNMOUNT	(1<<22) /* this is a kern_mount call */
 #define MS_I_VERSION	(1<<23) /* Update inode I_version field */

@@ -38,6 +38,8 @@
 
 #define __DQUOT_VERSION__	"dquot_6.5.2"
 
+// ARM10C 20151114
+// MAXQUOTAS: 2
 #define MAXQUOTAS 2
 #define USRQUOTA  0		/* element used for user quotas */
 #define GRPQUOTA  1		/* element used for group quotas */

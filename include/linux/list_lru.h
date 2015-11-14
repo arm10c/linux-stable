@@ -19,6 +19,8 @@ enum lru_status {
 				   internally, but has to return locked. */
 };
 
+// ARM10C 20151114
+// sizeof(struct list_lru_node): 28 bytes
 struct list_lru_node {
 	spinlock_t		lock;
 	struct list_head	list;
@@ -26,6 +28,8 @@ struct list_lru_node {
 	long			nr_items;
 } ____cacheline_aligned_in_smp;
 
+// ARM10C 20151114
+// sizeof(struct list_lru): 8 bytess
 struct list_lru {
 	struct list_lru_node	*node;
 	nodemask_t		active_nodes;

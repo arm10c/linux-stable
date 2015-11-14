@@ -17,6 +17,8 @@
 
 // ARM10C 20150919
 // ARM10C 20151024
+// ARM10C 20151114
+// sizeof(struct percpu_counter): 36 bytes
 struct percpu_counter {
 	raw_spinlock_t lock;
 	s64 count;
@@ -43,6 +45,8 @@ int __percpu_counter_init(struct percpu_counter *fbc, s64 amount,
 // &bdi->bdi_stat[0]: &(&sysfs_backing_dev_info)->bdi_stat[0], 0
 // ARM10C 20151031
 // &pl->events: &(&(&sysfs_backing_dev_info)->completions)->events, 0
+// ARM10C 20151114
+// &s->s_writers.counter[0]: &(kmem_cache#25-oX (struct super_block))->s_writers.counter[0], 0
 #define percpu_counter_init(fbc, value)					\
 	({								\
 		static struct lock_class_key __key;			\

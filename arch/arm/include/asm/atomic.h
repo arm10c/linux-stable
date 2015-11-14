@@ -49,6 +49,8 @@
 // &buf->priority: &(&(&(kmem_cache#25-oX)->port)->buf)->priority, 0
 // ARM10C 20150808
 // &init_css_set.refcount, 1
+// ARM10C 20151114
+// &s->s_active: &(kmem_cache#25-oX (struct super_block))->s_active, 1
 #define atomic_set(v,i)	(((v)->counter) = (i))
 
 #if __LINUX_ARM_ARCH__ >= 6
@@ -77,6 +79,8 @@ static inline void atomic_add(int i, atomic_t *v)
 	: "cc");
 }
 
+// ARM10C 20151114
+// i: 0xffff0001, v: &(&(kmem_cache#25-oX (struct super_block))->s_umount)->count
 static inline int atomic_add_return(int i, atomic_t *v)
 {
 	unsigned long tmp;

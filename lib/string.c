@@ -147,6 +147,9 @@ EXPORT_SYMBOL(strncpy);
  * of course, the buffer size is zero). It does not pad
  * out the result like strncpy() does.
  */
+// ARM10C 20151114
+// [re] s->s_id: (kmem_cache#25-oX (struct super_block))->s_id, type->name: (&sysfs_fs_type)->name: "sysfs",
+// [re] sizeof((kmem_cache#25-oX (struct super_block))->s_id): 32 bytes
 size_t strlcpy(char *dest, const char *src, size_t size)
 {
 	size_t ret = strlen(src);

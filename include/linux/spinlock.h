@@ -106,6 +106,8 @@
 // &bdi->wb_lock: &(&sysfs_backing_dev_info)->wb_lock
 // ARM10C 20151031
 // &pl->lock: &(&(&sysfs_backing_dev_info)->completions)->lock
+// ARM10C 20151114
+// &sem->wait_lock: &(&(kmem_cache#25-oX (struct super_block))->s_umount)->wait_lock
 # define raw_spin_lock_init(lock)				\
 do {								\
 	static struct lock_class_key __key;	/* struct lock_class_key { }; */	\
@@ -348,6 +350,8 @@ static inline raw_spinlock_t *spinlock_check(spinlock_t *lock)
 // &bdi->wb_lock: &(&sysfs_backing_dev_info)->wb_lock
 // ARM10C 20151031
 // &wb->list_lock: &(&(&sysfs_backing_dev_info)->wb)->list_lock
+// ARM10C 20151114
+// &lru->node[0].lock: (&(kmem_cache#25-oX (struct super_block))->s_dentry_lru)->node[0].lock
 #define spin_lock_init(_lock)				\
 do {							\
 	spinlock_check(_lock);				\
@@ -361,6 +365,12 @@ do {							\
 // ARM10C 20150718
 // ARM10C 20150919
 // &percpu_counters_lock
+// ARM10C 20151114
+// &kobj_ns_type_lock
+// ARM10C 20151114
+// &sb_lock
+// ARM10C 20151114
+// &unnamed_dev_lock
 static inline void spin_lock(spinlock_t *lock)
 {
 	// lock->rlock: (&contig_page_data->node_zones[0].lock)->rlock
@@ -417,6 +427,12 @@ do {									\
 // ARM10C 20150919
 // ARM10C 20151107
 // &mnt_id_lock
+// ARM10C 20151114
+// &kobj_ns_type_lock
+// ARM10C 20151114
+// &sb_lock
+// ARM10C 20151114
+// &unnamed_dev_lock
 static inline void spin_unlock(spinlock_t *lock)
 {
 	raw_spin_unlock(&lock->rlock);

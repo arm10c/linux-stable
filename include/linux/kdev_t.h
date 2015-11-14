@@ -3,11 +3,19 @@
 
 #include <uapi/linux/kdev_t.h>
 
+// ARM10C 20151114
+// MINORBITS: 20
 #define MINORBITS	20
+// ARM10C 20151114
+// MINORBITS: 20
+// MINORMASK: 0xfffff
 #define MINORMASK	((1U << MINORBITS) - 1)
 
 #define MAJOR(dev)	((unsigned int) ((dev) >> MINORBITS))
 #define MINOR(dev)	((unsigned int) ((dev) & MINORMASK))
+// ARM10C 20151114
+// MINORBITS: 20
+// 0, dev: 0
 #define MKDEV(ma,mi)	(((ma) << MINORBITS) | (mi))
 
 #define print_dev_t(buffer, dev)					\

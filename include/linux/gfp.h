@@ -242,6 +242,7 @@ struct vm_area_struct;
 /* GFP_ATOMIC means both !wait (__GFP_WAIT not set) and use emergency pool */
 // ARM10C 20140426
 // ARM10C 20151024
+// ARM10C 20151114
 // __GFP_HIGH: 0x20u
 // GFP_ATOMIC: 0x20u
 #define GFP_ATOMIC	(__GFP_HIGH)
@@ -268,6 +269,7 @@ struct vm_area_struct;
 // ARM10C 20150912
 // ARM10C 20151031
 // ARM10C 20151107
+// ARM10C 20151114
 // __GFP_WAIT: 0x10
 // __GFP_IO: 0x40
 // __GFP_FS: 0x80
@@ -276,6 +278,7 @@ struct vm_area_struct;
 #define GFP_TEMPORARY	(__GFP_WAIT | __GFP_IO | __GFP_FS | \
 			 __GFP_RECLAIMABLE)
 // ARM10C 20151003
+// ARM10C 20151114
 // __GFP_WAIT: 0x10u
 // __GFP_IO: 0x40u
 // __GFP_FS: 0x80u

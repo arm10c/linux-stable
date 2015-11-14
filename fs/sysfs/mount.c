@@ -75,6 +75,7 @@ static int sysfs_fill_super(struct super_block *sb, void *data, int silent)
 	return 0;
 }
 
+// ARM10C 20151114
 static int sysfs_test_super(struct super_block *sb, void *data)
 {
 	struct sysfs_super_info *sb_info = sysfs_info(sb);
@@ -89,13 +90,53 @@ static int sysfs_test_super(struct super_block *sb, void *data)
 	return found;
 }
 
+// ARM10C 20151114
+// s: kmem_cache#25-oX (struct super_block), data: kmem_cache#30-oX (struct sysfs_super_info)
 static int sysfs_set_super(struct super_block *sb, void *data)
 {
 	int error;
+
+	// sb: kmem_cache#25-oX (struct super_block), data: kmem_cache#30-oX (struct sysfs_super_info)
+	// set_anon_super(kmem_cache#25-oX (struct super_block), kmem_cache#30-oX (struct sysfs_super_info)): 0
 	error = set_anon_super(sb, data);
+	// error: 0
+
+	// set_anon_super에서 한일:
+	// idr_layer_cache를 사용하여 struct idr_layer 의 메모리 kmem_cache#21-o0...7를 8 개를 할당 받음
+	// (kmem_cache#21-o0...7)->ary[0]: NULL
+	// (&(&unnamed_dev_ida)->idr)->id_free: kmem_cache#21-o7
+	// (&(&unnamed_dev_ida)->idr)->id_free_cnt: 7
+	//
+	// struct ida_bitmap 의 메모리 kmem_cache#27-oX 할당 받음
+	// (&unnamed_dev_ida)->free_bitmap: kmem_cache#27-oX
+	//
+	// (&(&unnamed_dev_ida)->idr)->id_free: NULL
+	// (&(&unnamed_dev_ida)->idr)->id_free_cnt: 6
+	// (&(&unnamed_dev_ida)->idr)->top: kmem_cache#21-o7 (struct idr_layer)
+	// (&(&unnamed_dev_ida)->idr)->layers: 1
+	// (&unnamed_dev_ida)->free_bitmap: NULL
+	//
+	// (kmem_cache#21-o7 (struct idr_layer))->ary[0]: NULL
+	// (kmem_cache#21-o7 (struct idr_layer))->layer: 0
+	// (kmem_cache#21-o7 (struct idr_layer))->ary[0]: kmem_cache#27-oX (struct ida_bitmap)
+	// (kmem_cache#21-o7 (struct idr_layer))->count: 1
+	//
+	// (kmem_cache#27-oX (struct ida_bitmap))->bitmap 의 0 bit를 1로 set 수행
+	//
+	// unnamed_dev_start: 1
+	//
+	// (kmem_cache#25-oX (struct super_block))->s_dev: 0
+	// (kmem_cache#25-oX (struct super_block))->s_bdi: &noop_backing_dev_info
+
+	// error: 0
 	if (!error)
+		// s->s_fs_info: (kmem_cache#25-oX (struct super_block))->s_fs_info, data: kmem_cache#30-oX (struct sysfs_super_info)
 		sb->s_fs_info = data;
+		// s->s_fs_info: (kmem_cache#25-oX (struct super_block))->s_fs_info: kmem_cache#30-oX (struct sysfs_super_info)
+
+	// error: 0
 	return error;
+	// return 0
 }
 
 static void free_sysfs_super_info(struct sysfs_super_info *info)
@@ -106,6 +147,8 @@ static void free_sysfs_super_info(struct sysfs_super_info *info)
 	kfree(info);
 }
 
+// ARM10C 20151114
+// type: &sysfs_fs_type, flags: 0x400000, name: "sysfs", data: NULL
 static struct dentry *sysfs_mount(struct file_system_type *fs_type,
 	int flags, const char *dev_name, void *data)
 {
@@ -114,6 +157,7 @@ static struct dentry *sysfs_mount(struct file_system_type *fs_type,
 	struct super_block *sb;
 	int error;
 
+	// flags: 0x400000, MS_KERNMOUNT: 0x400000
 	if (!(flags & MS_KERNMOUNT)) {
 		if (!capable(CAP_SYS_ADMIN) && !fs_fully_visible(fs_type))
 			return ERR_PTR(-EPERM);
@@ -124,13 +168,23 @@ static struct dentry *sysfs_mount(struct file_system_type *fs_type,
 		}
 	}
 
+	// sizeof(struct sysfs_super_info): 8 bytes, GFP_KERNEL: 0xD0
+	// kzalloc(8, GFP_KERNEL: 0xD0): kmem_cache#30-oX
 	info = kzalloc(sizeof(*info), GFP_KERNEL);
+	// info: kmem_cache#30-oX (struct sysfs_super_info)
+
+	// info: kmem_cache#30-oX (struct sysfs_super_info)
 	if (!info)
 		return ERR_PTR(-ENOMEM);
 
+	// KOBJ_NS_TYPE_NONE: 0, KOBJ_NS_TYPES: 2
 	for (type = KOBJ_NS_TYPE_NONE; type < KOBJ_NS_TYPES; type++)
+		// type: 0, info->ns[0]: (kmem_cache#30-oX (struct sysfs_super_info))->ns[0],
+		// kobj_ns_grab_current(0): NULL
 		info->ns[type] = kobj_ns_grab_current(type);
+		// info->ns[0]: (kmem_cache#30-oX (struct sysfs_super_info))->ns[0]: NULL
 
+	// fs_type: &sysfs_fs_type, flags: 0x400000, info: kmem_cache#30-oX (struct sysfs_super_info)
 	sb = sget(fs_type, sysfs_test_super, sysfs_set_super, flags, info);
 	if (IS_ERR(sb) || sb->s_fs_info != info)
 		free_sysfs_super_info(info);
@@ -159,6 +213,7 @@ static void sysfs_kill_sb(struct super_block *sb)
 }
 
 // ARM10C 20151031
+// ARM10C 20151114
 static struct file_system_type sysfs_fs_type = {
 	.name		= "sysfs",
 	.mount		= sysfs_mount,

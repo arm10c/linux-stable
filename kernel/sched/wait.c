@@ -22,6 +22,10 @@
 // &port->delta_msr_wait: &(&(kmem_cache#25-oX)->port)->delta_msr_wait, "&port->delta_msr_wait", &__key
 // ARM10C 20150718
 // &vc->paste_wait: &(kmem_cache#25-oX)->paste_wait, "&vc->paste_wait", &__key
+// ARM10C 20151114
+// &s->s_writers.wait: &(kmem_cache#25-oX (struct super_block))->s_writers.wait, "&s->s_writers.wait", &__key
+// ARM10C 20151114
+// &s->s_writers.wait_unfrozen: &(kmem_cache#25-oX (struct super_block))->s_writers.wait_unfrozen, "&s->s_writers.wait_unfrozen", &__key
 void __init_waitqueue_head(wait_queue_head_t *q, const char *name, struct lock_class_key *key)
 {
 	// &q->lock: &(&(&rcu_bh_state)->gp_wq)->lock

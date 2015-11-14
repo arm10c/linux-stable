@@ -346,6 +346,25 @@ struct ida {
 //      }
 //      .free_bitmap = NULL,
 // }
+// ARM10C 20151114
+// #define DEFINE_IDA(unnamed_dev_ida):
+// struct ida unnamed_dev_ida =
+// {
+//     .idr =
+//     {
+//         .lock =
+//         (spinlock_t )
+//         { { .rlock =
+//              {
+//                .raw_lock = { { 0 } },
+//                .magic = 0xdead4ead,
+//                .owner_cpu = -1,
+//                .owner = 0xffffffff,
+//              }
+//          } },
+//      }
+//      .free_bitmap = NULL,
+// }
 #define DEFINE_IDA(name)	struct ida name = IDA_INIT(name)
 
 int ida_pre_get(struct ida *ida, gfp_t gfp_mask);

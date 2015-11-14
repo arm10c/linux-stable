@@ -57,6 +57,7 @@ enum quota_type {
 };
 
 typedef __kernel_uid32_t qid_t; /* Type in which we store ids in memory */
+// ARM10C 20151114
 typedef long long qsize_t;	/* Type in which we store sizes */
 
 struct kqid {			/* Type in which we store the quota identifier */
@@ -203,6 +204,8 @@ struct mem_dqblk {
  */
 struct quota_format_type;
 
+// ARM10C 20151114
+// sizeof(struct mem_dqinfo): 48 bytes
 struct mem_dqinfo {
 	struct quota_format_type *dqi_format;
 	int dqi_fmt_id;		/* Id of the dqi_format - used when turning
@@ -385,13 +388,18 @@ static inline void quota_send_warning(struct kqid qid, dev_t dev,
 }
 #endif /* CONFIG_QUOTA_NETLINK_INTERFACE */
 
+// ARM10C 20151114
+// sizeof(struct quota_info): 224 bytes
 struct quota_info {
 	unsigned int flags;			/* Flags for diskquotas on this device */
 	struct mutex dqio_mutex;		/* lock device while I/O in progress */
 	struct mutex dqonoff_mutex;		/* Serialize quotaon & quotaoff */
 	struct rw_semaphore dqptr_sem;		/* serialize ops using quota_info struct, pointers from inode to dquots */
+	// MAXQUOTAS: 2
 	struct inode *files[MAXQUOTAS];		/* inodes of quotafiles */
+	// MAXQUOTAS: 2
 	struct mem_dqinfo info[MAXQUOTAS];	/* Information for each quota type */
+	// MAXQUOTAS: 2
 	const struct quota_format_ops *ops[MAXQUOTAS];	/* Operations for each type */
 };
 

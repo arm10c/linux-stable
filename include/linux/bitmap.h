@@ -186,6 +186,8 @@ extern int bitmap_ord_to_pos(const unsigned long *bitmap, int n, int bits);
 // dstp: [pcp0] (&cfd_data)->cpumask, nr_cpumask_bits: 4
 // ARM10C 20150620
 // dstp: [pcp0] (&cfd_data)->cpumask_ipi, nr_cpumask_bits: 4
+// ARM10C 20151114
+// dstp->bits: (&(&(kmem_cache#25-oX (struct super_block))->s_dentry_lru)->active_nodes)->bits, 1
 static inline void bitmap_zero(unsigned long *dst, int nbits)
 {
 	if (small_const_nbits(nbits))

@@ -178,6 +178,8 @@ static unsigned long get_lru_size(struct lruvec *lruvec, enum lru_list lru)
 /*
  * Add a shrinker callback to be called from the vm.
  */
+// ARM10C 20151114
+// [re] &s->s_shrink: &(kmem_cache#25-oX (struct super_block))->s_shrink
 int register_shrinker(struct shrinker *shrinker)
 {
 	size_t size = sizeof(*shrinker->nr_deferred);

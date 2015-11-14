@@ -23,7 +23,8 @@
 // ARM10C 20140419
 // ARM10C 20140830
 // ARM10C 20150919
-// sizeof(raw_spinlock_t) : 16byte
+// ARM10C 20151114
+// sizeof(struct raw_spinlock_t): 16 bytes
 typedef struct raw_spinlock {
 	arch_spinlock_t raw_lock;
 #ifdef CONFIG_GENERIC_LOCKBREAK // CONFIG_GENERIC_LOCKBREAK=n
@@ -167,7 +168,7 @@ typedef struct raw_spinlock {
 // ARM10C 20140419
 // ARM10C 20150919
 // ARM10C 20151031
-// sizeof(spinlock_t) : 16 byte
+// sizeof(spinlock_t): 16 bytes
 typedef struct spinlock {
 	union {
 		struct raw_spinlock rlock;
@@ -257,6 +258,17 @@ typedef struct spinlock {
 //	      .owner = 0xffffffff,
 //	    }
 //	} }
+// ARM10C 20151114
+// #define __SPIN_LOCK_UNLOCKED(kobj_ns_type_lock):
+//	(spinlock_t )
+//	{ { .rlock =
+//	    {
+//	      .raw_lock = { { 0 } },
+//	      .magic = 0xdead4ead,
+//	      .owner_cpu = -1,
+//	      .owner = 0xffffffff,
+//	    }
+//	} }
 #define __SPIN_LOCK_UNLOCKED(lockname) \
 	(spinlock_t ) __SPIN_LOCK_INITIALIZER(lockname)
 
@@ -265,6 +277,42 @@ typedef struct spinlock {
 // ARM10C 20151031
 // #define DEFINE_SPINLOCK(mnt_id_lock):
 // spinlock_t mnt_id_lock =
+// (spinlock_t )
+// { { .rlock =
+//     {
+//       .raw_lock = { { 0 } },
+//       .magic = 0xdead4ead,
+//       .owner_cpu = -1,
+//       .owner = 0xffffffff,
+//     }
+// } }
+// ARM10C 20151114
+// #define DEFINE_SPINLOCK(kobj_ns_type_lock):
+// spinlock_t kobj_ns_type_lock =
+// (spinlock_t )
+// { { .rlock =
+//     {
+//       .raw_lock = { { 0 } },
+//       .magic = 0xdead4ead,
+//       .owner_cpu = -1,
+//       .owner = 0xffffffff,
+//     }
+// } }
+// ARM10C 20151114
+// #define DEFINE_SPINLOCK(sb_lock):
+// spinlock_t sb_lock =
+// (spinlock_t )
+// { { .rlock =
+//     {
+//       .raw_lock = { { 0 } },
+//       .magic = 0xdead4ead,
+//       .owner_cpu = -1,
+//       .owner = 0xffffffff,
+//     }
+// } }
+// ARM10C 20151114
+// #define DEFINE_SPINLOCK(unnamed_dev_lock):
+// spinlock_t unnamed_dev_lock =
 // (spinlock_t )
 // { { .rlock =
 //     {

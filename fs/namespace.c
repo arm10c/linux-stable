@@ -1099,10 +1099,15 @@ vfs_kern_mount(struct file_system_type *type, int flags, const char *name, void 
 		return ERR_PTR(-ENOMEM);
 
 // 2015/11/07 종료
+// 2015/11/14 시작
 
+	// flags: 0x400000, MS_KERNMOUNT: 0x400000
 	if (flags & MS_KERNMOUNT)
+		// mnt->mnt.mnt_flags: (kmem_cache#2-oX (struct mount))->mnt.mnt_flags, MNT_INTERNAL: 0x4000
 		mnt->mnt.mnt_flags = MNT_INTERNAL;
+		// mnt->mnt.mnt_flags: (kmem_cache#2-oX (struct mount))->mnt.mnt_flags: 0x4000
 
+	// type: &sysfs_fs_type, flags: 0x400000, name: "sysfs", data: NULL
 	root = mount_fs(type, flags, name, data);
 	if (IS_ERR(root)) {
 		free_vfsmnt(mnt);

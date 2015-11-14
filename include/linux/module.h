@@ -466,6 +466,7 @@ void symbol_put_addr(void *addr);
 /* Sometimes we know we already have a refcount, and it's easier not
    to handle the error case (which only happens with rmmod --wait). */
 // ARM10C 20150718
+// ARM10C 20151114
 extern void __module_get(struct module *module);
 
 /* This is the Right Way to get a module: if it fails, it's being removed,

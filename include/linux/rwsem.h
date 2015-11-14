@@ -68,6 +68,10 @@ static inline int rwsem_is_locked(struct rw_semaphore *sem)
 extern void __init_rwsem(struct rw_semaphore *sem, const char *name,
 			 struct lock_class_key *key);
 
+// ARM10C 20151114
+// &s->s_umount: &(kmem_cache#25-oX (struct super_block))->s_umount
+// ARM10C 20151114
+// &s->s_dquot.dqptr_sem: &(kmem_cache#25-oX (struct super_block))->s_dquot.dqptr_sem
 #define init_rwsem(sem)						\
 do {								\
 	static struct lock_class_key __key;			\
@@ -110,7 +114,7 @@ extern void up_write(struct rw_semaphore *sem);
  */
 extern void downgrade_write(struct rw_semaphore *sem);
 
-#ifdef CONFIG_DEBUG_LOCK_ALLOC
+#ifdef CONFIG_DEBUG_LOCK_ALLOC // CONFIG_DEBUG_LOCK_ALLOC=n
 /*
  * nested locking. NOTE: rwsems are not allowed to recurse
  * (which occurs if the same task tries to acquire the same
@@ -145,6 +149,8 @@ extern void up_read_non_owner(struct rw_semaphore *sem);
 #else
 # define down_read_nested(sem, subclass)		down_read(sem)
 # define down_write_nest_lock(sem, nest_lock)	down_write(sem)
+// ARM10C 20151114
+// &s->s_umount: &(kmem_cache#25-oX (struct super_block))->s_umount, SINGLE_DEPTH_NESTING: 1
 # define down_write_nested(sem, subclass)	down_write(sem)
 # define down_read_non_owner(sem)		down_read(sem)
 # define up_read_non_owner(sem)			up_read(sem)

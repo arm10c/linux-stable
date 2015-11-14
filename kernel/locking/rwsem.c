@@ -42,12 +42,22 @@ EXPORT_SYMBOL(down_read_trylock);
 /*
  * lock for writing
  */
+// ARM10C 20151114
+// &s->s_umount: &(kmem_cache#25-oX (struct super_block))->s_umount, SINGLE_DEPTH_NESTING: 1
 void __sched down_write(struct rw_semaphore *sem)
 {
-	might_sleep();
-	rwsem_acquire(&sem->dep_map, 0, 0, _RET_IP_);
+	might_sleep(); // null function
 
+	// &sem->dep_map: &(&(kmem_cache#25-oX (struct super_block))->s_umount)->dep_map
+	rwsem_acquire(&sem->dep_map, 0, 0, _RET_IP_); // null function
+
+	// sem: &(kmem_cache#25-oX (struct super_block))->s_umount
+	// LOCK_CONTENDED(&(kmem_cache#25-oX (struct super_block))->s_umount, __down_write_trylock, __down_write):
+	// __down_write(&(kmem_cache#25-oX (struct super_block))->s_umount)
 	LOCK_CONTENDED(sem, __down_write_trylock, __down_write);
+
+	// __down_write에서 한일:
+	// (&(kmem_cache#25-oX (struct super_block))->s_umount)->count: 0xffff0001
 }
 
 EXPORT_SYMBOL(down_write);

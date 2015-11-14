@@ -16,9 +16,11 @@
 #define	EBADF		 9	/* Bad file number */
 #define	ECHILD		10	/* No child processes */
 // ARM10C 20151107
+// ARM10C 20151114
 // EAGAIN: 11
 #define	EAGAIN		11	/* Try again */
 // ARM10C 20151031
+// ARM10C 20151114
 // ENOMEM: 12
 #define	ENOMEM		12	/* Out of memory */
 #define	EACCES		13	/* Permission denied */

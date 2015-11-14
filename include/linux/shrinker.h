@@ -45,6 +45,8 @@ struct shrink_control {
  *
  * @flags determine the shrinker abilities, like numa awareness
  */
+// ARM10C 20151114
+// sizeof(struct shrinker): 32 bytes
 struct shrinker {
 	unsigned long (*count_objects)(struct shrinker *,
 				       struct shrink_control *sc);
@@ -60,9 +62,13 @@ struct shrinker {
 	/* objs pending delete, per node */
 	atomic_long_t *nr_deferred;
 };
+// ARM10C 20151114
+// DEFAULT_SEEKS: 2
 #define DEFAULT_SEEKS 2 /* A good number if you don't know better. */
 
 /* Flags */
+// ARM10C 20151114
+// SHRINKER_NUMA_AWARE: 1
 #define SHRINKER_NUMA_AWARE (1 << 0)
 
 extern int register_shrinker(struct shrinker *);

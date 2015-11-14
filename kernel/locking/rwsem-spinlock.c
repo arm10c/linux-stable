@@ -36,19 +36,36 @@ EXPORT_SYMBOL(rwsem_is_locked);
 /*
  * initialise the semaphore
  */
+// ARM10C 20151114
+// &s->s_umount: &(kmem_cache#25-oX (struct super_block))->s_umount, "&s->s_umount", &__key
+// ARM10C 20151114
+// &s->s_dquot.dqptr_sem: &(kmem_cache#25-oX (struct super_block))->s_dquot.dqptr_sem, "&s->s_dquot.dqptr_sem", &__key
 void __init_rwsem(struct rw_semaphore *sem, const char *name,
 		  struct lock_class_key *key)
 {
-#ifdef CONFIG_DEBUG_LOCK_ALLOC
+#ifdef CONFIG_DEBUG_LOCK_ALLOC // CONFIG_DEBUG_LOCK_ALLOC=n
 	/*
 	 * Make sure we are not reinitializing a held semaphore:
 	 */
 	debug_check_no_locks_freed((void *)sem, sizeof(*sem));
 	lockdep_init_map(&sem->dep_map, name, key, 0);
 #endif
+	// sem->activity: (&(kmem_cache#25-oX (struct super_block))->s_umount)->activity
 	sem->activity = 0;
+	// sem->activity: (&(kmem_cache#25-oX (struct super_block))->s_umount)->activity: 0
+
+	// &sem->wait_lock: &(&(kmem_cache#25-oX (struct super_block))->s_umount)->wait_lock
 	raw_spin_lock_init(&sem->wait_lock);
+
+	// raw_spin_lock_init에서 한일:
+	// &(&(kmem_cache#25-oX (struct super_block))->s_umount)->wait_lock을 사용한 spinlock 초기화
+
+	// &sem->wait_list: &(&(kmem_cache#25-oX (struct super_block))->s_umount)->wait_list
 	INIT_LIST_HEAD(&sem->wait_list);
+
+	// INIT_LIST_HEAD에서 한일:
+	// (&(&(kmem_cache#25-oX (struct super_block))->s_umount)->wait_list)->next: &(&(kmem_cache#25-oX (struct super_block))->s_umount)->wait_list
+	// (&(&(kmem_cache#25-oX (struct super_block))->s_umount)->wait_list)->prev: &(&(kmem_cache#25-oX (struct super_block))->s_umount)->wait_list
 }
 EXPORT_SYMBOL(__init_rwsem);
 

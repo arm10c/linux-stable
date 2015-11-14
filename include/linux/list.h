@@ -74,6 +74,7 @@
 // ARM10C 20131130
 // ARM10C 20141108
 // ARM10C 20150919
+// ARM10C 20151114
 #define LIST_HEAD(name) \
 	struct list_head name = LIST_HEAD_INIT(name)
 
@@ -134,6 +135,12 @@
 // mnt->mnt_slave_list: (kmem_cache#2-oX (struct mount))->mnt_slave_list
 // ARM10C 20151107
 // mnt->mnt_slave: (kmem_cache#2-oX (struct mount))->mnt_slave
+// ARM10C 20151114
+// &s->s_inodes: &(kmem_cache#25-oX (struct super_block))->s_inodes
+// ARM10C 20151114
+// &lru->node[0].list: (&(kmem_cache#25-oX (struct super_block))->s_dentry_lru)->node[0].list
+// ARM10C 20151114
+// &s->s_mounts: &(kmem_cache#25-oX (struct super_block))->s_mounts
 static inline void INIT_LIST_HEAD(struct list_head *list)
 {
 	list->next = list;
@@ -226,6 +233,8 @@ static inline void list_add(struct list_head *new, struct list_head *head)
 // &ss->base_cftset.node: &(&cpu_cgroup_subsys)->base_cftset.node, &ss->cftsets: &(&cpu_cgroup_subsys)->cftsets
 // ARM10C 20150822
 // &ss->base_cftset.node: &(&cpuacct_subsys)->base_cftset.node, &ss->cftsets: &(&cpuacct_subsys)->cftsets
+// ARM10C 20151114
+// [re] s->s_list: (kmem_cache#25-oX (struct super_block))->s_list, &super_blocks
 static inline void list_add_tail(struct list_head *new, struct list_head *head)
 {
 	// new: &waiter.list, head->prev: (&(&cpu_add_remove_lock)->wait_list)->prev
@@ -900,6 +909,8 @@ static inline void list_splice_tail_init(struct list_head *list,
 // &init_css_set.hlist
 // ARM10C 20151107
 // mnt->mnt_hash: (kmem_cache#2-oX (struct mount))->mnt_hash
+// ARM10C 20151114
+// &s->s_instances: &(kmem_cache#25-oX (struct super_block))->s_instances
 static inline void INIT_HLIST_NODE(struct hlist_node *h)
 {
 
@@ -983,6 +994,8 @@ static inline void hlist_del_init(struct hlist_node *n)
 // clk->child_node: (kmem_cache#29-oX (mout_mspll_kfc))->child_node, new_parent->children: (kmem_cache#29-oX (sclk_spll))->children
 // ARM10C 20150228
 // &clk->child_node: &(kmem_cache#29-oX (sclk_apll))->child_node, &clk->parent->children: (&kmem_cache#29-oX (mout_apll))->children
+// ARM10C 20151114
+// [re] &s->s_instances: &(kmem_cache#25-oX (struct super_block))->s_instances, &type->fs_supers: &(&sysfs_fs_type)->fs_supers
 static inline void hlist_add_head(struct hlist_node *n, struct hlist_head *h)
 {
 	// h->first: (&clk_root_list)->first: NULL
@@ -1083,6 +1096,8 @@ static inline void hlist_move_list(struct hlist_head *old,
 // hlist_entry_safe((&clk_orphan_list)->first, typeof(*orphan), child_node)
 // ARM10C 20150228
 // clk->children: (kmem_cache#29-oX (mout_mspll_kfc))->children
+// ARM10C 20151114
+// (&(&sysfs_fs_type)->fs_supers)->first, typeof(*(old)), s_instances
 #define hlist_entry_safe(ptr, type, member) \
 	({ typeof(ptr) ____ptr = (ptr); \
 	   ____ptr ? hlist_entry(____ptr, type, member) : NULL; \
@@ -1110,6 +1125,10 @@ static inline void hlist_move_list(struct hlist_head *old,
 // #define hlist_for_each_entry(child, &clk->children, child_node):
 // for (child = hlist_entry_safe((&clk->children)->first, typeof(*(child)), child_node);
 //      child; child = hlist_entry_safe((child)->child_node.next, typeof(*(child)), child_node))
+// ARM10C 20151114
+// #define hlist_for_each_entry(old, &type->fs_supers, s_instances):
+// for (old = hlist_entry_safe((&type->fs_supers)->first, typeof(*(old)), s_instances);
+//      old; old = hlist_entry_safe((old)->s_instances.next, typeof(*(old)), s_instances))
 #define hlist_for_each_entry(pos, head, member)				\
 	for (pos = hlist_entry_safe((head)->first, typeof(*(pos)), member);\
 	     pos;							\

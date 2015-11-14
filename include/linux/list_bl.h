@@ -29,8 +29,8 @@
 #define LIST_BL_BUG_ON(x)
 #endif
 
-// ARM10C 2014/03/22
-// 4: sizeof(hlist_bl_head)
+// ARM10C 20140322
+// sizeof(struct hlist_bl_head): 4 bytes
 struct hlist_bl_head {
 	struct hlist_bl_node *first;
 };
@@ -40,6 +40,8 @@ struct hlist_bl_head {
 struct hlist_bl_node {
 	struct hlist_bl_node *next, **pprev;
 };
+// ARM10C 20151114
+// &s->s_anon: &(kmem_cache#25-oX (struct super_block))->s_anon
 #define INIT_HLIST_BL_HEAD(ptr) \
 	((ptr)->first = NULL)
 

@@ -95,6 +95,9 @@
 #include <linux/bitmap.h>
 #include <linux/numa.h>
 
+// ARM10C 20151114
+// MAX_NUMNODES: 1
+// DECLARE_BITMAP(bits, 1): bits[1]
 typedef struct { DECLARE_BITMAP(bits, MAX_NUMNODES); } nodemask_t;
 extern nodemask_t _unused_nodemask_arg_;
 
@@ -125,10 +128,19 @@ static inline void __nodes_setall(nodemask_t *dstp, int nbits)
 	bitmap_fill(dstp->bits, nbits);
 }
 
+// ARM10C 20151114
+// MAX_NUMNODES: 1
+// lru->active_nodes: (&(kmem_cache#25-oX (struct super_block))->s_dentry_lru)->active_nodes
 #define nodes_clear(dst) __nodes_clear(&(dst), MAX_NUMNODES)
+// ARM10C 20151114
+// &(&(kmem_cache#25-oX (struct super_block))->s_dentry_lru)->active_nodes, 1
 static inline void __nodes_clear(nodemask_t *dstp, int nbits)
 {
+	// dstp->bits: (&(&(kmem_cache#25-oX (struct super_block))->s_dentry_lru)->active_nodes)->bits, 1
 	bitmap_zero(dstp->bits, nbits);
+
+	// bitmap_zero에서 한일:
+	// dstp->bits: (&(&(kmem_cache#25-oX (struct super_block))->s_dentry_lru)->active_nodes)->bits[0]: 0
 }
 
 /* No static inline type checking - see Subtlety (1) above. */
@@ -494,6 +506,8 @@ static inline int num_node_state(enum node_states state)
 #define next_online_node(nid)	(MAX_NUMNODES)
 // ARM10C 20140607
 // ARM10C 20140726
+// ARM10C 20151114
+// nr_node_ids: 1
 #define nr_node_ids		1
 // ARM10C 20140308
 #define nr_online_nodes		1

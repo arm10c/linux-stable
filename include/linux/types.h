@@ -17,14 +17,18 @@
 // ARM10C 20141004
 // IRQ_BITMAP_BITS: 8212
 // DECLARE_BITMAP(allocated_irqs, 8212): allocated_irqs[257]
+// ARM10C 20151114
+// DECLARE_BITMAP(bits, 1): bits[1]
 #define DECLARE_BITMAP(name,bits) \
 	unsigned long name[BITS_TO_LONGS(bits)]
 
 // ARM10C 20151003
+// ARM10C 20151114
 typedef __u32 __kernel_dev_t;
 
 typedef __kernel_fd_set		fd_set;
 // ARM10C 20151003
+// ARM10C 20151114
 typedef __kernel_dev_t		dev_t;
 typedef __kernel_ino_t		ino_t;
 typedef __kernel_mode_t		mode_t;
@@ -62,6 +66,7 @@ typedef __kernel_old_gid_t	old_gid_t;
 
 #if defined(__GNUC__)
 // ARM10C 20151003
+// ARM10C 20151114
 typedef __kernel_loff_t		loff_t;
 #endif
 
@@ -182,6 +187,7 @@ typedef u32 dma_addr_t;
 // ARM10C 20140426
 typedef unsigned __bitwise__ gfp_t;
 // ARM10C 20151003
+// ARM10C 20151114
 typedef unsigned __bitwise__ fmode_t;
 // ARM10C 20150919
 typedef unsigned __bitwise__ oom_flags_t;
@@ -210,6 +216,7 @@ typedef unsigned long irq_hw_number_t;
 // ARM10C 20150808
 // ARM10C 20150919
 // ARM10C 20151003
+// ARM10C 20151114
 typedef struct {
 	int counter;
 } atomic_t;
@@ -227,6 +234,7 @@ typedef struct {
 // ARM10C 20150919
 // ARM10C 20151003
 // ARM10C 20151024
+// ARM10C 20151114
 // sizeof(struct list_head) : 8 bytes
 struct list_head {
 	struct list_head *next, *prev;
@@ -244,6 +252,7 @@ struct hlist_head {
 // ARM10C 20150808
 // ARM10C 20150912
 // ARM10C 20151024
+// ARM10C 20151114
 // sizeof(struct hlist_node): 8 bytes
 struct hlist_node {
 	struct hlist_node *next, **pprev;
@@ -277,6 +286,7 @@ struct callback_head {
 // ARM10C 20150912
 // ARM10C 20150919
 // ARM10C 20151024
+// ARM10C 20151114
 // sizeof(rcu_head): 8 bytes
 #define rcu_head callback_head
 

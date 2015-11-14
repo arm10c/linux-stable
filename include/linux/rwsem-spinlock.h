@@ -21,6 +21,7 @@
  * - if wait_list is not empty, then there are processes waiting for the semaphore
  */
 // ARM10C 20150919
+// ARM10C 20151114
 // sizeof(struct rw_semaphore): 28 bytes
 struct rw_semaphore {
 	__s32			activity;

@@ -246,6 +246,8 @@ static void __move_to_free_list(struct idr *idp, struct idr_layer *p)
 
 // ARM10C 20151031
 // idp: &(&mnt_id_ida)->idr, new: kmem_cache#21-oX
+// ARM10C 20151114
+// idp: &(&unnamed_dev_ida)->idr, new: kmem_cache#21-oX
 static void move_to_free_list(struct idr *idp, struct idr_layer *p)
 {
 	unsigned long flags;
@@ -295,22 +297,30 @@ static void idr_mark_full(struct idr_layer **pa, int id)
 
 // ARM10C 20151031
 // &ida->idr: &(&mnt_id_ida)->idr, gfp_mask: 0xD0
+// ARM10C 20151114
+// &ida->idr: &(&unnamed_dev_ida)->idr, gfp_mask: 0x20
 int __idr_pre_get(struct idr *idp, gfp_t gfp_mask)
 {
 	// idp->id_free_cnt: (&(&mnt_id_ida)->idr)->id_free_cnt: 0, MAX_IDR_FREE: 8
+	// idp->id_free_cnt: (&(&unnamed_dev_ida)->idr)->id_free_cnt: 0, MAX_IDR_FREE: 8
 	while (idp->id_free_cnt < MAX_IDR_FREE) {
 		struct idr_layer *new;
 
 		// idr_layer_cache: kmem_cache#21, gfp_mask: 0xD0
 		// kmem_cache_zalloc(kmem_cache#21, 0xD0): kmem_cache#21-oX
+		// idr_layer_cache: kmem_cache#21, gfp_mask: 0x20
+		// kmem_cache_zalloc(kmem_cache#21, 0x20): kmem_cache#21-oX
 		new = kmem_cache_zalloc(idr_layer_cache, gfp_mask);
 		// new: kmem_cache#21-oX
+		// new: kmem_cache#21-oX
 
+		// new: kmem_cache#21-oX
 		// new: kmem_cache#21-oX
 		if (new == NULL)
 			return (0);
 
 		// idp: &(&mnt_id_ida)->idr, new: kmem_cache#21-oX
+		// idp: &(&unnamed_dev_ida)->idr, new: kmem_cache#21-oX
 		move_to_free_list(idp, new);
 
 		// move_to_free_list에서 한일:
@@ -319,8 +329,16 @@ int __idr_pre_get(struct idr *idp, gfp_t gfp_mask)
 		// (&(&mnt_id_ida)->idr)->id_free_cnt: 1
 
 		// (&(&mnt_id_ida)->idr)->id_free_cnt: 2...7 까지 loop 수행
+
+		// move_to_free_list에서 한일:
+		// (kmem_cache#21-oX)->ary[0]: NULL
+		// (&(&unnamed_dev_ida)->idr)->id_free: kmem_cache#21-oX
+		// (&(&unnamed_dev_ida)->idr)->id_free_cnt: 1
+
+		// (&(&unnamed_dev_ida)->idr)->id_free_cnt: 2...7 까지 loop 수행
 	}
 	return 1;
+	// return 1
 	// return 1
 }
 EXPORT_SYMBOL(__idr_pre_get);
@@ -1107,6 +1125,8 @@ EXPORT_SYMBOL(idr_init);
 
 // ARM10C 20151031
 // ida: &mnt_id_ida, bitmap: kmem_cache#27-oX
+// ARM10C 20151114
+// ida: &unnamed_dev_ida, bitmap: kmem_cache#27-oX
 static void free_bitmap(struct ida *ida, struct ida_bitmap *bitmap)
 {
 	unsigned long flags;
@@ -1153,11 +1173,15 @@ static void free_bitmap(struct ida *ida, struct ida_bitmap *bitmap)
  */
 // ARM10C 20151031
 // &mnt_id_ida, GFP_KERNEL: 0xD0
+// ARM10C 20151114
+// &unnamed_dev_ida, GFP_ATOMIC: 0x20u
 int ida_pre_get(struct ida *ida, gfp_t gfp_mask)
 {
 	/* allocate idr_layers */
 	// &ida->idr: &(&mnt_id_ida)->idr, gfp_mask: 0xD0
 	// __idr_pre_get(&(&mnt_id_ida)->idr, 0xD0): 1
+	// &ida->idr: &(&unnamed_dev_ida)->idr, gfp_mask: 0x20
+	// __idr_pre_get(&(&unnamed_dev_ida)->idr, 0x20): 1
 	if (!__idr_pre_get(&ida->idr, gfp_mask))
 		return 0;
 
@@ -1167,28 +1191,44 @@ int ida_pre_get(struct ida *ida, gfp_t gfp_mask)
 	// (&(&mnt_id_ida)->idr)->id_free: kmem_cache#21-o7
 	// (&(&mnt_id_ida)->idr)->id_free_cnt: 7
 
+	// __idr_pre_get에서 한일:
+	// idr_layer_cache를 사용하여 struct idr_layer 의 메모리 kmem_cache#21-o0...7를 8 개를 할당 받음
+	// (kmem_cache#21-o0...7)->ary[0]: NULL
+	// (&(&unnamed_dev_ida)->idr)->id_free: kmem_cache#21-o7
+	// (&(&unnamed_dev_ida)->idr)->id_free_cnt: 7
+
 	/* allocate free_bitmap */
 	// ida->free_bitmap: (&mnt_id_ida)->free_bitmap: NULL
+	// ida->free_bitmap: (&unnamed_dev_ida)->free_bitmap: NULL
 	if (!ida->free_bitmap) {
 		struct ida_bitmap *bitmap;
 
 		// sizeof(struct ida_bitmap): 172 bytes, gfp_mask: 0xD0
 		// kmalloc(172, 0xD0): kmem_cache#27-oX
+		// sizeof(struct ida_bitmap): 172 bytes, gfp_mask: 0x20
+		// kmalloc(172, 0x20): kmem_cache#27-oX
 		bitmap = kmalloc(sizeof(struct ida_bitmap), gfp_mask);
 		// bitmap: kmem_cache#27-oX
+		// bitmap: kmem_cache#27-oX
 
+		// bitmap: kmem_cache#27-oX
 		// bitmap: kmem_cache#27-oX
 		if (!bitmap)
 			return 0;
 
 		// ida: &mnt_id_ida, bitmap: kmem_cache#27-oX
+		// ida: &unnamed_dev_ida, bitmap: kmem_cache#27-oX
 		free_bitmap(ida, bitmap);
 
 		// free_bitmap에서 한일:
 		// (&mnt_id_ida)->free_bitmap: kmem_cache#27-oX
+
+		// free_bitmap에서 한일:
+		// (&unnamed_dev_ida)->free_bitmap: kmem_cache#27-oX
 	}
 
 	return 1;
+	// return 1
 	// return 1
 }
 EXPORT_SYMBOL(ida_pre_get);
@@ -1210,6 +1250,8 @@ EXPORT_SYMBOL(ida_pre_get);
  */
 // ARM10C 20151031
 // &mnt_id_ida, mnt_id_start: 0, &mnt->mnt_id: &(kmem_cache#2-oX)->mnt_id
+// ARM10C 20151114
+// &unnamed_dev_ida, unnamed_dev_start: 0, &dev
 int ida_get_new_above(struct ida *ida, int starting_id, int *p_id)
 {
 	// MAX_IDR_LEVEL: 4

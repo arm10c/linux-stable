@@ -881,6 +881,8 @@ static inline int file_check_writeable(struct file *filp)
 }
 #endif /* CONFIG_DEBUG_WRITECOUNT */
 
+// ARM10C 20151114
+// MAX_NON_LFS: 0x7fffffff
 #define	MAX_NON_LFS	((1UL<<31) - 1)
 
 /* Page cache limit. The filesystems should put that into their s_maxbytes 
@@ -1229,31 +1231,41 @@ extern struct list_head super_blocks;
 extern spinlock_t sb_lock;
 
 /* Possible states of 'frozen' field */
+// ARM10C 20151114
 enum {
 	SB_UNFROZEN = 0,		/* FS is unfrozen */
 	SB_FREEZE_WRITE	= 1,		/* Writes, dir ops, ioctls frozen */
 	SB_FREEZE_PAGEFAULT = 2,	/* Page faults stopped as well */
 	SB_FREEZE_FS = 3,		/* For internal FS use (e.g. to stop
 					 * internal threads if needed) */
+	// SB_FREEZE_COMPLETE: 4
 	SB_FREEZE_COMPLETE = 4,		/* ->freeze_fs finished successfully */
 };
 
+// ARM10C 20151114
+// SB_FREEZE_COMPLETE: 4
+// SB_FREEZE_LEVELS: 3
 #define SB_FREEZE_LEVELS (SB_FREEZE_COMPLETE - 1)
 
+// ARM10C 20151114
+// sizeof(struct sb_writers): 160 bytess
 struct sb_writers {
 	/* Counters for counting writers at each level */
+	// SB_FREEZE_LEVELS: 3
 	struct percpu_counter	counter[SB_FREEZE_LEVELS];
 	wait_queue_head_t	wait;		/* queue for waiting for
 						   writers / faults to finish */
 	int			frozen;		/* Is sb frozen? */
 	wait_queue_head_t	wait_unfrozen;	/* queue for waiting for
 						   sb to be thawed */
-#ifdef CONFIG_DEBUG_LOCK_ALLOC
+#ifdef CONFIG_DEBUG_LOCK_ALLOC // CONFIG_DEBUG_LOCK_ALLOC=n
 	struct lockdep_map	lock_map[SB_FREEZE_LEVELS];
 #endif
 };
 
 // ARM10C 20151003
+// ARM10C 20151114
+// sizeof(struct super_block): 709 bytes
 struct super_block {
 	struct list_head	s_list;		/* Keep this first */
 	dev_t			s_dev;		/* search index; _not_ kdev_t */
@@ -1271,7 +1283,7 @@ struct super_block {
 	struct rw_semaphore	s_umount;
 	int			s_count;
 	atomic_t		s_active;
-#ifdef CONFIG_SECURITY
+#ifdef CONFIG_SECURITY // CONFIG_SECURITY=n
 	void                    *s_security;
 #endif
 	const struct xattr_handler **s_xattr;
@@ -1285,6 +1297,7 @@ struct super_block {
 	struct hlist_node	s_instances;
 	struct quota_info	s_dquot;	/* Diskquota specific options */
 
+	// sizeof(struct sb_writers): 160 bytess
 	struct sb_writers	s_writers;
 
 	char s_id[32];				/* Informational name */
@@ -1611,6 +1624,7 @@ extern ssize_t vfs_readv(struct file *, const struct iovec __user *,
 extern ssize_t vfs_writev(struct file *, const struct iovec __user *,
 		unsigned long, loff_t *);
 
+// ARM10C 20151114
 struct super_operations {
    	struct inode *(*alloc_inode)(struct super_block *sb);
 	void (*destroy_inode)(struct inode *);
@@ -1829,8 +1843,12 @@ struct file_system_type {
 	const char *name;
 	int fs_flags;
 #define FS_REQUIRES_DEV		1 
+// ARM10C 20151114
+// FS_BINARY_MOUNTDATA: 2
 #define FS_BINARY_MOUNTDATA	2
 #define FS_HAS_SUBTYPE		4
+// ARM10C 20151114
+// FS_USERNS_MOUNT: 8
 #define FS_USERNS_MOUNT		8	/* Can be mounted by userns root */
 #define FS_USERNS_DEV_MOUNT	16 /* A userns mount does not imply MNT_NODEV */
 #define FS_RENAME_DOES_D_MOVE	32768	/* FS will handle d_move() during rename() internally. */

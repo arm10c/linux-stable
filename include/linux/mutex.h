@@ -51,6 +51,7 @@
 // ARM10C 20150718
 // ARM10C 20150919
 // ARM10C 20151003
+// ARM10C 20151114
 // sizeof(struct mutex): 40 bytes
 struct mutex {
 	/* 1: unlocked, 0: locked, negative: locked, possible waiters */

@@ -89,6 +89,7 @@
 // ARM10C 20140607
 // ARM10C 20141004
 // ARM10C 20141129
+// ARM10C 20151114
 #define DIV_ROUND_UP(n,d) (((n) + (d) - 1) / (d))
 #define DIV_ROUND_UP_ULL(ll,d) \
 	({ unsigned long long _tmp = (ll)+(d)-1; do_div(_tmp, d); _tmp; })
@@ -212,6 +213,7 @@ extern int _cond_resched(void);
 // ARM10C 20140315
 // ARM10C 20140920
 // ARM10C 20150704
+// ARM10C 20151114
 // might_resched(): NULL function
 # define might_sleep() do { might_resched(); } while (0)
 #endif

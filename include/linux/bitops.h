@@ -17,8 +17,11 @@
 #define BIT_WORD(nr)		((nr) / BITS_PER_LONG)
 #define BIT_ULL_MASK(nr)	(1ULL << ((nr) % BITS_PER_LONG_LONG))
 #define BIT_ULL_WORD(nr)	((nr) / BITS_PER_LONG_LONG)
+// ARM10C 20151114
+// BITS_PER_BYTE: 8
 #define BITS_PER_BYTE		8
 // ARM10C 20140607
+// BITS_PER_BYTE: 8
 // pcpu_unit_pages: 0x8
 // ARM10C 20141004
 // 4

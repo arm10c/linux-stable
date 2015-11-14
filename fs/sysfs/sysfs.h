@@ -167,7 +167,10 @@ struct sysfs_addrm_cxt {
  * the network namespace of the task which mounted this sysfs
  * instance).
  */
+// ARM10C 20151114
+// sizeof(struct sysfs_super_info): 8 bytes
 struct sysfs_super_info {
+	// KOBJ_NS_TYPES: 2
 	void *ns[KOBJ_NS_TYPES];
 };
 #define sysfs_info(SB) ((struct sysfs_super_info *)(SB->s_fs_info))
