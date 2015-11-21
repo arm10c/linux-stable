@@ -44,6 +44,8 @@ EXPORT_SYMBOL(down_read_trylock);
  */
 // ARM10C 20151114
 // &s->s_umount: &(kmem_cache#25-oX (struct super_block))->s_umount, SINGLE_DEPTH_NESTING: 1
+// ARM10C 20151121
+// &shrinker_rwsem
 void __sched down_write(struct rw_semaphore *sem)
 {
 	might_sleep(); // null function
@@ -57,7 +59,7 @@ void __sched down_write(struct rw_semaphore *sem)
 	LOCK_CONTENDED(sem, __down_write_trylock, __down_write);
 
 	// __down_write에서 한일:
-	// (&(kmem_cache#25-oX (struct super_block))->s_umount)->count: 0xffff0001
+	// sem->activity: (&(kmem_cache#25-oX (struct super_block))->s_umount)->activity: -1
 }
 
 EXPORT_SYMBOL(down_write);
@@ -91,11 +93,18 @@ EXPORT_SYMBOL(up_read);
 /*
  * release a write lock
  */
+// ARM10C 20151121
+// &shrinker_rwsem
 void up_write(struct rw_semaphore *sem)
 {
-	rwsem_release(&sem->dep_map, 1, _RET_IP_);
+	// &sem->dep_map: &(&shrinker_rwsem)->dep_map
+	rwsem_release(&sem->dep_map, 1, _RET_IP_); // null function
 
+	// sem: &shrinker_rwsem
 	__up_write(sem);
+
+	// __up_write에서 한일:
+	// (&shrinker_rwsem)->activity: 0
 }
 
 EXPORT_SYMBOL(up_write);

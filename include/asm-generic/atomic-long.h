@@ -143,6 +143,7 @@ static inline long atomic_long_add_unless(atomic_long_t *l, long a, long u)
 // ARM10C 20150919
 // ARM10C 20151003
 // ARM10C 20151114
+// ARM10C 20151121
 typedef atomic_t atomic_long_t;
 
 // ARM10C 20140809
@@ -228,21 +229,11 @@ static inline int atomic_long_add_negative(long i, atomic_long_t *l)
 	return atomic_add_negative(i, v);
 }
 
-// ARM10C 20151114
-// RWSEM_ACTIVE_WRITE_BIAS: 0xffff0001, &sem->count: &(&(kmem_cache#25-oX (struct super_block))->s_umount)->count
 static inline long atomic_long_add_return(long i, atomic_long_t *l)
 {
-	// l: &(&(kmem_cache#25-oX (struct super_block))->s_umount)->count
 	atomic_t *v = (atomic_t *)l;
-	// v: &(&(kmem_cache#25-oX (struct super_block))->s_umount)->count
 
-	// i: 0xffff0001, v: &(&(kmem_cache#25-oX (struct super_block))->s_umount)->count
-	// atomic_add_returna(0xffff0001, &(&(kmem_cache#25-oX (struct super_block))->s_umount)->count): 0xffff0001
 	return (long)atomic_add_return(i, v);
-	// return 0xffff0001
-
-	// atomic_add_returna에서 한일:
-	// (&(kmem_cache#25-oX (struct super_block))->s_umount)->count: 0xffff0001
 }
 
 static inline long atomic_long_sub_return(long i, atomic_long_t *l)

@@ -507,6 +507,7 @@ static inline int num_node_state(enum node_states state)
 // ARM10C 20140607
 // ARM10C 20140726
 // ARM10C 20151114
+// ARM10C 20151121
 // nr_node_ids: 1
 #define nr_node_ids		1
 // ARM10C 20140308

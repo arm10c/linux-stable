@@ -526,6 +526,7 @@ struct posix_acl;
  * of the 'struct inode'
  */
 // ARM10C 20151003
+// ARM10C 20151121
 // sizeof(struct inode): 394 bytes
 struct inode {
 	umode_t			i_mode;
@@ -1625,6 +1626,7 @@ extern ssize_t vfs_writev(struct file *, const struct iovec __user *,
 		unsigned long, loff_t *);
 
 // ARM10C 20151114
+// ARM10C 20151121
 struct super_operations {
    	struct inode *(*alloc_inode)(struct super_block *sb);
 	void (*destroy_inode)(struct inode *);
@@ -1645,7 +1647,7 @@ struct super_operations {
 	int (*show_devname)(struct seq_file *, struct dentry *);
 	int (*show_path)(struct seq_file *, struct dentry *);
 	int (*show_stats)(struct seq_file *, struct dentry *);
-#ifdef CONFIG_QUOTA
+#ifdef CONFIG_QUOTA // CONFIG_QUOTA=n
 	ssize_t (*quota_read)(struct super_block *, int, char *, size_t, loff_t);
 	ssize_t (*quota_write)(struct super_block *, int, const char *, size_t, loff_t);
 #endif

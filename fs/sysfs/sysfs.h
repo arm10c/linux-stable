@@ -57,6 +57,7 @@ struct sysfs_inode_attrs {
  * requires s_active reference.
  */
 // ARM10C 20151031
+// ARM10C 20151121
 // sizeof(struct sysfs_dirent): 64 bytes
 struct sysfs_dirent {
 	atomic_t		s_count;

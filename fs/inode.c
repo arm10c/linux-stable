@@ -54,8 +54,10 @@
 // ARM10C 20140322
 static unsigned int i_hash_mask __read_mostly;
 // ARM10C 20140322
+// ARM10C 20151121
 static unsigned int i_hash_shift __read_mostly;
 // ARM10C 20140322
+// ARM10C 20151121
 static struct hlist_head *inode_hashtable __read_mostly;
 static __cacheline_aligned_in_smp DEFINE_SPINLOCK(inode_hash_lock);
 
@@ -451,12 +453,19 @@ static inline void inode_sb_list_del(struct inode *inode)
 	}
 }
 
+// ARM10C 20151121
+// sb: kmem_cache#25-oX (struct super_block), ino: (&sysfs_root)->s_ino: 1
 static unsigned long hash(struct super_block *sb, unsigned long hashval)
 {
 	unsigned long tmp;
 
+	// hashval: 1, sb: kmem_cache#25-oX (struct super_block), GOLDEN_RATIO_PRIME: 0x9e370001, L1_CACHE_BYTES: 64
 	tmp = (hashval * (unsigned long)sb) ^ (GOLDEN_RATIO_PRIME + hashval) /
 			L1_CACHE_BYTES;
+	// tmp: (kmem_cache#25-oX (struct super_block)) ^ (0x9e370002) / 64
+
+	// tmp: (kmem_cache#25-oX (struct super_block)) ^ (0x9e370002) / 64, GOLDEN_RATIO_PRIME: 0x9e370001, i_hash_shift : 16
+	// (kmem_cache#25-oX (struct super_block)) / 64 >> 16
 	tmp = tmp ^ ((tmp ^ GOLDEN_RATIO_PRIME) >> i_hash_shift);
 	return tmp & i_hash_mask;
 }
@@ -1074,8 +1083,12 @@ EXPORT_SYMBOL(iget5_locked);
  * hashed, and with the I_NEW flag set.  The file system gets to fill it in
  * before unlocking it via unlock_new_inode().
  */
+// ARM10C 20151121
+// sb: kmem_cache#25-oX (struct super_block), sd->s_ino: (&sysfs_root)->s_ino: 1
 struct inode *iget_locked(struct super_block *sb, unsigned long ino)
 {
+	// inode_hashtable: 256KB의 메모리 공간,
+	// sb: kmem_cache#25-oX (struct super_block), ino: (&sysfs_root)->s_ino: 1
 	struct hlist_head *head = inode_hashtable + hash(sb, ino);
 	struct inode *inode;
 

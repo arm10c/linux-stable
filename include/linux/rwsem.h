@@ -52,16 +52,70 @@ static inline int rwsem_is_locked(struct rw_semaphore *sem)
 #ifdef CONFIG_DEBUG_LOCK_ALLOC
 # define __RWSEM_DEP_MAP_INIT(lockname) , .dep_map = { .name = #lockname }
 #else
+// ARM10C 20151121
 # define __RWSEM_DEP_MAP_INIT(lockname)
 #endif
 
 // ARM10C 20131012
+// ARM10C 20151121
+// RWSEM_UNLOCKED_VALUE: 0x00000000L
+// __RAW_SPIN_LOCK_UNLOCKED(shrinker_rwsem.wait_lock):
+// (raw_spinlock_t)
+// {
+//    .raw_lock = { { 0 } },
+//    .magic = 0xdead4ead,
+//    .owner_cpu = -1,
+//    .owner = 0xffffffff,
+// }
+// LIST_HEAD_INIT((shrinker_rwsem).wait_list):
+// { &((shrinker_rwsem).wait_list), &((shrinker_rwsem).wait_list) }
+// __RWSEM_DEP_MAP_INIT(shrinker_rwsem):
+//
+// #define __RWSEM_INITIALIZER(shrinker_rwsem):
+// {
+//     0x00000000L,
+//     (raw_spinlock_t)
+//     {
+//        .raw_lock = { { 0 } },
+//        .magic = 0xdead4ead,
+//        .owner_cpu = -1,
+//        .owner = 0xffffffff,
+//     },
+//     { &((shrinker_rwsem).wait_list), &((shrinker_rwsem).wait_list) }
+//  }
 #define __RWSEM_INITIALIZER(name)			\
 	{ RWSEM_UNLOCKED_VALUE,				\
 	  __RAW_SPIN_LOCK_UNLOCKED(name.wait_lock),	\
 	  LIST_HEAD_INIT((name).wait_list)		\
 	  __RWSEM_DEP_MAP_INIT(name) }
 
+// ARM10C 20151121
+// __RWSEM_INITIALIZER(shrinker_rwsem):
+// {
+//     0x00000000L,
+//     (raw_spinlock_t)
+//     {
+//        .raw_lock = { { 0 } },
+//        .magic = 0xdead4ead,
+//        .owner_cpu = -1,
+//        .owner = 0xffffffff,
+//     },
+//     { &((shrinker_rwsem).wait_list), &((shrinker_rwsem).wait_list) }
+//  }
+//
+// #define DECLARE_RWSEM(shrinker_rwsem):
+// struct rw_semaphore shrinker_rwsem =
+// {
+//     0x00000000L,
+//     (raw_spinlock_t)
+//     {
+//        .raw_lock = { { 0 } },
+//        .magic = 0xdead4ead,
+//        .owner_cpu = -1,
+//        .owner = 0xffffffff,
+//     },
+//     { &((shrinker_rwsem).wait_list), &((shrinker_rwsem).wait_list) }
+//  }
 #define DECLARE_RWSEM(name) \
 	struct rw_semaphore name = __RWSEM_INITIALIZER(name)
 

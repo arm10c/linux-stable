@@ -46,6 +46,7 @@ struct shrink_control {
  * @flags determine the shrinker abilities, like numa awareness
  */
 // ARM10C 20151114
+// ARM10C 20151121
 // sizeof(struct shrinker): 32 bytes
 struct shrinker {
 	unsigned long (*count_objects)(struct shrinker *,
@@ -68,6 +69,7 @@ struct shrinker {
 
 /* Flags */
 // ARM10C 20151114
+// ARM10C 20151121
 // SHRINKER_NUMA_AWARE: 1
 #define SHRINKER_NUMA_AWARE (1 << 0)
 

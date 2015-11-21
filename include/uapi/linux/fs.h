@@ -79,6 +79,8 @@ struct inodes_stat_t {
 #define MS_REC		16384
 #define MS_VERBOSE	32768	/* War is peace. Verbosity is silence.
 				   MS_VERBOSE is deprecated. */
+// ARM10C 20151121
+// MS_SILENT: 0x8000
 #define MS_SILENT	32768
 #define MS_POSIXACL	(1<<16)	/* VFS does not apply the umask */
 #define MS_UNBINDABLE	(1<<17)	/* change to unbindable */

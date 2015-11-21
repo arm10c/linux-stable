@@ -133,7 +133,25 @@ int vm_swappiness = 60;
 // ARM10C 20140308
 unsigned long vm_total_pages;	/* The total number of pages which the VM controls */
 
+// ARM10C 20151121
+// #define LIST_HEAD(shrinker_list):
+// struct list_head shrinker_list =
+// { &(shrinker_list), &(shrinker_list) }
 static LIST_HEAD(shrinker_list);
+// ARM10C 20151121
+// #define DECLARE_RWSEM(shrinker_rwsem):
+// struct rw_semaphore shrinker_rwsem =
+// {
+//     0x00000000L,
+//     (raw_spinlock_t)
+//     {
+//        .raw_lock = { { 0 } },
+//        .magic = 0xdead4ead,
+//        .owner_cpu = -1,
+//        .owner = 0xffffffff,
+//     },
+//     { &((shrinker_rwsem).wait_list), &((shrinker_rwsem).wait_list) }
+//  }
 static DECLARE_RWSEM(shrinker_rwsem);
 
 #ifdef CONFIG_MEMCG
@@ -178,31 +196,57 @@ static unsigned long get_lru_size(struct lruvec *lruvec, enum lru_list lru)
 /*
  * Add a shrinker callback to be called from the vm.
  */
-// ARM10C 20151114
+// ARM10C 20151121
 // [re] &s->s_shrink: &(kmem_cache#25-oX (struct super_block))->s_shrink
 int register_shrinker(struct shrinker *shrinker)
 {
+	// *shrinker->nr_deferred: *(&(kmem_cache#25-oX (struct super_block))->s_shrink)->nr_deferred
+	// sizeof(*(&(kmem_cache#25-oX (struct super_block))->s_shrink)->nr_deferred): 4 bytes
 	size_t size = sizeof(*shrinker->nr_deferred);
+	// size: 4
 
 	/*
 	 * If we only have one possible node in the system anyway, save
 	 * ourselves the trouble and disable NUMA aware behavior. This way we
 	 * will save memory and some small loop time later.
 	 */
+	// nr_node_ids: 1
 	if (nr_node_ids == 1)
+		// shrinker->flags: (&(kmem_cache#25-oX (struct super_block))->s_shrink)->flags: 1, SHRINKER_NUMA_AWARE: 1
 		shrinker->flags &= ~SHRINKER_NUMA_AWARE;
+		// shrinker->flags: (&(kmem_cache#25-oX (struct super_block))->s_shrink)->flags: 0
 
+	// shrinker->flags: (&(kmem_cache#25-oX (struct super_block))->s_shrink)->flags: 0, SHRINKER_NUMA_AWARE: 1
 	if (shrinker->flags & SHRINKER_NUMA_AWARE)
 		size *= nr_node_ids;
 
+	// shrinker->nr_deferred: (&(kmem_cache#25-oX (struct super_block))->s_shrink)->nr_deferred, size: 4, GFP_KERNEL: 0xD0
+	// kzalloc(4, GFP_KERNEL: 0xD0): kmem_cache#30-oX
 	shrinker->nr_deferred = kzalloc(size, GFP_KERNEL);
+	// shrinker->nr_deferred: (&(kmem_cache#25-oX (struct super_block))->s_shrink)->nr_deferred: kmem_cache#30-oX
+
+	// shrinker->nr_deferred: (&(kmem_cache#25-oX (struct super_block))->s_shrink)->nr_deferred: kmem_cache#30-oX
 	if (!shrinker->nr_deferred)
 		return -ENOMEM;
 
 	down_write(&shrinker_rwsem);
+
+	// down_write에서 한일:
+	// (&shrinker_rwsem)->activity: -1
+
+	// &shrinker->list: &(&(kmem_cache#25-oX (struct super_block))->s_shrink)->list
 	list_add_tail(&shrinker->list, &shrinker_list);
+
+	// list_add_tail에서 한일:
+	// head list인 &shrinker_list에 &(&(kmem_cache#25-oX (struct super_block))->s_shrink)->list를 tail로 추가함
+
 	up_write(&shrinker_rwsem);
+
+	// up_write에서 한일:
+	// (&shrinker_rwsem)->activity: 0
+
 	return 0;
+	// return 0
 }
 EXPORT_SYMBOL(register_shrinker);
 

@@ -138,6 +138,15 @@ typedef struct raw_spinlock {
 //    .owner_cpu = -1,
 //    .owner = 0xffffffff,
 // }
+// ARM10C 20151121
+// #define __RAW_SPIN_LOCK_UNLOCKED(shrinker_rwsem.wait_lock):
+// (raw_spinlock_t)
+// {
+//    .raw_lock = { { 0 } },
+//    .magic = 0xdead4ead,
+//    .owner_cpu = -1,
+//    .owner = 0xffffffff,
+// }
 #define __RAW_SPIN_LOCK_UNLOCKED(lockname)	\
 	(raw_spinlock_t) __RAW_SPIN_LOCK_INITIALIZER(lockname)
 

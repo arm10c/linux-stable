@@ -18,11 +18,16 @@
 #include <linux/compiler.h>
 
 /* 2^31 + 2^29 - 2^25 + 2^22 - 2^19 - 2^16 + 1 */
+// ARM10C 20151121
+// GOLDEN_RATIO_PRIME_32: 0x9e370001UL
 #define GOLDEN_RATIO_PRIME_32 0x9e370001UL
 /*  2^63 + 2^61 - 2^57 + 2^54 - 2^51 - 2^18 + 1 */
 #define GOLDEN_RATIO_PRIME_64 0x9e37fffffffc0001UL
 
-#if BITS_PER_LONG == 32
+#if BITS_PER_LONG == 32 // BITS_PER_LONG: 32
+// ARM10C 20151121
+// GOLDEN_RATIO_PRIME_32: 0x9e370001UL
+// GOLDEN_RATIO_PRIME: 0x9e370001UL
 #define GOLDEN_RATIO_PRIME GOLDEN_RATIO_PRIME_32
 #define hash_long(val, bits) hash_32(val, bits)
 #elif BITS_PER_LONG == 64

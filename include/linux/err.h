@@ -52,6 +52,8 @@ static inline long __must_check PTR_ERR(__force const void *ptr)
 // css: &root_task_group.css
 // ARM10C 20150822
 // css: &root_cpuacct.css
+// ARM10C 20151121
+// sb: kmem_cache#25-oX (struct super_block)
 static inline long __must_check IS_ERR(__force const void *ptr)
 {
 	return IS_ERR_VALUE((unsigned long)ptr);

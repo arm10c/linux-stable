@@ -233,6 +233,10 @@ static inline void do_raw_spin_unlock(raw_spinlock_t *lock) __releases(lock)
 // &sem->lock: &(&console_sem)->lock
 // ARM10C 20150725
 // &logbuf_lock, flags
+// ARM10C 20151121
+// &sem->wait_lock: (&(kmem_cache#25-oX (struct super_block))->s_umount)->wait_lock, flags
+// ARM10C 20151121
+// &sem->wait_lock: &(&shrinker_rwsem)->wait_lock, flags
 #define raw_spin_lock_irqsave(lock, flags)			\
 	do {						\
 		typecheck(unsigned long, flags);	\

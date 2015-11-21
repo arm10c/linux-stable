@@ -333,7 +333,7 @@ static struct super_block *alloc_super(struct file_system_type *type, int flags)
 	down_write_nested(&s->s_umount, SINGLE_DEPTH_NESTING);
 
 	// down_write_nested에서 한일:
-	// (&(kmem_cache#25-oX (struct super_block))->s_umount)->count: 0xffff0001
+	// (&(kmem_cache#25-oX (struct super_block))->s_umount)->activity: -1
 
 	// s->s_count: (kmem_cache#25-oX (struct super_block))->s_count
 	s->s_count = 1;
@@ -751,7 +751,7 @@ retry:
 		// (&(&(kmem_cache#25-oX (struct super_block))->s_umount)->wait_list)->next: &(&(kmem_cache#25-oX (struct super_block))->s_umount)->wait_list
 		// (&(&(kmem_cache#25-oX (struct super_block))->s_umount)->wait_list)->prev: &(&(kmem_cache#25-oX (struct super_block))->s_umount)->wait_list
 		//
-		// (&(kmem_cache#25-oX (struct super_block))->s_umount)->count: 0xffff0001
+		// (&(kmem_cache#25-oX (struct super_block))->s_umount)->activity: -1
 		//
 		// (&(kmem_cache#25-oX (struct super_block))->s_vfs_rename_mutex)->count: 1
 		// (&(kmem_cache#25-oX (struct super_block))->s_vfs_rename_mutex)->wait_lock)->rlock)->raw_lock: { { 0 } }
@@ -806,7 +806,7 @@ retry:
 		// goto retry
 	}
 
-	// [re] set: sysfs_set_super, [re] s: kmem_cache#25-oX (struct super_block), data: kmem_cache#30-oX (struct sysfs_super_info)
+	// [re] set: sysfs_set_super, s: kmem_cache#25-oX (struct super_block), data: kmem_cache#30-oX (struct sysfs_super_info)
 	// [re] sysfs_set_super(kmem_cache#25-oX (struct super_block), kmem_cache#30-oX (struct sysfs_super_info)): 0
 	err = set(s, data);
 	// [re] err: 0
@@ -881,10 +881,19 @@ retry:
 	get_filesystem(type);
 
 // 2015/11/14 종료
+// 2015/11/21 시작
 
 	// [re] &s->s_shrink: &(kmem_cache#25-oX (struct super_block))->s_shrink
 	register_shrinker(&s->s_shrink);
+
+	// register_shrinker에서 한일:
+	// (&(kmem_cache#25-oX (struct super_block))->s_shrink)->flags: 0
+	// (&(kmem_cache#25-oX (struct super_block))->s_shrink)->nr_deferred: kmem_cache#30-oX
+	// head list인 &shrinker_list에 &(&(kmem_cache#25-oX (struct super_block))->s_shrink)->list를 tail로 추가함
+
+	// s: kmem_cache#25-oX (struct super_block)
 	return s;
+	// return kmem_cache#25-oX (struct super_block)
 }
 
 EXPORT_SYMBOL(sget);

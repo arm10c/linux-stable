@@ -352,10 +352,15 @@ static void sysfs_init_inode(struct sysfs_dirent *sd, struct inode *inode)
  *	RETURNS:
  *	Pointer to allocated inode on success, NULL on failure.
  */
+// ARM10C 20151121
+// sb: kmem_cache#25-oX (struct super_block), &sysfs_root
 struct inode *sysfs_get_inode(struct super_block *sb, struct sysfs_dirent *sd)
 {
 	struct inode *inode;
 
+// 2015/11/21 종료
+
+	// sb: kmem_cache#25-oX (struct super_block), sd->s_ino: (&sysfs_root)->s_ino: 1
 	inode = iget_locked(sb, sd->s_ino);
 	if (inode && (inode->i_state & I_NEW))
 		sysfs_init_inode(sd, inode);

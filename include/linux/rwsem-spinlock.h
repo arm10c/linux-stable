@@ -22,6 +22,7 @@
  */
 // ARM10C 20150919
 // ARM10C 20151114
+// ARM10C 20151121
 // sizeof(struct rw_semaphore): 28 bytes
 struct rw_semaphore {
 	__s32			activity;

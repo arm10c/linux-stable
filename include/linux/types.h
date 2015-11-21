@@ -217,6 +217,7 @@ typedef unsigned long irq_hw_number_t;
 // ARM10C 20150919
 // ARM10C 20151003
 // ARM10C 20151114
+// ARM10C 20151121
 typedef struct {
 	int counter;
 } atomic_t;
@@ -242,6 +243,7 @@ struct list_head {
 
 // ARM10C 20140322
 // ARM10C 20151024
+// ARM10C 20151121
 // sizeof(struct hlist_head): 4 bytes
 struct hlist_head {
 	struct hlist_node *first;

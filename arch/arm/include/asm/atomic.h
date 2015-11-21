@@ -79,8 +79,6 @@ static inline void atomic_add(int i, atomic_t *v)
 	: "cc");
 }
 
-// ARM10C 20151114
-// i: 0xffff0001, v: &(&(kmem_cache#25-oX (struct super_block))->s_umount)->count
 static inline int atomic_add_return(int i, atomic_t *v)
 {
 	unsigned long tmp;

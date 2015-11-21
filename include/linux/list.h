@@ -68,6 +68,12 @@
 // ARM10C 20150808
 // LIST_HEAD_INIT(init_task.cpu_timers[2]):
 // { &(init_task.cpu_timers[2]), &(init_task.cpu_timers[2]) }
+// ARM10C 20151121
+// LIST_HEAD_INIT((shrinker_rwsem).wait_list):
+// { &((shrinker_rwsem).wait_list), &((shrinker_rwsem).wait_list) }
+// ARM10C 20151121
+// LIST_HEAD_INIT(shrinker_list):
+// { &(shrinker_list), &(shrinker_list) }
 #define LIST_HEAD_INIT(name) { &(name), &(name) }
 
 // ARM10C 20131116
@@ -75,6 +81,7 @@
 // ARM10C 20141108
 // ARM10C 20150919
 // ARM10C 20151114
+// ARM10C 20151121
 #define LIST_HEAD(name) \
 	struct list_head name = LIST_HEAD_INIT(name)
 
@@ -235,6 +242,10 @@ static inline void list_add(struct list_head *new, struct list_head *head)
 // &ss->base_cftset.node: &(&cpuacct_subsys)->base_cftset.node, &ss->cftsets: &(&cpuacct_subsys)->cftsets
 // ARM10C 20151114
 // [re] s->s_list: (kmem_cache#25-oX (struct super_block))->s_list, &super_blocks
+// ARM10C 20151121
+// &waiter.list, &sem->wait_list: &(&(kmem_cache#25-oX (struct super_block))->s_umount)->wait_list
+// ARM10C 20151121
+// &shrinker->list: &(&(kmem_cache#25-oX (struct super_block))->s_shrink)->list, &shrinker_list
 static inline void list_add_tail(struct list_head *new, struct list_head *head)
 {
 	// new: &waiter.list, head->prev: (&(&cpu_add_remove_lock)->wait_list)->prev
@@ -276,6 +287,7 @@ static inline void __list_del_entry(struct list_head *entry)
 
 // ARM10C 20140412
 // ARM10C 20140517
+// ARM10C 20151121
 static inline void list_del(struct list_head *entry)
 {
 	__list_del(entry->prev, entry->next);
@@ -408,6 +420,7 @@ static inline int list_is_last(const struct list_head *list,
 // ARM10C 20150523
 // ARM10C 20150725
 // ARM10C 20150822
+// ARM10C 20151121
 static inline int list_empty(const struct list_head *head)
 {
 	// head->next: waiter->list->next, head: waiter->list

@@ -9,11 +9,14 @@
 #include <linux/sched.h>
 #include <linux/export.h>
 
+// ARM10C 20151121
 enum rwsem_waiter_type {
+	// RWSEM_WAITING_FOR_WRITE: 0
 	RWSEM_WAITING_FOR_WRITE,
 	RWSEM_WAITING_FOR_READ
 };
 
+// ARM10C 20151121
 struct rwsem_waiter {
 	struct list_head list;
 	struct task_struct *task;
@@ -201,19 +204,38 @@ int __down_read_trylock(struct rw_semaphore *sem)
 /*
  * get a write lock on the semaphore
  */
+// ARM10C 20151121
+// sem: &(kmem_cache#25-oX (struct super_block))->s_umount, 0
 void __sched __down_write_nested(struct rw_semaphore *sem, int subclass)
 {
 	struct rwsem_waiter waiter;
 	struct task_struct *tsk;
 	unsigned long flags;
 
+	// &sem->wait_lock: (&(kmem_cache#25-oX (struct super_block))->s_umount)->wait_lock
 	raw_spin_lock_irqsave(&sem->wait_lock, flags);
 
+	// raw_spin_lock_irqsave에서 한일:
+	// (&(kmem_cache#25-oX (struct super_block))->s_umount)->wait_lock 을 사용하여 spin lock 을 수행하고 cpsr을 flags에 저장함
+
 	/* set up my own style of waitqueue */
+	// current: &init_task
 	tsk = current;
+	// tsk: &init_task
+
+	// tsk: &init_task
 	waiter.task = tsk;
+	// waiter.task: &init_task
+
+	// RWSEM_WAITING_FOR_WRITE: 0
 	waiter.type = RWSEM_WAITING_FOR_WRITE;
+	// waiter.type: 0
+
+	// &sem->wait_list: &(&(kmem_cache#25-oX (struct super_block))->s_umount)->wait_list
 	list_add_tail(&waiter.list, &sem->wait_list);
+
+	// list_add_tail에서 한일:
+	// head list 인 &(&(kmem_cache#25-oX (struct super_block))->s_umount)->wait_list에 &waiter.list을 tail로 추가함
 
 	/* wait for someone to release the lock */
 	for (;;) {
@@ -223,23 +245,42 @@ void __sched __down_write_nested(struct rw_semaphore *sem, int subclass)
 		 * itself into sleep and waiting for system woke it or someone
 		 * else in the head of the wait list up.
 		 */
+		// sem->activity: (&(kmem_cache#25-oX (struct super_block))->s_umount)->activity: 0
 		if (sem->activity == 0)
 			break;
+			// break 수행
+
 		set_task_state(tsk, TASK_UNINTERRUPTIBLE);
 		raw_spin_unlock_irqrestore(&sem->wait_lock, flags);
 		schedule();
 		raw_spin_lock_irqsave(&sem->wait_lock, flags);
 	}
 	/* got the lock */
+	// sem->activity: (&(kmem_cache#25-oX (struct super_block))->s_umount)->activity: 0
 	sem->activity = -1;
+	// sem->activity: (&(kmem_cache#25-oX (struct super_block))->s_umount)->activity: -1
+
 	list_del(&waiter.list);
 
+	// list_del에서 한일:
+	// head list 인 &(&(kmem_cache#25-oX (struct super_block))->s_umount)->wait_list에 추가된 &waiter.list을 삭제함
+
+	// &sem->wait_lock: (&(kmem_cache#25-oX (struct super_block))->s_umount)->wait_lock
 	raw_spin_unlock_irqrestore(&sem->wait_lock, flags);
+
+	// raw_spin_lock_irqsave에서 한일:
+	// (&(kmem_cache#25-oX (struct super_block))->s_umount)->wait_lock 을 사용하여 spin unlock 을 수행하고 flags에 저장된 cpsr을 복원함
 }
 
+// ARM10C 20151114
+// &(kmem_cache#25-oX (struct super_block))->s_umount
 void __sched __down_write(struct rw_semaphore *sem)
 {
+	// sem: &(kmem_cache#25-oX (struct super_block))->s_umount
 	__down_write_nested(sem, 0);
+
+	// __down_write_nested에서 한일:
+	// sem->activity: (&(kmem_cache#25-oX (struct super_block))->s_umount)->activity: -1
 }
 
 /*
@@ -281,17 +322,32 @@ void __up_read(struct rw_semaphore *sem)
 /*
  * release a write lock on the semaphore
  */
+// ARM10C 20151121
+// sem: &shrinker_rwsem
 void __up_write(struct rw_semaphore *sem)
 {
 	unsigned long flags;
 
+	// &sem->wait_lock: &(&shrinker_rwsem)->wait_lock
 	raw_spin_lock_irqsave(&sem->wait_lock, flags);
 
+	// raw_spin_lock_irqsave에서 한일:
+	// &(&shrinker_rwsem)->wait_lock 을 사용하여 spin lock 을 수행하고 cpsr을 flags에 저장함
+
+	// sem->activity: (&shrinker_rwsem)->activity: -1
 	sem->activity = 0;
+	// sem->activity: (&shrinker_rwsem)->activity: 0
+
+	// &sem->wait_list: &(&shrinker_rwsem)->wait_list
+	// list_empty(&(&shrinker_rwsem)->wait_list): 1
 	if (!list_empty(&sem->wait_list))
 		sem = __rwsem_do_wake(sem, 1);
 
+	// &sem->wait_lock: &(&shrinker_rwsem)->wait_lock
 	raw_spin_unlock_irqrestore(&sem->wait_lock, flags);
+
+	// raw_spin_unlock_irqrestore에서 한일:
+	// &(&shrinker_rwsem)->wait_lock 을 사용하여 spin unlock 을 수행하고 flags에 저장된 cpsr을 복원함
 }
 
 /*
