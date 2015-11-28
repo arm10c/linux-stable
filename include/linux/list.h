@@ -1111,6 +1111,8 @@ static inline void hlist_move_list(struct hlist_head *old,
 // clk->children: (kmem_cache#29-oX (mout_mspll_kfc))->children
 // ARM10C 20151114
 // (&(&sysfs_fs_type)->fs_supers)->first, typeof(*(old)), s_instances
+// ARM10C 20151128
+// (256KB의 메모리 공간 + 계산된 hash index 값)->first, typeof(*(inode)), i_hash
 #define hlist_entry_safe(ptr, type, member) \
 	({ typeof(ptr) ____ptr = (ptr); \
 	   ____ptr ? hlist_entry(____ptr, type, member) : NULL; \
@@ -1142,6 +1144,10 @@ static inline void hlist_move_list(struct hlist_head *old,
 // #define hlist_for_each_entry(old, &type->fs_supers, s_instances):
 // for (old = hlist_entry_safe((&type->fs_supers)->first, typeof(*(old)), s_instances);
 //      old; old = hlist_entry_safe((old)->s_instances.next, typeof(*(old)), s_instances))
+// ARM10C 20151128
+// #define hlist_for_each_entry(inode, head, i_hash):
+// for (inode = hlist_entry_safe((head)->first, typeof(*(inode)), i_hash);
+//     inode; inode = hlist_entry_safe((inode)->i_hash.next, typeof(*(inode)), i_hash))
 #define hlist_for_each_entry(pos, head, member)				\
 	for (pos = hlist_entry_safe((head)->first, typeof(*(pos)), member);\
 	     pos;							\

@@ -45,6 +45,7 @@ static inline gid_t __kgid_val(kgid_t gid)
 
 // ARM10C 20150919
 // ARM10C 20151003
+// ARM10C 20151128
 typedef uid_t kuid_t;
 // ARM10C 20150919
 // ARM10C 20151003
@@ -60,6 +61,8 @@ static inline gid_t __kgid_val(kgid_t gid)
 	return gid;
 }
 
+// ARM10C 20151128
+// uid: 0
 #define KUIDT_INIT(value) ((kuid_t) value )
 #define KGIDT_INIT(value) ((kgid_t) value )
 
@@ -131,7 +134,7 @@ static inline bool gid_valid(kgid_t gid)
 	return !gid_eq(gid, INVALID_GID);
 }
 
-#ifdef CONFIG_USER_NS
+#ifdef CONFIG_USER_NS // CONFIG_USER_NS=n
 
 extern kuid_t make_kuid(struct user_namespace *from, uid_t uid);
 extern kgid_t make_kgid(struct user_namespace *from, gid_t gid);
@@ -153,9 +156,13 @@ static inline bool kgid_has_mapping(struct user_namespace *ns, kgid_t gid)
 
 #else
 
+// ARM10C 20151128
+// &init_user_ns, uid: 0
 static inline kuid_t make_kuid(struct user_namespace *from, uid_t uid)
 {
+	// uid: 0, KUIDT_INIT(0): ((kuid_t) 0)
 	return KUIDT_INIT(uid);
+	// return 0
 }
 
 static inline kgid_t make_kgid(struct user_namespace *from, gid_t gid)

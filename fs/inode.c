@@ -59,6 +59,18 @@ static unsigned int i_hash_shift __read_mostly;
 // ARM10C 20140322
 // ARM10C 20151121
 static struct hlist_head *inode_hashtable __read_mostly;
+// ARM10C 20151128
+// #define DEFINE_SPINLOCK(inode_hash_lock):
+// spinlock_t unnamed_dev_lock =
+// (spinlock_t )
+// { { .rlock =
+//     {
+//       .raw_lock = { { 0 } },
+//       .magic = 0xdead4ead,
+//       .owner_cpu = -1,
+//       .owner = 0xffffffff,
+//     }
+// } }
 static __cacheline_aligned_in_smp DEFINE_SPINLOCK(inode_hash_lock);
 
 __cacheline_aligned_in_smp DEFINE_SPINLOCK(inode_sb_list_lock);
@@ -128,38 +140,115 @@ int proc_nr_inodes(ctl_table *table, int write,
  * These are initializations that need to be done on every inode
  * allocation as the fields are not initialised by slab allocation.
  */
+// ARM10C 20151128
+// sb: kmem_cache#25-oX (struct super_block), inode: kmem_cache#4-oX
 int inode_init_always(struct super_block *sb, struct inode *inode)
 {
 	static const struct inode_operations empty_iops;
 	static const struct file_operations empty_fops;
-	struct address_space *const mapping = &inode->i_data;
 
+	// &inode->i_data: &(kmem_cache#4-oX)->i_data
+	struct address_space *const mapping = &inode->i_data;
+	// mapping: &(kmem_cache#4-oX)->i_data
+
+	// inode->i_sb: (kmem_cache#4-oX)->i_sb, sb: kmem_cache#25-oX (struct super_block)
 	inode->i_sb = sb;
+	// inode->i_sb: (kmem_cache#4-oX)->i_sb: kmem_cache#25-oX (struct super_block)
+
+	// inode->i_blkbits: (kmem_cache#4-oX)->i_blkbits,
+	// sb->s_blocksize_bits: (kmem_cache#25-oX (struct super_block))->s_blocksize_bits: 12
 	inode->i_blkbits = sb->s_blocksize_bits;
+	// inode->i_blkbits: (kmem_cache#4-oX)->i_blkbits: 12
+
+	// inode->i_flags: (kmem_cache#4-oX)->i_flags
 	inode->i_flags = 0;
+	// inode->i_flags: (kmem_cache#4-oX)->i_flags: 0
+
+	// &inode->i_count: &(kmem_cache#4-oX)->i_count
 	atomic_set(&inode->i_count, 1);
+
+	// atomic_set에서 한일:
+	// (kmem_cache#4-oX)->i_count: 1
+
+	// inode->i_op: (kmem_cache#4-oX)->i_op
 	inode->i_op = &empty_iops;
+	// inode->i_op: (kmem_cache#4-oX)->i_op: &empty_iops
+
+	// inode->i_fop: (kmem_cache#4-oX)->i_fop
 	inode->i_fop = &empty_fops;
+	// inode->i_fop: (kmem_cache#4-oX)->i_fop: &empty_fops
+
+	// inode->__i_nlink: (kmem_cache#4-oX)->__i_nlink
 	inode->__i_nlink = 1;
+	// inode->__i_nlink: (kmem_cache#4-oX)->__i_nlink: 1
+
+	// inode->i_opflags: (kmem_cache#4-oX)->i_opflags
 	inode->i_opflags = 0;
+	// inode->i_opflags: (kmem_cache#4-oX)->i_opflags: 0
+
+	// inode: kmem_cache#4-oX
 	i_uid_write(inode, 0);
+
+	// i_uid_write에서 한일:
+	// inode->i_uid: (kmem_cache#4-oX)->i_uid: 0
+
+	// inode: kmem_cache#4-oX
 	i_gid_write(inode, 0);
+
+	// i_gid_write에서 한일:
+	// inode->i_gid: (kmem_cache#4-oX)->i_gid: 0
+
+	// &inode->i_writecount: &(kmem_cache#4-oX)->i_writecount
 	atomic_set(&inode->i_writecount, 0);
+
+	// atomic_set에서 한일:
+	// (kmem_cache#4-oX)->i_count: 0
+
+	// inode->i_size: (kmem_cache#4-oX)->i_size
 	inode->i_size = 0;
+	// inode->i_size: (kmem_cache#4-oX)->i_size: 0
+
+	// inode->i_blocks: (kmem_cache#4-oX)->i_blocks
 	inode->i_blocks = 0;
+	// inode->i_blocks: (kmem_cache#4-oX)->i_blocks: 0
+
+	// inode->i_bytes: (kmem_cache#4-oX)->i_bytes
 	inode->i_bytes = 0;
+	// inode->i_bytes: (kmem_cache#4-oX)->i_bytes: 0
+
+	// inode->i_generation: (kmem_cache#4-oX)->i_generation
 	inode->i_generation = 0;
-#ifdef CONFIG_QUOTA
+	// inode->i_generation: (kmem_cache#4-oX)->i_generation: 0
+
+#ifdef CONFIG_QUOTA // CONFIG_QUOTA=n
 	memset(&inode->i_dquot, 0, sizeof(inode->i_dquot));
 #endif
+	// inode->i_pipe: (kmem_cache#4-oX)->i_pipe
 	inode->i_pipe = NULL;
-	inode->i_bdev = NULL;
-	inode->i_cdev = NULL;
-	inode->i_rdev = 0;
-	inode->dirtied_when = 0;
+	// inode->i_pipe: (kmem_cache#4-oX)->i_pipe: NULL
 
+	// inode->i_bdev: (kmem_cache#4-oX)->i_bdev
+	inode->i_bdev = NULL;
+	// inode->i_bdev: (kmem_cache#4-oX)->i_bdev: NULL
+
+	// inode->i_cdev: (kmem_cache#4-oX)->i_cdev
+	inode->i_cdev = NULL;
+	// inode->i_cdev: (kmem_cache#4-oX)->i_cdev: NULL
+
+	// inode->i_rdev: (kmem_cache#4-oX)->i_rdev
+	inode->i_rdev = 0;
+	// inode->i_rdev: (kmem_cache#4-oX)->i_rdev: 0
+
+	// inode->dirtied_when: (kmem_cache#4-oX)->dirtied_when
+	inode->dirtied_when = 0;
+	// inode->dirtied_when: (kmem_cache#4-oX)->dirtied_when: 0
+
+	// inode: kmem_cache#4-oX, security_inode_alloc(kmem_cache#4-oX): 0
 	if (security_inode_alloc(inode))
 		goto out;
+
+// 2015/11/28 종료
+
 	spin_lock_init(&inode->i_lock);
 	lockdep_set_class(&inode->i_lock, &sb->s_type->i_lock_key);
 
@@ -206,18 +295,27 @@ out:
 }
 EXPORT_SYMBOL(inode_init_always);
 
+// ARM10C 20151128
+// sb: kmem_cache#25-oX (struct super_block)
 static struct inode *alloc_inode(struct super_block *sb)
 {
 	struct inode *inode;
 
+	// sb->s_op: (kmem_cache#25-oX (struct super_block))->s_op: &sysfs_ops
+	// sb->s_op->alloc_inode: (kmem_cache#25-oX (struct super_block))->s_op->alloc_inode: NULL
 	if (sb->s_op->alloc_inode)
 		inode = sb->s_op->alloc_inode(sb);
 	else
+		// inode_cachep: kmem_cache#4, GFP_KERNEL: 0xD0
+		// kmem_cache_alloc(kmem_cache#4, GFP_KERNEL: 0xD0): kmem_cache#4-oX
 		inode = kmem_cache_alloc(inode_cachep, GFP_KERNEL);
+		// inode: kmem_cache#4-oX
 
+	// inode: kmem_cache#4-oX
 	if (!inode)
 		return NULL;
 
+	// sb: kmem_cache#25-oX (struct super_block), inode: kmem_cache#4-oX
 	if (unlikely(inode_init_always(sb, inode))) {
 		if (inode->i_sb->s_op->destroy_inode)
 			inode->i_sb->s_op->destroy_inode(inode);
@@ -465,9 +563,16 @@ static unsigned long hash(struct super_block *sb, unsigned long hashval)
 	// tmp: (kmem_cache#25-oX (struct super_block)) ^ (0x9e370002) / 64
 
 	// tmp: (kmem_cache#25-oX (struct super_block)) ^ (0x9e370002) / 64, GOLDEN_RATIO_PRIME: 0x9e370001, i_hash_shift : 16
-	// (kmem_cache#25-oX (struct super_block)) / 64 >> 16
 	tmp = tmp ^ ((tmp ^ GOLDEN_RATIO_PRIME) >> i_hash_shift);
+	// tmp: ((kmem_cache#25-oX (struct super_block)) ^ (0x9e370002) / 64) ^ ((kmem_cache#25-oX (struct super_block)) / 64 >> 16)
+
+	// FIXME:
+	// golden ratio를 이용한 위의 계산법에 대한 이해는 나중에 하는것으로 함
+
+	// tmp: ((kmem_cache#25-oX (struct super_block)) ^ (0x9e370002) / 64) ^ ((kmem_cache#25-oX (struct super_block)) / 64 >> 16),
+	// i_hash_mask: 0xFFFF
 	return tmp & i_hash_mask;
+	// return 계산된 hash index 값
 }
 
 /**
@@ -806,13 +911,23 @@ repeat:
  * find_inode_fast is the fast path version of find_inode, see the comment at
  * iget_locked for details.
  */
+// ARM10C 20151128
+// sb: kmem_cache#25-oX (struct super_block), head: 256KB의 메모리 공간 + 계산된 hash index 값, ino: 1
 static struct inode *find_inode_fast(struct super_block *sb,
 				struct hlist_head *head, unsigned long ino)
 {
 	struct inode *inode = NULL;
+	// inode: NULL
 
 repeat:
+	// inode: NULL, head: 256KB의 메모리 공간 + 계산된 hash index 값
 	hlist_for_each_entry(inode, head, i_hash) {
+	// for (inode = hlist_entry_safe((head)->first, typeof(*(inode)), i_hash);
+	//     inode; inode = hlist_entry_safe((inode)->i_hash.next, typeof(*(inode)), i_hash))
+
+		// hlist_entry_safe((256KB의 메모리 공간 + 계산된 hash index 값)->first, typeof(*(inode)), i_hash): NULL,
+		// inode: NULL
+
 		if (inode->i_ino != ino)
 			continue;
 		if (inode->i_sb != sb)
@@ -827,6 +942,7 @@ repeat:
 		return inode;
 	}
 	return NULL;
+	// return NULL
 }
 
 /*
@@ -1089,17 +1205,34 @@ struct inode *iget_locked(struct super_block *sb, unsigned long ino)
 {
 	// inode_hashtable: 256KB의 메모리 공간,
 	// sb: kmem_cache#25-oX (struct super_block), ino: (&sysfs_root)->s_ino: 1
+	// hash(kmem_cache#25-oX (struct super_block), 1): 계산된 hash index 값
 	struct hlist_head *head = inode_hashtable + hash(sb, ino);
+	// head: 256KB의 메모리 공간 + 계산된 hash index 값
+
 	struct inode *inode;
 
 	spin_lock(&inode_hash_lock);
+
+	// spin_lock에서 한일:
+	// inode_hash_lock을 이용한 spin lock 수행
+
+	// sb: kmem_cache#25-oX (struct super_block), head: 256KB의 메모리 공간 + 계산된 hash index 값, ino: 1
+	// find_inode_fast(kmem_cache#25-oX (struct super_block), 256KB의 메모리 공간 + 계산된 hash index 값, 1): NULL
 	inode = find_inode_fast(sb, head, ino);
+	// inode: NULL
+
 	spin_unlock(&inode_hash_lock);
+
+	// spin_unlock에서 한일:
+	// inode_hash_lock을 이용한 spin unlock 수행
+
+	// inode: NULL
 	if (inode) {
 		wait_on_inode(inode);
 		return inode;
 	}
 
+	// sb: kmem_cache#25-oX (struct super_block)
 	inode = alloc_inode(sb);
 	if (inode) {
 		struct inode *old;

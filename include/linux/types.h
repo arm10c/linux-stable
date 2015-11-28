@@ -50,6 +50,7 @@ typedef _Bool			bool;
 
 // ARM10C 20150919
 // ARM10C 20151003
+// ARM10C 20151128
 typedef __kernel_uid32_t	uid_t;
 // ARM10C 20151003
 typedef __kernel_gid32_t	gid_t;

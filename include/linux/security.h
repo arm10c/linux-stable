@@ -2078,6 +2078,8 @@ static inline int security_sb_parse_opts_str(char *options, struct security_mnt_
 	return 0;
 }
 
+// ARM10C 20151128
+// inode: kmem_cache#4-oX
 static inline int security_inode_alloc(struct inode *inode)
 {
 	return 0;

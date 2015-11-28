@@ -408,6 +408,7 @@ int pagecache_write_end(struct file *, struct address_space *mapping,
 
 struct backing_dev_info;
 // ARM10C 20151003
+// ARM10C 20151128
 // sizeof(struct address_space): 136 bytes
 struct address_space {
 	struct inode		*host;		/* owner: inode, block_device */
@@ -720,14 +721,22 @@ static inline gid_t i_gid_read(const struct inode *inode)
 	return from_kgid(&init_user_ns, inode->i_gid);
 }
 
+// ARM10C 20151128
+// inode: kmem_cache#4-oX, 0
 static inline void i_uid_write(struct inode *inode, uid_t uid)
 {
+	// inode->i_uid: (kmem_cache#4-oX)->i_uid, uid: 0, make_kuid(&init_user_ns, 0): 0
 	inode->i_uid = make_kuid(&init_user_ns, uid);
+	// inode->i_uid: (kmem_cache#4-oX)->i_uid: 0
 }
 
+// ARM10C 20151128
+// inode: kmem_cache#4-oX, 0
 static inline void i_gid_write(struct inode *inode, gid_t gid)
 {
+	// inode->i_gid: (kmem_cache#4-oX)->i_gid, gid: 0, make_kuid(&init_user_ns, 0): 0
 	inode->i_gid = make_kgid(&init_user_ns, gid);
+	// inode->i_gid: (kmem_cache#4-oX)->i_gid: 0
 }
 
 static inline unsigned iminor(const struct inode *inode)
@@ -1548,6 +1557,7 @@ struct block_device_operations;
 #define HAVE_UNLOCKED_IOCTL 1
 
 // ARM10C 20151003
+// ARM10C 20151128
 struct file_operations {
 	struct module *owner;
 	loff_t (*llseek) (struct file *, loff_t, int);
@@ -1580,6 +1590,7 @@ struct file_operations {
 };
 
 // ARM10C 20151003
+// ARM10C 20151128
 struct inode_operations {
 	struct dentry * (*lookup) (struct inode *,struct dentry *, unsigned int);
 	void * (*follow_link) (struct dentry *, struct nameidata *);
@@ -1627,6 +1638,7 @@ extern ssize_t vfs_writev(struct file *, const struct iovec __user *,
 
 // ARM10C 20151114
 // ARM10C 20151121
+// ARM10C 20151128
 struct super_operations {
    	struct inode *(*alloc_inode)(struct super_block *sb);
 	void (*destroy_inode)(struct inode *);

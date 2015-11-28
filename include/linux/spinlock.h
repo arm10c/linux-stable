@@ -375,6 +375,8 @@ do {							\
 // &sb_lock
 // ARM10C 20151114
 // &unnamed_dev_lock
+// ARM10C 20151128
+// &inode_hash_lock
 static inline void spin_lock(spinlock_t *lock)
 {
 	// lock->rlock: (&contig_page_data->node_zones[0].lock)->rlock

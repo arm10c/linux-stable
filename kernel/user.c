@@ -22,6 +22,7 @@
  * userns count is 1 for root user, 1 for init_uts_ns,
  * and 1 for... ?
  */
+// ARM10C 20151128
 struct user_namespace init_user_ns = {
 	.uid_map = {
 		.nr_extents = 1,

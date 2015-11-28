@@ -51,6 +51,10 @@
 // &init_css_set.refcount, 1
 // ARM10C 20151114
 // &s->s_active: &(kmem_cache#25-oX (struct super_block))->s_active, 1
+// ARM10C 20151128
+// &inode->i_count: &(kmem_cache#4-oX)->i_count, 1
+// ARM10C 20151128
+// &inode->i_writecount: &(kmem_cache#4-oX)->i_writecount, 0
 #define atomic_set(v,i)	(((v)->counter) = (i))
 
 #if __LINUX_ARM_ARCH__ >= 6

@@ -359,6 +359,7 @@ struct inode *sysfs_get_inode(struct super_block *sb, struct sysfs_dirent *sd)
 	struct inode *inode;
 
 // 2015/11/21 종료
+// 2015/11/28 시작
 
 	// sb: kmem_cache#25-oX (struct super_block), sd->s_ino: (&sysfs_root)->s_ino: 1
 	inode = iget_locked(sb, sd->s_ino);
