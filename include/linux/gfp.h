@@ -220,6 +220,7 @@ struct vm_area_struct;
 #define __GFP_BITS_SHIFT 25	/* Room for N __GFP_FOO bits */
 // ARM10C 20140426
 // ARM10C 20141004
+// ARM10C 20151205
 // __GFP_BITS_SHIFT: 25
 // __GFP_BITS_MASK: 0x1ffffff
 #define __GFP_BITS_MASK ((__force gfp_t)((1 << __GFP_BITS_SHIFT) - 1))
@@ -290,6 +291,7 @@ struct vm_area_struct;
 #define GFP_HIGHUSER	(__GFP_WAIT | __GFP_IO | __GFP_FS | __GFP_HARDWALL | \
 			 __GFP_HIGHMEM)
 // ARM10C 20140308
+// ARM10C 20151205
 // __GFP_WAIT: 0x10
 // __GFP_IO: 0x40
 // __GFP_FS: 0x80

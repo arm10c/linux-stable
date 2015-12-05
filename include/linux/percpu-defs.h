@@ -174,6 +174,9 @@
 //	__attribute__((section(".data..percpu" "")))
 //	__typeof__(struct tvec_base *) tvec_bases
 // ARM10C 20150912
+// DEFINE_PER_CPU(unsigned long, nr_inodes):
+//	__attribute__((section(".data..percpu" "")))
+//	__typeof__(unsigned long) nr_inodes
 #define DEFINE_PER_CPU(type, name)					\
 	DEFINE_PER_CPU_SECTION(type, name, "")
 

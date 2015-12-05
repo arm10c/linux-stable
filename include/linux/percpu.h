@@ -505,7 +505,7 @@ extern void __bad_size_call_parameter(void);
 // ARM10C 20151107
 // mnt->mnt_pcp->mnt_count: (kmem_cache#2-oX (struct mount))->mnt_pcp->mnt_count, 1
 //
-// #define __pcpu_size_call(this_cpu_add_, variable,1 
+// #define __pcpu_size_call(this_cpu_add_, variable,1):
 // do {
 // 	__verify_pcpu_ptr(&(variable));
 // 	switch(sizeof(mnt->mnt_pcp->mnt_count)) {
@@ -513,6 +513,21 @@ extern void __bad_size_call_parameter(void);
 // 		case 2: this_cpu_add_2(mnt->mnt_pcp->mnt_count, 1);break;
 // 		case 4: this_cpu_add_4(mnt->mnt_pcp->mnt_count, 1);break;
 // 		case 8: this_cpu_add_8(mnt->mnt_pcp->mnt_count, 1);break;
+// 		default:
+// 			__bad_size_call_parameter();break;
+// 	}
+// } while (0)
+// ARM10C 20151205
+// this_cpu_add_, nr_inodes, 1
+//
+// #define __pcpu_size_call(this_cpu_add_, nr_inodes,1):
+// do {
+// 	__verify_pcpu_ptr(&(nr_inodes));
+// 	switch(sizeof(nr_inodes)) {
+// 		case 1: this_cpu_add_1(nr_inodes, 1);break;
+// 		case 2: this_cpu_add_2(nr_inodes, 1);break;
+// 		case 4: this_cpu_add_4(nr_inodes, 1);break;
+// 		case 8: this_cpu_add_8(nr_inodes, 1);break;
 // 		default:
 // 			__bad_size_call_parameter();break;
 // 	}
@@ -580,6 +595,16 @@ do {									\
 # define this_cpu_read(pcp)	__pcpu_size_call_return(this_cpu_read_, (pcp))
 #endif
 
+// ARM10C 20151205
+// nr_inodes, 1, +=
+//
+// #define _this_cpu_generic_to_op(nr_inodes, 1, +=):
+// do {
+// 	unsigned long flags;
+// 	raw_local_irq_save(flags);
+// 	*__this_cpu_ptr(&(nr_inodes)) += 1;
+// 	raw_local_irq_restore(flags);
+// } while (0)
 #define _this_cpu_generic_to_op(pcp, val, op)				\
 do {									\
 	unsigned long flags;						\
@@ -612,6 +637,8 @@ do {									\
 #  define this_cpu_add_2(pcp, val)	_this_cpu_generic_to_op((pcp), (val), +=)
 # endif
 # ifndef this_cpu_add_4
+// ARM10C 20151205
+// nr_inodes, 1
 #  define this_cpu_add_4(pcp, val)	_this_cpu_generic_to_op((pcp), (val), +=)
 # endif
 # ifndef this_cpu_add_8
@@ -619,6 +646,8 @@ do {									\
 # endif
 // ARM10C 20151107
 // mnt->mnt_pcp->mnt_count: (kmem_cache#2-oX (struct mount))->mnt_pcp->mnt_count, 1
+// ARM10C 20151205
+// nr_inodes, 1
 # define this_cpu_add(pcp, val)		__pcpu_size_call(this_cpu_add_, (pcp), (val))
 #endif
 
@@ -627,6 +656,8 @@ do {									\
 #endif
 
 #ifndef this_cpu_inc
+// ARM10C 20151205
+// nr_inodes
 # define this_cpu_inc(pcp)		this_cpu_add((pcp), 1)
 #endif
 

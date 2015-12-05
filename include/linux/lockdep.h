@@ -419,6 +419,12 @@ static inline void lockdep_on(void)
 // ARM10C 20151114
 // &s->s_vfs_rename_mutex: &(kmem_cache#25-oX (struct super_block))->s_vfs_rename_mutex,
 // &type->s_vfs_rename_key: &(&sysfs_fs_type)->s_vfs_rename_key
+// ARM10C 20151205
+// &inode->i_lock: &(kmem_cache#4-oX)->i_lock,
+// &sb->s_type->i_lock_key: &(kmem_cache#25-oX (struct super_block))->s_type->i_lock_key
+// ARM10C 20151205
+// &inode->i_mutex: &(kmem_cache#4-oX)->i_mutex,
+// &sb->s_type->i_mutex_key: &(kmem_cache#25-oX (struct super_block))->s_type->i_mutex_key
 # define lockdep_set_class(lock, key)		do { (void)(key); } while (0)
 // ARM10C 20140111
 // ARM10C 20140927

@@ -916,6 +916,8 @@ static inline void list_splice_tail_init(struct list_head *list,
 // ((&mountpoint_hashtable[0])->first = NULL)
 // ARM10C 20151107
 // mnt->mnt_fsnotify_marks: (kmem_cache#2-oX (struct mount))->mnt_fsnotify_marks
+// ARM10C 20151205
+// &inode->i_dentry: &(kmem_cache#4-oX)->i_dentry
 #define INIT_HLIST_HEAD(ptr) ((ptr)->first = NULL)
 
 // ARM10C 20150808

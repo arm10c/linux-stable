@@ -108,6 +108,8 @@
 // &pl->lock: &(&(&sysfs_backing_dev_info)->completions)->lock
 // ARM10C 20151114
 // &sem->wait_lock: &(&(kmem_cache#25-oX (struct super_block))->s_umount)->wait_lock
+// ARM10C 20151205
+// &inode->i_lock: (&(kmem_cache#4-oX)->i_lock)->rlock
 # define raw_spin_lock_init(lock)				\
 do {								\
 	static struct lock_class_key __key;	/* struct lock_class_key { }; */	\
@@ -332,6 +334,8 @@ static inline void do_raw_spin_unlock(raw_spinlock_t *lock) __releases(lock)
 // ARM10C 20151031
 // DESC: 이 함수는 inline함수를 사용해서 인자가 spinlock_t*인지
 //       컴파일 타임에 확인하는 트릭을 사용하고 있다.
+// ARM10C 20151205
+// &inode->i_lock: &(kmem_cache#4-oX)->i_lock
 static inline raw_spinlock_t *spinlock_check(spinlock_t *lock)
 {
 	return &lock->rlock;
@@ -356,6 +360,8 @@ static inline raw_spinlock_t *spinlock_check(spinlock_t *lock)
 // &wb->list_lock: &(&(&sysfs_backing_dev_info)->wb)->list_lock
 // ARM10C 20151114
 // &lru->node[0].lock: (&(kmem_cache#25-oX (struct super_block))->s_dentry_lru)->node[0].lock
+// ARM10C 20151205
+// &inode->i_lock: &(kmem_cache#4-oX)->i_lock
 #define spin_lock_init(_lock)				\
 do {							\
 	spinlock_check(_lock);				\

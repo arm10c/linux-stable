@@ -21,6 +21,8 @@
 // &fbc->lock: &(&vm_committed_as)->lock, "&fbc->lock", &__key
 // ARM10C 20151114
 // &sem->wait_lock: &(&(kmem_cache#25-oX (struct super_block))->s_umount)->wait_lock, "&sem->wait_lock", &__key
+// ARM10C 20151205
+// &inode->i_lock: (&(kmem_cache#4-oX)->i_lock)->rlock, "(&inode->i_lock)->rlock, &__key
 void __raw_spin_lock_init(raw_spinlock_t *lock, const char *name,
 			  struct lock_class_key *key)
 {

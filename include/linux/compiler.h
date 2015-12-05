@@ -33,6 +33,7 @@ extern void __chk_io_ptr(const volatile void __iomem *);
 // ARM10C 20140322
 // ARM10C 20150606
 // ARM10C 20150808
+// ARM10C 20151205
 # define __force
 # define __nocast
 // ARM10C 20140215

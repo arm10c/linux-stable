@@ -65,6 +65,8 @@
 // &s->s_dquot.dqio_mutex: &(kmem_cache#25-oX (struct super_block))->s_dquot.dqio_mutex, "&s->s_dquot.dqio_mutex", &__key
 // ARM10C 20151114
 // &s->s_dquot.dqonoff_mutex: &(kmem_cache#25-oX (struct super_block))->s_dquot.dqonoff_mutex, "&s->s_dquot.dqonoff_mutex", &__key
+// ARM10C 20151205
+// &inode->i_mutex: &(kmem_cache#4-oX)->i_mutex, "&inode->i_mutex", &__key
 void
 __mutex_init(struct mutex *lock, const char *name, struct lock_class_key *key)
 {

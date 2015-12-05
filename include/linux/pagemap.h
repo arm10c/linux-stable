@@ -78,10 +78,14 @@ static inline gfp_t mapping_gfp_mask(struct address_space * mapping)
  * This is non-atomic.  Only to be used before the mapping is activated.
  * Probably needs a barrier...
  */
+// ARM10C 20151205
+// mapping: &(kmem_cache#4-oX)->i_data, GFP_HIGHUSER_MOVABLE: 0x200DA
 static inline void mapping_set_gfp_mask(struct address_space *m, gfp_t mask)
 {
+	// m->flags: (&(kmem_cache#4-oX)->i_data)->flags, __GFP_BITS_MASK: 0x1ffffff, mask: 0x200DA
 	m->flags = (m->flags & ~(__force unsigned long)__GFP_BITS_MASK) |
 				(__force unsigned long)mask;
+	// m->flags: (&(kmem_cache#4-oX)->i_data)->flags: 0x200DA
 }
 
 /*

@@ -263,6 +263,15 @@ extern unsigned long __per_cpu_offset[NR_CPUS];
 // })
 // ARM10C 20141206
 // ARM10C 20151031
+// ARM10C 20151205
+// *__this_cpu_ptr(&(nr_inodes)):
+// *({
+//  	do {
+// 	 	const void __percpu *__vpp_verify = (typeof((&(nr_inodes)))NULL;
+// 	 	(void)__vpp_verify;
+//  	} while (0)
+//  	&(nr_inodes) + __my_cpu_offset;
+// })
 #define __this_cpu_ptr(ptr) SHIFT_PERCPU_PTR(ptr, __my_cpu_offset)
 #endif
 #ifdef CONFIG_DEBUG_PREEMPT // CONFIG_DEBUG_PREEMPT=y
