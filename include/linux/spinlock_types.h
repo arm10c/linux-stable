@@ -343,6 +343,18 @@ typedef struct spinlock {
 //       .owner = 0xffffffff,
 //     }
 // } }
+// ARM10C 20151205
+// #define DEFINE_SPINLOCK(inode_sb_list_lock):
+// spinlock_t inode_sb_list_lock =
+// (spinlock_t )
+// { { .rlock =
+//     {
+//       .raw_lock = { { 0 } },
+//       .magic = 0xdead4ead,
+//       .owner_cpu = -1,
+//       .owner = 0xffffffff,
+//     }
+// } }
 #define DEFINE_SPINLOCK(x)	spinlock_t x = __SPIN_LOCK_UNLOCKED(x)
 
 #include <linux/rwlock_types.h>

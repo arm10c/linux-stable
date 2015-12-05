@@ -13,6 +13,7 @@
 /* Structure holding internal timekeeping values. */
 // ARM10C 20150103
 // ARM10C 20150418
+// ARM10C 20151205
 // sizeof(struct timekeeper): 128 bytes
 struct timekeeper {
 	/* Current clocksource used for timekeeping. */
@@ -75,6 +76,8 @@ struct timekeeper {
 };
 
 // ARM10C 20150103
+// tk: &timekeeper
+// ARM10C 20151205
 // tk: &timekeeper
 static inline struct timespec tk_xtime(struct timekeeper *tk)
 {

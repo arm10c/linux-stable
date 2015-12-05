@@ -38,10 +38,13 @@ static const struct super_operations sysfs_ops = {
 };
 
 // ARM10C 20151121
+// ARM10C 20151205
 struct sysfs_dirent sysfs_root = {
 	.s_name		= "",
 	.s_count	= ATOMIC_INIT(1),
+	// SYSFS_DIR: 0x0001, KOBJ_NS_TYPE_NONE: 0, SYSFS_NS_TYPE_SHIFT: 8
 	.s_flags	= SYSFS_DIR | (KOBJ_NS_TYPE_NONE << SYSFS_NS_TYPE_SHIFT),
+	// S_IFDIR: 0040000, S_IRUGO: 00444, S_IXUGO: 00111
 	.s_mode		= S_IFDIR | S_IRUGO | S_IXUGO,
 	.s_ino		= 1,
 };
@@ -512,9 +515,17 @@ out_err:
 }
 
 #undef sysfs_get
+// ARM10C 20151205
+// sd: &sysfs_root
 struct sysfs_dirent *sysfs_get(struct sysfs_dirent *sd)
 {
+	// sd: &sysfs_root
+	// __sysfs_get(&sysfs_root): 2
 	return __sysfs_get(sd);
+	// return 2
+
+	// __sysfs_get에서 한일:
+	// (&sysfs_root)->s_count: 2
 }
 EXPORT_SYMBOL_GPL(sysfs_get);
 

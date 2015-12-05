@@ -531,6 +531,7 @@ struct posix_acl;
  */
 // ARM10C 20151003
 // ARM10C 20151121
+// ARM10C 20151205
 // sizeof(struct inode): 394 bytes
 struct inode {
 	umode_t			i_mode;
@@ -1781,7 +1782,12 @@ struct super_operations {
 #define I_DIRTY_SYNC		(1 << 0)
 #define I_DIRTY_DATASYNC	(1 << 1)
 #define I_DIRTY_PAGES		(1 << 2)
+// ARM10C 20151205
+// __I_NEW: 3
 #define __I_NEW			3
+// ARM10C 20151205
+// __I_NEW: 3
+// I_NEW: 0x8
 #define I_NEW			(1 << __I_NEW)
 #define I_WILL_FREE		(1 << 4)
 #define I_FREEING		(1 << 5)

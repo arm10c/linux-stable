@@ -33,11 +33,13 @@
 
 // ARM10C 20150103
 // ARM10C 20150418
+// ARM10C 20151205
 static struct timekeeper timekeeper;
 // ARM10C 20150103
 static DEFINE_RAW_SPINLOCK(timekeeper_lock);
 // ARM10C 20150103
 // ARM10C 20150418
+// ARM10C 20151205
 static seqcount_t timekeeper_seq;
 // ARM10C 20150103
 static struct timekeeper shadow_timekeeper;
@@ -1834,19 +1836,30 @@ struct timespec __current_kernel_time(void)
 	return tk_xtime(tk);
 }
 
+// ARM10C 20151205
 struct timespec current_kernel_time(void)
 {
 	struct timekeeper *tk = &timekeeper;
+	// tk: &timekeeper
+
 	struct timespec now;
 	unsigned long seq;
 
 	do {
+		// read_seqcount_begin(&timekeeper_seq): 2
 		seq = read_seqcount_begin(&timekeeper_seq);
+		// seq: 2
 
+		// tk: &timekeeper, tk_xtime(&timekeeper): 현재시간값
 		now = tk_xtime(tk);
+		// now: 현재시간값
+
+		// seq: 2, read_seqcount_retry(&timekeeper_seq, 2): 0
 	} while (read_seqcount_retry(&timekeeper_seq, seq));
 
+	// now: 현재시간값
 	return now;
+	// return 현재시간값
 }
 EXPORT_SYMBOL(current_kernel_time);
 

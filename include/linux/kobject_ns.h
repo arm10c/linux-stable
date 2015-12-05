@@ -25,6 +25,7 @@ struct kobject;
  * Network namespace will likely be the first.
  */
 // ARM10C 20151114
+// ARM10C 20151205
 enum kobj_ns_type {
 	// KOBJ_NS_TYPE_NONE: 0
 	KOBJ_NS_TYPE_NONE = 0,

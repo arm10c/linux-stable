@@ -116,6 +116,7 @@ __ATTRIBUTE_GROUPS(_name)
 struct file;
 struct vm_area_struct;
 
+// ARM10C 20151205
 struct bin_attribute {
 	struct attribute	attr;
 	size_t			size;
@@ -248,6 +249,7 @@ void sysfs_notify_dirent(struct sysfs_dirent *sd);
 struct sysfs_dirent *sysfs_get_dirent_ns(struct sysfs_dirent *parent_sd,
 					 const unsigned char *name,
 					 const void *ns);
+// ARM10C 20151205
 struct sysfs_dirent *sysfs_get(struct sysfs_dirent *sd);
 void sysfs_put(struct sysfs_dirent *sd);
 

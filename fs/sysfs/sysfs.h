@@ -42,6 +42,7 @@ struct sysfs_elem_attr {
 	struct sysfs_open_dirent *open;
 };
 
+// ARM10C 20151205
 struct sysfs_inode_attrs {
 	struct iattr	ia_iattr;
 	void		*ia_secdata;
@@ -91,7 +92,11 @@ struct sysfs_dirent {
 
 #define SD_DEACTIVATED_BIAS		INT_MIN
 
+// ARM10C 20151205
+// SYSFS_TYPE_MASK: 0x00ff
 #define SYSFS_TYPE_MASK			0x00ff
+// ARM10C 20151205
+// SYSFS_DIR: 0x0001
 #define SYSFS_DIR			0x0001
 #define SYSFS_KOBJ_ATTR			0x0002
 #define SYSFS_KOBJ_BIN_ATTR		0x0004
@@ -101,14 +106,20 @@ struct sysfs_dirent {
 
 /* identify any namespace tag on sysfs_dirents */
 #define SYSFS_NS_TYPE_MASK		0xf00
+// ARM10C 20151205
+// SYSFS_NS_TYPE_SHIFT: 8
 #define SYSFS_NS_TYPE_SHIFT		8
 
 #define SYSFS_FLAG_MASK			~(SYSFS_NS_TYPE_MASK|SYSFS_TYPE_MASK)
 #define SYSFS_FLAG_REMOVED		0x02000
 
+// ARM10C 20151205
+// sd: &sysfs_root
 static inline unsigned int sysfs_type(struct sysfs_dirent *sd)
 {
+	// sd->s_flags: (&sysfs_root)->s_flags: 0x1, SYSFS_TYPE_MASK: 0x00ff
 	return sd->s_flags & SYSFS_TYPE_MASK;
+	// return 0x1
 }
 
 /*
@@ -214,13 +225,25 @@ int sysfs_create_subdir(struct kobject *kobj, const char *name,
 int sysfs_rename(struct sysfs_dirent *sd, struct sysfs_dirent *new_parent_sd,
 		 const char *new_name, const void *new_ns);
 
+// ARM10C 20151205
+// sd: &sysfs_root
 static inline struct sysfs_dirent *__sysfs_get(struct sysfs_dirent *sd)
 {
+	// sd: &sysfs_root
 	if (sd) {
+		// &sd->s_count: &(&sysfs_root)->s_count, atomic_read(&(&sysfs_root)->s_count): 1
 		WARN_ON(!atomic_read(&sd->s_count));
+
+		// &sd->s_count: &(&sysfs_root)->s_count
 		atomic_inc(&sd->s_count);
+
+		// atomic_inc에서 한일:
+		// (&sysfs_root)->s_count: 2
 	}
+
+	// sd: &sysfs_root
 	return sd;
+	// return &sysfs_root
 }
 #define sysfs_get(sd) __sysfs_get(sd)
 

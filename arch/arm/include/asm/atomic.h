@@ -23,6 +23,7 @@
 // ARM10C 20140809
 // ARM10C 20150808
 // ARM10C 20150912
+// ARM10C 20151205
 #define ATOMIC_INIT(i)	{ (i) }
 
 #ifdef __KERNEL__
@@ -35,6 +36,8 @@
 // ARM10C 20140315
 // atomic_read(&(&cpu_add_remove_lock)->count): (*(volatile int *)&(&(&cpu_add_remove_lock)->count)->counter)
 // ARM10C 20140329
+// ARM10C 20151205
+// &sd->s_count: &(&sysfs_root)->s_count
 #define atomic_read(v)	(*(volatile int *)&(v)->counter)
 // ARM10C 20140118
 // ARM10C 20140322
@@ -247,6 +250,8 @@ static inline int __atomic_add_unless(atomic_t *v, int a, int u)
 	return c;
 }
 
+// ARM10C 20151205
+// &sd->s_count: &(&sysfs_root)->s_count
 #define atomic_inc(v)		atomic_add(1, v)
 // ARM10C 20150912
 #define atomic_dec(v)		atomic_sub(1, v)

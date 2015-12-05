@@ -60,6 +60,7 @@ static unsigned int i_hash_shift __read_mostly;
 // ARM10C 20151121
 static struct hlist_head *inode_hashtable __read_mostly;
 // ARM10C 20151128
+// ARM10C 20151205
 // #define DEFINE_SPINLOCK(inode_hash_lock):
 // spinlock_t unnamed_dev_lock =
 // (spinlock_t )
@@ -73,6 +74,18 @@ static struct hlist_head *inode_hashtable __read_mostly;
 // } }
 static __cacheline_aligned_in_smp DEFINE_SPINLOCK(inode_hash_lock);
 
+// ARM10C 20151205
+// #define DEFINE_SPINLOCK(inode_sb_list_lock):
+// spinlock_t inode_sb_list_lock =
+// (spinlock_t )
+// { { .rlock =
+//     {
+//       .raw_lock = { { 0 } },
+//       .magic = 0xdead4ead,
+//       .owner_cpu = -1,
+//       .owner = 0xffffffff,
+//     }
+// } }
 __cacheline_aligned_in_smp DEFINE_SPINLOCK(inode_sb_list_lock);
 
 /*
@@ -675,11 +688,26 @@ static void inode_lru_list_del(struct inode *inode)
  * inode_sb_list_add - add inode to the superblock list of inodes
  * @inode: inode to add
  */
+// ARM10C 20151205
+// inode: kmem_cache#4-oX
 void inode_sb_list_add(struct inode *inode)
 {
 	spin_lock(&inode_sb_list_lock);
+
+	// spin_lock에서 한일:
+	// &inode_sb_list_lock을 이용한 spin lock 수행
+
+	// &inode->i_sb_list: &(kmem_cache#4-oX)->i_sb_list,
+	// &inode->i_sb->s_inodes: &(kmem_cache#4-oX)->i_sb->s_inodes
 	list_add(&inode->i_sb_list, &inode->i_sb->s_inodes);
+
+	// list_add에서 한일:
+	// head list인 &(kmem_cache#4-oX)->i_sb->s_inodes에 &(kmem_cache#4-oX)->i_sb_list를 추가함
+
 	spin_unlock(&inode_sb_list_lock);
+
+	// spin_unlock에서 한일:
+	// &inode_sb_list_lock을 이용한 spin unlock 수행
 }
 EXPORT_SYMBOL_GPL(inode_sb_list_add);
 
@@ -1054,6 +1082,8 @@ repeat:
  */
 // ARM10C 20151128
 // sb: kmem_cache#25-oX (struct super_block), head: 256KB의 메모리 공간 + 계산된 hash index 값, ino: 1
+// ARM10C 20151205
+// sb: kmem_cache#25-oX (struct super_block), head: 256KB의 메모리 공간 + 계산된 hash index 값, ino: 1
 static struct inode *find_inode_fast(struct super_block *sb,
 				struct hlist_head *head, unsigned long ino)
 {
@@ -1379,6 +1409,8 @@ struct inode *iget_locked(struct super_block *sb, unsigned long ino)
 	// inode: kmem_cache#4-oX
 
 	// alloc_inode에서 한일:
+	// inode용 kmem_cache인 inode_cachep: kmem_cache#4 를 사용하여 inode를 위한 메모리 kmem_cache#4-oX 할당 받음
+	//
 	// (kmem_cache#4-oX)->i_sb: kmem_cache#25-oX (struct super_block)
 	// (kmem_cache#4-oX)->i_blkbits: 12
 	// (kmem_cache#4-oX)->i_flags: 0
@@ -1440,21 +1472,63 @@ struct inode *iget_locked(struct super_block *sb, unsigned long ino)
 		struct inode *old;
 
 		spin_lock(&inode_hash_lock);
+
+		// spin_lock에서 한일:
+		// &inode_hash_lock을 이용한 spin lock 수행
+
 		/* We released the lock, so.. */
+		// sb: kmem_cache#25-oX (struct super_block), head: 256KB의 메모리 공간 + 계산된 hash index 값, ino: 1
+		// find_inode_fast(kmem_cache#25-oX (struct super_block), 256KB의 메모리 공간 + 계산된 hash index 값, 1): NULL
 		old = find_inode_fast(sb, head, ino);
+		// old: NULL
+
+		// old: NULL
 		if (!old) {
+			// inode->i_ino: (kmem_cache#4-oX)->i_ino, ino: 1
 			inode->i_ino = ino;
+			// inode->i_ino: (kmem_cache#4-oX)->i_ino: 1
+
+			// &inode->i_lock: &(kmem_cache#4-oX)->i_lock
 			spin_lock(&inode->i_lock);
+
+			// spin_lock에서 한일:
+			// &(kmem_cache#4-oX)->i_lock을 이용한 spin lock 수행
+
+			// inode->i_state: (kmem_cache#4-oX)->i_state, I_NEW: 0x8
 			inode->i_state = I_NEW;
+			// inode->i_state: (kmem_cache#4-oX)->i_state: 0x8
+
+			// &inode->i_hash: &(kmem_cache#4-oX)->i_hash, head: 256KB의 메모리 공간 + 계산된 hash index 값
 			hlist_add_head(&inode->i_hash, head);
+
+			// hlist_add_head에서 한일:
+			// (&(kmem_cache#4-oX)->i_hash)->next: NULL
+			// (256KB의 메모리 공간 + 계산된 hash index 값)->first: &(kmem_cache#4-oX)->i_hash
+			// (&(kmem_cache#4-oX)->i_hash)->pprev: &(&(kmem_cache#4-oX)->i_hash)
+
+			// &inode->i_lock: &(kmem_cache#4-oX)->i_lock
 			spin_unlock(&inode->i_lock);
+
+			// spin_unlock에서 한일:
+			// &(kmem_cache#4-oX)->i_lock을 이용한 spin unlock 수행
+
+			// inode: kmem_cache#4-oX
 			inode_sb_list_add(inode);
+
+			// inode_sb_list_add에서 한일:
+			// head list인 &(kmem_cache#4-oX)->i_sb->s_inodes에 &(kmem_cache#4-oX)->i_sb_list를 추가함
+
 			spin_unlock(&inode_hash_lock);
+
+			// spin_unlock에서 한일:
+			// &inode_hash_lock을 이용한 spin unlock 수행
 
 			/* Return the locked inode with I_NEW set, the
 			 * caller is responsible for filling in the contents
 			 */
+			// inode: kmem_cache#4-oX
 			return inode;
+			// return kmem_cache#4-oX
 		}
 
 		/*

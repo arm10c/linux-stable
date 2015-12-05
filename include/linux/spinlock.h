@@ -383,6 +383,8 @@ do {							\
 // &unnamed_dev_lock
 // ARM10C 20151128
 // &inode_hash_lock
+// ARM10C 20151205
+// &inode->i_lock: &(kmem_cache#4-oX)->i_lock
 static inline void spin_lock(spinlock_t *lock)
 {
 	// lock->rlock: (&contig_page_data->node_zones[0].lock)->rlock

@@ -178,6 +178,8 @@ static inline unsigned raw_read_seqcount_begin(const seqcount_t *s)
  */
 // ARM10C 20150418
 // &timekeeper_seq
+// ARM10C 20151205
+// &timekeeper_seq
 static inline unsigned read_seqcount_begin(const seqcount_t *s)
 {
 	// s: &timekeeper_seq
@@ -251,6 +253,8 @@ static inline int __read_seqcount_retry(const seqcount_t *s, unsigned start)
 // ARM10C 20140913
 // &cd.seq, seq: 0
 // ARM10C 20150418
+// &timekeeper_seq, seq: 2
+// ARM10C 20151205
 // &timekeeper_seq, seq: 2
 static inline int read_seqcount_retry(const seqcount_t *s, unsigned start)
 {

@@ -216,6 +216,9 @@ extern void __list_add(struct list_head *new,
 // &ss->sibling: &(&cpuacct_subsys)->sibling, &cgroup_dummy_root.subsys_list
 // ARM10C 20150919
 // &fbc->list: &(&vm_committed_as)->list
+// ARM10C 20151205
+// &inode->i_sb_list: &(kmem_cache#4-oX)->i_sb_list,
+// &inode->i_sb->s_inodes: &(kmem_cache#4-oX)->i_sb->s_inodes
 static inline void list_add(struct list_head *new, struct list_head *head)
 {
 	__list_add(new, head, head->next);
@@ -1011,6 +1014,8 @@ static inline void hlist_del_init(struct hlist_node *n)
 // &clk->child_node: &(kmem_cache#29-oX (sclk_apll))->child_node, &clk->parent->children: (&kmem_cache#29-oX (mout_apll))->children
 // ARM10C 20151114
 // [re] &s->s_instances: &(kmem_cache#25-oX (struct super_block))->s_instances, &type->fs_supers: &(&sysfs_fs_type)->fs_supers
+// ARM10C 20151205
+// &inode->i_hash: &(kmem_cache#4-oX)->i_hash, head: 256KB의 메모리 공간 + 계산된 hash index 값
 static inline void hlist_add_head(struct hlist_node *n, struct hlist_head *h)
 {
 	// h->first: (&clk_root_list)->first: NULL
