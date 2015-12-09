@@ -1,4 +1,4 @@
-# Kernel study a10c(ARM)
+# Kernel study a10c(ARM) test
 
 ##### The Linux Kernel review for ARMv7 3.13.0 (exynos 5420)
 ##### Community name: kernel study a10th C team
