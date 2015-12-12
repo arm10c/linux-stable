@@ -374,6 +374,7 @@ enum zone_type {
 // sizeof(struct zone): 804 bytes
 // ARM10C 20140308
 // ARM10C 20150912
+// ARM10C 20151212
 struct zone {
 	/* Fields commonly accessed by the page allocator */
 

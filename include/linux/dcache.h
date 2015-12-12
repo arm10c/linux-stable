@@ -45,6 +45,7 @@ struct vfsmount;
  * dentry.
  */
 // ARM10C 20151003
+// ARM10C 20151212
 // sizeof(struct qstr): 12 bytes
 struct qstr {
 	union {
@@ -57,6 +58,9 @@ struct qstr {
 	const unsigned char *name;
 };
 
+// ARM10C 20151212
+// #define QSTR_INIT("/", 1):
+// { { { .len = 1 } }, .name = "/" }
 #define QSTR_INIT(n,l) { { { .len = l } }, .name = n }
 #define hashlen_hash(hashlen) ((u32) (hashlen))
 #define hashlen_len(hashlen)  ((u32)((hashlen) >> 32))
@@ -103,6 +107,7 @@ extern unsigned int full_name_hash(const unsigned char *, unsigned int);
 #else
 # ifdef CONFIG_SMP // CONFIG_SMP=y
 // ARM10C 20151003
+// ARM10C 20151212
 // DNAME_INLINE_LEN: 36
 #  define DNAME_INLINE_LEN 36 /* 128 bytes */
 # else
@@ -116,6 +121,7 @@ extern unsigned int full_name_hash(const unsigned char *, unsigned int);
 // ARM10C 20151031
 // ARM10C 20151114
 // ARM10C 20151121
+// ARM10C 20151212
 // sizeof(struct dentry): 140 bytes
 struct dentry {
 	/* RCU lookup touched fields */

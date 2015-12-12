@@ -1562,6 +1562,7 @@ struct block_device_operations;
 
 // ARM10C 20151003
 // ARM10C 20151128
+// ARM10C 20151212
 struct file_operations {
 	struct module *owner;
 	loff_t (*llseek) (struct file *, loff_t, int);
@@ -1595,6 +1596,7 @@ struct file_operations {
 
 // ARM10C 20151003
 // ARM10C 20151128
+// ARM10C 20151212
 struct inode_operations {
 	struct dentry * (*lookup) (struct inode *,struct dentry *, unsigned int);
 	void * (*follow_link) (struct dentry *, struct nameidata *);
@@ -1783,9 +1785,11 @@ struct super_operations {
 #define I_DIRTY_DATASYNC	(1 << 1)
 #define I_DIRTY_PAGES		(1 << 2)
 // ARM10C 20151205
+// ARM10C 20151212
 // __I_NEW: 3
 #define __I_NEW			3
 // ARM10C 20151205
+// ARM10C 20151212
 // __I_NEW: 3
 // I_NEW: 0x8
 #define I_NEW			(1 << __I_NEW)
@@ -2473,9 +2477,10 @@ extern struct inode * iget5_locked(struct super_block *, unsigned long, int (*te
 extern struct inode * iget_locked(struct super_block *, unsigned long);
 extern int insert_inode_locked4(struct inode *, unsigned long, int (*test)(struct inode *, void *), void *);
 extern int insert_inode_locked(struct inode *);
-#ifdef CONFIG_DEBUG_LOCK_ALLOC
+#ifdef CONFIG_DEBUG_LOCK_ALLOC // CONFIG_DEBUG_LOCK_ALLOC=n
 extern void lockdep_annotate_inode_mutex_key(struct inode *inode);
 #else
+// ARM10C 20151212
 static inline void lockdep_annotate_inode_mutex_key(struct inode *inode) { };
 #endif
 extern void unlock_new_inode(struct inode *);

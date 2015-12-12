@@ -430,6 +430,8 @@ static inline __deprecated void *bus_to_virt(unsigned long x)
 // x: kmem_cache#30-o11
 // ARM10C 20151024
 // addr: migratetype이 MIGRATE_UNMOVABLE인 order 2의 page의 가상주소
+// ARM10C 20151212
+// word: &(kmem_cache#4-oX)->i_state
 */
 #define virt_to_page(kaddr)	pfn_to_page(__pa(kaddr) >> PAGE_SHIFT)
 #define virt_addr_valid(kaddr)	(((unsigned long)(kaddr) >= PAGE_OFFSET && (unsigned long)(kaddr) < (unsigned long)high_memory) \

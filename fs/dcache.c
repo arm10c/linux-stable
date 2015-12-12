@@ -87,6 +87,7 @@ __cacheline_aligned_in_smp DEFINE_SEQLOCK(rename_lock);
 EXPORT_SYMBOL(rename_lock);
 
 // ARM10C 20151003
+// ARM10C 20151212
 static struct kmem_cache *dentry_cache __read_mostly;
 
 /*
@@ -1480,13 +1481,19 @@ EXPORT_SYMBOL(check_submounts_and_drop);
  * available. On a success the dentry is returned. The name passed in is
  * copied and the copy passed in may be reused after this call.
  */
- 
+// ARM10C 20151212
+// root_inode->i_sb: (kmem_cache#4-oX)->i_sb: kmem_cache#25-oX (struct super_block), &name
 struct dentry *__d_alloc(struct super_block *sb, const struct qstr *name)
 {
 	struct dentry *dentry;
 	char *dname;
 
+	// dentry_cache: kmem_cache#5, GFP_KERNEL: 0xD0
+	// kmem_cache_alloc(kmem_cache#5, GFP_KERNEL: 0xD0): kmem_cache#5-oX
 	dentry = kmem_cache_alloc(dentry_cache, GFP_KERNEL);
+	// dentry: kmem_cache#5-oX
+
+	// dentry: kmem_cache#5-oX
 	if (!dentry)
 		return NULL;
 
@@ -1496,7 +1503,11 @@ struct dentry *__d_alloc(struct super_block *sb, const struct qstr *name)
 	 * will still always have a NUL at the end, even if we might
 	 * be overwriting an internal NUL character
 	 */
+	// DNAME_INLINE_LEN: 36, dentry->d_iname: (kmem_cache#5-oX)->d_iname[35]
 	dentry->d_iname[DNAME_INLINE_LEN-1] = 0;
+	// dentry->d_iname: (kmem_cache#5-oX)->d_iname[35]: 0
+
+	// name->len: (&name)->len: 1, DNAME_INLINE_LEN: 36
 	if (name->len > DNAME_INLINE_LEN-1) {
 		dname = kmalloc(name->len + 1, GFP_KERNEL);
 		if (!dname) {
@@ -1504,13 +1515,30 @@ struct dentry *__d_alloc(struct super_block *sb, const struct qstr *name)
 			return NULL;
 		}
 	} else  {
+		// dentry->d_iname: (kmem_cache#5-oX)->d_iname
 		dname = dentry->d_iname;
+		// dname: (kmem_cache#5-oX)->d_iname
 	}	
 
+	// dentry->d_name.len: (kmem_cache#5-oX)->d_name.len, name->len: (&name)->len: 1
 	dentry->d_name.len = name->len;
+	// dentry->d_name.len: (kmem_cache#5-oX)->d_name.len: 1
+
+	// dentry->d_name.hash: (kmem_cache#5-oX)->d_name.hash, name->hash: (&name)->hash: 0
 	dentry->d_name.hash = name->hash;
+	// dentry->d_name.hash: (kmem_cache#5-oX)->d_name.hash: (&name)->hash: 0
+
+	// dname: (kmem_cache#5-oX)->d_iname, name->name: (&name)->name: "/", name->len: (&name)->len: 1
 	memcpy(dname, name->name, name->len);
+
+	// memcpy에서 한일:
+	// dname: (kmem_cache#5-oX)->d_iname: "/"
+
+	// name->len: (&name)->len: 1, dname[1]: (kmem_cache#5-oX)->d_iname[1]
 	dname[name->len] = 0;
+	// dname[1]: (kmem_cache#5-oX)->d_iname[1]: 0
+
+// 2015/12/12 종료
 
 	/* Make sure we always see the terminating NUL character */
 	smp_wmb();
@@ -1789,13 +1817,23 @@ int d_instantiate_no_diralias(struct dentry *entry, struct inode *inode)
 }
 EXPORT_SYMBOL(d_instantiate_no_diralias);
 
+// ARM10C 20151212
+// inode: kmem_cache#4-oX
 struct dentry *d_make_root(struct inode *root_inode)
 {
 	struct dentry *res = NULL;
+	// res: NULL
 
+	// root_inode: kmem_cache#4-oX
 	if (root_inode) {
+		// QSTR_INIT("/", 1): { { { .len = 1 } }, .name = "/" }
 		static const struct qstr name = QSTR_INIT("/", 1);
 
+		// QSTR_INIT에서 한일:
+		// name.name: "/"
+		// name.len: 1
+
+		// root_inode->i_sb: (kmem_cache#4-oX)->i_sb: kmem_cache#25-oX (struct super_block)
 		res = __d_alloc(root_inode->i_sb, &name);
 		if (res)
 			d_instantiate(res, root_inode);

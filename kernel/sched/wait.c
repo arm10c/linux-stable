@@ -407,9 +407,22 @@ int __sched out_of_line_wait_on_bit_lock(void *word, int bit,
 }
 EXPORT_SYMBOL(out_of_line_wait_on_bit_lock);
 
+// ARM10C 20151212
+// bit_waitqueue(&(kmem_cache#4-oX)->i_state, 3): &(&(kmem_cache#4-oX)->i_state의 zone의 주소)->wait_table[계산된 hash index 값],
+// word: &(kmem_cache#4-oX)->i_state, bit: 3
 void __wake_up_bit(wait_queue_head_t *wq, void *word, int bit)
 {
+	// word: &(kmem_cache#4-oX)->i_state, bit: 3
+	// __WAIT_BIT_KEY_INITIALIZER(&(kmem_cache#4-oX)->i_state, 3):
+	// { .flags = &(kmem_cache#4-oX)->i_state, .bit_nr = 3, }
 	struct wait_bit_key key = __WAIT_BIT_KEY_INITIALIZER(word, bit);
+
+	// __WAIT_BIT_KEY_INITIALIZER에서 한읾:
+	// key.flags: &(kmem_cache#4-oX)->i_state
+	// key.bit_nr: 3
+
+	// wq: &(&(kmem_cache#4-oX)->i_state의 zone의 주소)->wait_table[계산된 hash index 값]
+	//i waitqueue_active(&(&(kmem_cache#4-oX)->i_state의 zone의 주소)->wait_table[계산된 hash index 값]): 0
 	if (waitqueue_active(wq))
 		__wake_up(wq, TASK_NORMAL, 1, &key);
 }
@@ -432,19 +445,41 @@ EXPORT_SYMBOL(__wake_up_bit);
  * may need to use a less regular barrier, such fs/inode.c's smp_mb(),
  * because spin_unlock() does not guarantee a memory barrier.
  */
+// ARM10C 20151212
+// &inode->i_state: &(kmem_cache#4-oX)->i_state: 0x0, __I_NEW: 3
 void wake_up_bit(void *word, int bit)
 {
+	// word: &(kmem_cache#4-oX)->i_state, bit: 3
+	// bit_waitqueue(&(kmem_cache#4-oX)->i_state, 3): &(&(kmem_cache#4-oX)->i_state의 zone의 주소)->wait_table[계산된 hash index 값]
 	__wake_up_bit(bit_waitqueue(word, bit), word, bit);
 }
 EXPORT_SYMBOL(wake_up_bit);
 
+// ARM10C 20151212
+// word: &(kmem_cache#4-oX)->i_state, bit: 3
 wait_queue_head_t *bit_waitqueue(void *word, int bit)
 {
+	// BITS_PER_LONG: 32
 	const int shift = BITS_PER_LONG == 32 ? 5 : 6;
-	const struct zone *zone = page_zone(virt_to_page(word));
-	unsigned long val = (unsigned long)word << shift | bit;
+	// shift: 5
 
+	// word: &(kmem_cache#4-oX)->i_state
+	// virt_to_page(&(kmem_cache#4-oX)->i_state): &(kmem_cache#4-oX)->i_state의 page 주소
+	// page_zone(&(kmem_cache#4-oX)->i_state의 page 주소): &(kmem_cache#4-oX)->i_state의 zone의 주소
+	const struct zone *zone = page_zone(virt_to_page(word));
+	// zone: &(kmem_cache#4-oX)->i_state의 zone의 주소
+
+	// word: &(kmem_cache#4-oX)->i_state, shift: 5, bit: 3
+	unsigned long val = (unsigned long)word << shift | bit;
+	// val: &(kmem_cache#4-oX)->i_state 값을 이용한 hash val 값
+
+	// val: &(kmem_cache#4-oX)->i_state 값을 이용한 hash val 값,
+	// zone->wait_table_bits: (&(kmem_cache#4-oX)->i_state의 zone의 주소)->wait_table_bits
+	// hash_long(&(kmem_cache#4-oX)->i_state 값을 이용한 hash val 값,
+	// (&(kmem_cache#4-oX)->i_state의 zone의 주소)->wait_table_bits): 계산된 hash index 값
+	// &zone->wait_table[계산된 hash index 값]: &(&(kmem_cache#4-oX)->i_state의 zone의 주소)->wait_table[계산된 hash index 값]
 	return &zone->wait_table[hash_long(val, zone->wait_table_bits)];
+	// return &(&(kmem_cache#4-oX)->i_state의 zone의 주소)->wait_table[계산된 hash index 값]
 }
 EXPORT_SYMBOL(bit_waitqueue);
 

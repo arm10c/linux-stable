@@ -568,16 +568,22 @@ EXPORT_SYMBOL(clear_nlink);
  * This is a low-level filesystem helper to replace any
  * direct filesystem manipulation of i_nlink.
  */
+// ARM10C 20151212
+// inode: kmem_cache#4-oX, 2
 void set_nlink(struct inode *inode, unsigned int nlink)
 {
+	// nlink: 2
 	if (!nlink) {
 		clear_nlink(inode);
 	} else {
 		/* Yes, some filesystems do change nlink from zero to one */
+		// inode->i_nlink: (kmem_cache#4-oX)->i_nlink: 1
 		if (inode->i_nlink == 0)
 			atomic_long_dec(&inode->i_sb->s_remove_count);
 
+		// inode->__i_nlink: (kmem_cache#4-oX)->__i_nlink: 1,  nlink: 2
 		inode->__i_nlink = nlink;
+		// inode->__i_nlink: (kmem_cache#4-oX)->__i_nlink: 2
 	}
 }
 EXPORT_SYMBOL(set_nlink);
@@ -1202,7 +1208,7 @@ struct inode *new_inode(struct super_block *sb)
 }
 EXPORT_SYMBOL(new_inode);
 
-#ifdef CONFIG_DEBUG_LOCK_ALLOC
+#ifdef CONFIG_DEBUG_LOCK_ALLOC // CONFIG_DEBUG_LOCK_ALLOC=n
 void lockdep_annotate_inode_mutex_key(struct inode *inode)
 {
 	if (S_ISDIR(inode->i_mode)) {
@@ -1230,15 +1236,39 @@ EXPORT_SYMBOL(lockdep_annotate_inode_mutex_key);
  * Called when the inode is fully initialised to clear the new state of the
  * inode and wake up anyone waiting for the inode to finish initialisation.
  */
+// ARM10C 20151212
+// inode: kmem_cache#4-oX
 void unlock_new_inode(struct inode *inode)
 {
-	lockdep_annotate_inode_mutex_key(inode);
+	// inode: kmem_cache#4-oX
+	lockdep_annotate_inode_mutex_key(inode); // null function
+
+	// &inode->i_lock: &(kmem_cache#4-oX)->i_lock
 	spin_lock(&inode->i_lock);
+
+	// spin_lock에서 한일:
+	// &(kmem_cache#4-oX)->i_lock을 이용한 spin lock 수행
+
+	// inode->i_state: (kmem_cache#4-oX)->i_state: 0x8, I_NEW: 0x8
 	WARN_ON(!(inode->i_state & I_NEW));
+
+	// inode->i_state: (kmem_cache#4-oX)->i_state: 0x8, I_NEW: 0x8
 	inode->i_state &= ~I_NEW;
+	// inode->i_state: (kmem_cache#4-oX)->i_state: 0x0
+
 	smp_mb();
+
+	// smp_mb에서 한일:
+	// memory barrier 수행 (공유자원을 다른 cpu core가 사용할 수 있게 해줌)
+
+	// &inode->i_state: &(kmem_cache#4-oX)->i_state: 0x0, __I_NEW: 3
 	wake_up_bit(&inode->i_state, __I_NEW);
+
+	// &inode->i_lock: &(kmem_cache#4-oX)->i_lock
 	spin_unlock(&inode->i_lock);
+
+	// spin_unlock에서 한일:
+	// &(kmem_cache#4-oX)->i_lock을 이용한 spin unlock 수행
 }
 EXPORT_SYMBOL(unlock_new_inode);
 

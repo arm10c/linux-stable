@@ -96,10 +96,17 @@ struct sysfs_dirent {
 // SYSFS_TYPE_MASK: 0x00ff
 #define SYSFS_TYPE_MASK			0x00ff
 // ARM10C 20151205
+// ARM10C 20151212
 // SYSFS_DIR: 0x0001
 #define SYSFS_DIR			0x0001
+// ARM10C 20151212
+// SYSFS_KOBJ_ATTR: 0x0002
 #define SYSFS_KOBJ_ATTR			0x0002
+// ARM10C 20151212
+// SYSFS_KOBJ_BIN_ATTR: 0x0004
 #define SYSFS_KOBJ_BIN_ATTR		0x0004
+// ARM10C 20151212
+// SYSFS_KOBJ_LINK: 0x0008
 #define SYSFS_KOBJ_LINK			0x0008
 #define SYSFS_COPY_NAME			(SYSFS_DIR | SYSFS_KOBJ_LINK)
 #define SYSFS_ACTIVE_REF		(SYSFS_KOBJ_ATTR | SYSFS_KOBJ_BIN_ATTR)
@@ -114,6 +121,8 @@ struct sysfs_dirent {
 #define SYSFS_FLAG_REMOVED		0x02000
 
 // ARM10C 20151205
+// sd: &sysfs_root
+// ARM10C 20151212
 // sd: &sysfs_root
 static inline unsigned int sysfs_type(struct sysfs_dirent *sd)
 {

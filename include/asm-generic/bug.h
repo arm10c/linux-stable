@@ -87,6 +87,7 @@ extern void warn_slowpath_null(const char *file, const int line);
 
 #ifndef WARN_ON
 // ARM10C 20131109
+// ARM10C 20151212
 #define WARN_ON(condition) ({						\
 	int __ret_warn_on = !!(condition);				\
 	if (unlikely(__ret_warn_on))					\

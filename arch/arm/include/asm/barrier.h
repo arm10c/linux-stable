@@ -64,6 +64,7 @@
 #else
 // ARM10C 20140125
 // ARM10C 20140621
+// ARM10C 20151212
 // A.R.M: A8.8.43 DMB
 // ISH option:
 // ISH Inner Shareable is the required shareability domain, reads and writes are the required

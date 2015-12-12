@@ -19,6 +19,7 @@
 
 /* 2^31 + 2^29 - 2^25 + 2^22 - 2^19 - 2^16 + 1 */
 // ARM10C 20151121
+// ARM10C 20151212
 // GOLDEN_RATIO_PRIME_32: 0x9e370001UL
 #define GOLDEN_RATIO_PRIME_32 0x9e370001UL
 /*  2^63 + 2^61 - 2^57 + 2^54 - 2^51 - 2^18 + 1 */
@@ -29,6 +30,9 @@
 // GOLDEN_RATIO_PRIME_32: 0x9e370001UL
 // GOLDEN_RATIO_PRIME: 0x9e370001UL
 #define GOLDEN_RATIO_PRIME GOLDEN_RATIO_PRIME_32
+// ARM10C 20151212
+// val: &(kmem_cache#4-oX)->i_state 값을 이용한 hash val 값,
+// zone->wait_table_bits: (&(kmem_cache#4-oX)->i_state의 zone의 주소)->wait_table_bits
 #define hash_long(val, bits) hash_32(val, bits)
 #elif BITS_PER_LONG == 64
 #define hash_long(val, bits) hash_64(val, bits)
@@ -60,13 +64,21 @@ static __always_inline u64 hash_64(u64 val, unsigned int bits)
 	return hash >> (64 - bits);
 }
 
+// ARM10C 20151212
+// val: &(kmem_cache#4-oX)->i_state 값을 이용한 hash val 값,
+// zone->wait_table_bits: (&(kmem_cache#4-oX)->i_state의 zone의 주소)->wait_table_bits
 static inline u32 hash_32(u32 val, unsigned int bits)
 {
 	/* On some cpus multiply is faster, on others gcc will do shifts */
+	// val: &(kmem_cache#4-oX)->i_state 값을 이용한 hash val 값, GOLDEN_RATIO_PRIME_32: 0x9e370001UL
 	u32 hash = val * GOLDEN_RATIO_PRIME_32;
+	// hash: &(kmem_cache#4-oX)->i_state 값을 이용한 hash val 값* 0x9e370001UL
 
 	/* High bits are more random, so use them. */
+	// hash: &(kmem_cache#4-oX)->i_state 값을 이용한 hash val 값* 0x9e370001UL,
+	// bits: (&(kmem_cache#4-oX)->i_state의 zone의 주소)->wait_table_bits
 	return hash >> (32 - bits);
+	// return 계산된 hash index 값
 }
 
 static inline unsigned long hash_ptr(const void *ptr, unsigned int bits)

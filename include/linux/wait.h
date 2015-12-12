@@ -21,6 +21,7 @@ struct __wait_queue {
 	struct list_head	task_list;
 };
 
+// ARM10C 20151212
 struct wait_bit_key {
 	void			*flags;
 	int			bit_nr;
@@ -70,6 +71,8 @@ struct task_struct;
 #define DECLARE_WAIT_QUEUE_HEAD(name) \
 	wait_queue_head_t name = __WAIT_QUEUE_HEAD_INITIALIZER(name)
 
+// ARM10C 20151212
+// word: &(kmem_cache#4-oX)->i_state, bit: 3
 #define __WAIT_BIT_KEY_INITIALIZER(word, bit)				\
 	{ .flags = word, .bit_nr = bit, }
 
@@ -128,9 +131,18 @@ init_waitqueue_func_entry(wait_queue_t *q, wait_queue_func_t func)
 	q->func		= func;
 }
 
+// ARM10C 20151212
+// wq: &(&(kmem_cache#4-oX)->i_state의 zone의 주소)->wait_table[계산된 hash index 값]
 static inline int waitqueue_active(wait_queue_head_t *q)
 {
+	// NOTE:
+	// &(&(&(kmem_cache#4-oX)->i_state의 zone의 주소)->wait_table[계산된 hash index 값])->task_list에
+	// 연결된 list 가 없는 것으로 가정하고 진행
+
+	// &q->task_list: &(&(&(kmem_cache#4-oX)->i_state의 zone의 주소)->wait_table[계산된 hash index 값])->task_list
+	// list_empty(&(&(&(kmem_cache#4-oX)->i_state의 zone의 주소)->wait_table[계산된 hash index 값])->task_list): 1
 	return !list_empty(&q->task_list);
+	// return 0
 }
 
 extern void add_wait_queue(wait_queue_head_t *q, wait_queue_t *wait);

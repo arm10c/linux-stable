@@ -816,6 +816,7 @@ static struct dentry *sysfs_lookup(struct inode *dir, struct dentry *dentry,
 	return ret;
 }
 
+// ARM10C 20151212
 const struct inode_operations sysfs_dir_inode_operations = {
 	.lookup		= sysfs_lookup,
 	.permission	= sysfs_permission,
@@ -1156,6 +1157,7 @@ static loff_t sysfs_dir_llseek(struct file *file, loff_t offset, int whence)
 	return ret;
 }
 
+// ARM10C 20151212
 const struct file_operations sysfs_dir_operations = {
 	.read		= generic_read_dir,
 	.iterate	= sysfs_readdir,

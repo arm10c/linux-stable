@@ -306,10 +306,15 @@ static void sysfs_refresh_inode(struct sysfs_dirent *sd, struct inode *inode)
 	}
 
 // 2015/12/05 종료
+// 2015/12/12 시작
 
 	// sd: &sysfs_root, sysfs_type(&sysfs_root): 0x1, SYSFS_DIR: 0x0001
 	if (sysfs_type(sd) == SYSFS_DIR)
+		// inode: kmem_cache#4-oX, sd->s_dir.subdirs: (&sysfs_root)->s_dir.subdirs: 0
 		set_nlink(inode, sd->s_dir.subdirs + 2);
+
+		// set_nlink에서 한일:
+		// inode->__i_nlink: (kmem_cache#4-oX)->__i_nlink: 2
 }
 
 int sysfs_getattr(struct vfsmount *mnt, struct dentry *dentry,
@@ -365,29 +370,44 @@ static void sysfs_init_inode(struct sysfs_dirent *sd, struct inode *inode)
 	// sd: &sysfs_root, inode: kmem_cache#4-oX
 	sysfs_refresh_inode(sd, inode);
 
+	// sysfs_refresh_inode에서 한일:
+	// (kmem_cache#4-oX)->i_mode: 40447
+	// (kmem_cache#4-oX)->__i_nlink: 2
+
 	/* initialize inode according to type */
+	// sd: &sysfs_root, sysfs_type(&sysfs_root): 0x1
 	switch (sysfs_type(sd)) {
-	case SYSFS_DIR:
+	case SYSFS_DIR: // SYSFS_DIR: 0x0001
+		// inode->i_op: (kmem_cache#4-oX)->i_op
 		inode->i_op = &sysfs_dir_inode_operations;
+		// inode->i_op: (kmem_cache#4-oX)->i_op: &sysfs_dir_inode_operations
+
+		// inode->i_fop: (kmem_cache#4-oX)->i_fop
 		inode->i_fop = &sysfs_dir_operations;
+		// inode->i_fop: (kmem_cache#4-oX)->i_fop: &sysfs_dir_operations
 		break;
-	case SYSFS_KOBJ_ATTR:
+	case SYSFS_KOBJ_ATTR: // SYSFS_KOBJ_ATTR: 0x0002
 		inode->i_size = PAGE_SIZE;
 		inode->i_fop = &sysfs_file_operations;
 		break;
-	case SYSFS_KOBJ_BIN_ATTR:
+	case SYSFS_KOBJ_BIN_ATTR: // SYSFS_KOBJ_BIN_ATTR: 0x0004
 		bin_attr = sd->s_attr.bin_attr;
 		inode->i_size = bin_attr->size;
 		inode->i_fop = &sysfs_bin_operations;
 		break;
-	case SYSFS_KOBJ_LINK:
+	case SYSFS_KOBJ_LINK: // SYSFS_KOBJ_LINK: 0x0008
 		inode->i_op = &sysfs_symlink_inode_operations;
 		break;
 	default:
 		BUG();
 	}
 
+	// inode: kmem_cache#4-oX
 	unlock_new_inode(inode);
+
+	// unlock_new_inode에서 한일
+	// (kmem_cache#4-oX)->i_state: 0x0
+	// memory barrier 수행 (공유자원을 다른 cpu core가 사용할 수 있게 해줌)
 }
 
 /**
@@ -492,7 +512,27 @@ struct inode *sysfs_get_inode(struct super_block *sb, struct sysfs_dirent *sd)
 		// sd: &sysfs_root, inode: kmem_cache#4-oX
 		sysfs_init_inode(sd, inode);
 
+		// sysfs_init_inode에서 한일:
+		// (&sysfs_root)->s_count: 2
+		//
+		// (kmem_cache#4-oX)->i_private: 2
+		// (kmem_cache#4-oX)->i_mapping->a_ops: &sysfs_aops
+		// (kmem_cache#4-oX)->i_mapping->backing_dev_info: &sysfs_backing_dev_info
+		// (kmem_cache#4-oX)->i_op: &sysfs_inode_operations
+		// (kmem_cache#4-oX)->i_mode: 40447
+		// (kmem_cache#4-oX)->i_atime: 현재시간값,
+		// (kmem_cache#4-oX)->i_mtime: 현재시간값,
+		// (kmem_cache#4-oX)->i_ctime: 현재시간값
+		// (kmem_cache#4-oX)->i_mode: 40447
+		// (kmem_cache#4-oX)->__i_nlink: 2
+		// (kmem_cache#4-oX)->i_op: &sysfs_dir_inode_operations
+		// (kmem_cache#4-oX)->i_fop: &sysfs_dir_operations
+		// (kmem_cache#4-oX)->i_state: 0x0
+		// memory barrier 수행 (공유자원을 다른 cpu core가 사용할 수 있게 해줌)
+
+	// inode: kmem_cache#4-oX
 	return inode;
+	// return kmem_cache#4-oX
 }
 
 /*

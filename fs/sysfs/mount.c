@@ -83,14 +83,109 @@ static int sysfs_fill_super(struct super_block *sb, void *data, int silent)
 	// &sysfs_mutex을 사용하여 mutex lock을 수행함
 
 	// sb: kmem_cache#25-oX (struct super_block),
+	// sysfs_get_inode(kmem_cache#25-oX (struct super_block), &sysfs_root): kmem_cache#4-oX
 	inode = sysfs_get_inode(sb, &sysfs_root);
+	// inode: kmem_cache#4-oX
+
+	// sysfs_get_inode에서 한일:
+	//
+	// inode용 kmem_cache인 inode_cachep: kmem_cache#4 를 사용하여 inode를 위한 메모리 kmem_cache#4-oX 할당 받음
+	//
+	// (kmem_cache#4-oX)->i_sb: kmem_cache#25-oX (struct super_block)
+	// (kmem_cache#4-oX)->i_blkbits: 12
+	// (kmem_cache#4-oX)->i_flags: 0
+	// (kmem_cache#4-oX)->i_count: 1
+	// (kmem_cache#4-oX)->i_op: &empty_iops
+	// (kmem_cache#4-oX)->__i_nlink: 1
+	// (kmem_cache#4-oX)->i_opflags: 0
+	// (kmem_cache#4-oX)->i_uid: 0
+	// (kmem_cache#4-oX)->i_gid: 0
+	// (kmem_cache#4-oX)->i_count: 0
+	// (kmem_cache#4-oX)->i_size: 0
+	// (kmem_cache#4-oX)->i_blocks: 0
+	// (kmem_cache#4-oX)->i_bytes: 0
+	// (kmem_cache#4-oX)->i_generation: 0
+	// (kmem_cache#4-oX)->i_pipe: NULL
+	// (kmem_cache#4-oX)->i_bdev: NULL
+	// (kmem_cache#4-oX)->i_cdev: NULL
+	// (kmem_cache#4-oX)->i_rdev: 0
+	// (kmem_cache#4-oX)->dirtied_when: 0
+	//
+	// &(kmem_cache#4-oX)->i_lock을 이용한 spin lock 초기화 수행
+	//
+	// ((&(kmem_cache#4-oX)->i_lock)->rlock)->raw_lock: { { 0 } }
+	// ((&(kmem_cache#4-oX)->i_lock)->rlock)->magic: 0xdead4ead
+	// ((&(kmem_cache#4-oX)->i_lock)->rlock)->owner: 0xffffffff
+	// ((&(kmem_cache#4-oX)->i_lock)->rlock)->owner_cpu: 0xffffffff
+	//
+	// (&(kmem_cache#4-oX)->i_mutex)->count: 1
+	// (&(&(&(kmem_cache#4-oX)->i_mutex)->wait_lock)->rlock)->raw_lock: { { 0 } }
+	// (&(&(&(kmem_cache#4-oX)->i_mutex)->wait_lock)->rlock)->magic: 0xdead4ead
+	// (&(&(&(kmem_cache#4-oX)->i_mutex)->wait_lock)->rlock)->owner: 0xffffffff
+	// (&(&(&(kmem_cache#4-oX)->i_mutex)->wait_lock)->rlock)->owner_cpu: 0xffffffff
+	// (&(&(kmem_cache#4-oX)->i_mutex)->wait_list)->next: &(&(kmem_cache#4-oX)->i_mutex)->wait_list
+	// (&(&(kmem_cache#4-oX)->i_mutex)->wait_list)->prev: &(&(kmem_cache#4-oX)->i_mutex)->wait_list
+	// (&(kmem_cache#4-oX)->i_mutex)->onwer: NULL
+	// (&(kmem_cache#4-oX)->i_mutex)->magic: &(kmem_cache#4-oX)->i_mutex
+	//
+	// (kmem_cache#4-oX)->i_dio_count: 0
+	//
+	// (&(kmem_cache#4-oX)->i_data)->a_ops: &empty_aops
+	// (&(kmem_cache#4-oX)->i_data)->host: kmem_cache#4-oX
+	// (&(kmem_cache#4-oX)->i_data)->flags: 0
+	// (&(kmem_cache#4-oX)->i_data)->flags: 0x200DA
+	// (&(kmem_cache#4-oX)->i_data)->private_data: NULL
+	// (&(kmem_cache#4-oX)->i_data)->backing_dev_info: &default_backing_dev_info
+	// (&(kmem_cache#4-oX)->i_data)->writeback_index: 0
+	//
+	// (kmem_cache#4-oX)->i_private: NULL
+	// (kmem_cache#4-oX)->i_mapping: &(kmem_cache#4-oX)->i_data
+	// (&(kmem_cache#4-oX)->i_dentry)->first: NULL
+	// (kmem_cache#4-oX)->i_acl: (void *)(0xFFFFFFFF),
+	// (kmem_cache#4-oX)->i_default_acl: (void *)(0xFFFFFFFF)
+	// (kmem_cache#4-oX)->i_fsnotify_mask: 0
+	//
+	// [pcp0] nr_inodes: 1
+	//
+	// (kmem_cache#4-oX)->i_ino: 1
+	// (kmem_cache#4-oX)->i_state: 0x8
+	//
+	// (&(kmem_cache#4-oX)->i_hash)->next: NULL
+	// (256KB의 메모리 공간 + 계산된 hash index 값)->first: &(kmem_cache#4-oX)->i_hash
+	// (&(kmem_cache#4-oX)->i_hash)->pprev: &(&(kmem_cache#4-oX)->i_hash)
+	//
+	// head list인 &(kmem_cache#4-oX)->i_sb->s_inodes에 &(kmem_cache#4-oX)->i_sb_list를 추가함
+	//
+	// (&sysfs_root)->s_count: 2
+	//
+	// (kmem_cache#4-oX)->i_private: 2
+	// (kmem_cache#4-oX)->i_mapping->a_ops: &sysfs_aops
+	// (kmem_cache#4-oX)->i_mapping->backing_dev_info: &sysfs_backing_dev_info
+	// (kmem_cache#4-oX)->i_op: &sysfs_inode_operations
+	// (kmem_cache#4-oX)->i_mode: 40447
+	// (kmem_cache#4-oX)->i_atime: 현재시간값,
+	// (kmem_cache#4-oX)->i_mtime: 현재시간값,
+	// (kmem_cache#4-oX)->i_ctime: 현재시간값
+	// (kmem_cache#4-oX)->i_mode: 40447
+	// (kmem_cache#4-oX)->__i_nlink: 2
+	// (kmem_cache#4-oX)->i_op: &sysfs_dir_inode_operations
+	// (kmem_cache#4-oX)->i_fop: &sysfs_dir_operations
+	// (kmem_cache#4-oX)->i_state: 0x0
+	// memory barrier 수행 (공유자원을 다른 cpu core가 사용할 수 있게 해줌)
+
 	mutex_unlock(&sysfs_mutex);
+
+	// mutex_unlock에서 한일:
+	// &sysfs_mutex을 사용하여 mutex unlock을 수행함
+
+	// inode: kmem_cache#4-oX
 	if (!inode) {
 		pr_debug("sysfs: could not get root inode\n");
 		return -ENOMEM;
 	}
 
 	/* instantiate and link root dentry */
+	// inode: kmem_cache#4-oX
 	root = d_make_root(inode);
 	if (!root) {
 		pr_debug("%s: could not get root dentry!\n", __func__);

@@ -5013,7 +5013,7 @@ static inline unsigned long wait_table_hash_nr_entries(unsigned long pages)
  * hash function before the remainder is taken.
  */
 // ARM10C 20140111
-// size = 1024(0x400) 
+// size = 1024(0x400)
 static inline unsigned long wait_table_bits(unsigned long size)
 {
 	//size = 1024(0x400), return 10

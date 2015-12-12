@@ -938,6 +938,8 @@ static inline bool cpupid_match_pid(struct task_struct *task, int cpupid)
 // ARM10C 20140517
 // ARM10C 20140531
 // ARM10C 20140628
+// ARM10C 20151212
+// virt_to_page(&(kmem_cache#4-oX)->i_state): &(kmem_cache#4-oX)->i_state의 page 주소
 static inline struct zone *page_zone(const struct page *page)
 {
 	// NODE_DATA(page_to_nid(page)): &contig_page_data
