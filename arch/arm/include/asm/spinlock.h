@@ -164,6 +164,8 @@ static inline int arch_spin_value_unlocked(arch_spinlock_t lock)
 
 // ARM10C 20140315
 // arch_spin_is_locked(&(&(&(&cpu_add_remove_lock)->wait_lock)->rlock)->raw_lock)
+// ARM10C 20151219
+// &(&(kmem_cache#5-oX)->d_lock)->rlock
 static inline int arch_spin_is_locked(arch_spinlock_t *lock)
 {
 	// lock: (&(&(&(&cpu_add_remove_lock)->wait_lock)->rlock)->raw_lock)

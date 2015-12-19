@@ -39,6 +39,7 @@ static const struct super_operations sysfs_ops = {
 
 // ARM10C 20151121
 // ARM10C 20151205
+// ARM10C 20151219
 struct sysfs_dirent sysfs_root = {
 	.s_name		= "",
 	.s_count	= ATOMIC_INIT(1),
@@ -184,16 +185,84 @@ static int sysfs_fill_super(struct super_block *sb, void *data, int silent)
 	}
 
 	/* instantiate and link root dentry */
-	// inode: kmem_cache#4-oX
+	// inode: kmem_cache#4-oX, d_make_root(kmem_cache#4-oX): kmem_cache#5-oX
 	root = d_make_root(inode);
+	// root: kmem_cache#5-oX
+
+	// d_make_root에서 한일:
+	// dentry_cache인 kmem_cache#5을 사용하여 dentry로 사용할 메모리 kmem_cache#5-oX을 할당받음
+	//
+	// (kmem_cache#5-oX)->d_iname[35]: 0
+	// (kmem_cache#5-oX)->d_name.len: 1
+	// (kmem_cache#5-oX)->d_name.hash: (&name)->hash: 0
+	// (kmem_cache#5-oX)->d_iname: "/"
+	//
+	// 공유자원을 다른 cpu core가 사용할수 있게 함
+	//
+	// (kmem_cache#5-oX)->d_name.name: "/"
+	// (kmem_cache#5-oX)->d_lockref.count: 1
+	// (kmem_cache#5-oX)->d_flags: 0
+	//
+	// (&(kmem_cache#5-oX)->d_lock)->raw_lock: { { 0 } }
+	// (&(kmem_cache#5-oX)->d_lock)->magic: 0xdead4ead
+	// (&(kmem_cache#5-oX)->d_lock)->owner: 0xffffffff
+	// (&(kmem_cache#5-oX)->d_lock)->owner_cpu: 0xffffffff
+	//
+	// (&(kmem_cache#5-oX)->d_seq)->sequence: 0
+	//
+	// (kmem_cache#5-oX)->d_inode: NULL
+	//
+	// (kmem_cache#5-oX)->d_parent: kmem_cache#5-oX
+	// (kmem_cache#5-oX)->d_sb: kmem_cache#25-oX (struct super_block)
+	// (kmem_cache#5-oX)->d_op: NULL
+	// (kmem_cache#5-oX)->d_fsdata: NULL
+	//
+	// (&(kmem_cache#5-oX)->d_hash)->next: NULL
+	// (&(kmem_cache#5-oX)->d_hash)->pprev: NULL
+	// (&(kmem_cache#5-oX)->d_lru)->next: &(kmem_cache#5-oX)->d_lru
+	// (&(kmem_cache#5-oX)->d_lru)->prev: &(kmem_cache#5-oX)->d_lru
+	// (&(kmem_cache#5-oX)->d_subdirs)->next: &(kmem_cache#5-oX)->d_subdirs
+	// (&(kmem_cache#5-oX)->d_subdirs)->prev: &(kmem_cache#5-oX)->d_subdirs
+	// (&(kmem_cache#5-oX)->d_alias)->next: NULL
+	// (&(kmem_cache#5-oX)->d_alias)->pprev: NULL
+	// (&(kmem_cache#5-oX)->d_u.d_child)->next: &(kmem_cache#5-oX)->d_u.d_child
+	// (&(kmem_cache#5-oX)->d_u.d_child)->prev: &(kmem_cache#5-oX)->d_u.d_child
+	//
+	// (kmem_cache#5-oX)->d_op: NULL
+	//
+	// [pcp0] nr_dentry: 1
+	//
+	// (&(kmem_cache#5-oX)->d_alias)->next: NULL
+	// (&(kmem_cache#4-oX)->i_dentry)->first: &(kmem_cache#5-oX)->d_alias
+	// (&(kmem_cache#5-oX)->d_alias)->pprev: &(&(kmem_cache#5-oX)->d_alias)
+	//
+	// (kmem_cache#5-oX)->d_inode: kmem_cache#4-oX
+	//
+	// 공유자원을 다른 cpu core가 사용할수 있게 함
+	// (&(kmem_cache#5-oX)->d_seq)->sequence: 2
+	//
+	// (kmem_cache#5-oX)->d_flags: 0x00100000
+
+	// root: kmem_cache#5-oX
 	if (!root) {
 		pr_debug("%s: could not get root dentry!\n", __func__);
 		return -ENOMEM;
 	}
+
+	// root->d_fsdata: (kmem_cache#5-oX)->d_fsdata
 	root->d_fsdata = &sysfs_root;
+	// root->d_fsdata: (kmem_cache#5-oX)->d_fsdata: &sysfs_root
+
+	// sb->s_root: (kmem_cache#25-oX (struct super_block))->s_root, root: kmem_cache#5-oX
 	sb->s_root = root;
+	// sb->s_root: (kmem_cache#25-oX (struct super_block))->s_root: kmem_cache#5-oX (struct dentry)
+
+	// sb->s_d_op: (kmem_cache#25-oX (struct super_block))->s_d_op
 	sb->s_d_op = &sysfs_dentry_ops;
+	// sb->s_d_op: (kmem_cache#25-oX (struct super_block))->s_d_op: &sysfs_dentry_ops
+
 	return 0;
+	// return 0
 }
 
 // ARM10C 20151114
@@ -464,15 +533,175 @@ static struct dentry *sysfs_mount(struct file_system_type *fs_type,
 	// sb->s_root: (kmem_cache#25-oX (struct super_block))->s_root: NULL
 	if (!sb->s_root) {
 		// sb: kmem_cache#25-oX (struct super_block), data: NULL, flags: 0x400000, MS_SILENT: 0x8000
+		// sysfs_fill_super(kmem_cache#25-oX (struct super_block), NULL, 0): 0
 		error = sysfs_fill_super(sb, data, flags & MS_SILENT ? 1 : 0);
+		// error: 0
+
+		// sysfs_fill_super에서 한일:
+		// (kmem_cache#25-oX (struct super_block))->s_blocksize: 0x1000
+		// (kmem_cache#25-oX (struct super_block))->s_blocksize_bits: 12
+		// (kmem_cache#25-oX (struct super_block))->s_magic: 0x62656572
+		// (kmem_cache#25-oX (struct super_block))->s_op: &sysfs_ops
+		// (kmem_cache#25-oX (struct super_block))->s_time_gran: 1
+		//
+		// inode용 kmem_cache인 inode_cachep: kmem_cache#4 를 사용하여 inode를 위한 메모리 kmem_cache#4-oX 할당 받음
+		//
+		// (kmem_cache#4-oX)->i_sb: kmem_cache#25-oX (struct super_block)
+		// (kmem_cache#4-oX)->i_blkbits: 12
+		// (kmem_cache#4-oX)->i_flags: 0
+		// (kmem_cache#4-oX)->i_count: 1
+		// (kmem_cache#4-oX)->i_op: &empty_iops
+		// (kmem_cache#4-oX)->__i_nlink: 1
+		// (kmem_cache#4-oX)->i_opflags: 0
+		// (kmem_cache#4-oX)->i_uid: 0
+		// (kmem_cache#4-oX)->i_gid: 0
+		// (kmem_cache#4-oX)->i_count: 0
+		// (kmem_cache#4-oX)->i_size: 0
+		// (kmem_cache#4-oX)->i_blocks: 0
+		// (kmem_cache#4-oX)->i_bytes: 0
+		// (kmem_cache#4-oX)->i_generation: 0
+		// (kmem_cache#4-oX)->i_pipe: NULL
+		// (kmem_cache#4-oX)->i_bdev: NULL
+		// (kmem_cache#4-oX)->i_cdev: NULL
+		// (kmem_cache#4-oX)->i_rdev: 0
+		// (kmem_cache#4-oX)->dirtied_when: 0
+		//
+		// &(kmem_cache#4-oX)->i_lock을 이용한 spin lock 초기화 수행
+		//
+		// ((&(kmem_cache#4-oX)->i_lock)->rlock)->raw_lock: { { 0 } }
+		// ((&(kmem_cache#4-oX)->i_lock)->rlock)->magic: 0xdead4ead
+		// ((&(kmem_cache#4-oX)->i_lock)->rlock)->owner: 0xffffffff
+		// ((&(kmem_cache#4-oX)->i_lock)->rlock)->owner_cpu: 0xffffffff
+		//
+		// (&(kmem_cache#4-oX)->i_mutex)->count: 1
+		// (&(&(&(kmem_cache#4-oX)->i_mutex)->wait_lock)->rlock)->raw_lock: { { 0 } }
+		// (&(&(&(kmem_cache#4-oX)->i_mutex)->wait_lock)->rlock)->magic: 0xdead4ead
+		// (&(&(&(kmem_cache#4-oX)->i_mutex)->wait_lock)->rlock)->owner: 0xffffffff
+		// (&(&(&(kmem_cache#4-oX)->i_mutex)->wait_lock)->rlock)->owner_cpu: 0xffffffff
+		// (&(&(kmem_cache#4-oX)->i_mutex)->wait_list)->next: &(&(kmem_cache#4-oX)->i_mutex)->wait_list
+		// (&(&(kmem_cache#4-oX)->i_mutex)->wait_list)->prev: &(&(kmem_cache#4-oX)->i_mutex)->wait_list
+		// (&(kmem_cache#4-oX)->i_mutex)->onwer: NULL
+		// (&(kmem_cache#4-oX)->i_mutex)->magic: &(kmem_cache#4-oX)->i_mutex
+		//
+		// (kmem_cache#4-oX)->i_dio_count: 0
+		//
+		// (&(kmem_cache#4-oX)->i_data)->a_ops: &empty_aops
+		// (&(kmem_cache#4-oX)->i_data)->host: kmem_cache#4-oX
+		// (&(kmem_cache#4-oX)->i_data)->flags: 0
+		// (&(kmem_cache#4-oX)->i_data)->flags: 0x200DA
+		// (&(kmem_cache#4-oX)->i_data)->private_data: NULL
+		// (&(kmem_cache#4-oX)->i_data)->backing_dev_info: &default_backing_dev_info
+		// (&(kmem_cache#4-oX)->i_data)->writeback_index: 0
+		//
+		// (kmem_cache#4-oX)->i_private: NULL
+		// (kmem_cache#4-oX)->i_mapping: &(kmem_cache#4-oX)->i_data
+		// (&(kmem_cache#4-oX)->i_dentry)->first: NULL
+		// (kmem_cache#4-oX)->i_acl: (void *)(0xFFFFFFFF),
+		// (kmem_cache#4-oX)->i_default_acl: (void *)(0xFFFFFFFF)
+		// (kmem_cache#4-oX)->i_fsnotify_mask: 0
+		//
+		// [pcp0] nr_inodes: 1
+		//
+		// (kmem_cache#4-oX)->i_ino: 1
+		// (kmem_cache#4-oX)->i_state: 0x8
+		//
+		// (&(kmem_cache#4-oX)->i_hash)->next: NULL
+		// (256KB의 메모리 공간 + 계산된 hash index 값)->first: &(kmem_cache#4-oX)->i_hash
+		// (&(kmem_cache#4-oX)->i_hash)->pprev: &(&(kmem_cache#4-oX)->i_hash)
+		//
+		// head list인 &(kmem_cache#4-oX)->i_sb->s_inodes에 &(kmem_cache#4-oX)->i_sb_list를 추가함
+		//
+		// (&sysfs_root)->s_count: 2
+		//
+		// (kmem_cache#4-oX)->i_private: 2
+		// (kmem_cache#4-oX)->i_mapping->a_ops: &sysfs_aops
+		// (kmem_cache#4-oX)->i_mapping->backing_dev_info: &sysfs_backing_dev_info
+		// (kmem_cache#4-oX)->i_op: &sysfs_inode_operations
+		// (kmem_cache#4-oX)->i_atime: 현재시간값,
+		// (kmem_cache#4-oX)->i_mtime: 현재시간값,
+		// (kmem_cache#4-oX)->i_ctime: 현재시간값
+		// (kmem_cache#4-oX)->i_mode: 40447
+		// (kmem_cache#4-oX)->__i_nlink: 2
+		// (kmem_cache#4-oX)->i_op: &sysfs_dir_inode_operations
+		// (kmem_cache#4-oX)->i_fop: &sysfs_dir_operations
+		// (kmem_cache#4-oX)->i_state: 0x0
+		// memory barrier 수행 (공유자원을 다른 cpu core가 사용할 수 있게 해줌)
+		//
+		// dentry_cache인 kmem_cache#5을 사용하여 dentry로 사용할 메모리 kmem_cache#5-oX을 할당받음
+		//
+		// (kmem_cache#5-oX)->d_iname[35]: 0
+		// (kmem_cache#5-oX)->d_name.len: 1
+		// (kmem_cache#5-oX)->d_name.hash: (&name)->hash: 0
+		// (kmem_cache#5-oX)->d_iname: "/"
+		//
+		// 공유자원을 다른 cpu core가 사용할수 있게 함
+		//
+		// (kmem_cache#5-oX)->d_name.name: "/"
+		// (kmem_cache#5-oX)->d_lockref.count: 1
+		// (kmem_cache#5-oX)->d_flags: 0
+		//
+		// (&(kmem_cache#5-oX)->d_lock)->raw_lock: { { 0 } }
+		// (&(kmem_cache#5-oX)->d_lock)->magic: 0xdead4ead
+		// (&(kmem_cache#5-oX)->d_lock)->owner: 0xffffffff
+		// (&(kmem_cache#5-oX)->d_lock)->owner_cpu: 0xffffffff
+		//
+		// (&(kmem_cache#5-oX)->d_seq)->sequence: 0
+		//
+		// (kmem_cache#5-oX)->d_inode: NULL
+		//
+		// (kmem_cache#5-oX)->d_parent: kmem_cache#5-oX
+		// (kmem_cache#5-oX)->d_sb: kmem_cache#25-oX (struct super_block)
+		// (kmem_cache#5-oX)->d_op: NULL
+		// (kmem_cache#5-oX)->d_fsdata: NULL
+		//
+		// (&(kmem_cache#5-oX)->d_hash)->next: NULL
+		// (&(kmem_cache#5-oX)->d_hash)->pprev: NULL
+		// (&(kmem_cache#5-oX)->d_lru)->next: &(kmem_cache#5-oX)->d_lru
+		// (&(kmem_cache#5-oX)->d_lru)->prev: &(kmem_cache#5-oX)->d_lru
+		// (&(kmem_cache#5-oX)->d_subdirs)->next: &(kmem_cache#5-oX)->d_subdirs
+		// (&(kmem_cache#5-oX)->d_subdirs)->prev: &(kmem_cache#5-oX)->d_subdirs
+		// (&(kmem_cache#5-oX)->d_alias)->next: NULL
+		// (&(kmem_cache#5-oX)->d_alias)->pprev: NULL
+		// (&(kmem_cache#5-oX)->d_u.d_child)->next: &(kmem_cache#5-oX)->d_u.d_child
+		// (&(kmem_cache#5-oX)->d_u.d_child)->prev: &(kmem_cache#5-oX)->d_u.d_child
+		//
+		// (kmem_cache#5-oX)->d_op: NULL
+		//
+		// [pcp0] nr_dentry: 1
+		//
+		// (&(kmem_cache#5-oX)->d_alias)->next: NULL
+		// (&(kmem_cache#4-oX)->i_dentry)->first: &(kmem_cache#5-oX)->d_alias
+		// (&(kmem_cache#5-oX)->d_alias)->pprev: &(&(kmem_cache#5-oX)->d_alias)
+		//
+		// (kmem_cache#5-oX)->d_inode: kmem_cache#4-oX
+		//
+		// 공유자원을 다른 cpu core가 사용할수 있게 함
+		// (&(kmem_cache#5-oX)->d_seq)->sequence: 2
+		//
+		// (kmem_cache#5-oX)->d_flags: 0x00100000
+		//
+		// (kmem_cache#5-oX)->d_fsdata: &sysfs_root
+		// (kmem_cache#25-oX (struct super_block))->s_root: kmem_cache#5-oX (struct dentry)
+		// (kmem_cache#25-oX (struct super_block))->s_d_op: &sysfs_dentry_ops
+
+		// error: 0
 		if (error) {
 			deactivate_locked_super(sb);
 			return ERR_PTR(error);
 		}
+
+		// sb->s_flags: (kmem_cache#25-oX (struct super_block))->s_flags: 0x400000, MS_ACTIVE: 0x40000000
 		sb->s_flags |= MS_ACTIVE;
+		// sb->s_flags: (kmem_cache#25-oX (struct super_block))->s_flags: 0x40400000
 	}
 
+	// sb->s_root: (kmem_cache#25-oX (struct super_block))->s_root: kmem_cache#5-oX (struct dentry)
+	// dget(kmem_cache#5-oX (struct dentry)): kmem_cache#5-oX (struct dentry)
 	return dget(sb->s_root);
+	// return kmem_cache#5-oX (struct dentry)
+
+	// dget에서 한일:
+	// (&(kmem_cache#5-oX (struct dentry))->d_lockref)->count: 1
 }
 
 static void sysfs_kill_sb(struct super_block *sb)
@@ -487,6 +716,7 @@ static void sysfs_kill_sb(struct super_block *sb)
 
 // ARM10C 20151031
 // ARM10C 20151114
+// ARM10C 20151219
 static struct file_system_type sysfs_fs_type = {
 	.name		= "sysfs",
 	.mount		= sysfs_mount,

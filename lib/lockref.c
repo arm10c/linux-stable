@@ -2,7 +2,7 @@
 #include <linux/lockref.h>
 #include <linux/mutex.h>
 
-#if USE_CMPXCHG_LOCKREF
+#if USE_CMPXCHG_LOCKREF // USE_CMPXCHG_LOCKREF: 0
 
 /*
  * Allow weakly-ordered memory architectures to provide barrier-less
@@ -35,6 +35,7 @@
 
 #else
 
+// ARM10C 20151219
 #define CMPXCHG_LOOP(CODE, SUCCESS) do { } while (0)
 
 #endif
@@ -46,17 +47,32 @@
  * This operation is only valid if you already hold a reference
  * to the object, so you know the count cannot be zero.
  */
+// ARM10C 20151219
+// &dentry->d_lockref: &(kmem_cache#5-oX (struct dentry))->d_lockref
 void lockref_get(struct lockref *lockref)
 {
+	// CMPXCHG_LOOP(new.count++;, return;): do { } while (0)
 	CMPXCHG_LOOP(
 		new.count++;
 	,
 		return;
 	);
 
+	// &lockref->lock: &(&(kmem_cache#5-oX (struct dentry))->d_lockref)->lock
 	spin_lock(&lockref->lock);
+
+	// spin_lock에서 한일:
+	// &(&(kmem_cache#5-oX (struct dentry))->d_lockref)->lock을 이용하여 spin lock 수행
+
+	// lockref->count: (&(kmem_cache#5-oX (struct dentry))->d_lockref)->count
 	lockref->count++;
+	// lockref->count: (&(kmem_cache#5-oX (struct dentry))->d_lockref)->count: 1
+
+	// &lockref->lock: &(&(kmem_cache#5-oX (struct dentry))->d_lockref)->lock
 	spin_unlock(&lockref->lock);
+
+	// spin_unlock에서 한일:
+	// &(&(kmem_cache#5-oX (struct dentry))->d_lockref)->lock을 이용하여 spin lock 수행
 }
 EXPORT_SYMBOL(lockref_get);
 

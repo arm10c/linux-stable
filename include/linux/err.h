@@ -22,6 +22,7 @@
 // ARM10C 20141122
 // ARM10C 20150620
 // ARM10C 20150822
+// ARM10C 20151219
 // -MAX_ERRNO: 0xFFFFF001
 #define IS_ERR_VALUE(x) unlikely((x) >= (unsigned long)-MAX_ERRNO)
 
@@ -54,6 +55,8 @@ static inline long __must_check PTR_ERR(__force const void *ptr)
 // css: &root_cpuacct.css
 // ARM10C 20151121
 // sb: kmem_cache#25-oX (struct super_block)
+// ARM10C 20151219
+// root: kmem_cache#5-oX (struct dentry)
 static inline long __must_check IS_ERR(__force const void *ptr)
 {
 	return IS_ERR_VALUE((unsigned long)ptr);

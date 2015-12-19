@@ -97,7 +97,11 @@ struct inodes_stat_t {
 
 /* These sb flags are internal to the kernel */
 #define MS_NOSEC	(1<<28)
+// ARM10C 20151219
+// MS_BORN: 0x20000000
 #define MS_BORN		(1<<29)
+// ARM10C 20151219
+// MS_ACTIVE: 0x40000000
 #define MS_ACTIVE	(1<<30)
 #define MS_NOUSER	(1<<31)
 

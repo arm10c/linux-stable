@@ -19,10 +19,16 @@
 /*
  * fsnotify_d_instantiate - instantiate a dentry for inode
  */
+// ARM10C 20151219
+// dentry: kmem_cache#5-oX, inode: kmem_cache#4-oX
 static inline void fsnotify_d_instantiate(struct dentry *dentry,
 					  struct inode *inode)
 {
+	// dentry: kmem_cache#5-oX, inode: kmem_cache#4-oX
 	__fsnotify_d_instantiate(dentry, inode);
+
+	// __fsnotify_d_instantiate에서 한일:
+	// (kmem_cache#5-oX)->d_flags: 0x00100000
 }
 
 /* Notify this dentry's parent about a child's events. */

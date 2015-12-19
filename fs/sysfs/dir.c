@@ -357,6 +357,7 @@ static void sysfs_dentry_release(struct dentry *dentry)
 	sysfs_put(dentry->d_fsdata);
 }
 
+// ARM10C 20151219
 const struct dentry_operations sysfs_dentry_ops = {
 	.d_revalidate	= sysfs_dentry_revalidate,
 	.d_delete	= sysfs_dentry_delete,

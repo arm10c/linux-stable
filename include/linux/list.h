@@ -1028,6 +1028,8 @@ static inline void hlist_del_init(struct hlist_node *n)
 // [re] &s->s_instances: &(kmem_cache#25-oX (struct super_block))->s_instances, &type->fs_supers: &(&sysfs_fs_type)->fs_supers
 // ARM10C 20151205
 // &inode->i_hash: &(kmem_cache#4-oX)->i_hash, head: 256KB의 메모리 공간 + 계산된 hash index 값
+// ARM10C 20151219
+// &dentry->d_alias: (kmem_cache#5-oX)->d_alias, &inode->i_dentry: &(kmem_cache#4-oX)->i_dentry
 static inline void hlist_add_head(struct hlist_node *n, struct hlist_head *h)
 {
 	// h->first: (&clk_root_list)->first: NULL

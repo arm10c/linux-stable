@@ -17,6 +17,8 @@
 
 int in_lock_functions(unsigned long addr);
 
+// ARM10C 20151219
+// &(&(kmem_cache#5-oX)->d_lock)->rlock
 #define assert_raw_spin_locked(x)	BUG_ON(!raw_spin_is_locked(x))
 
 // ARM10C 20140405

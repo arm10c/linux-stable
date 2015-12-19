@@ -278,11 +278,20 @@ static void d_free(struct dentry *dentry)
  * should be called after unhashing, and after changing d_inode (if
  * the dentry has not already been unhashed).
  */
+// ARM10C 20151219
+// dentry: kmem_cache#5-oX
 static inline void dentry_rcuwalk_barrier(struct dentry *dentry)
 {
+	// &dentry->d_lock: &(kmem_cache#5-oX)->d_lock
 	assert_spin_locked(&dentry->d_lock);
+	
 	/* Go through a barrier */
+	// &dentry->d_seq: &(kmem_cache#5-oX)->d_seq
 	write_seqcount_barrier(&dentry->d_seq);
+
+	// write_seqcount_barrier에서 한일:
+	// 공유자원을 다른 cpu core가 사용할수 있게 함
+	// (&(kmem_cache#5-oX)->d_seq)->sequence: 2
 }
 
 /*
@@ -1801,15 +1810,52 @@ static void __d_instantiate(struct dentry *dentry, struct inode *inode)
 	unsigned add_flags = d_flags_for_inode(inode);
 	// add_flags: 0x00100000
 
+	// &dentry->d_lock: &(kmem_cache#5-oX)->d_lock
 	spin_lock(&dentry->d_lock);
+
+	// spin_lock에서 한일:
+	// &(kmem_cache#5-oX)->d_lock을 이용하여 spin lock 수행
+
+	// dentry->d_flags: (kmem_cache#5-oX)->d_flags: 0, DCACHE_ENTRY_TYPE: 0x00700000
 	dentry->d_flags &= ~DCACHE_ENTRY_TYPE;
+	// dentry->d_flags: (kmem_cache#5-oX)->d_flags: 0
+
+	// dentry->d_flags: (kmem_cache#5-oX)->d_flags: 0, add_flags: 0x00100000
 	dentry->d_flags |= add_flags;
+	// dentry->d_flags: (kmem_cache#5-oX)->d_flags: 0x00100000
+
+	// inode: kmem_cache#4-oX
 	if (inode)
+		// &dentry->d_alias: &(kmem_cache#5-oX)->d_alias, &inode->i_dentry: &(kmem_cache#4-oX)->i_dentry
 		hlist_add_head(&dentry->d_alias, &inode->i_dentry);
+
+		// hlist_add_head에서 한일:
+		// (&(kmem_cache#5-oX)->d_alias)->next: NULL
+		// (&(kmem_cache#4-oX)->i_dentry)->first: &(kmem_cache#5-oX)->d_alias
+		// (&(kmem_cache#5-oX)->d_alias)->pprev: &(&(kmem_cache#5-oX)->d_alias)
+
+	// dentry->d_inode: (kmem_cache#5-oX)->d_inode, inode: kmem_cache#4-oX
 	dentry->d_inode = inode;
+	// dentry->d_inode: (kmem_cache#5-oX)->d_inode: kmem_cache#4-oX
+
+	// dentry: kmem_cache#5-oX
 	dentry_rcuwalk_barrier(dentry);
+
+	// dentry_rcuwalk_barrier에서 한일:
+	// 공유자원을 다른 cpu core가 사용할수 있게 함
+	// (&(kmem_cache#5-oX)->d_seq)->sequence: 2
+
+	// &dentry->d_lock: &(kmem_cache#5-oX)->d_lock
 	spin_unlock(&dentry->d_lock);
+
+	// spin_unlock에서 한일:
+	// &(kmem_cache#5-oX)->d_lock을 이용하여 spin unlock 수행
+
+	// dentry: kmem_cache#5-oX, inode: kmem_cache#4-oX
 	fsnotify_d_instantiate(dentry, inode);
+
+	// fsnotify_d_instantiate에서 한일
+	// (kmem_cache#5-oX)->d_flags: 0x00100000
 }
 
 /**
@@ -1844,9 +1890,30 @@ void d_instantiate(struct dentry *entry, struct inode * inode)
 
 	// entry: kmem_cache#5-oX, inode: kmem_cache#4-oX
 	__d_instantiate(entry, inode);
+
+	// __d_instantiate에서 한일:
+	//
+	// (&(kmem_cache#5-oX)->d_alias)->next: NULL
+	// (&(kmem_cache#4-oX)->i_dentry)->first: &(kmem_cache#5-oX)->d_alias
+	// (&(kmem_cache#5-oX)->d_alias)->pprev: &(&(kmem_cache#5-oX)->d_alias)
+	//
+	// (kmem_cache#5-oX)->d_inode: kmem_cache#4-oX
+	//
+	// 공유자원을 다른 cpu core가 사용할수 있게 함
+	// (&(kmem_cache#5-oX)->d_seq)->sequence: 2
+	//
+	// (kmem_cache#5-oX)->d_flags: 0x00100000
+
+	// inode: kmem_cache#4-oX
 	if (inode)
+		// &inode->i_lock: &(kmem_cache#4-oX)->i_lock
 		spin_unlock(&inode->i_lock);
-	security_d_instantiate(entry, inode);
+
+		// spin_unlock에서 한일:
+		// &(kmem_cache#4-oX)->i_lock을 이용하여 spin unlock을 수행
+
+	// entry: kmem_cache#5-oX, inode: kmem_cache#4-oX
+	security_d_instantiate(entry, inode); // null function
 }
 EXPORT_SYMBOL(d_instantiate);
 
@@ -2020,10 +2087,26 @@ struct dentry *d_make_root(struct inode *root_inode)
 		if (res)
 			// res: kmem_cache#5-oX, root_inode: kmem_cache#4-oX
 			d_instantiate(res, root_inode);
+
+			// d_instantiate에서 한일:
+			//
+			// (&(kmem_cache#5-oX)->d_alias)->next: NULL
+			// (&(kmem_cache#4-oX)->i_dentry)->first: &(kmem_cache#5-oX)->d_alias
+			// (&(kmem_cache#5-oX)->d_alias)->pprev: &(&(kmem_cache#5-oX)->d_alias)
+			//
+			// (kmem_cache#5-oX)->d_inode: kmem_cache#4-oX
+			//
+			// 공유자원을 다른 cpu core가 사용할수 있게 함
+			// (&(kmem_cache#5-oX)->d_seq)->sequence: 2
+			//
+			// (kmem_cache#5-oX)->d_flags: 0x00100000
 		else
 			iput(root_inode);
 	}
+
+	// res: kmem_cache#5-oX
 	return res;
+	// return kmem_cache#5-oX
 }
 EXPORT_SYMBOL(d_make_root);
 

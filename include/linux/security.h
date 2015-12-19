@@ -2025,9 +2025,12 @@ static inline int security_sb_remount(struct super_block *sb, void *data)
 	return 0;
 }
 
+// ARM10C 20151219
+// sb: kmem_cache#25-oX (struct super_block), flags: 0x400000, secdata: NULL
 static inline int security_sb_kern_mount(struct super_block *sb, int flags, void *data)
 {
 	return 0;
+	// return 0
 }
 
 static inline int security_sb_show_options(struct seq_file *m,
@@ -2565,6 +2568,8 @@ static inline int security_sem_semop(struct sem_array *sma,
 	return 0;
 }
 
+// ARM10C 20151219
+// entry: kmem_cache#5-oX, inode: kmem_cache#4-oX
 static inline void security_d_instantiate(struct dentry *dentry, struct inode *inode)
 { }
 
@@ -3127,7 +3132,7 @@ static inline void securityfs_remove(struct dentry *dentry)
 
 #endif
 
-#ifdef CONFIG_SECURITY
+#ifdef CONFIG_SECURITY // CONFIG_SECURITY=n
 
 static inline char *alloc_secdata(void)
 {
@@ -3146,6 +3151,7 @@ static inline char *alloc_secdata(void)
         return (char *)1;
 }
 
+// ARM10C 20151219
 static inline void free_secdata(void *secdata)
 { }
 #endif /* CONFIG_SECURITY */

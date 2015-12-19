@@ -53,6 +53,8 @@
 
 /* This inode cares about things that happen to its children.  Always set for
  * dnotify and inotify. */
+// ARM10C 20151219
+// FS_EVENT_ON_CHILD: 0x08000000
 #define FS_EVENT_ON_CHILD	0x08000000
 
 /* This is a list of all events that may get sent to a parernt based on fs event
@@ -299,7 +301,7 @@ struct fsnotify_mark {
 	void (*free_mark)(struct fsnotify_mark *mark); /* called on final put+free */
 };
 
-#ifdef CONFIG_FSNOTIFY
+#ifdef CONFIG_FSNOTIFY // CONFIG_FSNOTIFY=y
 
 /* called from the vfs helpers */
 
@@ -311,11 +313,16 @@ extern void __fsnotify_inode_delete(struct inode *inode);
 extern void __fsnotify_vfsmount_delete(struct vfsmount *mnt);
 extern u32 fsnotify_get_cookie(void);
 
+// ARM10C 20151219
+// parent->d_inode: (kmem_cache#5-oX)->d_inode: kmem_cache#4-oX
 static inline int fsnotify_inode_watches_children(struct inode *inode)
 {
 	/* FS_EVENT_ON_CHILD is set if the inode may care */
+	// inode->i_fsnotify_mask: (kmem_cache#4-oX)->i_fsnotify_mask: 0, FS_EVENT_ON_CHILD: 0x08000000
 	if (!(inode->i_fsnotify_mask & FS_EVENT_ON_CHILD))
 		return 0;
+		// return 0
+
 	/* this inode might care about child events, does it care about the
 	 * specific set of events that can happen on a child? */
 	return inode->i_fsnotify_mask & FS_EVENTS_POSS_ON_CHILD;
@@ -325,10 +332,13 @@ static inline int fsnotify_inode_watches_children(struct inode *inode)
  * Update the dentry with a flag indicating the interest of its parent to receive
  * filesystem events when those events happens to this dentry->d_inode.
  */
+// ARM10C 20151219
+// dentry: kmem_cache#5-oX
 static inline void __fsnotify_update_dcache_flags(struct dentry *dentry)
 {
 	struct dentry *parent;
 
+	// &dentry->d_lock: &(kmem_cache#5-oX)->d_lock
 	assert_spin_locked(&dentry->d_lock);
 
 	/*
@@ -338,24 +348,48 @@ static inline void __fsnotify_update_dcache_flags(struct dentry *dentry)
 	 * find our entry, so it will spin until we complete here, and update
 	 * us with the new state.
 	 */
+	// dentry->d_parent: (kmem_cache#5-oX)->d_parent: kmem_cache#5-oX
 	parent = dentry->d_parent;
+	// parent: kmem_cache#5-oX
+
+	// parent->d_inode: (kmem_cache#5-oX)->d_inode: kmem_cache#4-oX,
+	// fsnotify_inode_watches_children(kmem_cache#4-oX): 0
 	if (parent->d_inode && fsnotify_inode_watches_children(parent->d_inode))
 		dentry->d_flags |= DCACHE_FSNOTIFY_PARENT_WATCHED;
 	else
+		// dentry->d_flags: (kmem_cache#5-oX)->d_flags: 0x00100000, DCACHE_FSNOTIFY_PARENT_WATCHED: 0x00004000
 		dentry->d_flags &= ~DCACHE_FSNOTIFY_PARENT_WATCHED;
+		// dentry->d_flags: (kmem_cache#5-oX)->d_flags: 0x00100000
 }
 
 /*
  * fsnotify_d_instantiate - instantiate a dentry for inode
  */
+// ARM10C 20151219
+// dentry: kmem_cache#5-oX, inode: kmem_cache#4-oX
 static inline void __fsnotify_d_instantiate(struct dentry *dentry, struct inode *inode)
 {
+	// inode: kmem_cache#4-oX
 	if (!inode)
 		return;
 
+	// &dentry->d_lock: &(kmem_cache#5-oX)->d_lock
 	spin_lock(&dentry->d_lock);
+
+	// spin_lock에서 한일:
+	// &(kmem_cache#5-oX)->d_lock을 이용하여 spin lock 수행
+
+	// dentry: kmem_cache#5-oX
 	__fsnotify_update_dcache_flags(dentry);
+
+	// __fsnotify_update_dcache_flags에서 한일:
+	// (kmem_cache#5-oX)->d_flags: 0x00100000
+
+	// &dentry->d_lock: &(kmem_cache#5-oX)->d_lock
 	spin_unlock(&dentry->d_lock);
+
+	// spin_unlock에서 한일:
+	// &(kmem_cache#5-oX)->d_lock을 이용하여 spin unlock 수행
 }
 
 /* called from fsnotify listeners, such as fanotify or dnotify */

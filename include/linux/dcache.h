@@ -122,6 +122,7 @@ extern unsigned int full_name_hash(const unsigned char *, unsigned int);
 // ARM10C 20151114
 // ARM10C 20151121
 // ARM10C 20151212
+// ARM10C 20151219
 // sizeof(struct dentry): 140 bytes
 struct dentry {
 	/* RCU lookup touched fields */
@@ -231,6 +232,8 @@ struct dentry_operations {
      /* this dentry has been "silly renamed" and has to be deleted on the last
       * dput() */
 #define DCACHE_COOKIE			0x00002000 /* For use by dcookie subsystem */
+// ARM10C 20151219
+// DCACHE_FSNOTIFY_PARENT_WATCHED: 0x00004000
 #define DCACHE_FSNOTIFY_PARENT_WATCHED	0x00004000
      /* Parent inode is watched by some fsnotify listener */
 
@@ -244,6 +247,8 @@ struct dentry_operations {
 
 #define DCACHE_LRU_LIST			0x00080000
 
+// ARM10C 20151219
+// DCACHE_ENTRY_TYPE: 0x00700000
 #define DCACHE_ENTRY_TYPE		0x00700000
 #define DCACHE_MISS_TYPE		0x00000000 /* Negative dentry */
 // ARM10C 20151219
@@ -388,11 +393,21 @@ static inline struct dentry *dget_dlock(struct dentry *dentry)
 	return dentry;
 }
 
+// ARM10C 20151219
+// sb->s_root: (kmem_cache#25-oX (struct super_block))->s_root: kmem_cache#5-oX (struct dentry)
 static inline struct dentry *dget(struct dentry *dentry)
 {
+	// dentry: kmem_cache#5-oX (struct dentry)
 	if (dentry)
+		// &dentry->d_lockref: &(kmem_cache#5-oX (struct dentry))->d_lockref
 		lockref_get(&dentry->d_lockref);
+
+		// lockref_get에서 한일:
+		// (&(kmem_cache#5-oX (struct dentry))->d_lockref)->count: 1
+
+	// dentry: kmem_cache#5-oX (struct dentry)
 	return dentry;
+	// return kmem_cache#5-oX (struct dentry)
 }
 
 extern struct dentry *dget_parent(struct dentry *dentry);

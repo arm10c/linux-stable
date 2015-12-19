@@ -128,6 +128,9 @@ do {								\
 //
 // raw_spin_is_locked(&(&(&cpu_add_remove_lock)->wait_lock)->rlock):
 // arch_spin_is_locked(&(&(&(&cpu_add_remove_lock)->wait_lock)->rlock)->raw_lock)
+//
+// ARM10C 20151219
+// &(&(kmem_cache#5-oX)->d_lock)->rlock
 #define raw_spin_is_locked(lock)	arch_spin_is_locked(&(lock)->raw_lock)
 
 #ifdef CONFIG_GENERIC_LOCKBREAK
@@ -391,6 +394,10 @@ do {							\
 // &inode->i_lock: &(kmem_cache#4-oX)->i_lock
 // ARM10C 20151219
 // &inode->i_lock: &(kmem_cache#4-oX)->i_lock
+// ARM10C 20151219
+// &dentry->d_lock: &(kmem_cache#5-oX)->d_lock
+// ARM10C 20151219
+// &lockref->lock: &(&(kmem_cache#5-oX (struct dentry))->d_lockref)->lock
 static inline void spin_lock(spinlock_t *lock)
 {
 	// lock->rlock: (&contig_page_data->node_zones[0].lock)->rlock
@@ -455,6 +462,10 @@ do {									\
 // &unnamed_dev_lock
 // ARM10C 20151212
 // &inode->i_lock: &(kmem_cache#4-oX)->i_lock
+// ARM10C 20151219
+// &inode->i_lock: &(kmem_cache#4-oX)->i_lock
+// ARM10C 20151219
+// &lockref->lock: &(&(kmem_cache#5-oX (struct dentry))->d_lockref)->lock
 static inline void spin_unlock(spinlock_t *lock)
 {
 	raw_spin_unlock(&lock->rlock);
@@ -514,6 +525,8 @@ static inline int spin_can_lock(spinlock_t *lock)
 	return raw_spin_can_lock(&lock->rlock);
 }
 
+// ARM10C 20151219
+// &dentry->d_lock: &(kmem_cache#5-oX)->d_lock
 #define assert_spin_locked(lock)	assert_raw_spin_locked(&(lock)->rlock)
 
 /*

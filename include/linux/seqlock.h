@@ -375,10 +375,18 @@ static inline void write_seqcount_end(seqcount_t *s)
  * After write_seqcount_barrier, no read-side seq operations will complete
  * successfully and see data older than this.
  */
+// ARM10C 20151219
+// &dentry->d_seq: &(kmem_cache#5-oX)->d_seq
 static inline void write_seqcount_barrier(seqcount_t *s)
 {
 	smp_wmb();
+
+	// smp_wmb에서 한일:
+	// 공유자원을 다른 cpu core가 사용할수 있게 함
+
+	// s->sequence: (&(kmem_cache#5-oX)->d_seq)->sequence: 0
 	s->sequence+=2;
+	// s->sequence: (&(kmem_cache#5-oX)->d_seq)->sequence: 2
 }
 
 typedef struct {
