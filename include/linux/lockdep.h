@@ -411,6 +411,8 @@ static inline void lockdep_on(void)
 // ARM10C 20151114
 // &s->s_writers.lock_map[i]: &(kmem_cache#25-oX (struct super_block))->s_writers.lock_map[0],
 // sb_writers_name[0]: "sb_writers", &type->s_writers_key[i]: &(&sysfs_fs_type)->s_writers_key[0], 0
+// ARM10C 20151219
+// &s->dep_map: (&(kmem_cache#5-oX)->d_seq)->dep_map, name: NULL, key: NULL, 0
 # define lockdep_init_map(lock, name, key, sub) \
 		do { (void)(name); (void)(key); } while (0)
 // ARM10C 20150919

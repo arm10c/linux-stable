@@ -162,7 +162,6 @@ static int sysfs_fill_super(struct super_block *sb, void *data, int silent)
 	// (kmem_cache#4-oX)->i_mapping->a_ops: &sysfs_aops
 	// (kmem_cache#4-oX)->i_mapping->backing_dev_info: &sysfs_backing_dev_info
 	// (kmem_cache#4-oX)->i_op: &sysfs_inode_operations
-	// (kmem_cache#4-oX)->i_mode: 40447
 	// (kmem_cache#4-oX)->i_atime: 현재시간값,
 	// (kmem_cache#4-oX)->i_mtime: 현재시간값,
 	// (kmem_cache#4-oX)->i_ctime: 현재시간값

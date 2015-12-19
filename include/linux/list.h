@@ -148,6 +148,10 @@
 // &lru->node[0].list: (&(kmem_cache#25-oX (struct super_block))->s_dentry_lru)->node[0].list
 // ARM10C 20151114
 // &s->s_mounts: &(kmem_cache#25-oX (struct super_block))->s_mounts
+// ARM10C 20151219
+// &dentry->d_lru: &(kmem_cache#5-oX)->d_lru
+// ARM10C 20151219
+// &dentry->d_subdirs: &(kmem_cache#5-oX)->d_subdirs
 static inline void INIT_LIST_HEAD(struct list_head *list)
 {
 	list->next = list;
@@ -931,6 +935,8 @@ static inline void list_splice_tail_init(struct list_head *list,
 // mnt->mnt_hash: (kmem_cache#2-oX (struct mount))->mnt_hash
 // ARM10C 20151114
 // &s->s_instances: &(kmem_cache#25-oX (struct super_block))->s_instances
+// ARM10C 20151219
+// &dentry->d_alias: &(kmem_cache#5-oX)->d_alias
 static inline void INIT_HLIST_NODE(struct hlist_node *h)
 {
 
@@ -943,9 +949,13 @@ static inline void INIT_HLIST_NODE(struct hlist_node *h)
 	// h->pprev: (&init_css_set.hlist)->pprev: NULL
 }
 
+// ARM10C 20151219
+// &entry->d_alias: &(kmem_cache#5-oX)->d_alias
 static inline int hlist_unhashed(const struct hlist_node *h)
 {
+	// h->pprev: (&(kmem_cache#5-oX)->d_alias)->pprev: NULL
 	return !h->pprev;
+	// return 1
 }
 
 static inline int hlist_empty(const struct hlist_head *h)

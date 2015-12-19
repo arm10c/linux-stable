@@ -521,6 +521,8 @@ struct posix_acl;
 #define ACL_NOT_CACHED ((void *)(-1))
 
 #define IOP_FASTPERM	0x0001
+// ARM10C 20151219
+// IOP_LOOKUP: 0x0002
 #define IOP_LOOKUP	0x0002
 #define IOP_NOFOLLOW	0x0004
 
@@ -1688,6 +1690,8 @@ struct super_operations {
 #define S_SWAPFILE	256	/* Do not truncate: swapon got its bmaps */
 #define S_PRIVATE	512	/* Inode is fs-internal */
 #define S_IMA		1024	/* Inode has an associated IMA struct */
+// ARM10C 20151219
+// S_AUTOMOUNT: 2048
 #define S_AUTOMOUNT	2048	/* Automount/referral quasi-directory */
 #define S_NOSEC		4096	/* no suid or xattr security attributes */
 
@@ -1725,6 +1729,10 @@ struct super_operations {
 #define IS_SWAPFILE(inode)	((inode)->i_flags & S_SWAPFILE)
 #define IS_PRIVATE(inode)	((inode)->i_flags & S_PRIVATE)
 #define IS_IMA(inode)		((inode)->i_flags & S_IMA)
+// ARM10C 20151219
+// S_AUTOMOUNT: 2048
+//
+// inode: kmem_cache#4-oX
 #define IS_AUTOMOUNT(inode)	((inode)->i_flags & S_AUTOMOUNT)
 #define IS_NOSEC(inode)		((inode)->i_flags & S_NOSEC)
 

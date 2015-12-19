@@ -362,6 +362,8 @@ static inline raw_spinlock_t *spinlock_check(spinlock_t *lock)
 // &lru->node[0].lock: (&(kmem_cache#25-oX (struct super_block))->s_dentry_lru)->node[0].lock
 // ARM10C 20151205
 // &inode->i_lock: &(kmem_cache#4-oX)->i_lock
+// ARM10C 20151219
+// &dentry->d_lock: &(kmem_cache#5-oX)->d_lock
 #define spin_lock_init(_lock)				\
 do {							\
 	spinlock_check(_lock);				\
@@ -386,6 +388,8 @@ do {							\
 // ARM10C 20151205
 // &inode->i_lock: &(kmem_cache#4-oX)->i_lock
 // ARM10C 20151212
+// &inode->i_lock: &(kmem_cache#4-oX)->i_lock
+// ARM10C 20151219
 // &inode->i_lock: &(kmem_cache#4-oX)->i_lock
 static inline void spin_lock(spinlock_t *lock)
 {

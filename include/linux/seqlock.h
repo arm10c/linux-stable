@@ -54,14 +54,20 @@ typedef struct seqcount {
 #endif
 } seqcount_t;
 
+// ARM10C 20151219
+// &dentry->d_seq: &(kmem_cache#5-oX)->d_seq
 static inline void __seqcount_init(seqcount_t *s, const char *name,
 					  struct lock_class_key *key)
 {
 	/*
 	 * Make sure we are not reinitializing a held lock:
 	 */
-	lockdep_init_map(&s->dep_map, name, key, 0);
+	// &s->dep_map: (&(kmem_cache#5-oX)->d_seq)->dep_map, name: NULL, key: NULL, 0
+	lockdep_init_map(&s->dep_map, name, key, 0); // null function
+
+	// s->sequence: (&(kmem_cache#5-oX)->d_seq)->sequence
 	s->sequence = 0;
+	// s->sequence: (&(kmem_cache#5-oX)->d_seq)->sequence: 0
 }
 
 #ifdef CONFIG_DEBUG_LOCK_ALLOC // CONFIG_DEBUG_LOCK_ALLOC=n
@@ -87,6 +93,8 @@ static inline void seqcount_lockdep_reader_access(const seqcount_t *s)
 
 #else
 # define SEQCOUNT_DEP_MAP_INIT(lockname)
+// ARM10C 20151219
+// &dentry->d_seq: &(kmem_cache#5-oX)->d_seq
 # define seqcount_init(s) __seqcount_init(s, NULL, NULL)
 // ARM10C 20150418
 # define seqcount_lockdep_reader_access(x)

@@ -817,6 +817,7 @@ static struct dentry *sysfs_lookup(struct inode *dir, struct dentry *dentry,
 }
 
 // ARM10C 20151212
+// ARM10C 20151219
 const struct inode_operations sysfs_dir_inode_operations = {
 	.lookup		= sysfs_lookup,
 	.permission	= sysfs_permission,

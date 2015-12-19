@@ -29,6 +29,10 @@
 #define LIST_BL_BUG_ON(x)
 #endif
 
+// hlist_bl_head 에서 bl의 의미:
+// bitlocked linked list
+// https://lwn.net/Articles/609904/
+
 // ARM10C 20140322
 // sizeof(struct hlist_bl_head): 4 bytes
 struct hlist_bl_head {
@@ -36,6 +40,7 @@ struct hlist_bl_head {
 };
 
 // ARM10C 20151003
+// ARM10C 20151219
 // sizeof(struct hlist_bl_node): 8 bytes
 struct hlist_bl_node {
 	struct hlist_bl_node *next, **pprev;
@@ -45,10 +50,17 @@ struct hlist_bl_node {
 #define INIT_HLIST_BL_HEAD(ptr) \
 	((ptr)->first = NULL)
 
+// ARM10C 20151219
+// &dentry->d_hash: &(kmem_cache#5-oX)->d_hash
 static inline void INIT_HLIST_BL_NODE(struct hlist_bl_node *h)
 {
+	// h->next: (&(kmem_cache#5-oX)->d_hash)->next
 	h->next = NULL;
+	// h->next: (&(kmem_cache#5-oX)->d_hash)->next: NULL
+
+	// h->pprev: (&(kmem_cache#5-oX)->d_hash)->pprev
 	h->pprev = NULL;
+	// h->pprev: (&(kmem_cache#5-oX)->d_hash)->pprev: NULL
 }
 
 #define hlist_bl_entry(ptr, type, member) container_of(ptr,type,member)

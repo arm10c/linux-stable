@@ -141,6 +141,8 @@ extern void warn_slowpath_null(const char *file, const int line);
 #endif
 
 // ARM10C 20131207
+// ARM10C 20151219
+// dentry->d_op: (kmem_cache#5-oX)->d_op: NULL
 #define WARN_ON_ONCE(condition)	({				\
 	static bool __section(.data.unlikely) __warned;		\
 	int __ret_warn_once = !!(condition);			\

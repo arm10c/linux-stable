@@ -177,6 +177,10 @@
 // DEFINE_PER_CPU(unsigned long, nr_inodes):
 //	__attribute__((section(".data..percpu" "")))
 //	__typeof__(unsigned long) nr_inodes
+// ARM10C 20151219
+// DEFINE_PER_CPU(long, nr_dentry):
+//	__attribute__((section(".data..percpu" "")))
+//	__typeof__(unsigned long) nr_dentry
 #define DEFINE_PER_CPU(type, name)					\
 	DEFINE_PER_CPU_SECTION(type, name, "")
 
