@@ -10,6 +10,10 @@
   - current : 3.13.x
   
 # HISTORY
+* 125th (2015/11/27) week [125차](https://github.com/hephaex/kernel_review/blob/master/a10c_125.md)
+ - vfs_caches_init()
+  - mnt_init()
+    - sysfs_init()
 * 124th (2015/11/21) week [124차](https://github.com/hephaex/kernel_review/blob/master/a10c_124.md)
  - vfs_caches_init()
 * 123th (2015/11/14) week [123차](https://github.com/hephaex/kernel_review/blob/master/a10c_123.md)
