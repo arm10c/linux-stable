@@ -35,6 +35,8 @@ struct kref {
 // ARM10C 20140208
 // ARM10C 20150718
 // &port->kref: &(&(kmem_cache#25-oX)->port)->kref
+// ARM10C 20160109
+// &kobj->kref: &(kmem_cache#30-oX (struct kobject))->kref
 static inline void kref_init(struct kref *kref)
 {
 	atomic_set(&kref->refcount, 1);

@@ -152,6 +152,8 @@
 // &dentry->d_lru: &(kmem_cache#5-oX)->d_lru
 // ARM10C 20151219
 // &dentry->d_subdirs: &(kmem_cache#5-oX)->d_subdirs
+// ARM10C 20160109
+// &kobj->entry: &(kmem_cache#30-oX (struct kobject))->entry
 static inline void INIT_LIST_HEAD(struct list_head *list)
 {
 	list->next = list;

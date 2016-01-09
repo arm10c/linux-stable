@@ -955,6 +955,8 @@ extern void *__kmalloc_track_caller(size_t, gfp_t, unsigned long);
 // len: 12, gfp: GFP_NOWAIT: 0
 // ARM10C 20140920
 // len: 16, gfp: GFP_KERNEL: 0xD0
+// ARM10C 20160109
+// len: 3, GFP_KERNEL: 0xD0
 #define kmalloc_track_caller(size, flags) \
 	__kmalloc_track_caller(size, flags, _RET_IP_)
 #else
@@ -1087,6 +1089,8 @@ static inline void *kmem_cache_zalloc(struct kmem_cache *k, gfp_t flags)
 // size: 28, GFP_KERNEL: 0xD0
 // ARM10C 20151121
 // size: 4, GFP_KERNEL: 0xD0
+// ARM10C 20160109
+// sizeof(struct kobject): 36 bytes, GFP_KERNEL: 0xD0
 static inline void *kzalloc(size_t size, gfp_t flags)
 {
 	// size: 512, GFP_KERNEL: 0xD0, __GFP_ZERO: 0x8000u

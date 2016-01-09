@@ -59,6 +59,7 @@ enum kobject_action {
 };
 
 // ARM10C 20140607
+// ARM10C 20160109
 // sizeof(struct kobject): 36 bytes
 struct kobject {
 	const char		*name;
@@ -112,6 +113,7 @@ extern void kobject_put(struct kobject *kobj);
 extern const void *kobject_namespace(struct kobject *kobj);
 extern char *kobject_get_path(struct kobject *kobj, gfp_t flag);
 
+// ARM10C 20160109
 struct kobj_type {
 	void (*release)(struct kobject *kobj);
 	const struct sysfs_ops *sysfs_ops;

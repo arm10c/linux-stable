@@ -167,16 +167,42 @@ static void kobj_kset_leave(struct kobject *kobj)
 	kset_put(kobj->kset);
 }
 
+// ARM10C 20160109
+// kobj: kmem_cache#30-oX (struct kobject)
 static void kobject_init_internal(struct kobject *kobj)
 {
+	// kobj: kmem_cache#30-oX (struct kobject)
 	if (!kobj)
 		return;
+
+	// &kobj->kref: &(kmem_cache#30-oX (struct kobject))->kref
 	kref_init(&kobj->kref);
+
+	// kref_init에서 한일:
+	// (&(kmem_cache#30-oX (struct kobject))->kref)->refcount: 1
+
+	// &kobj->entry: &(kmem_cache#30-oX (struct kobject))->entry
 	INIT_LIST_HEAD(&kobj->entry);
+
+	// INIT_LIST_HEAD에서 한일:
+	// (&(kmem_cache#30-oX (struct kobject))->entry)->next: &(kmem_cache#30-oX (struct kobject))->entry
+	// (&(kmem_cache#30-oX (struct kobject))->entry)->prev: &(kmem_cache#30-oX (struct kobject))->entry
+
+	// kobj->state_in_sysfs: (kmem_cache#30-oX (struct kobject))->state_in_sysfs
 	kobj->state_in_sysfs = 0;
+	// kobj->state_in_sysfs: (kmem_cache#30-oX (struct kobject))->state_in_sysfs: 0
+
+	// kobj->state_add_uevent_sent: (kmem_cache#30-oX (struct kobject))->state_add_uevent_sent
 	kobj->state_add_uevent_sent = 0;
+	// kobj->state_add_uevent_sent: (kmem_cache#30-oX (struct kobject))->state_add_uevent_sent: 0
+
+	// kobj->state_remove_uevent_sent: (kmem_cache#30-oX (struct kobject))->state_remove_uevent_sent
 	kobj->state_remove_uevent_sent = 0;
+	// kobj->state_remove_uevent_sent: (kmem_cache#30-oX (struct kobject))->state_remove_uevent_sent: 0
+
+	// kobj->state_initialized: (kmem_cache#30-oX (struct kobject))->state_initialized
 	kobj->state_initialized = 1;
+	// kobj->state_initialized: (kmem_cache#30-oX (struct kobject))->state_initialized: 1
 }
 
 
@@ -237,18 +263,32 @@ static int kobject_add_internal(struct kobject *kobj)
  * @fmt: format string used to build the name
  * @vargs: vargs to format the string.
  */
+// ARM10C 20160109
+// kobj: kmem_cache#30-oX (struct kobject), fmt: "%s", vargs: "fs"
 int kobject_set_name_vargs(struct kobject *kobj, const char *fmt,
 				  va_list vargs)
 {
+	// kobj->name: (kmem_cache#30-oX (struct kobject))->name: NULL
 	const char *old_name = kobj->name;
+	// old_name: NULL
+
 	char *s;
 
+	// kobj->name: (kmem_cache#30-oX (struct kobject))->name: NULL, fmt: "%s"
 	if (kobj->name && !fmt)
 		return 0;
 
+	// kobj->name: (kmem_cache#30-oX (struct kobject))->name: NULL
+	// GFP_KERNEL: 0xD0, fmt: "%s", vargs: "fs"
+	// kvasprintf(GFP_KERNEL: 0xD0, "%s", "fs"): kmem_cache#30-oX: "fs"
 	kobj->name = kvasprintf(GFP_KERNEL, fmt, vargs);
+	// kobj->name: (kmem_cache#30-oX (struct kobject))->name: kmem_cache#30-oX: "fs"
+
+	// kobj->name: (kmem_cache#30-oX (struct kobject))->name: kmem_cache#30-oX: "fs"
 	if (!kobj->name)
 		return -ENOMEM;
+
+// 2016/01/09 종료
 
 	/* ewww... some of these buggers have '/' in the name ... */
 	while ((s = strchr(kobj->name, '/')))
@@ -292,18 +332,25 @@ EXPORT_SYMBOL(kobject_set_name);
  * to kobject_put(), not by a call to kfree directly to ensure that all of
  * the memory is cleaned up properly.
  */
+// ARM10C 20160109
+// kobj: kmem_cache#30-oX (struct kobject), &dynamic_kobj_ktype
 void kobject_init(struct kobject *kobj, struct kobj_type *ktype)
 {
 	char *err_str;
 
+	// kobj: kmem_cache#30-oX (struct kobject)
 	if (!kobj) {
 		err_str = "invalid kobject pointer!";
 		goto error;
 	}
+
+	// ktype: &dynamic_kobj_ktype
 	if (!ktype) {
 		err_str = "must have a ktype to be initialized properly!\n";
 		goto error;
 	}
+
+	// kobj->state_initialized: (kmem_cache#30-oX (struct kobject))->state_initialized: 0
 	if (kobj->state_initialized) {
 		/* do not error out as sometimes we can recover */
 		printk(KERN_ERR "kobject (%p): tried to init an initialized "
@@ -311,9 +358,25 @@ void kobject_init(struct kobject *kobj, struct kobj_type *ktype)
 		dump_stack();
 	}
 
+	// kobj: kmem_cache#30-oX (struct kobject)
 	kobject_init_internal(kobj);
+
+	// kobject_init_internal에서 한일:
+	//
+	// (&(kmem_cache#30-oX (struct kobject))->kref)->refcount: 1
+	// (&(kmem_cache#30-oX (struct kobject))->entry)->next: &(kmem_cache#30-oX (struct kobject))->entry
+	// (&(kmem_cache#30-oX (struct kobject))->entry)->prev: &(kmem_cache#30-oX (struct kobject))->entry
+	// (kmem_cache#30-oX (struct kobject))->state_in_sysfs: 0
+	// (kmem_cache#30-oX (struct kobject))->state_add_uevent_sent: 0
+	// (kmem_cache#30-oX (struct kobject))->state_remove_uevent_sent: 0
+	// (kmem_cache#30-oX (struct kobject))->state_initialized: 1
+
+	// kobj->ktype: (kmem_cache#30-oX (struct kobject))->ktype, ktype: &dynamic_kobj_ktype
 	kobj->ktype = ktype;
+	// kobj->ktype: (kmem_cache#30-oX (struct kobject))->ktype: &dynamic_kobj_ktype
+
 	return;
+	// return
 
 error:
 	printk(KERN_ERR "kobject (%p): %s\n", kobj, err_str);
@@ -321,11 +384,14 @@ error:
 }
 EXPORT_SYMBOL(kobject_init);
 
+// ARM10C 20160109
+// kobj: kmem_cache#30-oX (struct kobject), parent: NULL, fmt: "%s", args: "fs"
 static int kobject_add_varg(struct kobject *kobj, struct kobject *parent,
 			    const char *fmt, va_list vargs)
 {
 	int retval;
 
+	// kobj: kmem_cache#30-oX (struct kobject), fmt: "%s", vargs: "fs"
 	retval = kobject_set_name_vargs(kobj, fmt, vargs);
 	if (retval) {
 		printk(KERN_ERR "kobject: can not set name properly!\n");
@@ -360,15 +426,19 @@ static int kobject_add_varg(struct kobject *kobj, struct kobject *parent,
  * kobject_uevent() with the UEVENT_ADD parameter to ensure that
  * userspace is properly notified of this kobject's creation.
  */
+// ARM10C 20160109
+// kobj: kmem_cache#30-oX (struct kobject), parent: NULL, "%s", name: "fs"
 int kobject_add(struct kobject *kobj, struct kobject *parent,
 		const char *fmt, ...)
 {
 	va_list args;
 	int retval;
 
+	// kobj: kmem_cache#30-oX (struct kobject)
 	if (!kobj)
 		return -EINVAL;
 
+	// kobj->state_initialized: (kmem_cache#30-oX (struct kobject))->state_initialized: 1
 	if (!kobj->state_initialized) {
 		printk(KERN_ERR "kobject '%s' (%p): tried to add an "
 		       "uninitialized object, something is seriously wrong.\n",
@@ -376,7 +446,14 @@ int kobject_add(struct kobject *kobj, struct kobject *parent,
 		dump_stack();
 		return -EINVAL;
 	}
+
+	// fmt: "%s"
 	va_start(args, fmt);
+
+	// va_start에서 한일:
+	// (args): (((char *) &("%s")) + 4): "fs"
+
+	// kobj: kmem_cache#30-oX (struct kobject), parent: NULL, fmt: "%s", args: "fs"
 	retval = kobject_add_varg(kobj, parent, fmt, args);
 	va_end(args);
 
@@ -657,6 +734,7 @@ static void dynamic_kobj_release(struct kobject *kobj)
 	kfree(kobj);
 }
 
+// ARM10C 20160109
 static struct kobj_type dynamic_kobj_ktype = {
 	.release	= dynamic_kobj_release,
 	.sysfs_ops	= &kobj_sysfs_ops,
@@ -673,16 +751,37 @@ static struct kobj_type dynamic_kobj_ktype = {
  * call to kobject_put() and not kfree(), as kobject_init() has
  * already been called on this structure.
  */
+// ARM10C 20160109
 struct kobject *kobject_create(void)
 {
 	struct kobject *kobj;
 
+	// sizeof(struct kobject): 36 bytes, GFP_KERNEL: 0xD0
+	// kzalloc(36, GFP_KERNEL: 0xD0): kmem_cache#30-oX (struct kobject)
 	kobj = kzalloc(sizeof(*kobj), GFP_KERNEL);
+	// kobj: kmem_cache#30-oX (struct kobject)
+
+	// kobj: kmem_cache#30-oX (struct kobject)
 	if (!kobj)
 		return NULL;
 
+	// kobj: kmem_cache#30-oX (struct kobject)
 	kobject_init(kobj, &dynamic_kobj_ktype);
+
+	// kobject_init에서 한일:
+	//
+	// (&(kmem_cache#30-oX (struct kobject))->kref)->refcount: 1
+	// (&(kmem_cache#30-oX (struct kobject))->entry)->next: &(kmem_cache#30-oX (struct kobject))->entry
+	// (&(kmem_cache#30-oX (struct kobject))->entry)->prev: &(kmem_cache#30-oX (struct kobject))->entry
+	// (kmem_cache#30-oX (struct kobject))->state_in_sysfs: 0
+	// (kmem_cache#30-oX (struct kobject))->state_add_uevent_sent: 0
+	// (kmem_cache#30-oX (struct kobject))->state_remove_uevent_sent: 0
+	// (kmem_cache#30-oX (struct kobject))->state_initialized: 1
+	// (kmem_cache#30-oX (struct kobject))->ktype: &dynamic_kobj_ktype
+
+	// kobj: kmem_cache#30-oX (struct kobject)
 	return kobj;
+	// return kmem_cache#30-oX (struct kobject)
 }
 
 /**
@@ -698,15 +797,34 @@ struct kobject *kobject_create(void)
  *
  * If the kobject was not able to be created, NULL will be returned.
  */
+// ARM10C 20160109
+// "fs", NULL
 struct kobject *kobject_create_and_add(const char *name, struct kobject *parent)
 {
 	struct kobject *kobj;
 	int retval;
 
+	// kobject_create(): kmem_cache#30-oX (struct kobject)
 	kobj = kobject_create();
+	// kobj: kmem_cache#30-oX (struct kobject)
+
+	// kobject_create에서 한일:
+	//
+	// struct kobject의 메모리를 할당받음 kmem_cache#30-oX (struct kobject)
+	// (&(kmem_cache#30-oX (struct kobject))->kref)->refcount: 1
+	// (&(kmem_cache#30-oX (struct kobject))->entry)->next: &(kmem_cache#30-oX (struct kobject))->entry
+	// (&(kmem_cache#30-oX (struct kobject))->entry)->prev: &(kmem_cache#30-oX (struct kobject))->entry
+	// (kmem_cache#30-oX (struct kobject))->state_in_sysfs: 0
+	// (kmem_cache#30-oX (struct kobject))->state_add_uevent_sent: 0
+	// (kmem_cache#30-oX (struct kobject))->state_remove_uevent_sent: 0
+	// (kmem_cache#30-oX (struct kobject))->state_initialized: 1
+	// (kmem_cache#30-oX (struct kobject))->ktype: &dynamic_kobj_ktype
+
+	// kobj: kmem_cache#30-oX (struct kobject)
 	if (!kobj)
 		return NULL;
 
+	// kobj: kmem_cache#30-oX (struct kobject), parent: NULL, name: "fs"
 	retval = kobject_add(kobj, parent, "%s", name);
 	if (retval) {
 		printk(KERN_WARNING "%s: kobject_add error: %d\n",

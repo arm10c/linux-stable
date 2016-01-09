@@ -358,21 +358,35 @@
 #ifndef _VALIST
 #define _VALIST
 // ARM10C 20150117
+// ARM10C 20160109
 typedef char *va_list;
 #endif				/* _VALIST */
 
 /* Storage alignment properties */
 
+// ARM10C 20160109
+// sizeof (acpi_native_int): 4
+// _AUPBND: 3
 #define  _AUPBND                (sizeof (acpi_native_int) - 1)
 #define  _ADNBND                (sizeof (acpi_native_int) - 1)
 
 /* Variable argument list macro definitions */
 
+// ARM10C 20160109
+// #define _bnd("%s", 3):
+// (((sizeof ("%s")) + (3)) & (~(3)))
 #define _bnd(X, bnd)            (((sizeof (X)) + (bnd)) & (~(bnd)))
 #define va_arg(ap, T)           (*(T *)(((ap) += (_bnd (T, _AUPBND))) - (_bnd (T,_ADNBND))))
+// ARM10C 20160109
 #define va_end(ap)              (ap = (va_list) NULL)
 // ARM10C 20150117
 // ap, dev_fmt: NULL
+// ARM10C 20160109
+// _AUPBND: 3
+// _bnd("%s",3): 4
+//
+// #define va_start(args, "%s"):
+// (void) ((args) = (((char *) &("%s")) + 4))
 #define va_start(ap, A)         (void) ((ap) = (((char *) &(A)) + (_bnd (A,_AUPBND))))
 
 #endif				/* va_arg */

@@ -8,6 +8,7 @@
 #include <linux/compiler.h>
 #include <linux/export.h>
 
+// ARM10C 20160109
 const unsigned char _ctype[] = {
 _C,_C,_C,_C,_C,_C,_C,_C,				/* 0-7 */
 _C,_C|_S,_C|_S,_C|_S,_C|_S,_C|_S,_C,_C,			/* 8-15 */

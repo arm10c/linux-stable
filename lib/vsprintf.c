@@ -349,11 +349,16 @@ int num_to_str(char *buf, int size, unsigned long long num)
 #define SMALL	32		/* use lowercase in hex (must be 32 == 0x20) */
 #define SPECIAL	64		/* prefix hex with "0x", octal with "0" */
 
+// ARM10C 20160109
 enum format_type {
+	// FORMAT_TYPE_NONE: 0
 	FORMAT_TYPE_NONE, /* Just a string part */
+	// FORMAT_TYPE_WIDTH: 1
 	FORMAT_TYPE_WIDTH,
+	// FORMAT_TYPE_PRECISION: 2
 	FORMAT_TYPE_PRECISION,
 	FORMAT_TYPE_CHAR,
+	// FORMAT_TYPE_STR: 4
 	FORMAT_TYPE_STR,
 	FORMAT_TYPE_PTR,
 	FORMAT_TYPE_PERCENT_CHAR,
@@ -372,6 +377,7 @@ enum format_type {
 	FORMAT_TYPE_PTRDIFF
 };
 
+// ARM10C 20160109
 struct printf_spec {
 	u8	type;		/* format_type enum */
 	u8	flags;		/* flags to number() */
@@ -1398,12 +1404,17 @@ char *pointer(const char *fmt, char *buf, char *end, void *ptr,
  * @precision: precision of a number
  * @qualifier: qualifier of a number (long, size_t, ...)
  */
+// ARM10C 20160109
+// fmt: "%s", &spec
 static noinline_for_stack
 int format_decode(const char *fmt, struct printf_spec *spec)
 {
+	// fmt: "%s"
 	const char *start = fmt;
+	// start: "%s"
 
 	/* we finished early by reading the field width */
+	// spec->type: (&spec)->type: 0, FORMAT_TYPE_WIDTH: 1
 	if (spec->type == FORMAT_TYPE_WIDTH) {
 		if (spec->field_width < 0) {
 			spec->field_width = -spec->field_width;
@@ -1414,6 +1425,7 @@ int format_decode(const char *fmt, struct printf_spec *spec)
 	}
 
 	/* we finished early by reading the precision */
+	// spec->type: (&spec)->type: 0, FORMAT_TYPE_PRECISION: 2
 	if (spec->type == FORMAT_TYPE_PRECISION) {
 		if (spec->precision < 0)
 			spec->precision = 0;
@@ -1423,25 +1435,37 @@ int format_decode(const char *fmt, struct printf_spec *spec)
 	}
 
 	/* By default */
+	// spec->type: (&spec)->type: 0, FORMAT_TYPE_NONE: 0
 	spec->type = FORMAT_TYPE_NONE;
+	// spec->type: (&spec)->type: 0
 
+	// fmt: "%s"
 	for (; *fmt ; ++fmt) {
+		// *fmt: '%'
 		if (*fmt == '%')
 			break;
+			// break 수행
 	}
 
 	/* Return the current non-format string */
+	// fmt: "%s", start: "%s", *fmt: '%'
 	if (fmt != start || !*fmt)
 		return fmt - start;
 
 	/* Process flags */
+	// spec->flags: (&spec)->flags
 	spec->flags = 0;
+	// spec->flags: (&spec)->flags: 0
 
 	while (1) { /* this also skips first '%' */
 		bool found = true;
+		// found: true
 
+		// fmt: "%s"
 		++fmt;
+		// fmt: "s"
 
+		// *fmt: 's'
 		switch (*fmt) {
 		case '-': spec->flags |= LEFT;    break;
 		case '+': spec->flags |= PLUS;    break;
@@ -1449,15 +1473,21 @@ int format_decode(const char *fmt, struct printf_spec *spec)
 		case '#': spec->flags |= SPECIAL; break;
 		case '0': spec->flags |= ZEROPAD; break;
 		default:  found = false;
+			  // found: false
 		}
 
+		// found: false
 		if (!found)
 			break;
+			// break 수행
 	}
 
 	/* get field width */
+	// spec->field_width: (&spec)->field_width
 	spec->field_width = -1;
+	// spec->field_width: (&spec)->field_width: -1
 
+	// *fmt: 's', isdigit('s'): 0
 	if (isdigit(*fmt))
 		spec->field_width = skip_atoi(&fmt);
 	else if (*fmt == '*') {
@@ -1468,7 +1498,11 @@ int format_decode(const char *fmt, struct printf_spec *spec)
 
 precision:
 	/* get the precision */
+	// spec->precision: (&spec)->precision
 	spec->precision = -1;
+	// spec->precision: (&spec)->precision: -1
+
+	// *fmt: 's'
 	if (*fmt == '.') {
 		++fmt;
 		if (isdigit(*fmt)) {
@@ -1484,7 +1518,11 @@ precision:
 
 qualifier:
 	/* get the conversion qualifier */
+	// spec->qualifier: (&spec)->qualifier
 	spec->qualifier = -1;
+	// spec->qualifier: (&spec)->qualifier: -1
+
+	// *fmt: 's', _tolower('s'): 's'
 	if (*fmt == 'h' || _tolower(*fmt) == 'l' ||
 	    _tolower(*fmt) == 'z' || *fmt == 't') {
 		spec->qualifier = *fmt++;
@@ -1500,15 +1538,24 @@ qualifier:
 	}
 
 	/* default base */
+	// spec->base: (&spec)->base
 	spec->base = 10;
+	// spec->base: (&spec)->base: 10
+
+	// *fmt: 's'
 	switch (*fmt) {
 	case 'c':
 		spec->type = FORMAT_TYPE_CHAR;
 		return ++fmt - start;
 
 	case 's':
+		// spec->type: (&spec)->type, FORMAT_TYPE_STR: 4
 		spec->type = FORMAT_TYPE_STR;
+		// spec->type: (&spec)->type: 4
+
+		// fmt: "s",  start: "%s"
 		return ++fmt - start;
+		// return 2
 
 	case 'p':
 		spec->type = FORMAT_TYPE_PTR;
@@ -1622,6 +1669,10 @@ qualifier:
  *
  * If you're not already dealing with a va_list consider using snprintf().
  */
+// ARM10C 20160109
+// NULL, 0, fmt: "%s", aq: "fs"
+// ARM10C 20160109
+// p: kmem_cache#30-oX, len: 2, fmt: "%s", ap: "fs"
 int vsnprintf(char *buf, size_t size, const char *fmt, va_list args)
 {
 	unsigned long long num;
@@ -1630,34 +1681,67 @@ int vsnprintf(char *buf, size_t size, const char *fmt, va_list args)
 
 	/* Reject out-of-range values early.  Large positive sizes are
 	   used for unknown buffer sizes. */
+	// size: 0
 	if (WARN_ON_ONCE((int) size < 0))
 		return 0;
 
+	// buf: NULL
 	str = buf;
+	// str: NULL
+
+	// buf: NULL
 	end = buf + size;
+	// end: NULL
 
 	/* Make sure end is always >= buf */
+	// end: NULL, buf: NULL
 	if (end < buf) {
 		end = ((void *)-1);
 		size = end - buf;
 	}
 
+	// *fmt: '%'
 	while (*fmt) {
+		// fmt: "%s"
 		const char *old_fmt = fmt;
+		// old_fmt: "%s"
+
+		// fmt: "%s", format_decode("%s", &spec): 2
 		int read = format_decode(fmt, &spec);
+		// read: 2
 
+		// format_decode에서 한일:
+		//
+		// (&spec)->type: 0
+		// (&spec)->flags: 0
+		// (&spec)->field_width: -1
+		// (&spec)->precision: -1
+		// (&spec)->qualifier: -1
+		// (&spec)->base: 10
+
+		// fmt: "%s", read: 2
 		fmt += read;
+		// fmt: NULL
 
+		// spec.type: 0
 		switch (spec.type) {
-		case FORMAT_TYPE_NONE: {
+		case FORMAT_TYPE_NONE: { // FORMAT_TYPE_NONE: 0
+			// read: 2
 			int copy = read;
+			// copy: 2
+
+			// str: NULL, end: NULL
 			if (str < end) {
 				if (copy > end - str)
 					copy = end - str;
 				memcpy(str, old_fmt, copy);
 			}
+			// str: NULL, read: 2
 			str += read;
+			// str: 2
+
 			break;
+			// break 수행
 		}
 
 		case FORMAT_TYPE_WIDTH:
@@ -1771,6 +1855,7 @@ int vsnprintf(char *buf, size_t size, const char *fmt, va_list args)
 		}
 	}
 
+	// size: 0
 	if (size > 0) {
 		if (str < end)
 			*str = '\0';
@@ -1779,7 +1864,9 @@ int vsnprintf(char *buf, size_t size, const char *fmt, va_list args)
 	}
 
 	/* the trailing null byte doesn't count towards the total */
+	// str: 2, buf: NULL
 	return str-buf;
+	// return 2
 
 }
 EXPORT_SYMBOL(vsnprintf);

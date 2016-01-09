@@ -67,6 +67,9 @@
 
 /* Host-dependent types and defines for in-kernel ACPICA */
 
+// ARM10C 20160109
+// BITS_PER_LONG: 32
+// ACPI_MACHINE_WIDTH: 32
 #define ACPI_MACHINE_WIDTH          BITS_PER_LONG
 #define ACPI_EXPORT_SYMBOL(symbol)  EXPORT_SYMBOL(symbol);
 #define strtoul                     simple_strtoul

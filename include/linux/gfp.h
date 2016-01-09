@@ -274,6 +274,7 @@ struct vm_area_struct;
 // ARM10C 20151121
 // ARM10C 20151128
 // ARM10C 20151212
+// ARM10C 20160109
 // __GFP_WAIT: 0x10
 // __GFP_IO: 0x40
 // __GFP_FS: 0x80

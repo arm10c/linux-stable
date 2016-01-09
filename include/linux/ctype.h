@@ -7,7 +7,11 @@
  */
 
 #define _U	0x01	/* upper */
+// ARM10C 20160109
+// _L: 0x02
 #define _L	0x02	/* lower */
+// ARM10C 20160109
+// _D: 0x04
 #define _D	0x04	/* digit */
 #define _C	0x08	/* cntrl */
 #define _P	0x10	/* punct */
@@ -17,11 +21,17 @@
 
 extern const unsigned char _ctype[];
 
+// ARM10C 20160109
 #define __ismask(x) (_ctype[(int)(unsigned char)(x)])
 
 #define isalnum(c)	((__ismask(c)&(_U|_L|_D)) != 0)
 #define isalpha(c)	((__ismask(c)&(_U|_L)) != 0)
 #define iscntrl(c)	((__ismask(c)&(_C)) != 0)
+// ARM10C 20160109
+// *fmt: 's'
+// _L: 0x02
+//
+// __ismask('s'): 0x02, _D: 0x04
 #define isdigit(c)	((__ismask(c)&(_D)) != 0)
 #define isgraph(c)	((__ismask(c)&(_P|_U|_L|_D)) != 0)
 #define islower(c)	((__ismask(c)&(_L)) != 0)
@@ -30,6 +40,7 @@ extern const unsigned char _ctype[];
 /* Note: isspace() must return false for %NUL-terminator */
 // ARM10C 20131019
 #define isspace(c)	((__ismask(c)&(_S)) != 0)
+// ARM10C 20160109
 #define isupper(c)	((__ismask(c)&(_U)) != 0)
 #define isxdigit(c)	((__ismask(c)&(_D|_X)) != 0)
 
@@ -37,6 +48,7 @@ extern const unsigned char _ctype[];
 #define toascii(c) (((unsigned char)(c))&0x7f)
 
 // ARM10C 20131005
+// ARM10C 20160109
 static inline unsigned char __tolower(unsigned char c)
 {
 	if (isupper(c))
@@ -52,6 +64,7 @@ static inline unsigned char __toupper(unsigned char c)
 }
 
 // ARM10C 20131005
+// ARM10C 20160109
 #define tolower(c) __tolower(c)
 #define toupper(c) __toupper(c)
 

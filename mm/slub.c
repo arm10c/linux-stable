@@ -8090,6 +8090,8 @@ static struct notifier_block slab_notifier = {
 // len: 12, gfp: GFP_NOWAIT: 0, _RET_IP_
 // ARM10C 20140920
 // len: 16, gfp: GFP_KERNEL: 0xD0, _RET_IP_
+// ARM10C 20160109
+// len: 3, GFP_KERNEL: 0xD0, _RET_IP_
 void *__kmalloc_track_caller(size_t size, gfp_t gfpflags, unsigned long caller)
 {
 	struct kmem_cache *s;

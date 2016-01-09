@@ -147,7 +147,7 @@ typedef COMPILER_DEPENDENT_INT64 INT64;
  *
  ******************************************************************************/
 
-#if ACPI_MACHINE_WIDTH == 64
+#if ACPI_MACHINE_WIDTH == 64 // ACPI_MACHINE_WIDTH: 32
 
 /*! [Begin] no source code translation (keep the typedefs as-is) */
 
@@ -186,7 +186,7 @@ typedef u64 acpi_physical_address;
  *
  ******************************************************************************/
 
-#elif ACPI_MACHINE_WIDTH == 32
+#elif ACPI_MACHINE_WIDTH == 32 // ACPI_MACHINE_WIDTH: 32
 
 /*! [Begin] no source code translation (keep the typedefs as-is) */
 
@@ -195,6 +195,7 @@ typedef int INT32;
 
 /*! [End] no source code translation !*/
 
+// ARM10C 20160109
 typedef s32 acpi_native_int;
 
 typedef u32 acpi_size;
