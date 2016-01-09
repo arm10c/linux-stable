@@ -47,6 +47,7 @@
 // ARM10C 20150103
 // ARM10C 20150418
 // ARM10C 20151003
+// ARM10C 20160109
 typedef struct seqcount {
 	unsigned sequence;
 #ifdef CONFIG_DEBUG_LOCK_ALLOC // CONFIG_DEBUG_LOCK_ALLOC=n
@@ -92,6 +93,8 @@ static inline void seqcount_lockdep_reader_access(const seqcount_t *s)
 }
 
 #else
+// ARM10C 20160109
+// #define SEQCOUNT_DEP_MAP_INIT(mount_lock):
 # define SEQCOUNT_DEP_MAP_INIT(lockname)
 // ARM10C 20151219
 // &dentry->d_seq: &(kmem_cache#5-oX)->d_seq
@@ -100,6 +103,11 @@ static inline void seqcount_lockdep_reader_access(const seqcount_t *s)
 # define seqcount_lockdep_reader_access(x)
 #endif
 
+// ARM10C 20160109
+// SEQCOUNT_DEP_MAP_INIT(mount_lock):
+//
+// #define SEQCNT_ZERO(mount_lock):
+// { .sequence = 0, }
 #define SEQCNT_ZERO(lockname) { .sequence = 0, SEQCOUNT_DEP_MAP_INIT(lockname)}
 
 
@@ -285,17 +293,22 @@ static inline int read_seqcount_retry(const seqcount_t *s, unsigned start)
 // &cd.seq
 // ARM10C 20150530
 // &cd.seq
+// ARM10C 20160109
+// s: &(&mount_lock)->seqcount
 static inline void raw_write_seqcount_begin(seqcount_t *s)
 {
 	// s->sequence: (&timekeeper_seq)->sequence: 0
 	// s->sequence: (&cd.seq)->sequence: 0
 	// s->sequence: (&cd.seq)->sequence: 2
+	// s->sequence: (&(&mount_lock)->seqcount)->sequence: 0
 	s->sequence++;
 	// s->sequence: (&timekeeper_seq)->sequence: 1
 	// s->sequence: (&cd.seq)->sequence: 1
 	// s->sequence: (&cd.seq)->sequence: 3
+	// s->sequence: (&(&mount_lock)->seqcount)->sequence: 1
 
 	smp_wmb();
+	// 공유자원을 다른 cpu core가 사용할수 있게 메모리 적용
 	// 공유자원을 다른 cpu core가 사용할수 있게 메모리 적용
 	// 공유자원을 다른 cpu core가 사용할수 있게 메모리 적용
 	// 공유자원을 다른 cpu core가 사용할수 있게 메모리 적용
@@ -307,9 +320,12 @@ static inline void raw_write_seqcount_begin(seqcount_t *s)
 // &cd.seq
 // ARM10C 20150530
 // &cd.seq
+// ARM10C 20160109
+// s: &(&mount_lock)->seqcount
 static inline void raw_write_seqcount_end(seqcount_t *s)
 {
 	smp_wmb();
+	// 공유자원을 다른 cpu core가 사용할수 있게 메모리 적용
 	// 공유자원을 다른 cpu core가 사용할수 있게 메모리 적용
 	// 공유자원을 다른 cpu core가 사용할수 있게 메모리 적용
 	// 공유자원을 다른 cpu core가 사용할수 있게 메모리 적용
@@ -317,10 +333,12 @@ static inline void raw_write_seqcount_end(seqcount_t *s)
 	// s->sequence: (&timekeeper_seq)->sequence: 1
 	// s->sequence: (&cd.seq)->sequence: 1
 	// s->sequence: (&cd.seq)->sequence: 3
+	// s->sequence: (&(&mount_lock)->seqcount)->sequence: 1
 	s->sequence++;
 	// s->sequence: (&timekeeper_seq)->sequence: 2
 	// s->sequence: (&cd.seq)->sequence: 2
 	// s->sequence: (&cd.seq)->sequence: 4
+	// s->sequence: (&(&mount_lock)->seqcount)->sequence: 2
 }
 
 /*
@@ -329,43 +347,67 @@ static inline void raw_write_seqcount_end(seqcount_t *s)
  */
 // ARM10C 20150103
 // s: &timekeeper_seq, 0
+// ARM10C 20160109
+// s: &(&mount_lock)->seqcount, 0
 static inline void write_seqcount_begin_nested(seqcount_t *s, int subclass)
 {
 	// s: &timekeeper_seq
+	// s: &(&mount_lock)->seqcount
 	raw_write_seqcount_begin(s);
 
 	// raw_write_seqcount_begin에서 한일:
 	// (&timekeeper_seq)->sequence: 1
 	// 공유자원을 다른 cpu core가 사용할수 있게 메모리 적용
 
+	// raw_write_seqcount_begin에서 한일:
+	// (&(&mount_lock)->seqcount)->sequence: 1
+	// 공유자원을 다른 cpu core가 사용할수 있게 메모리 적용
+
 	// &s->dep_map: (&timekeeper_seq)->dep_map, subclass: 0
+	// &s->dep_map: (&(&mount_lock)->seqcount)->dep_map, subclass: 0
 	seqcount_acquire(&s->dep_map, subclass, 0, _RET_IP_); // null function
 }
 
 // ARM10C 20150103
 // &timekeeper_seq
+// ARM10C 20160109
+// &sl->seqcount: &(&mount_lock)->seqcount
 static inline void write_seqcount_begin(seqcount_t *s)
 {
 	// s: &timekeeper_seq
+	// s: &(&mount_lock)->seqcount
 	write_seqcount_begin_nested(s, 0);
 
 	// write_seqcount_begin_nested에서 한일:
 	// (&timekeeper_seq)->sequence: 1
 	// 공유자원을 다른 cpu core가 사용할수 있게 메모리 적용
+
+	// write_seqcount_begin_nested에서 한일:
+	// (&(&mount_lock)->seqcount)->sequence: 1
+	// 공유자원을 다른 cpu core가 사용할수 있게 메모리 적용
 }
 
 // ARM10C 20150103
 // &timekeeper_seq
+// ARM10C 20160109
+// &sl->seqcount: &(&mount_lock)->seqcount
 static inline void write_seqcount_end(seqcount_t *s)
 {
 	// &s->dep_map: &(&timekeeper_seq)->dep_map
+	// &s->dep_map: &(&(&mount_lock)->seqcount)->dep_map
 	seqcount_release(&s->dep_map, 1, _RET_IP_); // null function
 
 	// s: &timekeeper_seq
+	// s: &(&mount_lock)->seqcount
 	raw_write_seqcount_end(s);
 
 	// raw_write_seqcount_end에서 한일:
+	// 공유자원을 다른 cpu core가 사용할수 있게 메모리 적용
 	// (&timekeeper_seq)->sequence: 2
+
+	// raw_write_seqcount_end에서 한일:
+	// 공유자원을 다른 cpu core가 사용할수 있게 메모리 적용
+	// (&(&mount_lock)->seqcount)->sequence: 2
 }
 
 /**
@@ -389,6 +431,7 @@ static inline void write_seqcount_barrier(seqcount_t *s)
 	// s->sequence: (&(kmem_cache#5-oX)->d_seq)->sequence: 2
 }
 
+// ARM10C 20160109
 typedef struct {
 	struct seqcount seqcount;
 	spinlock_t lock;
@@ -398,6 +441,34 @@ typedef struct {
  * These macros triggered gcc-3.x compile-time problems.  We think these are
  * OK now.  Be cautious.
  */
+// ARM10C 20160109
+// SEQCNT_ZERO(mount_lock):
+// { .sequence = 0, }
+// __SPIN_LOCK_UNLOCKED(mount_lock):
+// (spinlock_t )
+// { { .rlock =
+//     {
+//       .raw_lock = { { 0 } },
+//       .magic = 0xdead4ead,
+//       .owner_cpu = -1,
+//       .owner = 0xffffffff,
+//     }
+// } }
+//
+// #define __SEQLOCK_UNLOCKED(mount_lock):
+// {
+//     .seqcount = { .sequence = 0, },
+//     .lock =
+//     (spinlock_t )
+//     { { .rlock =
+//         {
+//           .raw_lock = { { 0 } },
+//           .magic = 0xdead4ead,
+//           .owner_cpu = -1,
+//           .owner = 0xffffffff,
+//         }
+//     } }
+// }
 #define __SEQLOCK_UNLOCKED(lockname)			\
 	{						\
 		.seqcount = SEQCNT_ZERO(lockname),	\
@@ -410,6 +481,37 @@ typedef struct {
 		spin_lock_init(&(x)->lock);		\
 	} while (0)
 
+// ARM10C 20160109
+// __SEQLOCK_UNLOCKED(mount_lock):
+// {
+//     .seqcount = { .sequence = 0, },
+//     .lock =
+//     (spinlock_t )
+//     { { .rlock =
+//         {
+//           .raw_lock = { { 0 } },
+//           .magic = 0xdead4ead,
+//           .owner_cpu = -1,
+//           .owner = 0xffffffff,
+//         }
+//     } }
+// }
+//
+// #define DEFINE_SEQLOCK(mount_lock):
+// seqlock_t mount_lock =
+// {
+//     .seqcount = { .sequence = 0, },
+//     .lock =
+//     (spinlock_t )
+//     { { .rlock =
+//         {
+//           .raw_lock = { { 0 } },
+//           .magic = 0xdead4ead,
+//           .owner_cpu = -1,
+//           .owner = 0xffffffff,
+//         }
+//     } }
+// }
 #define DEFINE_SEQLOCK(x) \
 		seqlock_t x = __SEQLOCK_UNLOCKED(x)
 
@@ -431,16 +533,40 @@ static inline unsigned read_seqretry(const seqlock_t *sl, unsigned start)
  * Acts like a normal spin_lock/unlock.
  * Don't need preempt_disable() because that is in the spin_lock already.
  */
+// ARM10C 20160109
+// &mount_lock
 static inline void write_seqlock(seqlock_t *sl)
 {
+	// &sl->lock: &(&mount_lock)->lock
 	spin_lock(&sl->lock);
+
+	// spin_lock레서 한일:
+	// &(&mount_lock)->lock 을 사용하여 spin lock 수행
+
+	// &sl->seqcount: &(&mount_lock)->seqcount
 	write_seqcount_begin(&sl->seqcount);
+
+	// write_seqcount_begin에서 한일:
+	// (&(&mount_lock)->seqcount)->sequence: 1
+	// 공유자원을 다른 cpu core가 사용할수 있게 메모리 적용
 }
 
+// ARM10C 20160109
+// &mount_lock
 static inline void write_sequnlock(seqlock_t *sl)
 {
+	// &sl->seqcount: &(&mount_lock)->seqcount
 	write_seqcount_end(&sl->seqcount);
+
+	// write_seqcount_end에서 한일:
+	// 공유자원을 다른 cpu core가 사용할수 있게 메모리 적용
+	// (&(&mount_lock)->seqcount)->sequence: 2
+
+	// &sl->lock: &(&mount_lock)->lock
 	spin_unlock(&sl->lock);
+
+	// spin_unlock에서 한일:
+	// &(&mount_lock)->lock을 사용하여 spin unlock 수행
 }
 
 static inline void write_seqlock_bh(seqlock_t *sl)

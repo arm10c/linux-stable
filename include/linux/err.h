@@ -23,17 +23,22 @@
 // ARM10C 20150620
 // ARM10C 20150822
 // ARM10C 20151219
+// ARM10C 20160109
 // -MAX_ERRNO: 0xFFFFF001
 #define IS_ERR_VALUE(x) unlikely((x) >= (unsigned long)-MAX_ERRNO)
 
 // ARM10C 20150321
 // ARM10C 20150328
 // -ENOENT: -2
+// ARM10C 20160109
+// -EINVAL: -22
 static inline void * __must_check ERR_PTR(long error)
 {
 	// -ENOENT: -2
+	// -EINVAL: -22
 	return (void *) error;
 	// 0xfffffffe
+	// 0xffffffea
 }
 
 static inline long __must_check PTR_ERR(__force const void *ptr)
@@ -57,6 +62,10 @@ static inline long __must_check PTR_ERR(__force const void *ptr)
 // sb: kmem_cache#25-oX (struct super_block)
 // ARM10C 20151219
 // root: kmem_cache#5-oX (struct dentry)
+// ARM10C 20160109
+// &(kmem_cache#2-oX (struct mount))->mnt
+// ARM10C 20160109
+// sysfs_mnt: &(kmem_cache#2-oX (struct mount))->mnt
 static inline long __must_check IS_ERR(__force const void *ptr)
 {
 	return IS_ERR_VALUE((unsigned long)ptr);

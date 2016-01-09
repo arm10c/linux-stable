@@ -29,6 +29,7 @@ struct mountpoint {
 
 // ARM10C 20151024
 // ARM10C 20151031
+// ARM10C 20160109
 // sizeof(struct mount): 152 bytes
 struct mount {
 	struct hlist_node mnt_hash;
@@ -65,11 +66,21 @@ struct mount {
 	struct path mnt_ex_mountpoint;
 };
 
+// ARM10C 20160109
+// EINVAL: 22
+// ERR_PTR(-22): 0xffffffea
+// MNT_NS_INTERNAL: 0xffffffea
 #define MNT_NS_INTERNAL ERR_PTR(-EINVAL) /* distinct from any mnt_namespace */
 
+// ARM10C 20160109
+// mnt: &(kmem_cache#2-oX (struct mount))->mnt
 static inline struct mount *real_mount(struct vfsmount *mnt)
 {
+	// mnt: &(kmem_cache#2-oX (struct mount))->mnt
+	// container_of(&(kmem_cache#2-oX (struct mount))->mnt, struct mount, &(kmem_cache#2-oX (struct mount))->mnt):
+	// kmem_cache#2-oX (struct mount)
 	return container_of(mnt, struct mount, mnt);
+	// return kmem_cache#2-oX (struct mount)
 }
 
 static inline int mnt_has_parent(struct mount *mnt)
@@ -95,14 +106,27 @@ static inline void get_mnt_ns(struct mnt_namespace *ns)
 
 extern seqlock_t mount_lock;
 
+// ARM10C 20160109
 static inline void lock_mount_hash(void)
 {
 	write_seqlock(&mount_lock);
+
+	// write_seqlock에서 한일:
+	// &(&mount_lock)->lock 을 사용하여 spin lock 수행
+	// (&(&mount_lock)->seqcount)->sequence: 1
+	// 공유자원을 다른 cpu core가 사용할수 있게 메모리 적용
+
 }
 
+// ARM10C 20160109
 static inline void unlock_mount_hash(void)
 {
 	write_sequnlock(&mount_lock);
+
+	// write_sequnlock에서 한일:
+	// 공유자원을 다른 cpu core가 사용할수 있게 메모리 적용
+	// (&(&mount_lock)->seqcount)->sequence: 2
+	// &(&mount_lock)->lock을 사용하여 spin unlock 수행
 }
 
 struct proc_mounts {
