@@ -34,6 +34,7 @@ typedef __kernel_ino_t		ino_t;
 typedef __kernel_mode_t		mode_t;
 // ARM10C 20151003
 // ARM10C 20151031
+// ARM10C 20160116
 typedef unsigned short		umode_t;
 typedef __u32			nlink_t;
 typedef __kernel_off_t		off_t;

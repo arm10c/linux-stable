@@ -6918,6 +6918,8 @@ EXPORT_SYMBOL(ksize);
 // desc: kmem_cache#30-o10 (exynos4210_combiner)
 // ARM10C 20151031
 // bitmap: NULL
+// ARM10C 20160116
+// old_name: (kmem_cache#30-oX (struct kobject))->name: NULL
 void kfree(const void *x)
 {
 	struct page *page;

@@ -27,12 +27,18 @@
  * and thus @kobj should have a namespace tag associated with it.  Returns
  * %NULL otherwise.
  */
+// ARM10C 20160116
+// kobj: kmem_cache#30-oX (struct kobject)
 const void *kobject_namespace(struct kobject *kobj)
 {
+	// kobj: kmem_cache#30-oX (struct kobject), kobj_ns_ops(kmem_cache#30-oX (struct kobject)): NULL
 	const struct kobj_ns_type_operations *ns_ops = kobj_ns_ops(kobj);
+	// ns_ops: NULL
 
+	// ns_ops: NULL, KOBJ_NS_TYPE_NONE: 0
 	if (!ns_ops || ns_ops->type == KOBJ_NS_TYPE_NONE)
 		return NULL;
+		// return NULL
 
 	return kobj->ktype->namespace(kobj);
 }
@@ -63,10 +69,13 @@ static int populate_dir(struct kobject *kobj)
 	return error;
 }
 
+// ARM10C 20160116
+// kobj: kmem_cache#30-oX (struct kobject)
 static int create_dir(struct kobject *kobj)
 {
 	int error;
 
+	// kobj: kmem_cache#30-oX (struct kobject), kobject_namespace(kmem_cache#30-oX (struct kobject)): NULL
 	error = sysfs_create_dir_ns(kobj, kobject_namespace(kobj));
 	if (!error) {
 		error = populate_dir(kobj);
@@ -206,23 +215,33 @@ static void kobject_init_internal(struct kobject *kobj)
 }
 
 
+// ARM10C 20160116
+// kobj: kmem_cache#30-oX (struct kobject)
 static int kobject_add_internal(struct kobject *kobj)
 {
 	int error = 0;
+	// error: 0
+
 	struct kobject *parent;
 
+	// kobj: kmem_cache#30-oX (struct kobject)
 	if (!kobj)
 		return -ENOENT;
 
+	// kobj->name: (kmem_cache#30-oX (struct kobject))->name: "fs"
 	if (!kobj->name || !kobj->name[0]) {
 		WARN(1, "kobject: (%p): attempted to be registered with empty "
 			 "name!\n", kobj);
 		return -EINVAL;
 	}
 
+	// kobj->parent: (kmem_cache#30-oX (struct kobject))->parent: NULL
+	// kobject_get(NULL): NULL
 	parent = kobject_get(kobj->parent);
+	// parent: NULL
 
 	/* join kset if set, use it as parent if we do not already have one */
+	// kobj->kset: (kmem_cache#30-oX (struct kobject))->kset: NULL
 	if (kobj->kset) {
 		if (!parent)
 			parent = kobject_get(&kobj->kset->kobj);
@@ -230,11 +249,16 @@ static int kobject_add_internal(struct kobject *kobj)
 		kobj->parent = parent;
 	}
 
+	// kobj: kmem_cache#30-oX (struct kobject),
+	// kobject_name(kmem_cache#30-oX (struct kobject)): "fs", parent: NULL,
+	// kobj->kset: (kmem_cache#30-oX (struct kobject))->kset: NULL
 	pr_debug("kobject: '%s' (%p): %s: parent: '%s', set: '%s'\n",
 		 kobject_name(kobj), kobj, __func__,
 		 parent ? kobject_name(parent) : "<NULL>",
 		 kobj->kset ? kobject_name(&kobj->kset->kobj) : "<NULL>");
+	// "kobject: 'fs' (kmem_cache#30-oX): kobject_add_internal: parent: '<NULL>', set: '<NULL>'\n"
 
+	// kobj: kmem_cache#30-oX (struct kobject)
 	error = create_dir(kobj);
 	if (error) {
 		kobj_kset_leave(kobj);
@@ -270,7 +294,7 @@ int kobject_set_name_vargs(struct kobject *kobj, const char *fmt,
 {
 	// kobj->name: (kmem_cache#30-oX (struct kobject))->name: NULL
 	const char *old_name = kobj->name;
-	// old_name: NULL
+	// old_name: (kmem_cache#30-oX (struct kobject))->name: NULL
 
 	char *s;
 
@@ -289,13 +313,22 @@ int kobject_set_name_vargs(struct kobject *kobj, const char *fmt,
 		return -ENOMEM;
 
 // 2016/01/09 종료
+// 2016/01/16 시작
 
 	/* ewww... some of these buggers have '/' in the name ... */
+	// kobj->name: (kmem_cache#30-oX (struct kobject))->name: kmem_cache#30-oX: "fs"
+	// strchr("fs", '/'): NULL
 	while ((s = strchr(kobj->name, '/')))
 		s[0] = '!';
 
+	// old_name: (kmem_cache#30-oX (struct kobject))->name: NULL
 	kfree(old_name);
+
+	// kfree에서 한일:
+	// (kmem_cache#30-oX (struct kobject))->name 에 이전에  할당된 메모리를 돌려줌
+
 	return 0;
+	// return 0
 }
 
 /**
@@ -392,12 +425,25 @@ static int kobject_add_varg(struct kobject *kobj, struct kobject *parent,
 	int retval;
 
 	// kobj: kmem_cache#30-oX (struct kobject), fmt: "%s", vargs: "fs"
+	// kobject_set_name_vargs(kmem_cache#30-oX (struct kobject), "%s", "fs"): 0
 	retval = kobject_set_name_vargs(kobj, fmt, vargs);
+	// retval: 0
+
+	// kobject_set_name_vargs에서 한일:
+	// struct kobject의 멤버 name에 메모리를 할당하고 string 값을 만듬
+	// (kmem_cache#30-oX (struct kobject))->name: kmem_cache#30-oX: "fs"
+
+	// retval: 0
 	if (retval) {
 		printk(KERN_ERR "kobject: can not set name properly!\n");
 		return retval;
 	}
+
+	// kobj->parent: (kmem_cache#30-oX (struct kobject))->parent, parent: NULL
 	kobj->parent = parent;
+	// kobj->parent: (kmem_cache#30-oX (struct kobject))->parent: NULL
+
+	// kobj: kmem_cache#30-oX (struct kobject)
 	return kobject_add_internal(kobj);
 }
 
@@ -632,11 +678,17 @@ void kobject_del(struct kobject *kobj)
  * kobject_get - increment refcount for object.
  * @kobj: object.
  */
+// ARM10C 20160116
+// kobj->parent: (kmem_cache#30-oX (struct kobject))->parent: NULL
 struct kobject *kobject_get(struct kobject *kobj)
 {
+	// kobj: NULL
 	if (kobj)
 		kref_get(&kobj->kref);
+
+	// kobj: NULL
 	return kobj;
+	// return NULL
 }
 
 static struct kobject * __must_check kobject_get_unless_zero(struct kobject *kobj)
@@ -735,6 +787,7 @@ static void dynamic_kobj_release(struct kobject *kobj)
 }
 
 // ARM10C 20160109
+// ARM10C 20160116
 static struct kobj_type dynamic_kobj_ktype = {
 	.release	= dynamic_kobj_release,
 	.sysfs_ops	= &kobj_sysfs_ops,
@@ -1130,19 +1183,37 @@ int kobj_ns_type_registered(enum kobj_ns_type type)
 	return registered;
 }
 
+// ARM10C 20160116
+// kobj->parent: (kmem_cache#30-oX (struct kobject))->parent: NULL
+// ARM10C 20160116
+// kobj: kmem_cache#30-oX (struct kobject)
 const struct kobj_ns_type_operations *kobj_child_ns_ops(struct kobject *parent)
 {
 	const struct kobj_ns_type_operations *ops = NULL;
+	// ops: NULL
+	// ops: NULL
 
+	// parent: NULL
+	// parent: kmem_cache#30-oX (struct kobject), parent->ktype: (kmem_cache#30-oX (struct kobject))->ktype: &dynamic_kobj_ktype,
+	// parent->ktype->child_ns_type: (kmem_cache#30-oX (struct kobject))->ktype->child_ns_type: NULL
 	if (parent && parent->ktype->child_ns_type)
 		ops = parent->ktype->child_ns_type(parent);
 
+	// ops: NULL
+	// ops: NULL
 	return ops;
+	// return NULL
+	// return NULL
 }
 
+// ARM10C 20160116
+// kobj: kmem_cache#30-oX (struct kobject)
 const struct kobj_ns_type_operations *kobj_ns_ops(struct kobject *kobj)
 {
+	// kobj->parent: (kmem_cache#30-oX (struct kobject))->parent: NULL
+	// kobj_child_ns_ops(NULL): NULL
 	return kobj_child_ns_ops(kobj->parent);
+	// return NULL
 }
 
 bool kobj_ns_current_may_mount(enum kobj_ns_type type)

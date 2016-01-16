@@ -271,6 +271,7 @@ struct ida_bitmap {
 };
 
 // ARM10C 20151031
+// ARM10C 20160116
 struct ida {
 	struct idr		idr;
 	struct ida_bitmap	*free_bitmap;
@@ -349,6 +350,25 @@ struct ida {
 // ARM10C 20151114
 // #define DEFINE_IDA(unnamed_dev_ida):
 // struct ida unnamed_dev_ida =
+// {
+//     .idr =
+//     {
+//         .lock =
+//         (spinlock_t )
+//         { { .rlock =
+//              {
+//                .raw_lock = { { 0 } },
+//                .magic = 0xdead4ead,
+//                .owner_cpu = -1,
+//                .owner = 0xffffffff,
+//              }
+//          } },
+//      }
+//      .free_bitmap = NULL,
+// }
+// ARM10C 20160116
+// #define DEFINE_IDA(sysfs_ino_ida):
+// struct ida sysfs_ino_ida =
 // {
 //     .idr =
 //     {

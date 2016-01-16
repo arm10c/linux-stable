@@ -60,6 +60,10 @@
 // &inode->i_writecount: &(kmem_cache#4-oX)->i_writecount, 0
 // ARM10C 20151205
 // &inode->i_dio_count: &(kmem_cache#4-oX)->i_dio_count, 0
+// ARM10C 20160116
+// &sd->s_count,: &(kmem_cache#1-oX (struct sysfs_dirent))->s_count, 1
+// ARM10C 20160116
+// &sd->s_active,: &(kmem_cache#1-oX (struct sysfs_dirent))->s_active, 0
 #define atomic_set(v,i)	(((v)->counter) = (i))
 
 #if __LINUX_ARM_ARCH__ >= 6

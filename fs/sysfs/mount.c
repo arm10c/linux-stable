@@ -27,6 +27,7 @@
 // ARM10C 20151031
 static struct vfsmount *sysfs_mnt;
 // ARM10C 20151031
+// ARM10C 20160116
 struct kmem_cache *sysfs_dir_cachep;
 
 // ARM10C 20151121
@@ -40,6 +41,7 @@ static const struct super_operations sysfs_ops = {
 // ARM10C 20151121
 // ARM10C 20151205
 // ARM10C 20151219
+// ARM10C 20160116
 struct sysfs_dirent sysfs_root = {
 	.s_name		= "",
 	.s_count	= ATOMIC_INIT(1),

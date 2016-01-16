@@ -21,20 +21,30 @@ char *kvasprintf(gfp_t gfp, const char *fmt, va_list ap)
 	char *p;
 	va_list aq;
 
+	// ap: 192
 	// ap: "fs"
 	va_copy(aq, ap);
 
 	// va_copy에서 한일:
+	// aq: 192
+
+	// va_copy에서 한일:
 	// aq: "fs"
 
+	// fmt: "kmalloc-%d", aq: 192
+	// vsnprintf(NULL, 0, "kmalloc-%d", 192): 11
 	// fmt: "%s", aq: "fs"
 	// vsnprintf(NULL, 0, "%s", "fs"): 2
 	len = vsnprintf(NULL, 0, fmt, aq);
 	// len: 11 "kmalloc-192"의 길이
 	// len: 2
 
+	// aq: 192
 	// aq: "fs"
 	va_end(aq);
+
+	// va_end에서 한일:
+	// aq: NULL
 
 	// va_end에서 한일:
 	// aq: NULL
@@ -42,6 +52,7 @@ char *kvasprintf(gfp_t gfp, const char *fmt, va_list ap)
 	// len: 11, gfp: GFP_NOWAIT: 0
 	// kmalloc_track_caller(12, GFP_NOWAIT: 0): kmem_cache#30-o0
 	// len: 2, GFP_KERNEL: 0xD0
+	// kmalloc_track_caller(3, GFP_NOWAIT: 0): kmem_cache#30-oX
 	p = kmalloc_track_caller(len+1, gfp);
 	// p: kmem_cache#30-o0
 	// p: kmem_cache#30-oX
@@ -51,16 +62,20 @@ char *kvasprintf(gfp_t gfp, const char *fmt, va_list ap)
 	if (!p)
 		return NULL;
 
+	// p: kmem_cache#30-oX, len: 11, fmt: "kmalloc-%d", ap: 192
 	// p: kmem_cache#30-oX, len: 2, fmt: "%s", ap: "fs"
 	vsnprintf(p, len+1, fmt, ap);
 
 	// vsnprintf에서 한일:
+	// p: kmem_cache#30-oX: "kmalloc-192"
+
+	// vsnprintf에서 한일:
 	// p: kmem_cache#30-oX: "fs"
 
-	// p: kmem_cache#30-o0
+	// p: kmem_cache#30-o0: "kmalloc-192"
 	// p: kmem_cache#30-oX: "fs"
 	return p;
-	// return kmem_cache#30-o0
+	// return kmem_cache#30-o0: "kmalloc-192"
 	// return kmem_cache#30-oX: "fs"
 }
 EXPORT_SYMBOL(kvasprintf);

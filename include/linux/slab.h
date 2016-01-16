@@ -1009,6 +1009,8 @@ extern void *__kmalloc_node_track_caller(size_t, gfp_t, int, unsigned long);
 // idr_layer_cache: kmem_cache#21, gfp_mask: 0xD0
 // ARM10C 20151114
 // idr_layer_cache: kmem_cache#21, gfp_mask: 0x20
+// ARM10C 20160116
+// sysfs_dir_cachep: kmem_cache#1, GFP_KERNEL: 0xD0
 static inline void *kmem_cache_zalloc(struct kmem_cache *k, gfp_t flags)
 {
 	// k: &boot_kmem_cache, flags: GFP_NOWAIT: 0, __GFP_ZERO: 0x8000u
@@ -1028,6 +1030,8 @@ static inline void *kmem_cache_zalloc(struct kmem_cache *k, gfp_t flags)
 	// kmem_cache_alloc(kmem_cache#21, 0x80D0): kmem_cache#21-oX
 	// k: kmem_cache#21, flags: GFP_KERNEL: 0x20
 	// kmem_cache_alloc(kmem_cache#21, 0x8020): kmem_cache#21-oX
+	// k: kmem_cache#1, flags: GFP_KERNEL: 0x20
+	// kmem_cache_alloc(kmem_cache#1, 0x8020): kmem_cache#1-oX
 	return kmem_cache_alloc(k, flags | __GFP_ZERO);
 	// return UNMOVABLE인 page (boot_kmem_cache)의 object의 시작 virtual address
 	// return UNMOVABLE인 page (boot_kmem_cache)의 시작 virtual address + 3968
@@ -1036,6 +1040,7 @@ static inline void *kmem_cache_zalloc(struct kmem_cache *k, gfp_t flags)
 	// return kmem_cache#2-oX
 	// return kmem_cache#21-oX
 	// return kmem_cache#21-oX
+	// return kmem_cache#1-oX
 }
 
 /**

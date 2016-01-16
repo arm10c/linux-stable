@@ -60,6 +60,7 @@ enum kobject_action {
 
 // ARM10C 20140607
 // ARM10C 20160109
+// ARM10C 20160116
 // sizeof(struct kobject): 36 bytes
 struct kobject {
 	const char		*name;
@@ -84,9 +85,13 @@ int kobject_set_name(struct kobject *kobj, const char *name, ...);
 extern int kobject_set_name_vargs(struct kobject *kobj, const char *fmt,
 				  va_list vargs);
 
+// ARM10C 20160116
+// kobj: kmem_cache#30-oX (struct kobject)
 static inline const char *kobject_name(const struct kobject *kobj)
 {
+	// kobj->name: (kmem_cache#30-oX (struct kobject))->name: "fs"
 	return kobj->name;
+	// return "fs"
 }
 
 extern void kobject_init(struct kobject *kobj, struct kobj_type *ktype);
@@ -114,6 +119,7 @@ extern const void *kobject_namespace(struct kobject *kobj);
 extern char *kobject_get_path(struct kobject *kobj, gfp_t flag);
 
 // ARM10C 20160109
+// ARM10C 20160116
 struct kobj_type {
 	void (*release)(struct kobject *kobj);
 	const struct sysfs_ops *sysfs_ops;

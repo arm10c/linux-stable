@@ -26,6 +26,8 @@ struct kobject;
  */
 // ARM10C 20151114
 // ARM10C 20151205
+// ARM10C 20160116
+// ARM10C 20160116
 enum kobj_ns_type {
 	// KOBJ_NS_TYPE_NONE: 0
 	KOBJ_NS_TYPE_NONE = 0,
@@ -42,6 +44,7 @@ enum kobj_ns_type {
  *   @drop_ns: drops a reference to namespace
  */
 // ARM10C 20151114
+// ARM10C 20160116
 struct kobj_ns_type_operations {
 	enum kobj_ns_type type;
 	bool (*current_may_mount)(void);

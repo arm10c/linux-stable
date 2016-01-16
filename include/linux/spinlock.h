@@ -400,6 +400,8 @@ do {							\
 // &lockref->lock: &(&(kmem_cache#5-oX (struct dentry))->d_lockref)->lock
 // ARM10C 20160109
 // &sl->lock: &(&mount_lock)->lock
+// ARM10C 20160116
+// &sysfs_ino_lock
 static inline void spin_lock(spinlock_t *lock)
 {
 	// lock->rlock: (&contig_page_data->node_zones[0].lock)->rlock
@@ -470,6 +472,8 @@ do {									\
 // &lockref->lock: &(&(kmem_cache#5-oX (struct dentry))->d_lockref)->lock
 // ARM10C 20160109
 // &sl->lock: &(&mount_lock)->lock
+// ARM10C 20160116
+// &sysfs_ino_lock
 static inline void spin_unlock(spinlock_t *lock)
 {
 	raw_spin_unlock(&lock->rlock);

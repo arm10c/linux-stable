@@ -1252,6 +1252,8 @@ EXPORT_SYMBOL(ida_pre_get);
 // &mnt_id_ida, mnt_id_start: 0, &mnt->mnt_id: &(kmem_cache#2-oX)->mnt_id
 // ARM10C 20151114
 // &unnamed_dev_ida, unnamed_dev_start: 0, &dev
+// ARM10C 20160116
+// &sysfs_ino_ida, 2, &ino
 int ida_get_new_above(struct ida *ida, int starting_id, int *p_id)
 {
 	// MAX_IDR_LEVEL: 4

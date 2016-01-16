@@ -297,6 +297,8 @@ EXPORT_SYMBOL(strncmp);
  */
 // ARM10C 20151031
 // fs->name: (&sysfs_fs_type)->name: "sysfs", '.'
+// ARM10C 20160116
+// kobj->name: (kmem_cache#30-oX (struct kobject))->name: kmem_cache#30-oX: "fs", '/'
 char *strchr(const char *s, int c)
 {
 	for (; *s != (char)c; ++s)

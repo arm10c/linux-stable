@@ -59,6 +59,7 @@ struct sysfs_inode_attrs {
  */
 // ARM10C 20151031
 // ARM10C 20151121
+// ARM10C 20160116
 // sizeof(struct sysfs_dirent): 64 bytes
 struct sysfs_dirent {
 	atomic_t		s_count;
@@ -97,6 +98,7 @@ struct sysfs_dirent {
 #define SYSFS_TYPE_MASK			0x00ff
 // ARM10C 20151205
 // ARM10C 20151212
+// ARM10C 20160116
 // SYSFS_DIR: 0x0001
 #define SYSFS_DIR			0x0001
 // ARM10C 20151212
@@ -106,8 +108,13 @@ struct sysfs_dirent {
 // SYSFS_KOBJ_BIN_ATTR: 0x0004
 #define SYSFS_KOBJ_BIN_ATTR		0x0004
 // ARM10C 20151212
+// ARM10C 20160116
 // SYSFS_KOBJ_LINK: 0x0008
 #define SYSFS_KOBJ_LINK			0x0008
+// ARM10C 20160116
+// SYSFS_DIR: 0x0001
+// SYSFS_KOBJ_LINK: 0x0008
+// SYSFS_COPY_NAME: 0x9
 #define SYSFS_COPY_NAME			(SYSFS_DIR | SYSFS_KOBJ_LINK)
 #define SYSFS_ACTIVE_REF		(SYSFS_KOBJ_ATTR | SYSFS_KOBJ_BIN_ATTR)
 
@@ -118,6 +125,8 @@ struct sysfs_dirent {
 #define SYSFS_NS_TYPE_SHIFT		8
 
 #define SYSFS_FLAG_MASK			~(SYSFS_NS_TYPE_MASK|SYSFS_TYPE_MASK)
+// ARM10C 20160116
+// SYSFS_FLAG_REMOVED: 0x02000
 #define SYSFS_FLAG_REMOVED		0x02000
 
 // ARM10C 20151205
@@ -175,6 +184,7 @@ static inline bool sysfs_ignore_lockdep(struct sysfs_dirent *sd)
 /*
  * Context structure to be used while adding/removing nodes.
  */
+// ARM10C 20160116
 struct sysfs_addrm_cxt {
 	struct sysfs_dirent	*removed;
 };
