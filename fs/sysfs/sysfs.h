@@ -43,6 +43,7 @@ struct sysfs_elem_attr {
 };
 
 // ARM10C 20151205
+// ARM10C 20160116
 struct sysfs_inode_attrs {
 	struct iattr	ia_iattr;
 	void		*ia_secdata;
@@ -119,8 +120,11 @@ struct sysfs_dirent {
 #define SYSFS_ACTIVE_REF		(SYSFS_KOBJ_ATTR | SYSFS_KOBJ_BIN_ATTR)
 
 /* identify any namespace tag on sysfs_dirents */
+// ARM10C 20160116
+// SYSFS_NS_TYPE_MASK: 0xf00
 #define SYSFS_NS_TYPE_MASK		0xf00
 // ARM10C 20151205
+// ARM10C 20160116
 // SYSFS_NS_TYPE_SHIFT: 8
 #define SYSFS_NS_TYPE_SHIFT		8
 
@@ -133,10 +137,16 @@ struct sysfs_dirent {
 // sd: &sysfs_root
 // ARM10C 20151212
 // sd: &sysfs_root
+// ARM10C 20160116
+// sd: kmem_cache#1-oX (struct sysfs_dirent)
 static inline unsigned int sysfs_type(struct sysfs_dirent *sd)
 {
 	// sd->s_flags: (&sysfs_root)->s_flags: 0x1, SYSFS_TYPE_MASK: 0x00ff
+	// sd->s_flags: (&sysfs_root)->s_flags: 0x1, SYSFS_TYPE_MASK: 0x00ff
+	// sd->s_flags: (kmem_cache#1-oX (struct sysfs_dirent))->s_flags: 0x2001, SYSFS_TYPE_MASK: 0x00ff
 	return sd->s_flags & SYSFS_TYPE_MASK;
+	// return 0x1
+	// return 0x1
 	// return 0x1
 }
 
@@ -144,9 +154,13 @@ static inline unsigned int sysfs_type(struct sysfs_dirent *sd)
  * Return any namespace tags on this dirent.
  * enum kobj_ns_type is defined in linux/kobject.h
  */
+// ARM10C 20160116
+// parent_sd: &sysfs_root
 static inline enum kobj_ns_type sysfs_ns_type(struct sysfs_dirent *sd)
 {
+	// sd->s_flags; (&sysfs_root)->s_flags: 0x1, SYSFS_NS_TYPE_MASK: 0xf00, SYSFS_NS_TYPE_SHIFT: 8
 	return (sd->s_flags & SYSFS_NS_TYPE_MASK) >> SYSFS_NS_TYPE_SHIFT;
+	// return 0
 }
 
 #ifdef CONFIG_DEBUG_LOCK_ALLOC
@@ -185,6 +199,7 @@ static inline bool sysfs_ignore_lockdep(struct sysfs_dirent *sd)
  * Context structure to be used while adding/removing nodes.
  */
 // ARM10C 20160116
+// sizeof(struct sysfs_addrm_cxt): 4 bytes
 struct sysfs_addrm_cxt {
 	struct sysfs_dirent	*removed;
 };
@@ -245,6 +260,8 @@ int sysfs_rename(struct sysfs_dirent *sd, struct sysfs_dirent *new_parent_sd,
 		 const char *new_name, const void *new_ns);
 
 // ARM10C 20151205
+// sd: &sysfs_root
+// ARM10C 20160116
 // sd: &sysfs_root
 static inline struct sysfs_dirent *__sysfs_get(struct sysfs_dirent *sd)
 {

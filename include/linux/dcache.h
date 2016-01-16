@@ -76,22 +76,35 @@ extern struct dentry_stat_t dentry_stat;
 
 /* Name hashing routines. Initial hash value */
 /* Hash courtesy of the R5 hash in reiserfs modulo sign bits */
+// ARM10C 20160116
 #define init_name_hash()		0
 
 /* partial hash update function. Assume roughly 4 bits per character */
+// ARM10C 20160116
+// 'f', hash: 0
+// ARM10C 20160116
+// 's', hash: 0x4662
 static inline unsigned long
 partial_name_hash(unsigned long c, unsigned long prevhash)
 {
+	// prevhash: 0, c: 102
+	// prevhash: 0x4662, c: 115
 	return (prevhash + (c << 4) + (c >> 4)) * 11;
+	// return 0x4662
+	// return 0x35593
 }
 
 /*
  * Finally: cut down the number of bits to a int value (and try to avoid
  * losing bits)
  */
+// ARM10C 20160116
+// hash: 0x35593
 static inline unsigned long end_name_hash(unsigned long hash)
 {
+	// hash: 0x35593
 	return (unsigned int) hash;
+	// return 0x35593
 }
 
 /* Compute the hash for a name string. */

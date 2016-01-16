@@ -33,6 +33,8 @@
 // ARM10C 20151212
 // val: &(kmem_cache#4-oX)->i_state 값을 이용한 hash val 값,
 // zone->wait_table_bits: (&(kmem_cache#4-oX)->i_state의 zone의 주소)->wait_table_bits
+// ARM10C 20160116
+// ptr: NULL, bits: 31
 #define hash_long(val, bits) hash_32(val, bits)
 #elif BITS_PER_LONG == 64
 #define hash_long(val, bits) hash_64(val, bits)
@@ -67,6 +69,8 @@ static __always_inline u64 hash_64(u64 val, unsigned int bits)
 // ARM10C 20151212
 // val: &(kmem_cache#4-oX)->i_state 값을 이용한 hash val 값,
 // zone->wait_table_bits: (&(kmem_cache#4-oX)->i_state의 zone의 주소)->wait_table_bits
+// ARM10C 20160116
+// ptr: NULL, bits: 31
 static inline u32 hash_32(u32 val, unsigned int bits)
 {
 	/* On some cpus multiply is faster, on others gcc will do shifts */
@@ -81,9 +85,14 @@ static inline u32 hash_32(u32 val, unsigned int bits)
 	// return 계산된 hash index 값
 }
 
+// ARM10C 20160116
+// NULL, 31
 static inline unsigned long hash_ptr(const void *ptr, unsigned int bits)
 {
+	// ptr: NULL, bits: 31
+	// hash_long(NULL, 31): 계산된 hash index 값
 	return hash_long((unsigned long)ptr, bits);
+	// return 계산된 hash index 값
 }
 
 static inline u32 hash32_ptr(const void *ptr)

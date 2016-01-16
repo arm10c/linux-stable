@@ -476,6 +476,8 @@ static const struct rb_augment_callbacks dummy_callbacks = {
 // ARM10C 20150613
 // &node->node: &(&(&sched_clock_timer)->node)->node,
 // &head->head: [pcp0] &(&(&(&hrtimer_bases)->clock_base[0])->active)->head
+// ARM10C 20160116
+// &sd->s_rb: &(kmem_cache#1-oX (struct sysfs_dirent))->s_rb, &sd->s_parent->s_dir.children: &(&sysfs_root)->s_dir.children
 void rb_insert_color(struct rb_node *node, struct rb_root *root)
 {
 	// node: &(kmem_cache#30-o9)->rb_node, root: &vmap_area_root

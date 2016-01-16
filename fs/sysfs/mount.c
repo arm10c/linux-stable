@@ -1205,15 +1205,23 @@ out_err:
 #undef sysfs_get
 // ARM10C 20151205
 // sd: &sysfs_root
+// ARM10C 20160116
+// parent_sd: &sysfs_root
 struct sysfs_dirent *sysfs_get(struct sysfs_dirent *sd)
 {
 	// sd: &sysfs_root
-	// __sysfs_get(&sysfs_root): 2
+	// __sysfs_get(&sysfs_root): &sysfs_root
+	// sd: &sysfs_root
+	// __sysfs_get(&sysfs_root): &sysfs_root
 	return __sysfs_get(sd);
-	// return 2
+	// return &sysfs_root
+	// return &sysfs_root
 
 	// __sysfs_get에서 한일:
 	// (&sysfs_root)->s_count: 2
+
+	// __sysfs_get에서 한일:
+	// (&sysfs_root)->s_count: 3
 }
 EXPORT_SYMBOL_GPL(sysfs_get);
 

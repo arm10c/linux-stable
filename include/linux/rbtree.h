@@ -38,6 +38,7 @@
 // ARM10C 20150919
 // ARM10C 20151003
 // ARM10C 20151031
+// ARM10C 20160116
 // sizeof(struct rb_node): 12 bytes
 struct rb_node {
 	unsigned long  __rb_parent_color;
@@ -50,6 +51,7 @@ struct rb_node {
 // ARM10C 20141025
 // ARM10C 20150103
 // ARM10C 20150919
+// ARM10C 20160116
 struct rb_root {
 	struct rb_node *rb_node;
 };
@@ -123,6 +125,8 @@ extern void rb_replace_node(struct rb_node *victim, struct rb_node *new,
 // ARM10C 20150606
 // &node->node: &(&(&sched_clock_timer)->node)->node, parent: NULL,
 // p: [pcp0] &(&(&(&hrtimer_bases)->clock_base[0])->active)->head.rb_node
+// ARM10C 20160116
+// &sd->s_rb: &(kmem_cache#1-oX (struct sysfs_dirent))->s_rb, parent: NULL, node: &(&sysfs_root)->s_dir.children.rb_node
 static inline void rb_link_node(struct rb_node * node, struct rb_node * parent,
 				struct rb_node ** rb_link)
 {

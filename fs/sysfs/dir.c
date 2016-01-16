@@ -26,6 +26,7 @@
 #include "sysfs.h"
 
 // ARM10C 20151121
+// ARM10C 20160116
 // DEFINE_MUTEX(sysfs_mutex):
 // struct mutex sysfs_mutex =
 // { .count = { (1) }
@@ -89,20 +90,45 @@ static DEFINE_IDA(sysfs_ino_ida);
  *
  *	Returns 31 bit hash of ns + name (so it fits in an off_t )
  */
+// ARM10C 20160116
+// sd->s_name: (kmem_cache#1-oX (struct sysfs_dirent))->s_name: "fs",
+// sd->s_ns: (kmem_cache#1-oX (struct sysfs_dirent))->s_ns: NULL
 static unsigned int sysfs_name_hash(const char *name, const void *ns)
 {
+	// init_name_hash(): 0
 	unsigned long hash = init_name_hash();
+	// hash: 0
+
+	// name: "fs", strlen("fs"): 2
 	unsigned int len = strlen(name);
+	// len: 2
+
+	// len: 2
 	while (len--)
+		// [loop 1] len: 1, name: "fs", hash: 0, partial_name_hash('f', 0): 0x4662
+		// [loop 2] len: 0, name: "fs", hash: 0x4662, partial_name_hash('s', 0x4662): 0x35593
 		hash = partial_name_hash(*name++, hash);
+		// [loop 1] len: 1, hash: 0x4662
+		// [loop 1] len: 0, hash: 0x35593
+
+	// hash: 0x35593, end_name_hash(0x35593): 0x35593, ns: NULL, hash_ptr(NULL, 31): 계산된 hash index 값
 	hash = (end_name_hash(hash) ^ hash_ptr((void *)ns, 31));
+	// hash: 계산된 hash index 값
+
+	// hash: 계산된 hash index 값
 	hash &= 0x7fffffffU;
+	// hash: 계산된 hash index 값
+
 	/* Reserve hash numbers 0, 1 and INT_MAX for magic directory entries */
+	// hash: 계산된 hash index 값
 	if (hash < 1)
 		hash += 2;
 	if (hash >= INT_MAX)
 		hash = INT_MAX - 1;
+
+	// hash: 계산된 hash index 값
 	return hash;
+	// return 계산된 hash index 값
 }
 
 static int sysfs_name_compare(unsigned int hash, const char *name,
@@ -135,14 +161,27 @@ static int sysfs_sd_compare(const struct sysfs_dirent *left,
  *	RETURNS:
  *	0 on susccess -EEXIST on failure.
  */
+// ARM10C 20160116
+// sd: kmem_cache#1-oX (struct sysfs_dirent)
 static int sysfs_link_sibling(struct sysfs_dirent *sd)
 {
+	// &sd->s_parent: &(kmem_cache#1-oX (struct sysfs_dirent))->s_parent: &sysfs_root
+	// &sd->s_parent->s_dir.children.rb_node: &(&sysfs_root)->s_dir.children.rb_node
 	struct rb_node **node = &sd->s_parent->s_dir.children.rb_node;
+	// node: &(&sysfs_root)->s_dir.children.rb_node
+
 	struct rb_node *parent = NULL;
+	// parent: NULL
 
+	// sd: kmem_cache#1-oX (struct sysfs_dirent),
+	// sysfs_type(kmem_cache#1-oX (struct sysfs_dirent)): 0x1, SYSFS_DIR: 0x0001
 	if (sysfs_type(sd) == SYSFS_DIR)
+		// sd->s_parent: (kmem_cache#1-oX (struct sysfs_dirent))->s_parent: &sysfs_root
+		// sd->s_parent->s_dir.subdirs: (&sysfs_root)->s_dir.subdirs: 0
 		sd->s_parent->s_dir.subdirs++;
+		// sd->s_parent->s_dir.subdirs: (&sysfs_root)->s_dir.subdirs: 1
 
+	// *node: (&sysfs_root)->s_dir.children.rb_node: NULL
 	while (*node) {
 		struct sysfs_dirent *pos;
 		int result;
@@ -158,9 +197,33 @@ static int sysfs_link_sibling(struct sysfs_dirent *sd)
 			return -EEXIST;
 	}
 	/* add new node and rebalance the tree */
+	// &sd->s_rb: &(kmem_cache#1-oX (struct sysfs_dirent))->s_rb, parent: NULL, node: &(&sysfs_root)->s_dir.children.rb_node
 	rb_link_node(&sd->s_rb, parent, node);
+
+	// rb_link_node에서 한일:
+	// (&(kmem_cache#1-oX (struct sysfs_dirent))->s_rb)->__rb_parent_color: NULL
+	// (&(kmem_cache#1-oX (struct sysfs_dirent))->s_rb)->rb_left: NULL
+	// (&(kmem_cache#1-oX (struct sysfs_dirent))->s_rb)->rb_right: NULL
+	// (&sysfs_root)->s_dir.children.rb_node: &(kmem_cache#1-oX (struct sysfs_dirent))->s_rb
+
+	// &sd->s_rb: &(kmem_cache#1-oX (struct sysfs_dirent))->s_rb,
+	// &sd->s_parent: &(kmem_cache#1-oX (struct sysfs_dirent))->s_parent: &sysfs_root,
+	// &sd->s_parent->s_dir.children: &(&sysfs_root)->s_dir.children
 	rb_insert_color(&sd->s_rb, &sd->s_parent->s_dir.children);
+
+	// NOTE:
+	// inode의 값을 나타내는 (kmem_cache#1-oX (struct sysfs_dirent))->s_ino: 2 값을 이용하여
+	// rb_node를 INODE(2) 주석을 달기로 함
+
+	// rb_insert_color에서 한일:
+	// rbtree 조건에 맞게 tree 구성 및 안정화 작업 수행
+	/*
+	//                INODE(2)-b
+	//              /            \
+	*/
+
 	return 0;
+	// return 0
 }
 
 /**
@@ -522,12 +585,21 @@ struct sysfs_dirent *sysfs_new_dirent(const char *name, umode_t mode, int type)
  *	Kernel thread context (may sleep).  sysfs_mutex is locked on
  *	return.
  */
+// ARM10C 20160116
+// &acxt
 void sysfs_addrm_start(struct sysfs_addrm_cxt *acxt)
 	__acquires(sysfs_mutex)
 {
+	// sizeof(struct sysfs_addrm_cxt): 4 bytes
 	memset(acxt, 0, sizeof(*acxt));
 
+	// memset에서 한일:
+	// struct sysfs_addrm_cxt의 acxt 맴버값을 0으로 초기화 함
+
 	mutex_lock(&sysfs_mutex);
+
+	// mutex_lock에서 한일:
+	// &sysfs_mutex을 이용하여 mutex lock을 수행
 }
 
 /**
@@ -551,12 +623,16 @@ void sysfs_addrm_start(struct sysfs_addrm_cxt *acxt)
  *	0 on success, -EEXIST if entry with the given name already
  *	exists.
  */
+// ARM10C 20160116
+// acxt: &acxt, sd: kmem_cache#1-oX (struct sysfs_dirent), parent_sd: &sysfs_root
 int __sysfs_add_one(struct sysfs_addrm_cxt *acxt, struct sysfs_dirent *sd,
 		    struct sysfs_dirent *parent_sd)
 {
 	struct sysfs_inode_attrs *ps_iattr;
 	int ret;
 
+	// parent_sd: &sysfs_root, sysfs_ns_type(&sysfs_root): 0,
+	// sd->s_ns: (kmem_cache#1-oX (struct sysfs_dirent))->s_ns: NULL
 	if (!!sysfs_ns_type(parent_sd) != !!sd->s_ns) {
 		WARN(1, KERN_WARNING "sysfs: ns %s in '%s' for '%s'\n",
 			sysfs_ns_type(parent_sd) ? "required" : "invalid",
@@ -564,12 +640,45 @@ int __sysfs_add_one(struct sysfs_addrm_cxt *acxt, struct sysfs_dirent *sd,
 		return -EINVAL;
 	}
 
+	// sd->s_hash: (kmem_cache#1-oX (struct sysfs_dirent))->s_hash,
+	// sd->s_name: (kmem_cache#1-oX (struct sysfs_dirent))->s_name: "fs"
+	// sd->s_ns: (kmem_cache#1-oX (struct sysfs_dirent))->s_ns: NULL
+	// sysfs_name_hash("fs", NULL): 계산된 hash index 값
 	sd->s_hash = sysfs_name_hash(sd->s_name, sd->s_ns);
-	sd->s_parent = sysfs_get(parent_sd);
+	// sd->s_hash: (kmem_cache#1-oX (struct sysfs_dirent))->s_hash: 계산된 hash index 값
 
+	// sd->s_parent: (kmem_cache#1-oX (struct sysfs_dirent))->s_parent,
+	// parent_sd: &sysfs_root, sysfs_get(&sysfs_root): &sysfs_root
+	sd->s_parent = sysfs_get(parent_sd);
+	// sd->s_parent: (kmem_cache#1-oX (struct sysfs_dirent))->s_parent: &sysfs_root
+
+	// sd: kmem_cache#1-oX (struct sysfs_dirent)
+	// sysfs_link_sibling(kmem_cache#1-oX (struct sysfs_dirent)): 0
 	ret = sysfs_link_sibling(sd);
+	// ret: 0
+
+	// sysfs_link_sibling에서 한일:
+	// (&sysfs_root)->s_dir.subdirs: 1
+	//
+	// (&(kmem_cache#1-oX (struct sysfs_dirent))->s_rb)->__rb_parent_color: NULL
+	// (&(kmem_cache#1-oX (struct sysfs_dirent))->s_rb)->rb_left: NULL
+	// (&(kmem_cache#1-oX (struct sysfs_dirent))->s_rb)->rb_right: NULL
+	// (&sysfs_root)->s_dir.children.rb_node: &(kmem_cache#1-oX (struct sysfs_dirent))->s_rb
+	//
+	// inode의 값을 나타내는 (kmem_cache#1-oX (struct sysfs_dirent))->s_ino: 2 값을 이용하여
+	// rb_node를 INODE(2) 주석을 달기로 함
+	//
+	// rbtree 조건에 맞게 tree 구성 및 안정화 작업 수행
+	/*
+	//                INODE(2)-b
+	//              /            \
+	*/
+
+	// ret: 0
 	if (ret)
 		return ret;
+
+// 2016/01/16 종료
 
 	/* Update timestamps on the parent */
 	ps_iattr = parent_sd->s_iattr;
@@ -640,11 +749,14 @@ void sysfs_warn_dup(struct sysfs_dirent *parent, const char *name)
  *	0 on success, -EEXIST if entry with the given name already
  *	exists.
  */
+// ARM10C 20160116
+// &acxt, sd: kmem_cache#1-oX (struct sysfs_dirent), parent_sd: &sysfs_root
 int sysfs_add_one(struct sysfs_addrm_cxt *acxt, struct sysfs_dirent *sd,
 		  struct sysfs_dirent *parent_sd)
 {
 	int ret;
 
+	// acxt: &acxt, sd: kmem_cache#1-oX (struct sysfs_dirent), parent_sd: &sysfs_root
 	ret = __sysfs_add_one(acxt, sd, parent_sd);
 
 	if (ret == -EEXIST)
@@ -848,12 +960,26 @@ static int create_dir(struct kobject *kobj, struct sysfs_dirent *parent_sd,
 	if (!sd)
 		return -ENOMEM;
 
+	// sd->s_flags: (kmem_cache#1-oX (struct sysfs_dirent))->s_flags: 0x2001, type: 0, SYSFS_NS_TYPE_SHIFT: 8
 	sd->s_flags |= (type << SYSFS_NS_TYPE_SHIFT);
+	// sd->s_flags: (kmem_cache#1-oX (struct sysfs_dirent))->s_flags: 0x2001
+
+	// sd->s_ns: (kmem_cache#1-oX (struct sysfs_dirent))->s_ns, ns: NULL
 	sd->s_ns = ns;
+	// sd->s_ns: (kmem_cache#1-oX (struct sysfs_dirent))->s_ns: NULL
+
+	// sd->s_dir.kobj: (kmem_cache#1-oX (struct sysfs_dirent))->s_dir.kobj, kobj: kmem_cache#30-oX (struct kobject)
 	sd->s_dir.kobj = kobj;
+	// sd->s_dir.kobj: (kmem_cache#1-oX (struct sysfs_dirent))->s_dir.kobj: kmem_cache#30-oX (struct kobject)
 
 	/* link in */
 	sysfs_addrm_start(&acxt);
+
+	// sysfs_addrm_start에서 한일:
+	// struct sysfs_addrm_cxt의 acxt 맴버값을 0으로 초기화 함
+	// &sysfs_mutex을 이용하여 mutex lock을 수행
+
+	// sd: kmem_cache#1-oX (struct sysfs_dirent), parent_sd: &sysfs_root
 	rc = sysfs_add_one(&acxt, sd, parent_sd);
 	sysfs_addrm_finish(&acxt);
 

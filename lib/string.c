@@ -392,6 +392,8 @@ EXPORT_SYMBOL(strim);
  */
 // ARM10C 20151031
 // fs->name: (&sysfs_fs_type)->name: "sysfs"
+// ARM10C 20160116
+// name: "fs"
 size_t strlen(const char *s)
 {
 	const char *sc;
