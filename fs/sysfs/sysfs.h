@@ -44,6 +44,7 @@ struct sysfs_elem_attr {
 
 // ARM10C 20151205
 // ARM10C 20160116
+// ARM10C 20160123
 struct sysfs_inode_attrs {
 	struct iattr	ia_iattr;
 	void		*ia_secdata;
@@ -130,6 +131,7 @@ struct sysfs_dirent {
 
 #define SYSFS_FLAG_MASK			~(SYSFS_NS_TYPE_MASK|SYSFS_TYPE_MASK)
 // ARM10C 20160116
+// ARM10C 20160123
 // SYSFS_FLAG_REMOVED: 0x02000
 #define SYSFS_FLAG_REMOVED		0x02000
 
@@ -199,6 +201,7 @@ static inline bool sysfs_ignore_lockdep(struct sysfs_dirent *sd)
  * Context structure to be used while adding/removing nodes.
  */
 // ARM10C 20160116
+// ARM10C 20160123
 // sizeof(struct sysfs_addrm_cxt): 4 bytes
 struct sysfs_addrm_cxt {
 	struct sysfs_dirent	*removed;
@@ -263,23 +266,34 @@ int sysfs_rename(struct sysfs_dirent *sd, struct sysfs_dirent *new_parent_sd,
 // sd: &sysfs_root
 // ARM10C 20160116
 // sd: &sysfs_root
+// ARM10C 20160123
+// sd: kmem_cache#1-oX (struct sysfs_dirent)
 static inline struct sysfs_dirent *__sysfs_get(struct sysfs_dirent *sd)
 {
 	// sd: &sysfs_root
+	// sd: kmem_cache#1-oX (struct sysfs_dirent)
 	if (sd) {
 		// &sd->s_count: &(&sysfs_root)->s_count, atomic_read(&(&sysfs_root)->s_count): 1
+		// &sd->s_count: &(kmem_cache#1-oX (struct sysfs_dirent))->s_count,
+		// atomic_read(&(kmem_cache#1-oX (struct sysfs_dirent))->s_count): 1
 		WARN_ON(!atomic_read(&sd->s_count));
 
-		// &sd->s_count: &(&sysfs_root)->s_count
+		// &sd->s_count: &(&sysfs_root)->s_count: 1
+		// &sd->s_count: &(kmem_cache#1-oX (struct sysfs_dirent))->s_count: 1
 		atomic_inc(&sd->s_count);
 
 		// atomic_inc에서 한일:
 		// (&sysfs_root)->s_count: 2
+
+		// atomic_inc에서 한일:
+		// (kmem_cache#1-oX (struct sysfs_dirent))->s_count: 2
 	}
 
 	// sd: &sysfs_root
+	// sd: kmem_cache#1-oX (struct sysfs_dirent)
 	return sd;
 	// return &sysfs_root
+	// return kmem_cache#1-oX (struct sysfs_dirent)
 }
 #define sysfs_get(sd) __sysfs_get(sd)
 

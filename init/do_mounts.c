@@ -615,6 +615,7 @@ static struct file_system_type rootfs_fs_type = {
 	.kill_sb	= kill_litter_super,
 };
 
+// ARM10C 20160123
 int __init init_rootfs(void)
 {
 	int err = register_filesystem(&rootfs_fs_type);

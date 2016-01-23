@@ -120,6 +120,7 @@ extern char *kobject_get_path(struct kobject *kobj, gfp_t flag);
 
 // ARM10C 20160109
 // ARM10C 20160116
+// ARM10C 20160123
 struct kobj_type {
 	void (*release)(struct kobject *kobj);
 	const struct sysfs_ops *sysfs_ops;
@@ -200,9 +201,13 @@ static inline void kset_put(struct kset *k)
 	kobject_put(&k->kobj);
 }
 
+// ARM10C 20160123
+// kobj: kmem_cache#30-oX (struct kobject)
 static inline struct kobj_type *get_ktype(struct kobject *kobj)
 {
+	// kobj->ktype: (kmem_cache#30-oX (struct kobject))->ktype: &dynamic_kobj_ktype
 	return kobj->ktype;
+	// return &dynamic_kobj_ktype
 }
 
 extern struct kobject *kset_find_obj(struct kset *, const char *);

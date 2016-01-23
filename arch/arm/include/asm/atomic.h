@@ -256,6 +256,8 @@ static inline int __atomic_add_unless(atomic_t *v, int a, int u)
 
 // ARM10C 20151205
 // &sd->s_count: &(&sysfs_root)->s_count
+// ARM10C 20160123
+// &sd->s_count: &(kmem_cache#1-oX (struct sysfs_dirent))->s_count: 1
 #define atomic_inc(v)		atomic_add(1, v)
 // ARM10C 20150912
 #define atomic_dec(v)		atomic_sub(1, v)

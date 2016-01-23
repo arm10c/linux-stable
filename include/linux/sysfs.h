@@ -25,10 +25,11 @@ struct module;
 struct bin_attribute;
 enum kobj_ns_type;
 
+// ARM10C 20160123
 struct attribute {
 	const char		*name;
 	umode_t			mode;
-#ifdef CONFIG_DEBUG_LOCK_ALLOC
+#ifdef CONFIG_DEBUG_LOCK_ALLOC // CONFIG_DEBUG_LOCK_ALLOC=n
 	bool			ignore_lockdep:1;
 	struct lock_class_key	*key;
 	struct lock_class_key	skey;
@@ -252,6 +253,7 @@ struct sysfs_dirent *sysfs_get_dirent_ns(struct sysfs_dirent *parent_sd,
 					 const void *ns);
 // ARM10C 20151205
 // ARM10C 20160116
+// ARM10C 20160123
 struct sysfs_dirent *sysfs_get(struct sysfs_dirent *sd);
 void sysfs_put(struct sysfs_dirent *sd);
 

@@ -47,6 +47,7 @@ extern void __chk_io_ptr(const volatile void __iomem *);
 // ARM10C 20150711
 # define __acquires(x)
 // ARM10C 20140412
+// ARM10C 20160123
 # define __releases(x)
 // ARM10C 20140621
 // ARM10C 20140913

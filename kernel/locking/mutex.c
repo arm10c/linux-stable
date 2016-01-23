@@ -310,6 +310,8 @@ static __used noinline void __sched __mutex_unlock_slowpath(atomic_t *lock_count
 // &cgroup_mutex
 // ARM10C 20151212
 // &sysfs_mutex
+// ARM10C 20160123
+// &sysfs_mutex
 void __sched mutex_unlock(struct mutex *lock)
 {
 	/*
