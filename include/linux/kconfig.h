@@ -19,18 +19,22 @@
 #define __ARG_PLACEHOLDER_1 0,
 /*
 // ARM10C 20150822
+// ARM10C 20160123
 */
 #define config_enabled(cfg) _config_enabled(cfg)
 /*
 // ARM10C 20150822
+// ARM10C 20160123
 */
 #define _config_enabled(value) __config_enabled(__ARG_PLACEHOLDER_##value)
 /*
 // ARM10C 20150822
+// ARM10C 20160123
 */
 #define __config_enabled(arg1_or_junk) ___config_enabled(arg1_or_junk 1, 0)
 /*
 // ARM10C 20150822
+// ARM10C 20160123
 */
 #define ___config_enabled(__ignored, val, ...) val
 
@@ -43,6 +47,7 @@
 // ARM10C 20140111
 // ARM10C 20140510
 // ARM10C 20150919
+// ARM10C 20160123
 */
 #define IS_ENABLED(option) \
 	(config_enabled(option) || config_enabled(option##_MODULE))

@@ -35,7 +35,7 @@
 
 static struct vfsmount *shm_mnt;
 
-#ifdef CONFIG_SHMEM
+#ifdef CONFIG_SHMEM // CONFIG_SHMEM=y
 /*
  * This virtual memory filesystem is heavily based on the ramfs. It
  * extends ramfs by the ability to use swap and honor resource limits
@@ -174,6 +174,7 @@ static const struct inode_operations shmem_dir_inode_operations;
 static const struct inode_operations shmem_special_inode_operations;
 static const struct vm_operations_struct shmem_vm_ops;
 
+// ARM10C 20160123
 static struct backing_dev_info shmem_backing_dev_info  __read_mostly = {
 	.ra_pages	= 0,	/* No readahead */
 	.capabilities	= BDI_CAP_NO_ACCT_AND_WRITEBACK | BDI_CAP_SWAP_BACKED,
@@ -2664,6 +2665,7 @@ failed:
 	return err;
 }
 
+// ARM10C 20160123
 static struct kmem_cache *shmem_inode_cachep;
 
 static struct inode *shmem_alloc_inode(struct super_block *sb)
@@ -2688,18 +2690,25 @@ static void shmem_destroy_inode(struct inode *inode)
 	call_rcu(&inode->i_rcu, shmem_destroy_callback);
 }
 
+// ARM10C 20160123
 static void shmem_init_inode(void *foo)
 {
 	struct shmem_inode_info *info = foo;
 	inode_init_once(&info->vfs_inode);
 }
 
+// ARM10C 20160123
 static int shmem_init_inodecache(void)
 {
+	// sizeof(struct shmem_inode_info): 458 bytes, SLAB_PANIC: 0x00040000UL
+	// kmem_cache_create("shmem_inode_cache", 458, 0, 0x00040000UL, shmem_init_inode): kmem_cache#0
 	shmem_inode_cachep = kmem_cache_create("shmem_inode_cache",
 				sizeof(struct shmem_inode_info),
 				0, SLAB_PANIC, shmem_init_inode);
+	// shmem_inode_cachep: kmem_cache#0
+
 	return 0;
+	// return 0
 }
 
 static void shmem_destroy_inodecache(void)
@@ -2807,6 +2816,7 @@ static struct dentry *shmem_mount(struct file_system_type *fs_type,
 	return mount_nodev(fs_type, flags, data, shmem_fill_super);
 }
 
+// ARM10C 20160123
 static struct file_system_type shmem_fs_type = {
 	.owner		= THIS_MODULE,
 	.name		= "tmpfs",
@@ -2815,27 +2825,111 @@ static struct file_system_type shmem_fs_type = {
 	.fs_flags	= FS_USERNS_MOUNT,
 };
 
+// ARM10C 20160123
 int __init shmem_init(void)
 {
 	int error;
 
 	/* If rootfs called this, don't re-init */
+	// shmem_inode_cachep: NULL
 	if (shmem_inode_cachep)
 		return 0;
 
+	// bdi_init(&shmem_backing_dev_info): 0
 	error = bdi_init(&shmem_backing_dev_info);
+	// error: 0
+
+	// bdi_init에서 한일:
+	// (&shmem_backing_dev_info)->dev: NULL
+	// (&shmem_backing_dev_info)->min_ratio: 0
+	// (&shmem_backing_dev_info)->max_ratio: 100
+	// (&shmem_backing_dev_info)->max_prop_frac: 0x400
+	// &(&shmem_backing_dev_info)->wb_lock 을 이용한 spinlock 초기화 수행
+	// (&(&shmem_backing_dev_info)->bdi_list)->next: &(&shmem_backing_dev_info)->bdi_list
+	// (&(&shmem_backing_dev_info)->bdi_list)->prev: &(&shmem_backing_dev_info)->bdi_list
+	// (&(&shmem_backing_dev_info)->work_list)->next: &(&shmem_backing_dev_info)->work_list
+	// (&(&shmem_backing_dev_info)->work_list)->prev: &(&shmem_backing_dev_info)->work_list
+	//
+	// (&shmem_backing_dev_info)->wb 의 맴버값을 0으로 초기화함
+	// (&(&shmem_backing_dev_info)->wb)->bdi: &shmem_backing_dev_info
+	// (&(&shmem_backing_dev_info)->wb)->last_old_flush: XXX
+	// (&(&(&shmem_backing_dev_info)->wb)->b_dirty)->next: &(&(&shmem_backing_dev_info)->wb)->b_dirty
+	// (&(&(&shmem_backing_dev_info)->wb)->b_dirty)->prev: &(&(&shmem_backing_dev_info)->wb)->b_dirty
+	// (&(&(&shmem_backing_dev_info)->wb)->b_io)->next: &(&(&shmem_backing_dev_info)->wb)->b_io
+	// (&(&(&shmem_backing_dev_info)->wb)->b_io)->prev: &(&(&shmem_backing_dev_info)->wb)->b_io
+	// (&(&(&shmem_backing_dev_info)->wb)->b_more_io)->next: &(&(&shmem_backing_dev_info)->wb)->b_more_io
+	// (&(&(&shmem_backing_dev_info)->wb)->b_more_io)->prev: &(&(&shmem_backing_dev_info)->wb)->b_more_io
+	// &(&(&shmem_backing_dev_info)->wb)->list_lock 을 이용한 spinlock 초기화 수행
+	// (&(&(&(&shmem_backing_dev_info)->wb)->dwork)->work)->data: { 0xFFFFFFE0 }
+	// (&(&(&(&(&shmem_backing_dev_info)->wb)->dwork)->work)->entry)->next: &(&(&(&(&shmem_backing_dev_info)->wb)->dwork)->work)->entry
+	// (&(&(&(&(&shmem_backing_dev_info)->wb)->dwork)->work)->entry)->prev: &(&(&(&(&shmem_backing_dev_info)->wb)->dwork)->work)->entry
+	// (&(&(&(&shmem_backing_dev_info)->wb)->dwork)->work)->func: bdi_writeback_workfn
+	// (&(&(&(&shmem_backing_dev_info)->wb)->dwork)->timer)->entry.next: NULL
+	// (&(&(&(&shmem_backing_dev_info)->wb)->dwork)->timer)->base: [pcp0] tvec_bases | 0x2
+	// (&(&(&(&shmem_backing_dev_info)->wb)->dwork)->timer)->slack: -1
+	// (&(&(&(&shmem_backing_dev_info)->wb)->dwork)->timer)->function = (delayed_work_timer_fn);
+	// (&(&(&(&shmem_backing_dev_info)->wb)->dwork)->timer)->data = ((unsigned long)(&(&(&shmem_backing_dev_info)->wb)->dwork));
+	//
+	// (&(&(&(&(&shmem_backing_dev_info)->bdi_stat[0...3])->lock)->wait_lock)->rlock)->raw_lock: { { 0 } }
+	// (&(&(&(&(&shmem_backing_dev_info)->bdi_stat[0...3])->lock)->wait_lock)->rlock)->magic: 0xdead4ead
+	// (&(&(&(&(&shmem_backing_dev_info)->bdi_stat[0...3])->lock)->wait_lock)->rlock)->owner: 0xffffffff
+	// (&(&(&(&(&shmem_backing_dev_info)->bdi_stat[0...3])->lock)->wait_lock)->rlock)->owner_cpu: 0xffffffff
+	// (&(&(&shmem_backing_dev_info)->bdi_stat[0...3])->list)->next: &(&(&shmem_backing_dev_info)->bdi_stat[0...3])->list
+	// (&(&(&shmem_backing_dev_info)->bdi_stat[0...3])->list)->prev: &(&(&shmem_backing_dev_info)->bdi_stat[0...3])->list
+	// (&(&shmem_backing_dev_info)->bdi_stat[0...3])->count: 0
+	// (&(&shmem_backing_dev_info)->bdi_stat[0...3])->counters: kmem_cache#26-o0 에서 할당된 4 bytes 메모리 주소
+	// list head 인 &percpu_counters에 &(&(&shmem_backing_dev_info)->bdi_stat[0...3])->list를 연결함
+	//
+	// (&shmem_backing_dev_info)->dirty_exceeded: 0
+	// (&shmem_backing_dev_info)->bw_time_stamp: XXX
+	// (&shmem_backing_dev_info)->written_stamp: 0
+	// (&shmem_backing_dev_info)->balanced_dirty_ratelimit: 0x6400
+	// (&shmem_backing_dev_info)->dirty_ratelimit: 0x6400
+	// (&shmem_backing_dev_info)->write_bandwidth: 0x6400
+	// (&shmem_backing_dev_info)->avg_write_bandwidth: 0x6400
+	//
+	// (&(&(&(&(&(&shmem_backing_dev_info)->completions)->events)->lock)->wait_lock)->rlock)->raw_lock: { { 0 } }
+	// (&(&(&(&(&(&shmem_backing_dev_info)->completions)->events)->lock)->wait_lock)->rlock)->magic: 0xdead4ead
+	// (&(&(&(&(&(&shmem_backing_dev_info)->completions)->events)->lock)->wait_lock)->rlock)->owner: 0xffffffff
+	// (&(&(&(&(&(&shmem_backing_dev_info)->completions)->events)->lock)->wait_lock)->rlock)->owner_cpu: 0xffffffff
+	// (&(&(&(&shmem_backing_dev_info)->completions)->events)->list)->next: &(&(&(&shmem_backing_dev_info)->completions)->events)->list
+	// (&(&(&(&shmem_backing_dev_info)->completions)->events)->list)->prev: &(&(&(&shmem_backing_dev_info)->completions)->events)->list
+	// (&(&(&shmem_backing_dev_info)->completions)->events)->count: 0
+	// (&(&(&shmem_backing_dev_info)->completions)->events)->counters: kmem_cache#26-o0 에서 할당된 4 bytes 메모리 주소
+	// list head 인 &percpu_counters에 &(&(&(&shmem_backing_dev_info)->completions)->events)->list를 연결함
+	// (&(&shmem_backing_dev_info)->completions)->period: 0
+	// &(&(&shmem_backing_dev_info)->completions)->lock을 이용한 spinlock 초기화 수행
+
+	// error: 0
 	if (error)
 		goto out4;
 
+	// shmem_init_inodecache(): 0
 	error = shmem_init_inodecache();
+	// error: 0
+
+	// shmem_init_inodecache에서 한일:
+	// struct shmem_inode_info 의 type의 메모리 할당하는 kmem_cache를 생성함
+	// shmem_inode_cachep: kmem_cache#0
+
+	// error: 0
 	if (error)
 		goto out3;
 
+	// register_filesystem(&shmem_fs_type): 0
 	error = register_filesystem(&shmem_fs_type);
+	// error: 0
+
+	// register_filesystem에서 한일:
+	// (&rootfs_fs_type)->next: &shmem_fs_type
+
+	// error: 0
 	if (error) {
 		printk(KERN_ERR "Could not register tmpfs\n");
 		goto out2;
 	}
+
+// 2016/01/23 종료
 
 	shm_mnt = kern_mount(&shmem_fs_type);
 	if (IS_ERR(shm_mnt)) {

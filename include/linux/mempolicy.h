@@ -16,7 +16,7 @@
 
 struct mm_struct;
 
-#ifdef CONFIG_NUMA
+#ifdef CONFIG_NUMA // CONFIG_NUMA=n
 
 /*
  * Describe a memory policy.
@@ -216,6 +216,7 @@ static inline struct mempolicy *mpol_dup(struct mempolicy *old)
 	return NULL;
 }
 
+// ARM10C 20160123
 struct shared_policy {};
 
 static inline int mpol_set_shared_policy(struct shared_policy *info,

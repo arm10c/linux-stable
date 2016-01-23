@@ -30,8 +30,10 @@
  */
 
 // ARM10C 20151031
+// ARM10C 20160123
 static struct file_system_type *file_systems;
 // ARM10C 20151031
+// ARM10C 20160123
 // DEFINE_RWLOCK(file_systems_lock):
 // rwlock_t file_systems_lock =
 // (rwlock_t)
@@ -58,20 +60,45 @@ void put_filesystem(struct file_system_type *fs)
 }
 
 // ARM10C 20151031
-// fs->name: (&sysfs_fs_type)->name: "sysfs", strlen("sysfs"): 5
+// [1st] fs->name: (&sysfs_fs_type)->name: "sysfs", strlen("sysfs"): 5
+// ARM10C 20160123
+// [2nd] fs->name: (&rootfs_fs_type)->name: "rootfs", strlen("rootfs"): 6
+// ARM10C 20160123
+// [3rd] fs->name: (&shmem_fs_type)->name: "tmpfs", strlen("tmpfs"): 5
 static struct file_system_type **find_filesystem(const char *name, unsigned len)
 {
 	struct file_system_type **p;
 
-	// p: &file_systems, *p: file_systems: NULL
+	// [1st][f1] p: &file_systems, *p: file_systems: NULL
+	// [2nd][f1] p: &file_systems, *p: file_systems: &sysfs_fs_type
+	// [3rd][f1] p: &file_systems, *p: file_systems: &sysfs_fs_type
 	for (p=&file_systems; *p; p=&(*p)->next)
+		// [2nd][f2] p: &(&sysfs_fs_type)->next, *p: (&sysfs_fs_type)->next: NULL
+		// [3nd][f2] p: &(&sysfs_fs_type)->next, *p: (&sysfs_fs_type)->next: &rootfs_fs_type
+		// [3nd][f2] p: &(&rootfs_fs_type)->next, *p: (&rootfs_fs_type)->next: NULL
+
+		// [2nd][f1] (*p)->name: (&sysfs_fs_type)->name: "sysfs",
+		// [2nd][f1] strlen("sysfs"): 5, len: 6, name: "rootfs", strncmp("sysfs", "rootfs", 6): 1
+		// [3rd][f1] (*p)->name: (&sysfs_fs_type)->name: "sysfs",
+		// [3rd][f1] strlen("sysfs"): 5, len: 5, name: "rootfs", strncmp("sysfs", "rootfs", 5): 1
+		//
+		// [3rd][f2] (*p)->name: (&rootfs_fs_type)->name: "rootfs",
+		// [3rd][f2] strlen("rootfs"): 6, len: 5, name: "tmpfs", strncmp("rootfs", "tmpfs", 5): -1
 		if (strlen((*p)->name) == len &&
 		    strncmp((*p)->name, name, len) == 0)
 			break;
 
-	// p: &file_systems
+		// [2nd][f1] &(*p)->next: &(&sysfs_fs_type)->next
+		// [3nd][f1] &(*p)->next: &(&sysfs_fs_type)->next
+		// [3nd][f2] &(*p)->next: &(&rootfs_fs_type)->next
+
+	// [1st] p: &file_systems
+	// [2nd] p: &(&sysfs_fs_type)->next
+	// [3rd] p: &(&rootfs_fs_type)->next
 	return p;
-	// return &file_systems
+	// [1st] return &file_systems
+	// [2nd] return &(&sysfs_fs_type)->next
+	// [3rd] return &(&rootfs_fs_type)->next
 }
 
 /**
@@ -89,45 +116,83 @@ static struct file_system_type **find_filesystem(const char *name, unsigned len)
  
 // ARM10C 20151031
 // &sysfs_fs_type
+// ARM10C 20160123
+// &rootfs_fs_type
+// ARM10C 20160123
+// &shmem_fs_type
 int register_filesystem(struct file_system_type * fs)
 {
 	int res = 0;
 	// res: 0
+	// res: 0
+	// res: 0
 
 	struct file_system_type ** p;
 
-	// fs->name: (&sysfs_fs_type)->name: "sysfs"
-	// strchr("sysfs", '.'): NULL
+	// fs->name: (&sysfs_fs_type)->name: "sysfs", strchr("sysfs", '.'): NULL
+	// fs->name: (&rootfs_fs_type)->name: "rootfs", strchr("rootfs", '.'): NULL
+	// fs->name: (&shmem_fs_type)->name: "tmpfs", strchr("tmpfs", '.'): NULL
 	BUG_ON(strchr(fs->name, '.'));
 
 	// fs->next: (&sysfs_fs_type)->next: NULL
+	// fs->next: (&rootfs_fs_type)->next: NULL
+	// fs->next: (&shmem_fs_type)->next: NULL
 	if (fs->next)
 		return -EBUSY;
+
 	write_lock(&file_systems_lock);
+
+	// write_lock에서 한일:
+	// &file_systems_lock 을 사용한 write lock 수행
+
+	// write_lock에서 한일:
+	// &file_systems_lock 을 사용한 write lock 수행
 
 	// write_lock에서 한일:
 	// &file_systems_lock 을 사용한 write lock 수행
 
 	// fs->name: (&sysfs_fs_type)->name: "sysfs", strlen("sysfs"): 5
 	// find_filesystem("sysfs", 5): &file_systems
+	// fs->name: (&rootfs_fs_type)->name: "rootfs", strlen("rootfs"): 6
+	// find_filesystem("rootfs", 6): &(&sysfs_fs_type)->next
+	// fs->name: (&shmem_fs_type)->name: "tmpfs", strlen("tmpfs"): 5
+	// find_filesystem("tmpfs", 5): &(&rootfs_fs_type)->next
 	p = find_filesystem(fs->name, strlen(fs->name));
 	// p: &file_systems
+	// p: &(&sysfs_fs_type)->next
+	// p: &(&rootfs_fs_type)->next
 
 	// *p: file_systems: NULL
+	// *p: (&sysfs_fs_type)->next: NULL
+	// *p: (&rootfs_fs_type)->next: NULL
 	if (*p)
 		res = -EBUSY;
 	else
 		// *p: file_systems: NULL, fs: &sysfs_fs_type
+		// *p: (&sysfs_fs_type)->next: NULL, fs: &rootfs_fs_type
+		// *p: (&rootfs_fs_type)->next: NULL, fs: &shmem_fs_type
 		*p = fs;
 		// *p: file_systems: &sysfs_fs_type
+		// *p: (&sysfs_fs_type)->next: &rootfs_fs_type
+		// *p: (&rootfs_fs_type)->next: &shmem_fs_type
 
 	write_unlock(&file_systems_lock);
 
 	// write_unlock에서 한일:
 	// &file_systems_lock 을 사용한 write lock 수행
 
+	// write_unlock에서 한일:
+	// &file_systems_lock 을 사용한 write lock 수행
+
+	// write_unlock에서 한일:
+	// &file_systems_lock 을 사용한 write lock 수행
+
+	// res: 0
+	// res: 0
 	// res: 0
 	return res;
+	// return 0
+	// return 0
 	// return 0
 }
 

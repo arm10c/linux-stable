@@ -39,6 +39,7 @@ int __initdata rd_doload;	/* 1 = load RAM disk, 0 = don't load */
 
 int root_mountflags = MS_RDONLY | MS_SILENT;
 static char * __initdata root_device_name;
+// ARM10C 20160123
 static char __initdata saved_root_name[64];
 static int root_wait;
 
@@ -311,6 +312,7 @@ static int __init root_data_setup(char *str)
 	return 1;
 }
 
+// ARM10C 20160123
 static char * __initdata root_fs_names;
 static int __init fs_names_setup(char *str)
 {
@@ -609,6 +611,7 @@ static struct dentry *rootfs_mount(struct file_system_type *fs_type,
 	return mount_nodev(fs_type, flags, data, fill);
 }
 
+// ARM10C 20160123
 static struct file_system_type rootfs_fs_type = {
 	.name		= "rootfs",
 	.mount		= rootfs_mount,
@@ -618,11 +621,19 @@ static struct file_system_type rootfs_fs_type = {
 // ARM10C 20160123
 int __init init_rootfs(void)
 {
+	// register_filesystem(&rootfs_fs_type): 0
 	int err = register_filesystem(&rootfs_fs_type);
+	// err: 0
 
+	// register_filesystem에서 한일:
+	// (&sysfs_fs_type)->next: &rootfs_fs_type
+
+	// err: 0
 	if (err)
 		return err;
 
+	// CONFIG_TMPFS: y, IS_ENABLED(CONFIG_TMPFS): 1, saved_root_name[0]: 0,
+	// root_fs_names: NULL, strstr(NULL, "tmpfs"): NULL
 	if (IS_ENABLED(CONFIG_TMPFS) && !saved_root_name[0] &&
 		(!root_fs_names || strstr(root_fs_names, "tmpfs"))) {
 		err = shmem_init();

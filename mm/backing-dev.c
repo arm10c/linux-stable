@@ -506,6 +506,8 @@ static void bdi_wb_init(struct bdi_writeback *wb, struct backing_dev_info *bdi)
 
 // ARM10C 20151031
 // &sysfs_backing_dev_info
+// ARM10C 20160123
+// &shmem_backing_dev_info
 int bdi_init(struct backing_dev_info *bdi)
 {
 	int i, err;

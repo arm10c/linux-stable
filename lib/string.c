@@ -271,6 +271,8 @@ EXPORT_SYMBOL(strcmp);
  * @ct: Another string
  * @count: The maximum number of bytes to compare
  */
+// ARM10C 20160123
+// "sysfs", "rootfs", 6
 int strncmp(const char *cs, const char *ct, size_t count)
 {
 	unsigned char c1, c2;
@@ -394,6 +396,8 @@ EXPORT_SYMBOL(strim);
 // fs->name: (&sysfs_fs_type)->name: "sysfs"
 // ARM10C 20160116
 // name: "fs"
+// ARM10C 20160123
+// name: "rootfs"
 size_t strlen(const char *s)
 {
 	const char *sc;

@@ -536,6 +536,7 @@ struct posix_acl;
 // ARM10C 20151003
 // ARM10C 20151121
 // ARM10C 20151205
+// ARM10C 20160123
 // sizeof(struct inode): 394 bytes
 struct inode {
 	umode_t			i_mode;
@@ -1877,6 +1878,7 @@ int sync_inode(struct inode *inode, struct writeback_control *wbc);
 int sync_inode_metadata(struct inode *inode, int wait);
 
 // ARM10C 20151031
+// ARM10C 20160123
 struct file_system_type {
 	const char *name;
 	int fs_flags;

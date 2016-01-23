@@ -52,6 +52,8 @@ ssize_t vfs_getxattr_alloc(struct dentry *dentry, const char *name,
 int vfs_xattr_cmp(struct dentry *dentry, const char *xattr_name,
 		  const char *value, size_t size, gfp_t flags);
 
+// ARM10C 20160123
+// sizeof(struct simple_xattrs): 24 bytes
 struct simple_xattrs {
 	struct list_head head;
 	spinlock_t lock;
