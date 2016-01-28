@@ -1,7 +1,7 @@
 # Kernel study a10c(ARM)
 
 ##### The Linux Kernel review for ARMv7 3.13.0 (exynos 5420)
-##### Community name: kernel study a10th C team
+##### Community name: kernel study a10C team
 ##### Target Soc    : Samsung Exynos 5420 (ARMv7 A7&A15)
 ##### Kernel version: Linux kernel 3.13.x
   - 1st: 3.9.6
@@ -10,6 +10,12 @@
   - current : 3.13.x
   
 # HISTORY
+* 131th (2016/01/23) week [131차](https://github.com/hephaex/kernel_review/blob/master/a10c_131.md)
+ - vfs_caches_init()
+  - mnt_init()
+* 130th (2016/01/16) week [130차](https://github.com/hephaex/kernel_review/blob/master/a10c_130.md)
+ - vfs_caches_init()
+  - mnt_init()
 * 129th (2016/01/09) week [129차](https://github.com/hephaex/kernel_review/blob/master/a10c_129.md)
  - vfs_caches_init()
   - mnt_init()
