@@ -1963,6 +1963,8 @@ extern int unregister_filesystem(struct file_system_type *);
 extern struct vfsmount *kern_mount_data(struct file_system_type *, void *data);
 // ARM10C 20151031
 // &sysfs_fs_type
+// ARM10C 20160213
+// &shmem_fs_type
 #define kern_mount(type) kern_mount_data(type, NULL)
 extern void kern_unmount(struct vfsmount *mnt);
 extern int may_umount_tree(struct vfsmount *);

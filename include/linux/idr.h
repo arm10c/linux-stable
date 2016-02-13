@@ -41,6 +41,7 @@
 // ARM10C 20140920
 // ARM10C 20151031
 // ARM10C 20151107
+// ARM10C 20160213
 // DECLARE_BITMAP(bitmap, 0x100): bitmap[8]
 // sizeof(struct idr_layer): 1076 bytes
 struct idr_layer {
@@ -263,6 +264,7 @@ static inline void __deprecated idr_remove_all(struct idr *idp)
 
 // ARM10C 20151031
 // ARM10C 20151107
+// ARM10C 20160213
 // sizeof(struct ida_bitmap): 172 bytes
 struct ida_bitmap {
 	long			nr_busy;
@@ -272,6 +274,7 @@ struct ida_bitmap {
 
 // ARM10C 20151031
 // ARM10C 20160116
+// ARM10C 20160213
 struct ida {
 	struct idr		idr;
 	struct ida_bitmap	*free_bitmap;

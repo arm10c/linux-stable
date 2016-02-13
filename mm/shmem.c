@@ -33,6 +33,7 @@
 #include <linux/swap.h>
 #include <linux/aio.h>
 
+// ARM10C 20160213
 static struct vfsmount *shm_mnt;
 
 #ifdef CONFIG_SHMEM // CONFIG_SHMEM=y
@@ -2817,6 +2818,7 @@ static struct dentry *shmem_mount(struct file_system_type *fs_type,
 }
 
 // ARM10C 20160123
+// ARM10C 20160213
 static struct file_system_type shmem_fs_type = {
 	.owner		= THIS_MODULE,
 	.name		= "tmpfs",
@@ -2930,6 +2932,7 @@ int __init shmem_init(void)
 	}
 
 // 2016/01/23 종료
+// 2016/02/13 시작
 
 	shm_mnt = kern_mount(&shmem_fs_type);
 	if (IS_ERR(shm_mnt)) {

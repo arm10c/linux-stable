@@ -136,6 +136,7 @@ extern unsigned int full_name_hash(const unsigned char *, unsigned int);
 // ARM10C 20151121
 // ARM10C 20151212
 // ARM10C 20151219
+// ARM10C 20160213
 // sizeof(struct dentry): 140 bytes
 struct dentry {
 	/* RCU lookup touched fields */
