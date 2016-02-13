@@ -62,6 +62,8 @@ ENDPROC(_find_first_zero_bit_le)
 // p->bitmap: (kmem_cache#21-o7)->bitmap (struct idr_layer), IDR_SIZE: 0x100, n: 0
 // ARM10C 20151107
 // bitmap->bitmap: (kmem_cache#27-oX (struct ida_bitmap))->bitmap, IDA_BITMAP_BITS: 1344, offset: 0
+// ARM10C 20160213
+// p->bitmap: (kmem_cache#21-o7)->bitmap (struct idr_layer), IDR_SIZE: 0x100, n: 1
 ENTRY(_find_next_zero_bit_le)
 		teq	r1, #0
 		beq	3b

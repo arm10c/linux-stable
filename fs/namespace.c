@@ -193,6 +193,9 @@ retry:
 	// spin_lock에서 한일:
 	// &mnt_id_lock을 이용한 spin lock 수행
 
+
+// 2016/02/13 종료
+
 	// mnt_id_start: 0, &mnt->mnt_id: &(kmem_cache#2-oX)->mnt_id
 	// ida_get_new_above(&mnt_id_ida, 0, &(kmem_cache#2-oX)->mnt_id): 0
 	// mnt_id_start: 1, &mnt->mnt_id: &(kmem_cache#2-oX)->mnt_id

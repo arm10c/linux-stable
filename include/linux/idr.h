@@ -254,21 +254,21 @@ static inline void __deprecated idr_remove_all(struct idr *idp)
 #define IDA_CHUNK_SIZE		128	/* 128 bytes per chunk */
 // ARM10C 20151031
 // IDA_CHUNK_SIZE: 128
-// IDA_BITMAP_LONGS: 42
+// IDA_BITMAP_LONGS: 31
 #define IDA_BITMAP_LONGS	(IDA_CHUNK_SIZE / sizeof(long) - 1)
 // ARM10C 20151031
 // ARM10C 20151107
-// IDA_BITMAP_LONGS: 42
-// IDA_BITMAP_BITS: 1344
+// IDA_BITMAP_LONGS: 31
+// IDA_BITMAP_BITS: 992
 #define IDA_BITMAP_BITS 	(IDA_BITMAP_LONGS * sizeof(long) * 8)
 
 // ARM10C 20151031
 // ARM10C 20151107
 // ARM10C 20160213
-// sizeof(struct ida_bitmap): 172 bytes
+// sizeof(struct ida_bitmap): 128 bytes
 struct ida_bitmap {
 	long			nr_busy;
-	// IDA_BITMAP_LONGS: 42
+	// IDA_BITMAP_LONGS: 31
 	unsigned long		bitmap[IDA_BITMAP_LONGS];
 };
 

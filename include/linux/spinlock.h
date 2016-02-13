@@ -444,6 +444,8 @@ static inline void spin_lock_irq(spinlock_t *lock)
 // &idp->lock: &(&(&mnt_id_ida)->idr)->lock, flags
 // ARM10C 20151107
 // &ida->idr.lock: &(&mnt_id_ida)->idr.lock, flags
+// ARM10C 20160213
+// &ida->idr.lock: &(&mnt_id_ida)->idr.lock, flags
 #define spin_lock_irqsave(lock, flags)				\
 do {								\
 	raw_spin_lock_irqsave(spinlock_check(lock), flags);	\
@@ -489,6 +491,8 @@ static inline void spin_unlock_irq(spinlock_t *lock)
 	raw_spin_unlock_irq(&lock->rlock);
 }
 
+// ARM10C 20160213
+// &ida->idr.lock: &(&mnt_id_ida)->idr.lock, flags
 static inline void spin_unlock_irqrestore(spinlock_t *lock, unsigned long flags)
 {
 	raw_spin_unlock_irqrestore(&lock->rlock, flags);
