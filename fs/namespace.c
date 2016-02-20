@@ -172,12 +172,20 @@ retry:
 
 	// ida_pre_get에서 한일:
 	// idr_layer_cache를 사용하여 struct idr_layer 의 메모리 kmem_cache#21-o0...7를 8 개를 할당 받음
-	// (kmem_cache#21-o0...7)->ary[0]: NULL
-	// (&(&mnt_id_ida)->idr)->id_free: kmem_cache#21-o7
-	// (&(&mnt_id_ida)->idr)->id_free_cnt: 7
+	//
+	// (&(&mnt_id_ida)->idr)->id_free 이 idr object 8 번을 가르킴
+	// |
+	// |-> ---------------------------------------------------------------------------------------------------------------------------
+	//     | idr object 8         | idr object 7         | idr object 6         | idr object 5         | .... | idr object 0         |
+	//     ---------------------------------------------------------------------------------------------------------------------------
+	//     | ary[0]: idr object 7 | ary[0]: idr object 6 | ary[0]: idr object 5 | ary[0]: idr object 4 | .... | ary[0]: NULL         |
+	//     ---------------------------------------------------------------------------------------------------------------------------
+	//
+	// (&(&mnt_id_ida)->idr)->id_free: kmem_cache#21-oX (idr object 8)
+	// (&(&mnt_id_ida)->idr)->id_free_cnt: 8
 	//
 	// struct ida_bitmap 의 메모리 kmem_cache#27-oX 할당 받음
-	// (&mnt_id_ida)->free_bitmap: kmem_cache#27-oX
+	// (&mnt_id_ida)->free_bitmap: kmem_cache#27-oX (struct ida_bitmap)
 
 	// ida_pre_get에서 한일:
 	// idr_layer_cache를 사용하여 struct idr_layer 의 메모리 kmem_cache#21-oX 를 1 개를 할당 받음
@@ -195,6 +203,7 @@ retry:
 
 
 // 2016/02/13 종료
+// 2016/02/20 시작
 
 	// mnt_id_start: 0, &mnt->mnt_id: &(kmem_cache#2-oX)->mnt_id
 	// ida_get_new_above(&mnt_id_ida, 0, &(kmem_cache#2-oX)->mnt_id): 0
