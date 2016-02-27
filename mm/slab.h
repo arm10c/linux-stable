@@ -244,6 +244,8 @@ static inline struct kmem_cache *memcg_root_cache(struct kmem_cache *s)
 }
 #endif
 
+// ARM10C 20151031
+// s: kmem_cache#21, x: kmem_cache#21-oX (idr object 7)
 static inline struct kmem_cache *cache_from_obj(struct kmem_cache *s, void *x)
 {
 	struct kmem_cache *cachep;
@@ -256,8 +258,16 @@ static inline struct kmem_cache *cache_from_obj(struct kmem_cache *s, void *x)
 	 * to not do even the assignment. In that case, slab_equal_or_root
 	 * will also be a constant.
 	 */
+	// NOTE:
+	// idr_layer_cache는 SLAB_PANIC flag를 사용하여 kmem_cache를 생성함
+	// s->flags: (kmem_cache#21)->flags 값을 정확히는 알수 없으나
+	// SLAB_DEBUG_FREE가 아닌 SLAB_PANIC의 값이 flags에 있는 것은 알 수 있음
+
+	// memcg_kmem_enabled(): false, s->flags: (kmem_cache#21)->flags: XXX (SLAB_PANIC), SLAB_DEBUG_FREE: 0x00000100UL
 	if (!memcg_kmem_enabled() && !unlikely(s->flags & SLAB_DEBUG_FREE))
+		// s: kmem_cache#21
 		return s;
+		// return kmem_cache#21
 
 	page = virt_to_head_page(x);
 	cachep = page->slab_cache;

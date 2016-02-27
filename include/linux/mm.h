@@ -414,10 +414,13 @@ static inline void compound_unlock_irqrestore(struct page *page,
 // page: kmem_cache#30-o11의 page 주소
 // ARM10C 20151024
 // page: migratetype이 MIGRATE_UNMOVABLE인 order 2의 page의 물리주소
+// ARM10C 20151031
+// page: kmem_cache#21-oX (idr object 7)의 page 주소
 static inline struct page *compound_head(struct page *page)
 {
 	// page: kmem_cache#30-o11의 page 주소
 	// page: migratetype이 MIGRATE_UNMOVABLE인 order 2의 page의 물리주소
+	// page: kmem_cache#21-oX (idr object 7)의 page 주소
 	if (unlikely(PageTail(page))) {
 		struct page *head = page->first_page;
 
@@ -432,9 +435,11 @@ static inline struct page *compound_head(struct page *page)
 	}
 	// page: kmem_cache#30-o11의 page 주소
 	// page: migratetype이 MIGRATE_UNMOVABLE인 order 2의 page의 물리주소
+	// page: kmem_cache#21-oX (idr object 7)의 page 주소
 	return page;
 	// return kmem_cache#30-o11의 page 주소
 	// return migratetype이 MIGRATE_UNMOVABLE인 order 2의 page의 물리주소
+	// return kmem_cache#21-oX (idr object 7)의 page 주소
 }
 
 /*
@@ -499,16 +504,23 @@ static inline void get_page(struct page *page)
 
 // ARM10C 20141129
 // x: kmem_cache#30-o11
+// ARM10C 20151031
+// x: kmem_cache#21-oX (idr object 7)
 static inline struct page *virt_to_head_page(const void *x)
 {
 	// x: kmem_cache#30-o11, virt_to_page(kmem_cache#30-o11): kmem_cache#30-o11의 page 주소
+	// x: kmem_cache#21-oX (idr object 7), virt_to_page(kmem_cache#21-oX (idr object 7)): kmem_cache#21-oX (idr object 7)의 page 주소
 	struct page *page = virt_to_page(x);
 	// page: kmem_cache#30-o11의 page 주소
+	// page: kmem_cache#21-oX (idr object 7)의 page 주소
 
 	// page: kmem_cache#30-o11의 page 주소
 	// compound_head(kmem_cache#30-o11의 page 주소): kmem_cache#30-o11의 page 주소
+	// page: kmem_cache#21-oX (idr object 7)의 page 주소
+	// compound_head(kmem_cache#21-oX (idr object 7)의 page 주소): kmem_cache#21-oX (idr object 7)의 page 주소
 	return compound_head(page);
 	// return kmem_cache#30-o11의 page 주소
+	// return kmem_cache#21-oX (idr object 7)의 page 주소
 }
 
 /*

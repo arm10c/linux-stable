@@ -151,6 +151,7 @@ DEFINE_EVENT(kmem_free, kfree,
 	TP_ARGS(call_site, ptr)
 );
 
+// ARM10C 20151031
 DEFINE_EVENT(kmem_free, kmem_cache_free,
 
 	TP_PROTO(unsigned long call_site, const void *ptr),

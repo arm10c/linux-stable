@@ -813,25 +813,38 @@ retry:
 
 	// [re] sysfs_set_super에서 한일:
 	// idr_layer_cache를 사용하여 struct idr_layer 의 메모리 kmem_cache#21-o0...7를 8 개를 할당 받음
-	// (kmem_cache#21-o0...7)->ary[0]: NULL
-	// (&(&unnamed_dev_ida)->idr)->id_free: kmem_cache#21-o7
-	// (&(&unnamed_dev_ida)->idr)->id_free_cnt: 7
+	//
+	// (&(&unnamed_dev_ida)->idr)->id_free 이 idr object 8 번을 가르킴
+	// |
+	// |-> ---------------------------------------------------------------------------------------------------------------------------
+	//     | idr object 8         | idr object 7         | idr object 6         | idr object 5         | .... | idr object 0         |
+	//     ---------------------------------------------------------------------------------------------------------------------------
+	//     | ary[0]: idr object 7 | ary[0]: idr object 6 | ary[0]: idr object 5 | ary[0]: idr object 4 | .... | ary[0]: NULL         |
+	//     ---------------------------------------------------------------------------------------------------------------------------
+	//
+	// (&(&unnamed_dev_ida)->idr)->id_free: kmem_cache#21-oX (idr object 8)
+	// (&(&unnamed_dev_ida)->idr)->id_free_cnt: 8
 	//
 	// struct ida_bitmap 의 메모리 kmem_cache#27-oX 할당 받음
-	// (&unnamed_dev_ida)->free_bitmap: kmem_cache#27-oX
+	// (&unnamed_dev_ida)->free_bitmap: kmem_cache#27-oX (struct ida_bitmap)
 	//
-	// (&(&unnamed_dev_ida)->idr)->id_free: NULL
+	// (&(&unnamed_dev_ida)->idr)->id_free: kmem_cache#21-oX (idr object 6)
 	// (&(&unnamed_dev_ida)->idr)->id_free_cnt: 6
-	// (&(&unnamed_dev_ida)->idr)->top: kmem_cache#21-o7 (struct idr_layer)
 	// (&(&unnamed_dev_ida)->idr)->layers: 1
+	// ((&(&unnamed_dev_ida)->idr)->top): kmem_cache#21-oX (idr object 8)
+	//
+	// (kmem_cache#21-oX (idr object 8))->layer: 0
+	// kmem_cache#21-oX (struct idr_layer) (idr object 8)
+	// ((kmem_cache#21-oX (struct idr_layer) (idr object 8))->ary[0]): (typeof(*kmem_cache#27-oX (struct ida_bitmap)) __force space *)(kmem_cache#27-oX (struct ida_bitmap))
+	// (kmem_cache#21-oX (struct idr_layer) (idr object 8))->count: 1
+	//
 	// (&unnamed_dev_ida)->free_bitmap: NULL
-	//
-	// (kmem_cache#21-o7 (struct idr_layer))->ary[0]: NULL
-	// (kmem_cache#21-o7 (struct idr_layer))->layer: 0
-	// (kmem_cache#21-o7 (struct idr_layer))->ary[0]: kmem_cache#27-oX (struct ida_bitmap)
-	// (kmem_cache#21-o7 (struct idr_layer))->count: 1
-	//
+	// kmem_cache#27-oX (struct ida_bitmap) 메모리을 0으로 초기화
 	// (kmem_cache#27-oX (struct ida_bitmap))->bitmap 의 0 bit를 1로 set 수행
+	//
+	// (kmem_cache#2-oX (struct mount))->mnt_id: 0
+	//
+	// kmem_cache인 kmem_cache#21 에서 할당한 object인 kmem_cache#21-oX (idr object 7) 의 memory 공간을 반환함
 	//
 	// unnamed_dev_start: 1
 	//
@@ -1268,12 +1281,20 @@ int get_anon_bdev(dev_t *p)
 
 	// ida_pre_get에서 한일:
 	// idr_layer_cache를 사용하여 struct idr_layer 의 메모리 kmem_cache#21-o0...7를 8 개를 할당 받음
-	// (kmem_cache#21-o0...7)->ary[0]: NULL
-	// (&(&unnamed_dev_ida)->idr)->id_free: kmem_cache#21-o7
-	// (&(&unnamed_dev_ida)->idr)->id_free_cnt: 7
+	//
+	// (&(&unnamed_dev_ida)->idr)->id_free 이 idr object 8 번을 가르킴
+	// |
+	// |-> ---------------------------------------------------------------------------------------------------------------------------
+	//     | idr object 8         | idr object 7         | idr object 6         | idr object 5         | .... | idr object 0         |
+	//     ---------------------------------------------------------------------------------------------------------------------------
+	//     | ary[0]: idr object 7 | ary[0]: idr object 6 | ary[0]: idr object 5 | ary[0]: idr object 4 | .... | ary[0]: NULL         |
+	//     ---------------------------------------------------------------------------------------------------------------------------
+	//
+	// (&(&unnamed_dev_ida)->idr)->id_free: kmem_cache#21-oX (idr object 8)
+	// (&(&unnamed_dev_ida)->idr)->id_free_cnt: 8
 	//
 	// struct ida_bitmap 의 메모리 kmem_cache#27-oX 할당 받음
-	// (&unnamed_dev_ida)->free_bitmap: kmem_cache#27-oX
+	// (&unnamed_dev_ida)->free_bitmap: kmem_cache#27-oX (struct ida_bitmap)
 
 	spin_lock(&unnamed_dev_lock);
 
@@ -1286,18 +1307,23 @@ int get_anon_bdev(dev_t *p)
 	// error: 0
 
 	// ida_get_new_above에서 한일:
-	// (&(&unnamed_dev_ida)->idr)->id_free: NULL
+	// (&(&unnamed_dev_ida)->idr)->id_free: kmem_cache#21-oX (idr object 6)
 	// (&(&unnamed_dev_ida)->idr)->id_free_cnt: 6
-	// (&(&unnamed_dev_ida)->idr)->top: kmem_cache#21-o7 (struct idr_layer)
 	// (&(&unnamed_dev_ida)->idr)->layers: 1
+	// ((&(&unnamed_dev_ida)->idr)->top): kmem_cache#21-oX (idr object 8)
+	//
+	// (kmem_cache#21-oX (idr object 8))->layer: 0
+	// kmem_cache#21-oX (struct idr_layer) (idr object 8)
+	// ((kmem_cache#21-oX (struct idr_layer) (idr object 8))->ary[0]): (typeof(*kmem_cache#27-oX (struct ida_bitmap)) __force space *)(kmem_cache#27-oX (struct ida_bitmap))
+	// (kmem_cache#21-oX (struct idr_layer) (idr object 8))->count: 1
+	//
 	// (&unnamed_dev_ida)->free_bitmap: NULL
-	//
-	// (kmem_cache#21-o7 (struct idr_layer))->ary[0]: NULL
-	// (kmem_cache#21-o7 (struct idr_layer))->layer: 0
-	// (kmem_cache#21-o7 (struct idr_layer))->ary[0]: kmem_cache#27-oX (struct ida_bitmap)
-	// (kmem_cache#21-o7 (struct idr_layer))->count: 1
-	//
+	// kmem_cache#27-oX (struct ida_bitmap) 메모리을 0으로 초기화
 	// (kmem_cache#27-oX (struct ida_bitmap))->bitmap 의 0 bit를 1로 set 수행
+	//
+	// (kmem_cache#2-oX (struct mount))->mnt_id: 0
+	//
+	// kmem_cache인 kmem_cache#21 에서 할당한 object인 kmem_cache#21-oX (idr object 7) 의 memory 공간을 반환함
 	//
 	// dev: 0
 
@@ -1359,25 +1385,38 @@ int set_anon_super(struct super_block *s, void *data)
 
 	// get_anon_bdev에서 한일:
 	// idr_layer_cache를 사용하여 struct idr_layer 의 메모리 kmem_cache#21-o0...7를 8 개를 할당 받음
-	// (kmem_cache#21-o0...7)->ary[0]: NULL
-	// (&(&unnamed_dev_ida)->idr)->id_free: kmem_cache#21-o7
-	// (&(&unnamed_dev_ida)->idr)->id_free_cnt: 7
+	//
+	// (&(&unnamed_dev_ida)->idr)->id_free 이 idr object 8 번을 가르킴
+	// |
+	// |-> ---------------------------------------------------------------------------------------------------------------------------
+	//     | idr object 8         | idr object 7         | idr object 6         | idr object 5         | .... | idr object 0         |
+	//     ---------------------------------------------------------------------------------------------------------------------------
+	//     | ary[0]: idr object 7 | ary[0]: idr object 6 | ary[0]: idr object 5 | ary[0]: idr object 4 | .... | ary[0]: NULL         |
+	//     ---------------------------------------------------------------------------------------------------------------------------
+	//
+	// (&(&unnamed_dev_ida)->idr)->id_free: kmem_cache#21-oX (idr object 8)
+	// (&(&unnamed_dev_ida)->idr)->id_free_cnt: 8
 	//
 	// struct ida_bitmap 의 메모리 kmem_cache#27-oX 할당 받음
-	// (&unnamed_dev_ida)->free_bitmap: kmem_cache#27-oX
+	// (&unnamed_dev_ida)->free_bitmap: kmem_cache#27-oX (struct ida_bitmap)
 	//
-	// (&(&unnamed_dev_ida)->idr)->id_free: NULL
+	// (&(&unnamed_dev_ida)->idr)->id_free: kmem_cache#21-oX (idr object 6)
 	// (&(&unnamed_dev_ida)->idr)->id_free_cnt: 6
-	// (&(&unnamed_dev_ida)->idr)->top: kmem_cache#21-o7 (struct idr_layer)
 	// (&(&unnamed_dev_ida)->idr)->layers: 1
+	// ((&(&unnamed_dev_ida)->idr)->top): kmem_cache#21-oX (idr object 8)
+	//
+	// (kmem_cache#21-oX (idr object 8))->layer: 0
+	// kmem_cache#21-oX (struct idr_layer) (idr object 8)
+	// ((kmem_cache#21-oX (struct idr_layer) (idr object 8))->ary[0]): (typeof(*kmem_cache#27-oX (struct ida_bitmap)) __force space *)(kmem_cache#27-oX (struct ida_bitmap))
+	// (kmem_cache#21-oX (struct idr_layer) (idr object 8))->count: 1
+	//
 	// (&unnamed_dev_ida)->free_bitmap: NULL
-	//
-	// (kmem_cache#21-o7 (struct idr_layer))->ary[0]: NULL
-	// (kmem_cache#21-o7 (struct idr_layer))->layer: 0
-	// (kmem_cache#21-o7 (struct idr_layer))->ary[0]: kmem_cache#27-oX (struct ida_bitmap)
-	// (kmem_cache#21-o7 (struct idr_layer))->count: 1
-	//
+	// kmem_cache#27-oX (struct ida_bitmap) 메모리을 0으로 초기화
 	// (kmem_cache#27-oX (struct ida_bitmap))->bitmap 의 0 bit를 1로 set 수행
+	//
+	// (kmem_cache#2-oX (struct mount))->mnt_id: 0
+	//
+	// kmem_cache인 kmem_cache#21 에서 할당한 object인 kmem_cache#21-oX (idr object 7) 의 memory 공간을 반환함
 	//
 	// unnamed_dev_start: 1
 	//
@@ -1746,32 +1785,44 @@ mount_fs(struct file_system_type *type, int flags, const char *name, void *data)
 	// (kmem_cache#25-oX (struct super_block))->s_shrink.flags: 1
 	//
 	// idr_layer_cache를 사용하여 struct idr_layer 의 메모리 kmem_cache#21-o0...7를 8 개를 할당 받음
-	// (kmem_cache#21-o0...7)->ary[0]: NULL
-	// (&(&unnamed_dev_ida)->idr)->id_free: kmem_cache#21-o7
-	// (&(&unnamed_dev_ida)->idr)->id_free_cnt: 7
+	//
+	// (&(&unnamed_dev_ida)->idr)->id_free 이 idr object 8 번을 가르킴
+	// |
+	// |-> ---------------------------------------------------------------------------------------------------------------------------
+	//     | idr object 8         | idr object 7         | idr object 6         | idr object 5         | .... | idr object 0         |
+	//     ---------------------------------------------------------------------------------------------------------------------------
+	//     | ary[0]: idr object 7 | ary[0]: idr object 6 | ary[0]: idr object 5 | ary[0]: idr object 4 | .... | ary[0]: NULL         |
+	//     ---------------------------------------------------------------------------------------------------------------------------
+	//
+	// (&(&unnamed_dev_ida)->idr)->id_free: kmem_cache#21-oX (idr object 8)
+	// (&(&unnamed_dev_ida)->idr)->id_free_cnt: 8
 	//
 	// struct ida_bitmap 의 메모리 kmem_cache#27-oX 할당 받음
-	// (&unnamed_dev_ida)->free_bitmap: kmem_cache#27-oX
+	// (&unnamed_dev_ida)->free_bitmap: kmem_cache#27-oX (struct ida_bitmap)
 	//
-	// (&(&unnamed_dev_ida)->idr)->id_free: NULL
+	// (&(&unnamed_dev_ida)->idr)->id_free: kmem_cache#21-oX (idr object 6)
 	// (&(&unnamed_dev_ida)->idr)->id_free_cnt: 6
-	// (&(&unnamed_dev_ida)->idr)->top: kmem_cache#21-o7 (struct idr_layer)
 	// (&(&unnamed_dev_ida)->idr)->layers: 1
+	// ((&(&unnamed_dev_ida)->idr)->top): kmem_cache#21-oX (idr object 8)
+	//
+	// (kmem_cache#21-oX (idr object 8))->layer: 0
+	// kmem_cache#21-oX (struct idr_layer) (idr object 8)
+	// ((kmem_cache#21-oX (struct idr_layer) (idr object 8))->ary[0]): (typeof(*kmem_cache#27-oX (struct ida_bitmap)) __force space *)(kmem_cache#27-oX (struct ida_bitmap))
+	// (kmem_cache#21-oX (struct idr_layer) (idr object 8))->count: 1
+	//
 	// (&unnamed_dev_ida)->free_bitmap: NULL
-	//
-	// (kmem_cache#21-o7 (struct idr_layer))->ary[0]: NULL
-	// (kmem_cache#21-o7 (struct idr_layer))->layer: 0
-	// (kmem_cache#21-o7 (struct idr_layer))->ary[0]: kmem_cache#27-oX (struct ida_bitmap)
-	// (kmem_cache#21-o7 (struct idr_layer))->count: 1
-	//
+	// kmem_cache#27-oX (struct ida_bitmap) 메모리을 0으로 초기화
 	// (kmem_cache#27-oX (struct ida_bitmap))->bitmap 의 0 bit를 1로 set 수행
+	//
+	// (kmem_cache#2-oX (struct mount))->mnt_id: 0
+	//
+	// kmem_cache인 kmem_cache#21 에서 할당한 object인 kmem_cache#21-oX (idr object 7) 의 memory 공간을 반환함
 	//
 	// unnamed_dev_start: 1
 	//
 	// (kmem_cache#25-oX (struct super_block))->s_dev: 0
 	// (kmem_cache#25-oX (struct super_block))->s_bdi: &noop_backing_dev_info
 	// (kmem_cache#25-oX (struct super_block))->s_fs_info: kmem_cache#30-oX (struct sysfs_super_info)
-	//
 	// (kmem_cache#25-oX (struct super_block))->s_type: &sysfs_fs_type
 	// (kmem_cache#25-oX (struct super_block))->s_id: "sysfs"
 	//

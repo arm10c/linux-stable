@@ -343,20 +343,23 @@ static int sysfs_alloc_ino(unsigned int *pino)
 	// rc: 0
 
 	// ida_get_new_above에서 한일:
-	// (&(&sysfs_ino_ida)->idr)->id_free: NULL
+	// (&(&sysfs_ino_ida)->idr)->id_free: kmem_cache#21-oX (idr object 6)
 	// (&(&sysfs_ino_ida)->idr)->id_free_cnt: 6
-	// (&(&sysfs_ino_ida)->idr)->top: kmem_cache#21-o7 (struct idr_layer)
 	// (&(&sysfs_ino_ida)->idr)->layers: 1
+	// ((&(&sysfs_ino_ida)->idr)->top): kmem_cache#21-oX (idr object 8)
+	//
+	// (kmem_cache#21-oX (idr object 8))->layer: 0
+	// kmem_cache#21-oX (struct idr_layer) (idr object 8)
+	// ((kmem_cache#21-oX (struct idr_layer) (idr object 8))->ary[0]): (typeof(*kmem_cache#27-oX (struct ida_bitmap)) __force space *)(kmem_cache#27-oX (struct ida_bitmap))
+	// (kmem_cache#21-oX (struct idr_layer) (idr object 8))->count: 1
+	//
 	// (&sysfs_ino_ida)->free_bitmap: NULL
-	//
-	// (kmem_cache#21-o7 (struct idr_layer))->ary[0]: NULL
-	// (kmem_cache#21-o7 (struct idr_layer))->layer: 0
-	// (kmem_cache#21-o7 (struct idr_layer))->ary[0]: kmem_cache#27-oX (struct ida_bitmap)
-	// (kmem_cache#21-o7 (struct idr_layer))->count: 1
-	//
+	// kmem_cache#27-oX (struct ida_bitmap) 메모리을 0으로 초기화
 	// (kmem_cache#27-oX (struct ida_bitmap))->bitmap 의 0 bit를 1로 set 수행
 	//
 	// ino: 2
+	//
+	// kmem_cache인 kmem_cache#21 에서 할당한 object인 kmem_cache#21-oX (idr object 7) 의 memory 공간을 반환함
 
 	spin_unlock(&sysfs_ino_lock);
 
@@ -516,6 +519,8 @@ struct sysfs_dirent *sysfs_new_dirent(const char *name, umode_t mode, int type)
 	// sd: kmem_cache#1-oX (struct sysfs_dirent)
 	if (!sd)
 		goto err_out1;
+
+// 2016/02/27 종료
 
 	// &sd->s_ino: &(kmem_cache#1-oX (struct sysfs_dirent))->s_ino
 	// sysfs_alloc_ino(&(kmem_cache#1-oX (struct sysfs_dirent))->s_ino): 0

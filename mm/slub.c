@@ -5161,6 +5161,9 @@ slab_empty:
 // ARM10C 20141206
 // page->slab_cache: (kmem_cache#30-o11의 page 주소)->slab_cache,
 // page: kmem_cache#30-o11의 page 주소, object: kmem_cache#30-o11, _RET_IP_
+// ARM10C 20151031
+// s: kmem_cache#21, virt_to_head_page(kmem_cache#21-oX (idr object 7)): kmem_cache#21-oX (idr object 7)의 page 주소
+// x: kmem_cache#21-oX (idr object 7), _RET_IP_
 static __always_inline void slab_free(struct kmem_cache *s,
 			struct page *page, void *x, unsigned long addr)
 {
@@ -5241,13 +5244,27 @@ redo:
 
 }
 
+// ARM10C 20151031
+// idr_layer_cache: kmem_cache#21, p: kmem_cache#21-oX (idr object 7)
 void kmem_cache_free(struct kmem_cache *s, void *x)
 {
+	// s: kmem_cache#21, x: kmem_cache#21-oX (idr object 7)
+	// cache_from_obj(kmem_cache#21, kmem_cache#21-oX (idr object 7)): kmem_cache#21
 	s = cache_from_obj(s, x);
+	// s: kmem_cache#21
+
+	// s: kmem_cache#21
 	if (!s)
 		return;
+
+	// s: kmem_cache#21, x: kmem_cache#21-oX (idr object 7),
+	// virt_to_head_page(kmem_cache#21-oX (idr object 7)): kmem_cache#21-oX (idr object 7)의 page 주소
 	slab_free(s, virt_to_head_page(x), x, _RET_IP_);
-	trace_kmem_cache_free(_RET_IP_, x);
+
+	// slab_free에서 한일:
+	// kmem_cache인 kmem_cache#21 에서 할당한 object인 kmem_cache#21-oX (idr object 7) 의 memory 공간을 반환함
+
+	trace_kmem_cache_free(_RET_IP_, x); // null function
 }
 EXPORT_SYMBOL(kmem_cache_free);
 
