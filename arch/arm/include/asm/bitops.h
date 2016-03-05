@@ -232,6 +232,8 @@ extern int _find_next_bit_be(const unsigned long *p, int size, int offset);
 // bitmap->bitmap: (kmem_cache#27-oX (struct ida_bitmap))->bitmap, IDA_BITMAP_BITS: 992, offset: 0
 // ARM10C 20160213
 // p->bitmap: (kmem_cache#21-o7)->bitmap (struct idr_layer), IDR_SIZE: 0x100, n: 1
+// ARM10C 20160305
+// bitmap->bitmap: (kmem_cache#27-oX (struct ida_bitmap))->bitmap, IDA_BITMAP_BITS: 992, offset: 1
 #define find_next_zero_bit(p,sz,off)	_find_next_zero_bit_le(p,sz,off)
 #define find_first_bit(p,sz)		_find_first_bit_le(p,sz)
 // ARM10C 20140215
