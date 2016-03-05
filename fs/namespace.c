@@ -3698,8 +3698,8 @@ void __init mnt_init(void)
 	// ((kmem_cache#2-oX (struct mount))->mnt_slave)->prev: (kmem_cache#2-oX (struct mount))->mnt_slave
 	// ((kmem_cache#2-oX (struct mount))->mnt_fsnotify_marks)->first: NULL
 	//
-		// mnt->mnt.mnt_flags: (kmem_cache#2-oX (struct mount))->mnt.mnt_flags: 0x4000
-		//
+	// (kmem_cache#2-oX (struct mount))->mnt.mnt_flags: 0x4000
+	//
 	// struct sysfs_super_info의 메모리 kmem_cache#30-oX (struct sysfs_super_info)를 할당받음
 	//
 	// (kmem_cache#30-oX (struct sysfs_super_info))->ns[0]: NULL
@@ -4185,8 +4185,8 @@ struct vfsmount *kern_mount_data(struct file_system_type *type, void *data)
 	// ((kmem_cache#2-oX (struct mount))->mnt_slave)->prev: (kmem_cache#2-oX (struct mount))->mnt_slave
 	// ((kmem_cache#2-oX (struct mount))->mnt_fsnotify_marks)->first: NULL
 	//
-		// mnt->mnt.mnt_flags: (kmem_cache#2-oX (struct mount))->mnt.mnt_flags: 0x4000
-		//
+	// (kmem_cache#2-oX (struct mount))->mnt.mnt_flags: 0x4000
+	//
 	// struct sysfs_super_info의 메모리 kmem_cache#30-oX (struct sysfs_super_info)를 할당받음
 	//
 	// (kmem_cache#30-oX (struct sysfs_super_info))->ns[0]: NULL

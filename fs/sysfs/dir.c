@@ -338,11 +338,19 @@ static int sysfs_alloc_ino(unsigned int *pino)
 	// spin_lock에서 한일:
 	// &sysfs_ino_lock을 사용하여 spin lock을 수행
 
-	// ida_get_new_above(&sysfs_ino_ida, 2, &ino): 0
+	// [re] spin_lock에서 한일:
+	// [re] &sysfs_ino_lock을 사용하여 spin lock을 수행
+
+	// ida_get_new_above(&sysfs_ino_ida, 2, &ino): -11
+	// [re] ida_get_new_above(&sysfs_ino_ida, 2, &ino): 0
 	rc = ida_get_new_above(&sysfs_ino_ida, 2, &ino);
-	// rc: 0
+	// rc: -11
+	// [re] rc: 0
 
 	// ida_get_new_above에서 한일:
+	// (&(&sysfs_ino_ida)->idr)->id_free: NULL 이므로 -11 을 리턴함
+
+	// [re] ida_get_new_above에서 한일:
 	// (&(&sysfs_ino_ida)->idr)->id_free: kmem_cache#21-oX (idr object 6)
 	// (&(&sysfs_ino_ida)->idr)->id_free_cnt: 6
 	// (&(&sysfs_ino_ida)->idr)->layers: 1
@@ -355,9 +363,9 @@ static int sysfs_alloc_ino(unsigned int *pino)
 	//
 	// (&sysfs_ino_ida)->free_bitmap: NULL
 	// kmem_cache#27-oX (struct ida_bitmap) 메모리을 0으로 초기화
-	// (kmem_cache#27-oX (struct ida_bitmap))->bitmap 의 0 bit를 1로 set 수행
+	// (kmem_cache#27-oX (struct ida_bitmap))->bitmap 의 2 bit를 1로 set 수행
 	//
-	// ino: 2
+	// ino: 0
 	//
 	// kmem_cache인 kmem_cache#21 에서 할당한 object인 kmem_cache#21-oX (idr object 7) 의 memory 공간을 반환함
 
@@ -366,10 +374,31 @@ static int sysfs_alloc_ino(unsigned int *pino)
 	// spin_lock에서 한일:
 	// &sysfs_ino_lock을 사용하여 spin unlock을 수행
 
-	// rc: 0, EAGAIN: 11
+	// rc: -11, EAGAIN: 11
 	if (rc == -EAGAIN) {
+		// GFP_KERNEL: 0xD0
+		// ida_pre_get(&sysfs_ino_ida, 0xD0): 1
 		if (ida_pre_get(&sysfs_ino_ida, GFP_KERNEL))
 			goto retry;
+			// goto retry 수행
+
+		// ida_pre_get에서 한일:
+		// idr_layer_cache를 사용하여 struct idr_layer 의 메모리 kmem_cache#21-o0...7를 8 개를 할당 받음
+		//
+		// (&(&sysfs_ino_ida)->idr)->id_free 이 idr object 8 번을 가르킴
+		// |
+		// |-> ---------------------------------------------------------------------------------------------------------------------------
+		//     | idr object 8         | idr object 7         | idr object 6         | idr object 5         | .... | idr object 0         |
+		//     ---------------------------------------------------------------------------------------------------------------------------
+		//     | ary[0]: idr object 7 | ary[0]: idr object 6 | ary[0]: idr object 5 | ary[0]: idr object 4 | .... | ary[0]: NULL         |
+		//     ---------------------------------------------------------------------------------------------------------------------------
+		//
+		// (&(&sysfs_ino_ida)->idr)->id_free: kmem_cache#21-oX (idr object 8)
+		// (&(&sysfs_ino_ida)->idr)->id_free_cnt: 8
+		//
+		// struct ida_bitmap 의 메모리 kmem_cache#27-oX 할당 받음
+		// (&sysfs_ino_ida)->free_bitmap: kmem_cache#27-oX (struct ida_bitmap)
+
 		rc = -ENOMEM;
 	}
 
@@ -521,6 +550,7 @@ struct sysfs_dirent *sysfs_new_dirent(const char *name, umode_t mode, int type)
 		goto err_out1;
 
 // 2016/02/27 종료
+// 2016/03/05 시작
 
 	// &sd->s_ino: &(kmem_cache#1-oX (struct sysfs_dirent))->s_ino
 	// sysfs_alloc_ino(&(kmem_cache#1-oX (struct sysfs_dirent))->s_ino): 0
