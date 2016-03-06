@@ -247,6 +247,8 @@ retry:
 	// ida_get_new_above에서 한일:
 	// (&(&mnt_id_ida)->idr)->top: kmem_cache#21-oX (struct idr_layer) (idr object 8)
 	// (&(&mnt_id_ida)->idr)->layers: 1
+	// (&(&mnt_id_ida)->idr)->id_free: (idr object new 0)
+	// (&(&mnt_id_ida)->idr)->id_free_cnt: 7
 	//
 	// (kmem_cache#27-oX (struct ida_bitmap))->bitmap 의 1 bit를 1로 set 수행
 	// (kmem_cache#27-oX (struct ida_bitmap))->nr_busy: 2
@@ -444,6 +446,8 @@ static struct mount *alloc_vfsmnt(const char *name)
 		//
 		// (&(&mnt_id_ida)->idr)->top: kmem_cache#21-oX (struct idr_layer) (idr object 8)
 		// (&(&mnt_id_ida)->idr)->layers: 1
+		// (&(&mnt_id_ida)->idr)->id_free: (idr object new 0)
+		// (&(&mnt_id_ida)->idr)->id_free_cnt: 7
 		//
 		// (kmem_cache#27-oX (struct ida_bitmap))->bitmap 의 1 bit를 1로 set 수행
 		// (kmem_cache#27-oX (struct ida_bitmap))->nr_busy: 2
