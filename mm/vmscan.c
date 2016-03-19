@@ -198,6 +198,8 @@ static unsigned long get_lru_size(struct lruvec *lruvec, enum lru_list lru)
  */
 // ARM10C 20151121
 // [re] &s->s_shrink: &(kmem_cache#25-oX (struct super_block))->s_shrink
+// ARM10C 20160319
+// [re] &s->s_shrink: &(kmem_cache#25-oX (struct super_block))->s_shrink
 int register_shrinker(struct shrinker *shrinker)
 {
 	// *shrinker->nr_deferred: *(&(kmem_cache#25-oX (struct super_block))->s_shrink)->nr_deferred

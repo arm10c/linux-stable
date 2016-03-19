@@ -47,6 +47,8 @@ struct hlist_bl_node {
 };
 // ARM10C 20151114
 // &s->s_anon: &(kmem_cache#25-oX (struct super_block))->s_anon
+// ARM10C 20160319
+// &s->s_anon: &(kmem_cache#25-oX (struct super_block))->s_anon
 #define INIT_HLIST_BL_HEAD(ptr) \
 	((ptr)->first = NULL)
 

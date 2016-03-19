@@ -118,6 +118,10 @@ EXPORT_SYMBOL_GPL(list_lru_walk_node);
 // &s->s_dentry_lru: &(kmem_cache#25-oX (struct super_block))->s_dentry_lru
 // ARM10C 20151114
 // &s->s_inode_lru: &(kmem_cache#25-oX (struct super_block))->s_inode_lru
+// ARM10C 20160319
+// &s->s_dentry_lru: &(kmem_cache#25-oX (struct super_block))->s_dentry_lru
+// ARM10C 20160319
+// &s->s_inode_lru: &(kmem_cache#25-oX (struct super_block))->s_inode_lru
 int list_lru_init(struct list_lru *lru)
 {
 	int i;

@@ -97,10 +97,12 @@ static inline void mapping_set_gfp_mask(struct address_space *m, gfp_t mask)
  * Or rather, it _will_ be done in larger chunks.
  */
 // ARM10C 20151121
+// ARM10C 20160319
 // PAGE_SHIFT: 12
 // PAGE_CACHE_SHIFT: 12
 #define PAGE_CACHE_SHIFT	PAGE_SHIFT
 // ARM10C 20151121
+// ARM10C 20160319
 // PAGE_SIZE: 0x1000
 // PAGE_CACHE_SIZE: 0x1000
 #define PAGE_CACHE_SIZE		PAGE_SIZE

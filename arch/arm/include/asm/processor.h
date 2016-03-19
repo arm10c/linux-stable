@@ -92,7 +92,7 @@ unsigned long get_wchan(struct task_struct *p);
 #define KSTK_EIP(tsk)	task_pt_regs(tsk)->ARM_pc
 #define KSTK_ESP(tsk)	task_pt_regs(tsk)->ARM_sp
 
-#ifdef CONFIG_SMP
+#ifdef CONFIG_SMP // CONFIG_SMP=y
 #define __ALT_SMP_ASM(smp, up)						\
 	"9998:	" smp "\n"						\
 	"	.pushsection \".alt.smp.init\", \"a\"\n"		\
@@ -132,6 +132,8 @@ static inline void prefetch(const void *ptr)
 #define ARCH_HAS_PREFETCHW
 // ARM10C 20140329
 // page: 0x20000의 해당하는 struct page의 주소
+// ARM10C 20160319
+// &inode_sb_list_lock
 static inline void prefetchw(const void *ptr)
 {
 	__asm__ __volatile__(

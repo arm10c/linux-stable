@@ -47,6 +47,8 @@ int __percpu_counter_init(struct percpu_counter *fbc, s64 amount,
 // &pl->events: &(&(&sysfs_backing_dev_info)->completions)->events, 0
 // ARM10C 20151114
 // &s->s_writers.counter[0]: &(kmem_cache#25-oX (struct super_block))->s_writers.counter[0], 0
+// ARM10C 20160319
+// &s->s_writers.counter[0]: &(kmem_cache#25-oX (struct super_block))->s_writers.counter[0], 0
 #define percpu_counter_init(fbc, value)					\
 	({								\
 		static struct lock_class_key __key;			\

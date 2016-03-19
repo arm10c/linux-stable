@@ -402,6 +402,10 @@ do {							\
 // &sl->lock: &(&mount_lock)->lock
 // ARM10C 20160116
 // &sysfs_ino_lock
+// ARM10C 20160319
+// &unnamed_dev_lock
+// ARM10C 20160319
+// &inode->i_lock: &(kmem_cache#4-oX (struct inode))->i_lock
 static inline void spin_lock(spinlock_t *lock)
 {
 	// lock->rlock: (&contig_page_data->node_zones[0].lock)->rlock
@@ -478,6 +482,8 @@ do {									\
 // &sl->lock: &(&mount_lock)->lock
 // ARM10C 20160116
 // &sysfs_ino_lock
+// ARM10C 20160319
+// &inode->i_lock: &(kmem_cache#4-oX (struct inode))->i_lock
 static inline void spin_unlock(spinlock_t *lock)
 {
 	raw_spin_unlock(&lock->rlock);

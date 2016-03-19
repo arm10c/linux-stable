@@ -941,10 +941,13 @@ static struct module_attribute modinfo_refcnt =
 // vc->vc_sw->owner: ((kmem_cache#25-oX)->vc_sw)->owner: (&dummy_con)->owner: NULL
 // ARM10C 20151114
 // fs->owner: (&sysfs_fs_type)->owner: NULL
+// ARM10C 20160319
+// fs->owner: (&shmem_fs_type)->owner: NULL
 void __module_get(struct module *module)
 {
 	// module: (&dummy_con)->owner: NULL
 	// module: (&sysfs_fs_type)->owner: NULL
+	// module: (&shmem_fs_type)->owner: NULL
 	if (module) {
 		preempt_disable();
 		__this_cpu_inc(module->refptr->incs);

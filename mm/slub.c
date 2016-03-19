@@ -5246,6 +5246,8 @@ redo:
 
 // ARM10C 20151031
 // idr_layer_cache: kmem_cache#21, p: kmem_cache#21-oX (idr object 7)
+// ARM10C 20160319
+// idr_layer_cache: kmem_cache#21, p: kmem_cache#21-oX (idr object new 1)
 void kmem_cache_free(struct kmem_cache *s, void *x)
 {
 	// s: kmem_cache#21, x: kmem_cache#21-oX (idr object 7)

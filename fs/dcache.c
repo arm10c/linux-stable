@@ -2021,6 +2021,8 @@ EXPORT_SYMBOL(d_instantiate_no_diralias);
 
 // ARM10C 20151212
 // inode: kmem_cache#4-oX
+// ARM10C 20160319
+// inode: kmem_cache#4-oX (struct inode)
 struct dentry *d_make_root(struct inode *root_inode)
 {
 	struct dentry *res = NULL;

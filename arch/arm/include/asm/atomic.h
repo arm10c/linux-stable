@@ -64,6 +64,8 @@
 // &sd->s_count,: &(kmem_cache#1-oX (struct sysfs_dirent))->s_count, 1
 // ARM10C 20160116
 // &sd->s_active,: &(kmem_cache#1-oX (struct sysfs_dirent))->s_active, 0
+// ARM10C 20160319
+// &s->s_active: &(kmem_cache#25-oX (struct super_block))->s_active
 #define atomic_set(v,i)	(((v)->counter) = (i))
 
 #if __LINUX_ARM_ARCH__ >= 6

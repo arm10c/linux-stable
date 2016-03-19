@@ -43,6 +43,8 @@
 #endif
 
 #ifndef ARCH_HAS_SPINLOCK_PREFETCH
+// ARM10C 20160319
+// &inode_sb_list_lock
 #define spin_lock_prefetch(x) prefetchw(x)
 #endif
 

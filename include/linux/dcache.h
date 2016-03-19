@@ -137,6 +137,7 @@ extern unsigned int full_name_hash(const unsigned char *, unsigned int);
 // ARM10C 20151212
 // ARM10C 20151219
 // ARM10C 20160213
+// ARM10C 20160319
 // sizeof(struct dentry): 140 bytes
 struct dentry {
 	/* RCU lookup touched fields */
@@ -409,6 +410,8 @@ static inline struct dentry *dget_dlock(struct dentry *dentry)
 
 // ARM10C 20151219
 // sb->s_root: (kmem_cache#25-oX (struct super_block))->s_root: kmem_cache#5-oX (struct dentry)
+// ARM10C 20160319
+// s->s_root: (kmem_cache#25-oX (struct super_block))->s_root: kmem_cache#5-oX (struct dentry)
 static inline struct dentry *dget(struct dentry *dentry)
 {
 	// dentry: kmem_cache#5-oX (struct dentry)

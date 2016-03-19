@@ -2006,6 +2006,8 @@ static inline int security_bprm_secureexec(struct linux_binprm *bprm)
 
 // ARM10C 20151114
 // s: kmem_cache#25-oX (struct super_block)
+// ARM10C 20160319
+// s: kmem_cache#25-oX (struct super_block)
 static inline int security_sb_alloc(struct super_block *sb)
 {
 	return 0;

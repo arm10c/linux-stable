@@ -245,6 +245,9 @@ extern phys_addr_t per_cpu_ptr_to_phys(void *addr);
 // ARM10C 20151107
 // struct mnt_pcp
 // sizeof(struct mnt_pcp): 8 bytes, __alignof__(struct mnt_pcp): 8
+// ARM10C 20160319
+// struct mnt_pcp
+// sizeof(struct mnt_pcp): 8 bytes, __alignof__(struct mnt_pcp): 8
 #define alloc_percpu(type)	\
 	(typeof(type) __percpu *)__alloc_percpu(sizeof(type), __alignof__(type))
 
@@ -677,6 +680,8 @@ do {									\
 // nr_inodes, 1
 // ARM10C 20151219
 // nr_dentry, 1
+// ARM10C 20160319
+// mnt->mnt_pcp->mnt_count: (kmem_cache#2-oX (struct mount))->mnt_pcp->mnt_count, 1
 # define this_cpu_add(pcp, val)		__pcpu_size_call(this_cpu_add_, (pcp), (val))
 #endif
 

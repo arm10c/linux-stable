@@ -537,6 +537,7 @@ struct posix_acl;
 // ARM10C 20151121
 // ARM10C 20151205
 // ARM10C 20160123
+// ARM10C 20160319
 // sizeof(struct inode): 394 bytes
 struct inode {
 	umode_t			i_mode;
@@ -1285,6 +1286,7 @@ struct sb_writers {
 // ARM10C 20151003
 // ARM10C 20151114
 // ARM10C 20160109
+// ARM10C 20160319
 // sizeof(struct super_block): 709 bytes
 struct super_block {
 	struct list_head	s_list;		/* Keep this first */
@@ -1569,6 +1571,7 @@ struct block_device_operations;
 // ARM10C 20151003
 // ARM10C 20151128
 // ARM10C 20151212
+// ARM10C 20160319
 struct file_operations {
 	struct module *owner;
 	loff_t (*llseek) (struct file *, loff_t, int);
@@ -1603,6 +1606,7 @@ struct file_operations {
 // ARM10C 20151003
 // ARM10C 20151128
 // ARM10C 20151212
+// ARM10C 20160319
 struct inode_operations {
 	struct dentry * (*lookup) (struct inode *,struct dentry *, unsigned int);
 	void * (*follow_link) (struct dentry *, struct nameidata *);
@@ -1651,6 +1655,7 @@ extern ssize_t vfs_writev(struct file *, const struct iovec __user *,
 // ARM10C 20151114
 // ARM10C 20151121
 // ARM10C 20151128
+// ARM10C 20160319
 struct super_operations {
    	struct inode *(*alloc_inode)(struct super_block *sb);
 	void (*destroy_inode)(struct inode *);
@@ -1888,6 +1893,7 @@ struct file_system_type {
 #define FS_BINARY_MOUNTDATA	2
 #define FS_HAS_SUBTYPE		4
 // ARM10C 20151114
+// ARM10C 20160319
 // FS_USERNS_MOUNT: 8
 #define FS_USERNS_MOUNT		8	/* Can be mounted by userns root */
 #define FS_USERNS_DEV_MOUNT	16 /* A userns mount does not imply MNT_NODEV */
@@ -2711,6 +2717,7 @@ extern struct dentry *simple_lookup(struct inode *, struct dentry *, unsigned in
 extern ssize_t generic_read_dir(struct file *, char __user *, size_t, loff_t *);
 extern const struct file_operations simple_dir_operations;
 extern const struct inode_operations simple_dir_inode_operations;
+// ARM10C 20160319
 struct tree_descr { char *name; const struct file_operations *ops; int mode; };
 struct dentry *d_alloc_name(struct dentry *, const char *);
 extern int simple_fill_super(struct super_block *, unsigned long, struct tree_descr *);

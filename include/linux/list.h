@@ -154,6 +154,26 @@
 // &dentry->d_subdirs: &(kmem_cache#5-oX)->d_subdirs
 // ARM10C 20160109
 // &kobj->entry: &(kmem_cache#30-oX (struct kobject))->entry
+// ARM10C 20160319
+// mnt->mnt_child: (kmem_cache#2-oX (struct mount))->mnt_child
+// ARM10C 20160319
+// mnt->mnt_mounts: (kmem_cache#2-oX (struct mount))->mnt_mounts
+// ARM10C 20160319
+// mnt->mnt_list: (kmem_cache#2-oX (struct mount))->mnt_list
+// ARM10C 20160319
+// mnt->mnt_expire: (kmem_cache#2-oX (struct mount))->mnt_expire
+// ARM10C 20160319
+// mnt->mnt_share: (kmem_cache#2-oX (struct mount))->mnt_share
+// ARM10C 20160319
+// mnt->mnt_slave_list: (kmem_cache#2-oX (struct mount))->mnt_slave_list
+// ARM10C 20160319
+// mnt->mnt_slave: (kmem_cache#2-oX (struct mount))->mnt_slave
+// ARM10C 20160319
+// &s->s_inodes: &(kmem_cache#25-oX (struct super_block))->s_inodes
+// ARM10C 20160319
+// &s->s_mounts: &(kmem_cache#25-oX (struct super_block))->s_mounts
+// ARM10C 20160319
+// &inode->i_sb_list: &(kmem_cache#4-oX (struct inode))->i_sb_list
 static inline void INIT_LIST_HEAD(struct list_head *list)
 {
 	list->next = list;
@@ -931,6 +951,8 @@ static inline void list_splice_tail_init(struct list_head *list,
 // mnt->mnt_fsnotify_marks: (kmem_cache#2-oX (struct mount))->mnt_fsnotify_marks
 // ARM10C 20151205
 // &inode->i_dentry: &(kmem_cache#4-oX)->i_dentry
+// ARM10C 20160319
+// mnt->mnt_fsnotify_marks: (kmem_cache#2-oX (struct mount))->mnt_fsnotify_marks
 #define INIT_HLIST_HEAD(ptr) ((ptr)->first = NULL)
 
 // ARM10C 20150808
@@ -941,6 +963,10 @@ static inline void list_splice_tail_init(struct list_head *list,
 // &s->s_instances: &(kmem_cache#25-oX (struct super_block))->s_instances
 // ARM10C 20151219
 // &dentry->d_alias: &(kmem_cache#5-oX)->d_alias
+// ARM10C 20160319
+// mnt->mnt_hash: (kmem_cache#2-oX (struct mount))->mnt_hash
+// ARM10C 20160319
+// &s->s_instances: &(kmem_cache#25-oX (struct super_block))->s_instances
 static inline void INIT_HLIST_NODE(struct hlist_node *h)
 {
 
