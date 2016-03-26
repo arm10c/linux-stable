@@ -222,9 +222,12 @@ int __lockfunc _raw_read_trylock(rwlock_t *lock)
 EXPORT_SYMBOL(_raw_read_trylock);
 #endif
 
-#ifndef CONFIG_INLINE_READ_LOCK
+#ifndef CONFIG_INLINE_READ_LOCK // CONFIG_INLINE_READ_LOCK=n
+// ARM10C 20160326
+// &file_systems_lock
 void __lockfunc _raw_read_lock(rwlock_t *lock)
 {
+	// lock: &file_systems_lock
 	__raw_read_lock(lock);
 }
 EXPORT_SYMBOL(_raw_read_lock);

@@ -7,6 +7,7 @@
 #undef NULL
 #define NULL ((void *)0)
 
+// ARM10C 20160326
 enum {
 	false	= 0,
 	true	= 1

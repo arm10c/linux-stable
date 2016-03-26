@@ -389,6 +389,7 @@ static inline void lockdep_on(void)
 // &console_lock_dep_map, 0, 0, NULL, _RET_IP_
 // ARM10C 20151114
 // &sem->dep_map: &(&(kmem_cache#25-oX (struct super_block))->s_umount)->dep_map, 0, 0, 0, 1, NULL, _RET_IP_
+// ARM10C 20160326
 # define lock_acquire(l, s, t, r, c, n, i)	do { } while (0)
 // ARM10C 20150103
 // ARM10C 20150725
@@ -503,6 +504,9 @@ do {								\
 // ARM10C 20140517
 // ARM10C 20151031
 // ARM10C 20151114
+// ARM10C 20160326
+// LOCK_CONTENDED(lock, do_raw_read_trylock, do_raw_read_lock)
+// =>> do_raw_read_lock(lock)
 #define LOCK_CONTENDED(_lock, try, lock) \
 	lock(_lock)
 
@@ -563,6 +567,7 @@ static inline void print_irqtrace_events(struct task_struct *curr)
 // &sem->dep_map: &(&(kmem_cache#25-oX (struct super_block))->s_umount)->dep_map, 0, 0, NULL,  _RET_IP_
  #define lock_acquire_exclusive(l, s, t, n, i)		lock_acquire(l, s, t, 0, 1, n, i)
  #define lock_acquire_shared(l, s, t, n, i)		lock_acquire(l, s, t, 1, 1, n, i)
+// ARM10C 20160326
  #define lock_acquire_shared_recursive(l, s, t, n, i)	lock_acquire(l, s, t, 2, 1, n, i)
 #endif
 
@@ -575,6 +580,7 @@ static inline void print_irqtrace_events(struct task_struct *curr)
 
 // ARM10C 20140125
 #define rwlock_acquire(l, s, t, i)		lock_acquire_exclusive(l, s, t, NULL, i)
+// ARM10C 20160326
 #define rwlock_acquire_read(l, s, t, i)		lock_acquire_shared_recursive(l, s, t, NULL, i)
 // ARM10C 20140125
 #define rwlock_release(l, n, i)			lock_release(l, n, i)

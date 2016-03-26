@@ -214,6 +214,7 @@ static void rwlock_bug(rwlock_t *lock, const char *msg)
 }
 
 // ARM10C 20140125
+// ARM10C 20160326
 #define RWLOCK_BUG_ON(cond, lock, msg) if (unlikely(cond)) rwlock_bug(lock, msg)
 
 #if 0		/* __write_lock_debug() can lock up - maybe this can too? */
@@ -242,9 +243,14 @@ static void __read_lock_debug(rwlock_t *lock)
 }
 #endif
 
+// ARM10C 20160326
+// &file_systems_lock
 void do_raw_read_lock(rwlock_t *lock)
 {
+	// lock->magic: (&file_systems_lock)->magic: 0xdeaf1eed, RWLOCK_MAGIC: 0xdeaf1eed, lock: &file_systems_lock
 	RWLOCK_BUG_ON(lock->magic != RWLOCK_MAGIC, lock, "bad magic");
+
+	// &lock->raw_lock: &(&file_systems_lock)->raw_lock
 	arch_read_lock(&lock->raw_lock);
 }
 

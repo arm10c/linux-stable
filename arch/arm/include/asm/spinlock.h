@@ -11,7 +11,7 @@
  * sev and wfe are ARMv6K extensions.  Uniprocessor ARMv6 may not have the K
  * extensions, so when running on UP, we have to patch these instructions away.
  */
-#ifdef CONFIG_THUMB2_KERNEL
+#ifdef CONFIG_THUMB2_KERNEL // CONFIG_THUMB2_KERNEL=n
 /*
  * For Thumb-2, special care is needed to ensure that the conditional WFE
  * instruction really does assemble to exactly 4 bytes (as required by
@@ -30,6 +30,7 @@
 	"nop.w"					\
 )
 #else
+// ARM10C 20160326
 #define WFE(cond)	__ALT_SMP_ASM("wfe" cond, "nop")
 #endif
 
@@ -264,11 +265,27 @@ static inline void arch_write_unlock(arch_rwlock_t *rw)
  * currently active.  However, we know we won't have any write
  * locks.
  */
+// ARM10C 20160326
+// &lock->raw_lock: &(&file_systems_lock)->raw_lock
 static inline void arch_read_lock(arch_rwlock_t *rw)
 {
 	unsigned long tmp, tmp2;
 
+	// &rw->lock: &(&(&file_systems_lock)->raw_lock)->lock
 	prefetchw(&rw->lock);
+
+// 2016/03/26 종료
+
+	// prefetchw에서 한일:
+	// &(&(&file_systems_lock)->raw_lock)->lock 의 값을 미리 cache에 가져옴
+
+	// "1:  ldrex   tmp, [&rw->lock]\n"
+	// "    adds    tmp, tmp, #1\n"
+	// "    strexpl tmp2, tmp, [&rw->lock]\n"
+	//      WFE("mi")
+	// "    rsbpls   tmp, tmp2, #0\n"
+	// "    bmi      1b"
+
 	__asm__ __volatile__(
 "1:	ldrex	%0, [%2]\n"
 "	adds	%0, %0, #1\n"

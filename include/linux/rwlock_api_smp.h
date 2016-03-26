@@ -141,12 +141,14 @@ static inline int __raw_write_trylock(rwlock_t *lock)
  * even on CONFIG_PREEMPT, because lockdep assumes that interrupts are
  * not re-enabled during lock-acquire (which the preempt-spin-ops do):
  */
-#if !defined(CONFIG_GENERIC_LOCKBREAK) || defined(CONFIG_DEBUG_LOCK_ALLOC)
+#if !defined(CONFIG_GENERIC_LOCKBREAK) || defined(CONFIG_DEBUG_LOCK_ALLOC) // CONFIG_GENERIC_LOCKBREAK=n, CONFIG_DEBUG_LOCK_ALLOC=n
 
+// ARM10C 20160326
+// lock: &file_systems_lock
 static inline void __raw_read_lock(rwlock_t *lock)
 {
 	preempt_disable();
-	rwlock_acquire_read(&lock->dep_map, 0, 0, _RET_IP_);
+	rwlock_acquire_read(&lock->dep_map, 0, 0, _RET_IP_); // null function
 	LOCK_CONTENDED(lock, do_raw_read_trylock, do_raw_read_lock);
 }
 

@@ -29,6 +29,7 @@ do {								\
 #endif
 
 #ifdef CONFIG_DEBUG_SPINLOCK // CONFIG_DEBUG_SPINLOCK=y
+// ARM10C 20160326
  extern void do_raw_read_lock(rwlock_t *lock) __acquires(lock);
 #define do_raw_read_lock_flags(lock, flags) do_raw_read_lock(lock)
  extern int do_raw_read_trylock(rwlock_t *lock);
@@ -68,6 +69,8 @@ do {								\
 // ARM10C 20151031
 // &file_systems_lock
 #define write_lock(lock)	_raw_write_lock(lock)
+// ARM10C 20160326
+// &file_systems_lock
 #define read_lock(lock)		_raw_read_lock(lock)
 
 #if defined(CONFIG_SMP) || defined(CONFIG_DEBUG_SPINLOCK)

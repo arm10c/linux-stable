@@ -97,6 +97,8 @@ EXPORT_SYMBOL(up_read);
 // &shrinker_rwsem
 // ARM10C 20151219
 // &sb->s_umount: &(kmem_cache#25-oX (struct super_block))->s_umount
+// ARM10C 20160326
+// &sb->s_umount: &(kmem_cache#25-oX (struct super_block))->s_umount
 void up_write(struct rw_semaphore *sem)
 {
 	// &sem->dep_map: &(&shrinker_rwsem)->dep_map

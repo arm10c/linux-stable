@@ -277,6 +277,8 @@ static inline void list_add(struct list_head *new, struct list_head *head)
 // &shrinker->list: &(&(kmem_cache#25-oX (struct super_block))->s_shrink)->list, &shrinker_list
 // ARM10C 20160109
 // &mnt->mnt_instance: &(kmem_cache#2-oX (struct mount))->mnt_instance, &root->d_sb->s_mounts: &(kmem_cache#5-oX (struct dentry))->d_sb->s_mounts
+// ARM10C 20160326
+// &mnt->mnt_instance: &(kmem_cache#2-oX (struct mount))->mnt_instance, &root->d_sb->s_mounts: &(kmem_cache#5-oX (struct dentry))->d_sb->s_mounts
 static inline void list_add_tail(struct list_head *new, struct list_head *head)
 {
 	// new: &waiter.list, head->prev: (&(&cpu_add_remove_lock)->wait_list)->prev

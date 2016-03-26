@@ -56,6 +56,7 @@ struct bug_entry {
 // ARM10C 20140419
 // ARM10C 20150711
 // ARM10C 20160116
+// ARM10C 20160326
 #define BUG_ON(condition) do { if (unlikely(condition)) BUG(); } while(0)
 #endif
 
@@ -89,6 +90,7 @@ extern void warn_slowpath_null(const char *file, const int line);
 #ifndef WARN_ON
 // ARM10C 20131109
 // ARM10C 20151212
+// ARM10C 20160326
 #define WARN_ON(condition) ({						\
 	int __ret_warn_on = !!(condition);				\
 	if (unlikely(__ret_warn_on))					\

@@ -2029,6 +2029,8 @@ static inline int security_sb_remount(struct super_block *sb, void *data)
 
 // ARM10C 20151219
 // sb: kmem_cache#25-oX (struct super_block), flags: 0x400000, secdata: NULL
+// ARM10C 20160326
+// sb: kmem_cache#25-oX (struct super_block), flags: 0x400000, secdata: NULL
 static inline int security_sb_kern_mount(struct super_block *sb, int flags, void *data)
 {
 	return 0;

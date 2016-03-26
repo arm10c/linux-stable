@@ -595,6 +595,7 @@ out:
 	sys_chroot(".");
 }
 
+// ARM10C 20160326
 static bool is_tmpfs;
 static struct dentry *rootfs_mount(struct file_system_type *fs_type,
 	int flags, const char *dev_name, void *data)
@@ -636,14 +637,435 @@ int __init init_rootfs(void)
 	// root_fs_names: NULL, strstr(NULL, "tmpfs"): NULL
 	if (IS_ENABLED(CONFIG_TMPFS) && !saved_root_name[0] &&
 		(!root_fs_names || strstr(root_fs_names, "tmpfs"))) {
+		// shmem_init(): 0
 		err = shmem_init();
+		// err: 0
+
+		// shmem_init에서 한일:
+		// (&shmem_backing_dev_info)->dev: NULL
+		// (&shmem_backing_dev_info)->min_ratio: 0
+		// (&shmem_backing_dev_info)->max_ratio: 100
+		// (&shmem_backing_dev_info)->max_prop_frac: 0x400
+		// &(&shmem_backing_dev_info)->wb_lock 을 이용한 spinlock 초기화 수행
+		// (&(&shmem_backing_dev_info)->bdi_list)->next: &(&shmem_backing_dev_info)->bdi_list
+		// (&(&shmem_backing_dev_info)->bdi_list)->prev: &(&shmem_backing_dev_info)->bdi_list
+		// (&(&shmem_backing_dev_info)->work_list)->next: &(&shmem_backing_dev_info)->work_list
+		// (&(&shmem_backing_dev_info)->work_list)->prev: &(&shmem_backing_dev_info)->work_list
+		//
+		// (&shmem_backing_dev_info)->wb 의 맴버값을 0으로 초기화함
+		// (&(&shmem_backing_dev_info)->wb)->bdi: &shmem_backing_dev_info
+		// (&(&shmem_backing_dev_info)->wb)->last_old_flush: XXX
+		// (&(&(&shmem_backing_dev_info)->wb)->b_dirty)->next: &(&(&shmem_backing_dev_info)->wb)->b_dirty
+		// (&(&(&shmem_backing_dev_info)->wb)->b_dirty)->prev: &(&(&shmem_backing_dev_info)->wb)->b_dirty
+		// (&(&(&shmem_backing_dev_info)->wb)->b_io)->next: &(&(&shmem_backing_dev_info)->wb)->b_io
+		// (&(&(&shmem_backing_dev_info)->wb)->b_io)->prev: &(&(&shmem_backing_dev_info)->wb)->b_io
+		// (&(&(&shmem_backing_dev_info)->wb)->b_more_io)->next: &(&(&shmem_backing_dev_info)->wb)->b_more_io
+		// (&(&(&shmem_backing_dev_info)->wb)->b_more_io)->prev: &(&(&shmem_backing_dev_info)->wb)->b_more_io
+		// &(&(&shmem_backing_dev_info)->wb)->list_lock 을 이용한 spinlock 초기화 수행
+		// (&(&(&(&shmem_backing_dev_info)->wb)->dwork)->work)->data: { 0xFFFFFFE0 }
+		// (&(&(&(&(&shmem_backing_dev_info)->wb)->dwork)->work)->entry)->next: &(&(&(&(&shmem_backing_dev_info)->wb)->dwork)->work)->entry
+		// (&(&(&(&(&shmem_backing_dev_info)->wb)->dwork)->work)->entry)->prev: &(&(&(&(&shmem_backing_dev_info)->wb)->dwork)->work)->entry
+		// (&(&(&(&shmem_backing_dev_info)->wb)->dwork)->work)->func: bdi_writeback_workfn
+		// (&(&(&(&shmem_backing_dev_info)->wb)->dwork)->timer)->entry.next: NULL
+		// (&(&(&(&shmem_backing_dev_info)->wb)->dwork)->timer)->base: [pcp0] tvec_bases | 0x2
+		// (&(&(&(&shmem_backing_dev_info)->wb)->dwork)->timer)->slack: -1
+		// (&(&(&(&shmem_backing_dev_info)->wb)->dwork)->timer)->function = (delayed_work_timer_fn);
+		// (&(&(&(&shmem_backing_dev_info)->wb)->dwork)->timer)->data = ((unsigned long)(&(&(&shmem_backing_dev_info)->wb)->dwork));
+		//
+		// (&(&(&(&(&shmem_backing_dev_info)->bdi_stat[0...3])->lock)->wait_lock)->rlock)->raw_lock: { { 0 } }
+		// (&(&(&(&(&shmem_backing_dev_info)->bdi_stat[0...3])->lock)->wait_lock)->rlock)->magic: 0xdead4ead
+		// (&(&(&(&(&shmem_backing_dev_info)->bdi_stat[0...3])->lock)->wait_lock)->rlock)->owner: 0xffffffff
+		// (&(&(&(&(&shmem_backing_dev_info)->bdi_stat[0...3])->lock)->wait_lock)->rlock)->owner_cpu: 0xffffffff
+		// (&(&(&shmem_backing_dev_info)->bdi_stat[0...3])->list)->next: &(&(&shmem_backing_dev_info)->bdi_stat[0...3])->list
+		// (&(&(&shmem_backing_dev_info)->bdi_stat[0...3])->list)->prev: &(&(&shmem_backing_dev_info)->bdi_stat[0...3])->list
+		// (&(&shmem_backing_dev_info)->bdi_stat[0...3])->count: 0
+		// (&(&shmem_backing_dev_info)->bdi_stat[0...3])->counters: kmem_cache#26-o0 에서 할당된 4 bytes 메모리 주소
+		// list head 인 &percpu_counters에 &(&(&shmem_backing_dev_info)->bdi_stat[0...3])->list를 연결함
+		//
+		// (&shmem_backing_dev_info)->dirty_exceeded: 0
+		// (&shmem_backing_dev_info)->bw_time_stamp: XXX
+		// (&shmem_backing_dev_info)->written_stamp: 0
+		// (&shmem_backing_dev_info)->balanced_dirty_ratelimit: 0x6400
+		// (&shmem_backing_dev_info)->dirty_ratelimit: 0x6400
+		// (&shmem_backing_dev_info)->write_bandwidth: 0x6400
+		// (&shmem_backing_dev_info)->avg_write_bandwidth: 0x6400
+		//
+		// (&(&(&(&(&(&shmem_backing_dev_info)->completions)->events)->lock)->wait_lock)->rlock)->raw_lock: { { 0 } }
+		// (&(&(&(&(&(&shmem_backing_dev_info)->completions)->events)->lock)->wait_lock)->rlock)->magic: 0xdead4ead
+		// (&(&(&(&(&(&shmem_backing_dev_info)->completions)->events)->lock)->wait_lock)->rlock)->owner: 0xffffffff
+		// (&(&(&(&(&(&shmem_backing_dev_info)->completions)->events)->lock)->wait_lock)->rlock)->owner_cpu: 0xffffffff
+		// (&(&(&(&shmem_backing_dev_info)->completions)->events)->list)->next: &(&(&(&shmem_backing_dev_info)->completions)->events)->list
+		// (&(&(&(&shmem_backing_dev_info)->completions)->events)->list)->prev: &(&(&(&shmem_backing_dev_info)->completions)->events)->list
+		// (&(&(&shmem_backing_dev_info)->completions)->events)->count: 0
+		// (&(&(&shmem_backing_dev_info)->completions)->events)->counters: kmem_cache#26-o0 에서 할당된 4 bytes 메모리 주소
+		// list head 인 &percpu_counters에 &(&(&(&shmem_backing_dev_info)->completions)->events)->list를 연결함
+		// (&(&shmem_backing_dev_info)->completions)->period: 0
+		// &(&(&shmem_backing_dev_info)->completions)->lock을 이용한 spinlock 초기화 수행
+		//
+		// struct shmem_inode_info 의 type의 메모리 할당하는 kmem_cache를 생성함
+		// shmem_inode_cachep: kmem_cache#0
+		//
+		// (&rootfs_fs_type)->next: &shmem_fs_type
+		//
+		// struct mount의 메모리를 할당 받음 kmem_cache#2-oX (struct mount)
+		//
+		// idr_layer_cache를 사용하여 struct idr_layer 의 메모리 kmem_cache#21-oX를 2 개를 할당 받음
+		//
+		// (&(&mnt_id_ida)->idr)->id_free 이 idr object new 1번을 가르킴
+		// |
+		// |-> ---------------------------------------------------------------------------------------------------------------------------
+		//     | idr object new 1         | idr object new 0     | idr object 6         | idr object 5         | .... | idr object 0         |
+		//     ---------------------------------------------------------------------------------------------------------------------------
+		//     | ary[0]: idr object new 0 | ary[0]: idr object 6 | ary[0]: idr object 5 | ary[0]: idr object 4 | .... | ary[0]: NULL         |
+		//     ---------------------------------------------------------------------------------------------------------------------------
+		//
+		// (&(&mnt_id_ida)->idr)->id_free: kmem_cache#21-oX (idr object new 1)
+		// (&(&mnt_id_ida)->idr)->id_free_cnt: 8
+		//
+		// struct ida_bitmap 의 메모리 kmem_cache#27-oX 할당 받음
+		// (&mnt_id_ida)->free_bitmap: kmem_cache#27-oX (struct ida_bitmap)
+		//
+		// (&(&mnt_id_ida)->idr)->top: kmem_cache#21-oX (struct idr_layer) (idr object 8)
+		// (&(&mnt_id_ida)->idr)->layers: 1
+		// (&(&mnt_id_ida)->idr)->id_free: (idr object new 0)
+		// (&(&mnt_id_ida)->idr)->id_free_cnt: 7
+		//
+		// (kmem_cache#27-oX (struct ida_bitmap))->bitmap 의 1 bit를 1로 set 수행
+		// (kmem_cache#27-oX (struct ida_bitmap))->nr_busy: 2
+		//
+		// (kmem_cache#2-oX (struct mount))->mnt_id: 1
+		//
+		// kmem_cache인 kmem_cache#21 에서 할당한 object인 kmem_cache#21-oX (idr object new 1) 의 memory 공간을 반환함
+		//
+		// mnt_id_start: 2
+		//
+		// (kmem_cache#2-oX (struct mount))->mnt_devname: kmem_cache#30-oX: "tmpfs"
+		// (kmem_cache#2-oX (struct mount))->mnt_pcp: kmem_cache#26-o0 에서 할당된 8 bytes 메모리 주소
+		// [pcp0] (kmem_cache#2-oX (struct mount))->mnt_pcp->mnt_count: 1
+		//
+		// ((kmem_cache#2-oX (struct mount))->mnt_hash)->next: NULL
+		// ((kmem_cache#2-oX (struct mount))->mnt_hash)->pprev: NULL
+		// ((kmem_cache#2-oX (struct mount))->mnt_child)->next: (kmem_cache#2-oX (struct mount))->mnt_child
+		// ((kmem_cache#2-oX (struct mount))->mnt_child)->prev: (kmem_cache#2-oX (struct mount))->mnt_child
+		// ((kmem_cache#2-oX (struct mount))->mnt_mounts)->next: (kmem_cache#2-oX (struct mount))->mnt_mounts
+		// ((kmem_cache#2-oX (struct mount))->mnt_mounts)->prev: (kmem_cache#2-oX (struct mount))->mnt_mounts
+		// ((kmem_cache#2-oX (struct mount))->mnt_list)->next: (kmem_cache#2-oX (struct mount))->mnt_list
+		// ((kmem_cache#2-oX (struct mount))->mnt_list)->prev: (kmem_cache#2-oX (struct mount))->mnt_list
+		// ((kmem_cache#2-oX (struct mount))->mnt_expire)->next: (kmem_cache#2-oX (struct mount))->mnt_expire
+		// ((kmem_cache#2-oX (struct mount))->mnt_expire)->prev: (kmem_cache#2-oX (struct mount))->mnt_expire
+		// ((kmem_cache#2-oX (struct mount))->mnt_share)->next: (kmem_cache#2-oX (struct mount))->mnt_share
+		// ((kmem_cache#2-oX (struct mount))->mnt_share)->prev: (kmem_cache#2-oX (struct mount))->mnt_share
+		// ((kmem_cache#2-oX (struct mount))->mnt_slave_list)->next: (kmem_cache#2-oX (struct mount))->mnt_slave_list
+		// ((kmem_cache#2-oX (struct mount))->mnt_slave_list)->prev: (kmem_cache#2-oX (struct mount))->mnt_slave_list
+		// ((kmem_cache#2-oX (struct mount))->mnt_slave)->next: (kmem_cache#2-oX (struct mount))->mnt_slave
+		// ((kmem_cache#2-oX (struct mount))->mnt_slave)->prev: (kmem_cache#2-oX (struct mount))->mnt_slave
+		// ((kmem_cache#2-oX (struct mount))->mnt_fsnotify_marks)->first: NULL
+		//
+		// (kmem_cache#2-oX (struct mount))->mnt.mnt_flags: 0x4000
+		//
+		// struct super_block 만큼의 메모리를 할당 받음 kmem_cache#25-oX (struct super_block)
+		//
+		// (&(&(&(&(kmem_cache#25-oX (struct super_block))->s_writers.counter[0...2])->lock)->wait_lock)->rlock)->raw_lock: { { 0 } }
+		// (&(&(&(&(kmem_cache#25-oX (struct super_block))->s_writers.counter[0...2])->lock)->wait_lock)->rlock)->magic: 0xdead4ead
+		// (&(&(&(&(kmem_cache#25-oX (struct super_block))->s_writers.counter[0...2])->lock)->wait_lock)->rlock)->owner: 0xffffffff
+		// (&(&(&(&(kmem_cache#25-oX (struct super_block))->s_writers.counter[0...2])->lock)->wait_lock)->rlock)->owner_cpu: 0xffffffff
+		// (&(&(kmem_cache#25-oX (struct super_block))->s_writers.counter[0...2])->list)->next: &(&(kmem_cache#25-oX (struct super_block))->s_writers.counter[0...2])->list
+		// (&(&(kmem_cache#25-oX (struct super_block))->s_writers.counter[0...2])->list)->prev: &(&(kmem_cache#25-oX (struct super_block))->s_writers.counter[0...2])->list
+		// (&(kmem_cache#25-oX (struct super_block))->s_writers.counter[0...2])->count: 0
+		// (&(kmem_cache#25-oX (struct super_block))->s_writers.counter[0...2])->counters: kmem_cache#26-o0 에서 할당된 4 bytes 메모리 주소
+		// list head 인 &percpu_counters에 &(&(kmem_cache#25-oX (struct super_block))->s_writers.counter[0...2])->list를 연결함
+		//
+		// &(&(kmem_cache#25-oX (struct super_block))->s_writers.wait)->lock을 사용한 spinlock 초기화
+		// &(&(kmem_cache#25-oX (struct super_block))->s_writers.wait)->task_list를 사용한 list 초기화
+		// &(&(kmem_cache#25-oX (struct super_block))->s_writers.wait_unfrozen)->lock을 사용한 spinlock 초기화
+		// &(&(kmem_cache#25-oX (struct super_block))->s_writers.wait_unfrozen)->task_list를 사용한 list 초기화
+		//
+		// (&(kmem_cache#25-oX (struct super_block))->s_instances)->next: NULL
+		// (&(kmem_cache#25-oX (struct super_block))->s_instances)->pprev: NULL
+		// (&(kmem_cache#25-oX (struct super_block))->s_anon)->first: NULL
+		//
+		// (&(kmem_cache#25-oX (struct super_block))->s_inodes)->next: &(kmem_cache#25-oX (struct super_block))->s_inodes
+		// (&(kmem_cache#25-oX (struct super_block))->s_inodes)->prev: &(kmem_cache#25-oX (struct super_block))->s_inodes
+		//
+		// (&(kmem_cache#25-oX (struct super_block))->s_dentry_lru)->node: kmem_cache#30-oX
+		// (&(&(kmem_cache#25-oX (struct super_block))->s_dentry_lru)->active_nodes)->bits[0]: 0
+		// ((&(kmem_cache#25-oX (struct super_block))->s_dentry_lru)->node[0].lock)->raw_lock: { { 0 } }
+		// ((&(kmem_cache#25-oX (struct super_block))->s_dentry_lru)->node[0].lock)->magic: 0xdead4ead
+		// ((&(kmem_cache#25-oX (struct super_block))->s_dentry_lru)->node[0].lock)->owner: 0xffffffff
+		// ((&(kmem_cache#25-oX (struct super_block))->s_dentry_lru)->node[0].lock)->owner_cpu: 0xffffffff
+		// ((&(kmem_cache#25-oX (struct super_block))->s_dentry_lru)->node[0].list)->next: (&(kmem_cache#25-oX (struct super_block))->s_dentry_lru)->node[0].list
+		// ((&(kmem_cache#25-oX (struct super_block))->s_dentry_lru)->node[0].list)->prev: (&(kmem_cache#25-oX (struct super_block))->s_dentry_lru)->node[0].list
+		// (&(kmem_cache#25-oX (struct super_block))->s_dentry_lru)->node[0].nr_items: 0
+		// (&(kmem_cache#25-oX (struct super_block))->s_inode_lru)->node: kmem_cache#30-oX
+		// (&(&(kmem_cache#25-oX (struct super_block))->s_inode_lru)->active_nodes)->bits[0]: 0
+		// ((&(kmem_cache#25-oX (struct super_block))->s_inode_lru)->node[0].lock)->raw_lock: { { 0 } }
+		// ((&(kmem_cache#25-oX (struct super_block))->s_inode_lru)->node[0].lock)->magic: 0xdead4ead
+		// ((&(kmem_cache#25-oX (struct super_block))->s_inode_lru)->node[0].lock)->owner: 0xffffffff
+		// ((&(kmem_cache#25-oX (struct super_block))->s_inode_lru)->node[0].lock)->owner_cpu: 0xffffffff
+		// ((&(kmem_cache#25-oX (struct super_block))->s_inode_lru)->node[0].list)->next: (&(kmem_cache#25-oX (struct super_block))->s_inode_lru)->node[0].list
+		// ((&(kmem_cache#25-oX (struct super_block))->s_inode_lru)->node[0].list)->prev: (&(kmem_cache#25-oX (struct super_block))->s_inode_lru)->node[0].list
+		// (&(kmem_cache#25-oX (struct super_block))->s_inode_lru)->node[0].nr_items: 0
+		//
+		// (&(kmem_cache#25-oX (struct super_block))->s_mounts)->next: &(kmem_cache#25-oX (struct super_block))->s_mounts
+		// (&(kmem_cache#25-oX (struct super_block))->s_mounts)->prev: &(kmem_cache#25-oX (struct super_block))->s_mounts
+		//
+		// (&(kmem_cache#25-oX (struct super_block))->s_umount)->activity: 0
+		// &(&(kmem_cache#25-oX (struct super_block))->s_umount)->wait_lock을 사용한 spinlock 초기화
+		// (&(&(kmem_cache#25-oX (struct super_block))->s_umount)->wait_list)->next: &(&(kmem_cache#25-oX (struct super_block))->s_umount)->wait_list
+		// (&(&(kmem_cache#25-oX (struct super_block))->s_umount)->wait_list)->prev: &(&(kmem_cache#25-oX (struct super_block))->s_umount)->wait_list
+		//
+		// (&(kmem_cache#25-oX (struct super_block))->s_umount)->activity: -1
+		//
+		// (&(kmem_cache#25-oX (struct super_block))->s_vfs_rename_mutex)->count: 1
+		// (&(kmem_cache#25-oX (struct super_block))->s_vfs_rename_mutex)->wait_lock)->rlock)->raw_lock: { { 0 } }
+		// (&(kmem_cache#25-oX (struct super_block))->s_vfs_rename_mutex)->wait_lock)->rlock)->magic: 0xdead4ead
+		// (&(kmem_cache#25-oX (struct super_block))->s_vfs_rename_mutex)->wait_lock)->rlock)->owner: 0xffffffff
+		// (&(kmem_cache#25-oX (struct super_block))->s_vfs_rename_mutex)->wait_lock)->rlock)->owner_cpu: 0xffffffff
+		// (&(&(kmem_cache#25-oX (struct super_block))->s_vfs_rename_mutex)->wait_list)->next: &(&(kmem_cache#25-oX (struct super_block))->s_vfs_rename_mutex)->wait_list
+		// (&(&(kmem_cache#25-oX (struct super_block))->s_vfs_rename_mutex)->wait_list)->prev: &(&(kmem_cache#25-oX (struct super_block))->s_vfs_rename_mutex)->wait_list
+		// (&(kmem_cache#25-oX (struct super_block))->s_vfs_rename_mutex)->onwer: NULL
+		// (&(kmem_cache#25-oX (struct super_block))->s_vfs_rename_mutex)->magic: &(kmem_cache#25-oX (struct super_block))->s_vfs_rename_mutex
+		// (&(kmem_cache#25-oX (struct super_block))->s_dquot.dqio_mutex)->count: 1
+		// (&(kmem_cache#25-oX (struct super_block))->s_dquot.dqio_mutex)->wait_lock)->rlock)->raw_lock: { { 0 } }
+		// (&(kmem_cache#25-oX (struct super_block))->s_dquot.dqio_mutex)->wait_lock)->rlock)->magic: 0xdead4ead
+		// (&(kmem_cache#25-oX (struct super_block))->s_dquot.dqio_mutex)->wait_lock)->rlock)->owner: 0xffffffff
+		// (&(kmem_cache#25-oX (struct super_block))->s_dquot.dqio_mutex)->wait_lock)->rlock)->owner_cpu: 0xffffffff
+		// (&(&(kmem_cache#25-oX (struct super_block))->s_dquot.dqio_mutex)->wait_list)->next: &(&(kmem_cache#25-oX (struct super_block))->s_dquot.dqio_mutex)->wait_list
+		// (&(&(kmem_cache#25-oX (struct super_block))->s_dquot.dqio_mutex)->wait_list)->prev: &(&(kmem_cache#25-oX (struct super_block))->s_dquot.dqio_mutex)->wait_list
+		// (&(kmem_cache#25-oX (struct super_block))->s_dquot.dqio_mutex)->onwer: NULL
+		// (&(kmem_cache#25-oX (struct super_block))->s_dquot.dqio_mutex)->magic: &(kmem_cache#25-oX (struct super_block))->s_dquot.dqio_mutex
+		// (&(kmem_cache#25-oX (struct super_block))->s_dquot.dqonoff_mutex)->count: 1
+		// (&(kmem_cache#25-oX (struct super_block))->s_dquot.dqonoff_mutex)->wait_lock)->rlock)->raw_lock: { { 0 } }
+		// (&(kmem_cache#25-oX (struct super_block))->s_dquot.dqonoff_mutex)->wait_lock)->rlock)->magic: 0xdead4ead
+		// (&(kmem_cache#25-oX (struct super_block))->s_dquot.dqonoff_mutex)->wait_lock)->rlock)->owner: 0xffffffff
+		// (&(kmem_cache#25-oX (struct super_block))->s_dquot.dqonoff_mutex)->wait_lock)->rlock)->owner_cpu: 0xffffffff
+		// (&(&(kmem_cache#25-oX (struct super_block))->s_dquot.dqonoff_mutex)->wait_list)->next: &(&(kmem_cache#25-oX (struct super_block))->s_dquot.dqonoff_mutex)->wait_list
+		// (&(&(kmem_cache#25-oX (struct super_block))->s_dquot.dqonoff_mutex)->wait_list)->prev: &(&(kmem_cache#25-oX (struct super_block))->s_dquot.dqonoff_mutex)->wait_list
+		// (&(kmem_cache#25-oX (struct super_block))->s_dquot.dqonoff_mutex)->onwer: NULL
+		// (&(kmem_cache#25-oX (struct super_block))->s_dquot.dqonoff_mutex)->magic: &(kmem_cache#25-oX (struct super_block))->s_dquot.dqonoff_mutex
+		// (&(kmem_cache#25-oX (struct super_block))->s_dquot.dqptr_sem)->activity: 0
+		// &(&(kmem_cache#25-oX (struct super_block))->s_dquot.dqptr_sem)->wait_lock을 사용한 spinlock 초기화
+		// (&(&(kmem_cache#25-oX (struct super_block))->s_dquot.dqptr_sem)->wait_list)->next: &(&(kmem_cache#25-oX (struct super_block))->s_dquot.dqptr_sem)->wait_list
+		// (&(&(kmem_cache#25-oX (struct super_block))->s_dquot.dqptr_sem)->wait_list)->prev: &(&(kmem_cache#25-oX (struct super_block))->s_dquot.dqptr_sem)->wait_list
+		//
+		// (kmem_cache#25-oX (struct super_block))->s_flags: 0x400000
+		// (kmem_cache#25-oX (struct super_block))->s_bdi: &default_backing_dev_info
+		// (kmem_cache#25-oX (struct super_block))->s_count: 1
+		// ((kmem_cache#25-oX (struct super_block))->s_active)->counter: 1
+		// (kmem_cache#25-oX (struct super_block))->s_maxbytes: 0x7fffffff
+		// (kmem_cache#25-oX (struct super_block))->s_op: &default_op
+		// (kmem_cache#25-oX (struct super_block))->s_time_gran: 1000000000
+		// (kmem_cache#25-oX (struct super_block))->cleancache_poolid: -1
+		// (kmem_cache#25-oX (struct super_block))->s_shrink.seeks: 2
+		// (kmem_cache#25-oX (struct super_block))->s_shrink.scan_objects: super_cache_scan
+		// (kmem_cache#25-oX (struct super_block))->s_shrink.count_objects: super_cache_count
+		// (kmem_cache#25-oX (struct super_block))->s_shrink.batch: 1024
+		// (kmem_cache#25-oX (struct super_block))->s_shrink.flags: 1
+		//
+		// idr_layer_cache를 사용하여 struct idr_layer 의 메모리 kmem_cache#21-oX를 2 개를 할당 받음
+		//
+		// (&(&unnamed_dev_ida)->idr)->id_free 이 idr object new 1번을 가르킴
+		// |
+		// |-> ---------------------------------------------------------------------------------------------------------------------------
+		//     | idr object new 1         | idr object new 0     | idr object 6         | idr object 5         | .... | idr object 0     |
+		//     ---------------------------------------------------------------------------------------------------------------------------
+		//     | ary[0]: idr object new 0 | ary[0]: idr object 6 | ary[0]: idr object 5 | ary[0]: idr object 4 | .... | ary[0]: NULL     |
+		//     ---------------------------------------------------------------------------------------------------------------------------
+		//
+		// (&(&unnamed_dev_ida)->idr)->id_free: kmem_cache#21-oX (idr object new 1)
+		// (&(&unnamed_dev_ida)->idr)->id_free_cnt: 8
+		//
+		// struct ida_bitmap 의 메모리 kmem_cache#27-oX 할당 받음
+		// (&unnamed_dev_ida)->free_bitmap: kmem_cache#27-oX (struct ida_bitmap)
+		//
+		// (&(&unnamed_dev_ida)->idr)->top: kmem_cache#21-oX (struct idr_layer) (idr object 8)
+		// (&(&unnamed_dev_ida)->idr)->layers: 1
+		// (&(&unnamed_dev_ida)->idr)->id_free: (idr object new 0)
+		// (&(&unnamed_dev_ida)->idr)->id_free_cnt: 7
+		//
+		// (kmem_cache#27-oX (struct ida_bitmap))->bitmap 의 1 bit를 1로 set 수행
+		// (kmem_cache#27-oX (struct ida_bitmap))->nr_busy: 2
+		//
+		// kmem_cache인 kmem_cache#21 에서 할당한 object인 kmem_cache#21-oX (idr object new 1) 의 memory 공간을 반환함
+		//
+		// unnamed_dev_start: 2
+		//
+		// (kmem_cache#25-oX (struct super_block))->s_dev: 1
+		// (kmem_cache#25-oX (struct super_block))->s_bdi: &noop_backing_dev_info
+		// (kmem_cache#25-oX (struct super_block))->s_type: &shmem_fs_type
+		// (kmem_cache#25-oX (struct super_block))->s_id: "tmpfs"
+		//
+		// list head인 &super_blocks 에 (kmem_cache#25-oX (struct super_block))->s_list을 tail에 추가
+		//
+		// (&(kmem_cache#25-oX (struct super_block))->s_instances)->next: NULL
+		// (&(&shmem_fs_type)->fs_supers)->first: &(kmem_cache#25-oX (struct super_block))->s_instances
+		// (&(kmem_cache#25-oX (struct super_block))->s_instances)->pprev: &(&(&shmem_fs_type)->fs_supers)->first
+		//
+		// (&(kmem_cache#25-oX (struct super_block))->s_shrink)->flags: 0
+		// (&(kmem_cache#25-oX (struct super_block))->s_shrink)->nr_deferred: kmem_cache#30-oX
+		// head list인 &shrinker_list에 &(&(kmem_cache#25-oX (struct super_block))->s_shrink)->list를 tail로 추가함
+		//
+		// (kmem_cache#25-oX (struct super_block))->s_blocksize: 0x1000
+		// (kmem_cache#25-oX (struct super_block))->s_blocksize_bits: 12
+		// (kmem_cache#25-oX (struct super_block))->s_magic: 0x73636673
+		// (kmem_cache#25-oX (struct super_block))->s_op: &simple_super_operations
+		// (kmem_cache#25-oX (struct super_block))->s_time_gran: 1
+		//
+		// struct inode 만큼의 메모리를 할당 받음 kmem_cache#4-oX (struct inode)
+		//
+		// (kmem_cache#4-oX (struct inode))->i_sb: kmem_cache#25-oX (struct super_block)
+		// (kmem_cache#4-oX (struct inode))->i_blkbits: 12
+		// (kmem_cache#4-oX (struct inode))->i_flags: 0
+		// (kmem_cache#4-oX (struct inode))->i_count: 1
+		// (kmem_cache#4-oX (struct inode))->i_op: &empty_iops
+		// (kmem_cache#4-oX (struct inode))->__i_nlink: 1
+		// (kmem_cache#4-oX (struct inode))->i_opflags: 0
+		// (kmem_cache#4-oX (struct inode))->i_uid: 0
+		// (kmem_cache#4-oX (struct inode))->i_gid: 0
+		// (kmem_cache#4-oX (struct inode))->i_count: 0
+		// (kmem_cache#4-oX (struct inode))->i_size: 0
+		// (kmem_cache#4-oX (struct inode))->i_blocks: 0
+		// (kmem_cache#4-oX (struct inode))->i_bytes: 0
+		// (kmem_cache#4-oX (struct inode))->i_generation: 0
+		// (kmem_cache#4-oX (struct inode))->i_pipe: NULL
+		// (kmem_cache#4-oX (struct inode))->i_bdev: NULL
+		// (kmem_cache#4-oX (struct inode))->i_cdev: NULL
+		// (kmem_cache#4-oX (struct inode))->i_rdev: 0
+		// (kmem_cache#4-oX (struct inode))->dirtied_when: 0
+		//
+		// &(kmem_cache#4-oX (struct inode))->i_lock을 이용한 spin lock 초기화 수행
+		//
+		// ((&(kmem_cache#4-oX (struct inode))->i_lock)->rlock)->raw_lock: { { 0 } }
+		// ((&(kmem_cache#4-oX (struct inode))->i_lock)->rlock)->magic: 0xdead4ead
+		// ((&(kmem_cache#4-oX (struct inode))->i_lock)->rlock)->owner: 0xffffffff
+		// ((&(kmem_cache#4-oX (struct inode))->i_lock)->rlock)->owner_cpu: 0xffffffff
+		//
+		// (&(kmem_cache#4-oX (struct inode))->i_mutex)->count: 1
+		// (&(&(&(kmem_cache#4-oX (struct inode))->i_mutex)->wait_lock)->rlock)->raw_lock: { { 0 } }
+		// (&(&(&(kmem_cache#4-oX (struct inode))->i_mutex)->wait_lock)->rlock)->magic: 0xdead4ead
+		// (&(&(&(kmem_cache#4-oX (struct inode))->i_mutex)->wait_lock)->rlock)->owner: 0xffffffff
+		// (&(&(&(kmem_cache#4-oX (struct inode))->i_mutex)->wait_lock)->rlock)->owner_cpu: 0xffffffff
+		// (&(&(kmem_cache#4-oX (struct inode))->i_mutex)->wait_list)->next: &(&(kmem_cache#4-oX (struct inode))->i_mutex)->wait_list
+		// (&(&(kmem_cache#4-oX (struct inode))->i_mutex)->wait_list)->prev: &(&(kmem_cache#4-oX (struct inode))->i_mutex)->wait_list
+		// (&(kmem_cache#4-oX (struct inode))->i_mutex)->onwer: NULL
+		// (&(kmem_cache#4-oX (struct inode))->i_mutex)->magic: &(kmem_cache#4-oX (struct inode))->i_mutex
+		//
+		// (kmem_cache#4-oX (struct inode))->i_dio_count: 0
+		//
+		// (&(kmem_cache#4-oX (struct inode))->i_data)->a_ops: &empty_aops
+		// (&(kmem_cache#4-oX (struct inode))->i_data)->host: kmem_cache#4-oX (struct inode)
+		// (&(kmem_cache#4-oX (struct inode))->i_data)->flags: 0
+		// (&(kmem_cache#4-oX (struct inode))->i_data)->flags: 0x200DA
+		// (&(kmem_cache#4-oX (struct inode))->i_data)->private_data: NULL
+		// (&(kmem_cache#4-oX (struct inode))->i_data)->backing_dev_info: &default_backing_dev_info
+		// (&(kmem_cache#4-oX (struct inode))->i_data)->writeback_index: 0
+		//
+		// (kmem_cache#4-oX (struct inode))->i_private: NULL
+		// (kmem_cache#4-oX (struct inode))->i_mapping: &(kmem_cache#4-oX (struct inode))->i_data
+		// (&(kmem_cache#4-oX (struct inode))->i_dentry)->first: NULL
+		// (kmem_cache#4-oX (struct inode))->i_acl: (void *)(0xFFFFFFFF),
+		// (kmem_cache#4-oX (struct inode))->i_default_acl: (void *)(0xFFFFFFFF)
+		// (kmem_cache#4-oX (struct inode))->i_fsnotify_mask: 0
+		//
+		// [pcp0] nr_inodes: 1
+		//
+		// (kmem_cache#4-oX (struct inode))->i_state: 0
+		// &(kmem_cache#4-oX (struct inode))->i_sb_list->next: &(kmem_cache#4-oX (struct inode))->i_sb_list
+		// &(kmem_cache#4-oX (struct inode))->i_sb_list->prev: &(kmem_cache#4-oX (struct inode))->i_sb_list
+		//
+		// head list인 &(kmem_cache#4-oX (struct inode))->i_sb->s_inodes에 &(kmem_cache#4-oX (struct inode))->i_sb_list를 추가함
+		//
+		// (kmem_cache#4-oX (struct inode)))->i_ino: 1
+		// (kmem_cache#4-oX (struct inode)))->i_mode: 0x41ed
+		// (kmem_cache#4-oX (struct inode)))->i_atime: CURRENT_TIME: 현재시간값
+		// (kmem_cache#4-oX (struct inode)))->i_mtime: CURRENT_TIME: 현재시간값
+		// (kmem_cache#4-oX (struct inode)))->i_ctime: CURRENT_TIME: 현재시간값
+		// (kmem_cache#4-oX (struct inode)))->i_op: &simple_dir_inode_operations
+		// (kmem_cache#4-oX (struct inode)))->i_fop: &simple_dir_operations
+		//
+		// (kmem_cache#4-oX (struct inode))->__i_nlink: 2
+		//
+		// dentry_cache인 kmem_cache#5을 사용하여 dentry로 사용할 메모리 kmem_cache#5-oX (struct dentry)을 할당받음
+		//
+		// (kmem_cache#5-oX (struct dentry))->d_iname[35]: 0
+		// (kmem_cache#5-oX (struct dentry))->d_name.len: 1
+		// (kmem_cache#5-oX (struct dentry))->d_name.hash: (&name)->hash: 0
+		// (kmem_cache#5-oX (struct dentry))->d_iname: "/"
+		//
+		// 공유자원을 다른 cpu core가 사용할수 있게 함
+		//
+		// (kmem_cache#5-oX (struct dentry))->d_name.name: "/"
+		// (kmem_cache#5-oX (struct dentry))->d_lockref.count: 1
+		// (kmem_cache#5-oX (struct dentry))->d_flags: 0
+		//
+		// (&(kmem_cache#5-oX (struct dentry))->d_lock)->raw_lock: { { 0 } }
+		// (&(kmem_cache#5-oX (struct dentry))->d_lock)->magic: 0xdead4ead
+		// (&(kmem_cache#5-oX (struct dentry))->d_lock)->owner: 0xffffffff
+		// (&(kmem_cache#5-oX (struct dentry))->d_lock)->owner_cpu: 0xffffffff
+		//
+		// (&(kmem_cache#5-oX (struct dentry))->d_seq)->sequence: 0
+		//
+		// (kmem_cache#5-oX (struct dentry))->d_inode: NULL
+		//
+		// (kmem_cache#5-oX (struct dentry))->d_parent: kmem_cache#5-oX (struct dentry)
+		// (kmem_cache#5-oX (struct dentry))->d_sb: kmem_cache#25-oX (struct super_block)
+		// (kmem_cache#5-oX (struct dentry))->d_op: NULL
+		// (kmem_cache#5-oX (struct dentry))->d_fsdata: NULL
+		//
+		// (&(kmem_cache#5-oX (struct dentry))->d_hash)->next: NULL
+		// (&(kmem_cache#5-oX (struct dentry))->d_hash)->pprev: NULL
+		// (&(kmem_cache#5-oX (struct dentry))->d_lru)->next: &(kmem_cache#5-oX (struct dentry))->d_lru
+		// (&(kmem_cache#5-oX (struct dentry))->d_lru)->prev: &(kmem_cache#5-oX (struct dentry))->d_lru
+		// (&(kmem_cache#5-oX (struct dentry))->d_subdirs)->next: &(kmem_cache#5-oX (struct dentry))->d_subdirs
+		// (&(kmem_cache#5-oX (struct dentry))->d_subdirs)->prev: &(kmem_cache#5-oX (struct dentry))->d_subdirs
+		// (&(kmem_cache#5-oX (struct dentry))->d_alias)->next: NULL
+		// (&(kmem_cache#5-oX (struct dentry))->d_alias)->pprev: NULL
+		// (&(kmem_cache#5-oX (struct dentry))->d_u.d_child)->next: &(kmem_cache#5-oX (struct dentry))->d_u.d_child
+		// (&(kmem_cache#5-oX (struct dentry))->d_u.d_child)->prev: &(kmem_cache#5-oX (struct dentry))->d_u.d_child
+		//
+		// (kmem_cache#5-oX (struct dentry))->d_op: NULL
+		//
+		// [pcp0] nr_dentry: 1
+		//
+		// (&(kmem_cache#5-oX (struct dentry))->d_alias)->next: NULL
+		// (&(kmem_cache#4-oX)->i_dentry)->first: &(kmem_cache#5-oX (struct dentry))->d_alias
+		// (&(kmem_cache#5-oX (struct dentry))->d_alias)->pprev: &(&(kmem_cache#5-oX (struct dentry))->d_alias)
+		//
+		// (kmem_cache#5-oX (struct dentry))->d_inode: kmem_cache#4-oX
+		//
+		// 공유자원을 다른 cpu core가 사용할수 있게 함
+		// (&(kmem_cache#5-oX (struct dentry))->d_seq)->sequence: 2
+		//
+		// (kmem_cache#5-oX (struct dentry))->d_flags: 0x00100000
+		//
+		// (kmem_cache#25-oX (struct super_block))->s_root: kmem_cache#5-oX (struct dentry)
+		//
+		// (kmem_cache#25-oX (struct super_block))->s_flags: 0x40400000
+		//
+		// (kmem_cache#25-oX (struct super_block))->s_flags: 0x60400000
+		// (&(kmem_cache#25-oX (struct super_block))->s_umount)->activity: 0
+		//
+		// (kmem_cache#2-oX (struct mount))->mnt.mnt_root: kmem_cache#5-oX (struct dentry)
+		// (kmem_cache#2-oX (struct mount))->mnt.mnt_sb: kmem_cache#25-oX (struct super_block)
+		// (kmem_cache#2-oX (struct mount))->mnt_mountpoint: kmem_cache#5-oX (struct dentry)
+		// (kmem_cache#2-oX (struct mount))->mnt_parent: kmem_cache#2-oX (struct mount)
+		//
+		// list head인 &(kmem_cache#5-oX (struct dentry))->d_sb->s_mounts에
+		// &(kmem_cache#2-oX (struct mount))->mnt_instance를 tail로 연결
+		//
+		// (kmem_cache#2-oX (struct mount))->mnt_ns: 0xffffffea
+
 		is_tmpfs = true;
+		// is_tmpfs: 1
 	} else {
 		err = init_ramfs_fs();
 	}
 
+	// err: 0
 	if (err)
 		unregister_filesystem(&rootfs_fs_type);
 
+	// err: 0
 	return err;
+	// return 0
 }

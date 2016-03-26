@@ -34,6 +34,7 @@
 static struct file_system_type *file_systems;
 // ARM10C 20151031
 // ARM10C 20160123
+// ARM10C 20160326
 // DEFINE_RWLOCK(file_systems_lock):
 // rwlock_t file_systems_lock =
 // (rwlock_t)
@@ -369,6 +370,8 @@ static int __init proc_filesystems_init(void)
 module_init(proc_filesystems_init);
 #endif
 
+// ARM10C 20160326
+// name: "rootfs", len: 6
 static struct file_system_type *__get_fs_type(const char *name, int len)
 {
 	struct file_system_type *fs;
@@ -381,12 +384,21 @@ static struct file_system_type *__get_fs_type(const char *name, int len)
 	return fs;
 }
 
+// ARM10C 20160326
+// "rootfs"
 struct file_system_type *get_fs_type(const char *name)
 {
 	struct file_system_type *fs;
-	const char *dot = strchr(name, '.');
-	int len = dot ? dot - name : strlen(name);
 
+	// name: "rootfs", strchr("rootfs". '.'): NULL
+	const char *dot = strchr(name, '.');
+	// dot: NULL
+
+	// dot: NULL, name: "rootfs", strlen("rootfs"): 6
+	int len = dot ? dot - name : strlen(name);
+	// len: 6
+
+	// name: "rootfs", len: 6
 	fs = __get_fs_type(name, len);
 	if (!fs && (request_module("fs-%.*s", len, name) == 0))
 		fs = __get_fs_type(name, len);

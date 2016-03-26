@@ -2,6 +2,7 @@
 #include <linux/seq_file.h>
 #include <linux/poll.h>
 
+// ARM10C 20160326
 struct mnt_namespace {
 	atomic_t		count;
 	unsigned int		proc_inum;
@@ -75,6 +76,8 @@ struct mount {
 
 // ARM10C 20160109
 // mnt: &(kmem_cache#2-oX (struct mount))->mnt
+// ARM10C 20160326
+// mnt: &(kmem_cache#2-oX (struct mount))->mnt
 static inline struct mount *real_mount(struct vfsmount *mnt)
 {
 	// mnt: &(kmem_cache#2-oX (struct mount))->mnt
@@ -108,6 +111,7 @@ static inline void get_mnt_ns(struct mnt_namespace *ns)
 extern seqlock_t mount_lock;
 
 // ARM10C 20160109
+// ARM10C 20160326
 static inline void lock_mount_hash(void)
 {
 	write_seqlock(&mount_lock);
@@ -120,6 +124,7 @@ static inline void lock_mount_hash(void)
 }
 
 // ARM10C 20160109
+// ARM10C 20160326
 static inline void unlock_mount_hash(void)
 {
 	write_sequnlock(&mount_lock);
