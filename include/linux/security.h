@@ -2373,6 +2373,8 @@ static inline int security_kernel_create_files_as(struct cred *cred,
 	return 0;
 }
 
+// ARM10C 20160402
+// module_name: "fs-rootfs"
 static inline int security_kernel_module_request(char *kmod_name)
 {
 	return 0;

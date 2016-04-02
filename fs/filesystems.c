@@ -404,7 +404,17 @@ static struct file_system_type *__get_fs_type(const char *name, int len)
 		// fs: NULL
 
 	read_unlock(&file_systems_lock);
+
+	//  read_unlock 에서 한일:
+	// &(&(&file_systems_lock)->raw_lock)->lock 의 값을 미리 cache에 가져옴
+	// &(&(&file_systems_lock)->raw_lock)->lock 의 값을 1 만큼 값을 감소 시킴
+	// Inner Shareable domain에 포함되어 있는 core 들의 instruction이 완료 될때 까지 기다리 겠다는 뜻.
+	// 다중 프로세서 시스템 내의 모든 코어에 신호를 보낼 이벤트를 발생시킴
+	// current_thread_info()->preempt_count: 0x40000001
+
+	// fs: NULL
 	return fs;
+	// return NULL
 }
 
 // ARM10C 20160326
@@ -421,8 +431,14 @@ struct file_system_type *get_fs_type(const char *name)
 	int len = dot ? dot - name : strlen(name);
 	// len: 6
 
-	// name: "rootfs", len: 6
+	// name: "rootfs", len: 6, __get_fs_type("rootfs", 6): NULL
 	fs = __get_fs_type(name, len);
+	// fs: NULL
+
+	// __get_fs_type 에서 한일:
+	// fs: NULL
+
+	// fs: NULL, len: 6, name: "rootfs"
 	if (!fs && (request_module("fs-%.*s", len, name) == 0))
 		fs = __get_fs_type(name, len);
 

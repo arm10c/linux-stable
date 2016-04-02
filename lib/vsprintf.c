@@ -1673,6 +1673,8 @@ qualifier:
 // NULL, 0, fmt: "%s", aq: "fs"
 // ARM10C 20160109
 // p: kmem_cache#30-oX, len: 2, fmt: "%s", ap: "fs"
+// ARM10C 20160402
+// module_name, MODULE_NAME_LEN: 60, fmt: "fs-%.*s", args: (((char *) &("fs-%.*s")) + 4)
 int vsnprintf(char *buf, size_t size, const char *fmt, va_list args)
 {
 	unsigned long long num;

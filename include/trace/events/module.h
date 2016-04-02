@@ -101,6 +101,8 @@ DEFINE_EVENT(module_refcnt, module_put,
 );
 #endif /* CONFIG_MODULE_UNLOAD */
 
+// ARM10C 20160402
+// module_name: "fs-rootfs", wait: true
 TRACE_EVENT(module_request,
 
 	TP_PROTO(char *name, bool wait, unsigned long ip),

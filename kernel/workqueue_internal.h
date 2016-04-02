@@ -19,6 +19,7 @@ struct worker_pool;
  *
  * Only to be used in workqueue and async.
  */
+// ARM10C 20160402
 struct worker {
 	/* on idle list while idle, on busy hash table while busy */
 	union {
@@ -55,8 +56,10 @@ struct worker {
 /**
  * current_wq_worker - return struct worker if %current is a workqueue worker
  */
+// ARM10C 20160402
 static inline struct worker *current_wq_worker(void)
 {
+	// current->flags: (&init_task)->flags: 0x00200000, PF_WQ_WORKER: 0x00000020
 	if (current->flags & PF_WQ_WORKER)
 		return kthread_data(current);
 	return NULL;

@@ -27,6 +27,9 @@
 /* Not Yet Implemented */
 #define MODULE_SUPPORTED_DEVICE(name)
 
+// ARM10C 20160402
+// MAX_PARAM_PREFIX_LEN: 60
+// MODULE_NAME_LEN: 60
 #define MODULE_NAME_LEN MAX_PARAM_PREFIX_LEN
 
 struct modversion_info

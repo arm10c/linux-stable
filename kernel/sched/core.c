@@ -2503,25 +2503,35 @@ void __kprobes preempt_count_add(int val)
 EXPORT_SYMBOL(preempt_count_add);
 
 // ARM10C 20130907
+// ARM10C 20160402
+// 1
 void __kprobes preempt_count_sub(int val)
 {
-#ifdef CONFIG_DEBUG_PREEMPT
+#ifdef CONFIG_DEBUG_PREEMPT // CONFIG_DEBUG_PREEMPT=y
 	/*
 	 * Underflow?
 	 */
+	// val: 1, preempt_count(): 0x40000002, DEBUG_LOCKS_WARN_ON(0): 0
 	if (DEBUG_LOCKS_WARN_ON(val > preempt_count()))
 		return;
 	/*
 	 * Is the spinlock portion underflowing?
 	 */
+	// val: 1, PREEMPT_MASK: 0xFF, preempt_count(): 0x40000002, DEBUG_LOCKS_WARN_ON(0): 0
 	if (DEBUG_LOCKS_WARN_ON((val < PREEMPT_MASK) &&
 			!(preempt_count() & PREEMPT_MASK)))
 		return;
 #endif
 
+	// preempt_count(): 0x40000002, val: 1
 	if (preempt_count() == val)
 		trace_preempt_on(CALLER_ADDR0, get_parent_ip(CALLER_ADDR1));
+
+	// val: 1
 	__preempt_count_sub(val);
+
+	// __preempt_count_sub 에서 한일:
+	// current_thread_info()->preempt_count: 0x40000001
 }
 EXPORT_SYMBOL(preempt_count_sub);
 

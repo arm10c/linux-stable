@@ -10,12 +10,14 @@
 // ARM10C 20130824
 // ARM10C 20140315
 // ARM10C 20141227
+// ARM10C 20160402
 static __always_inline int preempt_count(void)
 {
 	return current_thread_info()->preempt_count;
 }
 
 // ARM10C 20141227
+// ARM10C 20160402
 static __always_inline int *preempt_count_ptr(void)
 {
 	return &current_thread_info()->preempt_count;
@@ -74,9 +76,13 @@ static __always_inline void __preempt_count_add(int val)
 	// current_thread_info()->preempt_count: 0x40000201
 }
 
+// ARM10C 20160402
+// val: 1
 static __always_inline void __preempt_count_sub(int val)
 {
+	// *preempt_count_ptr(): current_thread_info()->preempt_count: 0x40000002, val: 0x1
 	*preempt_count_ptr() -= val;
+	// *preempt_count_ptr(): current_thread_info()->preempt_count: 0x40000001
 }
 
 static __always_inline bool __preempt_count_dec_and_test(void)
@@ -92,8 +98,10 @@ static __always_inline bool __preempt_count_dec_and_test(void)
 /*
  * Returns true when we need to resched and can (barring IRQ state).
  */
+// ARM10C 20160402
 static __always_inline bool should_resched(void)
 {
+	// preempt_count(): 0x40000001, tif_need_resched(): 0
 	return unlikely(!preempt_count() && tif_need_resched());
 }
 

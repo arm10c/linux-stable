@@ -256,6 +256,9 @@ static inline void __raw_read_unlock(rwlock_t *lock)
 	// 다중 프로세서 시스템 내의 모든 코어에 신호를 보낼 이벤트를 발생시킴
 
 	preempt_enable();
+
+	// preempt_enable 에서 한일:
+	// current_thread_info()->preempt_count: 0x40000001
 }
 
 static inline void

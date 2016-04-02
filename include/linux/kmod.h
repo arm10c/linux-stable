@@ -26,14 +26,19 @@
 #include <linux/workqueue.h>
 #include <linux/sysctl.h>
 
+// ARM10C 20160402
+// KMOD_PATH_LEN: 256
 #define KMOD_PATH_LEN 256
 
-#ifdef CONFIG_MODULES
+#ifdef CONFIG_MODULES // CONFIG_MODULES=y
 extern char modprobe_path[]; /* for sysctl */
 /* modprobe exit status on success, -ve on error.  Return value
  * usually useless though. */
+// ARM10C 20160402
 extern __printf(2, 3)
 int __request_module(bool wait, const char *name, ...);
+// ARM10C 20160402
+// "fs-%.*s", len: 6, name: "rootfs"
 #define request_module(mod...) __request_module(true, mod)
 #define request_module_nowait(mod...) __request_module(false, mod)
 #define try_then_request_module(x, mod...) \
@@ -49,10 +54,16 @@ struct cred;
 struct file;
 
 #define UMH_NO_WAIT	0	/* don't wait at all */
+// ARM10C 20160402
+// UMH_WAIT_EXEC: 1
 #define UMH_WAIT_EXEC	1	/* wait for the exec, but not the process */
+// ARM10C 20160402
+// UMH_WAIT_PROC: 2
 #define UMH_WAIT_PROC	2	/* wait for the process to complete */
 #define UMH_KILLABLE	4	/* wait for EXEC/PROC killable */
 
+// ARM10C 20160402
+// sizeof(struct subprocess_info): 52 bytes
 struct subprocess_info {
 	struct work_struct work;
 	struct completion *complete;

@@ -113,6 +113,7 @@ enum {
 // ARM10C 20140809
 // ARM10C 20150718
 // ARM10C 20151031
+// ARM10C 20160402
 // sizeof(struct work_struct): 16 bytes
 struct work_struct {
 	atomic_long_t data;
@@ -306,6 +307,13 @@ static inline unsigned int work_static(struct work_struct *work) { return 0; }
 // (&(&(&(&(&sysfs_backing_dev_info)->wb)->dwork)->work)->entry)->next: &(&(&(&(&sysfs_backing_dev_info)->wb)->dwork)->work)->entry
 // (&(&(&(&(&sysfs_backing_dev_info)->wb)->dwork)->work)->entry)->prev: &(&(&(&(&sysfs_backing_dev_info)->wb)->dwork)->work)->entry
 // (&(&(&(&sysfs_backing_dev_info)->wb)->dwork)->work)->func: bdi_writeback_workfn
+//
+// ARM10C 20160402
+// #define INIT_WORK(&(kmem_cache#30-oX (struct subprocess_info))->work, __call_usermodehelper):
+// (&(kmem_cache#30-oX (struct subprocess_info))->work)->data: { 0xFFFFFFE0 }
+// (&(&(kmem_cache#30-oX (struct subprocess_info))->work)->entry)->next: &(&(kmem_cache#30-oX (struct subprocess_info))->work)->entry
+// (&(&(kmem_cache#30-oX (struct subprocess_info))->work)->entry)->prev: &(&(kmem_cache#30-oX (struct subprocess_info))->work)->entry
+// (&(kmem_cache#30-oX (struct subprocess_info))->work)->func: __call_usermodehelper
 #define INIT_WORK(_work, _func)						\
 	do {								\
 		__INIT_WORK((_work), (_func), 0);			\

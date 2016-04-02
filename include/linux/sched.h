@@ -1723,6 +1723,8 @@ extern void thread_group_cputime_adjusted(struct task_struct *p, cputime_t *ut, 
 #define PF_EXITING	0x00000004	/* getting shut down */
 #define PF_EXITPIDONE	0x00000008	/* pi exit done on shut down */
 #define PF_VCPU		0x00000010	/* I'm a virtual CPU */
+// ARM10C 20160402
+// PF_WQ_WORKER: 0x00000020
 #define PF_WQ_WORKER	0x00000020	/* I'm a workqueue worker */
 #define PF_FORKNOEXEC	0x00000040	/* forked but didn't exec */
 #define PF_MCE_PROCESS  0x00000080      /* process policy on mce errors */
@@ -2058,6 +2060,7 @@ static inline int kstack_end(void *addr)
 }
 #endif
 
+// ARM10C 20160402
 extern union thread_union init_thread_union;
 extern struct task_struct init_task;
 

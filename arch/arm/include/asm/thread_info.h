@@ -65,6 +65,7 @@ struct arm_restart_block {
  * __switch_to() assumes cpu_context follows immediately after cpu_domain.
  */
 // ARM10C 20140913
+// ARM10C 20160402
 struct thread_info {
 	unsigned long		flags;		/* low level flags */
 	int			preempt_count;	/* 0 => preemptable, <0 => bug */
@@ -135,6 +136,7 @@ static inline struct thread_info *current_thread_info(void) __attribute_const__;
 // 모기향책: 133p
 // ARM10C 20140308
 // ARM10C 20140315
+// ARM10C 20160402
 static inline struct thread_info *current_thread_info(void)
 {
 	// stack이 8K로 정렬되어 있기 때문에 13비트를 clear시키면 stack의 맨 앞을 가리키게 된다.
@@ -187,6 +189,8 @@ extern int vfp_restore_user_hwstate(struct user_vfp __user *,
 #define TIF_SIGPENDING		0
 /*
 // ARM10C 20140322
+// ARM10C 20160402
+// TIF_NEED_RESCHED: 1
 */
 #define TIF_NEED_RESCHED	1
 #define TIF_NOTIFY_RESUME	2	/* callback before returning to user */

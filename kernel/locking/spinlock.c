@@ -269,6 +269,13 @@ void __lockfunc _raw_read_unlock(rwlock_t *lock)
 {
 	// lock: &file_systems_lock
 	__raw_read_unlock(lock);
+
+	// __raw_read_unlock 에서 한일:
+	// &(&(&file_systems_lock)->raw_lock)->lock 의 값을 미리 cache에 가져옴
+	// &(&(&file_systems_lock)->raw_lock)->lock 의 값을 1 만큼 값을 감소 시킴
+	// Inner Shareable domain에 포함되어 있는 core 들의 instruction이 완료 될때 까지 기다리 겠다는 뜻.
+	// 다중 프로세서 시스템 내의 모든 코어에 신호를 보낼 이벤트를 발생시킴
+	// current_thread_info()->preempt_count: 0x40000001
 }
 EXPORT_SYMBOL(_raw_read_unlock);
 #endif

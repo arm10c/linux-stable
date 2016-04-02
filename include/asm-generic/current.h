@@ -16,6 +16,7 @@
 // ARM10C 20150117
 // ARM10C 20150606
 // ARM10C 20151121
+// ARM10C 20160402
 // get_current(): current_thread_info()->task: &init_task
 // current: &init_task
 #define current get_current()

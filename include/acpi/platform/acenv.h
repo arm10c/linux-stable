@@ -359,6 +359,7 @@
 #define _VALIST
 // ARM10C 20150117
 // ARM10C 20160109
+// ARM10C 20160402
 typedef char *va_list;
 #endif				/* _VALIST */
 
@@ -379,6 +380,7 @@ typedef char *va_list;
 #define va_arg(ap, T)           (*(T *)(((ap) += (_bnd (T, _AUPBND))) - (_bnd (T,_ADNBND))))
 // ARM10C 20160109
 // ARM10C 20160123
+// ARM10C 20160402
 #define va_end(ap)              (ap = (va_list) NULL)
 // ARM10C 20150117
 // ap, dev_fmt: NULL
@@ -388,6 +390,10 @@ typedef char *va_list;
 //
 // #define va_start(args, "%s"):
 // (void) ((args) = (((char *) &("%s")) + 4))
+//
+// ARM10C 20160402
+// args, fmt: "fs-%.*s",
+// (void) ((args) = (((char *) &("fs-%.*s")) + 4))
 #define va_start(ap, A)         (void) ((ap) = (((char *) &(A)) + (_bnd (A,_AUPBND))))
 
 #endif				/* va_arg */

@@ -697,6 +697,8 @@ static __always_inline void *kmalloc_large(size_t size, gfp_t flags)
 // sizeof(struct ida_bitmap): 172 bytes, gfp_mask: 0xD0
 // ARM10C 20151114
 // sizeof(struct ida_bitmap): 172 bytes, gfp_mask: 0x20
+// ARM10C 20160402
+// sizeof(char *[5]): 20 bytes, GFP_KERNEL: 0xD0
 static __always_inline void *kmalloc(size_t size, gfp_t flags)
 {
 	// size: 512
@@ -1099,6 +1101,8 @@ static inline void *kmem_cache_zalloc(struct kmem_cache *k, gfp_t flags)
 // size: 4, GFP_KERNEL: 0xD0
 // ARM10C 20160109
 // sizeof(struct kobject): 36 bytes, GFP_KERNEL: 0xD0
+// ARM10C 20160402
+// sizeof(struct subprocess_info): 52 bytes, gfp_mask: GFP_KERNEL: 0xD0
 static inline void *kzalloc(size_t size, gfp_t flags)
 {
 	// size: 512, GFP_KERNEL: 0xD0, __GFP_ZERO: 0x8000u

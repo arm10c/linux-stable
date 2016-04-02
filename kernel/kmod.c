@@ -62,11 +62,13 @@ static kernel_cap_t usermodehelper_inheritable = CAP_FULL_SET;
 static DEFINE_SPINLOCK(umh_sysctl_lock);
 static DECLARE_RWSEM(umhelper_sem);
 
-#ifdef CONFIG_MODULES
+#ifdef CONFIG_MODULES // CONFIG_MODULES=y
 
 /*
 	modprobe_path is set via /proc/sys.
 */
+// ARM10C 20160402
+// KMOD_PATH_LEN: 256
 char modprobe_path[KMOD_PATH_LEN] = "/sbin/modprobe";
 
 static void free_modprobe_argv(struct subprocess_info *info)
@@ -75,6 +77,8 @@ static void free_modprobe_argv(struct subprocess_info *info)
 	kfree(info->argv);
 }
 
+// ARM10C 20160402
+// module_name: "fs-rootfs", 2
 static int call_modprobe(char *module_name, int wait)
 {
 	struct subprocess_info *info;
@@ -84,23 +88,60 @@ static int call_modprobe(char *module_name, int wait)
 		"PATH=/sbin:/usr/sbin:/bin:/usr/bin",
 		NULL
 	};
+	// envp[0]: "HOME=/"
+	// envp[1]: "TERM=linux"
+	// envp[2]: "PATH=/sbin:/usr/sbin:/bin:/usr/bin"
 
+	// sizeof(char *[5]): 20 bytes, GFP_KERNEL: 0xD0
+	// kmalloc(20, GFP_KERNEL: 0xD0): kmem_cache#30-oX
 	char **argv = kmalloc(sizeof(char *[5]), GFP_KERNEL);
+	// argv: kmem_cache#30-oX
+
+	// argv: kmem_cache#30-oX
 	if (!argv)
 		goto out;
 
+	// module_name: "fs-rootfs", GFP_KERNEL: 0xD0
+	// kstrdup("fs-rootfs", GFP_KERNEL: 0xD0): kmem_cache#30-oX: "fs-rootfs"
 	module_name = kstrdup(module_name, GFP_KERNEL);
+	// module_name: kmem_cache#30-oX: "fs-rootfs"
+
+	// module_name: kmem_cache#30-oX: "fs-rootfs"
 	if (!module_name)
 		goto free_argv;
 
+	// argv[0]: (kmem_cache#30-oX)[0], modprobe_path: "/sbin/modprobe"
 	argv[0] = modprobe_path;
-	argv[1] = "-q";
-	argv[2] = "--";
-	argv[3] = module_name;	/* check free_modprobe_argv() */
-	argv[4] = NULL;
+	// argv[0]: (kmem_cache#30-oX)[0]: "/sbin/modprobe"
 
+	// argv[1]: (kmem_cache#30-oX)[1]
+	argv[1] = "-q";
+	// argv[1]: (kmem_cache#30-oX)[1]: "-q"
+
+	// argv[2]: (kmem_cache#30-oX)[2]
+	argv[2] = "--";
+	// argv[2]: (kmem_cache#30-oX)[2]: "--"
+
+	// argv[3]: (kmem_cache#30-oX)[3], module_name: kmem_cache#30-oX: "fs-rootfs"
+	argv[3] = module_name;	/* check free_modprobe_argv() */
+	// argv[3]: (kmem_cache#30-oX)[3]: kmem_cache#30-oX: "fs-rootfs"
+
+	// argv[4]: (kmem_cache#30-oX)[4]
+	argv[4] = NULL;
+	// argv[4]: (kmem_cache#30-oX)[4]: NULL
+
+	// modprobe_path: "/sbin/modprobe", argv: kmem_cache#30-oX
+	// envp[0]: "HOME=/"
+	// envp[1]: "TERM=linux"
+	// envp[2]: "PATH=/sbin:/usr/sbin:/bin:/usr/bin", GFP_KERNEL: 0xD0
+	// call_usermodehelper_setup("/sbin/modprobe", kmem_cache#30-oX, envp, GFP_KERNEL: 0xD0, NULL, free_modprobe_argv, NULL):
+	// kmem_cache#30-oX (struct subprocess_info)
 	info = call_usermodehelper_setup(modprobe_path, argv, envp, GFP_KERNEL,
 					 NULL, free_modprobe_argv, NULL);
+	// info: kmem_cache#30-oX (struct subprocess_info)
+
+// 2016/04/02 종료
+
 	if (!info)
 		goto free_module_name;
 
@@ -129,13 +170,23 @@ out:
  * If module auto-loading support is disabled then this function
  * becomes a no-operation.
  */
+// ARM10C 20160402
+// true, "fs-%.*s", len: 6, name: "rootfs"
 int __request_module(bool wait, const char *fmt, ...)
 {
 	va_list args;
+
+	// MODULE_NAME_LEN: 60
 	char module_name[MODULE_NAME_LEN];
 	unsigned int max_modprobes;
 	int ret;
+
+	// ATOMIC_INIT(0): { (0) }
 	static atomic_t kmod_concurrent = ATOMIC_INIT(0);
+	// kmod_concurrent.counter: 0
+
+// ARM10C 20160402
+// MAX_KMOD_CONCURRENT: 50
 #define MAX_KMOD_CONCURRENT 50	/* Completely arbitrary value - KAO */
 	static int kmod_loop_msg;
 
@@ -145,18 +196,43 @@ int __request_module(bool wait, const char *fmt, ...)
 	 * waiting for this task which already is waiting for the module
 	 * loading to complete, leading to a deadlock.
 	 */
+	// wait: true, current_is_async(): NULL
 	WARN_ON_ONCE(wait && current_is_async());
 
+	// modprobe_path[0]: '/'
 	if (!modprobe_path[0])
 		return 0;
 
+	// fmt: "fs-%.*s",
 	va_start(args, fmt);
+
+	// va_start에서 한일:
+	// args: (((char *) &("fs-%.*s")) + 4)
+
+	// MODULE_NAME_LEN: 60, fmt: "fs-%.*s", args: (((char *) &("fs-%.*s")) + 4)
+	// vsnprintf(module_name, 60, "fs-%.*s", (((char *) &("fs-%.*s")) + 4)): 9
 	ret = vsnprintf(module_name, MODULE_NAME_LEN, fmt, args);
+	// ret: 9
+
+	// vsnprintf 에서 한일:
+	// module_name: "fs-rootfs"
+
+	// args: (((char *) &("fs-%.*s")) + 4)
 	va_end(args);
+
+	// va_end에서 한일:
+	// args: NULL
+
+	// ret: 9, MODULE_NAME_LEN: 60
 	if (ret >= MODULE_NAME_LEN)
 		return -ENAMETOOLONG;
 
-	ret = security_kernel_module_request(module_name);
+	// module_name: "fs-rootfs"
+	// security_kernel_module_request("fs-rootfs"): 0
+	ret = security_kernel_module_request(module_name); // null function
+	// ret: 0
+
+	// ret: 0
 	if (ret)
 		return ret;
 
@@ -172,8 +248,18 @@ int __request_module(bool wait, const char *fmt, ...)
 	 * "trace the ppid" is simple, but will fail if someone's
 	 * parent exits.  I think this is as good as it gets. --RR
 	 */
+	// max_threads: 총 free된 page 수 / 16, MAX_KMOD_CONCURRENT: 50
+	// min(총 free된 page 수 / 16, 50): 50
 	max_modprobes = min(max_threads/2, MAX_KMOD_CONCURRENT);
+	// max_modprobes: 50
+
+	// kmod_concurrent.counter: 0
 	atomic_inc(&kmod_concurrent);
+
+	// atomic_inc 에서 한일:
+	// kmod_concurrent.counter: 1
+
+	// atomic_read(&kmod_concurrent): 1, max_modprobes: 50
 	if (atomic_read(&kmod_concurrent) > max_modprobes) {
 		/* We may be blaming an innocent here, but unlikely */
 		if (kmod_loop_msg < 5) {
@@ -186,8 +272,10 @@ int __request_module(bool wait, const char *fmt, ...)
 		return -ENOMEM;
 	}
 
+	// module_name: "fs-rootfs", wait: true
 	trace_module_request(module_name, wait, _RET_IP_);
 
+	// module_name: "fs-rootfs", wait: true, UMH_WAIT_PROC: 2, UMH_WAIT_EXEC: 1
 	ret = call_modprobe(module_name, wait ? UMH_WAIT_PROC : UMH_WAIT_EXEC);
 
 	atomic_dec(&kmod_concurrent);
@@ -530,6 +618,10 @@ static void helper_unlock(void)
  * Function must be runnable in either a process context or the
  * context in which call_usermodehelper_exec is called.
  */
+// ARM10C 20160402
+// modprobe_path: "/sbin/modprobe", argv: kmem_cache#30-oX
+// envp[0]: "HOME=/", envp[1]: "TERM=linux", envp[2]: "PATH=/sbin:/usr/sbin:/bin:/usr/bin",
+// GFP_KERNEL: 0xD0, NULL, free_modprobe_argv, NULL
 struct subprocess_info *call_usermodehelper_setup(char *path, char **argv,
 		char **envp, gfp_t gfp_mask,
 		int (*init)(struct subprocess_info *info, struct cred *new),
@@ -537,20 +629,53 @@ struct subprocess_info *call_usermodehelper_setup(char *path, char **argv,
 		void *data)
 {
 	struct subprocess_info *sub_info;
+
+	// sizeof(struct subprocess_info): 52 bytes, gfp_mask: GFP_KERNEL: 0xD0
+	// kzalloc(52, GFP_KERNEL: 0xD0): kmem_cache#30-oX
 	sub_info = kzalloc(sizeof(struct subprocess_info), gfp_mask);
+	// sub_info: kmem_cache#30-oX (struct subprocess_info)
+
+	// sub_info: kmem_cache#30-oX (struct subprocess_info)
 	if (!sub_info)
 		goto out;
 
+	// &sub_info->work: &(kmem_cache#30-oX (struct subprocess_info))->work
 	INIT_WORK(&sub_info->work, __call_usermodehelper);
-	sub_info->path = path;
-	sub_info->argv = argv;
-	sub_info->envp = envp;
 
+	// INIT_WORK 에서 한일:
+	// (&(kmem_cache#30-oX (struct subprocess_info))->work)->data: { 0xFFFFFFE0 }
+	// (&(&(kmem_cache#30-oX (struct subprocess_info))->work)->entry)->next: &(&(kmem_cache#30-oX (struct subprocess_info))->work)->entry
+	// (&(&(kmem_cache#30-oX (struct subprocess_info))->work)->entry)->prev: &(&(kmem_cache#30-oX (struct subprocess_info))->work)->entry
+	// (&(kmem_cache#30-oX (struct subprocess_info))->work)->func: __call_usermodehelper
+
+	// sub_info->path: (kmem_cache#30-oX (struct subprocess_info))->path, path: "/sbin/modprobe"
+	sub_info->path = path;
+	// sub_info->path: (kmem_cache#30-oX (struct subprocess_info))->path: "/sbin/modprobe"
+
+	// sub_info->argv: (kmem_cache#30-oX (struct subprocess_info))->argv, argv: kmem_cache#30-oX
+	sub_info->argv = argv;
+	// sub_info->argv: (kmem_cache#30-oX (struct subprocess_info))->argv: kmem_cache#30-oX
+
+	// sub_info->envp: (kmem_cache#30-oX (struct subprocess_info))->envp, envp: envp
+	sub_info->envp = envp;
+	// sub_info->envp: (kmem_cache#30-oX (struct subprocess_info))->envp: envp
+
+	// sub_info->cleanup: (kmem_cache#30-oX (struct subprocess_info))->cleanup, cleanup: NULL
 	sub_info->cleanup = cleanup;
+	// sub_info->cleanup: (kmem_cache#30-oX (struct subprocess_info))->cleanup: NULL
+
+	// sub_info->init: (kmem_cache#30-oX (struct subprocess_info))->init, init: free_modprobe_argv
 	sub_info->init = init;
+	// sub_info->init: (kmem_cache#30-oX (struct subprocess_info))->init: free_modprobe_argv
+
+	// sub_info->data: (kmem_cache#30-oX (struct subprocess_info))->data, data: NULL
 	sub_info->data = data;
+	// sub_info->data: (kmem_cache#30-oX (struct subprocess_info))->data: NULL
   out:
+
+	// sub_info: kmem_cache#30-oX (struct subprocess_info)
 	return sub_info;
+	// return kmem_cache#30-oX (struct subprocess_info)
 }
 EXPORT_SYMBOL(call_usermodehelper_setup);
 

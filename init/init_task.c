@@ -138,6 +138,7 @@ EXPORT_SYMBOL(init_task);
  */
 // ARM10C 20130824
 // ARM10C 20140315
+// ARM10C 20160402
 // __init_task_data: __attribute__((__section__(".data..init_task")))
 // INIT_THREAD_INFO(init_task):
 // {

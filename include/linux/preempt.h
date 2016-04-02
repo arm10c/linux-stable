@@ -23,8 +23,10 @@
 // ARM10C 20140920
 // ARM10C 20141227
 extern void preempt_count_add(int val);
+// ARM10C 20160402
 extern void preempt_count_sub(int val);
 // ARM10C 20140614
+// ARM10C 20160402
 #define preempt_count_dec_and_test() ({ preempt_count_sub(1); should_resched(); })
 #else
 #define preempt_count_add(val)	__preempt_count_add(val)
@@ -80,6 +82,7 @@ do { \
 // ARM10C 20140621
 // ARM10C 20140628
 // ARM10C 20141206
+// ARM10C 20160402
 #define preempt_enable() \
 do { \
 	barrier(); \

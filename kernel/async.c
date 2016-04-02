@@ -320,9 +320,14 @@ EXPORT_SYMBOL_GPL(async_synchronize_cookie);
  *
  * Returns %true if %current is an async worker task.
  */
+// ARM10C 20160402
 bool current_is_async(void)
 {
+	// current_wq_worker(): NULL
 	struct worker *worker = current_wq_worker();
+	// worker: NULL
 
+	// worker: NULL
 	return worker && worker->current_func == async_run_entry_fn;
+	// return NULL
 }
