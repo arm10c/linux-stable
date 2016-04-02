@@ -473,6 +473,7 @@ extern void __module_get(struct module *module);
  * so pretend it's not there. */
 // ARM10C 20150411
 // ARM10C 20150509
+// ARM10C 20160402
 extern bool try_module_get(struct module *module);
 
 extern void module_put(struct module *module);

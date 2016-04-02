@@ -229,6 +229,11 @@ void __lockfunc _raw_read_lock(rwlock_t *lock)
 {
 	// lock: &file_systems_lock
 	__raw_read_lock(lock);
+
+	// __raw_read_lock 에서 한일:
+	// &(&(&file_systems_lock)->raw_lock)->lock 의 값을 미리 cache에 가져옴
+	// &(&(&file_systems_lock)->raw_lock)->lock 의 값을 1을 더해줌
+	// 공유자원을 다른 cpu core가 사용할수 있게 해주는 옵션
 }
 EXPORT_SYMBOL(_raw_read_lock);
 #endif
@@ -258,8 +263,11 @@ EXPORT_SYMBOL(_raw_read_lock_bh);
 #endif
 
 #ifndef CONFIG_INLINE_READ_UNLOCK
+// ARM10C 20160402
+// &file_systems_lock
 void __lockfunc _raw_read_unlock(rwlock_t *lock)
 {
+	// lock: &file_systems_lock
 	__raw_read_unlock(lock);
 }
 EXPORT_SYMBOL(_raw_read_unlock);

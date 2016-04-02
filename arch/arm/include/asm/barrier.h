@@ -16,6 +16,7 @@
 #if __LINUX_ARM_ARCH__ >= 7 // __LINUX_ARM_ARCH__: 7
 #define isb(option) __asm__ __volatile__ ("isb " #option : : : "memory")
 // ARM10C 20131109
+// ARM10C 20160402
 #define dsb(option) __asm__ __volatile__ ("dsb " #option : : : "memory")
 // ARM10C 20131109
 // ARM10C 20140621
@@ -65,6 +66,7 @@
 // ARM10C 20140125
 // ARM10C 20140621
 // ARM10C 20151212
+// ARM10C 20160402
 // A.R.M: A8.8.43 DMB
 // ISH option:
 // ISH Inner Shareable is the required shareability domain, reads and writes are the required

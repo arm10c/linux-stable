@@ -31,6 +31,7 @@
 
 // ARM10C 20151031
 // ARM10C 20160123
+// ARM10C 20160402
 static struct file_system_type *file_systems;
 // ARM10C 20151031
 // ARM10C 20160123
@@ -69,6 +70,8 @@ void put_filesystem(struct file_system_type *fs)
 // [2nd] fs->name: (&rootfs_fs_type)->name: "rootfs", strlen("rootfs"): 6
 // ARM10C 20160123
 // [3rd] fs->name: (&shmem_fs_type)->name: "tmpfs", strlen("tmpfs"): 5
+// ARM10C 20160402
+// [4th] name: "rootfs", len: 6
 static struct file_system_type **find_filesystem(const char *name, unsigned len)
 {
 	struct file_system_type **p;
@@ -95,6 +98,9 @@ static struct file_system_type **find_filesystem(const char *name, unsigned len)
 		// [2nd][f1] &(*p)->next: &(&sysfs_fs_type)->next
 		// [3nd][f1] &(*p)->next: &(&sysfs_fs_type)->next
 		// [3nd][f2] &(*p)->next: &(&rootfs_fs_type)->next
+	
+	// file_systems 의 list 연결 상태
+	// sysfs_fs_type: "sysfs"  -> rootfs_fs_type: "rootfs" -> shmem_fs_type: "tmpfs"
 
 	// [1st] p: &file_systems
 	// [2nd] p: &(&sysfs_fs_type)->next
@@ -377,9 +383,26 @@ static struct file_system_type *__get_fs_type(const char *name, int len)
 	struct file_system_type *fs;
 
 	read_lock(&file_systems_lock);
+
+	// read_lock에서 한일:
+	// &(&(&file_systems_lock)->raw_lock)->lock 의 값을 미리 cache에 가져옴
+	// &(&(&file_systems_lock)->raw_lock)->lock 의 값을 1을 더해줌
+	// 공유자원을 다른 cpu core가 사용할수 있게 해주는 옵션
+
+	// name: "rootfs", len: 6
+	// find_filesystem("rootfs", 6): &&rootfs_fs_type
 	fs = *(find_filesystem(name, len));
+	// fs: &rootfs_fs_type
+
+	// find_filesystem 에서 한일:
+	// "rootfs" 이름을 가지고 file_systems 의 list로 연결된 file_system_type 값을 찾음
+
+	// fs: &rootfs_fs_type, fs->owner: (&rootfs_fs_type)->owner,
+	// try_module_get((&rootfs_fs_type)->owner): NULL
 	if (fs && !try_module_get(fs->owner))
 		fs = NULL;
+		// fs: NULL
+
 	read_unlock(&file_systems_lock);
 	return fs;
 }

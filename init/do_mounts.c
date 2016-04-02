@@ -613,6 +613,7 @@ static struct dentry *rootfs_mount(struct file_system_type *fs_type,
 }
 
 // ARM10C 20160123
+// ARM10C 20160402
 static struct file_system_type rootfs_fs_type = {
 	.name		= "rootfs",
 	.mount		= rootfs_mount,

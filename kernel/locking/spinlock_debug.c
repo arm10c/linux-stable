@@ -215,6 +215,7 @@ static void rwlock_bug(rwlock_t *lock, const char *msg)
 
 // ARM10C 20140125
 // ARM10C 20160326
+// ARM10C 20160402
 #define RWLOCK_BUG_ON(cond, lock, msg) if (unlikely(cond)) rwlock_bug(lock, msg)
 
 #if 0		/* __write_lock_debug() can lock up - maybe this can too? */
@@ -252,6 +253,11 @@ void do_raw_read_lock(rwlock_t *lock)
 
 	// &lock->raw_lock: &(&file_systems_lock)->raw_lock
 	arch_read_lock(&lock->raw_lock);
+
+	// arch_read_lock 에서 한일:
+	// &(&(&file_systems_lock)->raw_lock)->lock 의 값을 미리 cache에 가져옴
+	// &(&(&file_systems_lock)->raw_lock)->lock 의 값을 1을 더해줌
+	// 공유자원을 다른 cpu core가 사용할수 있게 해주는 옵션
 }
 
 int do_raw_read_trylock(rwlock_t *lock)
@@ -267,10 +273,22 @@ int do_raw_read_trylock(rwlock_t *lock)
 	return ret;
 }
 
+// ARM10C 20160402
+// lock: &file_systems_lock
 void do_raw_read_unlock(rwlock_t *lock)
 {
+	// lock->magic: (&file_systems_lock)->magic: 0xdeaf1eed, RWLOCK_MAGIC: 0xdeaf1eed
+	// lock: &file_systems_lock
 	RWLOCK_BUG_ON(lock->magic != RWLOCK_MAGIC, lock, "bad magic");
+
+	// &lock->raw_lock: &(&file_systems_lock)->raw_lock
 	arch_read_unlock(&lock->raw_lock);
+
+	// arch_read_unlock 에서 한일:
+	// &(&(&file_systems_lock)->raw_lock)->lock 의 값을 미리 cache에 가져옴
+	// &(&(&file_systems_lock)->raw_lock)->lock 의 값을 1 만큼 값을 감소 시킴
+	// Inner Shareable domain에 포함되어 있는 core 들의 instruction이 완료 될때 까지 기다리 겠다는 뜻.
+	// 다중 프로세서 시스템 내의 모든 코어에 신호를 보낼 이벤트를 발생시킴
 }
 
 // ARM10C 20140125

@@ -57,6 +57,7 @@
 // ARM10C 20141227
 #define BSYM(sym)	sym
 #else
+// ARM10C 20160402
 #define WASM(instr)	#instr
 #endif
 

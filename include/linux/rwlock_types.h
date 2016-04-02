@@ -27,6 +27,7 @@ typedef struct {
 // ARM10C 20140125
 // ARM10C 20151031
 // ARM10C 20160326
+// ARM10C 20160402
 // RWLOCK_MAGIC: 0xdeaf1eed
 #define RWLOCK_MAGIC		0xdeaf1eed
 

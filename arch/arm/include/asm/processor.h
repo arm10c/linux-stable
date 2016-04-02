@@ -94,6 +94,23 @@ unsigned long get_wchan(struct task_struct *p);
 
 #ifdef CONFIG_SMP // CONFIG_SMP=y
 // ARM10C 20160326
+// ARM10C 20160402
+// __ALT_SMP_ASM("wfemi", "nop")
+// #define __ALT_SMP_ASM(wfemi, nop):
+// "9998:
+// "	wfemi "\n"
+// "	.pushsection \".alt.wfemi.init\", \"a\"\n"
+// "	.long	9998b\n"
+// "	" nop "\n"
+// "	.popsection\n"
+// ARM10C 20160402
+// __ALT_SMP_ASM("sev", "nop"):
+// "9998:
+// "	sev "\n"
+// "	.pushsection \".alt.sev.init\", \"a\"\n"
+// "	.long	9998b\n"
+// "	" nop "\n"
+// "	.popsection\n"
 #define __ALT_SMP_ASM(smp, up)						\
 	"9998:	" smp "\n"						\
 	"	.pushsection \".alt.smp.init\", \"a\"\n"		\

@@ -148,8 +148,18 @@ static inline int __raw_write_trylock(rwlock_t *lock)
 static inline void __raw_read_lock(rwlock_t *lock)
 {
 	preempt_disable();
+
+	// &lock->dep_map: &(&file_systems_lock)->dep_map
 	rwlock_acquire_read(&lock->dep_map, 0, 0, _RET_IP_); // null function
+
+	// lock: &file_systems_lock
+	// LOCK_CONTENDED(&file_systems_lock, do_raw_read_trylock, do_raw_read_lock): do_raw_read_lock(&file_systems_lock)
 	LOCK_CONTENDED(lock, do_raw_read_trylock, do_raw_read_lock);
+
+	// do_raw_read_lock에서 한일:
+	// &(&(&file_systems_lock)->raw_lock)->lock 의 값을 미리 cache에 가져옴
+	// &(&(&file_systems_lock)->raw_lock)->lock 의 값을 1을 더해줌
+	// 공유자원을 다른 cpu core가 사용할수 있게 해주는 옵션
 }
 
 static inline unsigned long __raw_read_lock_irqsave(rwlock_t *lock)
@@ -229,10 +239,22 @@ static inline void __raw_write_unlock(rwlock_t *lock)
 	preempt_enable();
 }
 
+// ARM10C 20160402
+// lock: &file_systems_lock
 static inline void __raw_read_unlock(rwlock_t *lock)
 {
-	rwlock_release(&lock->dep_map, 1, _RET_IP_);
+	// &lock->dep_map: &(&file_systems_lock)->dep_map
+	rwlock_release(&lock->dep_map, 1, _RET_IP_); // null function
+
+	// lock: &file_systems_lock
 	do_raw_read_unlock(lock);
+
+	// do_raw_read_unlock 에서 한일:
+	// &(&(&file_systems_lock)->raw_lock)->lock 의 값을 미리 cache에 가져옴
+	// &(&(&file_systems_lock)->raw_lock)->lock 의 값을 1 만큼 값을 감소 시킴
+	// Inner Shareable domain에 포함되어 있는 core 들의 instruction이 완료 될때 까지 기다리 겠다는 뜻.
+	// 다중 프로세서 시스템 내의 모든 코어에 신호를 보낼 이벤트를 발생시킴
+
 	preempt_enable();
 }
 

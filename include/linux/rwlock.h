@@ -105,6 +105,7 @@ do {								\
 #define read_lock_bh(lock)		_raw_read_lock_bh(lock)
 #define write_lock_irq(lock)		_raw_write_lock_irq(lock)
 #define write_lock_bh(lock)		_raw_write_lock_bh(lock)
+// ARM10C 20160402
 #define read_unlock(lock)		_raw_read_unlock(lock)
 // ARM10C 20140125
 #define write_unlock(lock)		_raw_write_unlock(lock)

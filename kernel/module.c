@@ -965,9 +965,12 @@ EXPORT_SYMBOL(__module_get);
 // dev->owner: (&mct_comp_device)->owner
 // ARM10C 20150523
 // desc->owner: (kmem_cache#28-oX (irq 347))->owner: NULL,
+// ARM10C 20160402
+// fs: &rootfs_fs_type, fs->owner: (&rootfs_fs_type)->owner: NULL
 bool try_module_get(struct module *module)
 {
 	bool ret = true;
+	// ret: true
 	// ret: true
 	// ret: true
 	// ret: true
@@ -976,6 +979,8 @@ bool try_module_get(struct module *module)
 	// module: (kmem_cache#28-oX (irq 152))->owner: NULL
 	// module: (&mct_comp_device)->owner: NULL
 	// module: (kmem_cache#28-oX (irq 347))->owner: NULL
+	// module: (kmem_cache#28-oX (irq 347))->owner: NULL
+	// module: (&rootfs_fs_type)->owner: NULL
 	if (module) {
 		preempt_disable();
 
@@ -992,7 +997,9 @@ bool try_module_get(struct module *module)
 	// ret: true
 	// ret: true
 	// ret: true
+	// ret: true
 	return ret;
+	// return true
 	// return true
 	// return true
 	// return true

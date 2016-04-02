@@ -505,8 +505,9 @@ do {								\
 // ARM10C 20151031
 // ARM10C 20151114
 // ARM10C 20160326
+// ARM10C 20160402
 // LOCK_CONTENDED(lock, do_raw_read_trylock, do_raw_read_lock)
-// =>> do_raw_read_lock(lock)
+// => do_raw_read_lock(lock)
 #define LOCK_CONTENDED(_lock, try, lock) \
 	lock(_lock)
 
@@ -583,6 +584,7 @@ static inline void print_irqtrace_events(struct task_struct *curr)
 // ARM10C 20160326
 #define rwlock_acquire_read(l, s, t, i)		lock_acquire_shared_recursive(l, s, t, NULL, i)
 // ARM10C 20140125
+// ARM10C 20160402
 #define rwlock_release(l, n, i)			lock_release(l, n, i)
 
 // ARM10C 20150103

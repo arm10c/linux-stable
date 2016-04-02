@@ -31,20 +31,43 @@
 )
 #else
 // ARM10C 20160326
+// ARM10C 20160402
+// WFE("mi")
 #define WFE(cond)	__ALT_SMP_ASM("wfe" cond, "nop")
 #endif
 
+// ARM10C 20160402
 #define SEV		__ALT_SMP_ASM(WASM(sev), WASM(nop))
 
 // ARM10C 20130907
 // ARM10C 20140125
 // ARM10C 20130322
 // ARM10C 20140412
+// ARM10C 20160402
 static inline void dsb_sev(void)
 {
 
+	// A.R.M: A8.8.44 - Data Synchronization Barrier
+	// ISHST Inner Shareable is the required shareability domain, writes are the required access type.
+	// Encoded as option = 0b1010.
+
 	dsb(ishst);
+
+	// dsb 에서 한일:
+	// Inner Shareable domain에 포함되어 있는 core 들의 instruction이 완료 될때 까지 기다리 겠다는 뜻.
+
+	// SEV:
+	// __ALT_SMP_ASM("sev", "nop"):
+	// "9998:
+	// "	sev "\n"
+	// "	.pushsection \".alt.sev.init\", \"a\"\n"
+	// "	.long	9998b\n"
+	// "	" nop "\n"
+	// "	.popsection\n"
 	__asm__(SEV);
+
+	// SEV 가한일:
+	// 다중 프로세서 시스템 내의 모든 코어에 신호를 보낼 이벤트를 발생시킴
 }
 
 /*
@@ -275,6 +298,7 @@ static inline void arch_read_lock(arch_rwlock_t *rw)
 	prefetchw(&rw->lock);
 
 // 2016/03/26 종료
+// 2016/04/02 시작
 
 	// prefetchw에서 한일:
 	// &(&(&file_systems_lock)->raw_lock)->lock 의 값을 미리 cache에 가져옴
@@ -298,15 +322,34 @@ static inline void arch_read_lock(arch_rwlock_t *rw)
 	: "cc");
 
 	smp_mb();
+
+	// smp_mb 에서 한일:
+	// 공유자원을 다른 cpu core가 사용할수 있게 해주는 옵션
 }
 
+// ARM10C 20160402
+// &lock->raw_lock: &(&file_systems_lock)->raw_lock
 static inline void arch_read_unlock(arch_rwlock_t *rw)
 {
 	unsigned long tmp, tmp2;
 
 	smp_mb();
 
+	// smp_mb 에서 한일:
+	// 공유자원을 다른 cpu core가 사용할수 있게 해주는 옵션
+
+	// &rw->lock: &(&(&file_systems_lock)->raw_lock)->lock
 	prefetchw(&rw->lock);
+
+	// prefetchw에서 한일:
+	// &(&(&file_systems_lock)->raw_lock)->lock 의 값을 미리 cache에 가져옴
+
+	// "1:  ldrex   tmp, [&rw->lock]\n"
+	// "    sub     tmp, tmp, #1\n"
+	// "    strex   tmp2, tmp, [&rw->lock]\n"
+	// "    teq     tmp2, #0\n"
+	// "    bne     1b"
+
 	__asm__ __volatile__(
 "1:	ldrex	%0, [%2]\n"
 "	sub	%0, %0, #1\n"
@@ -317,8 +360,13 @@ static inline void arch_read_unlock(arch_rwlock_t *rw)
 	: "r" (&rw->lock)
 	: "cc");
 
+	// tmp: 0
 	if (tmp == 0)
 		dsb_sev();
+
+		// dsb_sev 에서 한일:
+		// Inner Shareable domain에 포함되어 있는 core 들의 instruction이 완료 될때 까지 기다리 겠다는 뜻.
+		// 다중 프로세서 시스템 내의 모든 코어에 신호를 보낼 이벤트를 발생시킴
 }
 
 static inline int arch_read_trylock(arch_rwlock_t *rw)
