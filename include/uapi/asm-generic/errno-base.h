@@ -28,6 +28,8 @@
 #define	EACCES		13	/* Permission denied */
 #define	EFAULT		14	/* Bad address */
 #define	ENOTBLK		15	/* Block device required */
+// ARM10C 20160409
+// EBUSY: 16
 #define	EBUSY		16	/* Device or resource busy */
 // ARM10C 20141115
 // ARM10C 20141122

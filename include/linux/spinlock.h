@@ -242,6 +242,8 @@ static inline void do_raw_spin_unlock(raw_spinlock_t *lock) __releases(lock)
 // &sem->wait_lock: (&(kmem_cache#25-oX (struct super_block))->s_umount)->wait_lock, flags
 // ARM10C 20151121
 // &sem->wait_lock: &(&shrinker_rwsem)->wait_lock, flags
+// ARM10C 20160409
+// &q->lock: &(&running_helpers_waitq)->lock, flags
 #define raw_spin_lock_irqsave(lock, flags)			\
 	do {						\
 		typecheck(unsigned long, flags);	\
@@ -339,6 +341,7 @@ static inline void do_raw_spin_unlock(raw_spinlock_t *lock) __releases(lock)
 //       컴파일 타임에 확인하는 트릭을 사용하고 있다.
 // ARM10C 20151205
 // &inode->i_lock: &(kmem_cache#4-oX)->i_lock
+// ARM10C 20160409
 static inline raw_spinlock_t *spinlock_check(spinlock_t *lock)
 {
 	return &lock->rlock;
@@ -452,6 +455,8 @@ static inline void spin_lock_irq(spinlock_t *lock)
 // &ida->idr.lock: &(&unnamed_dev_ida)->idr.lock, flags
 // ARM10C 20160213
 // &ida->idr.lock: &(&mnt_id_ida)->idr.lock, flags
+// ARM10C 20160409
+// &q->lock: &(&running_helpers_waitq)->lock, flags
 #define spin_lock_irqsave(lock, flags)				\
 do {								\
 	raw_spin_lock_irqsave(spinlock_check(lock), flags);	\
@@ -503,6 +508,8 @@ static inline void spin_unlock_irq(spinlock_t *lock)
 // &ida->idr.lock: &(&unnamed_dev_ida)->idr.lock
 // ARM10C 20160213
 // &ida->idr.lock: &(&mnt_id_ida)->idr.lock, flags
+// ARM10C 20160409
+// &q->lock: &(&running_helpers_waitq)->lock, flags
 static inline void spin_unlock_irqrestore(spinlock_t *lock, unsigned long flags)
 {
 	raw_spin_unlock_irqrestore(&lock->rlock, flags);

@@ -94,12 +94,21 @@ EXPORT_SYMBOL(remove_wait_queue);
  * started to run but is not in state TASK_RUNNING. try_to_wake_up() returns
  * zero in this (rare) case, and we handle it by continuing to scan the queue.
  */
+// ARM10C 20160409
+// q: &running_helpers_waitq, mode: 3, nr_exclusive: 1, 0, key: NULL
 static void __wake_up_common(wait_queue_head_t *q, unsigned int mode,
 			int nr_exclusive, int wake_flags, void *key)
 {
 	wait_queue_t *curr, *next;
 
+	// &q->task_list: &(&running_helpers_waitq)->task_list
+	// list_first_entry(&(&running_helpers_waitq)->task_list, typeof(*curr), task_list): &running_helpers_waitq
+	// curr: &running_helpers_waitq, list_next_entry(&running_helpers_waitq, task_list): &running_helpers_waitq
 	list_for_each_entry_safe(curr, next, &q->task_list, task_list) {
+	// for (curr = list_first_entry(&(&running_helpers_waitq)->task_list, typeof(*curr), task_list),
+	//      next = list_next_entry(curr, task_list); &curr->task_list != (&(&running_helpers_waitq)->task_list);
+	//      curr = next, next = list_next_entry(next, task_list))
+
 		unsigned flags = curr->flags;
 
 		if (curr->func(curr, mode, wake_flags, key) &&
@@ -118,14 +127,30 @@ static void __wake_up_common(wait_queue_head_t *q, unsigned int mode,
  * It may be assumed that this function implies a write memory barrier before
  * changing the task state if and only if any tasks are woken up.
  */
+// ARM10C 20160409
+// &running_helpers_waitq, TASK_NORMAL: 3, 1, NULL
 void __wake_up(wait_queue_head_t *q, unsigned int mode,
 			int nr_exclusive, void *key)
 {
 	unsigned long flags;
 
+	// &q->lock: &(&running_helpers_waitq)->lock
 	spin_lock_irqsave(&q->lock, flags);
+
+	// spin_lock_irqsave 에서 한일:
+	// &(&running_helpers_waitq)->lock 을 사용하여 spin lock을 수행 하고 cpsr을 flags에 저장함
+
+	// q: &running_helpers_waitq, mode: 3, nr_exclusive: 1, key: NULL
 	__wake_up_common(q, mode, nr_exclusive, 0, key);
+
+	// __wake_up_common 에서 한일:
+	// &running_helpers_waitq의 tasklist에 등록된 task가 없어서 수행한 일이 없음
+
+	// &q->lock: &(&running_helpers_waitq)->lock
 	spin_unlock_irqrestore(&q->lock, flags);
+
+	// spin_unlock_irqrestore 에서 한일:
+	// &(&running_helpers_waitq)->lock 을 사용하여 spin unlock을 수행 하고 flags에 저장된 cpsr을 복원함
 }
 EXPORT_SYMBOL(__wake_up);
 

@@ -1225,11 +1225,15 @@ static struct mount *skip_mnt_tree(struct mount *p)
 // type: &sysfs_fs_type, MS_KERNMOUNT: 0x400000, type->name: (&sysfs_fs_type)->name: "sysfs", data: NULL
 // ARM10C 20160213
 // type: &shmem_fs_type, MS_KERNMOUNT: 0x400000, type->name: (&shmem_fs_type)->name: "tmpfs", data: NULL
+// ARM10C 20160409
+// type: &rootfs_fs_type, 0, "rootfs", NULL
 struct vfsmount *
 vfs_kern_mount(struct file_system_type *type, int flags, const char *name, void *data)
 {
 	struct mount *mnt;
 	struct dentry *root;
+
+// 2016/04/09 종료
 
 	// type: &sysfs_fs_type
 	// type: &shmem_fs_type
@@ -3991,9 +3995,18 @@ static void __init init_mount_tree(void)
 	struct path root;
 	struct file_system_type *type;
 
+	// get_fs_type("rootfs"): &rootfs_fs_type
 	type = get_fs_type("rootfs");
+	// type: &rootfs_fs_type
+
+	// get_fs_type 에서 한일:
+	// "rootfs" 으로 등록된 &rootfs_fs_type 을 찾음
+
+	// type: &rootfs_fs_type
 	if (!type)
 		panic("Can't find rootfs type");
+
+	// type: &rootfs_fs_type
 	mnt = vfs_kern_mount(type, 0, "rootfs", NULL);
 	put_filesystem(type);
 	if (IS_ERR(mnt))

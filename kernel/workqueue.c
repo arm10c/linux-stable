@@ -229,6 +229,7 @@ struct wq_device;
  * The externally visible workqueue.  It relays the issued work items to
  * the appropriate worker_pool through its pool_workqueues.
  */
+// ARM10C 20160409
 struct workqueue_struct {
 	struct list_head	pwqs;		/* WR: all pwqs of this wq */
 	struct list_head	list;		/* PL: list of all workqueues */
@@ -250,10 +251,10 @@ struct workqueue_struct {
 	struct workqueue_attrs	*unbound_attrs;	/* WQ: only for unbound wqs */
 	struct pool_workqueue	*dfl_pwq;	/* WQ: only for unbound wqs */
 
-#ifdef CONFIG_SYSFS
+#ifdef CONFIG_SYSFS // CONFIG_SYSFS=y
 	struct wq_device	*wq_dev;	/* I: for sysfs interface */
 #endif
-#ifdef CONFIG_LOCKDEP
+#ifdef CONFIG_LOCKDEP // CONFIG_LOCKDEP=n
 	struct lockdep_map	lockdep_map;
 #endif
 	char			name[WQ_NAME_LEN]; /* I: workqueue name */

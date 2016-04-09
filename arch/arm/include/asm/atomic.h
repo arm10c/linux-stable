@@ -25,6 +25,7 @@
 // ARM10C 20150912
 // ARM10C 20151205
 // ARM10C 20160402
+// ARM10C 20160409
 #define ATOMIC_INIT(i)	{ (i) }
 
 #ifdef __KERNEL__
@@ -82,6 +83,8 @@
 // i: 32, v: &contig_page_data->node_zones[ZONE_NORMAL].vm_stat[0]
 // ARM10C 20160402
 // kmod_concurrent.counter: 0
+// ARM10C 20160409
+// 1, &running_helpers
 static inline void atomic_add(int i, atomic_t *v)
 {
 	unsigned long tmp;
@@ -122,6 +125,8 @@ static inline int atomic_add_return(int i, atomic_t *v)
 }
 
 // ARM10C 20150912
+// ARM10C 20160409
+// 1, kmod_concurrent.counter: 1
 static inline void atomic_sub(int i, atomic_t *v)
 {
 	unsigned long tmp;
@@ -141,6 +146,8 @@ static inline void atomic_sub(int i, atomic_t *v)
 
 // ARM10C 20140329
 // 1, &page->_count
+// ARM10C 20160409
+// 1, &running_helpers
 static inline int atomic_sub_return(int i, atomic_t *v)
 {
 	unsigned long tmp;
@@ -267,14 +274,20 @@ static inline int __atomic_add_unless(atomic_t *v, int a, int u)
 // &sd->s_count: &(kmem_cache#1-oX (struct sysfs_dirent))->s_count: 1
 // ARM10C 20160402
 // kmod_concurrent.counter: 0
+// ARM10C 20160409
+// &running_helpers
 #define atomic_inc(v)		atomic_add(1, v)
 // ARM10C 20150912
+// ARM10C 20160409
+// kmod_concurrent.counter: 1
 #define atomic_dec(v)		atomic_sub(1, v)
 
 #define atomic_inc_and_test(v)	(atomic_add_return(1, v) == 0)
 // ARM10C 20140329
 // &page->_count: 1
 // atomic_sub_return(1, &page->_count): 0
+// ARM10C 20160409
+// &running_helpers
 #define atomic_dec_and_test(v)	(atomic_sub_return(1, v) == 0)
 #define atomic_inc_return(v)    (atomic_add_return(1, v))
 #define atomic_dec_return(v)    (atomic_sub_return(1, v))
@@ -285,6 +298,7 @@ static inline int __atomic_add_unless(atomic_t *v, int a, int u)
 #define smp_mb__before_atomic_dec()	smp_mb()
 #define smp_mb__after_atomic_dec()	smp_mb()
 #define smp_mb__before_atomic_inc()	smp_mb()
+// ARM10C 20160409
 #define smp_mb__after_atomic_inc()	smp_mb()
 
 #ifndef CONFIG_GENERIC_ATOMIC64 // CONFIG_GENERIC_ATOMIC64=n

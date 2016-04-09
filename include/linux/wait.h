@@ -9,10 +9,12 @@
 #include <asm/current.h>
 #include <uapi/linux/wait.h>
 
+// ARM10C 20160409
 typedef struct __wait_queue wait_queue_t;
 typedef int (*wait_queue_func_t)(wait_queue_t *wait, unsigned mode, int flags, void *key);
 int default_wake_function(wait_queue_t *wait, unsigned mode, int flags, void *key);
 
+// ARM10C 20160409
 struct __wait_queue {
 	unsigned int		flags;
 #define WQ_FLAG_EXCLUSIVE	0x01
@@ -64,10 +66,78 @@ struct task_struct;
 #define DECLARE_WAITQUEUE(name, tsk)					\
 	wait_queue_t name = __WAITQUEUE_INITIALIZER(name, tsk)
 
+// ARM10C 20160409
+// __SPIN_LOCK_UNLOCKED(done.lock):
+// (spinlock_t )
+// { { .rlock =
+//     {
+//       .raw_lock = { { 0 } },
+//       .magic = 0xdead4ead,
+//       .owner_cpu = -1,
+//       .owner = 0xffffffff,
+//     }
+// } }
+//
+// #define __WAIT_QUEUE_HEAD_INITIALIZER(done):
+// {
+//     .lock            = (spinlock_t )
+//                        { { .rlock =
+//                            {
+//                              .raw_lock = { { 0 } },
+//                              .magic = 0xdead4ead,
+//                              .owner_cpu = -1,
+//                              .owner = 0xffffffff,
+//                            }
+//                        } }
+//     .task_list       = { &(done).task_list, &(done).task_list }
+// }
+// ARM10C 20160409
+// #define __WAIT_QUEUE_HEAD_INITIALIZER(running_helpers_waitq):
+// {
+//     .lock            = (spinlock_t )
+//                        { { .rlock =
+//                            {
+//                              .raw_lock = { { 0 } },
+//                              .magic = 0xdead4ead,
+//                              .owner_cpu = -1,
+//                              .owner = 0xffffffff,
+//                            }
+//                        } }
+//     .task_list       = { &(running_helpers_waitq).task_list, &(running_helpers_waitq).task_list }
+// }
 #define __WAIT_QUEUE_HEAD_INITIALIZER(name) {				\
 	.lock		= __SPIN_LOCK_UNLOCKED(name.lock),		\
 	.task_list	= { &(name).task_list, &(name).task_list } }
 
+// ARM10C 20160409
+// __WAIT_QUEUE_HEAD_INITIALIZER(running_helpers_waitq):
+// {
+//     .lock            = (spinlock_t )
+//                        { { .rlock =
+//                            {
+//                              .raw_lock = { { 0 } },
+//                              .magic = 0xdead4ead,
+//                              .owner_cpu = -1,
+//                              .owner = 0xffffffff,
+//                            }
+//                        } }
+//     .task_list       = { &(running_helpers_waitq).task_list, &(running_helpers_waitq).task_list }
+// }
+//
+// #define DECLARE_WAIT_QUEUE_HEAD(running_helpers_waitq):
+// wait_queue_head_t running_helpers_waitq =
+// {
+//     .lock            = (spinlock_t )
+//                        { { .rlock =
+//                            {
+//                              .raw_lock = { { 0 } },
+//                              .magic = 0xdead4ead,
+//                              .owner_cpu = -1,
+//                              .owner = 0xffffffff,
+//                            }
+//                        } }
+//     .task_list       = { &(running_helpers_waitq).task_list, &(running_helpers_waitq).task_list }
+// }
 #define DECLARE_WAIT_QUEUE_HEAD(name) \
 	wait_queue_head_t name = __WAIT_QUEUE_HEAD_INITIALIZER(name)
 
@@ -202,6 +272,9 @@ int out_of_line_wait_on_bit_lock(void *, int, int (*)(void *), unsigned);
 int out_of_line_wait_on_atomic_t(atomic_t *, int (*)(atomic_t *), unsigned);
 wait_queue_head_t *bit_waitqueue(void *, int);
 
+// ARM10C 20160409
+// TASK_NORMAL: 3
+// &running_helpers_waitq
 #define wake_up(x)			__wake_up(x, TASK_NORMAL, 1, NULL)
 #define wake_up_nr(x, nr)		__wake_up(x, TASK_NORMAL, nr, NULL)
 #define wake_up_all(x)			__wake_up(x, TASK_NORMAL, 0, NULL)

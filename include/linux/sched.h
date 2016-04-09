@@ -138,8 +138,12 @@ print_cfs_rq(struct seq_file *m, int cpu, struct cfs_rq *cfs_rq);
 // ARM10C 20140913
 // TASK_RUNNING: 0
 #define TASK_RUNNING		0
+// ARM10C 20160409
+// TASK_INTERRUPTIBLE: 1
 #define TASK_INTERRUPTIBLE	1
 // ARM10C 20140315
+// ARM10C 20160409
+// TASK_UNINTERRUPTIBLE: 2
 #define TASK_UNINTERRUPTIBLE	2
 #define __TASK_STOPPED		4
 #define __TASK_TRACED		8
@@ -164,6 +168,10 @@ extern char ___assert_task_state[1 - 2*!!(
 #define TASK_TRACED		(TASK_WAKEKILL | __TASK_TRACED)
 
 /* Convenience macros for the sake of wake_up */
+// ARM10C 20160409
+// TASK_INTERRUPTIBLE: 1
+// TASK_UNINTERRUPTIBLE: 2
+// TASK_NORMAL: 3
 #define TASK_NORMAL		(TASK_INTERRUPTIBLE | TASK_UNINTERRUPTIBLE)
 #define TASK_ALL		(TASK_NORMAL | __TASK_STOPPED | __TASK_TRACED)
 

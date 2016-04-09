@@ -45,6 +45,7 @@
 
 extern int max_threads;
 
+// ARM10C 20160409
 static struct workqueue_struct *khelper_wq;
 
 /*
@@ -140,12 +141,33 @@ static int call_modprobe(char *module_name, int wait)
 					 NULL, free_modprobe_argv, NULL);
 	// info: kmem_cache#30-oX (struct subprocess_info)
 
-// 2016/04/02 종료
+	// call_usermodehelper_setup 에서 한일:
+	// struct subprocess_info 만큼의 메모리를 할당받음 kmem_cache#30-oX (struct subprocess_info)
+	// (&(kmem_cache#30-oX (struct subprocess_info))->work)->data: { 0xFFFFFFE0 }
+	// (&(&(kmem_cache#30-oX (struct subprocess_info))->work)->entry)->next: &(&(kmem_cache#30-oX (struct subprocess_info))->work)->entry
+	// (&(&(kmem_cache#30-oX (struct subprocess_info))->work)->entry)->prev: &(&(kmem_cache#30-oX (struct subprocess_info))->work)->entry
+	// (&(kmem_cache#30-oX (struct subprocess_info))->work)->func: __call_usermodehelper
+	// (kmem_cache#30-oX (struct subprocess_info))->path: "/sbin/modprobe"
+	// (kmem_cache#30-oX (struct subprocess_info))->argv: kmem_cache#30-oX
+	// (kmem_cache#30-oX (struct subprocess_info))->envp: envp
+	// (kmem_cache#30-oX (struct subprocess_info))->cleanup: NULL
+	// (kmem_cache#30-oX (struct subprocess_info))->init: free_modprobe_argv
+	// (kmem_cache#30-oX (struct subprocess_info))->data: NULL
 
+// 2016/04/02 종료
+// 2016/04/09 시작
+
+	// info: kmem_cache#30-oX (struct subprocess_info)
 	if (!info)
 		goto free_module_name;
 
+	// info: kmem_cache#30-oX (struct subprocess_info), wait: 2, UMH_KILLABLE: 4
+	// call_usermodehelper_exec(kmem_cache#30-oX (struct subprocess_info), 6): -16
 	return call_usermodehelper_exec(info, wait | UMH_KILLABLE);
+
+	// call_usermodehelper_exec 에서 한일:
+	// struct subprocess_info 만큼 할당 받은 메모리를 반환함
+	// &running_helpers_waitq의 tasklist에 등록된 task가 없어서 수행한 일이 없음
 
 free_module_name:
 	kfree(module_name);
@@ -276,10 +298,35 @@ int __request_module(bool wait, const char *fmt, ...)
 	trace_module_request(module_name, wait, _RET_IP_);
 
 	// module_name: "fs-rootfs", wait: true, UMH_WAIT_PROC: 2, UMH_WAIT_EXEC: 1
+	// call_modprobe("fs-rootfs", UMH_WAIT_PROC: 2): -16
 	ret = call_modprobe(module_name, wait ? UMH_WAIT_PROC : UMH_WAIT_EXEC);
+	// ret: -16
 
+	// call_modprobe에서 한일:
+	// struct subprocess_info 만큼의 메모리를 할당받음 kmem_cache#30-oX (struct subprocess_info)
+	// (&(kmem_cache#30-oX (struct subprocess_info))->work)->data: { 0xFFFFFFE0 }
+	// (&(&(kmem_cache#30-oX (struct subprocess_info))->work)->entry)->next: &(&(kmem_cache#30-oX (struct subprocess_info))->work)->entry
+	// (&(&(kmem_cache#30-oX (struct subprocess_info))->work)->entry)->prev: &(&(kmem_cache#30-oX (struct subprocess_info))->work)->entry
+	// (&(kmem_cache#30-oX (struct subprocess_info))->work)->func: __call_usermodehelper
+	// (kmem_cache#30-oX (struct subprocess_info))->path: "/sbin/modprobe"
+	// (kmem_cache#30-oX (struct subprocess_info))->argv: kmem_cache#30-oX
+	// (kmem_cache#30-oX (struct subprocess_info))->envp: envp
+	// (kmem_cache#30-oX (struct subprocess_info))->cleanup: NULL
+	// (kmem_cache#30-oX (struct subprocess_info))->init: free_modprobe_argv
+	// (kmem_cache#30-oX (struct subprocess_info))->data: NULL
+	//
+	// struct subprocess_info 만큼 할당 받은 메모리를 반환함
+	// &running_helpers_waitq의 tasklist에 등록된 task가 없어서 수행한 일이 없음
+
+	// kmod_concurrent.counter: 1
 	atomic_dec(&kmod_concurrent);
+
+	// atomic_dec에서 한일:
+	// kmod_concurrent.counter: 0
+
+	// ret: -16
 	return ret;
+	// return -16
 }
 EXPORT_SYMBOL(__request_module);
 #endif /* CONFIG_MODULES */
@@ -346,11 +393,19 @@ static int call_helper(void *data)
 	return ____call_usermodehelper(data);
 }
 
+// ARM10C 20160409
+// sub_info: kmem_cache#30-oX (struct subprocess_info)
 static void call_usermodehelper_freeinfo(struct subprocess_info *info)
 {
+	// info->cleanup: (kmem_cache#30-oX (struct subprocess_info))->cleanup: NULL
 	if (info->cleanup)
 		(*info->cleanup)(info);
+
+	// info: kmem_cache#30-oX (struct subprocess_info)
 	kfree(info);
+
+	// kfree에서 한일:
+	// struct subprocess_info 만큼 할당 받은 메모리를 반환함
 }
 
 static void umh_complete(struct subprocess_info *sub_info)
@@ -449,15 +504,34 @@ static void __call_usermodehelper(struct work_struct *work)
  * land has been frozen during a system-wide hibernation or suspend operation).
  * Should always be manipulated under umhelper_sem acquired for write.
  */
+// ARM10C 20160409
+// UMH_DISABLED: 2
 static enum umh_disable_depth usermodehelper_disabled = UMH_DISABLED;
 
 /* Number of helpers running */
+// ARM10C 20160409
+// ATOMIC_INIT(0): { (0) }
 static atomic_t running_helpers = ATOMIC_INIT(0);
 
 /*
  * Wait queue head used by usermodehelper_disable() to wait for all running
  * helpers to finish.
  */
+// ARM10C 20160409
+// DECLARE_WAIT_QUEUE_HEAD(running_helpers_waitq):
+// wait_queue_head_t running_helpers_waitq =
+// {
+//     .lock            = (spinlock_t )
+//                        { { .rlock =
+//                            {
+//                              .raw_lock = { { 0 } },
+//                              .magic = 0xdead4ead,
+//                              .owner_cpu = -1,
+//                              .owner = 0xffffffff,
+//                            }
+//                        } }
+//     .task_list       = { &(running_helpers_waitq).task_list, &(running_helpers_waitq).task_list }
+// }
 static DECLARE_WAIT_QUEUE_HEAD(running_helpers_waitq);
 
 /*
@@ -583,16 +657,32 @@ int __usermodehelper_disable(enum umh_disable_depth depth)
 	return -EAGAIN;
 }
 
+// ARM10C 20160409
 static void helper_lock(void)
 {
 	atomic_inc(&running_helpers);
+
+	// atomic_inc에서 한일:
+	// running_helpers.counter 1
+
 	smp_mb__after_atomic_inc();
+
+	// smp_mb__after_atomic_inc 에서 한일:
+	// 공유자원을 다른 cpu core가 사용할수 있게 해주는 옵션
 }
 
+// ARM10C 20160409
 static void helper_unlock(void)
 {
+	// atomic_dec_and_test(&running_helpers): 1
 	if (atomic_dec_and_test(&running_helpers))
 		wake_up(&running_helpers_waitq);
+
+		// wake_up 에서 한일:
+		// &running_helpers_waitq의 tasklist에 등록된 task가 없어서 수행한 일이 없음
+	
+	// atomic_dec_and_test 에서 한일:
+	// running_helpers.counter 0
 }
 
 /**
@@ -691,19 +781,49 @@ EXPORT_SYMBOL(call_usermodehelper_setup);
  * asynchronously if wait is not set, and runs as a child of keventd.
  * (ie. it runs with full root capabilities).
  */
+// ARM10C 20160409
+// info: kmem_cache#30-oX (struct subprocess_info), 6
 int call_usermodehelper_exec(struct subprocess_info *sub_info, int wait)
 {
+	// DECLARE_COMPLETION_ONSTACK(done):
+	// struct completion done =
+	// { 0,
+	//   {
+	//     .lock            = (spinlock_t )
+	//                        { { .rlock =
+	//                            {
+	//                              .raw_lock = { { 0 } },
+	//                              .magic = 0xdead4ead,
+	//                              .owner_cpu = -1,
+	//                              .owner = 0xffffffff,
+	//                            }
+	//                        } }
+	//     .task_list       = { &(done).task_list, &(done).task_list }
+	//   }.wait
+	// }
 	DECLARE_COMPLETION_ONSTACK(done);
 	int retval = 0;
+	// retval: 0
 
+	// sub_info->path: (kmem_cache#30-oX (struct subprocess_info))->path: "/sbin/modprobe"
 	if (!sub_info->path) {
 		call_usermodehelper_freeinfo(sub_info);
 		return -EINVAL;
 	}
 	helper_lock();
+
+	// helper_lock 에서 한일:
+	// running_helpers.counter 1
+	// 공유자원을 다른 cpu core가 사용할수 있게 해주는 옵션
+
+	// khelper_wq: NULL, usermodehelper_disabled: 2
 	if (!khelper_wq || usermodehelper_disabled) {
+		// EBUSY: 16
 		retval = -EBUSY;
+		// retval: -16
+
 		goto out;
+		// goto out으로 이동
 	}
 	/*
 	 * Worker thread must not wait for khelper thread at below
@@ -738,10 +858,21 @@ int call_usermodehelper_exec(struct subprocess_info *sub_info, int wait)
 wait_done:
 	retval = sub_info->retval;
 out:
+	// sub_info: kmem_cache#30-oX (struct subprocess_info)
 	call_usermodehelper_freeinfo(sub_info);
+
+	// call_usermodehelper_freeinfo 에서 한일:
+	// struct subprocess_info 만큼 할당 받은 메모리를 반환함
 unlock:
 	helper_unlock();
+
+	// helper_unlock에서 한일:
+	// &running_helpers_waitq의 tasklist에 등록된 task가 없어서 수행한 일이 없음
+	// running_helpers.counter 0
+
+	// retval: -16
 	return retval;
+	// return -16
 }
 EXPORT_SYMBOL(call_usermodehelper_exec);
 

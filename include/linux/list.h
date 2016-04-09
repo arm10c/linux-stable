@@ -633,6 +633,10 @@ static inline void list_splice_tail_init(struct list_head *list,
 // ARM10C 20141108
 // ARM10C 20150523
 // list_entry((&clocksource_list)->next, struct clocksource, list)
+// ARM10C 20160409
+// list_entry((&(&running_helpers_waitq)->task_list)->next, typeof(*curr), task_list)
+// ARM10C 20160409
+// list_entry((&running_helpers_waitq)->task_list.next, typeof(*(&running_helpers_waitq)), task_list)
 #define list_entry(ptr, type, member)		\
 	container_of(ptr, type, member)
 
@@ -652,6 +656,8 @@ static inline void list_splice_tail_init(struct list_head *list,
 // ARM10C 20141011
 // ARM10C 20150523
 // list_first_entry(&clocksource_list, typeof(*tmp), list)
+// ARM10C 20160409
+// list_first_entry(&(&running_helpers_waitq)->task_list, typeof(*curr), task_list)
 #define list_first_entry(ptr, type, member) \
 	list_entry((ptr)->next, type, member)
 
@@ -686,6 +692,8 @@ static inline void list_splice_tail_init(struct list_head *list,
  * @member:	the name of the list_struct within the struct.
  */
 // ARM10C 20140614
+// ARM10C 20160409
+// list_next_entry(&running_helpers_waitq, task_list)
 #define list_next_entry(pos, member) \
 	list_entry((pos)->member.next, typeof(*(pos)), member)
 
@@ -866,6 +874,11 @@ static inline void list_splice_tail_init(struct list_head *list,
 // 	temp_desc = list_next_entry(desc, list);
 //      &desc->list != (&intc_desc_list);
 //      desc = temp_desc, temp_desc = list_next_entry(temp_desc, list))
+// ARM10C 20160409
+// #define list_for_each_entry_safe(curr, next, &(&running_helpers_waitq)->task_list, task_list):
+// for (curr = list_first_entry(&(&running_helpers_waitq)->task_list, typeof(*curr), task_list),
+//      next = list_next_entry(curr, task_list); &curr->task_list != (&(&running_helpers_waitq)->task_list);
+//      curr = next, next = list_next_entry(next, task_list))
 #define list_for_each_entry_safe(pos, n, head, member)			\
 	for (pos = list_first_entry(head, typeof(*pos), member),	\
 		n = list_next_entry(pos, member);			\

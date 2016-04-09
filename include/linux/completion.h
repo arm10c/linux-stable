@@ -23,12 +23,43 @@
  * DECLARE_COMPLETION_ONSTACK().
  */
 // ARM10C 20150919
+// ARM10C 20160409
 // sizeof(struct completion): 28 bytes
 struct completion {
 	unsigned int done;
 	wait_queue_head_t wait;
 };
 
+// ARM10C 20160409
+// __WAIT_QUEUE_HEAD_INITIALIZER((done)
+// {
+//     .lock            = (spinlock_t )
+//                        { { .rlock =
+//                            {
+//                              .raw_lock = { { 0 } },
+//                              .magic = 0xdead4ead,
+//                              .owner_cpu = -1,
+//                              .owner = 0xffffffff,
+//                            }
+//                        } }
+//     .task_list       = { &(done).task_list, &(done).task_list }
+// }
+//
+// #define COMPLETION_INITIALIZER(done):
+// { 0,
+//   {
+//     .lock            = (spinlock_t )
+//                        { { .rlock =
+//                            {
+//                              .raw_lock = { { 0 } },
+//                              .magic = 0xdead4ead,
+//                              .owner_cpu = -1,
+//                              .owner = 0xffffffff,
+//                            }
+//                        } }
+//     .task_list       = { &(done).task_list, &(done).task_list }
+//   }.wait
+// }
 #define COMPLETION_INITIALIZER(work) \
 	{ 0, __WAIT_QUEUE_HEAD_INITIALIZER((work).wait) }
 
@@ -43,6 +74,39 @@ struct completion {
  * for static declarations. You should use the _ONSTACK variant for automatic
  * variables.
  */
+// ARM10C 20160409
+// COMPLETION_INITIALIZER(done):
+// { 0,
+//   {
+//     .lock            = (spinlock_t )
+//                        { { .rlock =
+//                            {
+//                              .raw_lock = { { 0 } },
+//                              .magic = 0xdead4ead,
+//                              .owner_cpu = -1,
+//                              .owner = 0xffffffff,
+//                            }
+//                        } }
+//     .task_list       = { &(done).task_list, &(done).task_list }
+//   }.wait
+// }
+//
+// #define DECLARE_COMPLETION(done):
+// struct completion done =
+// { 0,
+//   {
+//     .lock            = (spinlock_t )
+//                        { { .rlock =
+//                            {
+//                              .raw_lock = { { 0 } },
+//                              .magic = 0xdead4ead,
+//                              .owner_cpu = -1,
+//                              .owner = 0xffffffff,
+//                            }
+//                        } }
+//     .task_list       = { &(done).task_list, &(done).task_list }
+//   }.wait
+// }
 #define DECLARE_COMPLETION(work) \
 	struct completion work = COMPLETION_INITIALIZER(work)
 
@@ -58,10 +122,44 @@ struct completion {
  * This macro declares and initializes a completion structure on the kernel
  * stack.
  */
-#ifdef CONFIG_LOCKDEP
+#ifdef CONFIG_LOCKDEP // CONFIG_LOCKDEP=n
 # define DECLARE_COMPLETION_ONSTACK(work) \
 	struct completion work = COMPLETION_INITIALIZER_ONSTACK(work)
 #else
+// ARM10C 20160409
+// DECLARE_COMPLETION(done)
+// struct completion done =
+// { 0,
+//   {
+//     .lock            = (spinlock_t )
+//                        { { .rlock =
+//                            {
+//                              .raw_lock = { { 0 } },
+//                              .magic = 0xdead4ead,
+//                              .owner_cpu = -1,
+//                              .owner = 0xffffffff,
+//                            }
+//                        } }
+//     .task_list       = { &(done).task_list, &(done).task_list }
+//   }.wait
+// }
+//
+// #define DECLARE_COMPLETION_ONSTACK(done):
+// struct completion done =
+// { 0,
+//   {
+//     .lock            = (spinlock_t )
+//                        { { .rlock =
+//                            {
+//                              .raw_lock = { { 0 } },
+//                              .magic = 0xdead4ead,
+//                              .owner_cpu = -1,
+//                              .owner = 0xffffffff,
+//                            }
+//                        } }
+//     .task_list       = { &(done).task_list, &(done).task_list }
+//   }.wait
+// }
 # define DECLARE_COMPLETION_ONSTACK(work) DECLARE_COMPLETION(work)
 #endif
 

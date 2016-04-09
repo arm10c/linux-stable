@@ -398,10 +398,9 @@ static struct file_system_type *__get_fs_type(const char *name, int len)
 	// "rootfs" 이름을 가지고 file_systems 의 list로 연결된 file_system_type 값을 찾음
 
 	// fs: &rootfs_fs_type, fs->owner: (&rootfs_fs_type)->owner,
-	// try_module_get((&rootfs_fs_type)->owner): NULL
+	// try_module_get((&rootfs_fs_type)->owner): true
 	if (fs && !try_module_get(fs->owner))
 		fs = NULL;
-		// fs: NULL
 
 	read_unlock(&file_systems_lock);
 
@@ -412,9 +411,9 @@ static struct file_system_type *__get_fs_type(const char *name, int len)
 	// 다중 프로세서 시스템 내의 모든 코어에 신호를 보낼 이벤트를 발생시킴
 	// current_thread_info()->preempt_count: 0x40000001
 
-	// fs: NULL
+	// fs: &rootfs_fs_type
 	return fs;
-	// return NULL
+	// return &rootfs_fs_type
 }
 
 // ARM10C 20160326
@@ -433,20 +432,40 @@ struct file_system_type *get_fs_type(const char *name)
 
 	// name: "rootfs", len: 6, __get_fs_type("rootfs", 6): NULL
 	fs = __get_fs_type(name, len);
-	// fs: NULL
-
+	// fs: &rootfs_fs_type
+ 
 	// __get_fs_type 에서 한일:
-	// fs: NULL
+	// fs: &rootfs_fs_type
 
-	// fs: NULL, len: 6, name: "rootfs"
+	// fs: &rootfs_fs_type, len: 6, name: "rootfs", request_module("fs-%.*s", 6, "rootfs"): -16
 	if (!fs && (request_module("fs-%.*s", len, name) == 0))
 		fs = __get_fs_type(name, len);
 
+	// request_module 에서 한일: (불리지 않음)
+	// struct subprocess_info 만큼의 메모리를 할당받음 kmem_cache#30-oX (struct subprocess_info)
+	// (&(kmem_cache#30-oX (struct subprocess_info))->work)->data: { 0xFFFFFFE0 }
+	// (&(&(kmem_cache#30-oX (struct subprocess_info))->work)->entry)->next: &(&(kmem_cache#30-oX (struct subprocess_info))->work)->entry
+	// (&(&(kmem_cache#30-oX (struct subprocess_info))->work)->entry)->prev: &(&(kmem_cache#30-oX (struct subprocess_info))->work)->entry
+	// (&(kmem_cache#30-oX (struct subprocess_info))->work)->func: __call_usermodehelper
+	// (kmem_cache#30-oX (struct subprocess_info))->path: "/sbin/modprobe"
+	// (kmem_cache#30-oX (struct subprocess_info))->argv: kmem_cache#30-oX
+	// (kmem_cache#30-oX (struct subprocess_info))->envp: envp
+	// (kmem_cache#30-oX (struct subprocess_info))->cleanup: NULL
+	// (kmem_cache#30-oX (struct subprocess_info))->init: free_modprobe_argv
+	// (kmem_cache#30-oX (struct subprocess_info))->data: NULL
+	//
+	// struct subprocess_info 만큼 할당 받은 메모리를 반환함
+	// &running_helpers_waitq의 tasklist에 등록된 task가 없어서 수행한 일이 없음
+
+	// dot: NULL, fs: &rootfs_fs_type, fs->fs_flags: (&rootfs_fs_type)->fs_flags: 0
 	if (dot && fs && !(fs->fs_flags & FS_HAS_SUBTYPE)) {
 		put_filesystem(fs);
 		fs = NULL;
 	}
+
+	// fs: &rootfs_fs_type
 	return fs;
+	// return &rootfs_fs_type
 }
 
 EXPORT_SYMBOL(get_fs_type);

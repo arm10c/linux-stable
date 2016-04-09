@@ -6939,6 +6939,8 @@ EXPORT_SYMBOL(ksize);
 // bitmap: NULL
 // ARM10C 20160116
 // old_name: (kmem_cache#30-oX (struct kobject))->name: NULL
+// ARM10C 20160409
+// info: kmem_cache#30-oX (struct subprocess_info)
 void kfree(const void *x)
 {
 	struct page *page;

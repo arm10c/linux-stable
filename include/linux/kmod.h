@@ -60,6 +60,8 @@ struct file;
 // ARM10C 20160402
 // UMH_WAIT_PROC: 2
 #define UMH_WAIT_PROC	2	/* wait for the process to complete */
+// ARM10C 20160409
+// UMH_KILLABLE: 4
 #define UMH_KILLABLE	4	/* wait for EXEC/PROC killable */
 
 // ARM10C 20160402
@@ -90,9 +92,11 @@ call_usermodehelper_exec(struct subprocess_info *info, int wait);
 
 extern struct ctl_table usermodehelper_table[];
 
+// ARM10C 20160409
 enum umh_disable_depth {
 	UMH_ENABLED = 0,
 	UMH_FREEZING,
+	// UMH_DISABLED: 2
 	UMH_DISABLED,
 };
 
