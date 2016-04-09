@@ -10,7 +10,10 @@
   - current : 3.13.x
   
 # HISTORY
-* 137th (2016/04/02) week [137차](https://github.com/hephaex/kernel_review/blob/master/a10c_137.md)
+* 138th (2016/04/02) week [138차](https://github.com/hephaex/kernel_review/blob/master/a10c_138.md)
+ - vfs_caches_init()
+  - mnt_init()
+* 137th (2016/03/26) week [137차](https://github.com/hephaex/kernel_review/blob/master/a10c_137.md)
  - vfs_caches_init()
   - mnt_init()
   - shmem_init()
