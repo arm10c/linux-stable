@@ -161,11 +161,14 @@ static inline struct hlist_head *mp_hash(struct dentry *dentry)
 // mnt: kmem_cache#2-oX
 // ARM10C 20160213
 // mnt: kmem_cache#2-oX
+// ARM10C 20160416
+// mnt: kmem_cache#2-oX (struct mount)
 static int mnt_alloc_id(struct mount *mnt)
 {
 	int res;
 
 retry:
+	// GFP_KERNEL: 0xD0
 	// GFP_KERNEL: 0xD0
 	// GFP_KERNEL: 0xD0
 	ida_pre_get(&mnt_id_ida, GFP_KERNEL);
@@ -204,7 +207,26 @@ retry:
 	// struct ida_bitmap 의 메모리 kmem_cache#27-oX 할당 받음
 	// (&mnt_id_ida)->free_bitmap: kmem_cache#27-oX (struct ida_bitmap)
 
+	// ida_pre_get에서 한일:
+	// idr_layer_cache를 사용하여 struct idr_layer 의 메모리 kmem_cache#21-oX를 1 개를 할당 받음
+	//
+	// (&(&mnt_id_ida)->idr)->id_free 이 idr object new 2번을 가르킴
+	// |
+	// |-> ---------------------------------------------------------------------------------------------------------------------------
+	//     | idr object new 2         | idr object new 0     | idr object 6         | idr object 5         | .... | idr object 0     |
+	//     ---------------------------------------------------------------------------------------------------------------------------
+	//     | ary[0]: idr object new 0 | ary[0]: idr object 6 | ary[0]: idr object 5 | ary[0]: idr object 4 | .... | ary[0]: NULL     |
+	//     ---------------------------------------------------------------------------------------------------------------------------
+	//
+	// (&(&mnt_id_ida)->idr)->id_free: kmem_cache#21-oX (idr object new 2)
+	// (&(&mnt_id_ida)->idr)->id_free_cnt: 8
+	//
+	// (&mnt_id_ida)->free_bitmap: kmem_cache#27-oX (struct ida_bitmap)
+
 	spin_lock(&mnt_id_lock);
+
+	// spin_lock에서 한일:
+	// &mnt_id_lock을 이용한 spin lock 수행
 
 	// spin_lock에서 한일:
 	// &mnt_id_lock을 이용한 spin lock 수행
@@ -220,6 +242,9 @@ retry:
 	// ida_get_new_above(&mnt_id_ida, 0, &(kmem_cache#2-oX)->mnt_id): 0
 	// mnt_id_start: 1, &mnt->mnt_id: &(kmem_cache#2-oX)->mnt_id
 	// ida_get_new_above(&mnt_id_ida, 1, &(kmem_cache#2-oX)->mnt_id): 0
+	//
+	// mnt_id_start: 2, &mnt->mnt_id: &(kmem_cache#2-oX)->mnt_id
+	// ida_get_new_above(&mnt_id_ida, 1, &(kmem_cache#2-oX)->mnt_id):
 	res = ida_get_new_above(&mnt_id_ida, mnt_id_start, &mnt->mnt_id);
 	// res: 0
 	// res: 0
@@ -366,8 +391,12 @@ unsigned int mnt_get_count(struct mount *mnt)
 // name: "sysfs"
 // ARM10C 20160213
 // name: "tmpfs"
+// ARM10C 20160416
+// name: "rootfs"
 static struct mount *alloc_vfsmnt(const char *name)
 {
+	// mnt_cache: kmem_cache#2, GFP_KERNEL: 0xD0
+	// kmem_cache_zalloc(kmem_cache#2, 0xD0): kmem_cache#2-oX (struct mount)
 	// mnt_cache: kmem_cache#2, GFP_KERNEL: 0xD0
 	// kmem_cache_zalloc(kmem_cache#2, 0xD0): kmem_cache#2-oX (struct mount)
 	// mnt_cache: kmem_cache#2, GFP_KERNEL: 0xD0
@@ -375,7 +404,9 @@ static struct mount *alloc_vfsmnt(const char *name)
 	struct mount *mnt = kmem_cache_zalloc(mnt_cache, GFP_KERNEL);
 	// mnt: kmem_cache#2-oX (struct mount)
 	// mnt: kmem_cache#2-oX (struct mount)
+	// mnt: kmem_cache#2-oX (struct mount)
 
+	// mnt: kmem_cache#2-oX (struct mount)
 	// mnt: kmem_cache#2-oX (struct mount)
 	// mnt: kmem_cache#2-oX (struct mount)
 	if (mnt) {
@@ -383,6 +414,9 @@ static struct mount *alloc_vfsmnt(const char *name)
 
 		// mnt: kmem_cache#2-oX (struct mount)
 		// mnt_alloc_id(kmem_cache#2-oX (struct mount)): 0
+		// mnt: kmem_cache#2-oX (struct mount)
+		// mnt_alloc_id(kmem_cache#2-oX (struct mount)): 0
+		//
 		// mnt: kmem_cache#2-oX (struct mount)
 		// mnt_alloc_id(kmem_cache#2-oX (struct mount)): 0
 		err = mnt_alloc_id(mnt);
@@ -433,9 +467,9 @@ static struct mount *alloc_vfsmnt(const char *name)
 		// (&(&mnt_id_ida)->idr)->id_free 이 idr object new 1번을 가르킴
 		// |
 		// |-> ---------------------------------------------------------------------------------------------------------------------------
-		//     | idr object new 1         | idr object new 0     | idr object 6         | idr object 5         | .... | idr object 0         |
+		//     | idr object new 1         | idr object new 0     | idr object 6         | idr object 5         | .... | idr object 0     |
 		//     ---------------------------------------------------------------------------------------------------------------------------
-		//     | ary[0]: idr object new 0 | ary[0]: idr object 6 | ary[0]: idr object 5 | ary[0]: idr object 4 | .... | ary[0]: NULL         |
+		//     | ary[0]: idr object new 0 | ary[0]: idr object 6 | ary[0]: idr object 5 | ary[0]: idr object 4 | .... | ary[0]: NULL     |
 		//     ---------------------------------------------------------------------------------------------------------------------------
 		//
 		// (&(&mnt_id_ida)->idr)->id_free: kmem_cache#21-oX (idr object new 1)
@@ -1234,14 +1268,17 @@ vfs_kern_mount(struct file_system_type *type, int flags, const char *name, void 
 	struct dentry *root;
 
 // 2016/04/09 종료
+// 2016/04/16 시작
 
 	// type: &sysfs_fs_type
 	// type: &shmem_fs_type
+	// type: &rootfs_fs_type
 	if (!type)
 		return ERR_PTR(-ENODEV);
 
 	// name: "sysfs", alloc_vfsmnt("sysfs"): kmem_cache#2-oX (struct mount)
 	// name: "tmpfs", alloc_vfsmnt("tmpfs"): kmem_cache#2-oX (struct mount)
+	// name: "rootfs", alloc_vfsmnt("rootfs"):
 	mnt = alloc_vfsmnt(name);
 	// mnt: kmem_cache#2-oX (struct mount)
 	// mnt: kmem_cache#2-oX (struct mount)
@@ -5471,9 +5508,9 @@ struct vfsmount *kern_mount_data(struct file_system_type *type, void *data)
 	// (&(&mnt_id_ida)->idr)->id_free 이 idr object new 1번을 가르킴
 	// |
 	// |-> ---------------------------------------------------------------------------------------------------------------------------
-	//     | idr object new 1         | idr object new 0     | idr object 6         | idr object 5         | .... | idr object 0         |
+	//     | idr object new 1         | idr object new 0     | idr object 6         | idr object 5         | .... | idr object 0     |
 	//     ---------------------------------------------------------------------------------------------------------------------------
-	//     | ary[0]: idr object new 0 | ary[0]: idr object 6 | ary[0]: idr object 5 | ary[0]: idr object 4 | .... | ary[0]: NULL         |
+	//     | ary[0]: idr object new 0 | ary[0]: idr object 6 | ary[0]: idr object 5 | ary[0]: idr object 4 | .... | ary[0]: NULL     |
 	//     ---------------------------------------------------------------------------------------------------------------------------
 	//
 	// (&(&mnt_id_ida)->idr)->id_free: kmem_cache#21-oX (idr object new 1)
