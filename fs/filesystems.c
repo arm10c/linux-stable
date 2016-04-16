@@ -52,10 +52,13 @@ static DEFINE_RWLOCK(file_systems_lock);
 // type: &sysfs_fs_type
 // ARM10C 20160319
 // [re] type: &shmem_fs_type
+// ARM10C 20160416
+// [re] type: &rootfs_fs_type
 void get_filesystem(struct file_system_type *fs)
 {
 	// fs->owner: (&sysfs_fs_type)->owner
 	// fs->owner: (&shmem_fs_type)->owner
+	// fs->owner: (&rootfs_fs_type)->owner
 	__module_get(fs->owner);
 }
 

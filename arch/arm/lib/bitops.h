@@ -32,6 +32,7 @@ ENDPROC(\name		)
 // testop	_test_and_clear_bit, bicne, strne
 // testop	_test_and_set_bit, orreq, streq
 // ARM10C 20140621
+// ARM10C 20160416
 	.macro	testop, name, instr, store
 ENTRY(	\name		)
 UNWIND(	.fnstart	)

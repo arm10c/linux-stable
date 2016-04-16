@@ -596,19 +596,32 @@ out:
 }
 
 // ARM10C 20160326
+// ARM10C 20160416
 static bool is_tmpfs;
+
+// ARM10C 20160416
+// type: &rootfs_fs_type, flags: 0, name: "rootfs", data: NULL
 static struct dentry *rootfs_mount(struct file_system_type *fs_type,
 	int flags, const char *dev_name, void *data)
 {
 	static unsigned long once;
 	void *fill = ramfs_fill_super;
+	// fill: ramfs_fill_super
 
+	// once: 0, test_and_set_bit(0, &once): 0
 	if (test_and_set_bit(0, &once))
 		return ERR_PTR(-ENODEV);
 
-	if (IS_ENABLED(CONFIG_TMPFS) && is_tmpfs)
-		fill = shmem_fill_super;
+	// test_and_set_bit 에서 한일:
+	// once: 1
 
+	// CONFIG_TMPFS=y, IS_ENABLED(CONFIG_TMPFS): 1, is_tmpfs: 1
+	if (IS_ENABLED(CONFIG_TMPFS) && is_tmpfs)
+		// fill: ramfs_fill_super
+		fill = shmem_fill_super;
+		// fill: shmem_fill_super
+
+	// fs_type: &rootfs_fs_type, flags: 0, data: NULL, fill: shmem_fill_super
 	return mount_nodev(fs_type, flags, data, fill);
 }
 

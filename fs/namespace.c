@@ -242,10 +242,10 @@ retry:
 	// ida_get_new_above(&mnt_id_ida, 0, &(kmem_cache#2-oX)->mnt_id): 0
 	// mnt_id_start: 1, &mnt->mnt_id: &(kmem_cache#2-oX)->mnt_id
 	// ida_get_new_above(&mnt_id_ida, 1, &(kmem_cache#2-oX)->mnt_id): 0
-	//
 	// mnt_id_start: 2, &mnt->mnt_id: &(kmem_cache#2-oX)->mnt_id
-	// ida_get_new_above(&mnt_id_ida, 1, &(kmem_cache#2-oX)->mnt_id):
+	// ida_get_new_above(&mnt_id_ida, 1, &(kmem_cache#2-oX)->mnt_id): 0
 	res = ida_get_new_above(&mnt_id_ida, mnt_id_start, &mnt->mnt_id);
+	// res: 0
 	// res: 0
 	// res: 0
 
@@ -282,14 +282,30 @@ retry:
 	//
 	// kmem_cache인 kmem_cache#21 에서 할당한 object인 kmem_cache#21-oX (idr object new 1) 의 memory 공간을 반환함
 
+	// ida_get_new_above에서 한일:
+	// (&(&mnt_id_ida)->idr)->top: kmem_cache#21-oX (struct idr_layer) (idr object 8)
+	// (&(&mnt_id_ida)->idr)->layers: 1
+	// (&(&mnt_id_ida)->idr)->id_free: (idr object new 0)
+	// (&(&mnt_id_ida)->idr)->id_free_cnt: 7
+	//
+	// (kmem_cache#27-oX (struct ida_bitmap))->bitmap 의 2 bit를 1로 set 수행
+	// (kmem_cache#27-oX (struct ida_bitmap))->nr_busy: 3
+	//
+	// (kmem_cache#2-oX (struct mount))->mnt_id: 2
+	//
+	// kmem_cache인 kmem_cache#21 에서 할당한 object인 kmem_cache#21-oX (idr object new 2) 의 memory 공간을 반환함
+
+	// res: 0
 	// res: 0
 	// res: 0
 	if (!res)
 		// mnt_id_start: 0, mnt->mnt_id: (kmem_cache#2-oX (struct mount))->mnt_id: 0
 		// mnt_id_start: 1, mnt->mnt_id: (kmem_cache#2-oX (struct mount))->mnt_id: 1
+		// mnt_id_start: 2, mnt->mnt_id: (kmem_cache#2-oX (struct mount))->mnt_id: 2
 		mnt_id_start = mnt->mnt_id + 1;
 		// mnt_id_start: 1
 		// mnt_id_start: 2
+		// mnt_id_start: 3
 
 	spin_unlock(&mnt_id_lock);
 
@@ -299,6 +315,10 @@ retry:
 	// spin_unlock에서 한일:
 	// &mnt_id_lock을 이용한 spin unlock 수행
 
+	// spin_unlock에서 한일:
+	// &mnt_id_lock을 이용한 spin unlock 수행
+
+	// res: 0, EAGAIN: 11
 	// res: 0, EAGAIN: 11
 	// res: 0, EAGAIN: 11
 	if (res == -EAGAIN)
@@ -306,7 +326,9 @@ retry:
 
 	// res: 0
 	// res: 0
+	// res: 0
 	return res;
+	// return 0
 	// return 0
 	// return 0
 }
@@ -416,10 +438,10 @@ static struct mount *alloc_vfsmnt(const char *name)
 		// mnt_alloc_id(kmem_cache#2-oX (struct mount)): 0
 		// mnt: kmem_cache#2-oX (struct mount)
 		// mnt_alloc_id(kmem_cache#2-oX (struct mount)): 0
-		//
 		// mnt: kmem_cache#2-oX (struct mount)
 		// mnt_alloc_id(kmem_cache#2-oX (struct mount)): 0
 		err = mnt_alloc_id(mnt);
+		// err: 0
 		// err: 0
 		// err: 0
 
@@ -492,6 +514,37 @@ static struct mount *alloc_vfsmnt(const char *name)
 		//
 		// mnt_id_start: 2
 
+		// mnt_alloc_id에서 한일:
+		// idr_layer_cache를 사용하여 struct idr_layer 의 메모리 kmem_cache#21-oX를 1 개를 할당 받음
+		//
+		// (&(&mnt_id_ida)->idr)->id_free 이 idr object new 2번을 가르킴
+		// |
+		// |-> ---------------------------------------------------------------------------------------------------------------------------
+		//     | idr object new 2         | idr object new 0     | idr object 6         | idr object 5         | .... | idr object 0     |
+		//     ---------------------------------------------------------------------------------------------------------------------------
+		//     | ary[0]: idr object new 0 | ary[0]: idr object 6 | ary[0]: idr object 5 | ary[0]: idr object 4 | .... | ary[0]: NULL     |
+		//     ---------------------------------------------------------------------------------------------------------------------------
+		//
+		// (&(&mnt_id_ida)->idr)->id_free: kmem_cache#21-oX (idr object new 2)
+		// (&(&mnt_id_ida)->idr)->id_free_cnt: 8
+		//
+		// (&mnt_id_ida)->free_bitmap: kmem_cache#27-oX (struct ida_bitmap)
+		//
+		// (&(&mnt_id_ida)->idr)->top: kmem_cache#21-oX (struct idr_layer) (idr object 8)
+		// (&(&mnt_id_ida)->idr)->layers: 1
+		// (&(&mnt_id_ida)->idr)->id_free: (idr object new 0)
+		// (&(&mnt_id_ida)->idr)->id_free_cnt: 7
+		//
+		// (kmem_cache#27-oX (struct ida_bitmap))->bitmap 의 2 bit를 1로 set 수행
+		// (kmem_cache#27-oX (struct ida_bitmap))->nr_busy: 3
+		//
+		// (kmem_cache#2-oX (struct mount))->mnt_id: 2
+		//
+		// kmem_cache인 kmem_cache#21 에서 할당한 object인 kmem_cache#21-oX (idr object new 2) 의 memory 공간을 반환함
+		//
+		// mnt_id_start: 3
+
+		// err: 0
 		// err: 0
 		// err: 0
 		if (err)
@@ -502,17 +555,22 @@ static struct mount *alloc_vfsmnt(const char *name)
 
 		// name: "sysfs"
 		// name: "tmpfs"
+		// name: "rootfs"
 		if (name) {
 			// mnt->mnt_devname: (kmem_cache#2-oX (struct mount))->mnt_devname, name: "sysfs", GFP_KERNEL: 0xD0
 			// kstrdup("sysfs", GFP_KERNEL: 0xD0): kmem_cache#30-oX: "sysfs"
 			// mnt->mnt_devname: (kmem_cache#2-oX (struct mount))->mnt_devname, name: "tmpfs", GFP_KERNEL: 0xD0
 			// kstrdup("tmpfs", GFP_KERNEL: 0xD0): kmem_cache#30-oX: "tmpfs"
+			// mnt->mnt_devname: (kmem_cache#2-oX (struct mount))->mnt_devname, name: "rootfs", GFP_KERNEL: 0xD0
+			// kstrdup("rootfs", GFP_KERNEL: 0xD0): kmem_cache#30-oX: "rootfs"
 			mnt->mnt_devname = kstrdup(name, GFP_KERNEL);
 			// mnt->mnt_devname: (kmem_cache#2-oX (struct mount))->mnt_devname: kmem_cache#30-oX: "sysfs"
 			// mnt->mnt_devname: (kmem_cache#2-oX (struct mount))->mnt_devname: kmem_cache#30-oX: "tmpfs"
+			// mnt->mnt_devname: (kmem_cache#2-oX (struct mount))->mnt_devname: kmem_cache#30-oX: "rootfs"
 
 			// mnt->mnt_devname: (kmem_cache#2-oX (struct mount))->mnt_devname: kmem_cache#30-oX: "sysfs"
 			// mnt->mnt_devname: (kmem_cache#2-oX (struct mount))->mnt_devname: kmem_cache#30-oX: "tmpfs"
+			// mnt->mnt_devname: (kmem_cache#2-oX (struct mount))->mnt_devname: kmem_cache#30-oX: "rootfs"
 			if (!mnt->mnt_devname)
 				goto out_free_id;
 		}
@@ -522,10 +580,14 @@ static struct mount *alloc_vfsmnt(const char *name)
 		// alloc_percpu(struct mnt_pcp): kmem_cache#26-o0 에서 할당된 8 bytes 메모리 주소
 		// mnt->mnt_pcp: (kmem_cache#2-oX (struct mount))->mnt_pcp, sizeof(struct mnt_pcp): 8 bytes
 		// alloc_percpu(struct mnt_pcp): kmem_cache#26-o0 에서 할당된 8 bytes 메모리 주소
+		// mnt->mnt_pcp: (kmem_cache#2-oX (struct mount))->mnt_pcp, sizeof(struct mnt_pcp): 8 bytes
+		// alloc_percpu(struct mnt_pcp): kmem_cache#26-o0 에서 할당된 8 bytes 메모리 주소
 		mnt->mnt_pcp = alloc_percpu(struct mnt_pcp);
 		// mnt->mnt_pcp: (kmem_cache#2-oX (struct mount))->mnt_pcp: kmem_cache#26-o0 에서 할당된 8 bytes 메모리 주소
 		// mnt->mnt_pcp: (kmem_cache#2-oX (struct mount))->mnt_pcp: kmem_cache#26-o0 에서 할당된 8 bytes 메모리 주소
+		// mnt->mnt_pcp: (kmem_cache#2-oX (struct mount))->mnt_pcp: kmem_cache#26-o0 에서 할당된 8 bytes 메모리 주소
 
+		// mnt->mnt_pcp: (kmem_cache#2-oX (struct mount))->mnt_pcp: kmem_cache#26-o0 에서 할당된 8 bytes 메모리 주소
 		// mnt->mnt_pcp: (kmem_cache#2-oX (struct mount))->mnt_pcp: kmem_cache#26-o0 에서 할당된 8 bytes 메모리 주소
 		// mnt->mnt_pcp: (kmem_cache#2-oX (struct mount))->mnt_pcp: kmem_cache#26-o0 에서 할당된 8 bytes 메모리 주소
 		if (!mnt->mnt_pcp)
@@ -533,7 +595,9 @@ static struct mount *alloc_vfsmnt(const char *name)
 
 		// mnt->mnt_pcp->mnt_count: (kmem_cache#2-oX (struct mount))->mnt_pcp->mnt_count
 		// mnt->mnt_pcp->mnt_count: (kmem_cache#2-oX (struct mount))->mnt_pcp->mnt_count
+		// mnt->mnt_pcp->mnt_count: (kmem_cache#2-oX (struct mount))->mnt_pcp->mnt_count
 		this_cpu_add(mnt->mnt_pcp->mnt_count, 1);
+		// [pcp0] mnt->mnt_pcp->mnt_count: (kmem_cache#2-oX (struct mount))->mnt_pcp->mnt_count: 1
 		// [pcp0] mnt->mnt_pcp->mnt_count: (kmem_cache#2-oX (struct mount))->mnt_pcp->mnt_count: 1
 		// [pcp0] mnt->mnt_pcp->mnt_count: (kmem_cache#2-oX (struct mount))->mnt_pcp->mnt_count: 1
 #else
@@ -541,6 +605,7 @@ static struct mount *alloc_vfsmnt(const char *name)
 		mnt->mnt_writers = 0;
 #endif
 
+		// mnt->mnt_hash: (kmem_cache#2-oX (struct mount))->mnt_hash
 		// mnt->mnt_hash: (kmem_cache#2-oX (struct mount))->mnt_hash
 		// mnt->mnt_hash: (kmem_cache#2-oX (struct mount))->mnt_hash
 		INIT_HLIST_NODE(&mnt->mnt_hash);
@@ -553,6 +618,11 @@ static struct mount *alloc_vfsmnt(const char *name)
 		// ((kmem_cache#2-oX (struct mount))->mnt_hash)->next: NULL
 		// ((kmem_cache#2-oX (struct mount))->mnt_hash)->pprev: NULL
 
+		// INIT_HLIST_NODE에서 한일:
+		// ((kmem_cache#2-oX (struct mount))->mnt_hash)->next: NULL
+		// ((kmem_cache#2-oX (struct mount))->mnt_hash)->pprev: NULL
+
+		// mnt->mnt_child: (kmem_cache#2-oX (struct mount))->mnt_child
 		// mnt->mnt_child: (kmem_cache#2-oX (struct mount))->mnt_child
 		// mnt->mnt_child: (kmem_cache#2-oX (struct mount))->mnt_child
 		INIT_LIST_HEAD(&mnt->mnt_child);
@@ -565,6 +635,11 @@ static struct mount *alloc_vfsmnt(const char *name)
 		// ((kmem_cache#2-oX (struct mount))->mnt_child)->next: (kmem_cache#2-oX (struct mount))->mnt_child
 		// ((kmem_cache#2-oX (struct mount))->mnt_child)->prev: (kmem_cache#2-oX (struct mount))->mnt_child
 
+		// INIT_LIST_HEAD에서 한일:
+		// ((kmem_cache#2-oX (struct mount))->mnt_child)->next: (kmem_cache#2-oX (struct mount))->mnt_child
+		// ((kmem_cache#2-oX (struct mount))->mnt_child)->prev: (kmem_cache#2-oX (struct mount))->mnt_child
+
+		// mnt->mnt_mounts: (kmem_cache#2-oX (struct mount))->mnt_mounts
 		// mnt->mnt_mounts: (kmem_cache#2-oX (struct mount))->mnt_mounts
 		// mnt->mnt_mounts: (kmem_cache#2-oX (struct mount))->mnt_mounts
 		INIT_LIST_HEAD(&mnt->mnt_mounts);
@@ -576,7 +651,12 @@ static struct mount *alloc_vfsmnt(const char *name)
 		// INIT_LIST_HEAD에서 한일:
 		// ((kmem_cache#2-oX (struct mount))->mnt_mounts)->next: (kmem_cache#2-oX (struct mount))->mnt_mounts
 		// ((kmem_cache#2-oX (struct mount))->mnt_mounts)->prev: (kmem_cache#2-oX (struct mount))->mnt_mounts
+
+		// INIT_LIST_HEAD에서 한일:
+		// ((kmem_cache#2-oX (struct mount))->mnt_mounts)->next: (kmem_cache#2-oX (struct mount))->mnt_mounts
+		// ((kmem_cache#2-oX (struct mount))->mnt_mounts)->prev: (kmem_cache#2-oX (struct mount))->mnt_mounts
 		
+		// mnt->mnt_list: (kmem_cache#2-oX (struct mount))->mnt_list
 		// mnt->mnt_list: (kmem_cache#2-oX (struct mount))->mnt_list
 		// mnt->mnt_list: (kmem_cache#2-oX (struct mount))->mnt_list
 		INIT_LIST_HEAD(&mnt->mnt_list);
@@ -589,6 +669,11 @@ static struct mount *alloc_vfsmnt(const char *name)
 		// ((kmem_cache#2-oX (struct mount))->mnt_list)->next: (kmem_cache#2-oX (struct mount))->mnt_list
 		// ((kmem_cache#2-oX (struct mount))->mnt_list)->prev: (kmem_cache#2-oX (struct mount))->mnt_list
 
+		// INIT_LIST_HEAD에서 한일:
+		// ((kmem_cache#2-oX (struct mount))->mnt_list)->next: (kmem_cache#2-oX (struct mount))->mnt_list
+		// ((kmem_cache#2-oX (struct mount))->mnt_list)->prev: (kmem_cache#2-oX (struct mount))->mnt_list
+
+		// mnt->mnt_expire: (kmem_cache#2-oX (struct mount))->mnt_expire
 		// mnt->mnt_expire: (kmem_cache#2-oX (struct mount))->mnt_expire
 		// mnt->mnt_expire: (kmem_cache#2-oX (struct mount))->mnt_expire
 		INIT_LIST_HEAD(&mnt->mnt_expire);
@@ -601,6 +686,11 @@ static struct mount *alloc_vfsmnt(const char *name)
 		// ((kmem_cache#2-oX (struct mount))->mnt_expire)->next: (kmem_cache#2-oX (struct mount))->mnt_expire
 		// ((kmem_cache#2-oX (struct mount))->mnt_expire)->prev: (kmem_cache#2-oX (struct mount))->mnt_expire
 
+		// INIT_LIST_HEAD에서 한일:
+		// ((kmem_cache#2-oX (struct mount))->mnt_expire)->next: (kmem_cache#2-oX (struct mount))->mnt_expire
+		// ((kmem_cache#2-oX (struct mount))->mnt_expire)->prev: (kmem_cache#2-oX (struct mount))->mnt_expire
+
+		// mnt->mnt_share: (kmem_cache#2-oX (struct mount))->mnt_share
 		// mnt->mnt_share: (kmem_cache#2-oX (struct mount))->mnt_share
 		// mnt->mnt_share: (kmem_cache#2-oX (struct mount))->mnt_share
 		INIT_LIST_HEAD(&mnt->mnt_share);
@@ -613,6 +703,11 @@ static struct mount *alloc_vfsmnt(const char *name)
 		// ((kmem_cache#2-oX (struct mount))->mnt_share)->next: (kmem_cache#2-oX (struct mount))->mnt_share
 		// ((kmem_cache#2-oX (struct mount))->mnt_share)->prev: (kmem_cache#2-oX (struct mount))->mnt_share
 
+		// INIT_LIST_HEAD에서 한일:
+		// ((kmem_cache#2-oX (struct mount))->mnt_share)->next: (kmem_cache#2-oX (struct mount))->mnt_share
+		// ((kmem_cache#2-oX (struct mount))->mnt_share)->prev: (kmem_cache#2-oX (struct mount))->mnt_share
+
+		// mnt->mnt_slave_list: (kmem_cache#2-oX (struct mount))->mnt_slave_list
 		// mnt->mnt_slave_list: (kmem_cache#2-oX (struct mount))->mnt_slave_list
 		// mnt->mnt_slave_list: (kmem_cache#2-oX (struct mount))->mnt_slave_list
 		INIT_LIST_HEAD(&mnt->mnt_slave_list);
@@ -625,6 +720,11 @@ static struct mount *alloc_vfsmnt(const char *name)
 		// ((kmem_cache#2-oX (struct mount))->mnt_slave_list)->next: (kmem_cache#2-oX (struct mount))->mnt_slave_list
 		// ((kmem_cache#2-oX (struct mount))->mnt_slave_list)->prev: (kmem_cache#2-oX (struct mount))->mnt_slave_list
 
+		// INIT_LIST_HEAD에서 한일:
+		// ((kmem_cache#2-oX (struct mount))->mnt_slave_list)->next: (kmem_cache#2-oX (struct mount))->mnt_slave_list
+		// ((kmem_cache#2-oX (struct mount))->mnt_slave_list)->prev: (kmem_cache#2-oX (struct mount))->mnt_slave_list
+
+		// mnt->mnt_slave: (kmem_cache#2-oX (struct mount))->mnt_slave
 		// mnt->mnt_slave: (kmem_cache#2-oX (struct mount))->mnt_slave
 		// mnt->mnt_slave: (kmem_cache#2-oX (struct mount))->mnt_slave
 		INIT_LIST_HEAD(&mnt->mnt_slave);
@@ -637,10 +737,18 @@ static struct mount *alloc_vfsmnt(const char *name)
 		// ((kmem_cache#2-oX (struct mount))->mnt_slave)->next: (kmem_cache#2-oX (struct mount))->mnt_slave
 		// ((kmem_cache#2-oX (struct mount))->mnt_slave)->prev: (kmem_cache#2-oX (struct mount))->mnt_slave
 
+		// INIT_LIST_HEAD에서 한일:
+		// ((kmem_cache#2-oX (struct mount))->mnt_slave)->next: (kmem_cache#2-oX (struct mount))->mnt_slave
+		// ((kmem_cache#2-oX (struct mount))->mnt_slave)->prev: (kmem_cache#2-oX (struct mount))->mnt_slave
+
 #ifdef CONFIG_FSNOTIFY // CONFIG_FSNOTIFY=y
 		// mnt->mnt_fsnotify_marks: (kmem_cache#2-oX (struct mount))->mnt_fsnotify_marks
 		// mnt->mnt_fsnotify_marks: (kmem_cache#2-oX (struct mount))->mnt_fsnotify_marks
+		// mnt->mnt_fsnotify_marks: (kmem_cache#2-oX (struct mount))->mnt_fsnotify_marks
 		INIT_HLIST_HEAD(&mnt->mnt_fsnotify_marks);
+
+		// INIT_HLIST_HEAD에서 한일:
+		// ((kmem_cache#2-oX (struct mount))->mnt_fsnotify_marks)->first: NULL
 
 		// INIT_HLIST_HEAD에서 한일:
 		// ((kmem_cache#2-oX (struct mount))->mnt_fsnotify_marks)->first: NULL
@@ -652,7 +760,9 @@ static struct mount *alloc_vfsmnt(const char *name)
 
 	// mnt: kmem_cache#2-oX (struct mount)
 	// mnt: kmem_cache#2-oX (struct mount)
+	// mnt: kmem_cache#2-oX (struct mount)
 	return mnt;
+	// return kmem_cache#2-oX (struct mount)
 	// return kmem_cache#2-oX (struct mount)
 	// return kmem_cache#2-oX (struct mount)
 
@@ -1278,8 +1388,9 @@ vfs_kern_mount(struct file_system_type *type, int flags, const char *name, void 
 
 	// name: "sysfs", alloc_vfsmnt("sysfs"): kmem_cache#2-oX (struct mount)
 	// name: "tmpfs", alloc_vfsmnt("tmpfs"): kmem_cache#2-oX (struct mount)
-	// name: "rootfs", alloc_vfsmnt("rootfs"):
+	// name: "rootfs", alloc_vfsmnt("rootfs"): kmem_cache#2-oX (struct mount)
 	mnt = alloc_vfsmnt(name);
+	// mnt: kmem_cache#2-oX (struct mount)
 	// mnt: kmem_cache#2-oX (struct mount)
 	// mnt: kmem_cache#2-oX (struct mount)
 
@@ -1397,6 +1508,61 @@ vfs_kern_mount(struct file_system_type *type, int flags, const char *name, void 
 	// ((kmem_cache#2-oX (struct mount))->mnt_slave)->prev: (kmem_cache#2-oX (struct mount))->mnt_slave
 	// ((kmem_cache#2-oX (struct mount))->mnt_fsnotify_marks)->first: NULL
 
+	// alloc_vfsmnt에서 한일:
+	// struct mount의 메모리를 할당 받음 kmem_cache#2-oX (struct mount)
+	//
+	// idr_layer_cache를 사용하여 struct idr_layer 의 메모리 kmem_cache#21-oX를 1 개를 할당 받음
+	//
+	// (&(&mnt_id_ida)->idr)->id_free 이 idr object new 2번을 가르킴
+	// |
+	// |-> ---------------------------------------------------------------------------------------------------------------------------
+	//     | idr object new 2         | idr object new 0     | idr object 6         | idr object 5         | .... | idr object 0     |
+	//     ---------------------------------------------------------------------------------------------------------------------------
+	//     | ary[0]: idr object new 0 | ary[0]: idr object 6 | ary[0]: idr object 5 | ary[0]: idr object 4 | .... | ary[0]: NULL     |
+	//     ---------------------------------------------------------------------------------------------------------------------------
+	//
+	// (&(&mnt_id_ida)->idr)->id_free: kmem_cache#21-oX (idr object new 2)
+	// (&(&mnt_id_ida)->idr)->id_free_cnt: 8
+	//
+	// (&mnt_id_ida)->free_bitmap: kmem_cache#27-oX (struct ida_bitmap)
+	//
+	// (&(&mnt_id_ida)->idr)->top: kmem_cache#21-oX (struct idr_layer) (idr object 8)
+	// (&(&mnt_id_ida)->idr)->layers: 1
+	// (&(&mnt_id_ida)->idr)->id_free: (idr object new 0)
+	// (&(&mnt_id_ida)->idr)->id_free_cnt: 7
+	//
+	// (kmem_cache#27-oX (struct ida_bitmap))->bitmap 의 2 bit를 1로 set 수행
+	// (kmem_cache#27-oX (struct ida_bitmap))->nr_busy: 3
+	//
+	// (kmem_cache#2-oX (struct mount))->mnt_id: 2
+	//
+	// kmem_cache인 kmem_cache#21 에서 할당한 object인 kmem_cache#21-oX (idr object new 2) 의 memory 공간을 반환함
+	//
+	// mnt_id_start: 3
+	//
+	// (kmem_cache#2-oX (struct mount))->mnt_devname: kmem_cache#30-oX: "rootfs"
+	// (kmem_cache#2-oX (struct mount))->mnt_pcp: kmem_cache#26-o0 에서 할당된 8 bytes 메모리 주소
+	// [pcp0] (kmem_cache#2-oX (struct mount))->mnt_pcp->mnt_count: 1
+	//
+	// ((kmem_cache#2-oX (struct mount))->mnt_hash)->next: NULL
+	// ((kmem_cache#2-oX (struct mount))->mnt_hash)->pprev: NULL
+	// ((kmem_cache#2-oX (struct mount))->mnt_child)->next: (kmem_cache#2-oX (struct mount))->mnt_child
+	// ((kmem_cache#2-oX (struct mount))->mnt_child)->prev: (kmem_cache#2-oX (struct mount))->mnt_child
+	// ((kmem_cache#2-oX (struct mount))->mnt_mounts)->next: (kmem_cache#2-oX (struct mount))->mnt_mounts
+	// ((kmem_cache#2-oX (struct mount))->mnt_mounts)->prev: (kmem_cache#2-oX (struct mount))->mnt_mounts
+	// ((kmem_cache#2-oX (struct mount))->mnt_list)->next: (kmem_cache#2-oX (struct mount))->mnt_list
+	// ((kmem_cache#2-oX (struct mount))->mnt_list)->prev: (kmem_cache#2-oX (struct mount))->mnt_list
+	// ((kmem_cache#2-oX (struct mount))->mnt_expire)->next: (kmem_cache#2-oX (struct mount))->mnt_expire
+	// ((kmem_cache#2-oX (struct mount))->mnt_expire)->prev: (kmem_cache#2-oX (struct mount))->mnt_expire
+	// ((kmem_cache#2-oX (struct mount))->mnt_share)->next: (kmem_cache#2-oX (struct mount))->mnt_share
+	// ((kmem_cache#2-oX (struct mount))->mnt_share)->prev: (kmem_cache#2-oX (struct mount))->mnt_share
+	// ((kmem_cache#2-oX (struct mount))->mnt_slave_list)->next: (kmem_cache#2-oX (struct mount))->mnt_slave_list
+	// ((kmem_cache#2-oX (struct mount))->mnt_slave_list)->prev: (kmem_cache#2-oX (struct mount))->mnt_slave_list
+	// ((kmem_cache#2-oX (struct mount))->mnt_slave)->next: (kmem_cache#2-oX (struct mount))->mnt_slave
+	// ((kmem_cache#2-oX (struct mount))->mnt_slave)->prev: (kmem_cache#2-oX (struct mount))->mnt_slave
+	// ((kmem_cache#2-oX (struct mount))->mnt_fsnotify_marks)->first: NULL
+
+	// mnt: kmem_cache#2-oX (struct mount)
 	// mnt: kmem_cache#2-oX (struct mount)
 	// mnt: kmem_cache#2-oX (struct mount)
 	if (!mnt)
@@ -1407,6 +1573,7 @@ vfs_kern_mount(struct file_system_type *type, int flags, const char *name, void 
 
 	// flags: 0x400000, MS_KERNMOUNT: 0x400000
 	// flags: 0x400000, MS_KERNMOUNT: 0x400000
+	// flags: 0, MS_KERNMOUNT: 0x400000
 	if (flags & MS_KERNMOUNT)
 		// mnt->mnt.mnt_flags: (kmem_cache#2-oX (struct mount))->mnt.mnt_flags, MNT_INTERNAL: 0x4000
 		// mnt->mnt.mnt_flags: (kmem_cache#2-oX (struct mount))->mnt.mnt_flags, MNT_INTERNAL: 0x4000
@@ -1418,6 +1585,9 @@ vfs_kern_mount(struct file_system_type *type, int flags, const char *name, void 
 	// mount_fs(&sysfs_fs_type, 0x400000, "sysfs", NULL): kmem_cache#5-oX (struct dentry)
 	// type: &shmem_fs_type, flags: 0x400000, name: "tmpfs", data: NULL
 	// mount_fs(&shmem_fs_type, 0x400000, "tmpfs", NULL): kmem_cache#5-oX (struct dentry)
+	//
+	// type: &rootfs_fs_type, flags: 0, name: "rootfs", data: NULL
+	// mount_fs(&rootfs_fs_type, 0, "rootfs", NULL): kmem_cache#5-oX (struct dentry)
 	root = mount_fs(type, flags, name, data);
 	// root: kmem_cache#5-oX (struct dentry)
 	// root: kmem_cache#5-oX (struct dentry)

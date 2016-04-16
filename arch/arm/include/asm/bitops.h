@@ -189,6 +189,7 @@ extern int _find_next_bit_be(const unsigned long *p, int size, int offset);
 // _test_and_clear_bit
 // _test_and_set_bit
 // ARM10C 20140621
+// ARM10C 20160416
 #define ATOMIC_BITOP(name,nr,p)		_##name(nr,p)	// ARM10C this
 #endif
 
@@ -205,6 +206,8 @@ extern int _find_next_bit_be(const unsigned long *p, int size, int offset);
 // ARM10C 20131207
 // ARM10C 20140621
 // bitnum: 0, addr: &(MIGRATE_UNMOVABLE인 page)->flags
+// ARM10C 20160416
+// 0, &once
 #define test_and_set_bit(nr,p)		ATOMIC_BITOP(test_and_set_bit,nr,p)
 // ARM10C 20131207
 #define test_and_clear_bit(nr,p)	ATOMIC_BITOP(test_and_clear_bit,nr,p)
@@ -234,6 +237,8 @@ extern int _find_next_bit_be(const unsigned long *p, int size, int offset);
 // p->bitmap: (kmem_cache#21-o7)->bitmap (struct idr_layer), IDR_SIZE: 0x100, n: 1
 // ARM10C 20160305
 // bitmap->bitmap: (kmem_cache#27-oX (struct ida_bitmap))->bitmap, IDA_BITMAP_BITS: 992, offset: 1
+// ARM10C 20160416
+// bitmap->bitmap: (kmem_cache#27-oX (struct ida_bitmap))->bitmap, IDA_BITMAP_BITS: 992, offset: 2
 #define find_next_zero_bit(p,sz,off)	_find_next_zero_bit_le(p,sz,off)
 #define find_first_bit(p,sz)		_find_first_bit_le(p,sz)
 // ARM10C 20140215

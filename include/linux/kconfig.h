@@ -48,6 +48,7 @@
 // ARM10C 20140510
 // ARM10C 20150919
 // ARM10C 20160123
+// ARM10C 20160416
 */
 #define IS_ENABLED(option) \
 	(config_enabled(option) || config_enabled(option##_MODULE))

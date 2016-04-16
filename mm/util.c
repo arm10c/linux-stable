@@ -42,6 +42,8 @@
 // name: "tmpfs", GFP_KERNEL: 0xD0
 // ARM10C 20160402
 // module_name: "fs-rootfs", GFP_KERNEL: 0xD0
+// ARM10C 20160416
+// name: "rootfs", GFP_KERNEL: 0xD0
 char *kstrdup(const char *s, gfp_t gfp)
 {
 	size_t len;
