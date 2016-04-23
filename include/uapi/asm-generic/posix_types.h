@@ -95,6 +95,7 @@ typedef struct {
 typedef __kernel_long_t	__kernel_off_t;
 // ARM10C 20151003
 // ARM10C 20151114
+// ARM10C 20160319
 typedef long long	__kernel_loff_t;
 // ARM10C 20150103
 typedef __kernel_long_t	__kernel_time_t;

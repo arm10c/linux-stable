@@ -296,6 +296,8 @@ extern unsigned long __per_cpu_offset[NR_CPUS];
 // })
 // ARM10C 20140510
 // zone->pageset: contig_page_data->node_zones[0].pageset
+// ARM10C 20160319
+// last_ino
 #define this_cpu_ptr(ptr) SHIFT_PERCPU_PTR(ptr, my_cpu_offset)
 #else
 #define this_cpu_ptr(ptr) __this_cpu_ptr(ptr)
@@ -304,6 +306,8 @@ extern unsigned long __per_cpu_offset[NR_CPUS];
 // ARM10C 20150509
 // __get_cpu_var(tick_cpu_sched): (*this_cpu_ptr(&(tick_cpu_sched)))
 // ARM10C 20150613
+// ARM10C 20160319
+// last_ino
 #define __get_cpu_var(var) (*this_cpu_ptr(&(var)))
 // ARM10C 20140830
 // __raw_get_cpu_var(hrtimer_bases): *__this_cpu_ptr(&(hrtimer_bases))

@@ -19,6 +19,7 @@
 struct inode;
 struct dentry;
 
+// ARM10C 20160319
 struct xattr_handler {
 	const char *prefix;
 	int flags;	/* fs private flags passed back to the handlers */

@@ -127,9 +127,13 @@ static inline int shmem_getpage(struct inode *inode, pgoff_t index,
 			mapping_gfp_mask(inode->i_mapping), fault_type);
 }
 
+// ARM10C 20160319
+// sb: kmem_cache#25-oX (struct super_block)
 static inline struct shmem_sb_info *SHMEM_SB(struct super_block *sb)
 {
+	// sb->s_fs_info: (kmem_cache#25-oX (struct super_block))->s_fs_info: kmem_cache#29-oX (struct shmem_sb_info)
 	return sb->s_fs_info;
+	// return kmem_cache#29-oX (struct shmem_sb_info)
 }
 
 /*
@@ -185,9 +189,16 @@ static struct backing_dev_info shmem_backing_dev_info  __read_mostly = {
 static LIST_HEAD(shmem_swaplist);
 static DEFINE_MUTEX(shmem_swaplist_mutex);
 
+// ARM10C 20160319
+// sb: kmem_cache#25-oX (struct super_block)
 static int shmem_reserve_inode(struct super_block *sb)
 {
+	// sb: kmem_cache#25-oX (struct super_block),
+	// SHMEM_SB(kmem_cache#25-oX (struct super_block)): kmem_cache#29-oX (struct shmem_sb_info)
 	struct shmem_sb_info *sbinfo = SHMEM_SB(sb);
+	// sbinfo: kmem_cache#29-oX (struct shmem_sb_info)
+
+	// sbinfo->max_inodes: (kmem_cache#29-oX (struct shmem_sb_info))->max_inodes: 0
 	if (sbinfo->max_inodes) {
 		spin_lock(&sbinfo->stat_lock);
 		if (!sbinfo->free_inodes) {
@@ -198,6 +209,7 @@ static int shmem_reserve_inode(struct super_block *sb)
 		spin_unlock(&sbinfo->stat_lock);
 	}
 	return 0;
+	// return 0
 }
 
 static void shmem_free_inode(struct super_block *sb)
@@ -1364,20 +1376,114 @@ static int shmem_mmap(struct file *file, struct vm_area_struct *vma)
 	return 0;
 }
 
+// ARM10C 20160319
+// sb: kmem_cache#25-oX (struct super_block), NULL, 0041777, 0, VM_NORESERVE: 0x00200000
 static struct inode *shmem_get_inode(struct super_block *sb, const struct inode *dir,
 				     umode_t mode, dev_t dev, unsigned long flags)
 {
 	struct inode *inode;
 	struct shmem_inode_info *info;
-	struct shmem_sb_info *sbinfo = SHMEM_SB(sb);
 
+	// sb: kmem_cache#25-oX (struct super_block),
+	// SHMEM_SB(kmem_cache#25-oX (struct super_block)): kmem_cache#29-oX (struct shmem_sb_info)
+	struct shmem_sb_info *sbinfo = SHMEM_SB(sb);
+	// sbinfo: kmem_cache#29-oX (struct shmem_sb_info)
+
+	// sb: kmem_cache#25-oX (struct super_block),
+	// shmem_reserve_inode(kmem_cache#25-oX (struct super_block)): 0
 	if (shmem_reserve_inode(sb))
 		return NULL;
 
+	// sb: kmem_cache#25-oX (struct super_block)
+	// new_inode(kmem_cache#25-oX (struct super_block)): kmem_cache#4-oX (struct inode)
 	inode = new_inode(sb);
+	// inode: kmem_cache#4-oX (struct inode)
+
+	// new_inode에서 한일:
+	// struct inode 만큼의 메모리를 할당 받음 kmem_cache#4-oX (struct inode)
+	//
+	// (kmem_cache#4-oX (struct inode))->i_sb: kmem_cache#25-oX (struct super_block)
+	// (kmem_cache#4-oX (struct inode))->i_blkbits: 12
+	// (kmem_cache#4-oX (struct inode))->i_flags: 0
+	// (kmem_cache#4-oX (struct inode))->i_count: 1
+	// (kmem_cache#4-oX (struct inode))->i_op: &empty_iops
+	// (kmem_cache#4-oX (struct inode))->__i_nlink: 1
+	// (kmem_cache#4-oX (struct inode))->i_opflags: 0
+	// (kmem_cache#4-oX (struct inode))->i_uid: 0
+	// (kmem_cache#4-oX (struct inode))->i_gid: 0
+	// (kmem_cache#4-oX (struct inode))->i_count: 0
+	// (kmem_cache#4-oX (struct inode))->i_size: 0
+	// (kmem_cache#4-oX (struct inode))->i_blocks: 0
+	// (kmem_cache#4-oX (struct inode))->i_bytes: 0
+	// (kmem_cache#4-oX (struct inode))->i_generation: 0
+	// (kmem_cache#4-oX (struct inode))->i_pipe: NULL
+	// (kmem_cache#4-oX (struct inode))->i_bdev: NULL
+	// (kmem_cache#4-oX (struct inode))->i_cdev: NULL
+	// (kmem_cache#4-oX (struct inode))->i_rdev: 0
+	// (kmem_cache#4-oX (struct inode))->dirtied_when: 0
+	//
+	// &(kmem_cache#4-oX (struct inode))->i_lock을 이용한 spin lock 초기화 수행
+	//
+	// ((&(kmem_cache#4-oX (struct inode))->i_lock)->rlock)->raw_lock: { { 0 } }
+	// ((&(kmem_cache#4-oX (struct inode))->i_lock)->rlock)->magic: 0xdead4ead
+	// ((&(kmem_cache#4-oX (struct inode))->i_lock)->rlock)->owner: 0xffffffff
+	// ((&(kmem_cache#4-oX (struct inode))->i_lock)->rlock)->owner_cpu: 0xffffffff
+	//
+	// (&(kmem_cache#4-oX (struct inode))->i_mutex)->count: 1
+	// (&(&(&(kmem_cache#4-oX (struct inode))->i_mutex)->wait_lock)->rlock)->raw_lock: { { 0 } }
+	// (&(&(&(kmem_cache#4-oX (struct inode))->i_mutex)->wait_lock)->rlock)->magic: 0xdead4ead
+	// (&(&(&(kmem_cache#4-oX (struct inode))->i_mutex)->wait_lock)->rlock)->owner: 0xffffffff
+	// (&(&(&(kmem_cache#4-oX (struct inode))->i_mutex)->wait_lock)->rlock)->owner_cpu: 0xffffffff
+	// (&(&(kmem_cache#4-oX (struct inode))->i_mutex)->wait_list)->next: &(&(kmem_cache#4-oX (struct inode))->i_mutex)->wait_list
+	// (&(&(kmem_cache#4-oX (struct inode))->i_mutex)->wait_list)->prev: &(&(kmem_cache#4-oX (struct inode))->i_mutex)->wait_list
+	// (&(kmem_cache#4-oX (struct inode))->i_mutex)->onwer: NULL
+	// (&(kmem_cache#4-oX (struct inode))->i_mutex)->magic: &(kmem_cache#4-oX (struct inode))->i_mutex
+	//
+	// (kmem_cache#4-oX (struct inode))->i_dio_count: 0
+	//
+	// (&(kmem_cache#4-oX (struct inode))->i_data)->a_ops: &empty_aops
+	// (&(kmem_cache#4-oX (struct inode))->i_data)->host: kmem_cache#4-oX (struct inode)
+	// (&(kmem_cache#4-oX (struct inode))->i_data)->flags: 0
+	// (&(kmem_cache#4-oX (struct inode))->i_data)->flags: 0x200DA
+	// (&(kmem_cache#4-oX (struct inode))->i_data)->private_data: NULL
+	// (&(kmem_cache#4-oX (struct inode))->i_data)->backing_dev_info: &default_backing_dev_info
+	// (&(kmem_cache#4-oX (struct inode))->i_data)->writeback_index: 0
+	//
+	// (kmem_cache#4-oX (struct inode))->i_private: NULL
+	// (kmem_cache#4-oX (struct inode))->i_mapping: &(kmem_cache#4-oX (struct inode))->i_data
+	// (&(kmem_cache#4-oX (struct inode))->i_dentry)->first: NULL
+	// (kmem_cache#4-oX (struct inode))->i_acl: (void *)(0xFFFFFFFF),
+	// (kmem_cache#4-oX (struct inode))->i_default_acl: (void *)(0xFFFFFFFF)
+	// (kmem_cache#4-oX (struct inode))->i_fsnotify_mask: 0
+	//
+	// [pcp0] nr_inodes: 1
+	//
+	// (kmem_cache#4-oX (struct inode))->i_state: 0
+	// &(kmem_cache#4-oX (struct inode))->i_sb_list->next: &(kmem_cache#4-oX (struct inode))->i_sb_list
+	// &(kmem_cache#4-oX (struct inode))->i_sb_list->prev: &(kmem_cache#4-oX (struct inode))->i_sb_list
+	//
+	// head list인 &(kmem_cache#4-oX (struct inode))->i_sb->s_inodes에 &(kmem_cache#4-oX (struct inode))->i_sb_list를 추가함
+
+	// inode: kmem_cache#4-oX (struct inode)
 	if (inode) {
+		// inode->i_ino: (kmem_cache#4-oX (struct inode))->i_ino, get_next_ino(): 1
 		inode->i_ino = get_next_ino();
+		// inode->i_ino: (kmem_cache#4-oX (struct inode))->i_ino: 1
+
+		// get_next_ino 에서 한일:
+		// (&shared_last_ino)->counter: 1024
+		// [pcp0] last_ino: 1
+
+		// inode: kmem_cache#4-oX (struct inode), dir: NULL, mode: 0041777
 		inode_init_owner(inode, dir, mode);
+
+		// inode_init_owner 에서 한일:
+		// (kmem_cache#4-oX (struct inode))->i_uid: 0
+		// (kmem_cache#4-oX (struct inode))->i_gid: 0
+		// (kmem_cache#4-oX (struct inode))->i_mode: 0041777
+
+// 2016/04/23 종료
+
 		inode->i_blocks = 0;
 		inode->i_mapping->backing_dev_info = &shmem_backing_dev_info;
 		inode->i_atime = inode->i_mtime = inode->i_ctime = CURRENT_TIME;
@@ -2224,8 +2330,9 @@ static int shmem_initxattrs(struct inode *inode,
 	return 0;
 }
 
+// ARM10C 20160319
 static const struct xattr_handler *shmem_xattr_handlers[] = {
-#ifdef CONFIG_TMPFS_POSIX_ACL
+#ifdef CONFIG_TMPFS_POSIX_ACL // CONFIG_TMPFS_POSIX_ACL=y
 	&generic_acl_access_handler,
 	&generic_acl_default_handler,
 #endif
@@ -2694,21 +2801,48 @@ int shmem_fill_super(struct super_block *sb, void *data, int silent)
 	// (&(kmem_cache#29-oX (struct shmem_sb_info))->used_blocks)->counters: kmem_cache#26-o0 에서 할당된 4 bytes 메모리 주소
 	// list head 인 &percpu_counters에 &(&(kmem_cache#29-oX (struct shmem_sb_info))->used_blocks)->list를 연결함
 
+	// sbinfo->free_inodes: (kmem_cache#29-oX (struct shmem_sb_info))->free_inodes,
+	// sbinfo->max_inodes: (kmem_cache#29-oX (struct shmem_sb_info))->max_inodes: 0
 	sbinfo->free_inodes = sbinfo->max_inodes;
+	// sbinfo->free_inodes: (kmem_cache#29-oX (struct shmem_sb_info))->free_inodes: 0
 
+	// sb->s_maxbytes: (kmem_cache#25-oX (struct super_block))->s_maxbytes, MAX_LFS_FILESIZE: 0x7ffffffffff
 	sb->s_maxbytes = MAX_LFS_FILESIZE;
+	// sb->s_maxbytes: (kmem_cache#25-oX (struct super_block))->s_maxbytes: 0x7ffffffffff
+
+	// sb->s_blocksize: (kmem_cache#25-oX (struct super_block))->s_blocksize, PAGE_CACHE_SIZE: 0x1000
 	sb->s_blocksize = PAGE_CACHE_SIZE;
+	// sb->s_blocksize: (kmem_cache#25-oX (struct super_block))->s_blocksize: 0x1000
+
+	// sb->s_blocksize_bits: (kmem_cache#25-oX (struct super_block))->s_blocksize_bits, PAGE_CACHE_SHIFT: 12
 	sb->s_blocksize_bits = PAGE_CACHE_SHIFT;
+	// sb->s_blocksize_bits: (kmem_cache#25-oX (struct super_block))->s_blocksize_bits: 12
+
+	// sb->s_magic: (kmem_cache#25-oX (struct super_block))->s_magic, TMPFS_MAGIC: 0x01021994
 	sb->s_magic = TMPFS_MAGIC;
+	// sb->s_magic: (kmem_cache#25-oX (struct super_block))->s_magic: 0x01021994
+
+	// sb->s_op: (kmem_cache#25-oX (struct super_block))->s_op
 	sb->s_op = &shmem_ops;
+	// sb->s_op: (kmem_cache#25-oX (struct super_block))->s_op: &shmem_ops
+
+	// sb->s_time_gran: (kmem_cache#25-oX (struct super_block))->s_time_gran
 	sb->s_time_gran = 1;
-#ifdef CONFIG_TMPFS_XATTR
+	// sb->s_time_gran: (kmem_cache#25-oX (struct super_block))->s_time_gran: 1
+
+#ifdef CONFIG_TMPFS_XATTR // CONFIG_TMPFS_XATTR=y
+	// sb->s_xattr: (kmem_cache#25-oX (struct super_block))->s_xattr
 	sb->s_xattr = shmem_xattr_handlers;
+	// sb->s_xattr: (kmem_cache#25-oX (struct super_block))->s_xattr: shmem_xattr_handlers
 #endif
-#ifdef CONFIG_TMPFS_POSIX_ACL
+#ifdef CONFIG_TMPFS_POSIX_ACL // CONFIG_TMPFS_POSIX_ACL=y
+	// sb->s_flags: (kmem_cache#25-oX (struct super_block))->s_flags: 0x90400000, MS_POSIXACL: 0x10000
 	sb->s_flags |= MS_POSIXACL;
+	// sb->s_flags: (kmem_cache#25-oX (struct super_block))->s_flags: 0x90410000
 #endif
 
+	// sb: kmem_cache#25-oX (struct super_block), S_IFDIR: 0040000,
+	// sbinfo->mode: (kmem_cache#29-oX (struct shmem_sb_info))->mode: 01777, VM_NORESERVE: 0x00200000
 	inode = shmem_get_inode(sb, NULL, S_IFDIR | sbinfo->mode, 0, VM_NORESERVE);
 	if (!inode)
 		goto failed;
@@ -2847,10 +2981,11 @@ static const struct inode_operations shmem_special_inode_operations = {
 #endif
 };
 
+// ARM10C 20160319
 static const struct super_operations shmem_ops = {
 	.alloc_inode	= shmem_alloc_inode,
 	.destroy_inode	= shmem_destroy_inode,
-#ifdef CONFIG_TMPFS
+#ifdef CONFIG_TMPFS // CONFIG_TMPFS=y
 	.statfs		= shmem_statfs,
 	.remount_fs	= shmem_remount_fs,
 	.show_options	= shmem_show_options,

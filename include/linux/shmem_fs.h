@@ -10,6 +10,7 @@
 /* inode in-kernel data */
 
 // ARM10C 20160123
+// ARM10C 20160319
 // sizeof(struct shmem_inode_info): 458 bytes
 struct shmem_inode_info {
 	spinlock_t		lock;

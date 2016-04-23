@@ -72,6 +72,7 @@ typedef __kernel_old_gid_t	old_gid_t;
 #if defined(__GNUC__)
 // ARM10C 20151003
 // ARM10C 20151114
+// ARM10C 20160319
 typedef __kernel_loff_t		loff_t;
 #endif
 
@@ -223,6 +224,7 @@ typedef unsigned long irq_hw_number_t;
 // ARM10C 20151003
 // ARM10C 20151114
 // ARM10C 20151121
+// ARM10C 20160319
 // ARM10C 20160402
 // ARM10C 20160409
 typedef struct {

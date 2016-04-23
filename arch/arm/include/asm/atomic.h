@@ -102,6 +102,8 @@ static inline void atomic_add(int i, atomic_t *v)
 	: "cc");
 }
 
+// ARM10C 20160319
+// LAST_INO_BATCH: 1024, &shared_last_ino
 static inline int atomic_add_return(int i, atomic_t *v)
 {
 	unsigned long tmp;

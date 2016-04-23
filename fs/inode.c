@@ -1144,26 +1144,58 @@ repeat:
  * error if st_ino won't fit in target struct field. Use 32bit counter
  * here to attempt to avoid that.
  */
+// ARM10C 20160319
+// LAST_INO_BATCH: 1024
 #define LAST_INO_BATCH 1024
+// ARM10C 20160319
+// DEFINE_PER_CPU(unsigned int, last_ino):
+// __attribute__((section(".data..percpu" ""))) __typeof__(unsigned int) last_ino
 static DEFINE_PER_CPU(unsigned int, last_ino);
 
+// ARM10C 20160319
 unsigned int get_next_ino(void)
 {
+	// &get_cpu_var(last_ino): [pcp0] &last_ino
 	unsigned int *p = &get_cpu_var(last_ino);
-	unsigned int res = *p;
+	// p: [pcp0] &last_ino
 
-#ifdef CONFIG_SMP
+	// get_cpu_var에서 한일:
+	// preempt disable 을 수행하고 pcp 0 변수인 last_ino 를 가져옴
+
+	// *p: [pcp0] last_ino: 0
+	unsigned int res = *p;
+	// res: 0
+
+#ifdef CONFIG_SMP // CONFIG_SMP=y
+	// res: 0, LAST_INO_BATCH: 1024
 	if (unlikely((res & (LAST_INO_BATCH-1)) == 0)) {
 		static atomic_t shared_last_ino;
-		int next = atomic_add_return(LAST_INO_BATCH, &shared_last_ino);
 
+		// LAST_INO_BATCH: 1024, atomic_add_return(1024, &shared_last_ino): 1024
+		int next = atomic_add_return(LAST_INO_BATCH, &shared_last_ino);
+		// next: 1024
+
+		// atomic_add_return에서 한일:
+		// (&shared_last_ino)->counter: 1024
+
+		// next: 1024, LAST_INO_BATCH: 1024
 		res = next - LAST_INO_BATCH;
+		// res: 0
 	}
 #endif
 
+	// *p: [pcp0] last_ino: 0, res: 0
 	*p = ++res;
+	// *p: [pcp0] last_ino: 1
+
 	put_cpu_var(last_ino);
+
+	// put_cpu_var에서 한일:
+	// preempt enable 을 수행하고 pcp 0 변수인 last_ino 를 가져옴
+
+	// res: 1
 	return res;
+	// return 1
 }
 EXPORT_SYMBOL(get_next_ino);
 
@@ -2464,17 +2496,28 @@ EXPORT_SYMBOL(init_special_inode);
  * @dir: Directory inode
  * @mode: mode of the new inode
  */
+// ARM10C 20160319
+// inode: kmem_cache#4-oX (struct inode), dir: NULL, mode: 0041777
 void inode_init_owner(struct inode *inode, const struct inode *dir,
 			umode_t mode)
 {
+	// inode->i_uid: (kmem_cache#4-oX (struct inode))->i_uid, current_fsuid(): init_cred.fsuid: 0
 	inode->i_uid = current_fsuid();
+	// inode->i_uid: (kmem_cache#4-oX (struct inode))->i_uid: 0
+
+	// dir: NULL, S_ISGID: 0002000
 	if (dir && dir->i_mode & S_ISGID) {
 		inode->i_gid = dir->i_gid;
 		if (S_ISDIR(mode))
 			mode |= S_ISGID;
 	} else
+		// inode->i_gid: (kmem_cache#4-oX (struct inode))->i_gid, current_fsgid(): init_cred.fsgid: 0
 		inode->i_gid = current_fsgid();
+		// inode->i_gid: (kmem_cache#4-oX (struct inode))->i_gid: 0
+
+	// inode->i_mode: (kmem_cache#4-oX (struct inode))->i_mode, mode: 0041777
 	inode->i_mode = mode;
+	// inode->i_mode: (kmem_cache#4-oX (struct inode))->i_mode: 0041777
 }
 EXPORT_SYMBOL(inode_init_owner);
 

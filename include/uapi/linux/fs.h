@@ -83,6 +83,8 @@ struct inodes_stat_t {
 // ARM10C 20160319
 // MS_SILENT: 0x8000
 #define MS_SILENT	32768
+// ARM10C 20160319
+// MS_POSIXACL: 0x10000
 #define MS_POSIXACL	(1<<16)	/* VFS does not apply the umask */
 #define MS_UNBINDABLE	(1<<17)	/* change to unbindable */
 #define MS_PRIVATE	(1<<18)	/* change to private */
