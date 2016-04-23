@@ -91,12 +91,15 @@ struct inodes_stat_t {
 #define MS_RELATIME	(1<<21)	/* Update atime relative to mtime/ctime. */
 // ARM10C 20151031
 // ARM10C 20151114
+// ARM10C 20160319
 // MS_KERNMOUNT: 0x400000
 #define MS_KERNMOUNT	(1<<22) /* this is a kern_mount call */
 #define MS_I_VERSION	(1<<23) /* Update inode I_version field */
 #define MS_STRICTATIME	(1<<24) /* Always perform atime updates */
 
 /* These sb flags are internal to the kernel */
+// ARM10C 20160319
+// MS_NOSEC: 0x10000000
 #define MS_NOSEC	(1<<28)
 // ARM10C 20151219
 // MS_BORN: 0x20000000
@@ -105,6 +108,8 @@ struct inodes_stat_t {
 // ARM10C 20160319
 // MS_ACTIVE: 0x40000000
 #define MS_ACTIVE	(1<<30)
+// ARM10C 20160319
+// MS_NOUSER: 0x80000000
 #define MS_NOUSER	(1<<31)
 
 /*

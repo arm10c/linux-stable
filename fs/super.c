@@ -2632,9 +2632,10 @@ struct dentry *mount_nodev(struct file_system_type *fs_type,
 		return ERR_CAST(s);
 
 // 2016/04/16 종료
+// 2016/04/23 시작
 
-	// s: kmem_cache#25-oX (struct super_block), data: NULL, flags: 0x400000, MS_SILENT: 0x8000
-	// fill_super(kmem_cache#25-oX (struct super_block), NULL, 0): 0
+	// fill_super: shmem_fill_super, s: kmem_cache#25-oX (struct super_block), data: NULL, flags: 0x400000, MS_SILENT: 0x8000
+	// shmem_fill_super(kmem_cache#25-oX (struct super_block), NULL, 0): 0
 	//
 	// s: kmem_cache#25-oX (struct super_block), data: NULL, flags: 0, MS_SILENT: 0x8000
 	error = fill_super(s, data, flags & MS_SILENT ? 1 : 0);

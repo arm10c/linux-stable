@@ -5,6 +5,11 @@
 #include <asm/stat.h>
 #include <uapi/linux/stat.h>
 
+// ARM10C 20160319
+// S_IRWXU: 00700
+// S_IRWXG: 00070
+// S_IRWXO: 00007
+// S_IRWXUGO: 00777
 #define S_IRWXUGO	(S_IRWXU|S_IRWXG|S_IRWXO)
 #define S_IALLUGO	(S_ISUID|S_ISGID|S_ISVTX|S_IRWXUGO)
 // ARM10C 20151205

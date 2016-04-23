@@ -101,6 +101,7 @@ extern int in_egroup_p(kgid_t);
  */
 // ARM10C 20150919
 // ARM10C 20151003
+// ARM10C 20160319
 // sizeof(struct cred): 92 bytes
 struct cred {
 	atomic_t	usage;
@@ -258,6 +259,7 @@ static inline void put_cred(const struct cred *_cred)
  * Access the subjective credentials of the current task.  RCU-safe,
  * since nobody else can modify it.
  */
+// ARM10C 20160319
 #define current_cred() \
 	rcu_dereference_protected(current->cred, 1)
 
@@ -326,6 +328,7 @@ static inline void put_cred(const struct cred *_cred)
 #define task_uid(task)		(task_cred_xxx((task), uid))
 #define task_euid(task)		(task_cred_xxx((task), euid))
 
+// ARM10C 20160319
 #define current_cred_xxx(xxx)			\
 ({						\
 	current_cred()->xxx;			\
@@ -337,7 +340,9 @@ static inline void put_cred(const struct cred *_cred)
 #define current_egid()		(current_cred_xxx(egid))
 #define current_suid()		(current_cred_xxx(suid))
 #define current_sgid()		(current_cred_xxx(sgid))
+// ARM10C 20160319
 #define current_fsuid() 	(current_cred_xxx(fsuid))
+// ARM10C 20160319
 #define current_fsgid() 	(current_cred_xxx(fsgid))
 #define current_cap()		(current_cred_xxx(cap_effective))
 #define current_user()		(current_cred_xxx(user))

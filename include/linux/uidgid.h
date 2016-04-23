@@ -46,9 +46,11 @@ static inline gid_t __kgid_val(kgid_t gid)
 // ARM10C 20150919
 // ARM10C 20151003
 // ARM10C 20151128
+// ARM10C 20160319
 typedef uid_t kuid_t;
 // ARM10C 20150919
 // ARM10C 20151003
+// ARM10C 20160319
 typedef gid_t kgid_t;
 
 static inline uid_t __kuid_val(kuid_t uid)
@@ -62,13 +64,20 @@ static inline gid_t __kgid_val(kgid_t gid)
 }
 
 // ARM10C 20151128
+// ARM10C 20160319
 // uid: 0
 #define KUIDT_INIT(value) ((kuid_t) value )
+// ARM10C 20160319
+// uid: 0
 #define KGIDT_INIT(value) ((kgid_t) value )
 
 #endif
 
+// ARM10C 20160319
+// GLOBAL_ROOT_UID: 0
 #define GLOBAL_ROOT_UID KUIDT_INIT(0)
+// ARM10C 20160319
+// GLOBAL_ROOT_GID: 0
 #define GLOBAL_ROOT_GID KGIDT_INIT(0)
 
 #define INVALID_UID KUIDT_INIT(-1)

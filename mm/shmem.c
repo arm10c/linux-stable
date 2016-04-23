@@ -2409,6 +2409,7 @@ static int shmem_encode_fh(struct inode *inode, __u32 *fh, int *len,
 	return 1;
 }
 
+// ARM10C 20160319
 static const struct export_operations shmem_export_ops = {
 	.get_parent     = shmem_get_parent,
 	.encode_fh      = shmem_encode_fh,
@@ -2596,30 +2597,55 @@ static void shmem_put_super(struct super_block *sb)
 }
 
 // ARM10C 20160319
-// ARM10C 20160416
+// s: kmem_cache#25-oX (struct super_block), data: NULL, flags: 0x400000, MS_SILENT: 0x8000
 int shmem_fill_super(struct super_block *sb, void *data, int silent)
 {
 	struct inode *inode;
 	struct shmem_sb_info *sbinfo;
+
+	// ENOMEM: 12
 	int err = -ENOMEM;
+	// err: -12
 
 	/* Round up to L1_CACHE_BYTES to resist false sharing */
+	// sizeof(struct shmem_sb_info): 78 bytes, L1_CACHE_BYTES: 64,
+	// max(78, 64): 78, GFP_KERNEL: 0xD0
+	// kzalloc(78, GFP_KERNEL: 0xD0): kmem_cache#29-oX
 	sbinfo = kzalloc(max((int)sizeof(struct shmem_sb_info),
 				L1_CACHE_BYTES), GFP_KERNEL);
+	// sbinfo: kmem_cache#29-oX (struct shmem_sb_info)
+
+	// sbinfo: kmem_cache#29-oX (struct shmem_sb_info)
 	if (!sbinfo)
 		return -ENOMEM;
 
+	// sbinfo->mode: (kmem_cache#29-oX (struct shmem_sb_info))->mode,
+	// S_IRWXUGO: 00777, S_ISVTX: 0001000
 	sbinfo->mode = S_IRWXUGO | S_ISVTX;
-	sbinfo->uid = current_fsuid();
-	sbinfo->gid = current_fsgid();
-	sb->s_fs_info = sbinfo;
+	// sbinfo->mode: (kmem_cache#29-oX (struct shmem_sb_info))->mode: 01777
 
-#ifdef CONFIG_TMPFS
+	// sbinfo->uid: (kmem_cache#29-oX (struct shmem_sb_info))->uid,
+	// current_fsuid(): init_cred.fsuid: 0
+	sbinfo->uid = current_fsuid();
+	// sbinfo->uid: (kmem_cache#29-oX (struct shmem_sb_info))->uid: 0
+
+	// sbinfo->gid: (kmem_cache#29-oX (struct shmem_sb_info))->gid,
+	// current_fsgid(): init_cred.fsgid: 0
+	sbinfo->gid = current_fsgid();
+	// sbinfo->gid: (kmem_cache#29-oX (struct shmem_sb_info))->gid: 0
+
+	// sb->s_fs_info: (kmem_cache#25-oX (struct super_block))->s_fs_info,
+	// sbinfo: kmem_cache#29-oX (struct shmem_sb_info)
+	sb->s_fs_info = sbinfo;
+	// sb->s_fs_info: (kmem_cache#25-oX (struct super_block))->s_fs_info: kmem_cache#29-oX (struct shmem_sb_info)
+
+#ifdef CONFIG_TMPFS // CONFIG_TMPFS=y
 	/*
 	 * Per default we only allow half of the physical ram per
 	 * tmpfs instance, limiting inodes to one per page of lowmem;
 	 * but the internal instance is left unlimited.
 	 */
+	// sb->s_flags: (kmem_cache#25-oX (struct super_block))->s_flags: 0x400000, MS_KERNMOUNT: 0x400000
 	if (!(sb->s_flags & MS_KERNMOUNT)) {
 		sbinfo->max_blocks = shmem_default_max_blocks();
 		sbinfo->max_inodes = shmem_default_max_inodes();
@@ -2628,17 +2654,46 @@ int shmem_fill_super(struct super_block *sb, void *data, int silent)
 			goto failed;
 		}
 	} else {
+		// sb->s_flags: (kmem_cache#25-oX (struct super_block))->s_flags: 0x400000, MS_NOUSER: 0x80000000
 		sb->s_flags |= MS_NOUSER;
+		// sb->s_flags: (kmem_cache#25-oX (struct super_block))->s_flags: 0x80400000
 	}
+	// sb->s_export_op: (kmem_cache#25-oX (struct super_block))->s_export_op
 	sb->s_export_op = &shmem_export_ops;
+	// sb->s_export_op: (kmem_cache#25-oX (struct super_block))->s_export_op: &shmem_export_ops
+
+	// sb->s_flags: (kmem_cache#25-oX (struct super_block))->s_flags: 0x80400000, MS_NOSEC: 0x10000000
 	sb->s_flags |= MS_NOSEC;
+	// sb->s_flags: (kmem_cache#25-oX (struct super_block))->s_flags: 0x90400000
 #else
 	sb->s_flags |= MS_NOUSER;
 #endif
 
+	// &sbinfo->stat_lock: &(kmem_cache#29-oX (struct shmem_sb_info))->stat_lock
 	spin_lock_init(&sbinfo->stat_lock);
+
+	// spin_lock_init에서 한일:
+	// (&(kmem_cache#29-oX (struct shmem_sb_info))->stat_lock)->raw_lock: { { 0 } }
+	// (&(kmem_cache#29-oX (struct shmem_sb_info))->stat_lock)->magic: 0xdead4ead
+	// (&(kmem_cache#29-oX (struct shmem_sb_info))->stat_lock)->owner: 0xffffffff
+	// (&(kmem_cache#29-oX (struct shmem_sb_info))->stat_lock)->owner_cpu: 0xffffffff
+
+	// &sbinfo->used_blocks: &(kmem_cache#29-oX (struct shmem_sb_info))->used_blocks
+	// percpu_counter_init(&(kmem_cache#29-oX (struct shmem_sb_info))->used_blocks, 0): 0
 	if (percpu_counter_init(&sbinfo->used_blocks, 0))
 		goto failed;
+
+	// percpu_counter_init에서 한일:
+	// (&(&(&(&(kmem_cache#29-oX (struct shmem_sb_info))->used_blocks)->lock)->wait_lock)->rlock)->raw_lock: { { 0 } }
+	// (&(&(&(&(kmem_cache#29-oX (struct shmem_sb_info))->used_blocks)->lock)->wait_lock)->rlock)->magic: 0xdead4ead
+	// (&(&(&(&(kmem_cache#29-oX (struct shmem_sb_info))->used_blocks)->lock)->wait_lock)->rlock)->owner: 0xffffffff
+	// (&(&(&(&(kmem_cache#29-oX (struct shmem_sb_info))->used_blocks)->lock)->wait_lock)->rlock)->owner_cpu: 0xffffffff
+	// (&(&(kmem_cache#29-oX (struct shmem_sb_info))->used_blocks)->list)->next: &(&(kmem_cache#29-oX (struct shmem_sb_info))->used_blocks)->list
+	// (&(&(kmem_cache#29-oX (struct shmem_sb_info))->used_blocks)->list)->prev: &(&(kmem_cache#29-oX (struct shmem_sb_info))->used_blocks)->list
+	// (&(kmem_cache#29-oX (struct shmem_sb_info))->used_blocks)->count: 0
+	// (&(kmem_cache#29-oX (struct shmem_sb_info))->used_blocks)->counters: kmem_cache#26-o0 에서 할당된 4 bytes 메모리 주소
+	// list head 인 &percpu_counters에 &(&(kmem_cache#29-oX (struct shmem_sb_info))->used_blocks)->list를 연결함
+
 	sbinfo->free_inodes = sbinfo->max_inodes;
 
 	sb->s_maxbytes = MAX_LFS_FILESIZE;

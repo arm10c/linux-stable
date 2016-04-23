@@ -25,6 +25,8 @@ struct shmem_inode_info {
 	struct inode		vfs_inode;
 };
 
+// ARM10C 20160319
+// sizeof(struct shmem_sb_info): 78 bytes
 struct shmem_sb_info {
 	unsigned long max_blocks;   /* How many blocks are allowed */
 	struct percpu_counter used_blocks;  /* How many are allocated */

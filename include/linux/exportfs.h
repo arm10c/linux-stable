@@ -180,6 +180,7 @@ struct fid {
  *    get_name is not (which is possibly inconsistent)
  */
 
+// ARM10C 20160319
 struct export_operations {
 	int (*encode_fh)(struct inode *inode, __u32 *fh, int *max_len,
 			struct inode *parent);

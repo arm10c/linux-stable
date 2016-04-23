@@ -498,6 +498,7 @@ static inline void rcu_preempt_sleep_check(void)
 // ARM10C 20140913
 // ARM10C 20141122
 // ARM10C 20150606
+// ARM10C 20160319
 #define rcu_lockdep_assert(c, s) do { } while (0)
 #define rcu_sleep_check() do { } while (0)
 
@@ -518,6 +519,7 @@ static inline void rcu_preempt_sleep_check(void)
 #else /* #ifdef __CHECKER__ */
 // ARM10C 20141122
 // ARM10C 20150606
+// ARM10C 20160319
 #define rcu_dereference_sparse(p, space)
 #endif /* #else #ifdef __CHECKER__ */
 
@@ -571,6 +573,8 @@ static inline void rcu_preempt_sleep_check(void)
 		smp_read_barrier_depends(); \
 		((typeof(*p) __force __kernel *)(_________p1)); \
 	})
+// ARM10C 20160319
+// current->cred, 1, __rcu
 #define __rcu_dereference_protected(p, c, space) \
 	({ \
 		rcu_lockdep_assert(c, "suspicious rcu_dereference_protected()" \
@@ -811,6 +815,8 @@ static inline void rcu_preempt_sleep_check(void)
  * when protected only by rcu_read_lock() will result in infrequent
  * but very ugly failures.
  */
+// ARM10C 20160319
+// current->cred, 1
 #define rcu_dereference_protected(p, c) \
 	__rcu_dereference_protected((p), (c), __rcu)
 

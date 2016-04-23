@@ -1105,6 +1105,8 @@ static inline void *kmem_cache_zalloc(struct kmem_cache *k, gfp_t flags)
 // size: 4, GFP_KERNEL: 0xD0
 // ARM10C 20160109
 // sizeof(struct kobject): 36 bytes, GFP_KERNEL: 0xD0
+// ARM10C 20160319
+// max(78, 64): 78, GFP_KERNEL: 0xD0
 // ARM10C 20160402
 // sizeof(struct subprocess_info): 52 bytes, gfp_mask: GFP_KERNEL: 0xD0
 static inline void *kzalloc(size_t size, gfp_t flags)

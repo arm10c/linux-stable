@@ -50,8 +50,10 @@ typedef int		__kernel_daddr_t;
 // ARM10C 20150919
 // ARM10C 20151003
 // ARM10C 20151128
+// ARM10C 20160319
 typedef unsigned int	__kernel_uid32_t;
 // ARM10C 20151003
+// ARM10C 20160319
 typedef unsigned int	__kernel_gid32_t;
 #endif
 

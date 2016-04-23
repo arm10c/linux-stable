@@ -136,6 +136,8 @@ EXPORT_SYMBOL(__percpu_counter_sum);
 // &bdi->bdi_stat[0]: &(&sysfs_backing_dev_info)->bdi_stat[0], 0, &__key
 // ARM10C 20151114
 // &s->s_writers.counter[0]: &(kmem_cache#25-oX (struct super_block))->s_writers.counter[0], 0, &__key
+// ARM10C 20160319
+// &sbinfo->used_blocks: &(kmem_cache#29-oX (struct shmem_sb_info))->used_blocks
 int __percpu_counter_init(struct percpu_counter *fbc, s64 amount,
 			  struct lock_class_key *key)
 {

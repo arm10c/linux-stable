@@ -33,6 +33,7 @@ static struct kmem_cache *cred_jar;
 /*
  * The initial credentials for the initial task
  */
+// ARM10C 20160319
 struct cred init_cred = {
 	.usage			= ATOMIC_INIT(4),
 #ifdef CONFIG_DEBUG_CREDENTIALS
@@ -45,7 +46,9 @@ struct cred init_cred = {
 	.sgid			= GLOBAL_ROOT_GID,
 	.euid			= GLOBAL_ROOT_UID,
 	.egid			= GLOBAL_ROOT_GID,
+	// GLOBAL_ROOT_UID: 0
 	.fsuid			= GLOBAL_ROOT_UID,
+	// GLOBAL_ROOT_GID: 0
 	.fsgid			= GLOBAL_ROOT_GID,
 	.securebits		= SECUREBITS_DEFAULT,
 	.cap_inheritable	= CAP_EMPTY_SET,
