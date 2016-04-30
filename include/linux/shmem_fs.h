@@ -40,9 +40,14 @@ struct shmem_sb_info {
 	struct mempolicy *mpol;     /* default memory policy for mappings */
 };
 
+// ARM10C 20160319
+// inode: kmem_cache#4-oX (struct inode)
 static inline struct shmem_inode_info *SHMEM_I(struct inode *inode)
 {
+	// inode: kmem_cache#4-oX (struct inode)
+	// container_of(kmem_cache#4-oX (struct inode), struct shmem_inode_info, vfs_inode): kmem_cache#4-oX (struct shmem_inode_info)
 	return container_of(inode, struct shmem_inode_info, vfs_inode);
+	// return kmem_cache#4-oX (struct shmem_inode_info)
 }
 
 /*

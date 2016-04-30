@@ -127,6 +127,8 @@ static inline int atomic_add_return(int i, atomic_t *v)
 }
 
 // ARM10C 20150912
+// ARM10C 20160319
+// v: &(kmem_cache#4-oX (struct inode))->i_sb->s_remove_count
 // ARM10C 20160409
 // 1, kmod_concurrent.counter: 1
 static inline void atomic_sub(int i, atomic_t *v)
@@ -280,6 +282,8 @@ static inline int __atomic_add_unless(atomic_t *v, int a, int u)
 // &running_helpers
 #define atomic_inc(v)		atomic_add(1, v)
 // ARM10C 20150912
+// ARM10C 20160319
+// v: &(kmem_cache#4-oX (struct inode))->i_sb->s_remove_count
 // ARM10C 20160409
 // kmod_concurrent.counter: 1
 #define atomic_dec(v)		atomic_sub(1, v)

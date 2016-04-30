@@ -370,6 +370,8 @@ static inline raw_spinlock_t *spinlock_check(spinlock_t *lock)
 // &inode->i_lock: &(kmem_cache#4-oX)->i_lock
 // ARM10C 20151219
 // &dentry->d_lock: &(kmem_cache#5-oX)->d_lock
+// ARM10C 20160319
+// &info->lock: &(kmem_cache#4-oX (struct shmem_inode_info))->lock
 // ARM10C 20160423
 // &sbinfo->stat_lock: &(kmem_cache#29-oX (struct shmem_sb_info))->stat_lock
 #define spin_lock_init(_lock)				\

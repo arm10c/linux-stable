@@ -174,6 +174,8 @@
 // &s->s_mounts: &(kmem_cache#25-oX (struct super_block))->s_mounts
 // ARM10C 20160319
 // &inode->i_sb_list: &(kmem_cache#4-oX (struct inode))->i_sb_list
+// ARM10C 20160319
+// &info->swaplist: &(kmem_cache#4-oX (struct shmem_inode_info))->swaplist
 static inline void INIT_LIST_HEAD(struct list_head *list)
 {
 	list->next = list;

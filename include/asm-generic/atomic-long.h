@@ -174,11 +174,19 @@ static inline void atomic_long_inc(atomic_long_t *l)
 	atomic_inc(v);
 }
 
+// ARM10C 20160319
+// &inode->i_sb->s_remove_count: &(kmem_cache#4-oX (struct inode))->i_sb->s_remove_count
 static inline void atomic_long_dec(atomic_long_t *l)
 {
+	// l: &(kmem_cache#4-oX (struct inode))->i_sb->s_remove_count
 	atomic_t *v = (atomic_t *)l;
+	// v: &(kmem_cache#4-oX (struct inode))->i_sb->s_remove_count
 
+	// v: &(kmem_cache#4-oX (struct inode))->i_sb->s_remove_count
 	atomic_dec(v);
+
+	// atomic_dec 에서 한일:
+	// (&(kmem_cache#4-oX (struct inode))->i_sb->s_remove_count)->counter: -1
 }
 
 // ARM10C 20140412

@@ -76,6 +76,7 @@ void warn_slowpath_fmt_taint(const char *file, const int line, unsigned taint,
 extern void warn_slowpath_null(const char *file, const int line);
 #define WANT_WARN_ON_SLOWPATH
 // ARM10C 20131109
+// ARM10C 20160319
 #define __WARN()		warn_slowpath_null(__FILE__, __LINE__)
 #define __WARN_printf(arg...)	warn_slowpath_fmt(__FILE__, __LINE__, arg)
 #define __WARN_printf_taint(taint, arg...)				\
@@ -91,6 +92,7 @@ extern void warn_slowpath_null(const char *file, const int line);
 // ARM10C 20131109
 // ARM10C 20151212
 // ARM10C 20160326
+// ARM10C 20160319
 #define WARN_ON(condition) ({						\
 	int __ret_warn_on = !!(condition);				\
 	if (unlikely(__ret_warn_on))					\

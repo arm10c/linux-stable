@@ -168,11 +168,18 @@ static inline void forget_all_cached_acls(struct inode *inode)
 }
 #endif
 
+// ARM10C 20160319
+// inode: kmem_cache#4-oX (struct inode)
 static inline void cache_no_acl(struct inode *inode)
 {
-#ifdef CONFIG_FS_POSIX_ACL
+#ifdef CONFIG_FS_POSIX_ACL // CONFIG_FS_POSIX_ACL=y
+	// inode->i_acl: (kmem_cache#4-oX (struct inode))->i_acl
 	inode->i_acl = NULL;
+	// inode->i_acl: (kmem_cache#4-oX (struct inode))->i_acl: NULL
+
+	// inode->i_default_acl: (kmem_cache#4-oX (struct inode))->i_default_acl
 	inode->i_default_acl = NULL;
+	// inode->i_default_acl: (kmem_cache#4-oX (struct inode))->i_default_acl: NULL
 #endif
 }
 

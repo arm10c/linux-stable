@@ -72,6 +72,8 @@ struct simple_xattr {
  */
 // ARM10C 20150808
 // &cgrp->xattrs: &(&(&cgroup_dummy_root)->top_cgroup)->xattrs
+// ARM10C 20160319
+// &info->xattrs: &(kmem_cache#4-oX (struct shmem_inode_info))->xattrs
 static inline void simple_xattrs_init(struct simple_xattrs *xattrs)
 {
 	// &xattrs->head: &(&(&(&cgroup_dummy_root)->top_cgroup)->xattrs)->head

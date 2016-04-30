@@ -573,8 +573,6 @@ EXPORT_SYMBOL(clear_nlink);
  */
 // ARM10C 20151212
 // inode: kmem_cache#4-oX (struct inode), 2
-// ARM10C 20160319
-// inode: kmem_cache#4-oX (struct inode), 2
 void set_nlink(struct inode *inode, unsigned int nlink)
 {
 	// nlink: 2
@@ -582,13 +580,10 @@ void set_nlink(struct inode *inode, unsigned int nlink)
 		clear_nlink(inode);
 	} else {
 		/* Yes, some filesystems do change nlink from zero to one */
-		// inode->i_nlink: (kmem_cache#4-oX (struct inode))->i_nlink: 1
 		if (inode->i_nlink == 0)
 			atomic_long_dec(&inode->i_sb->s_remove_count);
 
-		// inode->__i_nlink: (kmem_cache#4-oX (struct inode))->__i_nlink: 1,  nlink: 2
 		inode->__i_nlink = nlink;
-		// inode->__i_nlink: (kmem_cache#4-oX (struct inode))->__i_nlink: 2
 	}
 }
 EXPORT_SYMBOL(set_nlink);
@@ -601,14 +596,25 @@ EXPORT_SYMBOL(set_nlink);
  * direct filesystem manipulation of i_nlink.  Currently,
  * it is only here for parity with dec_nlink().
  */
+// ARM10C 20160319
+// inode: kmem_cache#4-oX (struct inode)
 void inc_nlink(struct inode *inode)
 {
+	// inode->i_nlink: (kmem_cache#4-oX (struct inode))->i_nlink: 0, I_LINKABLE: 0x400
 	if (unlikely(inode->i_nlink == 0)) {
+		// inode->i_state: (kmem_cache#4-oX (struct inode))->i_state: 0
 		WARN_ON(!(inode->i_state & I_LINKABLE));
+
+		// &inode->i_sb->s_remove_count: &(kmem_cache#4-oX (struct inode))->i_sb->s_remove_count
 		atomic_long_dec(&inode->i_sb->s_remove_count);
+
+		// atomic_long_dec 에서 한일:
+		// (&(kmem_cache#4-oX (struct inode))->i_sb->s_remove_count)->counter: -1
 	}
 
+	// inode->__i_nlink: (kmem_cache#4-oX (struct inode))->__i_nlink: 1
 	inode->__i_nlink++;
+	// inode->__i_nlink: (kmem_cache#4-oX (struct inode))->__i_nlink: 2
 }
 EXPORT_SYMBOL(inc_nlink);
 
@@ -2473,6 +2479,7 @@ void __init inode_init(void)
 void init_special_inode(struct inode *inode, umode_t mode, dev_t rdev)
 {
 	inode->i_mode = mode;
+
 	if (S_ISCHR(mode)) {
 		inode->i_fop = &def_chr_fops;
 		inode->i_rdev = rdev;

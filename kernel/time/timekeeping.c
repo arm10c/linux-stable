@@ -34,6 +34,7 @@
 // ARM10C 20150103
 // ARM10C 20150418
 // ARM10C 20151205
+// ARM10C 20160319
 static struct timekeeper timekeeper;
 // ARM10C 20150103
 static DEFINE_RAW_SPINLOCK(timekeeper_lock);
@@ -1821,6 +1822,7 @@ void monotonic_to_bootbased(struct timespec *ts)
 }
 EXPORT_SYMBOL_GPL(monotonic_to_bootbased);
 
+// ARM10C 20160319
 unsigned long get_seconds(void)
 {
 	struct timekeeper *tk = &timekeeper;
