@@ -33,6 +33,7 @@
 # define trace_hardirqs_on()		do { } while (0)    // ARM10C this 
 // ARM10C 20140412
 // ARM10C 20150523
+// ARM10C 20160514
 # define trace_hardirqs_off()		do { } while (0)    // ARM10C this 
 # define trace_softirqs_on(ip)		do { } while (0)
 # define trace_softirqs_off(ip)		do { } while (0)
@@ -60,6 +61,7 @@
 /*
  * Wrap the arch provided IRQ routines to provide appropriate checks.
  */
+ // ARM10C 20160514
 #define raw_local_irq_disable()		arch_local_irq_disable()
 // ARM10C 20150620
 #define raw_local_irq_enable()		arch_local_irq_enable()
@@ -106,6 +108,7 @@
  // ARM10C 20150620
 #define local_irq_enable() \
 	do { trace_hardirqs_on(); raw_local_irq_enable(); } while (0)
+ // ARM10C 20160514
 #define local_irq_disable() \
 	do { raw_local_irq_disable(); trace_hardirqs_off(); } while (0)
 // ARM10C 20140315

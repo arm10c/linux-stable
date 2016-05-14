@@ -164,9 +164,12 @@ unsigned long __lockfunc _raw_spin_lock_irqsave(raw_spinlock_t *lock)
 EXPORT_SYMBOL(_raw_spin_lock_irqsave);
 #endif
 
-#ifndef CONFIG_INLINE_SPIN_LOCK_IRQ
+#ifndef CONFIG_INLINE_SPIN_LOCK_IRQ // CONFIG_INLINE_SPIN_LOCK_IRQ=n
+// ARM10C 20160514
+// &lock->rlock: &(&proc_inum_lock)->rlock
 void __lockfunc _raw_spin_lock_irq(raw_spinlock_t *lock)
 {
+	// lock: &(&proc_inum_lock)->rlock
 	__raw_spin_lock_irq(lock);
 }
 EXPORT_SYMBOL(_raw_spin_lock_irq);
@@ -198,9 +201,12 @@ void __lockfunc _raw_spin_unlock_irqrestore(raw_spinlock_t *lock, unsigned long 
 EXPORT_SYMBOL(_raw_spin_unlock_irqrestore);
 #endif
 
-#ifndef CONFIG_INLINE_SPIN_UNLOCK_IRQ
+#ifndef CONFIG_INLINE_SPIN_UNLOCK_IRQ // CONFIG_INLINE_SPIN_UNLOCK_IRQ=n
+// ARM10C 20160514
+// &lock->rlock: &(&proc_inum_lock)->rlock
 void __lockfunc _raw_spin_unlock_irq(raw_spinlock_t *lock)
 {
+	// lock: &(&proc_inum_lock)->rlock
 	__raw_spin_unlock_irq(lock);
 }
 EXPORT_SYMBOL(_raw_spin_unlock_irq);

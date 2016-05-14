@@ -3,6 +3,8 @@
 #include <linux/poll.h>
 
 // ARM10C 20160326
+// ARM10C 20160514
+// sizeof(struct mnt_namespace): 60 bytes
 struct mnt_namespace {
 	atomic_t		count;
 	unsigned int		proc_inum;

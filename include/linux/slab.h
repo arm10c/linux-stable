@@ -699,6 +699,8 @@ static __always_inline void *kmalloc_large(size_t size, gfp_t flags)
 // sizeof(struct ida_bitmap): 172 bytes, gfp_mask: 0x20
 // ARM10C 20160402
 // sizeof(char *[5]): 20 bytes, GFP_KERNEL: 0xD0
+// ARM10C 20160514
+// sizeof(struct mnt_namespace): 60 bytes, GFP_KERNEL: 0xD0
 static __always_inline void *kmalloc(size_t size, gfp_t flags)
 {
 	// size: 512

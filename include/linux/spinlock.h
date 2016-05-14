@@ -165,6 +165,7 @@ do {								\
 
 #ifdef CONFIG_DEBUG_SPINLOCK // CONFIG_DEBUG_SPINLOCK=y
 // ARM10C 20140405
+// ARM10C 20160514
  extern void do_raw_spin_lock(raw_spinlock_t *lock) __acquires(lock);
 #define do_raw_spin_lock_flags(lock, flags) do_raw_spin_lock(lock)
  extern int do_raw_spin_trylock(raw_spinlock_t *lock);	// ARM10C this 
@@ -277,12 +278,16 @@ static inline void do_raw_spin_unlock(raw_spinlock_t *lock) __releases(lock)
 
 #endif
 
+// ARM10C 20160514
+// &lock->rlock: &(&proc_inum_lock)->rlock
 #define raw_spin_lock_irq(lock)		_raw_spin_lock_irq(lock)
 #define raw_spin_lock_bh(lock)		_raw_spin_lock_bh(lock)
 // ARM10C 20140412
 // ARM10C 20150725
 // &logbuf_lock
 #define raw_spin_unlock(lock)		_raw_spin_unlock(lock)
+// ARM10C 20160514
+// &lock->rlock: &(&proc_inum_lock)->rlock
 #define raw_spin_unlock_irq(lock)	_raw_spin_unlock_irq(lock)
 
 // ARM10C 20150103
@@ -439,8 +444,11 @@ do {									\
 	raw_spin_lock_nest_lock(spinlock_check(lock), nest_lock);	\
 } while (0)
 
+// ARM10C 20160514
+// &proc_inum_lock
 static inline void spin_lock_irq(spinlock_t *lock)
 {
+	// &lock->rlock: &(&proc_inum_lock)->rlock
 	raw_spin_lock_irq(&lock->rlock);
 }
 
@@ -503,8 +511,11 @@ static inline void spin_unlock_bh(spinlock_t *lock)
 	raw_spin_unlock_bh(&lock->rlock);
 }
 
+// ARM10C 20160514
+// &proc_inum_lock
 static inline void spin_unlock_irq(spinlock_t *lock)
 {
+	// &lock->rlock: &(&proc_inum_lock)->rlock
 	raw_spin_unlock_irq(&lock->rlock);
 }
 

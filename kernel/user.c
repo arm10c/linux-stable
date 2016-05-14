@@ -23,6 +23,7 @@
  * and 1 for... ?
  */
 // ARM10C 20151128
+// ARM10C 20160514
 struct user_namespace init_user_ns = {
 	.uid_map = {
 		.nr_extents = 1,

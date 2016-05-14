@@ -51,6 +51,7 @@ static inline void arch_local_irq_enable(void)
 }
 
 // ARM10C 20130824
+// ARM10C 20160514
 // 인터럽트를 disable한다.
 static inline void arch_local_irq_disable(void)
 {

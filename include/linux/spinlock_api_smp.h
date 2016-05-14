@@ -105,7 +105,7 @@ static inline int __raw_spin_trylock(raw_spinlock_t *lock)
  * even on CONFIG_PREEMPT, because lockdep assumes that interrupts are
  * not re-enabled during lock-acquire (which the preempt-spin-ops do):
  */
-#if !defined(CONFIG_GENERIC_LOCKBREAK) || defined(CONFIG_DEBUG_LOCK_ALLOC)
+#if !defined(CONFIG_GENERIC_LOCKBREAK) || defined(CONFIG_DEBUG_LOCK_ALLOC) // CONFIG_GENERIC_LOCKBREAK=n
 
 static inline unsigned long __raw_spin_lock_irqsave(raw_spinlock_t *lock)
 {
@@ -127,12 +127,25 @@ static inline unsigned long __raw_spin_lock_irqsave(raw_spinlock_t *lock)
 	return flags;
 }
 
+// ARM10C 20160514
+// lock: &(&proc_inum_lock)->rlock
 static inline void __raw_spin_lock_irq(raw_spinlock_t *lock)
 {
 	local_irq_disable();
+
+	// local_irq_disable에서 한일:
+	// cpsr 의 i 값을 변경하여 interrupt disable 수행
+
 	preempt_disable();
-	spin_acquire(&lock->dep_map, 0, 0, _RET_IP_);
+
+	// preempt_disable 에서 한일:
+	// preempt count값을 증가시키고 memory barrier 수행
+
+	spin_acquire(&lock->dep_map, 0, 0, _RET_IP_); // null function
+
+	// lock: &(&proc_inum_lock)->rlock
 	LOCK_CONTENDED(lock, do_raw_spin_trylock, do_raw_spin_lock);
+	// do_raw_spin_lock(&(&proc_inum_lock)->rlock)
 }
 
 static inline void __raw_spin_lock_bh(raw_spinlock_t *lock)
@@ -175,6 +188,8 @@ static inline void __raw_spin_unlock_irqrestore(raw_spinlock_t *lock,
 	preempt_enable();
 }
 
+// ARM10C 20160514
+// lock: &(&proc_inum_lock)->rlock
 static inline void __raw_spin_unlock_irq(raw_spinlock_t *lock)
 {
 	spin_release(&lock->dep_map, 1, _RET_IP_);

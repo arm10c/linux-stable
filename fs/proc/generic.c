@@ -119,40 +119,129 @@ static int xlate_proc_name(const char *name, struct proc_dir_entry **ret,
 	return rv;
 }
 
+// ARM10C 20160514
+// DEFINE_IDA(proc_inum_ida):
+// struct ida proc_inum_ida =
+// {
+//     .idr =
+//     {
+//         .lock =
+//         (spinlock_t )
+//         { { .rlock =
+//              {
+//                .raw_lock = { { 0 } },
+//                .magic = 0xdead4ead,
+//                .owner_cpu = -1,
+//                .owner = 0xffffffff,
+//              }
+//          } },
+//      }
+//      .free_bitmap = NULL,
+// }
 static DEFINE_IDA(proc_inum_ida);
+// ARM10C 20160514
+// DEFINE_SPINLOCK(proc_inum_lock):
+// spinlock_t proc_inum_lock =
+// (spinlock_t )
+// { { .rlock =
+//     {
+//       .raw_lock = { { 0 } },
+//       .magic = 0xdead4ead,
+//       .owner_cpu = -1,
+//       .owner = 0xffffffff,
+//     }
+// } }
 static DEFINE_SPINLOCK(proc_inum_lock); /* protects the above */
 
+// ARM10C 20160514
+// PROC_DYNAMIC_FIRST: 0xF0000000U
 #define PROC_DYNAMIC_FIRST 0xF0000000U
 
 /*
  * Return an inode number between PROC_DYNAMIC_FIRST and
  * 0xffffffff, or zero on failure.
  */
+// ARM10C 20160514
+// &new_ns->proc_inum: &(kmem_cache#30-oX (struct mnt_namespace))->proc_inum
 int proc_alloc_inum(unsigned int *inum)
 {
 	unsigned int i;
 	int error;
 
 retry:
+	// GFP_KERNEL: 0xD0, ida_pre_get(&proc_inum_ida, 0xD0): 1
 	if (!ida_pre_get(&proc_inum_ida, GFP_KERNEL))
 		return -ENOMEM;
 
+	// ida_pre_get 에서 한일:
+	// idr_layer_cache를 사용하여 struct idr_layer 의 메모리 kmem_cache#21-o0...7를 8 개를 할당 받음
+	//
+	// (&(&proc_inum_ida)->idr)->id_free 이 idr object 8 번을 가르킴
+	// |
+	// |-> ---------------------------------------------------------------------------------------------------------------------------
+	//     | idr object 8         | idr object 7         | idr object 6         | idr object 5         | .... | idr object 0         |
+	//     ---------------------------------------------------------------------------------------------------------------------------
+	//     | ary[0]: idr object 7 | ary[0]: idr object 6 | ary[0]: idr object 5 | ary[0]: idr object 4 | .... | ary[0]: NULL         |
+	//     ---------------------------------------------------------------------------------------------------------------------------
+	//
+	// (&(&proc_inum_ida)->idr)->id_free: kmem_cache#21-oX (idr object 8)
+	// (&(&proc_inum_ida)->idr)->id_free_cnt: 8
+
 	spin_lock_irq(&proc_inum_lock);
+
+	// spin_lock_irq 에서 한일:
+	// &proc_inum_lock 을 사용하여 spin lock을 수행
+
+	// ida_get_newa(&proc_inum_ida, &i): 0
 	error = ida_get_new(&proc_inum_ida, &i);
+	// error: 0
+
+	// ida_get_new 에서 한일:
+	// (&(&proc_inum_ida)->idr)->id_free: kmem_cache#21-oX (idr object 6)
+	// (&(&proc_inum_ida)->idr)->id_free_cnt: 6
+	// (&(&proc_inum_ida)->idr)->layers: 1
+	// ((&(&proc_inum_ida)->idr)->top): kmem_cache#21-oX (idr object 8)
+	//
+	// (kmem_cache#21-oX (idr object 8))->layer: 0
+	// kmem_cache#21-oX (struct idr_layer) (idr object 8)
+	// ((kmem_cache#21-oX (struct idr_layer) (idr object 8))->ary[0]): (typeof(*kmem_cache#27-oX (struct ida_bitmap)) __force space *)(kmem_cache#27-oX (struct ida_bitmap))
+	// (kmem_cache#21-oX (struct idr_layer) (idr object 8))->count: 1
+	//
+	// (&proc_inum_ida)->free_bitmap: NULL
+	// kmem_cache#27-oX (struct ida_bitmap) 메모리을 0으로 초기화
+	// (kmem_cache#27-oX (struct ida_bitmap))->nr_busy: 1
+	// (kmem_cache#27-oX (struct ida_bitmap))->bitmap 의 0 bit를 1로 set 수행
+	//
+	// i: 0
+	//
+	// kmem_cache인 kmem_cache#21 에서 할당한 object인 kmem_cache#21-oX (idr object 7) 의 memory 공간을 반환함
+
 	spin_unlock_irq(&proc_inum_lock);
+
+	// spin_unlock_irq 에서 한일:
+	// &proc_inum_lock 을 사용하여 spin lock을 수행
+
+	// error: 0
 	if (error == -EAGAIN)
 		goto retry;
 	else if (error)
 		return error;
 
+	// i: 0, UINT_MAX: 0xFFFFFFFF, PROC_DYNAMIC_FIRST: 0xF0000000
 	if (i > UINT_MAX - PROC_DYNAMIC_FIRST) {
 		spin_lock_irq(&proc_inum_lock);
 		ida_remove(&proc_inum_ida, i);
 		spin_unlock_irq(&proc_inum_lock);
 		return -ENOSPC;
 	}
+
+	// *inum: (kmem_cache#30-oX (struct mnt_namespace))->proc_inum,
+	// PROC_DYNAMIC_FIRST: 0xF0000000, i: 0
 	*inum = PROC_DYNAMIC_FIRST + i;
+	// *inum: (kmem_cache#30-oX (struct mnt_namespace))->proc_inum: 0xF0000000
+
 	return 0;
+	// return 0
 }
 
 void proc_free_inum(unsigned int inum)

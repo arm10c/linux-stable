@@ -169,6 +169,8 @@ static void __spin_lock_debug(raw_spinlock_t *lock)
 // ARM10C 20140405
 // ARM10C 20140517
 // &lock->rlock: &(&contig_page_data->node_zones[0].lock)->rlock
+// ARM10C 20160514
+// &(&proc_inum_lock)->rlock
 void do_raw_spin_lock(raw_spinlock_t *lock)
 {
 	debug_spin_lock_before(lock);

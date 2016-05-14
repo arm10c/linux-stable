@@ -1875,6 +1875,8 @@ static void free_bitmap(struct ida *ida, struct ida_bitmap *bitmap)
 // &mnt_id_ida, GFP_KERNEL: 0xD0
 // ARM10C 20160416
 // &unnamed_dev_ida, GFP_ATOMIC: 0x20
+// ARM10C 20160514
+// &proc_inum_ida, GFP_KERNEL: 0xD0
 int ida_pre_get(struct ida *ida, gfp_t gfp_mask)
 {
 	/* allocate idr_layers */
@@ -1892,6 +1894,8 @@ int ida_pre_get(struct ida *ida, gfp_t gfp_mask)
 	// __idr_pre_get(&(&mnt_id_ida)->idr, 0xD0): 1
 	// &ida->idr: &(&unnamed_dev_ida)->idr, gfp_mask: 0x20
 	// __idr_pre_get(&(&unnamed_dev_ida)->idr, 0x20): 1
+	// &ida->idr: &(&proc_inum_ida)->idr, gfp_mask: 0xD0
+	// __idr_pre_get(&(&proc_inum_ida)->idr, 0xD0): 1
 	if (!__idr_pre_get(&ida->idr, gfp_mask))
 		return 0;
 
@@ -1993,6 +1997,20 @@ int ida_pre_get(struct ida *ida, gfp_t gfp_mask)
 	// (&(&unnamed_dev_ida)->idr)->id_free: kmem_cache#21-oX (idr object new 2)
 	// (&(&unnamed_dev_ida)->idr)->id_free_cnt: 8
 
+	// __idr_pre_get에서 한일:
+	// idr_layer_cache를 사용하여 struct idr_layer 의 메모리 kmem_cache#21-o0...7를 8 개를 할당 받음
+	//
+	// (&(&proc_inum_ida)->idr)->id_free 이 idr object 8 번을 가르킴
+	// |
+	// |-> ---------------------------------------------------------------------------------------------------------------------------
+	//     | idr object 8         | idr object 7         | idr object 6         | idr object 5         | .... | idr object 0         |
+	//     ---------------------------------------------------------------------------------------------------------------------------
+	//     | ary[0]: idr object 7 | ary[0]: idr object 6 | ary[0]: idr object 5 | ary[0]: idr object 4 | .... | ary[0]: NULL         |
+	//     ---------------------------------------------------------------------------------------------------------------------------
+	//
+	// (&(&proc_inum_ida)->idr)->id_free: kmem_cache#21-oX (idr object 8)
+	// (&(&proc_inum_ida)->idr)->id_free_cnt: 8
+
 	/* allocate free_bitmap */
 	// ida->free_bitmap: (&mnt_id_ida)->free_bitmap: NULL
 	// ida->free_bitmap: (&unnamed_dev_ida)->free_bitmap: NULL
@@ -2001,6 +2019,7 @@ int ida_pre_get(struct ida *ida, gfp_t gfp_mask)
 	// ida->free_bitmap: (&unnamed_dev_ida)->free_bitmap: NULL
 	// ida->free_bitmap: (&mnt_id_ida)->free_bitmap: kmem_cache#27-oX (struct ida_bitmap)
 	// ida->free_bitmap: (&unnamed_dev_ida)->free_bitmap: kmem_cache#27-oX (struct ida_bitmap)
+	// ida->free_bitmap: (&proc_inum_ida)->free_bitmap: NULL
 	if (!ida->free_bitmap) {
 		struct ida_bitmap *bitmap;
 
@@ -2060,6 +2079,7 @@ int ida_pre_get(struct ida *ida, gfp_t gfp_mask)
 	// return 1
 	// return 1
 	// return 1
+	// return 1
 }
 EXPORT_SYMBOL(ida_pre_get);
 
@@ -2094,6 +2114,8 @@ EXPORT_SYMBOL(ida_pre_get);
 // &mnt_id_ida, mnt_id_start: 2, &mnt->mnt_id: &(kmem_cache#2-oX)->mnt_id
 // ARM10C 20160416
 // &unnamed_dev_ida, 2, &dev
+// ARM10C 20160514
+// ida: &proc_inum_ida, 0, p_id: &i
 int ida_get_new_above(struct ida *ida, int starting_id, int *p_id)
 {
 	// MAX_IDR_LEVEL: 4

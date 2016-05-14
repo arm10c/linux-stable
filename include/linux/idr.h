@@ -390,6 +390,25 @@ struct ida {
 //      }
 //      .free_bitmap = NULL,
 // }
+//
+// #define DEFINE_IDA(proc_inum_ida):
+// struct ida proc_inum_ida =
+// {
+//     .idr =
+//     {
+//         .lock =
+//         (spinlock_t )
+//         { { .rlock =
+//              {
+//                .raw_lock = { { 0 } },
+//                .magic = 0xdead4ead,
+//                .owner_cpu = -1,
+//                .owner = 0xffffffff,
+//              }
+//          } },
+//      }
+//      .free_bitmap = NULL,
+// }
 #define DEFINE_IDA(name)	struct ida name = IDA_INIT(name)
 
 int ida_pre_get(struct ida *ida, gfp_t gfp_mask);
@@ -409,9 +428,32 @@ void ida_simple_remove(struct ida *ida, unsigned int id);
  *
  * Simple wrapper around ida_get_new_above() w/ @starting_id of zero.
  */
+// ARM10C 20160514
+// &proc_inum_ida, &i
 static inline int ida_get_new(struct ida *ida, int *p_id)
 {
+	// ida: &proc_inum_ida, p_id: &i
 	return ida_get_new_above(ida, 0, p_id);
+
+	// ida_get_new_above에서 한일:
+	// (&(&proc_inum_ida)->idr)->id_free: kmem_cache#21-oX (idr object 6)
+	// (&(&proc_inum_ida)->idr)->id_free_cnt: 6
+	// (&(&proc_inum_ida)->idr)->layers: 1
+	// ((&(&proc_inum_ida)->idr)->top): kmem_cache#21-oX (idr object 8)
+	//
+	// (kmem_cache#21-oX (idr object 8))->layer: 0
+	// kmem_cache#21-oX (struct idr_layer) (idr object 8)
+	// ((kmem_cache#21-oX (struct idr_layer) (idr object 8))->ary[0]): (typeof(*kmem_cache#27-oX (struct ida_bitmap)) __force space *)(kmem_cache#27-oX (struct ida_bitmap))
+	// (kmem_cache#21-oX (struct idr_layer) (idr object 8))->count: 1
+	//
+	// (&proc_inum_ida)->free_bitmap: NULL
+	// kmem_cache#27-oX (struct ida_bitmap) 메모리을 0으로 초기화
+	// (kmem_cache#27-oX (struct ida_bitmap))->nr_busy: 1
+	// (kmem_cache#27-oX (struct ida_bitmap))->bitmap 의 0 bit를 1로 set 수행
+	//
+	// *p_id: 0
+	//
+	// kmem_cache인 kmem_cache#21 에서 할당한 object인 kmem_cache#21-oX (idr object 7) 의 memory 공간을 반환함
 }
 
 void __init idr_init_cache(void);

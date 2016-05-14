@@ -17,6 +17,7 @@ struct uid_gid_map {	/* 64 bytes -- 1 cache line */
 	} extent[UID_GID_MAP_MAX_EXTENTS];
 };
 
+// ARM10C 20160514
 struct user_namespace {
 	struct uid_gid_map	uid_map;
 	struct uid_gid_map	gid_map;
@@ -29,7 +30,7 @@ struct user_namespace {
 	unsigned int		proc_inum;
 
 	/* Register of per-UID persistent keyrings for this namespace */
-#ifdef CONFIG_PERSISTENT_KEYRINGS
+#ifdef CONFIG_PERSISTENT_KEYRINGS // CONFIG_PERSISTENT_KEYRINGS=n
 	struct key		*persistent_keyring_register;
 	struct rw_semaphore	persistent_keyring_register_sem;
 #endif
@@ -37,7 +38,7 @@ struct user_namespace {
 
 extern struct user_namespace init_user_ns;
 
-#ifdef CONFIG_USER_NS
+#ifdef CONFIG_USER_NS // CONFIG_USER_NS=n
 
 static inline struct user_namespace *get_user_ns(struct user_namespace *ns)
 {
@@ -65,6 +66,8 @@ extern ssize_t proc_gid_map_write(struct file *, const char __user *, size_t, lo
 extern ssize_t proc_projid_map_write(struct file *, const char __user *, size_t, loff_t *);
 #else
 
+// ARM10C 20160514
+// user_ns: &init_user_ns
 static inline struct user_namespace *get_user_ns(struct user_namespace *ns)
 {
 	return &init_user_ns;

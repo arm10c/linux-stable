@@ -26,6 +26,8 @@
 // &s->s_writers.wait: &(kmem_cache#25-oX (struct super_block))->s_writers.wait, "&s->s_writers.wait", &__key
 // ARM10C 20151114
 // &s->s_writers.wait_unfrozen: &(kmem_cache#25-oX (struct super_block))->s_writers.wait_unfrozen, "&s->s_writers.wait_unfrozen", &__key
+// ARM10C 20160514
+// &new_ns->poll: &(kmem_cache#30-oX (struct mnt_namespace))->poll, "&new_ns->poll", &__key
 void __init_waitqueue_head(wait_queue_head_t *q, const char *name, struct lock_class_key *key)
 {
 	// &q->lock: &(&(&rcu_bh_state)->gp_wq)->lock

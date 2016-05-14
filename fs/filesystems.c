@@ -62,8 +62,11 @@ void get_filesystem(struct file_system_type *fs)
 	__module_get(fs->owner);
 }
 
+// ARM10C 20160514
+// type: &rootfs_fs_type
 void put_filesystem(struct file_system_type *fs)
 {
+	// fs->owner: (&rootfs_fs_type)->owner: NULL
 	module_put(fs->owner);
 }
 

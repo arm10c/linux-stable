@@ -479,6 +479,7 @@ extern void __module_get(struct module *module);
 // ARM10C 20160402
 extern bool try_module_get(struct module *module);
 
+// ARM10C 20160514
 extern void module_put(struct module *module);
 
 #else /*!CONFIG_MODULE_UNLOAD*/

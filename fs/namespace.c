@@ -4288,29 +4288,114 @@ static void free_mnt_ns(struct mnt_namespace *ns)
  * number incrementing at 10Ghz will take 12,427 years to wrap which
  * is effectively never, so we can ignore the possibility.
  */
+// ARM10C 20160514
+// ATOMIC64_INIT(1): { (1) }
+// mnt_ns_seq.counter: 1
 static atomic64_t mnt_ns_seq = ATOMIC64_INIT(1);
 
+// ARM10C 20160514
+// &init_user_ns
 static struct mnt_namespace *alloc_mnt_ns(struct user_namespace *user_ns)
 {
 	struct mnt_namespace *new_ns;
 	int ret;
 
+	// sizeof(struct mnt_namespace): 60 bytes, GFP_KERNEL: 0xD0
+	// kmalloc(60,  GFP_KERNEL: 0xD0): kmem_cache#30-oX
 	new_ns = kmalloc(sizeof(struct mnt_namespace), GFP_KERNEL);
+	// new_ns: kmem_cache#30-oX (struct mnt_namespace)
+
+	// new_ns: kmem_cache#30-oX (struct mnt_namespace)
 	if (!new_ns)
 		return ERR_PTR(-ENOMEM);
+
+	// &new_ns->proc_inum: &(kmem_cache#30-oX (struct mnt_namespace))->proc_inum
+	// proc_alloc_inum(&(kmem_cache#30-oX (struct mnt_namespace))->proc_inum): 0
 	ret = proc_alloc_inum(&new_ns->proc_inum);
+	// ret: 0
+
+	// proc_alloc_inum에서 한일:
+	// idr_layer_cache를 사용하여 struct idr_layer 의 메모리 kmem_cache#21-o0...7를 8 개를 할당 받음
+	//
+	// (&(&proc_inum_ida)->idr)->id_free 이 idr object 8 번을 가르킴
+	// |
+	// |-> ---------------------------------------------------------------------------------------------------------------------------
+	//     | idr object 8         | idr object 7         | idr object 6         | idr object 5         | .... | idr object 0         |
+	//     ---------------------------------------------------------------------------------------------------------------------------
+	//     | ary[0]: idr object 7 | ary[0]: idr object 6 | ary[0]: idr object 5 | ary[0]: idr object 4 | .... | ary[0]: NULL         |
+	//     ---------------------------------------------------------------------------------------------------------------------------
+	//
+	// (&(&proc_inum_ida)->idr)->id_free: kmem_cache#21-oX (idr object 8)
+	// (&(&proc_inum_ida)->idr)->id_free_cnt: 8
+	//
+	// (&(&proc_inum_ida)->idr)->id_free: kmem_cache#21-oX (idr object 6)
+	// (&(&proc_inum_ida)->idr)->id_free_cnt: 6
+	// (&(&proc_inum_ida)->idr)->layers: 1
+	// ((&(&proc_inum_ida)->idr)->top): kmem_cache#21-oX (idr object 8)
+	//
+	// (kmem_cache#21-oX (idr object 8))->layer: 0
+	// kmem_cache#21-oX (struct idr_layer) (idr object 8)
+	// ((kmem_cache#21-oX (struct idr_layer) (idr object 8))->ary[0]): (typeof(*kmem_cache#27-oX (struct ida_bitmap)) __force space *)(kmem_cache#27-oX (struct ida_bitmap))
+	// (kmem_cache#21-oX (struct idr_layer) (idr object 8))->count: 1
+	//
+	// (&proc_inum_ida)->free_bitmap: NULL
+	// kmem_cache#27-oX (struct ida_bitmap) 메모리을 0으로 초기화
+	// (kmem_cache#27-oX (struct ida_bitmap))->nr_busy: 1
+	// (kmem_cache#27-oX (struct ida_bitmap))->bitmap 의 0 bit를 1로 set 수행
+	//
+	// kmem_cache인 kmem_cache#21 에서 할당한 object인 kmem_cache#21-oX (idr object 7) 의 memory 공간을 반환함
+	//
+	// (kmem_cache#30-oX (struct mnt_namespace))->proc_inum: 0xF0000000
+
+	// ret: 0
 	if (ret) {
 		kfree(new_ns);
 		return ERR_PTR(ret);
 	}
+	// new_ns->seq: (kmem_cache#30-oX (struct mnt_namespace))->seq,
+	// atomic64_add_return(1, &mnt_ns_seq): 2
 	new_ns->seq = atomic64_add_return(1, &mnt_ns_seq);
+	// new_ns->seq: (kmem_cache#30-oX (struct mnt_namespace))->seq: 2
+
+	// atomic64_add_return 에서 한일:
+	// mnt_ns_seq.counter: 2
+
+	// &new_ns->count: (kmem_cache#30-oX (struct mnt_namespace))->count
 	atomic_set(&new_ns->count, 1);
+
+	// atomic_set 에서 한일:
+	// (kmem_cache#30-oX (struct mnt_namespace))->count: 1
+
+	// &new_ns->root: (kmem_cache#30-oX (struct mnt_namespace))->root
 	new_ns->root = NULL;
+	// &new_ns->root: (kmem_cache#30-oX (struct mnt_namespace))->root: NULL
+
+	// &new_ns->list: &(kmem_cache#30-oX (struct mnt_namespace))->list
 	INIT_LIST_HEAD(&new_ns->list);
+
+	// INIT_LIST_HEAD 에서 한일:
+	// (&(kmem_cache#30-oX (struct mnt_namespace))->list)->next: &(kmem_cache#30-oX (struct mnt_namespace))->list
+	// (&(kmem_cache#30-oX (struct mnt_namespace))->list)->prev: &(kmem_cache#30-oX (struct mnt_namespace))->list
+
+	// &new_ns->poll: &(kmem_cache#30-oX (struct mnt_namespace))->poll
 	init_waitqueue_head(&new_ns->poll);
+
+	// init_waitqueue_head에서 한일:
+	// &(&(&(kmem_cache#30-oX (struct mnt_namespace))->poll)->open_wait)->lock을 사용한 spinlock 초기화
+	// &(&(&(kmem_cache#30-oX (struct mnt_namespace))->poll)->open_wait)->task_list를 사용한 list 초기화
+
+	// new_ns->event: (kmem_cache#30-oX (struct mnt_namespace))->event
 	new_ns->event = 0;
+	// new_ns->event: (kmem_cache#30-oX (struct mnt_namespace))->event: 0
+
+	// new_ns->user_ns: (kmem_cache#30-oX (struct mnt_namespace))->user_ns,
+	// user_ns: &init_user_ns, get_user_ns(&init_user_ns): &init_user_ns
 	new_ns->user_ns = get_user_ns(user_ns);
+	// new_ns->user_ns: (kmem_cache#30-oX (struct mnt_namespace))->user_ns: &init_user_ns
+
+	// new_ns: kmem_cache#30-oX (struct mnt_namespace)
 	return new_ns;
+	// return kmem_cache#30-oX (struct mnt_namespace)
 }
 
 struct mnt_namespace *copy_mnt_ns(unsigned long flags, struct mnt_namespace *ns,
@@ -4390,9 +4475,63 @@ struct mnt_namespace *copy_mnt_ns(unsigned long flags, struct mnt_namespace *ns,
  * create_mnt_ns - creates a private namespace and adds a root filesystem
  * @mnt: pointer to the new root filesystem mountpoint
  */
+// ARM10C 20160514
+// mnt: &(kmem_cache#2-oX (struct mount))->mnt
 static struct mnt_namespace *create_mnt_ns(struct vfsmount *m)
 {
+	// alloc_mnt_ns(&init_user_ns): kmem_cache#30-oX (struct mnt_namespace)
 	struct mnt_namespace *new_ns = alloc_mnt_ns(&init_user_ns);
+	// new_ns: kmem_cache#30-oX (struct mnt_namespace)
+
+	// alloc_mnt_ns에서 한일:
+	// struct mnt_namespace 만큼의 메모리를 할당 받음 kmem_cache#30-oX (struct mnt_namespace)
+	//
+	// idr_layer_cache를 사용하여 struct idr_layer 의 메모리 kmem_cache#21-o0...7를 8 개를 할당 받음
+	//
+	// (&(&proc_inum_ida)->idr)->id_free 이 idr object 8 번을 가르킴
+	// |
+	// |-> ---------------------------------------------------------------------------------------------------------------------------
+	//     | idr object 8         | idr object 7         | idr object 6         | idr object 5         | .... | idr object 0         |
+	//     ---------------------------------------------------------------------------------------------------------------------------
+	//     | ary[0]: idr object 7 | ary[0]: idr object 6 | ary[0]: idr object 5 | ary[0]: idr object 4 | .... | ary[0]: NULL         |
+	//     ---------------------------------------------------------------------------------------------------------------------------
+	//
+	// (&(&proc_inum_ida)->idr)->id_free: kmem_cache#21-oX (idr object 8)
+	// (&(&proc_inum_ida)->idr)->id_free_cnt: 8
+	//
+	// (&(&proc_inum_ida)->idr)->id_free: kmem_cache#21-oX (idr object 6)
+	// (&(&proc_inum_ida)->idr)->id_free_cnt: 6
+	// (&(&proc_inum_ida)->idr)->layers: 1
+	// ((&(&proc_inum_ida)->idr)->top): kmem_cache#21-oX (idr object 8)
+	//
+	// (kmem_cache#21-oX (idr object 8))->layer: 0
+	// kmem_cache#21-oX (struct idr_layer) (idr object 8)
+	// ((kmem_cache#21-oX (struct idr_layer) (idr object 8))->ary[0]): (typeof(*kmem_cache#27-oX (struct ida_bitmap)) __force space *)(kmem_cache#27-oX (struct ida_bitmap))
+	// (kmem_cache#21-oX (struct idr_layer) (idr object 8))->count: 1
+	//
+	// (&proc_inum_ida)->free_bitmap: NULL
+	// kmem_cache#27-oX (struct ida_bitmap) 메모리을 0으로 초기화
+	// (kmem_cache#27-oX (struct ida_bitmap))->nr_busy: 1
+	// (kmem_cache#27-oX (struct ida_bitmap))->bitmap 의 0 bit를 1로 set 수행
+	//
+	// kmem_cache인 kmem_cache#21 에서 할당한 object인 kmem_cache#21-oX (idr object 7) 의 memory 공간을 반환함
+	//
+	// mnt_ns_seq.counter: 2
+	//
+	// (kmem_cache#30-oX (struct mnt_namespace))->proc_inum: 0xF0000000
+	// (kmem_cache#30-oX (struct mnt_namespace))->seq: 2
+	// (kmem_cache#30-oX (struct mnt_namespace))->count: 1
+	// (kmem_cache#30-oX (struct mnt_namespace))->root: NULL
+	// (&(kmem_cache#30-oX (struct mnt_namespace))->list)->next: &(kmem_cache#30-oX (struct mnt_namespace))->list
+	// (&(kmem_cache#30-oX (struct mnt_namespace))->list)->prev: &(kmem_cache#30-oX (struct mnt_namespace))->list
+	// &(&(&(kmem_cache#30-oX (struct mnt_namespace))->poll)->open_wait)->lock을 사용한 spinlock 초기화
+	// &(&(&(kmem_cache#30-oX (struct mnt_namespace))->poll)->open_wait)->task_list를 사용한 list 초기화
+	// (kmem_cache#30-oX (struct mnt_namespace))->event: 0
+	// (kmem_cache#30-oX (struct mnt_namespace))->user_ns: &init_user_ns
+
+// 2016/05/14 종료
+
+	// new_ns: kmem_cache#30-oX (struct mnt_namespace), IS_ERR(kmem_cache#30-oX (struct mnt_namespace)): 0
 	if (!IS_ERR(new_ns)) {
 		struct mount *mnt = real_mount(m);
 		mnt->mnt_ns = new_ns;
@@ -5044,10 +5183,14 @@ static void __init init_mount_tree(void)
 	// list head인 &(kmem_cache#5-oX (struct dentry))->d_sb->s_mounts에
 	// &(kmem_cache#2-oX (struct mount))->mnt_instance를 tail로 연결
 
+	// type: &rootfs_fs_type
 	put_filesystem(type);
+
+	// mnt: &(kmem_cache#2-oX (struct mount))->mnt, IS_ERR(&(kmem_cache#2-oX (struct mount))->mnt): 0
 	if (IS_ERR(mnt))
 		panic("Can't create rootfs");
 
+	// mnt: &(kmem_cache#2-oX (struct mount))->mnt
 	ns = create_mnt_ns(mnt);
 	if (IS_ERR(ns))
 		panic("Can't allocate initial namespace");

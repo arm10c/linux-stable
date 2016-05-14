@@ -41,6 +41,7 @@ extern void preempt_count_sub(int val);
 // ARM10C 20140315
 // ARM10C 20140920
 // ARM10C 20160326
+// ARM10C 20160514
 #define preempt_count_inc() preempt_count_add(1)
 // ARM10C 20140125
 #define preempt_count_dec() preempt_count_sub(1)
@@ -58,6 +59,7 @@ extern void preempt_count_sub(int val);
 // ARM10C 20150411
 // ARM10C 20151031
 // ARM10C 20160326
+// ARM10C 20160514
 #define preempt_disable()/*ARM10C this*/	\
 do { \
 	preempt_count_inc(); \

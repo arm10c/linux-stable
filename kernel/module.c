@@ -1010,8 +1010,11 @@ bool try_module_get(struct module *module)
 }
 EXPORT_SYMBOL(try_module_get);
 
+// ARM10C 20160514
+// fs->owner: (&rootfs_fs_type)->owner: NULL
 void module_put(struct module *module)
 {
+	// module: NULL
 	if (module) {
 		preempt_disable();
 		smp_wmb(); /* see comment in module_refcount */

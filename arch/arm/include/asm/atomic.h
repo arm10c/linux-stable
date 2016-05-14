@@ -70,6 +70,8 @@
 // &sd->s_active,: &(kmem_cache#1-oX (struct sysfs_dirent))->s_active, 0
 // ARM10C 20160319
 // &s->s_active: &(kmem_cache#25-oX (struct super_block))->s_active
+// ARM10C 20160514
+// &new_ns->count: (kmem_cache#30-oX (struct mnt_namespace))->count
 #define atomic_set(v,i)	(((v)->counter) = (i))
 
 #if __LINUX_ARM_ARCH__ >= 6
@@ -309,10 +311,12 @@ static inline int __atomic_add_unless(atomic_t *v, int a, int u)
 
 #ifndef CONFIG_GENERIC_ATOMIC64 // CONFIG_GENERIC_ATOMIC64=n
 // ARM10C 20150919
+// ARM10C 20160514
 typedef struct {
 	long long counter;
 } atomic64_t;
 
+// ARM10C 20160514
 #define ATOMIC64_INIT(i) { (i) }
 
 #ifdef CONFIG_ARM_LPAE
@@ -385,6 +389,8 @@ static inline void atomic64_add(long long i, atomic64_t *v)
 	: "cc");
 }
 
+// ARM10C 20160514
+// 1, &mnt_ns_seq
 static inline long long atomic64_add_return(long long i, atomic64_t *v)
 {
 	long long result;

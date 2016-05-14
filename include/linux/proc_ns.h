@@ -39,7 +39,7 @@ enum {
 	PROC_PID_INIT_INO	= 0xEFFFFFFCU,
 };
 
-#ifdef CONFIG_PROC_FS
+#ifdef CONFIG_PROC_FS // CONFIG_PROC_FS=y
 
 extern int pid_ns_prepare_proc(struct pid_namespace *ns);
 extern void pid_ns_release_proc(struct pid_namespace *ns);

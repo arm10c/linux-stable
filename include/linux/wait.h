@@ -49,6 +49,7 @@ struct __wait_queue_head {
 // ARM10C 20150718
 // ARM10C 20150919
 // ARM10C 20151114
+// ARM10C 20160514
 // sizeof(wait_queue_head_t): 24 bytes
 typedef struct __wait_queue_head wait_queue_head_t;
 
@@ -174,6 +175,8 @@ extern void __init_waitqueue_head(wait_queue_head_t *q, const char *name, struct
 // &s->s_writers.wait: &(kmem_cache#25-oX (struct super_block))->s_writers.wait
 // ARM10C 20160319
 // &s->s_writers.wait_unfrozen: &(kmem_cache#25-oX (struct super_block))->s_writers.wait_unfrozen
+// ARM10C 20160514
+// &new_ns->poll: &(kmem_cache#30-oX (struct mnt_namespace))->poll
 #define init_waitqueue_head(q)				\
 	do {						\
 		static struct lock_class_key __key;	\
