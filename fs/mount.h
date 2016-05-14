@@ -112,6 +112,7 @@ extern seqlock_t mount_lock;
 
 // ARM10C 20160109
 // ARM10C 20160326
+// ARM10C 20160514
 static inline void lock_mount_hash(void)
 {
 	write_seqlock(&mount_lock);
@@ -125,6 +126,7 @@ static inline void lock_mount_hash(void)
 
 // ARM10C 20160109
 // ARM10C 20160326
+// ARM10C 20160514
 static inline void unlock_mount_hash(void)
 {
 	write_sequnlock(&mount_lock);
