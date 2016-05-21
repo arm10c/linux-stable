@@ -1328,6 +1328,8 @@ struct inode *new_inode_pseudo(struct super_block *sb)
  */
 // ARM10C 20160319
 // s: kmem_cache#25-oX (struct super_block)
+// ARM10C 20160521
+// s: kmem_cache#25-oX (struct super_block)
 struct inode *new_inode(struct super_block *sb)
 {
 	struct inode *inode;

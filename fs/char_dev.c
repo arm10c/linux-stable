@@ -31,6 +31,7 @@
  * - does not permit private mmap in NOMMU mode (can't do COW)
  * - no readahead or I/O queue unplugging required
  */
+// ARM10C 20160521
 struct backing_dev_info directly_mappable_cdev_bdi = {
 	.name = "char",
 	.capabilities	= (
@@ -45,8 +46,27 @@ struct backing_dev_info directly_mappable_cdev_bdi = {
 		BDI_CAP_NO_ACCT_AND_WRITEBACK),
 };
 
+// ARM10C 20160521
 static struct kobj_map *cdev_map;
 
+// ARM10C 20160521
+// DEFINE_MUTEX(chrdevs_lock):
+// struct mutex chrdevs_lock =
+// { .count = { (1) }
+//    , .wait_lock =
+//    (spinlock_t )
+//    { { .rlock =
+//	  {
+//	  .raw_lock = { { 0 } },
+//	  .magic = 0xdead4ead,
+//	  .owner_cpu = -1,
+//	  .owner = 0xffffffff,
+//	  }
+//    } }
+//    , .wait_list =
+//    { &(chrdevs_lock.wait_list), &(chrdevs_lock.wait_list) }
+//    , .magic = &chrdevs_lock
+// }
 static DEFINE_MUTEX(chrdevs_lock);
 
 static struct char_device_struct {
@@ -565,6 +585,7 @@ void cdev_init(struct cdev *cdev, const struct file_operations *fops)
 	cdev->ops = fops;
 }
 
+// ARM10C 20160521
 static struct kobject *base_probe(dev_t dev, int *part, void *data)
 {
 	if (request_module("char-major-%d-%d", MAJOR(dev), MINOR(dev)) > 0)
@@ -573,9 +594,26 @@ static struct kobject *base_probe(dev_t dev, int *part, void *data)
 	return NULL;
 }
 
+// ARM10C 20160521
 void __init chrdev_init(void)
 {
+	// kobj_map_init(base_probe, &chrdevs_lock): kmem_cache#26-oX (struct kobj_map)
 	cdev_map = kobj_map_init(base_probe, &chrdevs_lock);
+	// cdev_map: kmem_cache#26-oX (struct kobj_map)
+
+	// kobj_map_init 에서 한일:
+	// struct kobj_map 만큼의 메로리를 할당 받음 kmem_cache#26-oX (struct kobj_map)
+	// struct probe 만큼의 메로리를 할당 받음 kmem_cache#30-oX (struct probe)
+	//
+	// (kmem_cache#30-oX (struct probe))->dev: 1
+	// (kmem_cache#30-oX (struct probe))->range: 0xFFFFFFFF
+	// (kmem_cache#30-oX (struct probe))->get: base_probe
+	//
+	// (kmem_cache#26-oX (struct kobj_map))->probes[0...255]: kmem_cache#30-oX (struct probe)
+	// (kmem_cache#26-oX (struct kobj_map))->lock: &chrdevs_lock
+
+// 2016/05/21 종료
+
 	if (bdi_init(&directly_mappable_cdev_bdi))
 		panic("Failed to init directly mappable cdev bdi");
 }

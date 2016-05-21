@@ -46,6 +46,7 @@
 // ARM10C 20150919
 // ARM10C 20151003
 // ARM10C 20151024
+// ARM10C 20160521
 // SLAB_HWCACHE_ALIGN: 0x00002000UL
 #define SLAB_HWCACHE_ALIGN	0x00002000UL	/* Align objs on cache lines */
 // ARM10C 20140920
@@ -65,6 +66,7 @@
 // ARM10C 20151003
 // ARM10C 20151024
 // ARM10C 20160123
+// ARM10C 20160521
 // SLAB_PANIC: 0x00040000UL
 #define SLAB_PANIC		0x00040000UL	/* Panic if kmem_cache_create() fails */
 /*
@@ -110,6 +112,7 @@
 // SLAB_DESTROY_BY_RCU: 0x00080000UL
 #define SLAB_DESTROY_BY_RCU	0x00080000UL	/* Defer freeing slabs to RCU */
 // ARM10C 20151003
+// ARM10C 20160521
 // SLAB_MEM_SPREAD: 0x00100000UL
 #define SLAB_MEM_SPREAD		0x00100000UL	/* Spread some memory over cpuset */
 // ARM10C 20140419
@@ -154,6 +157,7 @@
 // ARM10C 20140920
 // ARM10C 20141004
 // ARM10C 20151003
+// ARM10C 20160521
 // SLAB_RECLAIM_ACCOUNT: 0x00020000UL
 #define SLAB_RECLAIM_ACCOUNT	0x00020000UL		/* Objects are reclaimable */
 // ARM10C 20140920
@@ -701,6 +705,8 @@ static __always_inline void *kmalloc_large(size_t size, gfp_t flags)
 // sizeof(char *[5]): 20 bytes, GFP_KERNEL: 0xD0
 // ARM10C 20160514
 // sizeof(struct mnt_namespace): 60 bytes, GFP_KERNEL: 0xD0
+// ARM10C 20160521
+// sizeof(struct kobj_map): 1024 bytes, GFP_KERNEL: 0xD0
 static __always_inline void *kmalloc(size_t size, gfp_t flags)
 {
 	// size: 512
@@ -1111,6 +1117,8 @@ static inline void *kmem_cache_zalloc(struct kmem_cache *k, gfp_t flags)
 // max(78, 64): 78, GFP_KERNEL: 0xD0
 // ARM10C 20160402
 // sizeof(struct subprocess_info): 52 bytes, gfp_mask: GFP_KERNEL: 0xD0
+// ARM10C 20160521
+// sizeof(struct probe): 28 bytes, GFP_KERNEL: 0xD0
 static inline void *kzalloc(size_t size, gfp_t flags)
 {
 	// size: 512, GFP_KERNEL: 0xD0, __GFP_ZERO: 0x8000u

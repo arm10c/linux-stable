@@ -24,11 +24,13 @@
 
 // ARM10C 20151003
 // ARM10C 20151114
+// ARM10C 20160521
 typedef __u32 __kernel_dev_t;
 
 typedef __kernel_fd_set		fd_set;
 // ARM10C 20151003
 // ARM10C 20151114
+// ARM10C 20160521
 typedef __kernel_dev_t		dev_t;
 typedef __kernel_ino_t		ino_t;
 typedef __kernel_mode_t		mode_t;
@@ -247,6 +249,7 @@ typedef struct {
 // ARM10C 20151114
 // ARM10C 20160123
 // ARM10C 20160409
+// ARM10C 20160521
 // sizeof(struct list_head) : 8 bytes
 struct list_head {
 	struct list_head *next, *prev;

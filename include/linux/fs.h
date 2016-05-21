@@ -439,6 +439,8 @@ struct address_space {
 struct request_queue;
 
 // ARM10C 20151003
+// ARM10C 20160521
+// sizeof(struct block_device): 169 bytes
 struct block_device {
 	dev_t			bd_dev;  /* not a kdev_t - it's a search key */
 	int			bd_openers;
@@ -450,7 +452,7 @@ struct block_device {
 	void *			bd_holder;
 	int			bd_holders;
 	bool			bd_write_holder;
-#ifdef CONFIG_SYSFS
+#ifdef CONFIG_SYSFS // CONFIG_SYSFS=y
 	struct list_head	bd_holder_disks;
 #endif
 	struct block_device *	bd_contains;
@@ -538,6 +540,7 @@ struct posix_acl;
 // ARM10C 20151205
 // ARM10C 20160123
 // ARM10C 20160319
+// ARM10C 20160521
 // sizeof(struct inode): 394 bytes
 struct inode {
 	umode_t			i_mode;
@@ -907,8 +910,9 @@ static inline int file_check_writeable(struct file *filp)
 
 /* Page cache limit. The filesystems should put that into their s_maxbytes 
    limits, otherwise bad things can happen in VM. */ 
-// ARM10C 20160319
 #if BITS_PER_LONG==32 // BITS_PER_LONG: 32
+// ARM10C 20160319
+// ARM10C 20160521
 // PAGE_CACHE_SIZE: 0x1000
 // BITS_PER_LONG: 32
 // MAX_LFS_FILESIZE: 0x7ffffffffff
@@ -1293,6 +1297,7 @@ struct sb_writers {
 // ARM10C 20160319
 // ARM10C 20160326
 // ARM10C 20160416
+// ARM10C 20160521
 // sizeof(struct super_block): 709 bytes
 struct super_block {
 	struct list_head	s_list;		/* Keep this first */
@@ -1662,6 +1667,7 @@ extern ssize_t vfs_writev(struct file *, const struct iovec __user *,
 // ARM10C 20151121
 // ARM10C 20151128
 // ARM10C 20160319
+// ARM10C 20160521
 struct super_operations {
    	struct inode *(*alloc_inode)(struct super_block *sb);
 	void (*destroy_inode)(struct inode *);
@@ -1895,6 +1901,7 @@ int sync_inode_metadata(struct inode *inode, int wait);
 // ARM10C 20160326
 // ARM10C 20160402
 // ARM10C 20160514
+// ARM10C 20160521
 struct file_system_type {
 	const char *name;
 	int fs_flags;
@@ -1982,6 +1989,8 @@ extern struct vfsmount *kern_mount_data(struct file_system_type *, void *data);
 // &sysfs_fs_type
 // ARM10C 20160213
 // &shmem_fs_type
+// ARM10C 20160521
+// &bd_type
 #define kern_mount(type) kern_mount_data(type, NULL)
 extern void kern_unmount(struct vfsmount *mnt);
 extern int may_umount_tree(struct vfsmount *);

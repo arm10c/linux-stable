@@ -1877,6 +1877,8 @@ static void free_bitmap(struct ida *ida, struct ida_bitmap *bitmap)
 // &unnamed_dev_ida, GFP_ATOMIC: 0x20
 // ARM10C 20160514
 // &proc_inum_ida, GFP_KERNEL: 0xD0
+// ARM10C 20160521
+// &unnamed_dev_ida, GFP_ATOMIC: 0x20
 int ida_pre_get(struct ida *ida, gfp_t gfp_mask)
 {
 	/* allocate idr_layers */
@@ -2116,6 +2118,10 @@ EXPORT_SYMBOL(ida_pre_get);
 // &unnamed_dev_ida, 2, &dev
 // ARM10C 20160514
 // ida: &proc_inum_ida, 0, p_id: &i
+// ARM10C 20160521
+// &mnt_id_ida, mnt_id_start: 3, &mnt->mnt_id: &(kmem_cache#2-oX)->mnt_id
+// ARM10C 20160521
+// (&unnamed_dev_ida, 3, &dev
 int ida_get_new_above(struct ida *ida, int starting_id, int *p_id)
 {
 	// MAX_IDR_LEVEL: 4

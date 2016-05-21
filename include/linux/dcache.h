@@ -46,6 +46,7 @@ struct vfsmount;
  */
 // ARM10C 20151003
 // ARM10C 20151212
+// ARM10C 20160521
 // sizeof(struct qstr): 12 bytes
 struct qstr {
 	union {
@@ -61,6 +62,9 @@ struct qstr {
 // ARM10C 20151212
 // #define QSTR_INIT("/", 1):
 // { { { .len = 1 } }, .name = "/" }
+// ARM10C 20160521
+// #define QSTR_INIT("bdev:", 5):
+// { { { .len = 5 } }, .name = "bdev:" }
 #define QSTR_INIT(n,l) { { { .len = l } }, .name = n }
 #define hashlen_hash(hashlen) ((u32) (hashlen))
 #define hashlen_len(hashlen)  ((u32)((hashlen) >> 32))
@@ -138,6 +142,7 @@ extern unsigned int full_name_hash(const unsigned char *, unsigned int);
 // ARM10C 20151219
 // ARM10C 20160213
 // ARM10C 20160319
+// ARM10C 20160521
 // sizeof(struct dentry): 140 bytes
 struct dentry {
 	/* RCU lookup touched fields */
@@ -416,6 +421,8 @@ static inline struct dentry *dget_dlock(struct dentry *dentry)
 // s->s_root: (kmem_cache#25-oX (struct super_block))->s_root: kmem_cache#5-oX (struct dentry)
 // ARM10C 20160521
 // path->dentry: (&root)->dentry: kmem_cache#5-oX (struct dentry)
+// ARM10C 20160521
+// s->s_root: (kmem_cache#25-oX (struct super_block))->s_root: kmem_cache#5-oX (struct dentry)
 static inline struct dentry *dget(struct dentry *dentry)
 {
 	// dentry: kmem_cache#5-oX (struct dentry)

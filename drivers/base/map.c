@@ -16,6 +16,9 @@
 #include <linux/kobject.h>
 #include <linux/kobj_map.h>
 
+// ARM10C 20160521
+// sizeof(struct probe): 28 bytes
+// sizeof(struct kobj_map): 1024 bytes
 struct kobj_map {
 	struct probe {
 		struct probe *next;
@@ -133,23 +136,53 @@ retry:
 	return NULL;
 }
 
+// ARM10C 20160521
+// base_probe, &chrdevs_lock
 struct kobj_map *kobj_map_init(kobj_probe_t *base_probe, struct mutex *lock)
 {
+	// sizeof(struct kobj_map): 1024 bytes, GFP_KERNEL: 0xD0
+	// kmalloc(1024, GFP_KERNEL: 0xD0): kmem_cache#26-oX (struct kobj_map)
 	struct kobj_map *p = kmalloc(sizeof(struct kobj_map), GFP_KERNEL);
+	// p: kmem_cache#26-oX (struct kobj_map)
+
+	// sizeof(struct probe): 28 bytes, GFP_KERNEL: 0xD0
+	// kzalloc(28, GFP_KERNEL: 0xD0): kmem_cache#30-oX (struct probe)
 	struct probe *base = kzalloc(sizeof(*base), GFP_KERNEL);
+	// base: kmem_cache#30-oX (struct probe)
+
 	int i;
 
+	// p: kmem_cache#26-oX (struct kobj_map), base: kmem_cache#30-oX (struct probe)
 	if ((p == NULL) || (base == NULL)) {
 		kfree(p);
 		kfree(base);
 		return NULL;
 	}
 
+	// base->dev: (kmem_cache#30-oX (struct probe))->dev
 	base->dev = 1;
+	// base->dev: (kmem_cache#30-oX (struct probe))->dev: 1
+
+	// base->range: (kmem_cache#30-oX (struct probe))->range
 	base->range = ~0;
+	// base->range: (kmem_cache#30-oX (struct probe))->range: 0xFFFFFFFF
+
+	// base->get: (kmem_cache#30-oX (struct probe))->get
 	base->get = base_probe;
+	// base->get: (kmem_cache#30-oX (struct probe))->get: base_probe
+
 	for (i = 0; i < 255; i++)
+		// i: 0, p->probes[0]: (kmem_cache#26-oX (struct kobj_map))->probes[0], base: kmem_cache#30-oX (struct probe)
 		p->probes[i] = base;
+		// i: 0, p->probes[0]: (kmem_cache#26-oX (struct kobj_map))->probes[0]: kmem_cache#30-oX (struct probe)
+		
+		// i: 1...255 loop 수행
+
+	// p->lock: (kmem_cache#26-oX (struct kobj_map))->lock, lock: &chrdevs_lock
 	p->lock = lock;
+	// p->lock: (kmem_cache#26-oX (struct kobj_map))->lock: &chrdevs_lock
+
+	// p: kmem_cache#26-oX (struct kobj_map)
 	return p;
+	// return kmem_cache#26-oX (struct kobj_map)
 }

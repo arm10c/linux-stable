@@ -85,6 +85,7 @@ struct kmem_cache_order_objects {
 // ARM10C 20151024
 // ARM10C 20151031
 // ARM10C 20160123
+// ARM10C 20160521
 // sizeof(struct kmem_cache): 116 bytes
 struct kmem_cache {
 	struct kmem_cache_cpu __percpu *cpu_slab;

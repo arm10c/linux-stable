@@ -249,6 +249,8 @@ unsigned long calculate_alignment(unsigned long flags,
 // NULL, name: "sysfs_dir_cache", size: 64, align: 0, flags: 0, ctor: NULL
 // ARM10C 20160123
 // NULL, "shmem_inode_cache", 458, 0, 0x00040000UL, shmem_init_inode
+// ARM10C 20160521
+// name: "bdev_cache", size: 563, align: 0, flags: 0x162000, ctor: init_once
 struct kmem_cache *
 kmem_cache_create_memcg(struct mem_cgroup *memcg, const char *name, size_t size,
 			size_t align, unsigned long flags, void (*ctor)(void *),
@@ -455,6 +457,8 @@ out_locked:
 // "sysfs_dir_cache", sizeof(struct sysfs_dirent): 64 bytes, 0, 0, NULL
 // ARM10C 20160123
 // "shmem_inode_cache", sizeof(struct shmem_inode_info): 458 bytes, 0, SLAB_PANIC: 0x00040000UL, shmem_init_inode
+// ARM10C 20160521
+// "bdev_cache", sizeof(struct bdev_inode): 563 bytes, 0, 0x162000, init_once
 struct kmem_cache *
 kmem_cache_create(const char *name, size_t size, size_t align,
 		  unsigned long flags, void (*ctor)(void *))
@@ -503,6 +507,8 @@ kmem_cache_create(const char *name, size_t size, size_t align,
 	// kmem_cache_create_memcg(NULL, "sysfs_dir_cache", 64, 0, 0, NULL): kmem_cache#1
 	// name: "shmem_inode_cache", size: 458, align: 0, flags: 0x00040000UL, ctor: shmem_init_inode
 	// kmem_cache_create_memcg(NULL, "shmem_inode_cache", 458, 0, 0x00040000UL, shmem_init_inode): kmem_cache#0
+	// name: "bdev_cache", size: 563, align: 0, flags: 0x162000, ctor: init_once
+	// kmem_cache_create_memcg(NULL, "bdev_cache", 563, 0, 0x162000, init_once): kmem_cache#n#30
 	return kmem_cache_create_memcg(NULL, name, size, align, flags, ctor, NULL);
 	// return kmem_cache#21
 	// return kmem_cache#20
@@ -526,6 +532,7 @@ kmem_cache_create(const char *name, size_t size, size_t align,
 	// return kmem_cache#2
 	// return kmem_cache#1
 	// return kmem_cache#0
+	// return kmem_cache#n#30
 }
 EXPORT_SYMBOL(kmem_cache_create);
 

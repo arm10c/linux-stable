@@ -52,6 +52,7 @@
 // ARM10C 20150919
 // ARM10C 20151003
 // ARM10C 20151114
+// ARM10C 20160521
 // sizeof(struct mutex): 40 bytes
 struct mutex {
 	/* 1: unlocked, 0: locked, negative: locked, possible waiters */
@@ -268,6 +269,24 @@ static inline void mutex_destroy(struct mutex *lock) {}
 //    , .wait_list =
 //    { &(sysfs_mutex.wait_list), &(sysfs_mutex.wait_list) }
 //    , .magic = &sysfs_mutex
+// }
+// ARM10C 20160521
+// DEFINE_MUTEX(chrdevs_lock):
+// struct mutex chrdevs_lock =
+// { .count = { (1) }
+//    , .wait_lock =
+//    (spinlock_t )
+//    { { .rlock =
+//	  {
+//	  .raw_lock = { { 0 } },
+//	  .magic = 0xdead4ead,
+//	  .owner_cpu = -1,
+//	  .owner = 0xffffffff,
+//	  }
+//    } }
+//    , .wait_list =
+//    { &(chrdevs_lock.wait_list), &(chrdevs_lock.wait_list) }
+//    , .magic = &chrdevs_lock
 // }
 #define DEFINE_MUTEX(mutexname) \
 	struct mutex mutexname = __MUTEX_INITIALIZER(mutexname)
