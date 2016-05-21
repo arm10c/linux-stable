@@ -451,10 +451,23 @@ int inode_permission(struct inode *inode, int mask)
  *
  * Given a path increment the reference count to the dentry and the vfsmount.
  */
+// ARM10C 20160521
+// path: &root
+// ARM10C 20160521
+// path: &root
 void path_get(const struct path *path)
 {
+	// path->mnt: (&root)->mnt: &(kmem_cache#2-oX (struct mount))->mnt
 	mntget(path->mnt);
+
+	// mntget 에서 한일:
+	// [pcp0] (kmem_cache#2-oX (struct mount))->mnt_pcp->mnt_count 을 1만큼 증가 시킴
+
+	// path->dentry: (&root)->dentry: kmem_cache#5-oX (struct dentry)
 	dget(path->dentry);
+
+	// dget에서 한일:
+	// (&(kmem_cache#5-oX (struct dentry))->d_lockref)->count: 1 만큼 증가 시킴
 }
 EXPORT_SYMBOL(path_get);
 

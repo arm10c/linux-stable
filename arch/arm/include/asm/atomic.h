@@ -87,6 +87,8 @@
 // kmod_concurrent.counter: 0
 // ARM10C 20160409
 // 1, &running_helpers
+// ARM10C 20160521
+// 1,, &ns->count: &(kmem_cache#30-oX (struct mnt_namespace))->count
 static inline void atomic_add(int i, atomic_t *v)
 {
 	unsigned long tmp;
@@ -282,6 +284,8 @@ static inline int __atomic_add_unless(atomic_t *v, int a, int u)
 // kmod_concurrent.counter: 0
 // ARM10C 20160409
 // &running_helpers
+// ARM10C 20160521
+// &ns->count: &(kmem_cache#30-oX (struct mnt_namespace))->count
 #define atomic_inc(v)		atomic_add(1, v)
 // ARM10C 20150912
 // ARM10C 20160319

@@ -30,15 +30,16 @@
 static struct kmem_cache *nsproxy_cachep;
 
 // ARM10C 20150808
+// ARM10C 20160521
 struct nsproxy init_nsproxy = {
 	.count			= ATOMIC_INIT(1),
 	.uts_ns			= &init_uts_ns,
-#if defined(CONFIG_POSIX_MQUEUE) || defined(CONFIG_SYSVIPC)
+#if defined(CONFIG_POSIX_MQUEUE) || defined(CONFIG_SYSVIPC) // CONFIG_POSIX_MQUEUE=n, CONFIG_SYSVIPC=y
 	.ipc_ns			= &init_ipc_ns,
 #endif
 	.mnt_ns			= NULL,
 	.pid_ns_for_children	= &init_pid_ns,
-#ifdef CONFIG_NET
+#ifdef CONFIG_NET // CONFIG_NET=y
 	.net_ns			= &init_net,
 #endif
 };

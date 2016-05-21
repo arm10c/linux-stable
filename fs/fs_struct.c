@@ -10,17 +10,58 @@
  * Replace the fs->{rootmnt,root} with {mnt,dentry}. Put the old values.
  * It can block.
  */
+// ARM10C 20160521
+// current->fs: (&init_task)->fs, &root
 void set_fs_root(struct fs_struct *fs, const struct path *path)
 {
 	struct path old_root;
 
+	// path: &root
 	path_get(path);
+
+	// path_get에서 한일:
+	// [pcp0] (kmem_cache#2-oX (struct mount))->mnt_pcp->mnt_count 을 1만큼 증가 시킴
+	// (&(kmem_cache#5-oX (struct dentry))->d_lockref)->count: 1 만큼 증가 시킴
+
+	// &fs->lock: &((&init_task)->fs)->lock
 	spin_lock(&fs->lock);
+
+	// spin_lock 에서 한일:
+	// &((&init_task)->fs)->lock 을 사용하여 spin lock 을 수행
+
+	// &fs->seq: &((&init_task)->fs)->seq
 	write_seqcount_begin(&fs->seq);
+
+	// write_seqcount_begin에서 한일:
+	// (&((&init_task)->fs)->seq)->sequence: 1
+	// 공유자원을 다른 cpu core가 사용할수 있게 메모리 적용
+
+	// fs->root: ((&init_task)->fs)->root: (&init_fs)->root: 맴버가 0 으로 초기화된 값
 	old_root = fs->root;
+	// old_root: 맴버가 0 으로 초기화된 값
+
+	// root.mnt: &(kmem_cache#2-oX (struct mount))->mnt
+	// root.dentry: kmem_cache#5-oX (struct dentry)
+
+	// fs->root: ((&init_task)->fs)->root: (&init_fs)->root: 맴버가 0 으로 초기화된 값, *path: root
 	fs->root = *path;
+	// fs->root: ((&init_task)->fs)->root.mnt: &(kmem_cache#2-oX (struct mount))->mnt
+	// fs->root: ((&init_task)->fs)->root.dentry: kmem_cache#5-oX (struct dentry)
+
+	// &fs->seq: &((&init_task)->fs)->seq
 	write_seqcount_end(&fs->seq);
+
+	// write_seqcount_end에서 한일:
+	// 공유자원을 다른 cpu core가 사용할수 있게 메모리 적용
+	// (&((&init_task)->fs)->seq)->sequence: 2
+
+	// &fs->lock: &((&init_task)->fs)->lock
 	spin_unlock(&fs->lock);
+
+	// spin_unlock 에서 한일:
+	// &((&init_task)->fs)->lock 을 사용하여 spin unlock 을 수행
+
+	// old_root.dentry: NULL
 	if (old_root.dentry)
 		path_put(&old_root);
 }
@@ -29,18 +70,58 @@ void set_fs_root(struct fs_struct *fs, const struct path *path)
  * Replace the fs->{pwdmnt,pwd} with {mnt,dentry}. Put the old values.
  * It can block.
  */
+// ARM10C 20160521
+// current->fs: (&init_task)->fs, &root
 void set_fs_pwd(struct fs_struct *fs, const struct path *path)
 {
 	struct path old_pwd;
 
+	// path: &root
 	path_get(path);
+
+	// path_get에서 한일:
+	// [pcp0] (kmem_cache#2-oX (struct mount))->mnt_pcp->mnt_count 을 1만큼 증가 시킴
+	// (&(kmem_cache#5-oX (struct dentry))->d_lockref)->count: 1 만큼 증가 시킴
+
+	// &fs->lock: &((&init_task)->fs)->lock
 	spin_lock(&fs->lock);
+
+	// spin_lock 에서 한일:
+	// &((&init_task)->fs)->lock 을 사용하여 spin lock 을 수행
+
+	// &fs->seq: &((&init_task)->fs)->seq
 	write_seqcount_begin(&fs->seq);
+
+	// write_seqcount_begin에서 한일:
+	// (&((&init_task)->fs)->seq)->sequence: 1
+	// 공유자원을 다른 cpu core가 사용할수 있게 메모리 적용
+
+	// fs->pwd: ((&init_task)->fs)->pwd: (&init_fs)->pwd: 맴버가 0 으로 초기화된 값
 	old_pwd = fs->pwd;
+	// old_pwd: 맴버가 0 으로 초기화된 값
+
+	// root.mnt: &(kmem_cache#2-oX (struct mount))->mnt
+	// root.dentry: kmem_cache#5-oX (struct dentry)
+
+	// fs->pwd: ((&init_task)->fs)->pwd: (&init_fs)->pwd: 맴버가 0 으로 초기화된 값, *path: root
 	fs->pwd = *path;
+	// fs->pwd: ((&init_task)->fs)->pwd.mnt: &(kmem_cache#2-oX (struct mount))->mnt
+	// fs->pwd: ((&init_task)->fs)->pwd.dentry: kmem_cache#5-oX (struct dentry)
+
+	// &fs->seq: &((&init_task)->fs)->seq
 	write_seqcount_end(&fs->seq);
+
+	// write_seqcount_end에서 한일:
+	// 공유자원을 다른 cpu core가 사용할수 있게 메모리 적용
+	// (&((&init_task)->fs)->seq)->sequence: 2
+
+	// &fs->lock: &((&init_task)->fs)->lock
 	spin_unlock(&fs->lock);
 
+	// spin_unlock 에서 한일:
+	// &((&init_task)->fs)->lock 을 사용하여 spin unlock 을 수행
+
+	// old_pwd.dentry: NULL
 	if (old_pwd.dentry)
 		path_put(&old_pwd);
 }
@@ -159,6 +240,7 @@ EXPORT_SYMBOL(current_umask);
 
 /* to be mentioned only in INIT_TASK */
 // ARM10C 20150808
+// ARM10C 20160521
 struct fs_struct init_fs = {
 	.users		= 1,
 	.lock		= __SPIN_LOCK_UNLOCKED(init_fs.lock),

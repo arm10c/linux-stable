@@ -34,6 +34,7 @@ struct mountpoint {
 // ARM10C 20151031
 // ARM10C 20160109
 // ARM10C 20160213
+// ARM10C 20160521
 // sizeof(struct mount): 152 bytes
 struct mount {
 	struct hlist_node mnt_hash;
@@ -80,6 +81,8 @@ struct mount {
 // mnt: &(kmem_cache#2-oX (struct mount))->mnt
 // ARM10C 20160326
 // mnt: &(kmem_cache#2-oX (struct mount))->mnt
+// ARM10C 20160521
+// m: &(kmem_cache#2-oX (struct mount))->mnt
 static inline struct mount *real_mount(struct vfsmount *mnt)
 {
 	// mnt: &(kmem_cache#2-oX (struct mount))->mnt
@@ -105,9 +108,15 @@ extern struct mount *__lookup_mnt_last(struct vfsmount *, struct dentry *);
 
 extern bool legitimize_mnt(struct vfsmount *, unsigned);
 
+// ARM10C 20160521
+// ns: kmem_cache#30-oX (struct mnt_namespace)
 static inline void get_mnt_ns(struct mnt_namespace *ns)
 {
+	// &ns->count: &(kmem_cache#30-oX (struct mnt_namespace))->count
 	atomic_inc(&ns->count);
+
+	// atomic_inc 에서 한일:
+	// (&(kmem_cache#30-oX (struct mnt_namespace))->count)->counter 을 1 증가 시킴
 }
 
 extern seqlock_t mount_lock;

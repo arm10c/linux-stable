@@ -414,6 +414,8 @@ static inline struct dentry *dget_dlock(struct dentry *dentry)
 // s->s_root: (kmem_cache#25-oX (struct super_block))->s_root: kmem_cache#5-oX (struct dentry)
 // ARM10C 20160514
 // s->s_root: (kmem_cache#25-oX (struct super_block))->s_root: kmem_cache#5-oX (struct dentry)
+// ARM10C 20160521
+// path->dentry: (&root)->dentry: kmem_cache#5-oX (struct dentry)
 static inline struct dentry *dget(struct dentry *dentry)
 {
 	// dentry: kmem_cache#5-oX (struct dentry)

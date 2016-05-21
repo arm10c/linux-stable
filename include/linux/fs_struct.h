@@ -6,6 +6,7 @@
 #include <linux/seqlock.h>
 
 // ARM10C 20150919
+// ARM10C 20160521
 // sizeof(struct fs_struct): 48 bytes
 struct fs_struct {
 	int users;

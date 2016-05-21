@@ -75,6 +75,8 @@ static inline long __must_check PTR_ERR(__force const void *ptr)
 // shm_mnt: &(kmem_cache#2-oX (struct mount))->mnt
 // ARM10C 20160514
 // new_ns: kmem_cache#30-oX (struct mnt_namespace)
+// ARM10C 20160521
+// ns: kmem_cache#30-oX (struct mnt_namespace)
 static inline long __must_check IS_ERR(__force const void *ptr)
 {
 	return IS_ERR_VALUE((unsigned long)ptr);

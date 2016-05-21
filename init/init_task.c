@@ -20,6 +20,7 @@ static struct sighand_struct init_sighand = INIT_SIGHAND(init_sighand);
 // ARM10C 20140315
 // ARM10C 20140913
 // ARM10C 20150808
+// ARM10C 20160521
 // INIT_TASK(init_task):
 // {
 //    .state            = 0,

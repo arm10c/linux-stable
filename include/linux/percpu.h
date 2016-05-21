@@ -554,6 +554,21 @@ extern void __bad_size_call_parameter(void);
 // 			__bad_size_call_parameter();break;
 // 	}
 // } while (0)
+// ARM10C 20160521
+// this_cpu_add_, mnt->mnt_pcp->mnt_count: (kmem_cache#2-oX (struct mount))->mnt_pcp->mnt_count, n: 1
+//
+// #define __pcpu_size_call(this_cpu_add_, (kmem_cache#2-oX (struct mount))->mnt_pcp->mnt_count, 1):
+// do {
+// 	__verify_pcpu_ptr(&((kmem_cache#2-oX (struct mount))->mnt_pcp->mnt_count));
+// 	switch(sizeof((kmem_cache#2-oX (struct mount))->mnt_pcp->mnt_count)) {
+// 		case 1: this_cpu_add_1((kmem_cache#2-oX (struct mount))->mnt_pcp->mnt_count, 1);break;
+// 		case 2: this_cpu_add_2((kmem_cache#2-oX (struct mount))->mnt_pcp->mnt_count, 1);break;
+// 		case 4: this_cpu_add_4((kmem_cache#2-oX (struct mount))->mnt_pcp->mnt_count, 1);break;
+// 		case 8: this_cpu_add_8((kmem_cache#2-oX (struct mount))->mnt_pcp->mnt_count, 1);break;
+// 		default:
+// 			__bad_size_call_parameter();break;
+// 	}
+// } while (0)
 #define __pcpu_size_call(stem, variable, ...)				\
 do {									\
 	__verify_pcpu_ptr(&(variable));					\
@@ -637,6 +652,16 @@ do {									\
 // 	*__this_cpu_ptr(&(nr_dentry)) += 1;
 // 	raw_local_irq_restore(flags);
 // } while (0)
+// ARM10C 20160521
+// (kmem_cache#2-oX (struct mount))->mnt_pcp->mnt_count, 1, +=
+//
+// #define _this_cpu_generic_to_op((kmem_cache#2-oX (struct mount))->mnt_pcp->mnt_count, 1, +=):
+// do {
+// 	unsigned long flags;
+// 	raw_local_irq_save(flags);
+// 	*__this_cpu_ptr(&((kmem_cache#2-oX (struct mount))->mnt_pcp->mnt_count)) += 1;
+// 	raw_local_irq_restore(flags);
+// } while (0)
 #define _this_cpu_generic_to_op(pcp, val, op)				\
 do {									\
 	unsigned long flags;						\
@@ -673,6 +698,8 @@ do {									\
 // nr_inodes, 1
 // ARM10C 20151219
 // nr_dentry, 1
+// ARM10C 20160521
+// (kmem_cache#2-oX (struct mount))->mnt_pcp->mnt_count, 1
 #  define this_cpu_add_4(pcp, val)	_this_cpu_generic_to_op((pcp), (val), +=)
 # endif
 # ifndef this_cpu_add_8
@@ -686,6 +713,8 @@ do {									\
 // nr_dentry, 1
 // ARM10C 20160319
 // mnt->mnt_pcp->mnt_count: (kmem_cache#2-oX (struct mount))->mnt_pcp->mnt_count, 1
+// ARM10C 20160521
+// mnt->mnt_pcp->mnt_count: (kmem_cache#2-oX (struct mount))->mnt_pcp->mnt_count, n: 1
 # define this_cpu_add(pcp, val)		__pcpu_size_call(this_cpu_add_, (pcp), (val))
 #endif
 

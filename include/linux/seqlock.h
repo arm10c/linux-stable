@@ -372,6 +372,10 @@ static inline void write_seqcount_begin_nested(seqcount_t *s, int subclass)
 // &timekeeper_seq
 // ARM10C 20160109
 // &sl->seqcount: &(&mount_lock)->seqcount
+// ARM10C 20160521
+// &fs->seq: &((&init_task)->fs)->seq
+// ARM10C 20160521
+// &fs->seq: &((&init_task)->fs)->seq
 static inline void write_seqcount_begin(seqcount_t *s)
 {
 	// s: &timekeeper_seq
@@ -391,6 +395,10 @@ static inline void write_seqcount_begin(seqcount_t *s)
 // &timekeeper_seq
 // ARM10C 20160109
 // &sl->seqcount: &(&mount_lock)->seqcount
+// ARM10C 20160521
+// &fs->seq: &((&init_task)->fs)->seq
+// ARM10C 20160521
+// &fs->seq: &((&init_task)->fs)->seq
 static inline void write_seqcount_end(seqcount_t *s)
 {
 	// &s->dep_map: &(&timekeeper_seq)->dep_map
