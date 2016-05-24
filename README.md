@@ -10,6 +10,15 @@
   - current : 3.13.x
   
 # HISTORY
+* 144th (2016/05/21) week [144차](https://github.com/hephaex/kernel_review/blob/master/a10c_144.md)
+ - vfs_caches_init()
+   - kmem_cache_create(): names_cache
+   - dcache_init()
+   - inode_init()
+   - files_init()
+   - mnt_init()
+   - bdev_cache_init()
+   - chrdev_init()
 * 143th (2016/05/14) week [143차](https://github.com/hephaex/kernel_review/blob/master/a10c_143.md)
  - vfs_caches_init()
   - mnt_init()
