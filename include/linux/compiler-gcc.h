@@ -143,6 +143,7 @@
  * code
  */
 // ARM10C 20140405
+// ARM10C 20160528
 #define uninitialized_var(x) x = x
 
 // ARM10C 20140614

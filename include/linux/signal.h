@@ -12,6 +12,8 @@ extern int print_fatal_signals;
  * Real Time signals may be queued.
  */
 
+// ARM10C 20160528
+// sizeof(struct sigqueue): 144 bytes
 struct sigqueue {
 	struct list_head list;
 	int flags;

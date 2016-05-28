@@ -120,6 +120,7 @@ unsigned long totalreserve_pages __read_mostly;
  * considered dirtyable memory.  This is the sum of those reserves
  * over all existing zones that contribute dirtyable memory.
  */
+// ARM10C 20160528
 unsigned long dirty_balance_reserve __read_mostly;
 
 // ARM10C 20150912

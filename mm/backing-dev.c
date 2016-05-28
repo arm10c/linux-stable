@@ -510,6 +510,8 @@ static void bdi_wb_init(struct bdi_writeback *wb, struct backing_dev_info *bdi)
 // &sysfs_backing_dev_info
 // ARM10C 20160123
 // &shmem_backing_dev_info
+// ARM10C 20160528
+// &directly_mappable_cdev_bdi
 int bdi_init(struct backing_dev_info *bdi)
 {
 	int i, err;

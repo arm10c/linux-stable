@@ -6003,4 +6003,75 @@ void __init vfs_caches_init(unsigned long mempages)
 	// blockdev_superblock: kmem_cache#25-oX (struct super_block)
 
 	chrdev_init();
+
+	// chrdev_init에서 한일:
+	// struct kobj_map 만큼의 메로리를 할당 받음 kmem_cache#26-oX (struct kobj_map)
+	// struct probe 만큼의 메로리를 할당 받음 kmem_cache#30-oX (struct probe)
+	//
+	// (kmem_cache#30-oX (struct probe))->dev: 1
+	// (kmem_cache#30-oX (struct probe))->range: 0xFFFFFFFF
+	// (kmem_cache#30-oX (struct probe))->get: base_probe
+	//
+	// (kmem_cache#26-oX (struct kobj_map))->probes[0...255]: kmem_cache#30-oX (struct probe)
+	// (kmem_cache#26-oX (struct kobj_map))->lock: &chrdevs_lock
+	//
+	// (&directly_mappable_cdev_bdi)->dev: NULL
+	// (&directly_mappable_cdev_bdi)->min_ratio: 0
+	// (&directly_mappable_cdev_bdi)->max_ratio: 100
+	// (&directly_mappable_cdev_bdi)->max_prop_frac: 0x400
+	// &(&directly_mappable_cdev_bdi)->wb_lock 을 이용한 spinlock 초기화 수행
+	// (&(&directly_mappable_cdev_bdi)->bdi_list)->next: &(&directly_mappable_cdev_bdi)->bdi_list
+	// (&(&directly_mappable_cdev_bdi)->bdi_list)->prev: &(&directly_mappable_cdev_bdi)->bdi_list
+	// (&(&directly_mappable_cdev_bdi)->work_list)->next: &(&directly_mappable_cdev_bdi)->work_list
+	// (&(&directly_mappable_cdev_bdi)->work_list)->prev: &(&directly_mappable_cdev_bdi)->work_list
+	//
+	// (&directly_mappable_cdev_bdi)->wb 의 맴버값을 0으로 초기화함
+	// (&(&directly_mappable_cdev_bdi)->wb)->bdi: &directly_mappable_cdev_bdi
+	// (&(&directly_mappable_cdev_bdi)->wb)->last_old_flush: XXX
+	// (&(&(&directly_mappable_cdev_bdi)->wb)->b_dirty)->next: &(&(&directly_mappable_cdev_bdi)->wb)->b_dirty
+	// (&(&(&directly_mappable_cdev_bdi)->wb)->b_dirty)->prev: &(&(&directly_mappable_cdev_bdi)->wb)->b_dirty
+	// (&(&(&directly_mappable_cdev_bdi)->wb)->b_io)->next: &(&(&directly_mappable_cdev_bdi)->wb)->b_io
+	// (&(&(&directly_mappable_cdev_bdi)->wb)->b_io)->prev: &(&(&directly_mappable_cdev_bdi)->wb)->b_io
+	// (&(&(&directly_mappable_cdev_bdi)->wb)->b_more_io)->next: &(&(&directly_mappable_cdev_bdi)->wb)->b_more_io
+	// (&(&(&directly_mappable_cdev_bdi)->wb)->b_more_io)->prev: &(&(&directly_mappable_cdev_bdi)->wb)->b_more_io
+	// &(&(&directly_mappable_cdev_bdi)->wb)->list_lock 을 이용한 spinlock 초기화 수행
+	// (&(&(&(&directly_mappable_cdev_bdi)->wb)->dwork)->work)->data: { 0xFFFFFFE0 }
+	// (&(&(&(&(&directly_mappable_cdev_bdi)->wb)->dwork)->work)->entry)->next: &(&(&(&(&directly_mappable_cdev_bdi)->wb)->dwork)->work)->entry
+	// (&(&(&(&(&directly_mappable_cdev_bdi)->wb)->dwork)->work)->entry)->prev: &(&(&(&(&directly_mappable_cdev_bdi)->wb)->dwork)->work)->entry
+	// (&(&(&(&directly_mappable_cdev_bdi)->wb)->dwork)->work)->func: bdi_writeback_workfn
+	// (&(&(&(&directly_mappable_cdev_bdi)->wb)->dwork)->timer)->entry.next: NULL
+	// (&(&(&(&directly_mappable_cdev_bdi)->wb)->dwork)->timer)->base: [pcp0] tvec_bases | 0x2
+	// (&(&(&(&directly_mappable_cdev_bdi)->wb)->dwork)->timer)->slack: -1
+	// (&(&(&(&directly_mappable_cdev_bdi)->wb)->dwork)->timer)->function = (delayed_work_timer_fn);
+	// (&(&(&(&directly_mappable_cdev_bdi)->wb)->dwork)->timer)->data = ((unsigned long)(&(&(&directly_mappable_cdev_bdi)->wb)->dwork));
+	//
+	// (&(&(&(&(&directly_mappable_cdev_bdi)->bdi_stat[0...3])->lock)->wait_lock)->rlock)->raw_lock: { { 0 } }
+	// (&(&(&(&(&directly_mappable_cdev_bdi)->bdi_stat[0...3])->lock)->wait_lock)->rlock)->magic: 0xdead4ead
+	// (&(&(&(&(&directly_mappable_cdev_bdi)->bdi_stat[0...3])->lock)->wait_lock)->rlock)->owner: 0xffffffff
+	// (&(&(&(&(&directly_mappable_cdev_bdi)->bdi_stat[0...3])->lock)->wait_lock)->rlock)->owner_cpu: 0xffffffff
+	// (&(&(&directly_mappable_cdev_bdi)->bdi_stat[0...3])->list)->next: &(&(&directly_mappable_cdev_bdi)->bdi_stat[0...3])->list
+	// (&(&(&directly_mappable_cdev_bdi)->bdi_stat[0...3])->list)->prev: &(&(&directly_mappable_cdev_bdi)->bdi_stat[0...3])->list
+	// (&(&directly_mappable_cdev_bdi)->bdi_stat[0...3])->count: 0
+	// (&(&directly_mappable_cdev_bdi)->bdi_stat[0...3])->counters: kmem_cache#26-o0 에서 할당된 4 bytes 메모리 주소
+	// list head 인 &percpu_counters에 &(&(&directly_mappable_cdev_bdi)->bdi_stat[0...3])->list를 연결함
+	//
+	// (&directly_mappable_cdev_bdi)->dirty_exceeded: 0
+	// (&directly_mappable_cdev_bdi)->bw_time_stamp: XXX
+	// (&directly_mappable_cdev_bdi)->written_stamp: 0
+	// (&directly_mappable_cdev_bdi)->balanced_dirty_ratelimit: 0x6400
+	// (&directly_mappable_cdev_bdi)->dirty_ratelimit: 0x6400
+	// (&directly_mappable_cdev_bdi)->write_bandwidth: 0x6400
+	// (&directly_mappable_cdev_bdi)->avg_write_bandwidth: 0x6400
+	//
+	// (&(&(&(&(&(&directly_mappable_cdev_bdi)->completions)->events)->lock)->wait_lock)->rlock)->raw_lock: { { 0 } }
+	// (&(&(&(&(&(&directly_mappable_cdev_bdi)->completions)->events)->lock)->wait_lock)->rlock)->magic: 0xdead4ead
+	// (&(&(&(&(&(&directly_mappable_cdev_bdi)->completions)->events)->lock)->wait_lock)->rlock)->owner: 0xffffffff
+	// (&(&(&(&(&(&directly_mappable_cdev_bdi)->completions)->events)->lock)->wait_lock)->rlock)->owner_cpu: 0xffffffff
+	// (&(&(&(&directly_mappable_cdev_bdi)->completions)->events)->list)->next: &(&(&(&directly_mappable_cdev_bdi)->completions)->events)->list
+	// (&(&(&(&directly_mappable_cdev_bdi)->completions)->events)->list)->prev: &(&(&(&directly_mappable_cdev_bdi)->completions)->events)->list
+	// (&(&(&directly_mappable_cdev_bdi)->completions)->events)->count: 0
+	// (&(&(&directly_mappable_cdev_bdi)->completions)->events)->counters: kmem_cache#26-o0 에서 할당된 4 bytes 메모리 주소
+	// list head 인 &percpu_counters에 &(&(&(&directly_mappable_cdev_bdi)->completions)->events)->list를 연결함
+	// (&(&directly_mappable_cdev_bdi)->completions)->period: 0
+	// &(&(&directly_mappable_cdev_bdi)->completions)->lock을 이용한 spinlock 초기화 수행
 }

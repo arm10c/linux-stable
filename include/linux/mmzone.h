@@ -132,14 +132,18 @@ struct zone_padding {
 // ARM10C 20140412
 // ARM10C 20140419
 // ARM10C 20140510
+// ARM10C 20160528
 enum zone_stat_item {
 	/* First 128 byte cacheline (assuming 64 bit words) */
+	// NR_FREE_PAGES: 0
 	NR_FREE_PAGES,
 	NR_ALLOC_BATCH,
 	NR_LRU_BASE,
 	NR_INACTIVE_ANON = NR_LRU_BASE, /* must match order of LRU_[IN]ACTIVE */
 	NR_ACTIVE_ANON,		/*  "     "     "   "       "         */
+	// NR_INACTIVE_FILE: 4
 	NR_INACTIVE_FILE,	/*  "     "     "   "       "         */
+	// NR_ACTIVE_FILE: 5
 	NR_ACTIVE_FILE,		/*  "     "     "   "       "         */
 	NR_UNEVICTABLE,		/*  "     "     "   "       "         */
 	NR_MLOCK,		/* mlock()ed pages found and moved off LRU */
@@ -375,6 +379,7 @@ enum zone_type {
 // ARM10C 20140308
 // ARM10C 20150912
 // ARM10C 20151212
+// ARM10C 20160528
 struct zone {
 	/* Fields commonly accessed by the page allocator */
 
@@ -1055,6 +1060,7 @@ extern struct pglist_data contig_page_data;	// bitmap 정보가 들어가있음
 // ARM10C 20140308
 // ARM10C 20140329
 // ARM10C 20140419
+// ARM10C 20160528
 #define NODE_DATA(nid)		(&contig_page_data)
 // ARM10C 20140329
 #define NODE_MEM_MAP(nid)	mem_map

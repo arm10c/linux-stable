@@ -76,12 +76,14 @@ int dirty_background_ratio = 10;
  * dirty_background_bytes starts at 0 (disabled) so that it is a function of
  * dirty_background_ratio * the amount of dirtyable memory
  */
+// ARM10C 20160528
 unsigned long dirty_background_bytes;
 
 /*
  * free highmem will not be subtracted from the total free memory
  * for calculating free ratios if vm_highmem_is_dirtyable is true
  */
+// ARM10C 20160528
 int vm_highmem_is_dirtyable;
 
 /*
@@ -95,6 +97,7 @@ int vm_dirty_ratio = 20;
  * vm_dirty_ratio * the amount of dirtyable memory
  */
 // ARM10C 20140510
+// ARM10C 20160528
 unsigned long vm_dirty_bytes;
 
 /*
@@ -202,6 +205,8 @@ static unsigned long writeout_period_time = 0;
  */
 // ARM10C 20140510
 // zone: contig_page_data->node_zones[0]
+// ARM10C 20160528
+// z: &(&contig_page_data)->node_zones[1]
 static unsigned long zone_dirtyable_memory(struct zone *zone)
 {
 	unsigned long nr_pages;
@@ -230,16 +235,28 @@ static unsigned long zone_dirtyable_memory(struct zone *zone)
 	// return ???? (32)
 }
 
+// ARM10C 20160528
+// x: free pages 수 + file로 사용되는 메모리 (swap 갈 후보) pages 수 + file로 사용되는 메모리 pages 수
 static unsigned long highmem_dirtyable_memory(unsigned long total)
 {
-#ifdef CONFIG_HIGHMEM
+#ifdef CONFIG_HIGHMEM // CONFIG_HIGHMEM=y
 	int node;
 	unsigned long x = 0;
+	// x: 0
 
+	// N_HIGH_MEMORY: 3
 	for_each_node_state(node, N_HIGH_MEMORY) {
-		struct zone *z = &NODE_DATA(node)->node_zones[ZONE_HIGHMEM];
+	// for ( (node) = 0; (node) == 0; (node) = 1)
 
+		// node: 0, NODE_DATA(0): &contig_page_data, ZONE_HIGHMEM: 1
+		struct zone *z = &NODE_DATA(node)->node_zones[ZONE_HIGHMEM];
+		// z: &(&contig_page_data)->node_zones[1]
+
+		// x: 0, z: &(&contig_page_data)->node_zones[1]
+		// zone_dirtyable_memory(&(&contig_page_data)->node_zones[1]):
+		// free pages 수 - dirty balance reserve pages 수  + file로 사용되는 메모리 (swap 갈 후보) pages 수 + file로 사용되는 메모리 pages 수 (himem)
 		x += zone_dirtyable_memory(z);
+		// x: free pages 수 - dirty balance reserve pages 수  + file로 사용되는 메모리 (swap 갈 후보) pages 수 + file로 사용되는 메모리 pages 수 (himem)
 	}
 	/*
 	 * Unreclaimable memory (kernel memory or anonymous memory
@@ -250,8 +267,13 @@ static unsigned long highmem_dirtyable_memory(unsigned long total)
 	 * accurate calculation but make sure that the total never
 	 * underflows.
 	 */
+	// x: free pages 수 - dirty balance reserve pages 수  + file로 사용되는 메모리 (swap 갈 후보) pages 수 + file로 사용되는 메모리 pages 수 (himem)
 	if ((long)x < 0)
 		x = 0;
+
+	// NOTE:
+	// himem 과 normal mem의 page 수를 정확히 알 수 없음
+	// himem의 memory page가 더 많다고 가정하고 분석 수행.
 
 	/*
 	 * Make sure that the number of highmem pages is never larger
@@ -259,7 +281,13 @@ static unsigned long highmem_dirtyable_memory(unsigned long total)
 	 * occur in very strange VM situations but we want to make sure
 	 * that this does not occur.
 	 */
+	// x: free pages 수 - dirty balance reserve pages 수  + file로 사용되는 메모리 (swap 갈 후보) pages 수 + file로 사용되는 메모리 pages 수 (himem),
+	// total: free pages 수 + file로 사용되는 메모리 (swap 갈 후보) pages 수 + file로 사용되는 메모리 pages 수
+	// min(free pages 수 - dirty balance reserve pages 수  + file로 사용되는 메모리 (swap 갈 후보) pages 수 + file로 사용되는 메모리 pages 수 (himem),
+	// free pages 수 + file로 사용되는 메모리 (swap 갈 후보) pages 수 + file로 사용되는 메모리 pages 수):
+	// free pages 수 + file로 사용되는 메모리 (swap 갈 후보) pages 수 + file로 사용되는 메모리 pages 수
 	return min(x, total);
+	// return free pages 수 + file로 사용되는 메모리 (swap 갈 후보) pages 수 + file로 사용되는 메모리 pages 수
 #else
 	return 0;
 #endif
@@ -271,20 +299,41 @@ static unsigned long highmem_dirtyable_memory(unsigned long total)
  * Returns the global number of pages potentially available for dirty
  * page cache.  This is the base value for the global dirty limits.
  */
+// ARM10C 20160528
 static unsigned long global_dirtyable_memory(void)
 {
 	unsigned long x;
 
+	// NR_FREE_PAGES: 0
+	// global_page_state(0): free pages 수
 	x = global_page_state(NR_FREE_PAGES);
+	// x: free pages 수
+
+	// x: free pages 수, dirty_balance_reserve: 0
 	x -= min(x, dirty_balance_reserve);
+	// x: free pages 수
 
+	// x: free pages 수, NR_INACTIVE_FILE: 4
+	// global_page_state(4): file로 사용되는 메모리 (swap 갈 후보) pages 수
 	x += global_page_state(NR_INACTIVE_FILE);
+	// x: free pages 수 + file로 사용되는 메모리 (swap 갈 후보) pages 수
+
+	// x: free pages 수 + file로 사용되는 메모리 (swap 갈 후보) pages 수, NR_ACTIVE_FILE: 5
+	// global_page_state(5): file로 사용되는 메모리 pages 수
 	x += global_page_state(NR_ACTIVE_FILE);
+	// x: free pages 수 + file로 사용되는 메모리 (swap 갈 후보) pages 수 + file로 사용되는 메모리 pages 수
 
+	// vm_highmem_is_dirtyable: 0
 	if (!vm_highmem_is_dirtyable)
+		// x: free pages 수 + file로 사용되는 메모리 (swap 갈 후보) pages 수 + file로 사용되는 메모리 pages 수
+		// highmem_dirtyable_memory(free pages 수 + file로 사용되는 메모리 (swap 갈 후보) pages 수 + file로 사용되는 메모리 pages 수):
+		// free pages 수 + file로 사용되는 메모리 (swap 갈 후보) pages 수 + file로 사용되는 메모리 pages 수
 		x -= highmem_dirtyable_memory(x);
+		// x: 0
 
+	// x: 0
 	return x + 1;	/* Ensure that we never return 0 */
+	// return 1
 }
 
 /*
@@ -296,15 +345,25 @@ static unsigned long global_dirtyable_memory(void)
  * The dirty limits will be lifted by 1/4 for PF_LESS_THROTTLE (ie. nfsd) and
  * real-time tasks.
  */
+// ARM10C 20160528
+// &background_thresh, &dirty_thresh
 void global_dirty_limits(unsigned long *pbackground, unsigned long *pdirty)
 {
 	unsigned long background;
 	unsigned long dirty;
+	
+	// uninitialized_var(available_memory):
+	// available_memory = available_memory
 	unsigned long uninitialized_var(available_memory);
 	struct task_struct *tsk;
 
+	// vm_dirty_bytes: 0, dirty_background_bytes: 0
 	if (!vm_dirty_bytes || !dirty_background_bytes)
+		// global_dirtyable_memory(): 1
 		available_memory = global_dirtyable_memory();
+		// available_memory: 1
+
+// 2016/05/28 종료
 
 	if (vm_dirty_bytes)
 		dirty = DIV_ROUND_UP(vm_dirty_bytes, PAGE_SIZE);
@@ -1784,6 +1843,7 @@ void laptop_sync_completion(void)
  * thresholds.
  */
 
+// ARM10C 20160528
 void writeback_set_ratelimit(void)
 {
 	unsigned long background_thresh;
@@ -1833,6 +1893,7 @@ static struct notifier_block ratelimit_nb = {
  * But we might still want to scale the dirty_ratio by how
  * much memory the box has..
  */
+// ARM10C 20160528
 void __init page_writeback_init(void)
 {
 	writeback_set_ratelimit();

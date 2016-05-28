@@ -126,8 +126,10 @@ extern unsigned long global_dirty_limit;
 
 /* These are exported to sysctl. */
 extern int dirty_background_ratio;
+// ARM10C 20160528
 extern unsigned long dirty_background_bytes;
 extern int vm_dirty_ratio;
+// ARM10C 20160528
 extern unsigned long vm_dirty_bytes;
 extern unsigned int dirty_writeback_interval;
 extern unsigned int dirty_expire_interval;

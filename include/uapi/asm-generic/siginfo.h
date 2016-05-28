@@ -14,11 +14,19 @@ typedef union sigval {
  * struct siginfo that is before the union.
  */
 #ifndef __ARCH_SI_PREAMBLE_SIZE
+// ARM10C 20160528
+// __ARCH_SI_PREAMBLE_SIZE: 12
 #define __ARCH_SI_PREAMBLE_SIZE	(3 * sizeof(int))
 #endif
 
+// ARM10C 20160528
+// SI_MAX_SIZE: 128
 #define SI_MAX_SIZE	128
 #ifndef SI_PAD_SIZE
+// ARM10C 20160528
+// __ARCH_SI_PREAMBLE_SIZE: 12
+// SI_MAX_SIZE: 128
+// SI_PAD_SIZE: 29
 #define SI_PAD_SIZE	((SI_MAX_SIZE - __ARCH_SI_PREAMBLE_SIZE) / sizeof(int))
 #endif
 
@@ -46,12 +54,15 @@ typedef union sigval {
 #ifndef HAVE_ARCH_SIGINFO_T
 
 // ARM10C 20150919
+// ARM10C 20160528
+// sizeof(struct siginfo): 128 bytes
 typedef struct siginfo {
 	int si_signo;
 	int si_errno;
 	int si_code;
 
 	union {
+		// SI_PAD_SIZE: 29
 		int _pad[SI_PAD_SIZE];
 
 		/* kill() */

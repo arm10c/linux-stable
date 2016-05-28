@@ -47,6 +47,7 @@
  * SLAB caches for signal bits.
  */
 
+// ARM10C 20160528
 static struct kmem_cache *sigqueue_cachep;
 
 int print_fatal_signals __read_mostly;
@@ -3624,9 +3625,20 @@ __attribute__((weak)) const char *arch_vma_name(struct vm_area_struct *vma)
 	return NULL;
 }
 
+// ARM10C 20160528
 void __init signals_init(void)
 {
+	// NOTE:
+	// 기존에 생성해 만들어 놓은 kmem_cache 용 object를 전부 사용하여
+	// 새로 kmem_cache를 위한 object를 만들었다고 가정하고 주석을 아래와 같이
+	// 달기로 함.(30 -> 0 순으로 사용)
+	// kmem_cache#n#29
+
+	// SLAB_PANIC: 0x00040000UL
+	// KMEM_CACHE(sigqueue, 0x00040000UL):
+	// kmem_cache_create("sigqueue", sizeof(struct sigqueue), __alignof__(struct sigqueue), (0x00040000UL), NULL): kmem_cache#n#29
 	sigqueue_cachep = KMEM_CACHE(sigqueue, SLAB_PANIC);
+	// sigqueue_cachep: kmem_cache#n#29
 }
 
 #ifdef CONFIG_KGDB_KDB

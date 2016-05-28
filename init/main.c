@@ -923,7 +923,12 @@ asmlinkage void __init start_kernel(void)
 
 	// totalram_pages: 총 free된 page 수
 	vfs_caches_init(totalram_pages);
+	// virtual file system을 위한 names, dentry, inode, filp, mount cache 생성 후
+	// file system 을 위한 초기화 수행 및 mount 수행, block, char dev 사용을 위한 초기화 수행
+
 	signals_init();
+	// signal을 사용하기 위한 kmem_cache 를 생성
+
 	/* rootfs populating might need page-writeback */
 	page_writeback_init();
 #ifdef CONFIG_PROC_FS

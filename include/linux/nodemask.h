@@ -394,6 +394,7 @@ static inline void __nodes_fold(nodemask_t *dstp, const nodemask_t *origp,
  */
 // ARM10C 20140308
 // ARM10C 20140426
+// ARM10C 20160528
 enum node_states {
 	N_POSSIBLE,		/* The node could become online at some point */
 	N_ONLINE,		/* The node is online */
@@ -494,6 +495,7 @@ static inline int num_node_state(enum node_states state)
 // ARM10C 20140419
 // ARM10C 20140426
 // ARM10C 20140705
+// ARM10C 20160528
 #define for_each_node_state(node, __state) \
 	for ( (node) = 0; (node) == 0; (node) = 1)
 

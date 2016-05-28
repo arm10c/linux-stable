@@ -67,6 +67,7 @@
 // ARM10C 20151024
 // ARM10C 20160123
 // ARM10C 20160521
+// ARM10C 20160528
 // SLAB_PANIC: 0x00040000UL
 #define SLAB_PANIC		0x00040000UL	/* Panic if kmem_cache_create() fails */
 /*
@@ -234,6 +235,9 @@ void kmem_cache_free(struct kmem_cache *, void *);
 // ARM10C 20151003
 // #define KMEM_CACHE(dentry, 0x160000):
 // kmem_cache_create("dentry", sizeof(struct dentry), __alignof__(struct dentry), (0x160000), NULL)
+// ARM10C 20160528
+// #define KMEM_CACHE(sigqueue, 0x00040000UL):
+// kmem_cache_create("sigqueue", sizeof(struct sigqueue), __alignof__(struct sigqueue), (0x00040000UL), NULL)
 #define KMEM_CACHE(__struct, __flags) kmem_cache_create(#__struct,\
 		sizeof(struct __struct), __alignof__(struct __struct),\
 		(__flags), NULL)
