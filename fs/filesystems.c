@@ -80,6 +80,8 @@ void put_filesystem(struct file_system_type *fs)
 // [4th] name: "rootfs", len: 6
 // ARM10C 20160521
 // [5th] fs->name: (&bd_type)->name: "bdev", strlen("bdev"): 4
+// ARM10C 20160604
+// [6th] fs->name: (&proc_fs_type)->name: "proc", strlen("proc"): 4
 static struct file_system_type **find_filesystem(const char *name, unsigned len)
 {
 	struct file_system_type **p;
@@ -140,9 +142,12 @@ static struct file_system_type **find_filesystem(const char *name, unsigned len)
 // &shmem_fs_type
 // ARM10C 20160521
 // &bd_type
+// ARM10C 20160604
+// &proc_fs_type
 int register_filesystem(struct file_system_type * fs)
 {
 	int res = 0;
+	// res: 0
 	// res: 0
 	// res: 0
 	// res: 0
@@ -154,16 +159,21 @@ int register_filesystem(struct file_system_type * fs)
 	// fs->name: (&rootfs_fs_type)->name: "rootfs", strchr("rootfs", '.'): NULL
 	// fs->name: (&shmem_fs_type)->name: "tmpfs", strchr("tmpfs", '.'): NULL
 	// fs->name: (&bd_type)->name: "bdev", strchr("bdev", '.'): NULL
+	// fs->name: (&proc_fs_type)->name: "proc", strchr("proc", '.'): NULL
 	BUG_ON(strchr(fs->name, '.'));
 
 	// fs->next: (&sysfs_fs_type)->next: NULL
 	// fs->next: (&rootfs_fs_type)->next: NULL
 	// fs->next: (&shmem_fs_type)->next: NULL
 	// fs->next: (&bd_type)->next: NULL
+	// fs->next: (&proc_fs_type)->next: NULL
 	if (fs->next)
 		return -EBUSY;
 
 	write_lock(&file_systems_lock);
+
+	// write_lock에서 한일:
+	// &file_systems_lock 을 사용한 write lock 수행
 
 	// write_lock에서 한일:
 	// &file_systems_lock 을 사용한 write lock 수행
@@ -184,17 +194,21 @@ int register_filesystem(struct file_system_type * fs)
 	// fs->name: (&shmem_fs_type)->name: "tmpfs", strlen("tmpfs"): 5
 	// find_filesystem("tmpfs", 5): &(&rootfs_fs_type)->next
 	// fs->name: (&bd_type)->name: "bdev", strlen("bdev"): 4
-	// find_filesystem("tmpfs", 4): &(&shmem_fs_type)->next
+	// find_filesystem("bdev", 4): &(&shmem_fs_type)->next
+	// fs->name: (&proc_fs_type)->name: "proc", strlen("proc"): 4
+	// find_filesystem("proc", 4): &(&bd_type)->next
 	p = find_filesystem(fs->name, strlen(fs->name));
 	// p: &file_systems
 	// p: &(&sysfs_fs_type)->next
 	// p: &(&rootfs_fs_type)->next
 	// p: &(&shmem_fs_type)->next
+	// p: &(&bd_type)->next
 
 	// *p: file_systems: NULL
 	// *p: (&sysfs_fs_type)->next: NULL
 	// *p: (&rootfs_fs_type)->next: NULL
 	// *p: (&shmem_fs_type)->next: NULL
+	// *p: (&bd_type)->next: NULL
 	if (*p)
 		res = -EBUSY;
 	else
@@ -202,11 +216,13 @@ int register_filesystem(struct file_system_type * fs)
 		// *p: (&sysfs_fs_type)->next: NULL, fs: &rootfs_fs_type
 		// *p: (&rootfs_fs_type)->next: NULL, fs: &shmem_fs_type
 		// *p: (&shmem_fs_type)->next: NULL, fs: &bd_type
+		// *p: (&bd_type)->next: NULL, fs: &proc_fs_type
 		*p = fs;
 		// *p: file_systems: &sysfs_fs_type
 		// *p: (&sysfs_fs_type)->next: &rootfs_fs_type
 		// *p: (&rootfs_fs_type)->next: &shmem_fs_type
 		// *p: (&shmem_fs_type)->next: &bd_type
+		// *p: (&bd_type)->next: &proc_fs_type
 
 	write_unlock(&file_systems_lock);
 
@@ -222,11 +238,16 @@ int register_filesystem(struct file_system_type * fs)
 	// write_unlock에서 한일:
 	// &file_systems_lock 을 사용한 write lock 수행
 
+	// write_unlock에서 한일:
+	// &file_systems_lock 을 사용한 write lock 수행
+
+	// res: 0
 	// res: 0
 	// res: 0
 	// res: 0
 	// res: 0
 	return res;
+	// return 0
 	// return 0
 	// return 0
 	// return 0

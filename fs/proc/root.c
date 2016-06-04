@@ -151,6 +151,7 @@ static void proc_kill_sb(struct super_block *sb)
 	put_pid_ns(ns);
 }
 
+// ARM10C 20160604
 static struct file_system_type proc_fs_type = {
 	.name		= "proc",
 	.mount		= proc_mount,
@@ -158,16 +159,59 @@ static struct file_system_type proc_fs_type = {
 	.fs_flags	= FS_USERNS_MOUNT,
 };
 
+// ARM10C 20160604
 void __init proc_root_init(void)
 {
 	int err;
 
 	proc_init_inodecache();
+
+	// proc_init_inodecache 에서 한일:
+	// struct proc_inode 크기 만큼의 메모리를 할당항는 kmem_cache 할당자를 생성함
+	// proc_inode_cachep: kmem_cache#n#28 (struct proc_inode)
+
+	// register_filesystem(&proc_fs_type): 0
 	err = register_filesystem(&proc_fs_type);
+	// err: 0
+
+	// register_filesystem에서 한일:
+	// (&bd_type)->next: &proc_fs_type
+	//
+	// file system 연결 결과
+	// file_systems: sysfs_fs_type -> rootfs_fs_type -> shmem_fs_type -> bd_type -> proc_fs_type
+
+	// err: 0
 	if (err)
 		return;
 
 	proc_self_init();
+
+	// proc_self_init 에서 한일:
+	// idr_layer_cache를 사용하여 struct idr_layer 의 메모리 kmem_cache#21-oX를 2 개를 할당 받음
+	//
+	// (&(&proc_inum_ida)->idr)->id_free 이 idr object new 1번을 가르킴
+	// |
+	// |-> ---------------------------------------------------------------------------------------------------------------------------
+	//     | idr object new 1         | idr object new 0     | idr object 6         | idr object 5         | .... | idr object 0     |
+	//     ---------------------------------------------------------------------------------------------------------------------------
+	//     | ary[0]: idr object new 0 | ary[0]: idr object 6 | ary[0]: idr object 5 | ary[0]: idr object 4 | .... | ary[0]: NULL     |
+	//     ---------------------------------------------------------------------------------------------------------------------------
+	//
+	// (&(&proc_inum_ida)->idr)->id_free: kmem_cache#21-oX (idr object new 1)
+	// (&(&proc_inum_ida)->idr)->id_free_cnt: 8
+	//
+	// (&(&proc_inum_ida)->idr)->top: kmem_cache#21-oX (struct idr_layer) (idr object 8)
+	// (&(&proc_inum_ida)->idr)->layers: 1
+	// (&(&proc_inum_ida)->idr)->id_free: (idr object new 0)
+	// (&(&proc_inum_ida)->idr)->id_free_cnt: 7
+	//
+	// (kmem_cache#27-oX (struct ida_bitmap))->bitmap 의 1 bit를 1로 set 수행
+	// (kmem_cache#27-oX (struct ida_bitmap))->nr_busy: 2
+	//
+	// kmem_cache인 kmem_cache#21 에서 할당한 object인 kmem_cache#21-oX (idr object new 1) 의 memory 공간을 반환함
+	//
+	// self_inum: 0xF0000001
+
 	proc_symlink("mounts", NULL, "self/mounts");
 
 	proc_net_init();
@@ -240,6 +284,7 @@ static const struct inode_operations proc_root_inode_operations = {
 /*
  * This is the root "inode" in the /proc tree..
  */
+// ARM10C 20160604
 struct proc_dir_entry proc_root = {
 	.low_ino	= PROC_ROOT_INO, 
 	.namelen	= 5, 

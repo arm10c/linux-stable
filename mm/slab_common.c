@@ -251,6 +251,8 @@ unsigned long calculate_alignment(unsigned long flags,
 // NULL, "shmem_inode_cache", 458, 0, 0x00040000UL, shmem_init_inode
 // ARM10C 20160521
 // name: "bdev_cache", size: 563, align: 0, flags: 0x162000, ctor: init_once
+// ARM10C 20160604
+// name: "proc_inode_cache", size: 426, align: 0, flags: 0x160000, ctor: init_once 
 struct kmem_cache *
 kmem_cache_create_memcg(struct mem_cgroup *memcg, const char *name, size_t size,
 			size_t align, unsigned long flags, void (*ctor)(void *),
@@ -461,6 +463,9 @@ out_locked:
 // "bdev_cache", sizeof(struct bdev_inode): 563 bytes, 0, 0x162000, init_once
 // ARM10C 20160528
 // "sigqueue", sizeof(struct sigqueue): 144 bytes, __alignof__(struct sigqueue), (0x00040000UL), NULL
+// ARM10C 20160604
+//0x00020000| 0x00100000| 0x00040000
+// "proc_inode_cache", sizeof(struct proc_inode): 426 bytes, 0, 0x160000, init_once
 struct kmem_cache *
 kmem_cache_create(const char *name, size_t size, size_t align,
 		  unsigned long flags, void (*ctor)(void *))
@@ -513,6 +518,8 @@ kmem_cache_create(const char *name, size_t size, size_t align,
 	// kmem_cache_create_memcg(NULL, "bdev_cache", 563, 0, 0x162000, init_once): kmem_cache#n#30
 	// name: "sigqueue", size: 144, align: 0, flags: 0x00040000, ctor: NULL
 	// kmem_cache_create_memcg(NULL, "sigqueue", 144, 0, 0x00040000, NULL): kmem_cache#n#29
+	// name: "proc_inode_cache", size: 426, align: 0, flags: 0x160000, ctor: init_once 
+	// kmem_cache_create_memcg(NULL, "proc_inode_cache", 426, 0, 0x160000,  init_once, NULL): kmem_cache#n#28
 	return kmem_cache_create_memcg(NULL, name, size, align, flags, ctor, NULL);
 	// return kmem_cache#21
 	// return kmem_cache#20
@@ -538,6 +545,7 @@ kmem_cache_create(const char *name, size_t size, size_t align,
 	// return kmem_cache#0
 	// return kmem_cache#n#30
 	// return kmem_cache#n#29
+	// return kmem_cache#n#28
 }
 EXPORT_SYMBOL(kmem_cache_create);
 

@@ -304,6 +304,8 @@ TRACE_EVENT(writeback_queue_io,
 	)
 );
 
+// ARM10C 20160604
+// background: 0, dirty: 0
 TRACE_EVENT(global_dirty_state,
 
 	TP_PROTO(unsigned long background_thresh,

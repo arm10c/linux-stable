@@ -28,6 +28,7 @@
 /*
  * ---- Global proportion definitions ----
  */
+// ARM10C 20160604
 struct fprop_global {
 	/* Number of events in the current period */
 	struct percpu_counter events;

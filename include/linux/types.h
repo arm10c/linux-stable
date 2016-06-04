@@ -19,6 +19,7 @@
 // DECLARE_BITMAP(allocated_irqs, 8212): allocated_irqs[257]
 // ARM10C 20151114
 // DECLARE_BITMAP(bits, 1): bits[1]
+// ARM10C 20160604
 #define DECLARE_BITMAP(name,bits) \
 	unsigned long name[BITS_TO_LONGS(bits)]
 
@@ -38,7 +39,9 @@ typedef __kernel_mode_t		mode_t;
 // ARM10C 20151031
 // ARM10C 20160116
 // ARM10C 20160319
+// ARM10C 20160604
 typedef unsigned short		umode_t;
+// ARM10C 20160604
 typedef __u32			nlink_t;
 typedef __kernel_off_t		off_t;
 // ARM10C 20150919
@@ -56,9 +59,11 @@ typedef _Bool			bool;
 // ARM10C 20151003
 // ARM10C 20151128
 // ARM10C 20160319
+// ARM10C 20160604
 typedef __kernel_uid32_t	uid_t;
 // ARM10C 20151003
 // ARM10C 20160319
+// ARM10C 20160604
 typedef __kernel_gid32_t	gid_t;
 typedef __kernel_uid16_t        uid16_t;
 typedef __kernel_gid16_t        gid16_t;
@@ -75,6 +80,7 @@ typedef __kernel_old_gid_t	old_gid_t;
 // ARM10C 20151003
 // ARM10C 20151114
 // ARM10C 20160319
+// ARM10C 20160604
 typedef __kernel_loff_t		loff_t;
 #endif
 
@@ -229,6 +235,7 @@ typedef unsigned long irq_hw_number_t;
 // ARM10C 20160319
 // ARM10C 20160402
 // ARM10C 20160409
+// ARM10C 20160604
 typedef struct {
 	int counter;
 } atomic_t;

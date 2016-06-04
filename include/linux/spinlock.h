@@ -379,6 +379,8 @@ static inline raw_spinlock_t *spinlock_check(spinlock_t *lock)
 // &info->lock: &(kmem_cache#4-oX (struct shmem_inode_info))->lock
 // ARM10C 20160423
 // &sbinfo->stat_lock: &(kmem_cache#29-oX (struct shmem_sb_info))->stat_lock
+// ARM10C 20160604
+// &ent->pde_unload_lock: &(kmem_cache#29-oX (struct proc_dir_entry))->pde_unload_lock
 #define spin_lock_init(_lock)				\
 do {							\
 	spinlock_check(_lock);				\
@@ -422,6 +424,8 @@ do {							\
 // &fs->lock: &((&init_task)->fs)->lock
 // ARM10C 20160521
 // &fs->lock: &((&init_task)->fs)->lock
+// ARM10C 20160604
+// &proc_subdir_lock
 static inline void spin_lock(spinlock_t *lock)
 {
 	// lock->rlock: (&contig_page_data->node_zones[0].lock)->rlock
@@ -509,6 +513,8 @@ do {									\
 // &fs->lock: &((&init_task)->fs)->lock
 // ARM10C 20160521
 // &fs->lock: &((&init_task)->fs)->lock
+// ARM10C 20160604
+// &proc_subdir_lock
 static inline void spin_unlock(spinlock_t *lock)
 {
 	raw_spin_unlock(&lock->rlock);

@@ -63,6 +63,7 @@
  * After a CPU has dirtied this many pages, balance_dirty_pages_ratelimited
  * will look to see if it needs to force writeback or throttling.
  */
+// ARM10C 20160604
 static long ratelimit_pages = 32;
 
 /* The following parameters are exported via /proc/sys/vm */
@@ -70,6 +71,7 @@ static long ratelimit_pages = 32;
 /*
  * Start background writeback (via writeback threads) at this percentage
  */
+// ARM10C 20160604
 int dirty_background_ratio = 10;
 
 /*
@@ -77,6 +79,7 @@ int dirty_background_ratio = 10;
  * dirty_background_ratio * the amount of dirtyable memory
  */
 // ARM10C 20160528
+// ARM10C 20160604
 unsigned long dirty_background_bytes;
 
 /*
@@ -90,6 +93,7 @@ int vm_highmem_is_dirtyable;
  * The generator of dirty data starts writeback at this percentage
  */
 // ARM10C 20140510
+// ARM10C 20160604
 int vm_dirty_ratio = 20;
 
 /*
@@ -98,6 +102,7 @@ int vm_dirty_ratio = 20;
  */
 // ARM10C 20140510
 // ARM10C 20160528
+// ARM10C 20160604
 unsigned long vm_dirty_bytes;
 
 /*
@@ -127,6 +132,7 @@ EXPORT_SYMBOL(laptop_mode);
 
 /* End of sysctl-exported parameters */
 
+// ARM10C 20160604
 unsigned long global_dirty_limit;
 
 /*
@@ -145,6 +151,7 @@ unsigned long global_dirty_limit;
  * measured in page writeback completions.
  *
  */
+// ARM10C 20160604
 static struct fprop_global writeout_completions;
 
 static void writeout_period(unsigned long t);
@@ -364,26 +371,50 @@ void global_dirty_limits(unsigned long *pbackground, unsigned long *pdirty)
 		// available_memory: 1
 
 // 2016/05/28 종료
+// 2016/06/04 시작
 
+	// vm_dirty_bytes: 0
 	if (vm_dirty_bytes)
 		dirty = DIV_ROUND_UP(vm_dirty_bytes, PAGE_SIZE);
 	else
+		// vm_dirty_ratio: 20, available_memory: 1
 		dirty = (vm_dirty_ratio * available_memory) / 100;
+		// dirty: 0
 
+	// dirty_background_bytes: 0
 	if (dirty_background_bytes)
 		background = DIV_ROUND_UP(dirty_background_bytes, PAGE_SIZE);
 	else
+		// dirty_background_ratio: 10, available_memory: 1
 		background = (dirty_background_ratio * available_memory) / 100;
+		// background: 0
 
+	// background: 0, dirty: 0
 	if (background >= dirty)
+		// dirty: 0
 		background = dirty / 2;
+		// background: 0
+
+	// current: &init_task
 	tsk = current;
+	// tsk: &init_task
+
+	// tsk->flags: (&init_task)->flags: 0x00200000, PF_LESS_THROTTLE: 0x00100000,
+	// tsk: &init_task, rt_task(&init_task): 0
 	if (tsk->flags & PF_LESS_THROTTLE || rt_task(tsk)) {
 		background += background / 4;
 		dirty += dirty / 4;
 	}
+
+	// *pbackground: background_thresh, background: 0
 	*pbackground = background;
+	// *pbackground: background_thresh: 0
+
+	// *pdirty: dirty_thresh, dirty: 0
 	*pdirty = dirty;
+	// *pdirty: dirty_thresh: 0
+
+	// background: 0, dirty: 0
 	trace_global_dirty_state(background, dirty);
 }
 
@@ -1848,11 +1879,25 @@ void writeback_set_ratelimit(void)
 {
 	unsigned long background_thresh;
 	unsigned long dirty_thresh;
+
 	global_dirty_limits(&background_thresh, &dirty_thresh);
+
+	// global_dirty_limits 에서 한일:
+	// background_thresh: 0, dirty_thresh: 0
+	
+	// dirty_thresh: 0
 	global_dirty_limit = dirty_thresh;
+	// global_dirty_limit: 0
+
+	// ratelimit_pages: 32, dirty_thresh: 0, num_online_cpus(): 1
 	ratelimit_pages = dirty_thresh / (num_online_cpus() * 32);
+	// ratelimit_pages: 0
+
+	// ratelimit_pages: 0
 	if (ratelimit_pages < 16)
+		// ratelimit_pages: 0
 		ratelimit_pages = 16;
+		// ratelimit_pages: 16
 }
 
 static int
@@ -1870,6 +1915,7 @@ ratelimit_handler(struct notifier_block *self, unsigned long action,
 	}
 }
 
+// ARM10C 20160604
 static struct notifier_block ratelimit_nb = {
 	.notifier_call	= ratelimit_handler,
 	.next		= NULL,
@@ -1897,9 +1943,31 @@ static struct notifier_block ratelimit_nb = {
 void __init page_writeback_init(void)
 {
 	writeback_set_ratelimit();
+
+	// writeback_set_ratelimit 에서 한일:
+	// global_dirty_limit: 0
+	// ratelimit_pages: 16
+
 	register_cpu_notifier(&ratelimit_nb);
 
+	// register_cpu_notifier에서 한일:
+	// (&cpu_chain)->head: &ratelimit_nb
+	// (&ratelimit_nb)->next은 (&buffer_cpu_notify_nb)->next로 대입
+
 	fprop_global_init(&writeout_completions);
+
+	// fprop_global_init 에서 한일:
+	// (&writeout_completions)->period: 0
+	// (&(&writeout_completions)->sequence)->sequence: 0
+	// (&(&(&(&(&writeout_completions)->events)->lock)->wait_lock)->rlock)->raw_lock: { { 0 } }
+	// (&(&(&(&(&writeout_completions)->events)->lock)->wait_lock)->rlock)->magic: 0xdead4ead
+	// (&(&(&(&(&writeout_completions)->events)->lock)->wait_lock)->rlock)->owner: 0xffffffff
+	// (&(&(&(&(&writeout_completions)->events)->lock)->wait_lock)->rlock)->owner_cpu: 0xffffffff
+	// (&(&(&writeout_completions)->events)->list)->next: &(&(&writeout_completions)->events)->list
+	// (&(&(&writeout_completions)->events)->list)->prev: &(&(&writeout_completions)->events)->list
+	// (&(&writeout_completions)->events)->count: 1
+	// (&(&writeout_completions)->events)->counters: kmem_cache#26-o0 에서 할당된 4 bytes 메모리 주소
+	// list head 인 &percpu_counters에 &(&(&writeout_completions)->events)->list를 연결함
 }
 
 /**

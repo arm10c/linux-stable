@@ -223,10 +223,13 @@ void cpu_hotplug_enable(void)
 // &hotplug_cfd_notifier
 // ARM10C 20151003
 // &buffer_cpu_notify_nb
+// ARM10C 20160604
+// &ratelimit_nb
 int __ref register_cpu_notifier(struct notifier_block *nb)
 {
 	int ret;
 	cpu_maps_update_begin();
+	// waiter를 만들어 mutex를 lock을 시도하며 기다리다 가능할 때 mutex lock한다.
 	// waiter를 만들어 mutex를 lock을 시도하며 기다리다 가능할 때 mutex lock한다.
 	// waiter를 만들어 mutex를 lock을 시도하며 기다리다 가능할 때 mutex lock한다.
 	// waiter를 만들어 mutex를 lock을 시도하며 기다리다 가능할 때 mutex lock한다.
@@ -259,10 +262,12 @@ int __ref register_cpu_notifier(struct notifier_block *nb)
 	// raw_notifier_chain_register(&cpu_chain, &exynos4_mct_cpu_nb): 0
 	// &cpu_chain, nb: &hotplug_cfd_notifier
 	// raw_notifier_chain_register(&cpu_chain, &hotplug_cfd_notifier): 0
-	//
 	// &cpu_chain, nb: &buffer_cpu_notify_nb
 	// raw_notifier_chain_register(&cpu_chain, &buffer_cpu_notify_nb): 0
+	// &cpu_chain, nb: &ratelimit_nb
+	// raw_notifier_chain_register(&cpu_chain, &ratelimit_nb): 0
 	ret = raw_notifier_chain_register(&cpu_chain, nb);
+	// ret: 0
 	// ret: 0
 	// ret: 0
 	// ret: 0
@@ -330,7 +335,13 @@ int __ref register_cpu_notifier(struct notifier_block *nb)
 	// (&cpu_chain)->head: &buffer_cpu_notify_nb
 	// (&buffer_cpu_notify_nb)->next은 (&hotplug_cfd_notifier)->next로 대입
 
+	// raw_notifier_chain_register(&ratelimit_nb) 에서 한일:
+	//
+	// (&cpu_chain)->head: &ratelimit_nb
+	// (&ratelimit_nb)->next은 (&buffer_cpu_notify_nb)->next로 대입
+
 	cpu_maps_update_done();
+	// mutex를 기다리는(waiter)가 있으면 깨우고 아니면 mutex unlock한다.
 	// mutex를 기다리는(waiter)가 있으면 깨우고 아니면 mutex unlock한다.
 	// mutex를 기다리는(waiter)가 있으면 깨우고 아니면 mutex unlock한다.
 	// mutex를 기다리는(waiter)가 있으면 깨우고 아니면 mutex unlock한다.
@@ -354,7 +365,9 @@ int __ref register_cpu_notifier(struct notifier_block *nb)
 	// ret: 0
 	// ret: 0
 	// ret: 0
+	// ret: 0
 	return ret;
+	// return 0
 	// return 0
 	// return 0
 	// return 0
@@ -886,11 +899,13 @@ EXPORT_SYMBOL(cpu_possible_mask);
 // ARM10C 20140927
 // ARM10C 20150328
 // ARM10C 20150523
+// ARM10C 20160604
 // CONFIG_NR_CPUS: 4
 static DECLARE_BITMAP(cpu_online_bits, CONFIG_NR_CPUS) __read_mostly;
 // ARM10C 20140927
 // ARM10C 20150328
 // ARM10C 20150523
+// ARM10C 20160604
 const struct cpumask *const cpu_online_mask = to_cpumask(cpu_online_bits);
 EXPORT_SYMBOL(cpu_online_mask);
 

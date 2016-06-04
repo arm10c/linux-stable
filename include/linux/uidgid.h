@@ -47,6 +47,7 @@ static inline gid_t __kgid_val(kgid_t gid)
 // ARM10C 20151003
 // ARM10C 20151128
 // ARM10C 20160319
+// ARM10C 20160604
 typedef uid_t kuid_t;
 // ARM10C 20150919
 // ARM10C 20151003

@@ -179,6 +179,7 @@ typedef struct raw_spinlock {
 // ARM10C 20151031
 // ARM10C 20160109
 // ARM10C 20160123
+// ARM10C 20160604
 // sizeof(spinlock_t): 16 bytes
 typedef struct spinlock {
 	union {
@@ -394,6 +395,18 @@ typedef struct spinlock {
 // ARM10C 20160514
 // #define DEFINE_SPINLOCK(proc_inum_lock):
 // spinlock_t proc_inum_lock =
+// (spinlock_t )
+// { { .rlock =
+//     {
+//       .raw_lock = { { 0 } },
+//       .magic = 0xdead4ead,
+//       .owner_cpu = -1,
+//       .owner = 0xffffffff,
+//     }
+// } }
+// ARM10C 20160604
+// #define DEFINE_SPINLOCK(proc_subdir_lock):
+// spinlock_t proc_subdir_lock =
 // (spinlock_t )
 // { { .rlock =
 //     {

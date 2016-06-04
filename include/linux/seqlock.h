@@ -57,6 +57,8 @@ typedef struct seqcount {
 
 // ARM10C 20151219
 // &dentry->d_seq: &(kmem_cache#5-oX)->d_seq
+// ARM10C 20160604
+// &p->sequence: &(&writeout_completions)->sequence
 static inline void __seqcount_init(seqcount_t *s, const char *name,
 					  struct lock_class_key *key)
 {
@@ -98,6 +100,8 @@ static inline void seqcount_lockdep_reader_access(const seqcount_t *s)
 # define SEQCOUNT_DEP_MAP_INIT(lockname)
 // ARM10C 20151219
 // &dentry->d_seq: &(kmem_cache#5-oX)->d_seq
+// ARM10C 20160604
+// &p->sequence: &(&writeout_completions)->sequence
 # define seqcount_init(s) __seqcount_init(s, NULL, NULL)
 // ARM10C 20150418
 # define seqcount_lockdep_reader_access(x)

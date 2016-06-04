@@ -34,17 +34,45 @@
  */
 #include <linux/flex_proportions.h>
 
+// ARM10C 20160604
+// &writeout_completions
 int fprop_global_init(struct fprop_global *p)
 {
 	int err;
 
+	// p->period: (&writeout_completions)->period
 	p->period = 0;
+	// p->period: (&writeout_completions)->period: 0
+
 	/* Use 1 to avoid dealing with periods with 0 events... */
+	// &p->events: &(&writeout_completions)->events
+	// percpu_counter_init(&(&writeout_completions)->events, 1): 0
 	err = percpu_counter_init(&p->events, 1);
+	// err: 0
+
+	// percpu_counter_init에서 한일:
+	// (&(&(&(&(&writeout_completions)->events)->lock)->wait_lock)->rlock)->raw_lock: { { 0 } }
+	// (&(&(&(&(&writeout_completions)->events)->lock)->wait_lock)->rlock)->magic: 0xdead4ead
+	// (&(&(&(&(&writeout_completions)->events)->lock)->wait_lock)->rlock)->owner: 0xffffffff
+	// (&(&(&(&(&writeout_completions)->events)->lock)->wait_lock)->rlock)->owner_cpu: 0xffffffff
+	// (&(&(&writeout_completions)->events)->list)->next: &(&(&writeout_completions)->events)->list
+	// (&(&(&writeout_completions)->events)->list)->prev: &(&(&writeout_completions)->events)->list
+	// (&(&writeout_completions)->events)->count: 1
+	// (&(&writeout_completions)->events)->counters: kmem_cache#26-o0 에서 할당된 4 bytes 메모리 주소
+	// list head 인 &percpu_counters에 &(&(&writeout_completions)->events)->list를 연결함
+
+	// err: 0
 	if (err)
 		return err;
+
+	// &p->sequence: &(&writeout_completions)->sequence
 	seqcount_init(&p->sequence);
+
+	// seqcount_init 에서 한일:
+	// (&(&writeout_completions)->sequence)->sequence: 0
+
 	return 0;
+	// return 0
 }
 
 void fprop_global_destroy(struct fprop_global *p)

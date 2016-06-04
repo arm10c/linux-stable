@@ -430,8 +430,11 @@ void ida_simple_remove(struct ida *ida, unsigned int id);
  */
 // ARM10C 20160514
 // &proc_inum_ida, &i
+// ARM10C 20160604
+// &proc_inum_ida, &i
 static inline int ida_get_new(struct ida *ida, int *p_id)
 {
+	// ida: &proc_inum_ida, p_id: &i
 	// ida: &proc_inum_ida, p_id: &i
 	return ida_get_new_above(ida, 0, p_id);
 
@@ -454,6 +457,19 @@ static inline int ida_get_new(struct ida *ida, int *p_id)
 	// *p_id: 0
 	//
 	// kmem_cache인 kmem_cache#21 에서 할당한 object인 kmem_cache#21-oX (idr object 7) 의 memory 공간을 반환함
+
+	// ida_get_new_above에서 한일:
+	// (&(&proc_inum_ida)->idr)->top: kmem_cache#21-oX (struct idr_layer) (idr object 8)
+	// (&(&proc_inum_ida)->idr)->layers: 1
+	// (&(&proc_inum_ida)->idr)->id_free: (idr object new 0)
+	// (&(&proc_inum_ida)->idr)->id_free_cnt: 7
+	//
+	// (kmem_cache#27-oX (struct ida_bitmap))->bitmap 의 1 bit를 1로 set 수행
+	// (kmem_cache#27-oX (struct ida_bitmap))->nr_busy: 2
+	//
+	// *p_id: 1
+	//
+	// kmem_cache인 kmem_cache#21 에서 할당한 object인 kmem_cache#21-oX (idr object new 1) 의 memory 공간을 반환함
 }
 
 void __init idr_init_cache(void);

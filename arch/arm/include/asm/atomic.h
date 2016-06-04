@@ -72,6 +72,8 @@
 // &s->s_active: &(kmem_cache#25-oX (struct super_block))->s_active
 // ARM10C 20160514
 // &new_ns->count: (kmem_cache#30-oX (struct mnt_namespace))->count
+// ARM10C 20160604
+// &ent->count: &(kmem_cache#29-oX (struct proc_dir_entry))->count
 #define atomic_set(v,i)	(((v)->counter) = (i))
 
 #if __LINUX_ARM_ARCH__ >= 6

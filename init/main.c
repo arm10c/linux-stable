@@ -931,7 +931,9 @@ asmlinkage void __init start_kernel(void)
 
 	/* rootfs populating might need page-writeback */
 	page_writeback_init();
-#ifdef CONFIG_PROC_FS
+	// page writeback을 위한 global_dirty_limit, ratelimit_pages 값을 초기화 수행
+
+#ifdef CONFIG_PROC_FS // CONFIG_PROC_FS=y
 	proc_root_init();
 #endif
 	cgroup_init();

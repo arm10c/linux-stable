@@ -57,6 +57,7 @@ static void proc_evict_inode(struct inode *inode)
 		ns_ops->put(ns);
 }
 
+// ARM10C 20160604
 static struct kmem_cache * proc_inode_cachep;
 
 static struct inode *proc_alloc_inode(struct super_block *sb)
@@ -91,6 +92,7 @@ static void proc_destroy_inode(struct inode *inode)
 	call_rcu(&inode->i_rcu, proc_i_callback);
 }
 
+// ARM10C 20160604
 static void init_once(void *foo)
 {
 	struct proc_inode *ei = (struct proc_inode *) foo;
@@ -98,13 +100,17 @@ static void init_once(void *foo)
 	inode_init_once(&ei->vfs_inode);
 }
 
+// ARM10C 20160604
 void __init proc_init_inodecache(void)
 {
+	// sizeof(struct proc_inode): 426 bytes, SLAB_RECLAIM_ACCOUNT: 0x00020000UL, SLAB_MEM_SPREAD: 0x00100000UL, SLAB_PANIC: 0x00040000UL
+	// kmem_cache_create("proc_inode_cache", 426, 0, 0x160000, init_once): kmem_cache#n#28
 	proc_inode_cachep = kmem_cache_create("proc_inode_cache",
 					     sizeof(struct proc_inode),
 					     0, (SLAB_RECLAIM_ACCOUNT|
 						SLAB_MEM_SPREAD|SLAB_PANIC),
 					     init_once);
+	// proc_inode_cachep: kmem_cache#n#28 (struct proc_inode)
 }
 
 static int proc_show_options(struct seq_file *seq, struct dentry *root)

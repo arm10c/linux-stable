@@ -56,6 +56,8 @@ void *memmove(void *__dest, __const void *__src, size_t count)
 	return __dest;
 }
 
+// ARM10C 20160604
+// fn: "mounts"
 size_t strlen(const char *s)
 {
 	const char *sc = s;
@@ -103,6 +105,8 @@ void *memchr(const void *s, int c, size_t count)
 	return NULL;
 }
 
+// ARM10C 20160604
+// cp: &"mounts", '/'
 char *strchr(const char *s, int c)
 {
 	while (*s != (char)c)

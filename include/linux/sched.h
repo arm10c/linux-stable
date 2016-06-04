@@ -1750,6 +1750,8 @@ extern void thread_group_cputime_adjusted(struct task_struct *p, cputime_t *ut, 
 #define PF_KSWAPD	0x00040000	/* I am kswapd */
 #define PF_MEMALLOC_NOIO 0x00080000	/* Allocating memory without IO involved */
 // ARM10C 20140510
+// ARM10C 20160604
+// PF_LESS_THROTTLE: 0x00100000
 #define PF_LESS_THROTTLE 0x00100000	/* Throttle me less: I clean memory */
 // ARM10C 20140510
 // ARM10C 20150808

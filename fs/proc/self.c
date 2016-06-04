@@ -42,6 +42,7 @@ static const struct inode_operations proc_self_inode_operations = {
 	.put_link	= kfree_put_link,
 };
 
+// ARM10C 20160604
 static unsigned self_inum;
 
 int proc_setup_self(struct super_block *s)
@@ -78,7 +79,34 @@ int proc_setup_self(struct super_block *s)
 	return 0;
 }
 
+// ARM10C 20160604
 void __init proc_self_init(void)
 {
 	proc_alloc_inum(&self_inum);
+
+	// proc_alloc_inum 에서 한일:
+	// idr_layer_cache를 사용하여 struct idr_layer 의 메모리 kmem_cache#21-oX를 2 개를 할당 받음
+	//
+	// (&(&proc_inum_ida)->idr)->id_free 이 idr object new 1번을 가르킴
+	// |
+	// |-> ---------------------------------------------------------------------------------------------------------------------------
+	//     | idr object new 1         | idr object new 0     | idr object 6         | idr object 5         | .... | idr object 0     |
+	//     ---------------------------------------------------------------------------------------------------------------------------
+	//     | ary[0]: idr object new 0 | ary[0]: idr object 6 | ary[0]: idr object 5 | ary[0]: idr object 4 | .... | ary[0]: NULL     |
+	//     ---------------------------------------------------------------------------------------------------------------------------
+	//
+	// (&(&proc_inum_ida)->idr)->id_free: kmem_cache#21-oX (idr object new 1)
+	// (&(&proc_inum_ida)->idr)->id_free_cnt: 8
+	//
+	// (&(&proc_inum_ida)->idr)->top: kmem_cache#21-oX (struct idr_layer) (idr object 8)
+	// (&(&proc_inum_ida)->idr)->layers: 1
+	// (&(&proc_inum_ida)->idr)->id_free: (idr object new 0)
+	// (&(&proc_inum_ida)->idr)->id_free_cnt: 7
+	//
+	// (kmem_cache#27-oX (struct ida_bitmap))->bitmap 의 1 bit를 1로 set 수행
+	// (kmem_cache#27-oX (struct ida_bitmap))->nr_busy: 2
+	//
+	// kmem_cache인 kmem_cache#21 에서 할당한 object인 kmem_cache#21-oX (idr object new 1) 의 memory 공간을 반환함
+	//
+	// self_inum: 0xF0000001
 }

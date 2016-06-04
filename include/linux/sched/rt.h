@@ -32,6 +32,8 @@
 
 // ARM10C 20140510
 // p->prio: init_task->prio: 120
+// ARM10C 20160604
+// p->prio: (&init_task)->prio: 120
 static inline int rt_prio(int prio)
 {
 	// prio: 120, MAX_RT_PRIO: 100
@@ -42,11 +44,16 @@ static inline int rt_prio(int prio)
 
 // ARM10C 20140510
 // tsk: init_task
+// ARM10C 20160604
+// tsk: &init_task
 static inline int rt_task(struct task_struct *p)
 {
 	// p->prio: init_task->prio: 120
 	// rt_prio(120): 0
+	// p->prio: (&init_task)->prio: 120
+	// rt_prio(120): 0
 	return rt_prio(p->prio);
+	// return 0
 	// return 0
 }
 

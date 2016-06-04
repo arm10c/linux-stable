@@ -59,6 +59,7 @@ extern int nr_cpu_ids;
 // ARM10C 20141004
 // ARM10C 20150418
 // ARM10C 20150523
+// ARM10C 20160604
 // NR_CPUS: 4
 // nr_cpumask_bits: 4
 #define nr_cpumask_bits	NR_CPUS
@@ -111,7 +112,10 @@ extern const struct cpumask *const cpu_present_mask;
 // ARM10C 20140913
 extern const struct cpumask *const cpu_active_mask;
 
-#if NR_CPUS > 1
+#if NR_CPUS > 1 // NR_CPUS: 4
+// ARM10C 20160604
+// cpu_online_mask: 0x1
+// num_online_cpus(): 1
 #define num_online_cpus()	cpumask_weight(cpu_online_mask)
 // ARM10C 20140215
 // ARM10C 20150912
@@ -593,6 +597,8 @@ static inline bool cpumask_full(const struct cpumask *srcp)
 // cpu_possible_mask: 0xF
 // ARM10C 20140913
 // new_mask: &cpu_bit_bitmap[1][0]
+// ARM10C 20160604
+// cpu_online_bits[1]
 static inline unsigned int cpumask_weight(const struct cpumask *srcp)
 {
 	// srcp: cpu_possible_mask, cpumask_bits(cpu_possible_mask): cpu_possible_mask->bits, nr_cpumask_bits: 4

@@ -29,6 +29,7 @@ BLOCKING_NOTIFIER_HEAD(reboot_notifier_list);
 // ARM10C 20150404
 // ARM10C 20150620
 // ARM10C 20151003
+// ARM10C 20160604
 static int notifier_chain_register(struct notifier_block **nl,
 		struct notifier_block *n)
 {
@@ -408,6 +409,8 @@ EXPORT_SYMBOL_GPL(blocking_notifier_call_chain);
 // &cpu_chain, nb: &hotplug_cfd_notifier
 // ARM10C 20151003
 // &cpu_chain, nb: &buffer_cpu_notify_nb
+// ARM10C 20160604
+// &cpu_chain, nb: &ratelimit_nb
 int raw_notifier_chain_register(struct raw_notifier_head *nh,
 		struct notifier_block *n)
 {
@@ -435,7 +438,10 @@ int raw_notifier_chain_register(struct raw_notifier_head *nh,
 	// notifier_chain_register(&exynos4_mct_cpu_nb, &hotplug_cfd_notifier): 0
 	// nh->head: (&cpu_chain)->head: &hotplug_cfd_notifier, n: &buffer_cpu_notify_nb
 	// notifier_chain_register(&hotplug_cfd_notifier, &buffer_cpu_notify_nb): 0
+	// nh->head: (&cpu_chain)->head: &buffer_cpu_notify_nb, n: &ratelimit_nb
+	// notifier_chain_register(&buffer_cpu_notify_nb, &ratelimit_nb): 0
 	return notifier_chain_register(&nh->head, n);
+	// return 0
 	// return 0
 	// return 0
 	// return 0
@@ -507,6 +513,11 @@ int raw_notifier_chain_register(struct raw_notifier_head *nh,
 	// notifier_chain_register(&buffer_cpu_notify_nb)에서 한일:
 	//
 	// (&cpu_chain)->head: &buffer_cpu_notify_nb
+	// &nh->head에 n의 포인터를 대입함
+
+	// notifier_chain_register(&ratelimit_nb)에서 한일:
+	//
+	// (&cpu_chain)->head: &ratelimit_nb
 	// &nh->head에 n의 포인터를 대입함
 }
 EXPORT_SYMBOL_GPL(raw_notifier_chain_register);

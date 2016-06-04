@@ -30,6 +30,8 @@ struct mempolicy;
  * non-directory entries).
  */
 // ARM10C 20150516
+// ARM10C 20160604
+// sizeof(struct proc_dir_entry): 91 bytes
 struct proc_dir_entry {
 	unsigned int low_ino;
 	umode_t mode;
@@ -51,6 +53,7 @@ struct proc_dir_entry {
 	char name[];
 };
 
+// ARM10C 20160604
 union proc_op {
 	int (*proc_get_link)(struct dentry *, struct path *);
 	int (*proc_read)(struct task_struct *task, char *page);
@@ -59,6 +62,8 @@ union proc_op {
 		struct task_struct *task);
 };
 
+// ARM10C 20160604
+// sizeof(struct proc_inode): 426 bytes
 struct proc_inode {
 	struct pid *pid;
 	int fd;

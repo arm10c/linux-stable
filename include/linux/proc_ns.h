@@ -16,6 +16,7 @@ struct proc_ns_operations {
 	unsigned int (*inum)(void *ns);
 };
 
+// ARM10C 20160604
 struct proc_ns {
 	void *ns;
 	const struct proc_ns_operations *ns_ops;
