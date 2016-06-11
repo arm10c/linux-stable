@@ -178,6 +178,8 @@
 // &info->swaplist: &(kmem_cache#4-oX (struct shmem_inode_info))->swaplist
 // ARM10C 20160514
 // &new_ns->list: (kmem_cache#30-oX (struct mnt_namespace))->list
+// ARM10C 20160611
+// &ent->pde_openers: &(kmem_cache#29-oX (struct proc_dir_entry))->pde_openers
 static inline void INIT_LIST_HEAD(struct list_head *list)
 {
 	list->next = list;

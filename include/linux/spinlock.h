@@ -426,6 +426,8 @@ do {							\
 // &fs->lock: &((&init_task)->fs)->lock
 // ARM10C 20160604
 // &proc_subdir_lock
+// ARM10C 20160611
+// &proc_subdir_lock
 static inline void spin_lock(spinlock_t *lock)
 {
 	// lock->rlock: (&contig_page_data->node_zones[0].lock)->rlock
@@ -514,6 +516,8 @@ do {									\
 // ARM10C 20160521
 // &fs->lock: &((&init_task)->fs)->lock
 // ARM10C 20160604
+// &proc_subdir_lock
+// ARM10C 20160611
 // &proc_subdir_lock
 static inline void spin_unlock(spinlock_t *lock)
 {

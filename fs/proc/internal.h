@@ -31,6 +31,7 @@ struct mempolicy;
  */
 // ARM10C 20150516
 // ARM10C 20160604
+// ARM10C 20160611
 // sizeof(struct proc_dir_entry): 91 bytes
 struct proc_dir_entry {
 	unsigned int low_ino;

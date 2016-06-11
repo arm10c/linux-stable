@@ -28,6 +28,7 @@
 #include "internal.h"
 
 // ARM10C 20160604
+// ARM10C 20160611
 // DEFINE_SPINLOCK(proc_subdir_lock):
 // spinlock_t proc_subdir_lock =
 // (spinlock_t )
@@ -89,7 +90,7 @@ static const struct inode_operations proc_file_inode_operations = {
  * returns "serial" in residual.
  */
 // ARM10C 20160604
-// name: "mounts", ret: NULL, residual: &"mounts"
+// name: "mounts", ret: &parent, residual: &"mounts"
 static int __xlate_proc_name(const char *name, struct proc_dir_entry **ret,
 			     const char **residual)
 {
@@ -99,7 +100,7 @@ static int __xlate_proc_name(const char *name, struct proc_dir_entry **ret,
 	struct proc_dir_entry	*de;
 	unsigned int		len;
 
-	// ret: NULL
+	// ret: &parent, *ret: parent: NULL
 	de = *ret;
 	// de: NULL
 
@@ -135,16 +136,16 @@ static int __xlate_proc_name(const char *name, struct proc_dir_entry **ret,
 	*residual = cp;
 	// *residual: "mounts"
 
-	// *ret: NULL, de: NULL
+	// *ret: parent: NULL, de: &proc_root
 	*ret = de;
-	// *ret: NULL
+	// *ret: parent: &proc_root
 
 	return 0;
 	// return 0
 }
 
 // ARM10C 20160604
-// name: "mounts", parent: NULL, &fn: &"mounts"
+// name: "mounts", parent: &parent, &fn: &"mounts"
 static int xlate_proc_name(const char *name, struct proc_dir_entry **ret,
 			   const char **residual)
 {
@@ -155,13 +156,13 @@ static int xlate_proc_name(const char *name, struct proc_dir_entry **ret,
 	// spin_lock 에서 한일:
 	// &proc_subdir_lock 을 이용하여 spin lock 을 수행
 
-	// name: "mounts", ret: NULL, residual: &"mounts"
-	// __xlate_proc_name("mounts", ret, "mounts"): 0
+	// name: "mounts", ret: &parent, residual: &"mounts"
+	// __xlate_proc_name("mounts", &parent, "mounts"): 0
 	rv = __xlate_proc_name(name, ret, residual);
 	// rv: 0
 
 	// __xlate_proc_name 에서 한일:
-	// residual: "mounts" ret: NULL
+	// residual: "mounts" ret: &proc_root
 
 	spin_unlock(&proc_subdir_lock);
 
@@ -219,12 +220,15 @@ static DEFINE_SPINLOCK(proc_inum_lock); /* protects the above */
 // &new_ns->proc_inum: &(kmem_cache#30-oX (struct mnt_namespace))->proc_inum
 // ARM10C 20160604
 // &self_inum
+// ARM10C 20160611
+// &dp->low_ino: &(kmem_cache#29-oX (struct proc_dir_entry))->low_ino
 int proc_alloc_inum(unsigned int *inum)
 {
 	unsigned int i;
 	int error;
 
 retry:
+	// GFP_KERNEL: 0xD0, ida_pre_get(&proc_inum_ida, 0xD0): 1
 	// GFP_KERNEL: 0xD0, ida_pre_get(&proc_inum_ida, 0xD0): 1
 	// GFP_KERNEL: 0xD0, ida_pre_get(&proc_inum_ida, 0xD0): 1
 	if (!ida_pre_get(&proc_inum_ida, GFP_KERNEL))
@@ -258,6 +262,20 @@ retry:
 	// (&(&proc_inum_ida)->idr)->id_free: kmem_cache#21-oX (idr object new 1)
 	// (&(&proc_inum_ida)->idr)->id_free_cnt: 8
 
+	// __idr_pre_get에서 한일:
+	// idr_layer_cache를 사용하여 struct idr_layer 의 메모리 kmem_cache#21-oX를 1 개를 할당 받음
+	//
+	// (&(&proc_inum_ida)->idr)->id_free 이 idr object new 2번을 가르킴
+	// |
+	// |-> ---------------------------------------------------------------------------------------------------------------------------
+	//     | idr object new 2         | idr object new 0     | idr object 6         | idr object 5         | .... | idr object 0     |
+	//     ---------------------------------------------------------------------------------------------------------------------------
+	//     | ary[0]: idr object new 0 | ary[0]: idr object 6 | ary[0]: idr object 5 | ary[0]: idr object 4 | .... | ary[0]: NULL     |
+	//     ---------------------------------------------------------------------------------------------------------------------------
+	//
+	// (&(&proc_inum_ida)->idr)->id_free: kmem_cache#21-oX (idr object new 2)
+	// (&(&proc_inum_ida)->idr)->id_free_cnt: 8
+
 	spin_lock_irq(&proc_inum_lock);
 
 	// spin_lock_irq 에서 한일:
@@ -266,9 +284,14 @@ retry:
 	// spin_lock_irq 에서 한일:
 	// &proc_inum_lock 을 사용하여 spin lock을 수행
 
+	// spin_lock_irq 에서 한일:
+	// &proc_inum_lock 을 사용하여 spin lock을 수행
+
+	// ida_get_new(&proc_inum_ida, &i): 0
 	// ida_get_new(&proc_inum_ida, &i): 0
 	// ida_get_new(&proc_inum_ida, &i): 0
 	error = ida_get_new(&proc_inum_ida, &i);
+	// error: 0
 	// error: 0
 	// error: 0
 
@@ -305,6 +328,19 @@ retry:
 	//
 	// kmem_cache인 kmem_cache#21 에서 할당한 object인 kmem_cache#21-oX (idr object new 1) 의 memory 공간을 반환함
 
+	// ida_get_new 에서 한일:
+	// (&(&proc_inum_ida)->idr)->top: kmem_cache#21-oX (struct idr_layer) (idr object 8)
+	// (&(&proc_inum_ida)->idr)->layers: 1
+	// (&(&proc_inum_ida)->idr)->id_free: (idr object new 0)
+	// (&(&proc_inum_ida)->idr)->id_free_cnt: 7
+	//
+	// (kmem_cache#27-oX (struct ida_bitmap))->bitmap 의 2 bit를 1로 set 수행
+	// (kmem_cache#27-oX (struct ida_bitmap))->nr_busy: 3
+	//
+	// i: 2
+	//
+	// kmem_cache인 kmem_cache#21 에서 할당한 object인 kmem_cache#21-oX (idr object new 2) 의 memory 공간을 반환함
+
 	spin_unlock_irq(&proc_inum_lock);
 
 	// spin_unlock_irq 에서 한일:
@@ -313,6 +349,10 @@ retry:
 	// spin_unlock_irq 에서 한일:
 	// &proc_inum_lock 을 사용하여 spin lock을 수행
 
+	// spin_unlock_irq 에서 한일:
+	// &proc_inum_lock 을 사용하여 spin lock을 수행
+
+	// error: 0
 	// error: 0
 	// error: 0
 	if (error == -EAGAIN)
@@ -322,6 +362,7 @@ retry:
 
 	// i: 0, UINT_MAX: 0xFFFFFFFF, PROC_DYNAMIC_FIRST: 0xF0000000
 	// i: 1, UINT_MAX: 0xFFFFFFFF, PROC_DYNAMIC_FIRST: 0xF0000000
+	// i: 2, UINT_MAX: 0xFFFFFFFF, PROC_DYNAMIC_FIRST: 0xF0000000
 	if (i > UINT_MAX - PROC_DYNAMIC_FIRST) {
 		spin_lock_irq(&proc_inum_lock);
 		ida_remove(&proc_inum_ida, i);
@@ -331,11 +372,14 @@ retry:
 
 	// *inum: (kmem_cache#30-oX (struct mnt_namespace))->proc_inum, PROC_DYNAMIC_FIRST: 0xF0000000, i: 0
 	// *inum: self_inum, PROC_DYNAMIC_FIRST: 0xF0000000, i: 1
+	// *inum: (kmem_cache#29-oX (struct proc_dir_entry))->low_ino, PROC_DYNAMIC_FIRST: 0xF0000000, i: 2
 	*inum = PROC_DYNAMIC_FIRST + i;
 	// *inum: (kmem_cache#30-oX (struct mnt_namespace))->proc_inum: 0xF0000000
 	// *inum: self_inum: 0xF0000001
+	// *inum: (kmem_cache#29-oX (struct proc_dir_entry))->low_ino: 0xF0000002
 
 	return 0;
+	// return 0
 	// return 0
 	// return 0
 }
@@ -354,6 +398,7 @@ static void *proc_follow_link(struct dentry *dentry, struct nameidata *nd)
 	return NULL;
 }
 
+// ARM10C 20160611
 static const struct inode_operations proc_link_inode_operations = {
 	.readlink	= generic_readlink,
 	.follow_link	= proc_follow_link,
@@ -470,21 +515,58 @@ static const struct inode_operations proc_dir_inode_operations = {
 	.setattr	= proc_notify_change,
 };
 
+// ARM10C 20160611
+// parent: &proc_root, ent: kmem_cache#29-oX (struct proc_dir_entry)
 static int proc_register(struct proc_dir_entry * dir, struct proc_dir_entry * dp)
 {
 	struct proc_dir_entry *tmp;
 	int ret;
 	
+	// &dp->low_ino: &(kmem_cache#29-oX (struct proc_dir_entry))->low_ino
+	// proc_alloc_inum(&(kmem_cache#29-oX (struct proc_dir_entry))->low_ino): 0
 	ret = proc_alloc_inum(&dp->low_ino);
+	// ret: 0
+
+	// proc_alloc_inum 에서 한일:
+	// idr_layer_cache를 사용하여 struct idr_layer 의 메모리 kmem_cache#21-oX를 1 개를 할당 받음
+	//
+	// (&(&proc_inum_ida)->idr)->id_free 이 idr object new 2번을 가르킴
+	// |
+	// |-> ---------------------------------------------------------------------------------------------------------------------------
+	//     | idr object new 2         | idr object new 0     | idr object 6         | idr object 5         | .... | idr object 0     |
+	//     ---------------------------------------------------------------------------------------------------------------------------
+	//     | ary[0]: idr object new 0 | ary[0]: idr object 6 | ary[0]: idr object 5 | ary[0]: idr object 4 | .... | ary[0]: NULL     |
+	//     ---------------------------------------------------------------------------------------------------------------------------
+	//
+	// (&(&proc_inum_ida)->idr)->id_free: kmem_cache#21-oX (idr object new 2)
+	// (&(&proc_inum_ida)->idr)->id_free_cnt: 8
+	//
+	// (&(&proc_inum_ida)->idr)->top: kmem_cache#21-oX (struct idr_layer) (idr object 8)
+	// (&(&proc_inum_ida)->idr)->layers: 1
+	// (&(&proc_inum_ida)->idr)->id_free: (idr object new 0)
+	// (&(&proc_inum_ida)->idr)->id_free_cnt: 7
+	//
+	// (kmem_cache#27-oX (struct ida_bitmap))->bitmap 의 2 bit를 1로 set 수행
+	// (kmem_cache#27-oX (struct ida_bitmap))->nr_busy: 3
+	//
+	// kmem_cache인 kmem_cache#21 에서 할당한 object인 kmem_cache#21-oX (idr object new 2) 의 memory 공간을 반환함
+	//
+	// (kmem_cache#29-oX (struct proc_dir_entry))->low_ino: 0xF0000002
+
+	// ret: 0
 	if (ret)
 		return ret;
 
+	// dp->mode: (kmem_cache#29-oX (struct proc_dir_entry))->mode: 0120777,
+	// S_ISDIR(0120777): 0, S_ISLNK(0120777): 1
 	if (S_ISDIR(dp->mode)) {
 		dp->proc_fops = &proc_dir_operations;
 		dp->proc_iops = &proc_dir_inode_operations;
 		dir->nlink++;
 	} else if (S_ISLNK(dp->mode)) {
+		// dp->proc_iops: (kmem_cache#29-oX (struct proc_dir_entry))->proc_iops
 		dp->proc_iops = &proc_link_inode_operations;
+		// dp->proc_iops: (kmem_cache#29-oX (struct proc_dir_entry))->proc_iops: &proc_link_inode_operations
 	} else if (S_ISREG(dp->mode)) {
 		BUG_ON(dp->proc_fops == NULL);
 		dp->proc_iops = &proc_file_inode_operations;
@@ -495,6 +577,10 @@ static int proc_register(struct proc_dir_entry * dir, struct proc_dir_entry * dp
 
 	spin_lock(&proc_subdir_lock);
 
+	// spin_lock 에서 한일:
+	// &proc_subdir_lock 을 이용하여 spin lock 을 수행
+
+	// dir: &proc_root, dir->subdir: (&proc_root)->subdir: NULL
 	for (tmp = dir->subdir; tmp; tmp = tmp->next)
 		if (strcmp(tmp->name, dp->name) == 0) {
 			WARN(1, "proc_dir_entry '%s/%s' already registered\n",
@@ -502,16 +588,29 @@ static int proc_register(struct proc_dir_entry * dir, struct proc_dir_entry * dp
 			break;
 		}
 
+	// dp->next: (kmem_cache#29-oX (struct proc_dir_entry))->next, dir->subdir: (&proc_root)->subdir: NULL
 	dp->next = dir->subdir;
+	// dp->next: (kmem_cache#29-oX (struct proc_dir_entry))->next: NULL
+
+	// dp->parent: (kmem_cache#29-oX (struct proc_dir_entry))->parent, dir: &proc_root
 	dp->parent = dir;
+	// dp->parent: (kmem_cache#29-oX (struct proc_dir_entry))->parent: &proc_root
+
+	// dir->subdir: (&proc_root)->subdir, dp: kmem_cache#29-oX (struct proc_dir_entry)
 	dir->subdir = dp;
+	// dir->subdir: (&proc_root)->subdir: kmem_cache#29-oX (struct proc_dir_entry)
+
 	spin_unlock(&proc_subdir_lock);
 
+	// spin_unlock 에서 한일:
+	// &proc_subdir_lock 을 이용하여 spin unlock 을 수행
+
 	return 0;
+	// return 0
 }
 
 // ARM10C 20160604
-// &parent: NULL, name: "mounts", 0120777, 1
+// &parent, name: "mounts", 0120777, 1
 static struct proc_dir_entry *__proc_create(struct proc_dir_entry **parent,
 					  const char *name,
 					  umode_t mode,
@@ -530,10 +629,13 @@ static struct proc_dir_entry *__proc_create(struct proc_dir_entry **parent,
 	if (!name || !strlen(name))
 		goto out;
 
-	// name: "mounts", parent: NULL, &fn: &"mounts"
-	// xlate_proc_name("mounts", NULL, "mounts"): 0
+	// name: "mounts", parent: &parent, &fn: &"mounts"
+	// xlate_proc_name("mounts", &parent, "mounts"): 0
 	if (xlate_proc_name(name, parent, &fn) != 0)
 		goto out;
+
+	// xlate_proc_name 에서 한일:
+	// parent: &proc_root
 
 	/* At this point there must not be any '/' characters beyond *fn */
 	// fn: "mounts", strchr("mounts", '/'): NULL
@@ -576,12 +678,29 @@ static struct proc_dir_entry *__proc_create(struct proc_dir_entry **parent,
 	// (&(kmem_cache#29-oX (struct proc_dir_entry))->count)->counter: 1
 
 // 2016/06/04 종료
+// 2016/06/11 시작
 
 	// &ent->pde_unload_lock: &(kmem_cache#29-oX (struct proc_dir_entry))->pde_unload_lock
 	spin_lock_init(&ent->pde_unload_lock);
+
+	// spin_lock_init에서 한일:
+	// &(kmem_cache#29-oX (struct proc_dir_entry))->pde_unload_lock을 이용한 spin lock 초기화 수행
+	//
+	// ((&(kmem_cache#29-oX (struct proc_dir_entry))->pde_unload_lock)->rlock)->raw_lock: { { 0 } }
+	// ((&(kmem_cache#29-oX (struct proc_dir_entry))->pde_unload_lock)->rlock)->magic: 0xdead4ead
+	// ((&(kmem_cache#29-oX (struct proc_dir_entry))->pde_unload_lock)->rlock)->owner: 0xffffffff
+	// ((&(kmem_cache#29-oX (struct proc_dir_entry))->pde_unload_lock)->rlock)->owner_cpu: 0xffffffff
+
+	// &ent->pde_openers: &(kmem_cache#29-oX (struct proc_dir_entry))->pde_openers
 	INIT_LIST_HEAD(&ent->pde_openers);
+
+	// INIT_LIST_HEAD 에서 한일:
+	// &(kmem_cache#29-oX (struct proc_dir_entry))->pde_openers->i_sb_list->next: &(kmem_cache#29-oX (struct proc_dir_entry))->pde_openers->i_sb_list
+	// &(kmem_cache#29-oX (struct proc_dir_entry))->pde_openers->i_sb_list->prev: &(kmem_cache#29-oX (struct proc_dir_entry))->pde_openers->i_sb_list
 out:
+	// ent: kmem_cache#29-oX (struct proc_dir_entry)
 	return ent;
+	// return kmem_cache#29-oX (struct proc_dir_entry)
 }
 
 // ARM10C 20160604
@@ -591,26 +710,93 @@ struct proc_dir_entry *proc_symlink(const char *name,
 {
 	struct proc_dir_entry *ent;
 
-	// &parent: NULL, name: "mounts"
+	// &parent, name: "mounts"
 	// S_IFLNK: 0120000, S_IRUGO: 00444, S_IWUGO: 00222, S_IXUGO: 00111
+	// __proc_create(NULL, "mounts", 0120777, 1): kmem_cache#29-oX (struct proc_dir_entry)
 	ent = __proc_create(&parent, name,
 			  (S_IFLNK | S_IRUGO | S_IWUGO | S_IXUGO),1);
+	// ent: kmem_cache#29-oX (struct proc_dir_entry)
 
+	// __proc_create 에서 한일:
+	// struct proc_dir_entry 만큼 메모리를 할당 받음 kmem_cache#29-oX (struct proc_dir_entry)
+	//
+	// (kmem_cache#29-oX (struct proc_dir_entry))->name: "mounts"
+	// (kmem_cache#29-oX (struct proc_dir_entry))->namelen: 6
+	// (kmem_cache#29-oX (struct proc_dir_entry))->mode: 0120777
+	// (kmem_cache#29-oX (struct proc_dir_entry))->nlink: 1
+	// (&(kmem_cache#29-oX (struct proc_dir_entry))->count)->counter: 1
+	// &(kmem_cache#29-oX (struct proc_dir_entry))->pde_unload_lock을 이용한 spin lock 초기화 수행
+	// ((&(kmem_cache#29-oX (struct proc_dir_entry))->pde_unload_lock)->rlock)->raw_lock: { { 0 } }
+	// ((&(kmem_cache#29-oX (struct proc_dir_entry))->pde_unload_lock)->rlock)->magic: 0xdead4ead
+	// ((&(kmem_cache#29-oX (struct proc_dir_entry))->pde_unload_lock)->rlock)->owner: 0xffffffff
+	// ((&(kmem_cache#29-oX (struct proc_dir_entry))->pde_unload_lock)->rlock)->owner_cpu: 0xffffffff
+	// &(kmem_cache#29-oX (struct proc_dir_entry))->pde_openers->i_sb_list->next: &(kmem_cache#29-oX (struct proc_dir_entry))->pde_openers->i_sb_list
+	// &(kmem_cache#29-oX (struct proc_dir_entry))->pde_openers->i_sb_list->prev: &(kmem_cache#29-oX (struct proc_dir_entry))->pde_openers->i_sb_list
+	//
+	// parent: &proc_root
+
+	// ent: kmem_cache#29-oX (struct proc_dir_entry)
 	if (ent) {
+		// ent->data: (kmem_cache#29-oX (struct proc_dir_entry))->data, dest: "self/mounts", strlen("self/mounts"): 11
+		// ent->size: (kmem_cache#29-oX (struct proc_dir_entry))->size: 11, GFP_KERNEL: 0xD0,
+		// kmalloc(12, GFP_KERNEL: 0xD0): kmem_cache#30-oX
 		ent->data = kmalloc((ent->size=strlen(dest))+1, GFP_KERNEL);
+		// ent->data: (kmem_cache#29-oX (struct proc_dir_entry))->data: kmem_cache#30-oX
+
+		// ent->data: (kmem_cache#29-oX (struct proc_dir_entry))->data: kmem_cache#30-oX
 		if (ent->data) {
+			// ent->data: (kmem_cache#29-oX (struct proc_dir_entry))->data: kmem_cache#30-oX, dest: "self/mounts"
+			// strcpy(kmem_cache#30-oX, "self/mounts"): kmem_cache#30-oX: "self/mounts"
 			strcpy((char*)ent->data,dest);
+			// ent->data: (kmem_cache#29-oX (struct proc_dir_entry))->data: kmem_cache#30-oX: "self/mounts"
+
+			// parent: NULL, ent: kmem_cache#29-oX (struct proc_dir_entry),
+			// proc_register(NULL, kmem_cache#29-oX (struct proc_dir_entry)): 0
 			if (proc_register(parent, ent) < 0) {
 				kfree(ent->data);
 				kfree(ent);
 				ent = NULL;
 			}
+
+			// proc_register 에서 한일:
+			// idr_layer_cache를 사용하여 struct idr_layer 의 메모리 kmem_cache#21-oX를 1 개를 할당 받음
+			//
+			// (&(&proc_inum_ida)->idr)->id_free 이 idr object new 2번을 가르킴
+			// |
+			// |-> ---------------------------------------------------------------------------------------------------------------------------
+			//     | idr object new 2         | idr object new 0     | idr object 6         | idr object 5         | .... | idr object 0     |
+			//     ---------------------------------------------------------------------------------------------------------------------------
+			//     | ary[0]: idr object new 0 | ary[0]: idr object 6 | ary[0]: idr object 5 | ary[0]: idr object 4 | .... | ary[0]: NULL     |
+			//     ---------------------------------------------------------------------------------------------------------------------------
+			//
+			// (&(&proc_inum_ida)->idr)->id_free: kmem_cache#21-oX (idr object new 2)
+			// (&(&proc_inum_ida)->idr)->id_free_cnt: 8
+			//
+			// (&(&proc_inum_ida)->idr)->top: kmem_cache#21-oX (struct idr_layer) (idr object 8)
+			// (&(&proc_inum_ida)->idr)->layers: 1
+			// (&(&proc_inum_ida)->idr)->id_free: (idr object new 0)
+			// (&(&proc_inum_ida)->idr)->id_free_cnt: 7
+			//
+			// (kmem_cache#27-oX (struct ida_bitmap))->bitmap 의 2 bit를 1로 set 수행
+			// (kmem_cache#27-oX (struct ida_bitmap))->nr_busy: 3
+			//
+			// kmem_cache인 kmem_cache#21 에서 할당한 object인 kmem_cache#21-oX (idr object new 2) 의 memory 공간을 반환함
+			//
+			// (kmem_cache#29-oX (struct proc_dir_entry))->low_ino: 0xF0000002
+			// (kmem_cache#29-oX (struct proc_dir_entry))->proc_iops: &proc_link_inode_operations
+			// (kmem_cache#29-oX (struct proc_dir_entry))->next: NULL
+			// (kmem_cache#29-oX (struct proc_dir_entry))->parent: &proc_root
+			//
+			// (&proc_root)->subdir: kmem_cache#29-oX (struct proc_dir_entry)
 		} else {
 			kfree(ent);
 			ent = NULL;
 		}
 	}
+
+	// ent: kmem_cache#29-oX (struct proc_dir_entry)
 	return ent;
+	// return kmem_cache#29-oX (struct proc_dir_entry)
 }
 EXPORT_SYMBOL(proc_symlink);
 

@@ -714,6 +714,8 @@ static __always_inline void *kmalloc_large(size_t size, gfp_t flags)
 // sizeof(struct mnt_namespace): 60 bytes, GFP_KERNEL: 0xD0
 // ARM10C 20160521
 // sizeof(struct kobj_map): 1024 bytes, GFP_KERNEL: 0xD0
+// ARM10C 20160611
+// 12, GFP_KERNEL: 0xD0
 static __always_inline void *kmalloc(size_t size, gfp_t flags)
 {
 	// size: 512

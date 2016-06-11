@@ -1618,6 +1618,7 @@ struct file_operations {
 // ARM10C 20151128
 // ARM10C 20151212
 // ARM10C 20160319
+// ARM10C 20160611
 struct inode_operations {
 	struct dentry * (*lookup) (struct inode *,struct dentry *, unsigned int);
 	void * (*follow_link) (struct dentry *, struct nameidata *);

@@ -1881,6 +1881,8 @@ static void free_bitmap(struct ida *ida, struct ida_bitmap *bitmap)
 // &unnamed_dev_ida, GFP_ATOMIC: 0x20
 // ARM10C 20160604
 // &proc_inum_ida, GFP_KERNEL: 0xD0
+// ARM10C 20160611
+// &proc_inum_ida, GFP_KERNEL: 0xD0
 int ida_pre_get(struct ida *ida, gfp_t gfp_mask)
 {
 	/* allocate idr_layers */
@@ -2125,6 +2127,8 @@ EXPORT_SYMBOL(ida_pre_get);
 // ARM10C 20160521
 // &unnamed_dev_ida, 3, &dev
 // ARM10C 20160604
+// ida: &proc_inum_ida, p_id: &i
+// ARM10C 20160611
 // ida: &proc_inum_ida, p_id: &i
 int ida_get_new_above(struct ida *ida, int starting_id, int *p_id)
 {
