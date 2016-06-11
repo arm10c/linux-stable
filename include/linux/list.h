@@ -82,6 +82,7 @@
 // ARM10C 20150919
 // ARM10C 20151114
 // ARM10C 20151121
+// ARM10C 20160611
 #define LIST_HEAD(name) \
 	struct list_head name = LIST_HEAD_INIT(name)
 
@@ -289,6 +290,8 @@ static inline void list_add(struct list_head *new, struct list_head *head)
 // &mnt->mnt_instance: &(kmem_cache#2-oX (struct mount))->mnt_instance, &root->d_sb->s_mounts: &(kmem_cache#5-oX (struct dentry))->d_sb->s_mounts
 // ARM10C 20160521
 // [re] s->s_list: (kmem_cache#25-oX (struct super_block))->s_list,
+// ARM10C 20160611
+// &ops->list: &(&proc_net_ns_ops)->list, list: &pernet_list
 static inline void list_add_tail(struct list_head *new, struct list_head *head)
 {
 	// new: &waiter.list, head->prev: (&(&cpu_add_remove_lock)->wait_list)->prev
@@ -647,6 +650,8 @@ static inline void list_splice_tail_init(struct list_head *list,
 // list_entry((&(&running_helpers_waitq)->task_list)->next, typeof(*curr), task_list)
 // ARM10C 20160409
 // list_entry((&running_helpers_waitq)->task_list.next, typeof(*(&running_helpers_waitq)), task_list)
+// ARM10C 20160611
+// list_entry((&net_namespace_list)->next, typeof(*net), list)
 #define list_entry(ptr, type, member)		\
 	container_of(ptr, type, member)
 
@@ -668,6 +673,8 @@ static inline void list_splice_tail_init(struct list_head *list,
 // list_first_entry(&clocksource_list, typeof(*tmp), list)
 // ARM10C 20160409
 // list_first_entry(&(&running_helpers_waitq)->task_list, typeof(*curr), task_list)
+// ARM10C 20160611
+// list_first_entry(&net_namespace_list, typeof(*net), list)
 #define list_first_entry(ptr, type, member) \
 	list_entry((ptr)->next, type, member)
 
@@ -798,6 +805,10 @@ static inline void list_splice_tail_init(struct list_head *list,
 // #define list_for_each_entry(tmp, &clocksource_list, list):
 // for (tmp = list_first_entry(&clocksource_list, typeof(*tmp), list);
 //     &tmp->list != (&clocksource_list); tmp = list_next_entry(tmp, list))
+// ARM10C 20160611
+// #define list_for_each_entry(net, &net_namespace_list, list):
+// for (net = list_first_entry(&net_namespace_list, typeof(*net), list);
+//     &net->list != (&net_namespace_list); net = list_next_entry(net, list))
 #define list_for_each_entry(pos, head, member)				\
 	for (pos = list_first_entry(head, typeof(*pos), member);	\
 	     &pos->member != (head);					\

@@ -22,10 +22,35 @@
  *	Our network namespace constructor/destructor lists
  */
 
+// ARM10C 20160611
+// LIST_HEAD(pernet_list):
+// struct list_head pernet_list = { &(pernet_list), &(pernet_list) }
 static LIST_HEAD(pernet_list);
+// ARM10C 20160611
 static struct list_head *first_device = &pernet_list;
+// ARM10C 20160611
+// DEFINE_MUTEX(net_mutex):
+// struct mutex net_mutex =
+// { .count = { (1) }
+//    , .wait_lock =
+//    (spinlock_t )
+//    { { .rlock =
+//	  {
+//	  .raw_lock = { { 0 } },
+//	  .magic = 0xdead4ead,
+//	  .owner_cpu = -1,
+//	  .owner = 0xffffffff,
+//	  }
+//    } }
+//    , .wait_list =
+//    { &(net_mutex.wait_list), &(net_mutex.wait_list) }
+//    , .magic = &net_mutex
+// }
 static DEFINE_MUTEX(net_mutex);
 
+// ARM10C 20160611
+// LIST_HEAD(net_namespace_list):
+// struct list_head net_namespace_list = { &(net_namespace_list), &(net_namespace_list) }
 LIST_HEAD(net_namespace_list);
 EXPORT_SYMBOL_GPL(net_namespace_list);
 
@@ -435,17 +460,37 @@ static int __init net_ns_init(void)
 
 pure_initcall(net_ns_init);
 
-#ifdef CONFIG_NET_NS
+#ifdef CONFIG_NET_NS // CONFIG_NET_NS=y
+// ARM10C 20160611
+// list: &pernet_list, ops: &proc_net_ns_ops
 static int __register_pernet_operations(struct list_head *list,
 					struct pernet_operations *ops)
 {
 	struct net *net;
 	int error;
+
+	// LIST_HEAD(net_exit_list):
+	// struct list_head net_exit_list = { &(net_exit_list), &(net_exit_list) }
 	LIST_HEAD(net_exit_list);
 
+	// &ops->list: &(&proc_net_ns_ops)->list, list: &pernet_list
 	list_add_tail(&ops->list, list);
+
+	// list_add_tail 에서 한일:
+	// list head 인 &pernet_list 에 &(&proc_net_ns_ops)->list 을 tail로 추가함
+
+	// ops->init: (&proc_net_ns_ops)->init: proc_net_ns_init,
+	// ops->id: (&proc_net_ns_ops)->id: NULL, ops->size: (&proc_net_ns_ops)->size: 0
 	if (ops->init || (ops->id && ops->size)) {
 		for_each_net(net) {
+		// for (net = list_first_entry(&net_namespace_list, typeof(*net), list);
+		//     &net->list != (&net_namespace_list); net = list_next_entry(net, list))
+
+			// list_first_entry(&net_namespace_list, typeof(*net), list):
+			// (&net_namespace_list)->next 의 주소에서 struct net 의 member인 list 의 offset 만큼 위치의 주소
+			// net: (&net_namespace_list)->next 의 주소에서 struct net 의 member인 list 의 offset 만큼 위치의 주소
+			// &net->list: &net_namespace_list
+
 			error = ops_init(ops, net);
 			if (error)
 				goto out_undo;
@@ -453,6 +498,7 @@ static int __register_pernet_operations(struct list_head *list,
 		}
 	}
 	return 0;
+	// return 0
 
 out_undo:
 	/* If I have an error cleanup all namespaces I initialized */
@@ -494,11 +540,14 @@ static void __unregister_pernet_operations(struct pernet_operations *ops)
 
 static DEFINE_IDA(net_generic_ids);
 
+// ARM10C 20160611
+// first_device: &pernet_list, ops: &proc_net_ns_ops
 static int register_pernet_operations(struct list_head *list,
 				      struct pernet_operations *ops)
 {
 	int error;
 
+	// ops->id: (&proc_net_ns_ops)->id: 0
 	if (ops->id) {
 again:
 		error = ida_get_new_above(&net_generic_ids, 1, ops->id);
@@ -511,14 +560,25 @@ again:
 		}
 		max_gen_ptrs = max_t(unsigned int, max_gen_ptrs, *ops->id);
 	}
+
+	// list: &pernet_list, ops: &proc_net_ns_ops
+	// __register_pernet_operations(&pernet_list, &proc_net_ns_ops): 0
 	error = __register_pernet_operations(list, ops);
+	// error: 0
+
+	// __register_pernet_operations 에서 한일:
+	// list head 인 &pernet_list 에 &(&proc_net_ns_ops)->list 을 tail로 추가함
+
+	// error: 0
 	if (error) {
 		rcu_barrier();
 		if (ops->id)
 			ida_remove(&net_generic_ids, *ops->id);
 	}
 
+	// error: 0
 	return error;
+	// return 0
 }
 
 static void unregister_pernet_operations(struct pernet_operations *ops)
@@ -549,13 +609,32 @@ static void unregister_pernet_operations(struct pernet_operations *ops)
  *	are called in the reverse of the order with which they were
  *	registered.
  */
+// ARM10C 20160611
+// &proc_net_ns_ops
 int register_pernet_subsys(struct pernet_operations *ops)
 {
 	int error;
 	mutex_lock(&net_mutex);
+
+	// mutex_lock 에서 한일:
+	// &net_mutex을 이용한 mutex lock 수행
+
+	// first_device: &pernet_list, ops: &proc_net_ns_ops
+	// register_pernet_operations(&pernet_list, &proc_net_ns_ops): 0
 	error =  register_pernet_operations(first_device, ops);
+	// error: 0
+
+	// register_pernet_operations 에서 한일:
+	// list head 인 &pernet_list 에 &(&proc_net_ns_ops)->list 을 tail로 추가함
+
 	mutex_unlock(&net_mutex);
+
+	// mutex_unlock 에서 한일:
+	// &net_mutex을 이용한 mutex unlock 수행
+
+	// error: 0
 	return error;
+	// return 0
 }
 EXPORT_SYMBOL_GPL(register_pernet_subsys);
 

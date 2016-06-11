@@ -226,6 +226,7 @@ int sysctl_legacy_va_layout;
 
 /* The default sysctl tables: */
 
+// ARM10C 20160611
 static struct ctl_table sysctl_base_table[] = {
 	{
 		.procname	= "kernel",
@@ -271,6 +272,7 @@ static int min_extfrag_threshold;
 static int max_extfrag_threshold = 1000;
 #endif
 
+// ARM10C 20160611
 static struct ctl_table kern_table[] = {
 	{
 		.procname	= "sched_child_runs_first",
@@ -1680,6 +1682,7 @@ static struct ctl_table dev_table[] = {
 	{ }
 };
 
+// ARM10C 20160611
 int __init sysctl_init(void)
 {
 	struct ctl_table_header *hdr;

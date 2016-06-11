@@ -245,6 +245,8 @@ static inline void do_raw_spin_unlock(raw_spinlock_t *lock) __releases(lock)
 // &sem->wait_lock: &(&shrinker_rwsem)->wait_lock, flags
 // ARM10C 20160409
 // &q->lock: &(&running_helpers_waitq)->lock, flags
+// ARM10C 20160611
+// &devtree_lock, flags
 #define raw_spin_lock_irqsave(lock, flags)			\
 	do {						\
 		typecheck(unsigned long, flags);	\
@@ -293,6 +295,8 @@ static inline void do_raw_spin_unlock(raw_spinlock_t *lock) __releases(lock)
 // ARM10C 20150103
 // ARM10C 20150516
 // ARM10C 20150620
+// ARM10C 20160611
+// &devtree_lock, flags
 #define raw_spin_unlock_irqrestore(lock, flags)		\
 	do {							\
 		typecheck(unsigned long, flags);		\

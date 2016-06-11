@@ -265,23 +265,347 @@ void __init proc_root_init(void)
 	//
 	// (&proc_root)->subdir: kmem_cache#29-oX (struct proc_dir_entry)
 
+	// proc_net_init(): 0
 	proc_net_init();
 
-#ifdef CONFIG_SYSVIPC
+	// proc_net_init 에서 한일:
+	// struct proc_dir_entry 만큼 메모리를 할당 받음 kmem_cache#29-oX (struct proc_dir_entry)
+	//
+	// (kmem_cache#29-oX (struct proc_dir_entry))->name: "net"
+	// (kmem_cache#29-oX (struct proc_dir_entry))->namelen: 3
+	// (kmem_cache#29-oX (struct proc_dir_entry))->mode: 0120777
+	// (kmem_cache#29-oX (struct proc_dir_entry))->nlink: 1
+	// (&(kmem_cache#29-oX (struct proc_dir_entry))->count)->counter: 1
+	// &(kmem_cache#29-oX (struct proc_dir_entry))->pde_unload_lock을 이용한 spin lock 초기화 수행
+	// ((&(kmem_cache#29-oX (struct proc_dir_entry))->pde_unload_lock)->rlock)->raw_lock: { { 0 } }
+	// ((&(kmem_cache#29-oX (struct proc_dir_entry))->pde_unload_lock)->rlock)->magic: 0xdead4ead
+	// ((&(kmem_cache#29-oX (struct proc_dir_entry))->pde_unload_lock)->rlock)->owner: 0xffffffff
+	// ((&(kmem_cache#29-oX (struct proc_dir_entry))->pde_unload_lock)->rlock)->owner_cpu: 0xffffffff
+	// &(kmem_cache#29-oX (struct proc_dir_entry))->pde_openers->i_sb_list->next: &(kmem_cache#29-oX (struct proc_dir_entry))->pde_openers->i_sb_list
+	// &(kmem_cache#29-oX (struct proc_dir_entry))->pde_openers->i_sb_list->prev: &(kmem_cache#29-oX (struct proc_dir_entry))->pde_openers->i_sb_list
+	//
+	// parent: &proc_root
+	//
+	// (kmem_cache#29-oX (struct proc_dir_entry))->data: kmem_cache#30-oX: "self/net"
+	//
+	// idr_layer_cache를 사용하여 struct idr_layer 의 메모리 kmem_cache#21-oX를 1 개를 할당 받음
+	//
+	// (&(&proc_inum_ida)->idr)->id_free 이 idr object new 3번을 가르킴
+	// |
+	// |-> ---------------------------------------------------------------------------------------------------------------------------
+	//     | idr object new 3         | idr object new 0     | idr object 6         | idr object 5         | .... | idr object 0     |
+	//     ---------------------------------------------------------------------------------------------------------------------------
+	//     | ary[0]: idr object new 0 | ary[0]: idr object 6 | ary[0]: idr object 5 | ary[0]: idr object 4 | .... | ary[0]: NULL     |
+	//     ---------------------------------------------------------------------------------------------------------------------------
+	//
+	// (&(&proc_inum_ida)->idr)->id_free: kmem_cache#21-oX (idr object new 3)
+	// (&(&proc_inum_ida)->idr)->id_free_cnt: 8
+	//
+	// (&(&proc_inum_ida)->idr)->top: kmem_cache#21-oX (struct idr_layer) (idr object 8)
+	// (&(&proc_inum_ida)->idr)->layers: 1
+	// (&(&proc_inum_ida)->idr)->id_free: (idr object new 0)
+	// (&(&proc_inum_ida)->idr)->id_free_cnt: 7
+	//
+	// (kmem_cache#27-oX (struct ida_bitmap))->bitmap 의 3 bit를 1로 set 수행
+	// (kmem_cache#27-oX (struct ida_bitmap))->nr_busy: 4
+	//
+	// kmem_cache인 kmem_cache#21 에서 할당한 object인 kmem_cache#21-oX (idr object new 3) 의 memory 공간을 반환함
+	//
+	// (kmem_cache#29-oX (struct proc_dir_entry))->low_ino: 0xF0000003
+	// (kmem_cache#29-oX (struct proc_dir_entry))->proc_iops: &proc_link_inode_operations
+	// (kmem_cache#29-oX (struct proc_dir_entry))->next: NULL
+	// (kmem_cache#29-oX (struct proc_dir_entry))->parent: &proc_root
+	//
+	// (&proc_root)->subdir: kmem_cache#29-oX (struct proc_dir_entry)
+	//
+	// list head 인 &pernet_list 에 &(&proc_net_ns_ops)->list 을 tail로 추가함
+
+#ifdef CONFIG_SYSVIPC // CONFIG_SYSVIPC=y
+	// proc_mkdir("sysvipc", NULL): kmem_cache#29-oX (struct proc_dir_entry)
 	proc_mkdir("sysvipc", NULL);
+
+	// proc_mkdir 에서 한일:
+	// struct proc_dir_entry 만큼 메모리를 할당 받음 kmem_cache#29-oX (struct proc_dir_entry)
+	//
+	// (kmem_cache#29-oX (struct proc_dir_entry))->name: "sysvipc"
+	// (kmem_cache#29-oX (struct proc_dir_entry))->namelen: 7
+	// (kmem_cache#29-oX (struct proc_dir_entry))->mode: 0040555
+	// (kmem_cache#29-oX (struct proc_dir_entry))->nlink: 2
+	// (&(kmem_cache#29-oX (struct proc_dir_entry))->count)->counter: 1
+	// &(kmem_cache#29-oX (struct proc_dir_entry))->pde_unload_lock을 이용한 spin lock 초기화 수행
+	// ((&(kmem_cache#29-oX (struct proc_dir_entry))->pde_unload_lock)->rlock)->raw_lock: { { 0 } }
+	// ((&(kmem_cache#29-oX (struct proc_dir_entry))->pde_unload_lock)->rlock)->magic: 0xdead4ead
+	// ((&(kmem_cache#29-oX (struct proc_dir_entry))->pde_unload_lock)->rlock)->owner: 0xffffffff
+	// ((&(kmem_cache#29-oX (struct proc_dir_entry))->pde_unload_lock)->rlock)->owner_cpu: 0xffffffff
+	// &(kmem_cache#29-oX (struct proc_dir_entry))->pde_openers->i_sb_list->next: &(kmem_cache#29-oX (struct proc_dir_entry))->pde_openers->i_sb_list
+	// &(kmem_cache#29-oX (struct proc_dir_entry))->pde_openers->i_sb_list->prev: &(kmem_cache#29-oX (struct proc_dir_entry))->pde_openers->i_sb_list
+	//
+	// parent: &proc_root
 #endif
+	// proc_mkdir("fs", NULL): kmem_cache#29-oX (struct proc_dir_entry)
 	proc_mkdir("fs", NULL);
+
+	// proc_mkdir 에서 한일:
+	// struct proc_dir_entry 만큼 메모리를 할당 받음 kmem_cache#29-oX (struct proc_dir_entry)
+	//
+	// (kmem_cache#29-oX (struct proc_dir_entry))->name: "fs"
+	// (kmem_cache#29-oX (struct proc_dir_entry))->namelen: 2
+	// (kmem_cache#29-oX (struct proc_dir_entry))->mode: 0040555
+	// (kmem_cache#29-oX (struct proc_dir_entry))->nlink: 2
+	// (&(kmem_cache#29-oX (struct proc_dir_entry))->count)->counter: 1
+	// &(kmem_cache#29-oX (struct proc_dir_entry))->pde_unload_lock을 이용한 spin lock 초기화 수행
+	// ((&(kmem_cache#29-oX (struct proc_dir_entry))->pde_unload_lock)->rlock)->raw_lock: { { 0 } }
+	// ((&(kmem_cache#29-oX (struct proc_dir_entry))->pde_unload_lock)->rlock)->magic: 0xdead4ead
+	// ((&(kmem_cache#29-oX (struct proc_dir_entry))->pde_unload_lock)->rlock)->owner: 0xffffffff
+	// ((&(kmem_cache#29-oX (struct proc_dir_entry))->pde_unload_lock)->rlock)->owner_cpu: 0xffffffff
+	// &(kmem_cache#29-oX (struct proc_dir_entry))->pde_openers->i_sb_list->next: &(kmem_cache#29-oX (struct proc_dir_entry))->pde_openers->i_sb_list
+	// &(kmem_cache#29-oX (struct proc_dir_entry))->pde_openers->i_sb_list->prev: &(kmem_cache#29-oX (struct proc_dir_entry))->pde_openers->i_sb_list
+	//
+	// parent: &proc_root
+
+	// proc_mkdir("driver", NULL): kmem_cache#29-oX (struct proc_dir_entry)
 	proc_mkdir("driver", NULL);
+
+	// proc_mkdir 에서 한일:
+	// struct proc_dir_entry 만큼 메모리를 할당 받음 kmem_cache#29-oX (struct proc_dir_entry)
+	//
+	// (kmem_cache#29-oX (struct proc_dir_entry))->name: "driver"
+	// (kmem_cache#29-oX (struct proc_dir_entry))->namelen: 6
+	// (kmem_cache#29-oX (struct proc_dir_entry))->mode: 0040555
+	// (kmem_cache#29-oX (struct proc_dir_entry))->nlink: 2
+	// (&(kmem_cache#29-oX (struct proc_dir_entry))->count)->counter: 1
+	// &(kmem_cache#29-oX (struct proc_dir_entry))->pde_unload_lock을 이용한 spin lock 초기화 수행
+	// ((&(kmem_cache#29-oX (struct proc_dir_entry))->pde_unload_lock)->rlock)->raw_lock: { { 0 } }
+	// ((&(kmem_cache#29-oX (struct proc_dir_entry))->pde_unload_lock)->rlock)->magic: 0xdead4ead
+	// ((&(kmem_cache#29-oX (struct proc_dir_entry))->pde_unload_lock)->rlock)->owner: 0xffffffff
+	// ((&(kmem_cache#29-oX (struct proc_dir_entry))->pde_unload_lock)->rlock)->owner_cpu: 0xffffffff
+	// &(kmem_cache#29-oX (struct proc_dir_entry))->pde_openers->i_sb_list->next: &(kmem_cache#29-oX (struct proc_dir_entry))->pde_openers->i_sb_list
+	// &(kmem_cache#29-oX (struct proc_dir_entry))->pde_openers->i_sb_list->prev: &(kmem_cache#29-oX (struct proc_dir_entry))->pde_openers->i_sb_list
+	//
+	// parent: &proc_root
+
+	// proc_mkdir("fs/nfsd", NULL): kmem_cache#29-oX (struct proc_dir_entry)
 	proc_mkdir("fs/nfsd", NULL); /* somewhere for the nfsd filesystem to be mounted */
-#if defined(CONFIG_SUN_OPENPROMFS) || defined(CONFIG_SUN_OPENPROMFS_MODULE)
+
+	// proc_mkdir 에서 한일:
+	// struct proc_dir_entry 만큼 메모리를 할당 받음 kmem_cache#29-oX (struct proc_dir_entry)
+	//
+	// (kmem_cache#29-oX (struct proc_dir_entry))->name: "fs/nfsd"
+	// (kmem_cache#29-oX (struct proc_dir_entry))->namelen: 7
+	// (kmem_cache#29-oX (struct proc_dir_entry))->mode: 0040555
+	// (kmem_cache#29-oX (struct proc_dir_entry))->nlink: 2
+	// (&(kmem_cache#29-oX (struct proc_dir_entry))->count)->counter: 1
+	// &(kmem_cache#29-oX (struct proc_dir_entry))->pde_unload_lock을 이용한 spin lock 초기화 수행
+	// ((&(kmem_cache#29-oX (struct proc_dir_entry))->pde_unload_lock)->rlock)->raw_lock: { { 0 } }
+	// ((&(kmem_cache#29-oX (struct proc_dir_entry))->pde_unload_lock)->rlock)->magic: 0xdead4ead
+	// ((&(kmem_cache#29-oX (struct proc_dir_entry))->pde_unload_lock)->rlock)->owner: 0xffffffff
+	// ((&(kmem_cache#29-oX (struct proc_dir_entry))->pde_unload_lock)->rlock)->owner_cpu: 0xffffffff
+	// &(kmem_cache#29-oX (struct proc_dir_entry))->pde_openers->i_sb_list->next: &(kmem_cache#29-oX (struct proc_dir_entry))->pde_openers->i_sb_list
+	// &(kmem_cache#29-oX (struct proc_dir_entry))->pde_openers->i_sb_list->prev: &(kmem_cache#29-oX (struct proc_dir_entry))->pde_openers->i_sb_list
+	//
+	// parent: &proc_root
+
+#if defined(CONFIG_SUN_OPENPROMFS) || defined(CONFIG_SUN_OPENPROMFS_MODULE) // CONFIG_SUN_OPENPROMFS=n, CONFIG_SUN_OPENPROMFS_MODULE=n
 	/* just give it a mountpoint */
 	proc_mkdir("openprom", NULL);
 #endif
 	proc_tty_init();
-#ifdef CONFIG_PROC_DEVICETREE
+
+	// proc_tty_init 에서 한일:
+	// struct proc_dir_entry 만큼 메모리를 할당 받음 kmem_cache#29-oX (struct proc_dir_entry)
+	//
+	// (kmem_cache#29-oX (struct proc_dir_entry))->name: "tty"
+	// (kmem_cache#29-oX (struct proc_dir_entry))->namelen: 3
+	// (kmem_cache#29-oX (struct proc_dir_entry))->mode: 0040555
+	// (kmem_cache#29-oX (struct proc_dir_entry))->nlink: 2
+	// (&(kmem_cache#29-oX (struct proc_dir_entry))->count)->counter: 1
+	// &(kmem_cache#29-oX (struct proc_dir_entry))->pde_unload_lock을 이용한 spin lock 초기화 수행
+	// ((&(kmem_cache#29-oX (struct proc_dir_entry))->pde_unload_lock)->rlock)->raw_lock: { { 0 } }
+	// ((&(kmem_cache#29-oX (struct proc_dir_entry))->pde_unload_lock)->rlock)->magic: 0xdead4ead
+	// ((&(kmem_cache#29-oX (struct proc_dir_entry))->pde_unload_lock)->rlock)->owner: 0xffffffff
+	// ((&(kmem_cache#29-oX (struct proc_dir_entry))->pde_unload_lock)->rlock)->owner_cpu: 0xffffffff
+	// &(kmem_cache#29-oX (struct proc_dir_entry))->pde_openers->i_sb_list->next: &(kmem_cache#29-oX (struct proc_dir_entry))->pde_openers->i_sb_list
+	// &(kmem_cache#29-oX (struct proc_dir_entry))->pde_openers->i_sb_list->prev: &(kmem_cache#29-oX (struct proc_dir_entry))->pde_openers->i_sb_list
+	//
+	// parent: &proc_root
+	//
+	// struct proc_dir_entry 만큼 메모리를 할당 받음 kmem_cache#29-oX (struct proc_dir_entry)
+	//
+	// (kmem_cache#29-oX (struct proc_dir_entry))->name: "tty/ldisc"
+	// (kmem_cache#29-oX (struct proc_dir_entry))->namelen: 9
+	// (kmem_cache#29-oX (struct proc_dir_entry))->mode: 0040555
+	// (kmem_cache#29-oX (struct proc_dir_entry))->nlink: 2
+	// (&(kmem_cache#29-oX (struct proc_dir_entry))->count)->counter: 1
+	// &(kmem_cache#29-oX (struct proc_dir_entry))->pde_unload_lock을 이용한 spin lock 초기화 수행
+	// ((&(kmem_cache#29-oX (struct proc_dir_entry))->pde_unload_lock)->rlock)->raw_lock: { { 0 } }
+	// ((&(kmem_cache#29-oX (struct proc_dir_entry))->pde_unload_lock)->rlock)->magic: 0xdead4ead
+	// ((&(kmem_cache#29-oX (struct proc_dir_entry))->pde_unload_lock)->rlock)->owner: 0xffffffff
+	// ((&(kmem_cache#29-oX (struct proc_dir_entry))->pde_unload_lock)->rlock)->owner_cpu: 0xffffffff
+	// &(kmem_cache#29-oX (struct proc_dir_entry))->pde_openers->i_sb_list->next: &(kmem_cache#29-oX (struct proc_dir_entry))->pde_openers->i_sb_list
+	// &(kmem_cache#29-oX (struct proc_dir_entry))->pde_openers->i_sb_list->prev: &(kmem_cache#29-oX (struct proc_dir_entry))->pde_openers->i_sb_list
+	//
+	// parent: &proc_root
+	//
+	// struct proc_dir_entry 만큼 메모리를 할당 받음 kmem_cache#29-oX (struct proc_dir_entry)
+	//
+	// (kmem_cache#29-oX (struct proc_dir_entry))->name: "tty/driver"
+	// (kmem_cache#29-oX (struct proc_dir_entry))->namelen: 10
+	// (kmem_cache#29-oX (struct proc_dir_entry))->mode: 00500
+	// (kmem_cache#29-oX (struct proc_dir_entry))->nlink: 2
+	// (&(kmem_cache#29-oX (struct proc_dir_entry))->count)->counter: 1
+	// &(kmem_cache#29-oX (struct proc_dir_entry))->pde_unload_lock을 이용한 spin lock 초기화 수행
+	// ((&(kmem_cache#29-oX (struct proc_dir_entry))->pde_unload_lock)->rlock)->raw_lock: { { 0 } }
+	// ((&(kmem_cache#29-oX (struct proc_dir_entry))->pde_unload_lock)->rlock)->magic: 0xdead4ead
+	// ((&(kmem_cache#29-oX (struct proc_dir_entry))->pde_unload_lock)->rlock)->owner: 0xffffffff
+	// ((&(kmem_cache#29-oX (struct proc_dir_entry))->pde_unload_lock)->rlock)->owner_cpu: 0xffffffff
+	// &(kmem_cache#29-oX (struct proc_dir_entry))->pde_openers->i_sb_list->next: &(kmem_cache#29-oX (struct proc_dir_entry))->pde_openers->i_sb_list
+	// &(kmem_cache#29-oX (struct proc_dir_entry))->pde_openers->i_sb_list->prev: &(kmem_cache#29-oX (struct proc_dir_entry))->pde_openers->i_sb_list
+	//
+	// parent: &proc_root
+	//
+	// struct proc_dir_entry 만큼 메모리를 할당 받음 kmem_cache#29-oX (struct proc_dir_entry)
+	//
+	// (kmem_cache#29-oX (struct proc_dir_entry))->name: "tty/ldiscs"
+	// (kmem_cache#29-oX (struct proc_dir_entry))->namelen: 10
+	// (kmem_cache#29-oX (struct proc_dir_entry))->mode: 0100444
+	// (kmem_cache#29-oX (struct proc_dir_entry))->nlink: 1
+	// (&(kmem_cache#29-oX (struct proc_dir_entry))->count)->counter: 1
+	// &(kmem_cache#29-oX (struct proc_dir_entry))->pde_unload_lock을 이용한 spin lock 초기화 수행
+	// ((&(kmem_cache#29-oX (struct proc_dir_entry))->pde_unload_lock)->rlock)->raw_lock: { { 0 } }
+	// ((&(kmem_cache#29-oX (struct proc_dir_entry))->pde_unload_lock)->rlock)->magic: 0xdead4ead
+	// ((&(kmem_cache#29-oX (struct proc_dir_entry))->pde_unload_lock)->rlock)->owner: 0xffffffff
+	// ((&(kmem_cache#29-oX (struct proc_dir_entry))->pde_unload_lock)->rlock)->owner_cpu: 0xffffffff
+	// &(kmem_cache#29-oX (struct proc_dir_entry))->pde_openers->i_sb_list->next: &(kmem_cache#29-oX (struct proc_dir_entry))->pde_openers->i_sb_list
+	// &(kmem_cache#29-oX (struct proc_dir_entry))->pde_openers->i_sb_list->prev: &(kmem_cache#29-oX (struct proc_dir_entry))->pde_openers->i_sb_list
+	//
+	// parent: &proc_root
+	//
+	// (kmem_cache#29-oX (struct proc_dir_entry))->proc_fops: &tty_ldiscs_proc_fops
+	// (kmem_cache#29-oX (struct proc_dir_entry))->data: NULL
+	//
+	// idr_layer_cache를 사용하여 struct idr_layer 의 메모리 kmem_cache#21-oX를 1 개를 할당 받음
+	//
+	// (&(&proc_inum_ida)->idr)->id_free 이 idr object new 4번을 가르킴
+	// |
+	// |-> ---------------------------------------------------------------------------------------------------------------------------
+	//     | idr object new 4         | idr object new 0     | idr object 6         | idr object 5         | .... | idr object 0     |
+	//     ---------------------------------------------------------------------------------------------------------------------------
+	//     | ary[0]: idr object new 0 | ary[0]: idr object 6 | ary[0]: idr object 5 | ary[0]: idr object 4 | .... | ary[0]: NULL     |
+	//     ---------------------------------------------------------------------------------------------------------------------------
+	//
+	// (&(&proc_inum_ida)->idr)->id_free: kmem_cache#21-oX (idr object new 4)
+	// (&(&proc_inum_ida)->idr)->id_free_cnt: 8
+	//
+	// (&(&proc_inum_ida)->idr)->top: kmem_cache#21-oX (struct idr_layer) (idr object 8)
+	// (&(&proc_inum_ida)->idr)->layers: 1
+	// (&(&proc_inum_ida)->idr)->id_free: (idr object new 0)
+	// (&(&proc_inum_ida)->idr)->id_free_cnt: 7
+	//
+	// (kmem_cache#27-oX (struct ida_bitmap))->bitmap 의 4 bit를 1로 set 수행
+	// (kmem_cache#27-oX (struct ida_bitmap))->nr_busy: 5
+	//
+	// kmem_cache인 kmem_cache#21 에서 할당한 object인 kmem_cache#21-oX (idr object new 4) 의 memory 공간을 반환함
+	//
+	// (kmem_cache#29-oX (struct proc_dir_entry))->low_ino: 0xF0000004
+	// (kmem_cache#29-oX (struct proc_dir_entry))->proc_iops: &proc_file_inode_operations
+	// (kmem_cache#29-oX (struct proc_dir_entry))->next: NULL
+	// (kmem_cache#29-oX (struct proc_dir_entry))->parent: &proc_root
+	//
+	// (&proc_root)->subdir: kmem_cache#29-oX (struct proc_dir_entry)
+	//
+	// struct proc_dir_entry 만큼 메모리를 할당 받음 kmem_cache#29-oX (struct proc_dir_entry)
+	//
+	// (kmem_cache#29-oX (struct proc_dir_entry))->name: "tty/drivers"
+	// (kmem_cache#29-oX (struct proc_dir_entry))->namelen: 11
+	// (kmem_cache#29-oX (struct proc_dir_entry))->mode: 0100444
+	// (kmem_cache#29-oX (struct proc_dir_entry))->nlink: 1
+	// (&(kmem_cache#29-oX (struct proc_dir_entry))->count)->counter: 1
+	// &(kmem_cache#29-oX (struct proc_dir_entry))->pde_unload_lock을 이용한 spin lock 초기화 수행
+	// ((&(kmem_cache#29-oX (struct proc_dir_entry))->pde_unload_lock)->rlock)->raw_lock: { { 0 } }
+	// ((&(kmem_cache#29-oX (struct proc_dir_entry))->pde_unload_lock)->rlock)->magic: 0xdead4ead
+	// ((&(kmem_cache#29-oX (struct proc_dir_entry))->pde_unload_lock)->rlock)->owner: 0xffffffff
+	// ((&(kmem_cache#29-oX (struct proc_dir_entry))->pde_unload_lock)->rlock)->owner_cpu: 0xffffffff
+	// &(kmem_cache#29-oX (struct proc_dir_entry))->pde_openers->i_sb_list->next: &(kmem_cache#29-oX (struct proc_dir_entry))->pde_openers->i_sb_list
+	// &(kmem_cache#29-oX (struct proc_dir_entry))->pde_openers->i_sb_list->prev: &(kmem_cache#29-oX (struct proc_dir_entry))->pde_openers->i_sb_list
+	//
+	// parent: &proc_root
+	//
+	// (kmem_cache#29-oX (struct proc_dir_entry))->proc_fops: &proc_tty_drivers_operations
+	// (kmem_cache#29-oX (struct proc_dir_entry))->data: NULL
+	//
+	// idr_layer_cache를 사용하여 struct idr_layer 의 메모리 kmem_cache#21-oX를 1 개를 할당 받음
+	//
+	// (&(&proc_inum_ida)->idr)->id_free 이 idr object new 5번을 가르킴
+	// |
+	// |-> ---------------------------------------------------------------------------------------------------------------------------
+	//     | idr object new 5         | idr object new 0     | idr object 6         | idr object 5         | .... | idr object 0     |
+	//     ---------------------------------------------------------------------------------------------------------------------------
+	//     | ary[0]: idr object new 0 | ary[0]: idr object 6 | ary[0]: idr object 5 | ary[0]: idr object 4 | .... | ary[0]: NULL     |
+	//     ---------------------------------------------------------------------------------------------------------------------------
+	//
+	// (&(&proc_inum_ida)->idr)->id_free: kmem_cache#21-oX (idr object new 5)
+	// (&(&proc_inum_ida)->idr)->id_free_cnt: 8
+	//
+	// (&(&proc_inum_ida)->idr)->top: kmem_cache#21-oX (struct idr_layer) (idr object 8)
+	// (&(&proc_inum_ida)->idr)->layers: 1
+	// (&(&proc_inum_ida)->idr)->id_free: (idr object new 0)
+	// (&(&proc_inum_ida)->idr)->id_free_cnt: 7
+	//
+	// (kmem_cache#27-oX (struct ida_bitmap))->bitmap 의 5 bit를 1로 set 수행
+	// (kmem_cache#27-oX (struct ida_bitmap))->nr_busy: 6
+	//
+	// kmem_cache인 kmem_cache#21 에서 할당한 object인 kmem_cache#21-oX (idr object new 5) 의 memory 공간을 반환함
+	//
+	// (kmem_cache#29-oX (struct proc_dir_entry))->low_ino: 0xF0000005
+	// (kmem_cache#29-oX (struct proc_dir_entry))->proc_iops: &proc_file_inode_operations
+	// (kmem_cache#29-oX (struct proc_dir_entry))->next: NULL
+	// (kmem_cache#29-oX (struct proc_dir_entry))->parent: &proc_root
+	//
+	// (&proc_root)->subdir: kmem_cache#29-oX (struct proc_dir_entry)
+
+#ifdef CONFIG_PROC_DEVICETREE // CONFIG_PROC_DEVICETREE=y
 	proc_device_tree_init();
+
+	// proc_device_tree_init 에서 한일:
+	// struct proc_dir_entry 만큼 메모리를 할당 받음 kmem_cache#29-oX (struct proc_dir_entry)
+	//
+	// (kmem_cache#29-oX (struct proc_dir_entry))->name: "device-tree"
+	// (kmem_cache#29-oX (struct proc_dir_entry))->namelen: 11
+	// (kmem_cache#29-oX (struct proc_dir_entry))->mode: 0040555
+	// (kmem_cache#29-oX (struct proc_dir_entry))->nlink: 2
+	// (&(kmem_cache#29-oX (struct proc_dir_entry))->count)->counter: 1
+	// &(kmem_cache#29-oX (struct proc_dir_entry))->pde_unload_lock을 이용한 spin lock 초기화 수행
+	// ((&(kmem_cache#29-oX (struct proc_dir_entry))->pde_unload_lock)->rlock)->raw_lock: { { 0 } }
+	// ((&(kmem_cache#29-oX (struct proc_dir_entry))->pde_unload_lock)->rlock)->magic: 0xdead4ead
+	// ((&(kmem_cache#29-oX (struct proc_dir_entry))->pde_unload_lock)->rlock)->owner: 0xffffffff
+	// ((&(kmem_cache#29-oX (struct proc_dir_entry))->pde_unload_lock)->rlock)->owner_cpu: 0xffffffff
+	// &(kmem_cache#29-oX (struct proc_dir_entry))->pde_openers->i_sb_list->next: &(kmem_cache#29-oX (struct proc_dir_entry))->pde_openers->i_sb_list
+	// &(kmem_cache#29-oX (struct proc_dir_entry))->pde_openers->i_sb_list->prev: &(kmem_cache#29-oX (struct proc_dir_entry))->pde_openers->i_sb_list
+	//
+	// parent: &proc_root
+	//
+	// unflatten_device_tree 에서 만든 tree의 root node 의 값을 사용하여proc device tree를 만드는 작업을 수행
 #endif
 	proc_mkdir("bus", NULL);
+
+	// proc_mkdir 에서 한일:
+	// struct proc_dir_entry 만큼 메모리를 할당 받음 kmem_cache#29-oX (struct proc_dir_entry)
+	//
+	// (kmem_cache#29-oX (struct proc_dir_entry))->name: "bus"
+	// (kmem_cache#29-oX (struct proc_dir_entry))->namelen: 3
+	// (kmem_cache#29-oX (struct proc_dir_entry))->mode: 0040555
+	// (kmem_cache#29-oX (struct proc_dir_entry))->nlink: 2
+	// (&(kmem_cache#29-oX (struct proc_dir_entry))->count)->counter: 1
+	// &(kmem_cache#29-oX (struct proc_dir_entry))->pde_unload_lock을 이용한 spin lock 초기화 수행
+	// ((&(kmem_cache#29-oX (struct proc_dir_entry))->pde_unload_lock)->rlock)->raw_lock: { { 0 } }
+	// ((&(kmem_cache#29-oX (struct proc_dir_entry))->pde_unload_lock)->rlock)->magic: 0xdead4ead
+	// ((&(kmem_cache#29-oX (struct proc_dir_entry))->pde_unload_lock)->rlock)->owner: 0xffffffff
+	// ((&(kmem_cache#29-oX (struct proc_dir_entry))->pde_unload_lock)->rlock)->owner_cpu: 0xffffffff
+	// &(kmem_cache#29-oX (struct proc_dir_entry))->pde_openers->i_sb_list->next: &(kmem_cache#29-oX (struct proc_dir_entry))->pde_openers->i_sb_list
+	// &(kmem_cache#29-oX (struct proc_dir_entry))->pde_openers->i_sb_list->prev: &(kmem_cache#29-oX (struct proc_dir_entry))->pde_openers->i_sb_list
+	//
+	// parent: &proc_root
+
 	proc_sys_init();
 }
 

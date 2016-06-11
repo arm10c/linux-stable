@@ -124,6 +124,7 @@ struct ctl_node {
 
 /* struct ctl_table_header is used to maintain dynamic lists of
    struct ctl_table trees. */
+// ARM10C 20160611
 struct ctl_table_header
 {
 	union {
@@ -143,17 +144,20 @@ struct ctl_table_header
 	struct ctl_node *node;
 };
 
+// ARM10C 20160611
 struct ctl_dir {
 	/* Header must be at the start of ctl_dir */
 	struct ctl_table_header header;
 	struct rb_root root;
 };
 
+// ARM10C 20160611
 struct ctl_table_set {
 	int (*is_seen)(struct ctl_table_set *);
 	struct ctl_dir dir;
 };
 
+// ARM10C 20160611
 struct ctl_table_root {
 	struct ctl_table_set default_set;
 	struct ctl_table_set *(*lookup)(struct ctl_table_root *root,
@@ -162,6 +166,7 @@ struct ctl_table_root {
 };
 
 /* struct ctl_path describes where in the hierarchy a table is added */
+// ARM10C 20160611
 struct ctl_path {
 	const char *procname;
 };

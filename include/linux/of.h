@@ -33,7 +33,8 @@ typedef u32 ihandle;
 // ARM10C 20140208
 // ARM10C 20141004
 // ARM10C 20150321
-// size : 24 byte
+// ARM10C 20160611
+// sizeof(struct property): 24 bytes
 struct property {
 	char	*name;
 	int	length;
@@ -53,7 +54,8 @@ struct of_irq_controller;
 // ARM10C 20150103
 // ARM10C 20150110
 // ARM10C 20150307
-// size: 60 byte
+// ARM10C 20160611
+// sizeof(struct device_node): 60 bytes
 struct device_node {
 	const char *name;
 	const char *type;
@@ -107,6 +109,7 @@ extern void of_node_put(struct device_node *node);
 // ARM10C 20141213
 // ARM10C 20150110
 // ARM10C 20150307
+// ARM10C 20160611
 static inline struct device_node *of_node_get(struct device_node *node)
 {
 	return node;
@@ -118,6 +121,7 @@ static inline struct device_node *of_node_get(struct device_node *node)
 // ARM10C 20141213
 // ARM10C 20150314
 // ARM10C 20150328
+// ARM10C 20160611
 static inline void of_node_put(struct device_node *node) { }
 #endif /* !CONFIG_OF_DYNAMIC */
 
@@ -194,6 +198,8 @@ static inline unsigned long of_read_ulong(const __be32 *cell, int size)
 // ARM10C 20140215
 // cpu->type: "cpu", "cpu"
 // 대소문자 구분 없이 string 비교
+// ARM10C 20160611
+// np->full_name: (unflatten_device_tree 에서 만든 tree의 root node 주소)->full_name: "/", path: "/"
 #define of_node_cmp(s1, s2)		strcasecmp((s1), (s2))
 #endif
 

@@ -38,6 +38,7 @@ struct netns_ipvs;
 #define NETDEV_HASHBITS    8
 #define NETDEV_HASHENTRIES (1 << NETDEV_HASHBITS)
 
+// ARM10C 20160611
 struct net {
 	atomic_t		passive;	/* To decided when the network
 						 * namespace should be freed.
@@ -63,7 +64,7 @@ struct net {
 	struct proc_dir_entry 	*proc_net;
 	struct proc_dir_entry 	*proc_net_stat;
 
-#ifdef CONFIG_SYSCTL
+#ifdef CONFIG_SYSCTL // CONFIG_SYSCTL=y
 	struct ctl_table_set	sysctls;
 #endif
 
@@ -87,40 +88,40 @@ struct net {
 	struct netns_packet	packet;
 	struct netns_unix	unx;
 	struct netns_ipv4	ipv4;
-#if IS_ENABLED(CONFIG_IPV6)
+#if IS_ENABLED(CONFIG_IPV6) // CONFIG_IPV6=m
 	struct netns_ipv6	ipv6;
 #endif
-#if defined(CONFIG_IP_SCTP) || defined(CONFIG_IP_SCTP_MODULE)
+#if defined(CONFIG_IP_SCTP) || defined(CONFIG_IP_SCTP_MODULE) // CONFIG_IP_SCTP=n, CONFIG_IP_SCTP_MODULE=n
 	struct netns_sctp	sctp;
 #endif
-#if defined(CONFIG_IP_DCCP) || defined(CONFIG_IP_DCCP_MODULE)
+#if defined(CONFIG_IP_DCCP) || defined(CONFIG_IP_DCCP_MODULE) // CONFIG_IP_DCCP=n, CONFIG_IP_DCCP_MODULE=n
 	struct netns_dccp	dccp;
 #endif
-#ifdef CONFIG_NETFILTER
+#ifdef CONFIG_NETFILTER // CONFIG_NETFILTER=n
 	struct netns_nf		nf;
 	struct netns_xt		xt;
-#if defined(CONFIG_NF_CONNTRACK) || defined(CONFIG_NF_CONNTRACK_MODULE)
+#if defined(CONFIG_NF_CONNTRACK) || defined(CONFIG_NF_CONNTRACK_MODULE) // CONFIG_NF_CONNTRACK=n, CONFIG_NF_CONNTRACK_MODULE=n
 	struct netns_ct		ct;
 #endif
-#if defined(CONFIG_NF_TABLES) || defined(CONFIG_NF_TABLES_MODULE)
+#if defined(CONFIG_NF_TABLES) || defined(CONFIG_NF_TABLES_MODULE) // CONFIG_NF_TABLES=n, CONFIG_NF_TABLES_MODULE=n
 	struct netns_nftables	nft;
 #endif
-#if IS_ENABLED(CONFIG_NF_DEFRAG_IPV6)
+#if IS_ENABLED(CONFIG_NF_DEFRAG_IPV6) // CONFIG_NF_DEFRAG_IPV6=n
 	struct netns_nf_frag	nf_frag;
 #endif
 	struct sock		*nfnl;
 	struct sock		*nfnl_stash;
 #endif
-#ifdef CONFIG_WEXT_CORE
+#ifdef CONFIG_WEXT_CORE // CONFIG_WEXT_CORE=n
 	struct sk_buff_head	wext_nlevents;
 #endif
 	struct net_generic __rcu	*gen;
 
 	/* Note : following structs are cache line aligned */
-#ifdef CONFIG_XFRM
+#ifdef CONFIG_XFRM // CONFIG_XFRM=y
 	struct netns_xfrm	xfrm;
 #endif
-#if IS_ENABLED(CONFIG_IP_VS)
+#if IS_ENABLED(CONFIG_IP_VS) // CONFIG_IP_VS=n
 	struct netns_ipvs	*ipvs;
 #endif
 	struct sock		*diag_nlsk;
@@ -266,6 +267,14 @@ static inline struct net *read_pnet(struct net * const *pnet)
 
 #endif
 
+// ARM10C 20160611
+// #define list_for_each_entry(net, &net_namespace_list, list):
+// for (net = list_first_entry(&net_namespace_list, typeof(*net), list);
+//     &net->list != (&net_namespace_list); net = list_next_entry(net, list))
+//
+// for_each_net(net):
+// for (net = list_first_entry(&net_namespace_list, typeof(*net), list);
+//     &net->list != (&net_namespace_list); net = list_next_entry(net, list))
 #define for_each_net(VAR)				\
 	list_for_each_entry(VAR, &net_namespace_list, list)
 
@@ -284,6 +293,7 @@ static inline struct net *read_pnet(struct net * const *pnet)
 #define __net_initconst	__initconst
 #endif
 
+// ARM10C 20160611
 struct pernet_operations {
 	struct list_head list;
 	int (*init)(struct net *net);

@@ -180,6 +180,7 @@ const struct file_operations proc_net_operations = {
 	.iterate	= proc_tgid_net_readdir,
 };
 
+// ARM10C 20160611
 static __net_init int proc_net_ns_init(struct net *net)
 {
 	struct proc_dir_entry *netd, *net_statd;
@@ -217,14 +218,72 @@ static __net_exit void proc_net_ns_exit(struct net *net)
 	kfree(net->proc_net);
 }
 
+// ARM10C 20160611
 static struct pernet_operations __net_initdata proc_net_ns_ops = {
 	.init = proc_net_ns_init,
 	.exit = proc_net_ns_exit,
 };
 
+// ARM10C 20160611
 int __init proc_net_init(void)
 {
+	// proc_symlink("net", NULL, "self/net"): kmem_cache#29-oX (struct proc_dir_entry)
 	proc_symlink("net", NULL, "self/net");
 
+	// proc_symlink 에서 한일:
+	// struct proc_dir_entry 만큼 메모리를 할당 받음 kmem_cache#29-oX (struct proc_dir_entry)
+	//
+	// (kmem_cache#29-oX (struct proc_dir_entry))->name: "net"
+	// (kmem_cache#29-oX (struct proc_dir_entry))->namelen: 3
+	// (kmem_cache#29-oX (struct proc_dir_entry))->mode: 0120777
+	// (kmem_cache#29-oX (struct proc_dir_entry))->nlink: 1
+	// (&(kmem_cache#29-oX (struct proc_dir_entry))->count)->counter: 1
+	// &(kmem_cache#29-oX (struct proc_dir_entry))->pde_unload_lock을 이용한 spin lock 초기화 수행
+	// ((&(kmem_cache#29-oX (struct proc_dir_entry))->pde_unload_lock)->rlock)->raw_lock: { { 0 } }
+	// ((&(kmem_cache#29-oX (struct proc_dir_entry))->pde_unload_lock)->rlock)->magic: 0xdead4ead
+	// ((&(kmem_cache#29-oX (struct proc_dir_entry))->pde_unload_lock)->rlock)->owner: 0xffffffff
+	// ((&(kmem_cache#29-oX (struct proc_dir_entry))->pde_unload_lock)->rlock)->owner_cpu: 0xffffffff
+	// &(kmem_cache#29-oX (struct proc_dir_entry))->pde_openers->i_sb_list->next: &(kmem_cache#29-oX (struct proc_dir_entry))->pde_openers->i_sb_list
+	// &(kmem_cache#29-oX (struct proc_dir_entry))->pde_openers->i_sb_list->prev: &(kmem_cache#29-oX (struct proc_dir_entry))->pde_openers->i_sb_list
+	//
+	// parent: &proc_root
+	//
+	// (kmem_cache#29-oX (struct proc_dir_entry))->data: kmem_cache#30-oX: "self/net"
+	//
+	// idr_layer_cache를 사용하여 struct idr_layer 의 메모리 kmem_cache#21-oX를 1 개를 할당 받음
+	//
+	// (&(&proc_inum_ida)->idr)->id_free 이 idr object new 3번을 가르킴
+	// |
+	// |-> ---------------------------------------------------------------------------------------------------------------------------
+	//     | idr object new 3         | idr object new 0     | idr object 6         | idr object 5         | .... | idr object 0     |
+	//     ---------------------------------------------------------------------------------------------------------------------------
+	//     | ary[0]: idr object new 0 | ary[0]: idr object 6 | ary[0]: idr object 5 | ary[0]: idr object 4 | .... | ary[0]: NULL     |
+	//     ---------------------------------------------------------------------------------------------------------------------------
+	//
+	// (&(&proc_inum_ida)->idr)->id_free: kmem_cache#21-oX (idr object new 3)
+	// (&(&proc_inum_ida)->idr)->id_free_cnt: 8
+	//
+	// (&(&proc_inum_ida)->idr)->top: kmem_cache#21-oX (struct idr_layer) (idr object 8)
+	// (&(&proc_inum_ida)->idr)->layers: 1
+	// (&(&proc_inum_ida)->idr)->id_free: (idr object new 0)
+	// (&(&proc_inum_ida)->idr)->id_free_cnt: 7
+	//
+	// (kmem_cache#27-oX (struct ida_bitmap))->bitmap 의 3 bit를 1로 set 수행
+	// (kmem_cache#27-oX (struct ida_bitmap))->nr_busy: 4
+	//
+	// kmem_cache인 kmem_cache#21 에서 할당한 object인 kmem_cache#21-oX (idr object new 3) 의 memory 공간을 반환함
+	//
+	// (kmem_cache#29-oX (struct proc_dir_entry))->low_ino: 0xF0000003
+	// (kmem_cache#29-oX (struct proc_dir_entry))->proc_iops: &proc_link_inode_operations
+	// (kmem_cache#29-oX (struct proc_dir_entry))->next: NULL
+	// (kmem_cache#29-oX (struct proc_dir_entry))->parent: &proc_root
+	//
+	// (&proc_root)->subdir: kmem_cache#29-oX (struct proc_dir_entry)
+
+	// register_pernet_subsys(&proc_net_ns_ops): 0
 	return register_pernet_subsys(&proc_net_ns_ops);
+	// return 0
+
+	// register_pernet_subsys 에서 한일:
+	// list head 인 &pernet_list 에 &(&proc_net_ns_ops)->list 을 tail로 추가함
 }

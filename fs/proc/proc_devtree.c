@@ -17,12 +17,18 @@
 #include <asm/uaccess.h>
 #include "internal.h"
 
+// ARM10C 20160611
+// np: unflatten_device_tree 에서 만든 tree의 root node 주소, de: kmem_cache#29-oX (struct proc_dir_entry)
 static inline void set_node_proc_entry(struct device_node *np,
 				       struct proc_dir_entry *de)
 {
+	// np->pde: (unflatten_device_tree 에서 만든 tree의 root node 주소)->pde,
+	// de: kmem_cache#29-oX (struct proc_dir_entry)
 	np->pde = de;
+	// np->pde: (unflatten_device_tree 에서 만든 tree의 root node 주소)->pde: kmem_cache#29-oX (struct proc_dir_entry)
 }
 
+// ARM10C 20160611
 static struct proc_dir_entry *proc_device_tree;
 
 /*
@@ -182,6 +188,8 @@ retry:
 /*
  * Process a node, adding entries for its children and its properties.
  */
+// ARM10C 20160611
+// root: unflatten_device_tree 에서 만든 tree의 root node 주소, proc_device_tree: kmem_cache#29-oX (struct proc_dir_entry)
 void proc_device_tree_add_node(struct device_node *np,
 			       struct proc_dir_entry *de)
 {
@@ -190,7 +198,13 @@ void proc_device_tree_add_node(struct device_node *np,
 	struct device_node *child;
 	const char *p;
 
+	// np: unflatten_device_tree 에서 만든 tree의 root node 주소, de: kmem_cache#29-oX (struct proc_dir_entry)
 	set_node_proc_entry(np, de);
+
+	// set_node_proc_entry 에서 한일:
+	// (unflatten_device_tree 에서 만든 tree의 root node 주소)->pde: kmem_cache#29-oX (struct proc_dir_entry)
+
+	// np: unflatten_device_tree 에서 만든 tree의 root node 주소,
 	for (child = NULL; (child = of_get_next_child(np, child));) {
 		/* Use everything after the last slash, or the full name */
 		p = kbasename(child->full_name);
@@ -223,19 +237,57 @@ void proc_device_tree_add_node(struct device_node *np,
 /*
  * Called on initialization to set up the /proc/device-tree subtree
  */
+// ARM10C 20160611
 void __init proc_device_tree_init(void)
 {
 	struct device_node *root;
 
+	// proc_mkdir("device-tree", NULL): kmem_cache#29-oX (struct proc_dir_entry)
 	proc_device_tree = proc_mkdir("device-tree", NULL);
+	// proc_device_tree: kmem_cache#29-oX (struct proc_dir_entry)
+
+	// proc_mkdir 에서 한일:
+	// struct proc_dir_entry 만큼 메모리를 할당 받음 kmem_cache#29-oX (struct proc_dir_entry)
+	//
+	// (kmem_cache#29-oX (struct proc_dir_entry))->name: "device-tree"
+	// (kmem_cache#29-oX (struct proc_dir_entry))->namelen: 11
+	// (kmem_cache#29-oX (struct proc_dir_entry))->mode: 0040555
+	// (kmem_cache#29-oX (struct proc_dir_entry))->nlink: 2
+	// (&(kmem_cache#29-oX (struct proc_dir_entry))->count)->counter: 1
+	// &(kmem_cache#29-oX (struct proc_dir_entry))->pde_unload_lock을 이용한 spin lock 초기화 수행
+	// ((&(kmem_cache#29-oX (struct proc_dir_entry))->pde_unload_lock)->rlock)->raw_lock: { { 0 } }
+	// ((&(kmem_cache#29-oX (struct proc_dir_entry))->pde_unload_lock)->rlock)->magic: 0xdead4ead
+	// ((&(kmem_cache#29-oX (struct proc_dir_entry))->pde_unload_lock)->rlock)->owner: 0xffffffff
+	// ((&(kmem_cache#29-oX (struct proc_dir_entry))->pde_unload_lock)->rlock)->owner_cpu: 0xffffffff
+	// &(kmem_cache#29-oX (struct proc_dir_entry))->pde_openers->i_sb_list->next: &(kmem_cache#29-oX (struct proc_dir_entry))->pde_openers->i_sb_list
+	// &(kmem_cache#29-oX (struct proc_dir_entry))->pde_openers->i_sb_list->prev: &(kmem_cache#29-oX (struct proc_dir_entry))->pde_openers->i_sb_list
+	//
+	// parent: &proc_root
+
+	// proc_device_tree: kmem_cache#29-oX (struct proc_dir_entry)
 	if (proc_device_tree == NULL)
 		return;
+
+	// of_find_node_by_path("/"): unflatten_device_tree 에서 만든 tree의 root node
 	root = of_find_node_by_path("/");
+	// root: unflatten_device_tree 에서 만든 tree의 root node 주소
+
+	// root: unflatten_device_tree 에서 만든 tree의 root node 주소
 	if (root == NULL) {
 		remove_proc_entry("device-tree", NULL);
 		pr_debug("/proc/device-tree: can't find root\n");
 		return;
 	}
+
+	// root: unflatten_device_tree 에서 만든 tree의 root node 주소, proc_device_tree: kmem_cache#29-oX (struct proc_dir_entry)
 	proc_device_tree_add_node(root, proc_device_tree);
-	of_node_put(root);
+
+	// NOTE:
+	// unflatten_device_tree 에서 수행한 device tree의 tree 구조를 정확히 분석 하지 않았으므로
+	// 디테일한 주석을 다는 것은 skip 함
+
+	// proc_device_tree_add_node 에서 한일:
+	// unflatten_device_tree 에서 만든 tree의 root node 의 값을 사용하여proc device tree를 만드는 작업을 수행
+
+	of_node_put(root); // null function
 }

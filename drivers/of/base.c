@@ -33,6 +33,7 @@ LIST_HEAD(aliases_lookup);
 // ARM10C 20140208
 // ARM10C 20141004
 // ARM10C 20141011
+// ARM10C 20160611
 struct device_node *of_allnodes;
 EXPORT_SYMBOL(of_allnodes);
 struct device_node *of_chosen;
@@ -48,6 +49,16 @@ DEFINE_MUTEX(of_aliases_mutex);
 // ARM10C 20140215
 // ARM10C 20141004
 // ARM10C 20150307
+// ARM10C 20160611
+// DEFINE_RAW_SPINLOCK(devtree_lock):
+// raw_spinlock_t devtree_lock =
+// (raw_spinlock_t)
+// {
+//    .raw_lock = { { 0 } },
+//    .magic = 0xdead4ead,
+//    .owner_cpu = -1,
+//    .owner = 0xffffffff,
+// }
 DEFINE_RAW_SPINLOCK(devtree_lock);
 
 // ARM10C 20141018
@@ -673,6 +684,8 @@ EXPORT_SYMBOL(of_get_next_parent);
  */
 // ARM10C 20140215
 // of_get_next_child(cpus, NULL)
+// ARM10C 20160611
+// np: unflatten_device_tree 에서 만든 tree의 root node 주소, NULL
 struct device_node *of_get_next_child(const struct device_node *node,
 	struct device_node *prev)
 {
@@ -752,19 +765,40 @@ EXPORT_SYMBOL(of_get_child_by_name);
  *	of_node_put() on it when done.
  */
 // ARM10C 20140208
+// ARM10C 20160611
+// "/"
 struct device_node *of_find_node_by_path(const char *path)
 {
+	// of_allnodes: unflatten_device_tree 에서 만든tree의 root node 의 주소
 	struct device_node *np = of_allnodes;
+	// np: unflatten_device_tree 에서 만든 tree의 root node 주소
+
 	unsigned long flags;
 
 	raw_spin_lock_irqsave(&devtree_lock, flags);
+
+	// raw_spin_lock_irqsave 에서 한일:
+	// devtree_lock을 사용한 spin lock 수행하고 cpsr을 flags에 저장
+
+	// np: unflatten_device_tree 에서 만든 tree의 root node
 	for (; np; np = np->allnext) {
+		// np->full_name: (unflatten_device_tree 에서 만든 tree의 root node 주소)->full_name: "/", path: "/"
+		// of_node_cmp("/", "/"): 0, np: unflatten_device_tree 에서 만든 tree의 root node
+		// np: unflatten_device_tree 에서 만든 tree의 root node,
+		// of_node_get(unflatten_device_tree 에서 만든 tree의 root node): unflatten_device_tree 에서 만든 tree의 root node,
 		if (np->full_name && (of_node_cmp(np->full_name, path) == 0)
 		    && of_node_get(np))
 			break;
+			// break 수행
 	}
 	raw_spin_unlock_irqrestore(&devtree_lock, flags);
+
+	// raw_spin_unlock_irqrestore 에서 한일:
+	// devtree_lock을 사용한 spin lock 해재하고 flags에 저장된 cpsr을 복원
+
+	// np: unflatten_device_tree 에서 만든 tree의 root node 주소
 	return np;
+	// return unflatten_device_tree 에서 만든 tree의 root node 주소
 }
 EXPORT_SYMBOL(of_find_node_by_path);
 

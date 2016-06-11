@@ -236,7 +236,8 @@ extern const struct file_operations proc_ns_dir_operations;
 extern const struct file_operations proc_net_operations;
 extern const struct inode_operations proc_net_inode_operations;
 
-#ifdef CONFIG_NET
+#ifdef CONFIG_NET // CONFIG_NET=y
+// ARM10C 20160611
 extern int proc_net_init(void);
 #else
 static inline int proc_net_init(void) { return 0; }
@@ -250,7 +251,8 @@ extern int proc_setup_self(struct super_block *);
 /*
  * proc_sysctl.c
  */
-#ifdef CONFIG_PROC_SYSCTL
+#ifdef CONFIG_PROC_SYSCTL // CONFIG_PROC_SYSCTL=y
+// ARM10C 20160611
 extern int proc_sys_init(void);
 extern void sysctl_head_put(struct ctl_table_header *);
 #else
@@ -261,7 +263,7 @@ static inline void sysctl_head_put(struct ctl_table_header *head) { }
 /*
  * proc_tty.c
  */
-#ifdef CONFIG_TTY
+#ifdef CONFIG_TTY // CONFIG_TTY=y
 extern void proc_tty_init(void);
 #else
 static inline void proc_tty_init(void) {}

@@ -288,6 +288,24 @@ static inline void mutex_destroy(struct mutex *lock) {}
 //    { &(chrdevs_lock.wait_list), &(chrdevs_lock.wait_list) }
 //    , .magic = &chrdevs_lock
 // }
+// ARM10C 20160611
+// DEFINE_MUTEX(net_mutex):
+// struct mutex net_mutex =
+// { .count = { (1) }
+//    , .wait_lock =
+//    (spinlock_t )
+//    { { .rlock =
+//	  {
+//	  .raw_lock = { { 0 } },
+//	  .magic = 0xdead4ead,
+//	  .owner_cpu = -1,
+//	  .owner = 0xffffffff,
+//	  }
+//    } }
+//    , .wait_list =
+//    { &(net_mutex.wait_list), &(net_mutex.wait_list) }
+//    , .magic = &net_mutex
+// }
 #define DEFINE_MUTEX(mutexname) \
 	struct mutex mutexname = __MUTEX_INITIALIZER(mutexname)
 

@@ -35,6 +35,7 @@ static struct ctl_table root_table[] = {
 	},
 	{ }
 };
+// ARM10C 20160611
 static struct ctl_table_root sysctl_table_root = {
 	.default_set.dir.header = {
 		{{.count = 1,
@@ -750,6 +751,7 @@ static const struct file_operations proc_sys_file_operations = {
 	.llseek		= default_llseek,
 };
 
+// ARM10C 20160611
 static const struct file_operations proc_sys_dir_file_operations = {
 	.read		= generic_read_dir,
 	.iterate	= proc_sys_readdir,
@@ -762,6 +764,7 @@ static const struct inode_operations proc_sys_inode_operations = {
 	.getattr	= proc_sys_getattr,
 };
 
+// ARM10C 20160611
 static const struct inode_operations proc_sys_dir_operations = {
 	.lookup		= proc_sys_lookup,
 	.permission	= proc_sys_permission,
@@ -1268,18 +1271,31 @@ static char *append_path(const char *path, char *pos, const char *name)
 	return pos;
 }
 
+// ARM10C 20160611
+// table: sysctl_base_table
 static int count_subheaders(struct ctl_table *table)
 {
 	int has_files = 0;
+	// has_files: 0
+
 	int nr_subheaders = 0;
+	// nr_subheaders: 0
+
 	struct ctl_table *entry;
 
 	/* special case: no directory and empty directory */
+	// table: sysctl_base_table, table->procname: sysctl_base_table[0].procname: "kernel"
 	if (!table || !table->procname)
 		return 1;
 
+// 2016/06/11 종료
+
+	// table: sysctl_base_table, entry: sysctl_base_table, entry->procname: sysctl_base_table[0].procname: "kernel"
 	for (entry = table; entry->procname; entry++) {
+
+		// entry->child: sysctl_base_table[0].child: kern_table
 		if (entry->child)
+			// nr_subheaders: 0, entry->child: sysctl_base_table[0].child: kern_table
 			nr_subheaders += count_subheaders(entry->child);
 		else
 			has_files = 1;
@@ -1372,11 +1388,17 @@ out:
  *
  * See __register_sysctl_table for more details.
  */
+// ARM10C 20160611
+// &sysctl_table_root.default_set, path: null_path, table: sysctl_base_table
 struct ctl_table_header *__register_sysctl_paths(
 	struct ctl_table_set *set,
 	const struct ctl_path *path, struct ctl_table *table)
 {
+	// table: sysctl_base_table
 	struct ctl_table *ctl_table_arg = table;
+	// ctl_table_arg: sysctl_base_table
+
+	// table: sysctl_base_table
 	int nr_subheaders = count_subheaders(table);
 	struct ctl_table_header *header = NULL, **subheaders, **subheader;
 	const struct ctl_path *component;
@@ -1443,9 +1465,12 @@ err_register_leaves:
  *
  * See __register_sysctl_paths for more details.
  */
+// ARM10C 20160611
+// null_path, table: sysctl_base_table
 struct ctl_table_header *register_sysctl_paths(const struct ctl_path *path,
 						struct ctl_table *table)
 {
+	// path: null_path, table: sysctl_base_table
 	return __register_sysctl_paths(&sysctl_table_root.default_set,
 					path, table);
 }
@@ -1460,10 +1485,13 @@ EXPORT_SYMBOL(register_sysctl_paths);
  *
  * See register_sysctl_paths for more details.
  */
+// ARM10C 20160611
+// sysctl_base_table
 struct ctl_table_header *register_sysctl_table(struct ctl_table *table)
 {
 	static const struct ctl_path null_path[] = { {} };
 
+	// table: sysctl_base_table
 	return register_sysctl_paths(null_path, table);
 }
 EXPORT_SYMBOL(register_sysctl_table);
@@ -1569,14 +1597,44 @@ void retire_sysctl_set(struct ctl_table_set *set)
 	WARN_ON(!RB_EMPTY_ROOT(&set->dir.root));
 }
 
+// ARM10C 20160611
 int __init proc_sys_init(void)
 {
 	struct proc_dir_entry *proc_sys_root;
 
+	// proc_mkdir("sys", NULL): kmem_cache#29-oX (struct proc_dir_entry)
 	proc_sys_root = proc_mkdir("sys", NULL);
+	// proc_sys_root: kmem_cache#29-oX (struct proc_dir_entry)
+
+	// proc_mkdir 에서 한일:
+	// struct proc_dir_entry 만큼 메모리를 할당 받음 kmem_cache#29-oX (struct proc_dir_entry)
+	//
+	// (kmem_cache#29-oX (struct proc_dir_entry))->name: "sys"
+	// (kmem_cache#29-oX (struct proc_dir_entry))->namelen: 3
+	// (kmem_cache#29-oX (struct proc_dir_entry))->mode: 0040555
+	// (kmem_cache#29-oX (struct proc_dir_entry))->nlink: 2
+	// (&(kmem_cache#29-oX (struct proc_dir_entry))->count)->counter: 1
+	// &(kmem_cache#29-oX (struct proc_dir_entry))->pde_unload_lock을 이용한 spin lock 초기화 수행
+	// ((&(kmem_cache#29-oX (struct proc_dir_entry))->pde_unload_lock)->rlock)->raw_lock: { { 0 } }
+	// ((&(kmem_cache#29-oX (struct proc_dir_entry))->pde_unload_lock)->rlock)->magic: 0xdead4ead
+	// ((&(kmem_cache#29-oX (struct proc_dir_entry))->pde_unload_lock)->rlock)->owner: 0xffffffff
+	// ((&(kmem_cache#29-oX (struct proc_dir_entry))->pde_unload_lock)->rlock)->owner_cpu: 0xffffffff
+	// &(kmem_cache#29-oX (struct proc_dir_entry))->pde_openers->i_sb_list->next: &(kmem_cache#29-oX (struct proc_dir_entry))->pde_openers->i_sb_list
+	// &(kmem_cache#29-oX (struct proc_dir_entry))->pde_openers->i_sb_list->prev: &(kmem_cache#29-oX (struct proc_dir_entry))->pde_openers->i_sb_list
+	//
+	// parent: &proc_root
+
+	// proc_sys_root->proc_iops: (kmem_cache#29-oX (struct proc_dir_entry))->proc_iops
 	proc_sys_root->proc_iops = &proc_sys_dir_operations;
+	// proc_sys_root->proc_iops: (kmem_cache#29-oX (struct proc_dir_entry))->proc_iops: &proc_sys_dir_operations
+
+	// proc_sys_root->proc_fops: (kmem_cache#29-oX (struct proc_dir_entry))->proc_fops
 	proc_sys_root->proc_fops = &proc_sys_dir_file_operations;
+	// proc_sys_root->proc_fops: (kmem_cache#29-oX (struct proc_dir_entry))->proc_fops: &proc_sys_dir_file_operations
+
+	// proc_sys_root->nlink: (kmem_cache#29-oX (struct proc_dir_entry))->nlink: 2
 	proc_sys_root->nlink = 0;
+	// proc_sys_root->nlink: (kmem_cache#29-oX (struct proc_dir_entry))->nlink: 0
 
 	return sysctl_init();
 }
