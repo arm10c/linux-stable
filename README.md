@@ -10,6 +10,10 @@
   - current : 3.13.x
   
 # HISTORY
+* 146th (2016/06/04) week [146차](https://github.com/hephaex/kernel_review/blob/master/a10c_146.md)
+ - page_writeback_init()
+   - writeback_set_ratelimit()
+   - global_dirty_limits()
 * 145th (2016/05/28) week [145차](https://github.com/hephaex/kernel_review/blob/master/a10c_145.md)
  - vhs_caches_init()
    - kmem_cache_create(): names_cache
