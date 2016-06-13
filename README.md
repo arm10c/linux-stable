@@ -10,6 +10,13 @@
   - current : 3.13.x
   
 # HISTORY
+* 147th (2016/06/11) week [147차](https://github.com/hephaex/kernel_review/blob/master/a10c_147.md)
+ - proc_root_init()
+   - proc_init_inodecache()
+   - register_filesystem()
+   - proc_self_init()
+   - proc_symlink()
+   - proc_net_init()
 * 146th (2016/06/04) week [146차](https://github.com/hephaex/kernel_review/blob/master/a10c_146.md)
  - page_writeback_init()
   - writeback_set_ratelimit()
