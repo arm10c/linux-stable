@@ -963,6 +963,7 @@ static int proc_cap_handler(struct ctl_table *table, int write,
 	return 0;
 }
 
+// ARM10C 20160625
 struct ctl_table usermodehelper_table[] = {
 	{
 		.procname	= "bset",

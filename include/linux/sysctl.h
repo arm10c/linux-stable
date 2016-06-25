@@ -104,6 +104,8 @@ static inline void *proc_sys_poll_event(struct ctl_table_poll *poll)
 	struct ctl_table_poll name = __CTL_TABLE_POLL_INITIALIZER(name)
 
 /* A sysctl table is an array of struct ctl_table: */
+// ARM10C 20160625
+// sizeof(struct ctl_table): 34 bytes
 struct ctl_table 
 {
 	const char *procname;		/* Text ID for /proc/sys, or zero */
@@ -117,6 +119,8 @@ struct ctl_table
 	void *extra2;
 };
 
+// ARM10C 20160625
+// sizeof(struct ctl_node): 16 bytes
 struct ctl_node {
 	struct rb_node node;
 	struct ctl_table_header *header;
@@ -125,6 +129,8 @@ struct ctl_node {
 /* struct ctl_table_header is used to maintain dynamic lists of
    struct ctl_table trees. */
 // ARM10C 20160611
+// ARM10C 20160625
+// sizeof(struct ctl_table_header): 32 bytes
 struct ctl_table_header
 {
 	union {
@@ -145,6 +151,7 @@ struct ctl_table_header
 };
 
 // ARM10C 20160611
+// ARM10C 20160625
 struct ctl_dir {
 	/* Header must be at the start of ctl_dir */
 	struct ctl_table_header header;
@@ -158,6 +165,7 @@ struct ctl_table_set {
 };
 
 // ARM10C 20160611
+// ARM10C 20160625
 struct ctl_table_root {
 	struct ctl_table_set default_set;
 	struct ctl_table_set *(*lookup)(struct ctl_table_root *root,
@@ -167,6 +175,7 @@ struct ctl_table_root {
 
 /* struct ctl_path describes where in the hierarchy a table is added */
 // ARM10C 20160611
+// ARM10C 20160625
 struct ctl_path {
 	const char *procname;
 };

@@ -310,6 +310,7 @@ struct callback_head {
 // ARM10C 20150919
 // ARM10C 20151024
 // ARM10C 20151114
+// ARM10C 20160625
 // sizeof(rcu_head): 8 bytes
 #define rcu_head callback_head
 
