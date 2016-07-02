@@ -227,6 +227,7 @@ int sysctl_legacy_va_layout;
 /* The default sysctl tables: */
 
 // ARM10C 20160611
+// ARM10C 20160625
 static struct ctl_table sysctl_base_table[] = {
 	{
 		.procname	= "kernel",
@@ -273,6 +274,7 @@ static int max_extfrag_threshold = 1000;
 #endif
 
 // ARM10C 20160611
+// ARM10C 20160625
 static struct ctl_table kern_table[] = {
 	{
 		.procname	= "sched_child_runs_first",
@@ -281,7 +283,7 @@ static struct ctl_table kern_table[] = {
 		.mode		= 0644,
 		.proc_handler	= proc_dointvec,
 	},
-#ifdef CONFIG_SCHED_DEBUG
+#ifdef CONFIG_SCHED_DEBUG // CONFIG_SCHED_DEBUG=y
 	{
 		.procname	= "sched_min_granularity_ns",
 		.data		= &sysctl_sched_min_granularity,
@@ -309,7 +311,7 @@ static struct ctl_table kern_table[] = {
 		.extra1		= &min_wakeup_granularity_ns,
 		.extra2		= &max_wakeup_granularity_ns,
 	},
-#ifdef CONFIG_SMP
+#ifdef CONFIG_SMP // CONFIG_SMP=y
 	{
 		.procname	= "sched_tunable_scaling",
 		.data		= &sysctl_sched_tunable_scaling,
@@ -357,7 +359,7 @@ static struct ctl_table kern_table[] = {
 		.extra2		= &one,
 	},
 #endif /* CONFIG_SMP */
-#ifdef CONFIG_NUMA_BALANCING
+#ifdef CONFIG_NUMA_BALANCING // CONFIG_NUMA_BALANCING=n
 	{
 		.procname	= "numa_balancing_scan_delay_ms",
 		.data		= &sysctl_numa_balancing_scan_delay,
@@ -432,7 +434,7 @@ static struct ctl_table kern_table[] = {
 		.mode		= 0644,
 		.proc_handler	= sched_rr_handler,
 	},
-#ifdef CONFIG_SCHED_AUTOGROUP
+#ifdef CONFIG_SCHED_AUTOGROUP // CONFIG_SCHED_AUTOGROUP=n
 	{
 		.procname	= "sched_autogroup_enabled",
 		.data		= &sysctl_sched_autogroup_enabled,
@@ -443,7 +445,7 @@ static struct ctl_table kern_table[] = {
 		.extra2		= &one,
 	},
 #endif
-#ifdef CONFIG_CFS_BANDWIDTH
+#ifdef CONFIG_CFS_BANDWIDTH // CONFIG_CFS_BANDWIDTH=n
 	{
 		.procname	= "sched_cfs_bandwidth_slice_us",
 		.data		= &sysctl_sched_cfs_bandwidth_slice,
@@ -453,7 +455,7 @@ static struct ctl_table kern_table[] = {
 		.extra1		= &one,
 	},
 #endif
-#ifdef CONFIG_PROVE_LOCKING
+#ifdef CONFIG_PROVE_LOCKING // CONFIG_PROVE_LOCKING=n
 	{
 		.procname	= "prove_locking",
 		.data		= &prove_locking,
@@ -462,7 +464,7 @@ static struct ctl_table kern_table[] = {
 		.proc_handler	= proc_dointvec,
 	},
 #endif
-#ifdef CONFIG_LOCK_STAT
+#ifdef CONFIG_LOCK_STAT // CONFIG_LOCK_STAT=n
 	{
 		.procname	= "lock_stat",
 		.data		= &lock_stat,
@@ -478,7 +480,7 @@ static struct ctl_table kern_table[] = {
 		.mode		= 0644,
 		.proc_handler	= proc_dointvec,
 	},
-#ifdef CONFIG_COREDUMP
+#ifdef CONFIG_COREDUMP // CONFIG_COREDUMP=y
 	{
 		.procname	= "core_uses_pid",
 		.data		= &core_uses_pid,
@@ -501,7 +503,7 @@ static struct ctl_table kern_table[] = {
 		.proc_handler	= proc_dointvec,
 	},
 #endif
-#ifdef CONFIG_PROC_SYSCTL
+#ifdef CONFIG_PROC_SYSCTL // CONFIG_PROC_SYSCTL=y
 	{
 		.procname	= "tainted",
 		.maxlen 	= sizeof(long),
@@ -509,7 +511,7 @@ static struct ctl_table kern_table[] = {
 		.proc_handler	= proc_taint,
 	},
 #endif
-#ifdef CONFIG_LATENCYTOP
+#ifdef CONFIG_LATENCYTOP // CONFIG_LATENCYTOP=n
 	{
 		.procname	= "latencytop",
 		.data		= &latencytop_enabled,
@@ -518,7 +520,7 @@ static struct ctl_table kern_table[] = {
 		.proc_handler	= proc_dointvec,
 	},
 #endif
-#ifdef CONFIG_BLK_DEV_INITRD
+#ifdef CONFIG_BLK_DEV_INITRD // CONFIG_BLK_DEV_INITRD=y
 	{
 		.procname	= "real-root-dev",
 		.data		= &real_root_dev,
@@ -534,7 +536,7 @@ static struct ctl_table kern_table[] = {
 		.mode		= 0644,
 		.proc_handler	= proc_dointvec,
 	},
-#ifdef CONFIG_SPARC
+#ifdef CONFIG_SPARC // CONFIG_SPARC=n
 	{
 		.procname	= "reboot-cmd",
 		.data		= reboot_command,
@@ -557,7 +559,7 @@ static struct ctl_table kern_table[] = {
 		.proc_handler	= proc_dointvec,
 	},
 #endif
-#ifdef CONFIG_SPARC64
+#ifdef CONFIG_SPARC64 // CONFIG_SPARC64=n
 	{
 		.procname	= "tsb-ratio",
 		.data		= &sysctl_tsb_ratio,
@@ -575,7 +577,7 @@ static struct ctl_table kern_table[] = {
 		.proc_handler	= proc_dointvec,
 	},
 #endif
-#ifdef CONFIG_SYSCTL_ARCH_UNALIGN_ALLOW
+#ifdef CONFIG_SYSCTL_ARCH_UNALIGN_ALLOW // CONFIG_SYSCTL_ARCH_UNALIGN_ALLOW=n
 	{
 		.procname	= "unaligned-trap",
 		.data		= &unaligned_enabled,
@@ -591,7 +593,7 @@ static struct ctl_table kern_table[] = {
 		.mode		= 0644,
 		.proc_handler	= proc_dointvec,
 	},
-#ifdef CONFIG_FUNCTION_TRACER
+#ifdef CONFIG_FUNCTION_TRACER // CONFIG_FUNCTION_TRACER=n
 	{
 		.procname	= "ftrace_enabled",
 		.data		= &ftrace_enabled,
@@ -600,7 +602,7 @@ static struct ctl_table kern_table[] = {
 		.proc_handler	= ftrace_enable_sysctl,
 	},
 #endif
-#ifdef CONFIG_STACK_TRACER
+#ifdef CONFIG_STACK_TRACER // CONFIG_STACK_TRACER=n
 	{
 		.procname	= "stack_tracer_enabled",
 		.data		= &stack_tracer_enabled,
@@ -609,7 +611,7 @@ static struct ctl_table kern_table[] = {
 		.proc_handler	= stack_trace_sysctl,
 	},
 #endif
-#ifdef CONFIG_TRACING
+#ifdef CONFIG_TRACING // CONFIG_TRACING=n
 	{
 		.procname	= "ftrace_dump_on_oops",
 		.data		= &ftrace_dump_on_oops,
@@ -625,7 +627,7 @@ static struct ctl_table kern_table[] = {
 		.proc_handler	= proc_dointvec,
 	},
 #endif
-#ifdef CONFIG_MODULES
+#ifdef CONFIG_MODULES // CONFIG_MODULES=y
 	{
 		.procname	= "modprobe",
 		.data		= &modprobe_path,
@@ -653,7 +655,7 @@ static struct ctl_table kern_table[] = {
 		.proc_handler	= proc_dostring,
 	},
 
-#ifdef CONFIG_CHR_DEV_SG
+#ifdef CONFIG_CHR_DEV_SG // CONFIG_CHR_DEV_SG=y
 	{
 		.procname	= "sg-big-buff",
 		.data		= &sg_big_buff,
@@ -662,7 +664,7 @@ static struct ctl_table kern_table[] = {
 		.proc_handler	= proc_dointvec,
 	},
 #endif
-#ifdef CONFIG_BSD_PROCESS_ACCT
+#ifdef CONFIG_BSD_PROCESS_ACCT // CONFIG_BSD_PROCESS_ACCT=n
 	{
 		.procname	= "acct",
 		.data		= &acct_parm,
@@ -671,7 +673,7 @@ static struct ctl_table kern_table[] = {
 		.proc_handler	= proc_dointvec,
 	},
 #endif
-#ifdef CONFIG_MAGIC_SYSRQ
+#ifdef CONFIG_MAGIC_SYSRQ // CONFIG_MAGIC_SYSRQ=y
 	{
 		.procname	= "sysrq",
 		.data		= &__sysrq_enabled,
@@ -680,7 +682,7 @@ static struct ctl_table kern_table[] = {
 		.proc_handler	= sysrq_sysctl_handler,
 	},
 #endif
-#ifdef CONFIG_PROC_SYSCTL
+#ifdef CONFIG_PROC_SYSCTL // CONFIG_PROC_SYSCTL=y
 	{
 		.procname	= "cad_pid",
 		.data		= NULL,
@@ -724,8 +726,8 @@ static struct ctl_table kern_table[] = {
 		.extra1		= &minolduid,
 		.extra2		= &maxolduid,
 	},
-#ifdef CONFIG_S390
-#ifdef CONFIG_MATHEMU
+#ifdef CONFIG_S390 // CONFIG_S390=n
+#ifdef CONFIG_MATHEMU // CONFIG_MATHEMU=n
 	{
 		.procname	= "ieee_emulation_warnings",
 		.data		= &sysctl_ieee_emulation_warnings,
@@ -758,7 +760,7 @@ static struct ctl_table kern_table[] = {
 		.mode		= 0644,
 		.proc_handler	= proc_dointvec,
 	},
-#if defined CONFIG_PRINTK
+#if defined CONFIG_PRINTK // CONFIG_PRINTK=y
 	{
 		.procname	= "printk",
 		.data		= &console_loglevel,
@@ -822,7 +824,7 @@ static struct ctl_table kern_table[] = {
 		.mode		= 0444,
 		.proc_handler	= proc_dointvec,
 	},
-#if defined(CONFIG_LOCKUP_DETECTOR)
+#if defined(CONFIG_LOCKUP_DETECTOR) // CONFIG_LOCKUP_DETECTOR=n
 	{
 		.procname       = "watchdog",
 		.data           = &watchdog_user_enabled,
@@ -860,7 +862,7 @@ static struct ctl_table kern_table[] = {
 		.extra2		= &one,
 	},
 #endif
-#if defined(CONFIG_X86_LOCAL_APIC) && defined(CONFIG_X86)
+#if defined(CONFIG_X86_LOCAL_APIC) && defined(CONFIG_X86) // CONFIG_X86_LOCAL_APIC=n, CONFIG_X86=n
 	{
 		.procname       = "unknown_nmi_panic",
 		.data           = &unknown_nmi_panic,
@@ -869,7 +871,7 @@ static struct ctl_table kern_table[] = {
 		.proc_handler   = proc_dointvec,
 	},
 #endif
-#if defined(CONFIG_X86)
+#if defined(CONFIG_X86) // CONFIG_X86=n
 	{
 		.procname	= "panic_on_unrecovered_nmi",
 		.data		= &panic_on_unrecovered_nmi,
@@ -922,7 +924,7 @@ static struct ctl_table kern_table[] = {
 		.proc_handler	= proc_dointvec,
 	},
 #endif
-#if defined(CONFIG_MMU)
+#if defined(CONFIG_MMU) // CONFIG_MMU=n
 	{
 		.procname	= "randomize_va_space",
 		.data		= &randomize_va_space,
@@ -931,7 +933,7 @@ static struct ctl_table kern_table[] = {
 		.proc_handler	= proc_dointvec,
 	},
 #endif
-#if defined(CONFIG_S390) && defined(CONFIG_SMP)
+#if defined(CONFIG_S390) && defined(CONFIG_SMP) // CONFIG_S390=n, CONFIG_SMP=y
 	{
 		.procname	= "spin_retry",
 		.data		= &spin_retry,
@@ -940,7 +942,7 @@ static struct ctl_table kern_table[] = {
 		.proc_handler	= proc_dointvec,
 	},
 #endif
-#if	defined(CONFIG_ACPI_SLEEP) && defined(CONFIG_X86)
+#if	defined(CONFIG_ACPI_SLEEP) && defined(CONFIG_X86) // CONFIG_ACPI_SLEEP=n, CONFIG_X86=n
 	{
 		.procname	= "acpi_video_flags",
 		.data		= &acpi_realmode_flags,
@@ -949,7 +951,7 @@ static struct ctl_table kern_table[] = {
 		.proc_handler	= proc_doulongvec_minmax,
 	},
 #endif
-#ifdef CONFIG_SYSCTL_ARCH_UNALIGN_NO_WARN
+#ifdef CONFIG_SYSCTL_ARCH_UNALIGN_NO_WARN // CONFIG_SYSCTL_ARCH_UNALIGN_NO_WARN=n
 	{
 		.procname	= "ignore-unaligned-usertrap",
 		.data		= &no_unaligned_warning,
@@ -958,7 +960,7 @@ static struct ctl_table kern_table[] = {
 		.proc_handler	= proc_dointvec,
 	},
 #endif
-#ifdef CONFIG_IA64
+#ifdef CONFIG_IA64 // CONFIG_IA64=n
 	{
 		.procname	= "unaligned-dump-stack",
 		.data		= &unaligned_dump_stack,
@@ -967,7 +969,7 @@ static struct ctl_table kern_table[] = {
 		.proc_handler	= proc_dointvec,
 	},
 #endif
-#ifdef CONFIG_DETECT_HUNG_TASK
+#ifdef CONFIG_DETECT_HUNG_TASK // CONFIG_DETECT_HUNG_TASK=y
 	{
 		.procname	= "hung_task_panic",
 		.data		= &sysctl_hung_task_panic,
@@ -1000,7 +1002,7 @@ static struct ctl_table kern_table[] = {
 		.proc_handler	= proc_doulongvec_minmax,
 	},
 #endif
-#ifdef CONFIG_COMPAT
+#ifdef CONFIG_COMPAT // CONFIG_COMPAT=n
 	{
 		.procname	= "compat-log",
 		.data		= &compat_log,
@@ -1009,7 +1011,7 @@ static struct ctl_table kern_table[] = {
 		.proc_handler	= proc_dointvec,
 	},
 #endif
-#ifdef CONFIG_RT_MUTEXES
+#ifdef CONFIG_RT_MUTEXES // CONFIG_RT_MUTEXES=y
 	{
 		.procname	= "max_lock_depth",
 		.data		= &max_lock_depth,
@@ -1025,14 +1027,14 @@ static struct ctl_table kern_table[] = {
 		.mode		= 0644,
 		.proc_handler	= proc_dostring,
 	},
-#ifdef CONFIG_KEYS
+#ifdef CONFIG_KEYS // CONFIG_KEYS=n
 	{
 		.procname	= "keys",
 		.mode		= 0555,
 		.child		= key_sysctls,
 	},
 #endif
-#ifdef CONFIG_RCU_TORTURE_TEST
+#ifdef CONFIG_RCU_TORTURE_TEST // CONFIG_RCU_TORTURE_TEST=n
 	{
 		.procname       = "rcutorture_runnable",
 		.data           = &rcutorture_runnable,
@@ -1041,7 +1043,7 @@ static struct ctl_table kern_table[] = {
 		.proc_handler	= proc_dointvec,
 	},
 #endif
-#ifdef CONFIG_PERF_EVENTS
+#ifdef CONFIG_PERF_EVENTS // CONFIG_PERF_EVENTS=n
 	/*
 	 * User-space scripts rely on the existence of this file
 	 * as a feature check for perf_events being enabled.
@@ -1080,7 +1082,7 @@ static struct ctl_table kern_table[] = {
 		.extra2		= &one_hundred,
 	},
 #endif
-#ifdef CONFIG_KMEMCHECK
+#ifdef CONFIG_KMEMCHECK // CONFIG_KMEMCHECK=n
 	{
 		.procname	= "kmemcheck",
 		.data		= &kmemcheck_enabled,
@@ -1089,7 +1091,7 @@ static struct ctl_table kern_table[] = {
 		.proc_handler	= proc_dointvec,
 	},
 #endif
-#ifdef CONFIG_BLOCK
+#ifdef CONFIG_BLOCK // CONFIG_BLOCK=y
 	{
 		.procname	= "blk_iopoll",
 		.data		= &blk_iopoll_enabled,
@@ -1101,6 +1103,7 @@ static struct ctl_table kern_table[] = {
 	{ }
 };
 
+// ARM10C 20160625
 static struct ctl_table vm_table[] = {
 	{
 		.procname	= "overcommit_memory",
@@ -1212,7 +1215,7 @@ static struct ctl_table vm_table[] = {
 		.extra1		= &zero,
 		.extra2		= &one_hundred,
 	},
-#ifdef CONFIG_HUGETLB_PAGE
+#ifdef CONFIG_HUGETLB_PAGE // CONFIG_HUGETLB_PAGE=n
 	{
 		.procname	= "nr_hugepages",
 		.data		= NULL,
@@ -1273,7 +1276,7 @@ static struct ctl_table vm_table[] = {
 		.extra1		= &one,
 		.extra2		= &three,
 	},
-#ifdef CONFIG_COMPACTION
+#ifdef CONFIG_COMPACTION // CONFIG_COMPACTION=y
 	{
 		.procname	= "compact_memory",
 		.data		= &sysctl_compact_memory,
@@ -1308,7 +1311,7 @@ static struct ctl_table vm_table[] = {
 		.proc_handler	= percpu_pagelist_fraction_sysctl_handler,
 		.extra1		= &min_percpu_pagelist_fract,
 	},
-#ifdef CONFIG_MMU
+#ifdef CONFIG_MMU // CONFIG_MMU=y
 	{
 		.procname	= "max_map_count",
 		.data		= &sysctl_max_map_count,
@@ -1360,7 +1363,7 @@ static struct ctl_table vm_table[] = {
 		.extra1		= &zero,
 	},
 #endif
-#ifdef CONFIG_NUMA
+#ifdef CONFIG_NUMA // CONFIG_NUMA=n
 	{
 		.procname	= "zone_reclaim_mode",
 		.data		= &zone_reclaim_mode,
@@ -1388,7 +1391,7 @@ static struct ctl_table vm_table[] = {
 		.extra2		= &one_hundred,
 	},
 #endif
-#ifdef CONFIG_SMP
+#ifdef CONFIG_SMP // CONFIG_SMP=y
 	{
 		.procname	= "stat_interval",
 		.data		= &sysctl_stat_interval,
@@ -1397,7 +1400,7 @@ static struct ctl_table vm_table[] = {
 		.proc_handler	= proc_dointvec_jiffies,
 	},
 #endif
-#ifdef CONFIG_MMU
+#ifdef CONFIG_MMU // CONFIG_MMU=y
 	{
 		.procname	= "mmap_min_addr",
 		.data		= &dac_mmap_min_addr,
@@ -1406,7 +1409,7 @@ static struct ctl_table vm_table[] = {
 		.proc_handler	= mmap_min_addr_handler,
 	},
 #endif
-#ifdef CONFIG_NUMA
+#ifdef CONFIG_NUMA // CONFIG_NUMA=n
 	{
 		.procname	= "numa_zonelist_order",
 		.data		= &numa_zonelist_order,
@@ -1416,7 +1419,7 @@ static struct ctl_table vm_table[] = {
 	},
 #endif
 #if (defined(CONFIG_X86_32) && !defined(CONFIG_UML))|| \
-   (defined(CONFIG_SUPERH) && defined(CONFIG_VSYSCALL))
+   (defined(CONFIG_SUPERH) && defined(CONFIG_VSYSCALL)) // CONFIG_X86_32=n, CONFIG_UML=n, CONFIG_SUPERH=n, CONFIG_VSYSCALL=n
 	{
 		.procname	= "vdso_enabled",
 		.data		= &vdso_enabled,
@@ -1426,7 +1429,7 @@ static struct ctl_table vm_table[] = {
 		.extra1		= &zero,
 	},
 #endif
-#ifdef CONFIG_HIGHMEM
+#ifdef CONFIG_HIGHMEM // CONFIG_HIGHMEM=y
 	{
 		.procname	= "highmem_is_dirtyable",
 		.data		= &vm_highmem_is_dirtyable,
@@ -1444,7 +1447,7 @@ static struct ctl_table vm_table[] = {
 		.mode		= 0644,
 		.proc_handler	= scan_unevictable_handler,
 	},
-#ifdef CONFIG_MEMORY_FAILURE
+#ifdef CONFIG_MEMORY_FAILURE // CONFIG_MEMORY_FAILURE=n
 	{
 		.procname	= "memory_failure_early_kill",
 		.data		= &sysctl_memory_failure_early_kill,
@@ -1487,6 +1490,7 @@ static struct ctl_table binfmt_misc_table[] = {
 };
 #endif
 
+// ARM10C 20160625
 static struct ctl_table fs_table[] = {
 	{
 		.procname	= "inode-nr",
@@ -1550,7 +1554,7 @@ static struct ctl_table fs_table[] = {
 		.extra1		= &minolduid,
 		.extra2		= &maxolduid,
 	},
-#ifdef CONFIG_FILE_LOCKING
+#ifdef CONFIG_FILE_LOCKING // CONFIG_FILE_LOCKING=y
 	{
 		.procname	= "leases-enable",
 		.data		= &leases_enable,
@@ -1559,7 +1563,7 @@ static struct ctl_table fs_table[] = {
 		.proc_handler	= proc_dointvec,
 	},
 #endif
-#ifdef CONFIG_DNOTIFY
+#ifdef CONFIG_DNOTIFY // CONFIG_DNOTIFY=y
 	{
 		.procname	= "dir-notify-enable",
 		.data		= &dir_notify_enable,
@@ -1568,8 +1572,8 @@ static struct ctl_table fs_table[] = {
 		.proc_handler	= proc_dointvec,
 	},
 #endif
-#ifdef CONFIG_MMU
-#ifdef CONFIG_FILE_LOCKING
+#ifdef CONFIG_MMU // CONFIG_MMU=y
+#ifdef CONFIG_FILE_LOCKING // CONFIG_FILE_LOCKING=y
 	{
 		.procname	= "lease-break-time",
 		.data		= &lease_break_time,
@@ -1578,7 +1582,7 @@ static struct ctl_table fs_table[] = {
 		.proc_handler	= proc_dointvec,
 	},
 #endif
-#ifdef CONFIG_AIO
+#ifdef CONFIG_AIO // CONFIG_AIO=y
 	{
 		.procname	= "aio-nr",
 		.data		= &aio_nr,
@@ -1594,14 +1598,14 @@ static struct ctl_table fs_table[] = {
 		.proc_handler	= proc_doulongvec_minmax,
 	},
 #endif /* CONFIG_AIO */
-#ifdef CONFIG_INOTIFY_USER
+#ifdef CONFIG_INOTIFY_USER // CONFIG_INOTIFY_USER=y
 	{
 		.procname	= "inotify",
 		.mode		= 0555,
 		.child		= inotify_table,
 	},
 #endif	
-#ifdef CONFIG_EPOLL
+#ifdef CONFIG_EPOLL // CONFIG_EPOLL=y
 	{
 		.procname	= "epoll",
 		.mode		= 0555,
@@ -1636,7 +1640,7 @@ static struct ctl_table fs_table[] = {
 		.extra1		= &zero,
 		.extra2		= &two,
 	},
-#if defined(CONFIG_BINFMT_MISC) || defined(CONFIG_BINFMT_MISC_MODULE)
+#if defined(CONFIG_BINFMT_MISC) || defined(CONFIG_BINFMT_MISC_MODULE) // CONFIG_BINFMT_MISC=n, CONFIG_BINFMT_MISC_MODULE=n
 	{
 		.procname	= "binfmt_misc",
 		.mode		= 0555,
@@ -1654,8 +1658,9 @@ static struct ctl_table fs_table[] = {
 	{ }
 };
 
+// ARM10C 20160625
 static struct ctl_table debug_table[] = {
-#ifdef CONFIG_SYSCTL_EXCEPTION_TRACE
+#ifdef CONFIG_SYSCTL_EXCEPTION_TRACE // CONFIG_SYSCTL_EXCEPTION_TRACE=n
 	{
 		.procname	= "exception-trace",
 		.data		= &show_unhandled_signals,
@@ -1664,7 +1669,7 @@ static struct ctl_table debug_table[] = {
 		.proc_handler	= proc_dointvec
 	},
 #endif
-#if defined(CONFIG_OPTPROBES)
+#if defined(CONFIG_OPTPROBES) // CONFIG_OPTPROBES=n
 	{
 		.procname	= "kprobes-optimization",
 		.data		= &sysctl_kprobes_optimization,
@@ -1678,6 +1683,7 @@ static struct ctl_table debug_table[] = {
 	{ }
 };
 
+// ARM10C 20160625
 static struct ctl_table dev_table[] = {
 	{ }
 };

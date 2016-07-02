@@ -10,6 +10,7 @@
 #define MAX_INPUT        255	/* size of the type-ahead buffer */
 #define NAME_MAX         255	/* # chars in a file name */
 // ARM10C 20151003
+// ARM10C 20160625
 // PATH_MAX: 4096
 #define PATH_MAX        4096	/* # chars in a path name including nul */
 #define PIPE_BUF        4096	/* # bytes in atomic write to a pipe */

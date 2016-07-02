@@ -36,6 +36,7 @@ static struct ctl_table root_table[] = {
 	{ }
 };
 // ARM10C 20160611
+// ARM10C 20160625
 static struct ctl_table_root sysctl_table_root = {
 	.default_set.dir.header = {
 		{{.count = 1,
@@ -1174,27 +1175,53 @@ out:
  * This routine returns %NULL on a failure to register, and a pointer
  * to the table header on success.
  */
+// ARM10C 20160625
+// [rc1] set: &sysctl_table_root.default_set, path: kmem_cache#23-oX, files: kmem_cache#24-oX
 struct ctl_table_header *__register_sysctl_table(
 	struct ctl_table_set *set,
 	const char *path, struct ctl_table *table)
 {
+	// set->dir.header.root: (&sysctl_table_root.default_set)->dir.header.root: &sysctl_table_root
 	struct ctl_table_root *root = set->dir.header.root;
+	// root: &sysctl_table_root
+
 	struct ctl_table_header *header;
 	const char *name, *nextname;
 	struct ctl_dir *dir;
 	struct ctl_table *entry;
 	struct ctl_node *node;
 	int nr_entries = 0;
+	// nr_entries: 0
 
+	// table: kmem_cache#24-oX, entry: kmem_cache#24-oX, entry->procname: (kmem_cache#24-oX)->procname: "sched_child_runs_first"
 	for (entry = table; entry->procname; entry++)
+		// nr_entries: 0
 		nr_entries++;
+		// nr_entries: 1
 
+		// kern_table 의 child 없는 index 만큼 loop 수행
+
+	// 위 loop 의 수행결과:
+	// nr_entries: 46
+
+	// sizeof(struct ctl_table_header): 32 bytes, sizeof(struct ctl_node): 16 bytes, nr_entries: 46, GFP_KERNEL: 0xD0
+	// kzalloc(768, GFP_KERNEL: 0xD0): kmem_cache#25-oX
 	header = kzalloc(sizeof(struct ctl_table_header) +
 			 sizeof(struct ctl_node)*nr_entries, GFP_KERNEL);
+	// header: kmem_cache#25-oX
+
+	// header: kmem_cache#25-oX
 	if (!header)
 		return NULL;
 
+	// header: kmem_cache#25-oX
 	node = (struct ctl_node *)(header + 1);
+	// node: &(kmem_cache#25-oX)[1] (struct ctl_node)
+
+// 2016/06/25 종료
+
+	// header: kmem_cache#25-oX, root: &sysctl_table_root, set: &sysctl_table_root.default_set,
+	// node: &(kmem_cache#25-oX)[1] (struct ctl_node), table: kmem_cache#24-oX
 	init_header(header, root, set, node, table);
 	if (sysctl_check_table(path, table))
 		goto fail;
@@ -1258,17 +1285,42 @@ struct ctl_table_header *register_sysctl(const char *path, struct ctl_table *tab
 }
 EXPORT_SYMBOL(register_sysctl);
 
+// ARM10C 20160625
+// path: kmem_cache#23-oX, pos: kmem_cache#23-oX,
+// entry->procname: sysctl_base_table[0].procname: "kernel"
 static char *append_path(const char *path, char *pos, const char *name)
 {
 	int namelen;
+
+	// name: "kernel", strlen("kernel"): 6
 	namelen = strlen(name);
+	// namelen: 6
+
+	// pos: kmem_cache#23-oX, path: kmem_cache#23-oX, namelen: 6, PATH_MAX: 4096
 	if (((pos - path) + namelen + 2) >= PATH_MAX)
 		return NULL;
+
+	// pos: kmem_cache#23-oX, name: "kernel", namelen: 6
 	memcpy(pos, name, namelen);
+
+	// memcpy 에서 한일:
+	// pos: kmem_cache#23-oX: "kernel"
+
+	// namelen: 6, pos[6]: (kmem_cache#23-oX)[6]: NULL
 	pos[namelen] = '/';
+	// pos[6]: (kmem_cache#23-oX)[6]: '/'
+
+	// namelen: 6, pos[7]: (kmem_cache#23-oX)[7]
 	pos[namelen + 1] = '\0';
+	// namelen: 6, pos[7]: (kmem_cache#23-oX)[7]: '\0'
+
+	// pos: kmem_cache#23-oX: "kernel/", namelen: 6
 	pos += namelen + 1;
+	// pos: &(kmem_cache#23-oX)[7]
+
+	// pos: &(kmem_cache#23-oX)[7]
 	return pos;
+	// return &(kmem_cache#23-oX)[7]
 }
 
 // ARM10C 20160611
@@ -1289,58 +1341,152 @@ static int count_subheaders(struct ctl_table *table)
 		return 1;
 
 // 2016/06/11 종료
+// 2016/06/25 시작
 
 	// table: sysctl_base_table, entry: sysctl_base_table, entry->procname: sysctl_base_table[0].procname: "kernel"
 	for (entry = table; entry->procname; entry++) {
 
-		// entry->child: sysctl_base_table[0].child: kern_table
+		// [f1] entry->child: sysctl_base_table[0].child: kern_table
+		// [f2] entry->child: sysctl_base_table[1].child: vm_table
+		// [f3] entry->child: sysctl_base_table[2].child: fs_table
+		// [f4] entry->child: sysctl_base_table[3].child: debug_table
+		// [f5] entry->child: sysctl_base_table[4].child: dev_table
 		if (entry->child)
-			// nr_subheaders: 0, entry->child: sysctl_base_table[0].child: kern_table
+			// [f1] nr_subheaders: 0, entry->child: sysctl_base_table[0].child: kern_table
+			// [f1] count_subheadera(kern_table): 2
+			// [f2] nr_subheaders: 2, entry->child: sysctl_base_table[1].child: vm_table
+			// [f2] count_subheadera(vm_table): 0
+			// [f3] nr_subheaders: 2, entry->child: sysctl_base_table[2].child: fs_table
+			// [f3] count_subheadera(fs_table): 0
+			// [f4] nr_subheaders: 2, entry->child: sysctl_base_table[3].child: debug_table
+			// [f4] count_subheadera(debug_table): 0
+			// [f5] nr_subheaders: 2, entry->child: sysctl_base_table[4].child: dev_table
+			// [f5] count_subheadera(dev_table): 0
 			nr_subheaders += count_subheaders(entry->child);
+			// [f1] nr_subheaders: 2
+			// [f2] nr_subheaders: 2
+			// [f3] nr_subheaders: 2
+			// [f4] nr_subheaders: 2
+			// [f5] nr_subheaders: 2
 		else
 			has_files = 1;
 	}
+
+	// nr_subheaders: 2, has_files: 0
 	return nr_subheaders + has_files;
+	// return 2
 }
 
+// ARM10C 20160625
+// new_path: kmem_cache#23-oX, pos: kmem_cache#23-oX, subheader: &(kmem_cache#27-oX)[1] (struct ctl_table_header)
+// set: &sysctl_table_root.default_set, table: sysctl_base_table
+// ARM10C 20160625
+// [rc1] path: kmem_cache#23-oX, child_pos: &(kmem_cache#23-oX)[7] subheader: &(kmem_cache#27-oX)[1] (struct ctl_table_header)
+// [rc1] set: &sysctl_table_root.default_set, entry->child: sysctl_base_table[0].child: kern_table
 static int register_leaf_sysctl_tables(const char *path, char *pos,
 	struct ctl_table_header ***subheader, struct ctl_table_set *set,
 	struct ctl_table *table)
 {
 	struct ctl_table *ctl_table_arg = NULL;
+	// ctl_table_arg: NULL
+	// [rc1] ctl_table_arg: NULL
+
 	struct ctl_table *entry, *files;
 	int nr_files = 0;
-	int nr_dirs = 0;
-	int err = -ENOMEM;
+	// nr_files: 0
+	// [rc1] nr_files: 0
 
+	int nr_dirs = 0;
+	// nr_dirs: 0
+	// [rc1] nr_dirs: 0
+
+	// ENOMEM: 12
+	// [rc1] ENOMEM: 12
+	int err = -ENOMEM;
+	// err: -12
+	// [rc1] err: -12
+
+	// table: sysctl_base_table, entry: sysctl_base_table,
+	// entry->procname: sysctl_base_table[0].procname: "kernel"
+	// [rc1] table: kern_table, entry: kern_table,
+	// [rc1] entry->procname: kern_table[0].procname: "sched_child_runs_first"
 	for (entry = table; entry->procname; entry++) {
+		// entry->child: sysctl_base_table[0].child: kern_table
+		// [rc1] entry->child: kern_table[0].child: NULL
 		if (entry->child)
+			// nr_dirs: 0
 			nr_dirs++;
+			// nr_dirs: 1
 		else
+			// [rc1] nr_files: 0
 			nr_files++;
+			// [rc1] nr_files: 1
+
+		// sysctl_base_table 맴버 값 만큼 loop 수행
+		// [rc1] kern_table 맴버 값 만큼 loop 수행
 	}
 
+	// 위 loop를 수행한 결과
+	// nr_dirs: 5
+
+	// [rc1] 위 loop를 수행한 결과
+	// [rc1] nr_dirs: 2, [rc1] nr_files: 46
+
+	// table: sysctl_base_table
+	// [rc1] table: kern_table
 	files = table;
+	// files: sysctl_base_table
+	// [rc1] files: kern_table
+
 	/* If there are mixed files and directories we need a new table */
+	// nr_dirs: 5, nr_files: 0
+	// [rc1] nr_dirs: 2, nr_files: 46
 	if (nr_dirs && nr_files) {
 		struct ctl_table *new;
+
+		// [rc1] sizeof(struct ctl_table): 34 bytes, nr_files: 46, GFP_KERNEL: 0xD0
+		// [rc1] kzalloc(1598, GFP_KERNEL: 0xD0): kmem_cache#24-oX
 		files = kzalloc(sizeof(struct ctl_table) * (nr_files + 1),
 				GFP_KERNEL);
+		// [rc1] files: kmem_cache#24-oX
+
+		// [rc1] files: kmem_cache#24-oX
 		if (!files)
 			goto out;
 
+		// [rc1] ctl_table_arg: NULL, [rc1] files: kmem_cache#24-oX
 		ctl_table_arg = files;
+		// [rc1] ctl_table_arg: kmem_cache#24-oX
+
+		// [rc1] files: kmem_cache#24-oX, new: kmem_cache#24-oX, table: kern_table, entry: kern_table,
+		// [rc1] entry->procname: kern_table[0].procname: "sched_child_runs_first"
 		for (new = files, entry = table; entry->procname; entry++) {
+			// [rc1] entry->child: kern_table[0].child: NULL
 			if (entry->child)
 				continue;
+			// [rc1] *new: (kmem_cache#24-oX)[0], *entry: kern_table[0]
 			*new = *entry;
+			// [rc1] *new: (kmem_cache#24-oX)[0]: kern_table[0]
+
+			// [rc1] new: kmem_cache#24-oX
 			new++;
+			// [rc1] new: &(kmem_cache#24-oX + 1)
+
+			// [rc1] kern_table 이 가지고 있는 index 만큼 loop 수행
 		}
+
+		// [rc1] 위 loop의 수행 결과:
+		// struct ctl_table 의 46 개 크기만큼 할당 받은 메모리 kmem_cache#24-oX 에
+		// kern_table의 child 멤버 값이 NULL 인 index 의 table 값을 복사함
 	}
 
 	/* Register everything except a directory full of subdirectories */
+	// nr_files: 0, nr_dirs: 5
+	// [rc1] nr_files: 46, nr_dirs: 2
 	if (nr_files || !nr_dirs) {
 		struct ctl_table_header *header;
+
+		// [rc1] set: &sysctl_table_root.default_set, path: kmem_cache#23-oX, files: kmem_cache#24-oX
 		header = __register_sysctl_table(set, path, files);
 		if (!header) {
 			kfree(ctl_table_arg);
@@ -1354,19 +1500,42 @@ static int register_leaf_sysctl_tables(const char *path, char *pos,
 	}
 
 	/* Recurse into the subdirectories. */
+	// table: sysctl_base_table, entry: sysctl_base_table,
+	// entry->procname: sysctl_base_table[0].procname: "kernel"
 	for (entry = table; entry->procname; entry++) {
 		char *child_pos;
 
+		// entry->child: sysctl_base_table[0].child: kern_table
 		if (!entry->child)
 			continue;
 
+		// ENAMETOOLONG: 36
 		err = -ENAMETOOLONG;
+		// err: -36
+
+		// path: kmem_cache#23-oX, pos: kmem_cache#23-oX,
+		// entry->procname: sysctl_base_table[0].procname: "kernel"
+		// append_path(kmem_cache#23-oX, kmem_cache#23-oX, "kernel"): &(kmem_cache#23-oX)[7]
 		child_pos = append_path(path, pos, entry->procname);
+		// child_pos: &(kmem_cache#23-oX)[7]
+
+		// append_path 에서 한일:
+		// pos: kmem_cache#23-oX: "kernel/"
+
+		// child_pos: &(kmem_cache#23-oX)[7]
 		if (!child_pos)
 			goto out;
 
+		// path: kmem_cache#23-oX, child_pos: &(kmem_cache#23-oX)[7] subheader: &(kmem_cache#27-oX)[1] (struct ctl_table_header)
+		// set: &sysctl_table_root.default_set, entry->child: sysctl_base_table[0].child: kern_table
+		// register_leaf_sysctl_tables(kmem_cache#23-oX, &(kmem_cache#23-oX)[7], &(kmem_cache#27-oX)[1] (struct ctl_table_header), 
+		//                             &sysctl_table_root.default_set, kern_table): 0
 		err = register_leaf_sysctl_tables(path, child_pos, subheader,
 						  set, entry->child);
+		// err: 0
+
+		// register_leaf_sysctl_tables 에서 한일:
+
 		pos[0] = '\0';
 		if (err)
 			goto out;
@@ -1398,42 +1567,77 @@ struct ctl_table_header *__register_sysctl_paths(
 	struct ctl_table *ctl_table_arg = table;
 	// ctl_table_arg: sysctl_base_table
 
-	// table: sysctl_base_table
+	// table: sysctl_base_table, count_subheaders(sysctl_base_table): 2
 	int nr_subheaders = count_subheaders(table);
+	// nr_subheaders: 2
+
 	struct ctl_table_header *header = NULL, **subheaders, **subheader;
+	// header: NULL
+
 	const struct ctl_path *component;
 	char *new_path, *pos;
 
+	// PATH_MAX: 4096, GFP_KERNEL: 0xD0,
+	// kmalloc(4096, GFP_KERNEL: 0xD0): kmem_cache#23-oX
 	pos = new_path = kmalloc(PATH_MAX, GFP_KERNEL);
+	// pos: kmem_cache#23-oX, new_path: kmem_cache#23-oX
+
+	// new_path: kmem_cache#23-oX
 	if (!new_path)
 		return NULL;
 
+	// pos[0]: (kmem_cache#23-oX)[0]
 	pos[0] = '\0';
+	// pos[0]: (kmem_cache#23-oX)[0]: '\0'
+
+	// path: null_path, component: null_path, component->procname: null_path->procname: NULL
 	for (component = path; component->procname; component++) {
 		pos = append_path(new_path, pos, component->procname);
 		if (!pos)
 			goto out;
 	}
+
+	// table->procname: sysctl_base_table[0].procname: "kernel",
+	// table->child: sysctl_base_table[0].child: kern_table,
+	// table[1]->procname: sysctl_base_table[1].procname: "vm",
 	while (table->procname && table->child && !table[1].procname) {
 		pos = append_path(new_path, pos, table->procname);
 		if (!pos)
 			goto out;
 		table = table->child;
 	}
+
+	// nr_subheaders: 2
 	if (nr_subheaders == 1) {
 		header = __register_sysctl_table(set, new_path, table);
 		if (header)
 			header->ctl_table_arg = ctl_table_arg;
 	} else {
+		// header: NULL, sizeof(struct ctl_table_header): 32 bytes
+		// sizeof(*header): 32, sizeof(*subheaders): 4, nr_subheaders: 2, GFP_KERNEL: 0xD0,
+		// kzalloc(256, GFP_KERNEL: 0xD0): kmem_cache#27-oX
 		header = kzalloc(sizeof(*header) +
 				 sizeof(*subheaders)*nr_subheaders, GFP_KERNEL);
+		// header: kmem_cache#27-oX
+
+		// header: kmem_cache#27-oX
 		if (!header)
 			goto out;
 
+		// header: kmem_cache#27-oX
 		subheaders = (struct ctl_table_header **) (header + 1);
-		subheader = subheaders;
-		header->ctl_table_arg = ctl_table_arg;
+		// subheaders: &(kmem_cache#27-oX)[1] (struct ctl_table_header)
 
+		// subheaders: &(kmem_cache#27-oX)[1] (struct ctl_table_header)
+		subheader = subheaders;
+		// subheader: &(kmem_cache#27-oX)[1] (struct ctl_table_header)
+
+		// header->ctl_table_arg: (kmem_cache#27-oX)->ctl_table_arg, ctl_table_arg: sysctl_base_table
+		header->ctl_table_arg = ctl_table_arg;
+		// header->ctl_table_arg: (kmem_cache#27-oX)->ctl_table_arg: sysctl_base_table
+
+		// new_path: kmem_cache#23-oX, pos: kmem_cache#23-oX, subheader: &(kmem_cache#27-oX)[1] (struct ctl_table_header)
+		// set: &sysctl_table_root.default_set, table: sysctl_base_table
 		if (register_leaf_sysctl_tables(new_path, pos, &subheader,
 						set, table))
 			goto err_register_leaves;

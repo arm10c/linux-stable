@@ -4,6 +4,8 @@
 #include <asm-generic/errno-base.h>
 
 #define	EDEADLK		35	/* Resource deadlock would occur */
+// ARM10C 20160625
+// ENAMETOOLONG: 36
 #define	ENAMETOOLONG	36	/* File name too long */
 #define	ENOLCK		37	/* No record locks available */
 #define	ENOSYS		38	/* Function not implemented */
