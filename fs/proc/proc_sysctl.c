@@ -37,6 +37,7 @@ static struct ctl_table root_table[] = {
 };
 // ARM10C 20160611
 // ARM10C 20160625
+// ARM10C 20160702
 static struct ctl_table_root sysctl_table_root = {
 	.default_set.dir.header = {
 		{{.count = 1,
@@ -48,6 +49,18 @@ static struct ctl_table_root sysctl_table_root = {
 	},
 };
 
+// ARM10C 20160702
+// DEFINE_SPINLOCK(sysctl_lock):
+// spinlock_t sysctl_lock =
+// (spinlock_t )
+// { { .rlock =
+//     {
+//       .raw_lock = { { 0 } },
+//       .magic = 0xdead4ead,
+//       .owner_cpu = -1,
+//       .owner = 0xffffffff,
+//     }
+// } }
 static DEFINE_SPINLOCK(sysctl_lock);
 
 static void drop_sysctl_table(struct ctl_table_header *header);
@@ -79,13 +92,19 @@ static int namecmp(const char *name1, int len1, const char *name2, int len2)
 }
 
 /* Called under sysctl_lock */
+// ARM10C 20160702
+// &head, dir: &(&sysctl_table_root.default_set)->dir, name: kmem_cache#23-oX: "kernel/", namelen: 6
 static struct ctl_table *find_entry(struct ctl_table_header **phead,
 	struct ctl_dir *dir, const char *name, int namelen)
 {
 	struct ctl_table_header *head;
 	struct ctl_table *entry;
-	struct rb_node *node = dir->root.rb_node;
 
+	// dir->root.rb_node: (&(&sysctl_table_root.default_set)->dir)->root.rb_node: NULL
+	struct rb_node *node = dir->root.rb_node;
+	// node: NULL
+
+	// node: NULL
 	while (node)
 	{
 		struct ctl_node *ctl_node;
@@ -108,6 +127,7 @@ static struct ctl_table *find_entry(struct ctl_table_header **phead,
 		}
 	}
 	return NULL;
+	// return NULL
 }
 
 static int insert_entry(struct ctl_table_header *head, struct ctl_table *entry)
@@ -156,24 +176,67 @@ static void erase_entry(struct ctl_table_header *head, struct ctl_table *entry)
 	rb_erase(node, &head->parent->root);
 }
 
+// ARM10C 20160702
+// header: kmem_cache#25-oX, root: &sysctl_table_root, set: &sysctl_table_root.default_set,
+// node: &(kmem_cache#25-oX)[1] (struct ctl_node), table: kmem_cache#24-oX
 static void init_header(struct ctl_table_header *head,
 	struct ctl_table_root *root, struct ctl_table_set *set,
 	struct ctl_node *node, struct ctl_table *table)
 {
+	// head->ctl_table: (kmem_cache#25-oX)->ctl_table, table: kmem_cache#24-oX
 	head->ctl_table = table;
+	// head->ctl_table: (kmem_cache#25-oX)->ctl_table: kmem_cache#24-oX
+
+	// head->ctl_table_arg: (kmem_cache#25-oX)->ctl_table_arg, table: kmem_cache#24-oX
 	head->ctl_table_arg = table;
+	// head->ctl_table_arg: (kmem_cache#25-oX)->ctl_table_arg: kmem_cache#24-oX
+
+	// head->used: (kmem_cache#25-oX)->used
 	head->used = 0;
+	// head->used: (kmem_cache#25-oX)->used: 0
+
+	// head->count: (kmem_cache#25-oX)->count
 	head->count = 1;
+	// head->count: (kmem_cache#25-oX)->count: 1
+
+	// head->nreg: (kmem_cache#25-oX)->nreg
 	head->nreg = 1;
+	// head->nreg: (kmem_cache#25-oX)->nreg: 1
+
+	// head->unregistering: (kmem_cache#25-oX)->unregistering
 	head->unregistering = NULL;
+	// head->unregistering: (kmem_cache#25-oX)->unregistering: NULL
+
+	// head->root: (kmem_cache#25-oX)->root, root: &sysctl_table_root
 	head->root = root;
+	// head->root: (kmem_cache#25-oX)->root: &sysctl_table_root
+
+	// head->set: (kmem_cache#25-oX)->set, set: &sysctl_table_root.default_set
 	head->set = set;
+	// head->set: (kmem_cache#25-oX)->set: &sysctl_table_root.default_set
+
+	// head->parent: (kmem_cache#25-oX)->parent
 	head->parent = NULL;
+	// head->parent: (kmem_cache#25-oX)->parent: NULL
+
+	// head->node: (kmem_cache#25-oX)->node, node: &(kmem_cache#25-oX)[1] (struct ctl_node)
 	head->node = node;
+	// head->node: (kmem_cache#25-oX)->node: &(kmem_cache#25-oX)[1] (struct ctl_node)
+
+	// node: &(kmem_cache#25-oX)[1] (struct ctl_node)
 	if (node) {
 		struct ctl_table *entry;
+
+		// table: kmem_cache#24-oX, entry: kmem_cache#24-oX,
+		// entry->procname: (kmem_cache#24-oX)->procname: "sched_child_runs_first"
 		for (entry = table; entry->procname; entry++, node++)
+			// entry: kmem_cache#24-oX, node: &(kmem_cache#25-oX)[1] (struct ctl_node)
+
+			// node->header: (&(kmem_cache#25-oX)[1] (struct ctl_node))->header, header: kmem_cache#25-oX
 			node->header = head;
+			// node->header: (&(kmem_cache#25-oX)[1] (struct ctl_node))->header: kmem_cache#25-oX
+
+			// entry: kmem_cache#24-oX (kern_table) 의 child 없는 맴버 46개 만큼 위 loop를 수행
 	}
 }
 
@@ -826,15 +889,25 @@ static const struct dentry_operations proc_sys_dentry_operations = {
 	.d_compare	= proc_sys_compare,
 };
 
+// ARM10C 20160702
+// dir: &(&sysctl_table_root.default_set)->dir, name: kmem_cache#23-oX: "kernel/", namelen: 6
 static struct ctl_dir *find_subdir(struct ctl_dir *dir,
 				   const char *name, int namelen)
 {
 	struct ctl_table_header *head;
 	struct ctl_table *entry;
 
+	// dir: &(&sysctl_table_root.default_set)->dir, name: kmem_cache#23-oX: "kernel/", namelen: 6
+	// find_entry(&head, &(&sysctl_table_root.default_set)->dir, "kernel/", 6): NULL
 	entry = find_entry(&head, dir, name, namelen);
+	// entry: NULL
+
+	// entry: NULL
 	if (!entry)
+		// ENOENT: 2, ERR_PTR(-2): 0xfffffffe
 		return ERR_PTR(-ENOENT);
+		// return 0xfffffffe
+
 	if (!S_ISDIR(entry->mode))
 		return ERR_PTR(-ENOTDIR);
 	return container_of(head, struct ctl_dir, header);
@@ -878,21 +951,43 @@ static struct ctl_dir *new_dir(struct ctl_table_set *set,
  * Upon error an error code is returned and the reference on @dir is
  * simply dropped.
  */
+// ARM10C 20160702
+// dir: &(&sysctl_table_root.default_set)->dir, name: kmem_cache#23-oX: "kernel/", namelen: 6
 static struct ctl_dir *get_subdir(struct ctl_dir *dir,
 				  const char *name, int namelen)
 {
+	// dir->header.set: (&(&sysctl_table_root.default_set)->dir)->header.set: &sysctl_table_root.default_set
 	struct ctl_table_set *set = dir->header.set;
+	// set: &sysctl_table_root.default_set
+
 	struct ctl_dir *subdir, *new = NULL;
+	// new: NULL
+
 	int err;
 
 	spin_lock(&sysctl_lock);
+
+	// spin_lock에서 한일:
+	// &sysctl_lock을 이용한 spin lock 수행
+
+	// dir: &(&sysctl_table_root.default_set)->dir, name: kmem_cache#23-oX: "kernel/", namelen: 6
+	// find_subdir(&(&sysctl_table_root.default_set)->dir, "kernel/", 6): 0xfffffffe
 	subdir = find_subdir(dir, name, namelen);
+	// subdir: 0xfffffffe
+
+	// subdir: 0xfffffffe, IS_ERR(0xfffffffe): 1
 	if (!IS_ERR(subdir))
 		goto found;
+
+	// subdir: 0xfffffffe, PTR_ERR(0xfffffffe): -2, ENOENT: 2
 	if (PTR_ERR(subdir) != -ENOENT)
 		goto failed;
 
 	spin_unlock(&sysctl_lock);
+
+	// spin_unlock에서 한일:
+	// &sysctl_lock을 이용한 spin unlock 수행
+
 	new = new_dir(set, name, namelen);
 	spin_lock(&sysctl_lock);
 	subdir = ERR_PTR(-ENOMEM);
@@ -991,13 +1086,20 @@ static int sysctl_err(const char *path, struct ctl_table *table, char *fmt, ...)
 	return -EINVAL;
 }
 
+// ARM10C 20160702
+// path: kmem_cache#23-oX, table: kmem_cache#24-oX
 static int sysctl_check_table(const char *path, struct ctl_table *table)
 {
 	int err = 0;
+	// err: 0
+
+	// table->procname: (kmem_cache#24-oX)->procname: "sched_child_runs_first"
 	for (; table->procname; table++) {
+		// table->child: (kmem_cache#24-oX)->child: NULL
 		if (table->child)
 			err = sysctl_err(path, table, "Not a file");
 
+		// table->proc_handler: (kmem_cache#24-oX)->proc_handler: proc_dointvec
 		if ((table->proc_handler == proc_dostring) ||
 		    (table->proc_handler == proc_dointvec) ||
 		    (table->proc_handler == proc_dointvec_minmax) ||
@@ -1006,19 +1108,30 @@ static int sysctl_check_table(const char *path, struct ctl_table *table)
 		    (table->proc_handler == proc_dointvec_ms_jiffies) ||
 		    (table->proc_handler == proc_doulongvec_minmax) ||
 		    (table->proc_handler == proc_doulongvec_ms_jiffies_minmax)) {
+			// table->data: (kmem_cache#24-oX)->data: &sysctl_sched_child_runs_first
 			if (!table->data)
 				err = sysctl_err(path, table, "No data");
+
+			// table->maxlen: (kmem_cache#24-oX)->maxlen: 4
 			if (!table->maxlen)
 				err = sysctl_err(path, table, "No maxlen");
 		}
+
+		// table->proc_handler: (kmem_cache#24-oX)->proc_handler: proc_dointvec
 		if (!table->proc_handler)
 			err = sysctl_err(path, table, "No proc_handler");
 
+		// table->mode: (kmem_cache#24-oX)->mode: 0644, S_IRUGO: 00444, S_IWUGO: 00222
 		if ((table->mode & (S_IRUGO|S_IWUGO)) != table->mode)
 			err = sysctl_err(path, table, "bogus .mode 0%o",
 				table->mode);
+
+		// table: kmem_cache#24-oX (kern_table) 의 child 없는 맴버 46개 만큼 위 loop를 수행
 	}
+
+	// err: 0
 	return err;
+	// return 0
 }
 
 static struct ctl_table_header *new_links(struct ctl_dir *dir, struct ctl_table *table,
@@ -1219,32 +1332,82 @@ struct ctl_table_header *__register_sysctl_table(
 	// node: &(kmem_cache#25-oX)[1] (struct ctl_node)
 
 // 2016/06/25 종료
+// 2016/07/02 시작
 
 	// header: kmem_cache#25-oX, root: &sysctl_table_root, set: &sysctl_table_root.default_set,
 	// node: &(kmem_cache#25-oX)[1] (struct ctl_node), table: kmem_cache#24-oX
 	init_header(header, root, set, node, table);
+
+	// init_header 에서 한일:
+	// (kmem_cache#25-oX)->ctl_table: kmem_cache#24-oX
+	// (kmem_cache#25-oX)->ctl_table_arg: kmem_cache#24-oX
+	// (kmem_cache#25-oX)->used: 0
+	// (kmem_cache#25-oX)->count: 1
+	// (kmem_cache#25-oX)->nreg: 1
+	// (kmem_cache#25-oX)->unregistering: NULL
+	// (kmem_cache#25-oX)->root: &sysctl_table_root
+	// (kmem_cache#25-oX)->set: &sysctl_table_root.default_set
+	// (kmem_cache#25-oX)->parent: NULL
+	// (kmem_cache#25-oX)->node: &(kmem_cache#25-oX)[1] (struct ctl_node)
+	// (&(kmem_cache#25-oX)[1...46] (struct ctl_node))->header: kmem_cache#25-oX
+
+	// path: kmem_cache#23-oX, table: kmem_cache#24-oX
+	// sysctl_check_table(kmem_cache#23-oX, kmem_cache#24-oX): 0
 	if (sysctl_check_table(path, table))
 		goto fail;
 
+	// sysctl_check_table 에서 한일:
+	// table: kmem_cache#24-oX (kern_table) 의 child 없는 맴버 46개 만큼 loop를 수행하면서 
+	// kern_table 의 맴버값을 체크함
+
 	spin_lock(&sysctl_lock);
+
+	// spin_lock에서 한일:
+	// &sysctl_lock을 이용한 spin lock 수행
+
+	// &set->dir: &(&sysctl_table_root.default_set)->dir
 	dir = &set->dir;
+	// dir: &(&sysctl_table_root.default_set)->dir
+
 	/* Reference moved down the diretory tree get_subdir */
+	// dir->header.nreg: (&(&sysctl_table_root.default_set)->dir)->header.nreg: 1
 	dir->header.nreg++;
+	// dir->header.nreg: (&(&sysctl_table_root.default_set)->dir)->header.nreg: 2
+
 	spin_unlock(&sysctl_lock);
 
+	// spin_unlock에서 한일:
+	// &sysctl_lock을 이용한 spin unlock 수행
+
 	/* Find the directory for the ctl_table */
+	// path: kmem_cache#23-oX: "kernel/", name: kmem_cache#23-oX: "kernel/"
 	for (name = path; name; name = nextname) {
 		int namelen;
+
+		// name: kmem_cache#23-oX: "kernel/"
+		// strchr(kmem_cache#23-oX, '/'): kmem_cache#23-oX 의 '/' 위치의 주소값
 		nextname = strchr(name, '/');
+		// nextname: kmem_cache#23-oX: "kernel/" 의 '/' 위치의 주소값
+
+		// nextname: kmem_cache#23-oX: "kernel/" 의 '/' 위치의 주소값
 		if (nextname) {
+			// nextname: kmem_cache#23-oX: "kernel/" 의 '/' 위치의 주소값,
+			// name: kmem_cache#23-oX: "kernel/"
 			namelen = nextname - name;
+			// namelen: 6
+
+			// nextname: kmem_cache#23-oX: "kernel/" 의 '/' 위치의 주소값
 			nextname++;
+			// nextname: kmem_cache#23-oX: "kernel/" 의 '/' 위치의 주소값+1
 		} else {
 			namelen = strlen(name);
 		}
+
+		// namelen: 6
 		if (namelen == 0)
 			continue;
 
+		// dir: &(&sysctl_table_root.default_set)->dir, name: kmem_cache#23-oX: "kernel/", namelen: 6
 		dir = get_subdir(dir, name, namelen);
 		if (IS_ERR(dir))
 			goto fail;
