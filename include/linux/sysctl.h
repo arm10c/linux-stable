@@ -121,6 +121,7 @@ struct ctl_table
 };
 
 // ARM10C 20160625
+// ARM10C 20160702
 // sizeof(struct ctl_node): 16 bytes
 struct ctl_node {
 	struct rb_node node;
@@ -155,6 +156,7 @@ struct ctl_table_header
 // ARM10C 20160611
 // ARM10C 20160625
 // ARM10C 20160702
+// sizeof(struct ctl_dir): 36 bytes
 struct ctl_dir {
 	/* Header must be at the start of ctl_dir */
 	struct ctl_table_header header;

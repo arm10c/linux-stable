@@ -130,14 +130,34 @@ static struct ctl_table *find_entry(struct ctl_table_header **phead,
 	// return NULL
 }
 
+// ARM10C 20160702
+// header: &(kmem_cache#29-oX)->header, entry: (kmem_cache#29-oX + 52) (struct ctl_table)
 static int insert_entry(struct ctl_table_header *head, struct ctl_table *entry)
 {
+	// entry: (kmem_cache#29-oX + 52) (struct ctl_table),
+	// head->ctl_table: (&(kmem_cache#29-oX)->header)->ctl_table: (kmem_cache#29-oX + 52) (struct ctl_table),
+	// head->node: (&(kmem_cache#29-oX)->header)->node: (kmem_cache#29-oX + 36) (struct ctl_node),
+	// &head->node[0].node: &((kmem_cache#29-oX + 36) (struct ctl_node)).node
 	struct rb_node *node = &head->node[entry - head->ctl_table].node;
-	struct rb_node **p = &head->parent->root.rb_node;
-	struct rb_node *parent = NULL;
-	const char *name = entry->procname;
-	int namelen = strlen(name);
+	// node: &((kmem_cache#29-oX + 36) (struct ctl_node)).node
 
+	// head->parent: (&(kmem_cache#29-oX)->header)->parent: &(&sysctl_table_root.default_set)->dir
+	// &head->parent->root.rb_node: &(&(&sysctl_table_root.default_set)->dir)->root.rb_node
+	struct rb_node **p = &head->parent->root.rb_node;
+	// p: &(&(&sysctl_table_root.default_set)->dir)->root.rb_node
+
+	struct rb_node *parent = NULL;
+	// parent: NULL
+
+	// entry->procname: ((kmem_cache#29-oX + 52) (struct ctl_table))->procname: (kmem_cache#29-oX + 120): "kernel"
+	const char *name = entry->procname;
+	// name: (kmem_cache#29-oX + 120): "kernel"
+
+	// name: (kmem_cache#29-oX + 120): "kernel", strlen("kernel"): 6
+	int namelen = strlen(name);
+	// namelen: 6
+
+	// *p: (&(&sysctl_table_root.default_set)->dir)->root.rb_node: NULL
 	while (*p) {
 		struct ctl_table_header *parent_head;
 		struct ctl_table *parent_entry;
@@ -164,9 +184,30 @@ static int insert_entry(struct ctl_table_header *head, struct ctl_table *entry)
 		}
 	}
 
+	// node: &((kmem_cache#29-oX + 36) (struct ctl_node)).node, parent: NULL,
+	// p: &(&(&sysctl_table_root.default_set)->dir)->root.rb_node
 	rb_link_node(node, parent, p);
+
+	// rb_link_node 에서 한일:
+	// (&((kmem_cache#29-oX + 36) (struct ctl_node)).node).__rb_parent_color: NULL
+	// (&((kmem_cache#29-oX + 36) (struct ctl_node)).node)->rb_left: NULL
+	// (&((kmem_cache#29-oX + 36) (struct ctl_node)).node)->rb_right: NULL
+	// (&(&sysctl_table_root.default_set)->dir)->root.rb_node: &((kmem_cache#29-oX + 36) (struct ctl_node)).node
+
+	// node: &((kmem_cache#29-oX + 36) (struct ctl_node)).node,
+	// head->parent: (&(kmem_cache#29-oX)->header)->parent: &(&sysctl_table_root.default_set)->dir,
+	// &head->parent->root: &(&(&sysctl_table_root.default_set)->dir)->root
 	rb_insert_color(node, &head->parent->root);
+
+	// rb_insert_color 에서 한일:
+	// &((kmem_cache#29-oX + 36) (struct ctl_node)).node 을 black node 로 추가
+	/*
+	//                          proc-b
+	//                         (kernel)
+	*/
+
 	return 0;
+	// return 0
 }
 
 static void erase_entry(struct ctl_table_header *head, struct ctl_table *entry)
@@ -179,6 +220,9 @@ static void erase_entry(struct ctl_table_header *head, struct ctl_table *entry)
 // ARM10C 20160702
 // header: kmem_cache#25-oX, root: &sysctl_table_root, set: &sysctl_table_root.default_set,
 // node: &(kmem_cache#25-oX)[1] (struct ctl_node), table: kmem_cache#24-oX
+// ARM10C 20160702
+// &new->header: &(kmem_cache#29-oX)->header, set->dir.header.root: (&sysctl_table_root.default_set)->dir.header.root,
+// set: &sysctl_table_root.default_set, node: (kmem_cache#29-oX + 36) (struct ctl_node), table: (kmem_cache#29-oX + 52) (struct ctl_table)
 static void init_header(struct ctl_table_header *head,
 	struct ctl_table_root *root, struct ctl_table_set *set,
 	struct ctl_node *node, struct ctl_table *table)
@@ -247,22 +291,59 @@ static void erase_header(struct ctl_table_header *head)
 		erase_entry(head, entry);
 }
 
+// ARM10C 20160702
+// dir: &(&sysctl_table_root.default_set)->dir, &new->header: &(kmem_cache#29-oX)->header
 static int insert_header(struct ctl_dir *dir, struct ctl_table_header *header)
 {
 	struct ctl_table *entry;
 	int err;
 
+	// dir->header.nreg: (&(&sysctl_table_root.default_set)->dir)->header.nreg: 2
 	dir->header.nreg++;
+	// dir->header.nreg: (&(&sysctl_table_root.default_set)->dir)->header.nreg: 3
+
+	// header->parent: (&(kmem_cache#29-oX)->header)->parent: NULL,
+	// dir: &(&sysctl_table_root.default_set)->dir
 	header->parent = dir;
+	// header->parent: (&(kmem_cache#29-oX)->header)->parent: &(&sysctl_table_root.default_set)->dir
+
+	// header: &(kmem_cache#29-oX)->header, insert_links(&(kmem_cache#29-oX)->header): 0
 	err = insert_links(header);
+	// err: 0
+
+	// err: 0
 	if (err)
 		goto fail_links;
+
+	// [f1] header->ctl_table: (&(kmem_cache#29-oX)->header)->ctl_table: (kmem_cache#29-oX + 52) (struct ctl_table),
+	// [f1] entry: (kmem_cache#29-oX + 52) (struct ctl_table), ((kmem_cache#29-oX + 52) (struct ctl_table))->procname: "kernel"
 	for (entry = header->ctl_table; entry->procname; entry++) {
+		// [f2] entry: ((kmem_cache#29-oX + 52) (struct ctl_table))[1]
+		// [f2] entry->procname: (((kmem_cache#29-oX + 52) (struct ctl_table))[1]).procname: NULL
+
+		// [f1] header: &(kmem_cache#29-oX)->header, entry: (kmem_cache#29-oX + 52) (struct ctl_table)
+		// [f1] insert_entry(&(kmem_cache#29-oX)->header, (kmem_cache#29-oX + 52) (struct ctl_table)): 0
 		err = insert_entry(header, entry);
+		// [f1] err: 0
+
+		// [f1] insert_entry 에서 한일:
+		// (&((kmem_cache#29-oX + 36) (struct ctl_node)).node).__rb_parent_color: NULL
+		// (&((kmem_cache#29-oX + 36) (struct ctl_node)).node)->rb_left: NULL
+		// (&((kmem_cache#29-oX + 36) (struct ctl_node)).node)->rb_right: NULL
+		// (&(&sysctl_table_root.default_set)->dir)->root.rb_node: &((kmem_cache#29-oX + 36) (struct ctl_node)).node
+		//
+		// &((kmem_cache#29-oX + 36) (struct ctl_node)).node 을 black node 로 추가
+		/*
+		//                          proc-b
+		//                         (kernel)
+		*/
+
+		// err: 0
 		if (err)
 			goto fail;
 	}
 	return 0;
+	// return 0
 fail:
 	erase_header(header);
 	put_links(header);
@@ -891,6 +972,8 @@ static const struct dentry_operations proc_sys_dentry_operations = {
 
 // ARM10C 20160702
 // dir: &(&sysctl_table_root.default_set)->dir, name: kmem_cache#23-oX: "kernel/", namelen: 6
+// ARM10C 20160702
+// dir: &(&sysctl_table_root.default_set)->dir, name: kmem_cache#23-oX: "kernel/", namelen: 6
 static struct ctl_dir *find_subdir(struct ctl_dir *dir,
 				   const char *name, int namelen)
 {
@@ -913,6 +996,8 @@ static struct ctl_dir *find_subdir(struct ctl_dir *dir,
 	return container_of(head, struct ctl_dir, header);
 }
 
+// ARM10C 20160702
+// set: &sysctl_table_root.default_set, name: kmem_cache#23-oX: "kernel/", namelen: 6
 static struct ctl_dir *new_dir(struct ctl_table_set *set,
 			       const char *name, int namelen)
 {
@@ -921,22 +1006,68 @@ static struct ctl_dir *new_dir(struct ctl_table_set *set,
 	struct ctl_node *node;
 	char *new_name;
 
+	// sizeof(struct ctl_dir): 36 bytes, sizeof(struct ctl_node): 16 bytes,
+	// sizeof(struct ctl_table): 34 bytes, namelen: 6, GFP_KERNEL: 0xD0
+	// kzalloc(127, GFP_KERNEL: 0xD0): kmem_cache#29-oX
 	new = kzalloc(sizeof(*new) + sizeof(struct ctl_node) +
 		      sizeof(struct ctl_table)*2 +  namelen + 1,
 		      GFP_KERNEL);
+	// new: kmem_cache#29-oX
+
+	// new: kmem_cache#29-oX
 	if (!new)
 		return NULL;
 
+	// new: kmem_cache#29-oX
 	node = (struct ctl_node *)(new + 1);
+	// node: (kmem_cache#29-oX + 36) (struct ctl_node)
+
+	// node: (kmem_cache#29-oX + 36) (struct ctl_node)
 	table = (struct ctl_table *)(node + 1);
+	// table: (kmem_cache#29-oX + 52) (struct ctl_table)
+
+	// table: (kmem_cache#29-oX + 52) (struct ctl_table)
 	new_name = (char *)(table + 2);
+	// new_name: (kmem_cache#29-oX + 120) (char)
+
+	// new_name: (kmem_cache#29-oX + 120) (char), name: kmem_cache#23-oX: "kernel/", namelen: 6
 	memcpy(new_name, name, namelen);
+
+	// memcpy 에서 한일:
+	// new_name: (kmem_cache#29-oX + 120): "kernel"
+
+	// new_name: (kmem_cache#29-oX + 120): "kernel", namelen: 6
 	new_name[namelen] = '\0';
+	// new_name: (kmem_cache#29-oX + 120): "kernel"
+
+	// table[0].procname: ((kmem_cache#29-oX + 52)[0] (struct ctl_table)).procname, new_name: (kmem_cache#29-oX + 120): "kernel"
 	table[0].procname = new_name;
+	// table[0].procname: ((kmem_cache#29-oX + 52)[0] (struct ctl_table)).procname: (kmem_cache#29-oX + 120): "kernel"
+
+	// table[0].mode: ((kmem_cache#29-oX + 52)[0] (struct ctl_table)).mode, S_IFDIR: 0040000, S_IRUGO: 00444, S_IXUGO: 00111
 	table[0].mode = S_IFDIR|S_IRUGO|S_IXUGO;
+	// table[0].mode: ((kmem_cache#29-oX + 52)[0] (struct ctl_table)).mode: 0040555
+
+	// &new->header: &(kmem_cache#29-oX)->header, set->dir.header.root: (&sysctl_table_root.default_set)->dir.header.root,
+	// set: &sysctl_table_root.default_set, node: (kmem_cache#29-oX + 36) (struct ctl_node), table: (kmem_cache#29-oX + 52) (struct ctl_table)
 	init_header(&new->header, set->dir.header.root, set, node, table);
 
+	// init_header 에서 한일:
+	// (&(kmem_cache#29-oX)->header)->ctl_table: (kmem_cache#29-oX + 52) (struct ctl_table)
+	// (&(kmem_cache#29-oX)->header)->ctl_table_arg: (kmem_cache#29-oX + 52) (struct ctl_table)
+	// (&(kmem_cache#29-oX)->header)->used: 0
+	// (&(kmem_cache#29-oX)->header)->count: 1
+	// (&(kmem_cache#29-oX)->header)->nreg: 1
+	// (&(kmem_cache#29-oX)->header)->unregistering: NULL
+	// (&(kmem_cache#29-oX)->header)->root: (&sysctl_table_root.default_set)->dir.header.root
+	// (&(kmem_cache#29-oX)->header)->set: &sysctl_table_root.default_set
+	// (&(kmem_cache#29-oX)->header)->parent: NULL
+	// (&(kmem_cache#29-oX)->header)->node: (kmem_cache#29-oX + 36) (struct ctl_node)
+	// ((kmem_cache#29-oX + 36) (struct ctl_node))->header: &(kmem_cache#29-oX)->header
+
+	// new: kmem_cache#29-oX
 	return new;
+	// return kmem_cache#29-oX
 }
 
 /**
@@ -988,39 +1119,124 @@ static struct ctl_dir *get_subdir(struct ctl_dir *dir,
 	// spin_unlock에서 한일:
 	// &sysctl_lock을 이용한 spin unlock 수행
 
+	// set: &sysctl_table_root.default_set, name: kmem_cache#23-oX: "kernel/", namelen: 6
+	// new_dir(&sysctl_table_root.default_set, "kernel/", 6): kmem_cache#29-oX
 	new = new_dir(set, name, namelen);
+	// new: kmem_cache#29-oX
+
+	// new_dir 에서 한일:
+	// struct ctl_dir: 36, struct ctl_node: 16, struct ctl_table: 34 * 2, char: 7
+	// 만큼의 메모리 kmem_cache#29-oX 를 할당 받음
+	//
+	// (kmem_cache#29-oX + 120): "kernel"
+	// ((kmem_cache#29-oX + 52)[0] (struct ctl_table)).procname: (kmem_cache#29-oX + 120): "kernel"
+	// ((kmem_cache#29-oX + 52)[0] (struct ctl_table)).mode: 0040555
+	// (&(kmem_cache#29-oX)->header)->ctl_table: (kmem_cache#29-oX + 52) (struct ctl_table)
+	// (&(kmem_cache#29-oX)->header)->ctl_table_arg: (kmem_cache#29-oX + 52) (struct ctl_table)
+	// (&(kmem_cache#29-oX)->header)->used: 0
+	// (&(kmem_cache#29-oX)->header)->count: 1
+	// (&(kmem_cache#29-oX)->header)->nreg: 1
+	// (&(kmem_cache#29-oX)->header)->unregistering: NULL
+	// (&(kmem_cache#29-oX)->header)->root: (&sysctl_table_root.default_set)->dir.header.root
+	// (&(kmem_cache#29-oX)->header)->set: &sysctl_table_root.default_set
+	// (&(kmem_cache#29-oX)->header)->parent: NULL
+	// (&(kmem_cache#29-oX)->header)->node: (kmem_cache#29-oX + 36) (struct ctl_node)
+	// ((kmem_cache#29-oX + 36) (struct ctl_node))->header: &(kmem_cache#29-oX)->header
+
 	spin_lock(&sysctl_lock);
+
+	// spin_lock에서 한일:
+	// &sysctl_lock을 이용한 spin lock 수행
+
+	// subdir: 0xfffffffe, ENOMEM: 12, ERR_PTR(-12): 0xfffffff4
 	subdir = ERR_PTR(-ENOMEM);
+	// subdir: 0xfffffff4
+
+	// new: kmem_cache#29-oX
 	if (!new)
 		goto failed;
 
 	/* Was the subdir added while we dropped the lock? */
+	// dir: &(&sysctl_table_root.default_set)->dir, name: kmem_cache#23-oX: "kernel/", namelen: 6
+	// find_subdir(&(&sysctl_table_root.default_set)->dir, "kernel/", 6): 0xfffffffe
 	subdir = find_subdir(dir, name, namelen);
+	// subdir: 0xfffffffe
+
+	// subdir: 0xfffffffe, IS_ERR(0xfffffffe): 1
 	if (!IS_ERR(subdir))
 		goto found;
+
+	// subdir: 0xfffffffe, PTR_ERR(0xfffffffe): -2, ENOENT: 2
 	if (PTR_ERR(subdir) != -ENOENT)
 		goto failed;
 
 	/* Nope.  Use the our freshly made directory entry. */
+	// dir: &(&sysctl_table_root.default_set)->dir, &new->header: &(kmem_cache#29-oX)->header
+	// insert_header(&(&sysctl_table_root.default_set)->dir, &(kmem_cache#29-oX)->header): 0
 	err = insert_header(dir, &new->header);
+	// err: 0
+
+	// insert_header 에서 한일:
+	// (&(&sysctl_table_root.default_set)->dir)->header.nreg: 3
+	// (&(kmem_cache#29-oX)->header)->parent: &(&sysctl_table_root.default_set)->dir
+	//
+	// (&((kmem_cache#29-oX + 36) (struct ctl_node)).node).__rb_parent_color: NULL
+	// (&((kmem_cache#29-oX + 36) (struct ctl_node)).node)->rb_left: NULL
+	// (&((kmem_cache#29-oX + 36) (struct ctl_node)).node)->rb_right: NULL
+	// (&(&sysctl_table_root.default_set)->dir)->root.rb_node: &((kmem_cache#29-oX + 36) (struct ctl_node)).node
+	//
+	// RB Tree &((kmem_cache#29-oX + 36) (struct ctl_node)).node 을 black node 로 추가
+	/*
+	//                          proc-b
+	//                         (kernel)
+	*/
+
+	// err: 0, ERR_PTR(0): 0
 	subdir = ERR_PTR(err);
+	// subdir: 0
+
+	// err: 0
 	if (err)
 		goto failed;
+
+	// subdir: 0, new: kmem_cache#29-oX
 	subdir = new;
+	// subdir: kmem_cache#29-oX
 found:
+	// subdir->header.nreg: (kmem_cache#29-oX)->header.nreg: 1
 	subdir->header.nreg++;
+	// subdir->header.nreg: (kmem_cache#29-oX)->header.nreg: 2
 failed:
+	// subdir: kmem_cache#29-oX, IS_ERR(kmem_cache#29-oX): 0
 	if (unlikely(IS_ERR(subdir))) {
 		pr_err("sysctl could not get directory: ");
 		sysctl_print_dir(dir);
 		pr_cont("/%*.*s %ld\n",
 			namelen, namelen, name, PTR_ERR(subdir));
 	}
+
+	// &dir->header: &(&(&sysctl_table_root.default_set)->dir)->header
 	drop_sysctl_table(&dir->header);
+
+	// drop_sysctl_table 에서 한일:
+	// (&(&(&sysctl_table_root.default_set)->dir)->header)->nreg: 2
+
+	// new: kmem_cache#29-oX
 	if (new)
+		// &new->header: &(kmem_cache#29-oX)->header
 		drop_sysctl_table(&new->header);
+
+		// drop_sysctl_table 에서 한일:
+		// (&(kmem_cache#29-oX)->header)->nreg: 1
+
 	spin_unlock(&sysctl_lock);
+
+	// spin_unlock에서 한일:
+	// &sysctl_lock을 이용한 spin unlock 수행
+
+	// subdir: kmem_cache#29-oX
 	return subdir;
+	// return kmem_cache#29-oX
 }
 
 static struct ctl_dir *xlate_dir(struct ctl_table_set *set, struct ctl_dir *dir)
@@ -1205,15 +1421,24 @@ static bool get_links(struct ctl_dir *dir,
 	return true;
 }
 
+// ARM10C 20160702
+// header: &(kmem_cache#29-oX)->header
 static int insert_links(struct ctl_table_header *head)
 {
 	struct ctl_table_set *root_set = &sysctl_table_root.default_set;
+	// root_set: &sysctl_table_root.default_set
+
 	struct ctl_dir *core_parent = NULL;
+	// core_parent: NULL
+
 	struct ctl_table_header *links;
 	int err;
 
+	// head->set: (&(kmem_cache#29-oX)->header)->set: &sysctl_table_root.default_set,
+	// root_set: &sysctl_table_root.default_set
 	if (head->set == root_set)
 		return 0;
+		// return 0
 
 	core_parent = xlate_dir(root_set, head->parent);
 	if (IS_ERR(core_parent))
@@ -1408,9 +1633,51 @@ struct ctl_table_header *__register_sysctl_table(
 			continue;
 
 		// dir: &(&sysctl_table_root.default_set)->dir, name: kmem_cache#23-oX: "kernel/", namelen: 6
+		// get_subdir(&(&sysctl_table_root.default_set)->dir, "kernel/", 6): kmem_cache#29-oX
 		dir = get_subdir(dir, name, namelen);
+		// dir: kmem_cache#29-oX
+
+		// get_subdir 에서 한일:
+		// struct ctl_dir: 36, struct ctl_node: 16, struct ctl_table: 34 * 2, char: 7
+		// 만큼의 메모리 kmem_cache#29-oX 를 할당 받음
+		//
+		// (kmem_cache#29-oX + 120): "kernel"
+		// ((kmem_cache#29-oX + 52)[0] (struct ctl_table)).procname: (kmem_cache#29-oX + 120): "kernel"
+		// ((kmem_cache#29-oX + 52)[0] (struct ctl_table)).mode: 0040555
+		// (&(kmem_cache#29-oX)->header)->ctl_table: (kmem_cache#29-oX + 52) (struct ctl_table)
+		// (&(kmem_cache#29-oX)->header)->ctl_table_arg: (kmem_cache#29-oX + 52) (struct ctl_table)
+		// (&(kmem_cache#29-oX)->header)->used: 0
+		// (&(kmem_cache#29-oX)->header)->count: 1
+		// (&(kmem_cache#29-oX)->header)->nreg: 1
+		// (&(kmem_cache#29-oX)->header)->unregistering: NULL
+		// (&(kmem_cache#29-oX)->header)->root: (&sysctl_table_root.default_set)->dir.header.root
+		// (&(kmem_cache#29-oX)->header)->set: &sysctl_table_root.default_set
+		// (&(kmem_cache#29-oX)->header)->parent: NULL
+		// (&(kmem_cache#29-oX)->header)->node: (kmem_cache#29-oX + 36) (struct ctl_node)
+		// ((kmem_cache#29-oX + 36) (struct ctl_node))->header: &(kmem_cache#29-oX)->header
+		//
+		// (&(&sysctl_table_root.default_set)->dir)->header.nreg: 3
+		// (&(kmem_cache#29-oX)->header)->parent: &(&sysctl_table_root.default_set)->dir
+		//
+		// (&((kmem_cache#29-oX + 36) (struct ctl_node)).node).__rb_parent_color: NULL
+		// (&((kmem_cache#29-oX + 36) (struct ctl_node)).node)->rb_left: NULL
+		// (&((kmem_cache#29-oX + 36) (struct ctl_node)).node)->rb_right: NULL
+		// (&(&sysctl_table_root.default_set)->dir)->root.rb_node: &((kmem_cache#29-oX + 36) (struct ctl_node)).node
+		//
+		// RB Tree &((kmem_cache#29-oX + 36) (struct ctl_node)).node 을 black node 로 추가
+		/*
+		//                          proc-b
+		//                         (kernel)
+		*/
+		// (&(&(&sysctl_table_root.default_set)->dir)->header)->nreg: 2
+		// (&(kmem_cache#29-oX)->header)->nreg: 1
+
+		// dir: kmem_cache#29-oX, IS_ERR(kmem_cache#29-oX): 0
 		if (IS_ERR(dir))
 			goto fail;
+
+// 2016/07/02 종료
+
 	}
 
 	spin_lock(&sysctl_lock);
@@ -1897,12 +2164,26 @@ static void put_links(struct ctl_table_header *header)
 	}
 }
 
+// ARM10C 20160702
+// &dir->header: &(&(&sysctl_table_root.default_set)->dir)->header
+// ARM10C 20160702
+// &new->header: &(kmem_cache#29-oX)->header
 static void drop_sysctl_table(struct ctl_table_header *header)
 {
+	// header->parent: (&(&(&sysctl_table_root.default_set)->dir)->header)->parent: NULL
+	// header->parent: (&(kmem_cache#29-oX)->header)->parent: &(&sysctl_table_root.default_set)->dir
 	struct ctl_dir *parent = header->parent;
+	// parent: NULL
+	// parent: &(&sysctl_table_root.default_set)->dir
 
+	// header->nreg: (&(&(&sysctl_table_root.default_set)->dir)->header)->nreg: 3
+	// header->nreg: (&(kmem_cache#29-oX)->header)->nreg: 2
 	if (--header->nreg)
+		// header->nreg: (&(&(&sysctl_table_root.default_set)->dir)->header)->nreg: 2
+		// header->nreg: (&(kmem_cache#29-oX)->header)->nreg: 1
 		return;
+		// return
+		// return
 
 	put_links(header);
 	start_unregistering(header);
