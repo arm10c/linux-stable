@@ -107,6 +107,8 @@ void *memchr(const void *s, int c, size_t count)
 
 // ARM10C 20160604
 // cp: &"mounts", '/'
+// ARM10C 20160702
+// kmem_cache#23-oX: "kernel/", '/'
 char *strchr(const char *s, int c)
 {
 	while (*s != (char)c)

@@ -35,6 +35,12 @@
 // -ENOENT: -2
 // ARM10C 20160109
 // -EINVAL: -22
+// ARM10C 20160702
+// -ENOENT: -2
+// ARM10C 20160702
+// -ENOMEM: -12
+// ARM10C 20160702
+// err: 0
 static inline void * __must_check ERR_PTR(long error)
 {
 	// -ENOENT: -2
@@ -44,9 +50,13 @@ static inline void * __must_check ERR_PTR(long error)
 	// 0xffffffea
 }
 
+// ARM10C 20160702
+// 0xfffffffe
 static inline long __must_check PTR_ERR(__force const void *ptr)
 {
+	// ptr: 0xfffffffe
 	return (long) ptr;
+	// return -2
 }
 
 // ARM10C 20140222
@@ -77,6 +87,10 @@ static inline long __must_check PTR_ERR(__force const void *ptr)
 // new_ns: kmem_cache#30-oX (struct mnt_namespace)
 // ARM10C 20160521
 // ns: kmem_cache#30-oX (struct mnt_namespace)
+// ARM10C 20160702
+// subdir: 0xfffffffe
+// ARM10C 20160702
+// subdir: kmem_cache#29-oX
 static inline long __must_check IS_ERR(__force const void *ptr)
 {
 	return IS_ERR_VALUE((unsigned long)ptr);

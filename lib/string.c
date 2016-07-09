@@ -401,6 +401,8 @@ EXPORT_SYMBOL(strim);
 // name: "fs"
 // ARM10C 20160123
 // name: "rootfs"
+// ARM10C 20160702
+// name: (kmem_cache#29-oX + 120): "kernel"
 size_t strlen(const char *s)
 {
 	const char *sc;

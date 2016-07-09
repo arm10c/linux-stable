@@ -5,6 +5,7 @@
 #define	EPERM		 1	/* Operation not permitted */
 // ARM10C 20150321
 // ARM10C 20150328
+// ARM10C 20160702
 // ENOENT: 2
 #define	ENOENT		 2	/* No such file or directory */
 #define	ESRCH		 3	/* No such process */
@@ -25,6 +26,7 @@
 // ARM10C 20151114
 // ARM10C 20160319
 // ARM10C 20160625
+// ARM10C 20160702
 // ENOMEM: 12
 #define	ENOMEM		12	/* Out of memory */
 #define	EACCES		13	/* Permission denied */
