@@ -481,6 +481,14 @@ static const struct rb_augment_callbacks dummy_callbacks = {
 // ARM10C 20160702
 // node: &((kmem_cache#29-oX + 36) (struct ctl_node)).node,
 // &head->parent->root: &(&(&sysctl_table_root.default_set)->dir)->root
+// ARM10C 20160709
+// node: &(&(kmem_cache#25-oX)[1] (struct ctl_node)).node,
+// head->parent: (kmem_cache#25-oX)->parent: kmem_cache#29-oX
+// &head->parent->root: &(kmem_cache#29-oX)->root
+// ARM10C 20160709
+// node: &(&(kmem_cache#25-oX)[1] (struct ctl_node) + 1).node,
+// head->parent: (kmem_cache#25-oX)->parent: kmem_cache#29-oX
+// &head->parent->root: &(kmem_cache#29-oX)->root
 void rb_insert_color(struct rb_node *node, struct rb_root *root)
 {
 	// node: &(kmem_cache#30-o9)->rb_node, root: &vmap_area_root

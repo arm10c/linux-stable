@@ -71,6 +71,7 @@ struct rb_root {
 
 // ARM10C 20141025
 // ARM10C 20141206
+// ARM10C 20160709
 #define	rb_entry(ptr, type, member) container_of(ptr, type, member)
 
 #define RB_EMPTY_ROOT(root)  ((root)->rb_node == NULL)
@@ -132,6 +133,12 @@ extern void rb_replace_node(struct rb_node *victim, struct rb_node *new,
 // ARM10C 20160702
 // node: &((kmem_cache#29-oX + 36) (struct ctl_node)).node, parent: NULL,
 // p: &(&(&sysctl_table_root.default_set)->dir)->root.rb_node
+// ARM10C 20160709
+// node: &(&(kmem_cache#25-oX)[1] (struct ctl_node)).node, parent: NULL
+// p: &(kmem_cache#29-oX)->root.rb_node
+// ARM10C 20160709
+// node: &(&(kmem_cache#25-oX)[1] (struct ctl_node) + 1).node, parent: (&(kmem_cache#25-oX)[1] (struct ctl_node)).node
+// p: &(&(&(kmem_cache#25-oX)[1] (struct ctl_node)).node)->rb_right
 static inline void rb_link_node(struct rb_node * node, struct rb_node * parent,
 				struct rb_node ** rb_link)
 {

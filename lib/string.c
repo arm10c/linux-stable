@@ -673,6 +673,8 @@ EXPORT_SYMBOL(memmove);
  * @count: The size of the area.
  */
 #undef memcmp
+// ARM10C 20160709
+// name1: "sched_min_granularity_ns", name2: "sched_child_runs_first", minlen: 21
 int memcmp(const void *cs, const void *ct, size_t count)
 {
 	const unsigned char *su1, *su2;

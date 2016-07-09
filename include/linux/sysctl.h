@@ -106,6 +106,7 @@ static inline void *proc_sys_poll_event(struct ctl_table_poll *poll)
 /* A sysctl table is an array of struct ctl_table: */
 // ARM10C 20160625
 // ARM10C 20160702
+// ARM10C 20160709
 // sizeof(struct ctl_table): 34 bytes
 struct ctl_table 
 {
@@ -122,6 +123,7 @@ struct ctl_table
 
 // ARM10C 20160625
 // ARM10C 20160702
+// ARM10C 20160709
 // sizeof(struct ctl_node): 16 bytes
 struct ctl_node {
 	struct rb_node node;
@@ -133,6 +135,7 @@ struct ctl_node {
 // ARM10C 20160611
 // ARM10C 20160625
 // ARM10C 20160702
+// ARM10C 20160709
 // sizeof(struct ctl_table_header): 32 bytes
 struct ctl_table_header
 {
