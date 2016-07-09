@@ -132,32 +132,48 @@ static struct ctl_table *find_entry(struct ctl_table_header **phead,
 
 // ARM10C 20160702
 // header: &(kmem_cache#29-oX)->header, entry: (kmem_cache#29-oX + 52) (struct ctl_table)
+// ARM10C 20160709
+// [2nd][f1] header: kmem_cache#25-oX, entry: kmem_cache#24-oX (struct ctl_table)
 static int insert_entry(struct ctl_table_header *head, struct ctl_table *entry)
 {
 	// entry: (kmem_cache#29-oX + 52) (struct ctl_table),
 	// head->ctl_table: (&(kmem_cache#29-oX)->header)->ctl_table: (kmem_cache#29-oX + 52) (struct ctl_table),
 	// head->node: (&(kmem_cache#29-oX)->header)->node: (kmem_cache#29-oX + 36) (struct ctl_node),
 	// &head->node[0].node: &((kmem_cache#29-oX + 36) (struct ctl_node)).node
+	// entry: kmem_cache#24-oX (struct ctl_table),
+	// head->ctl_table: (kmem_cache#25-oX)->ctl_table: kmem_cache#24-oX (struct ctl_table),
+	// head->node: (kmem_cache#25-oX)->node: &(kmem_cache#25-oX)[1] (struct ctl_node),
+	// &head->node[0].node: &(&(kmem_cache#25-oX)[1] (struct ctl_node)).node
 	struct rb_node *node = &head->node[entry - head->ctl_table].node;
 	// node: &((kmem_cache#29-oX + 36) (struct ctl_node)).node
+	// node: &(&(kmem_cache#25-oX)[1] (struct ctl_node)).node
 
 	// head->parent: (&(kmem_cache#29-oX)->header)->parent: &(&sysctl_table_root.default_set)->dir
 	// &head->parent->root.rb_node: &(&(&sysctl_table_root.default_set)->dir)->root.rb_node
+	// head->parent: (kmem_cache#25-oX)->parent: kmem_cache#29-oX
+	// &head->parent->root.rb_node: &(kmem_cache#29-oX)->root.rb_node
 	struct rb_node **p = &head->parent->root.rb_node;
 	// p: &(&(&sysctl_table_root.default_set)->dir)->root.rb_node
+	// p: &(kmem_cache#29-oX)->root.rb_node
 
 	struct rb_node *parent = NULL;
 	// parent: NULL
+	// parent: NULL
 
 	// entry->procname: ((kmem_cache#29-oX + 52) (struct ctl_table))->procname: (kmem_cache#29-oX + 120): "kernel"
+	// entry->procname: (kmem_cache#24-oX (struct ctl_table))->procname: "sched_child_runs_first"
 	const char *name = entry->procname;
 	// name: (kmem_cache#29-oX + 120): "kernel"
+	// name: "sched_child_runs_first"
 
 	// name: (kmem_cache#29-oX + 120): "kernel", strlen("kernel"): 6
+	// name: "sched_child_runs_first", strlen("sched_child_runs_first"): 21
 	int namelen = strlen(name);
 	// namelen: 6
+	// namelen: 21
 
 	// *p: (&(&sysctl_table_root.default_set)->dir)->root.rb_node: NULL
+	// *p: (kmem_cache#29-oX)->root.rb_node: 
 	while (*p) {
 		struct ctl_table_header *parent_head;
 		struct ctl_table *parent_entry;
@@ -292,41 +308,60 @@ static void erase_header(struct ctl_table_header *head)
 }
 
 // ARM10C 20160702
-// dir: &(&sysctl_table_root.default_set)->dir, &new->header: &(kmem_cache#29-oX)->header
+// [1st] dir: &(&sysctl_table_root.default_set)->dir, &new->header: &(kmem_cache#29-oX)->header
+// ARM10C 20160709
+// [2nd] dir: kmem_cache#29-oX, header: kmem_cache#25-oX
 static int insert_header(struct ctl_dir *dir, struct ctl_table_header *header)
 {
 	struct ctl_table *entry;
 	int err;
 
-	// dir->header.nreg: (&(&sysctl_table_root.default_set)->dir)->header.nreg: 2
+	// [1st] dir->header.nreg: (&(&sysctl_table_root.default_set)->dir)->header.nreg: 2
+	// [2nd] dir->header.nreg: (kmem_cache#29-oX)->header.nreg: 1
 	dir->header.nreg++;
-	// dir->header.nreg: (&(&sysctl_table_root.default_set)->dir)->header.nreg: 3
+	// [1st] dir->header.nreg: (&(&sysctl_table_root.default_set)->dir)->header.nreg: 3
+	// [2nd] dir->header.nreg: (kmem_cache#29-oX)->header.nreg: 2
 
-	// header->parent: (&(kmem_cache#29-oX)->header)->parent: NULL,
-	// dir: &(&sysctl_table_root.default_set)->dir
+	// [1st] header->parent: (&(kmem_cache#29-oX)->header)->parent: NULL,
+	// [1st] dir: &(&sysctl_table_root.default_set)->dir
+	// [2nd] header->parent: (kmem_cache#25-oX)->parent: NULL, dir: kmem_cache#29-oX
 	header->parent = dir;
-	// header->parent: (&(kmem_cache#29-oX)->header)->parent: &(&sysctl_table_root.default_set)->dir
+	// [1st] header->parent: (&(kmem_cache#29-oX)->header)->parent: &(&sysctl_table_root.default_set)->dir
+	// [2nd] header->parent: (kmem_cache#25-oX)->parent: kmem_cache#29-oX
 
-	// header: &(kmem_cache#29-oX)->header, insert_links(&(kmem_cache#29-oX)->header): 0
+	// [1st] header: &(kmem_cache#29-oX)->header, insert_links(&(kmem_cache#29-oX)->header): 0
+	// [2nd] header: kmem_cache#25-oX, insert_links(kmem_cache#25-oX): 0
 	err = insert_links(header);
-	// err: 0
+	// [1st] err: 0
+	// [2nd] err: 0
 
-	// err: 0
+	// [1st] err: 0
+	// [2nd] err: 0
 	if (err)
 		goto fail_links;
 
-	// [f1] header->ctl_table: (&(kmem_cache#29-oX)->header)->ctl_table: (kmem_cache#29-oX + 52) (struct ctl_table),
-	// [f1] entry: (kmem_cache#29-oX + 52) (struct ctl_table), ((kmem_cache#29-oX + 52) (struct ctl_table))->procname: "kernel"
+	// [2nd] NOTE:
+	// struct ctl_table 의 46 개 크기만큼 할당 받은 메모리 kmem_cache#24-oX 에
+	// kern_table의 child 멤버 값이 NULL 인 index 의 table 값을 복사한 값
+
+	// [1st][f1] header->ctl_table: (&(kmem_cache#29-oX)->header)->ctl_table: (kmem_cache#29-oX + 52) (struct ctl_table),
+	// [1st][f1] entry: (kmem_cache#29-oX + 52) (struct ctl_table), ((kmem_cache#29-oX + 52) (struct ctl_table))->procname: "kernel"
+	//
+	// [2nd][f1] header->ctl_table: (kmem_cache#25-oX)->ctl_table: kmem_cache#24-oX
+	// [2nd][f1] entry: kmem_cache#24-oX (struct ctl_table), (kmem_cache#24-oX (struct ctl_table))->procname: "sched_child_runs_first"
 	for (entry = header->ctl_table; entry->procname; entry++) {
-		// [f2] entry: ((kmem_cache#29-oX + 52) (struct ctl_table))[1]
-		// [f2] entry->procname: (((kmem_cache#29-oX + 52) (struct ctl_table))[1]).procname: NULL
+		// [1st][f2] entry: ((kmem_cache#29-oX + 52) (struct ctl_table))[1]
+		// [1st][f2] entry->procname: (((kmem_cache#29-oX + 52) (struct ctl_table))[1]).procname: NULL
 
-		// [f1] header: &(kmem_cache#29-oX)->header, entry: (kmem_cache#29-oX + 52) (struct ctl_table)
-		// [f1] insert_entry(&(kmem_cache#29-oX)->header, (kmem_cache#29-oX + 52) (struct ctl_table)): 0
+		// [1st][f1] header: &(kmem_cache#29-oX)->header, entry: (kmem_cache#29-oX + 52) (struct ctl_table)
+		// [1st][f1] insert_entry(&(kmem_cache#29-oX)->header, (kmem_cache#29-oX + 52) (struct ctl_table)): 0
+		//
+		// [2nd][f1] header: kmem_cache#25-oX, entry: kmem_cache#24-oX (struct ctl_table)
+		// [2nd][f1] insert_entry(kmem_cache#25-oX, kmem_cache#24-oX (struct ctl_table)): 0
 		err = insert_entry(header, entry);
-		// [f1] err: 0
+		// [1st][f1] err: 0
 
-		// [f1] insert_entry 에서 한일:
+		// [1st][f1] insert_entry 에서 한일:
 		// (&((kmem_cache#29-oX + 36) (struct ctl_node)).node).__rb_parent_color: NULL
 		// (&((kmem_cache#29-oX + 36) (struct ctl_node)).node)->rb_left: NULL
 		// (&((kmem_cache#29-oX + 36) (struct ctl_node)).node)->rb_right: NULL
@@ -338,12 +373,12 @@ static int insert_header(struct ctl_dir *dir, struct ctl_table_header *header)
 		//                         (kernel)
 		*/
 
-		// err: 0
+		// [1st] err: 0
 		if (err)
 			goto fail;
 	}
 	return 0;
-	// return 0
+	// [1st] return 0
 fail:
 	erase_header(header);
 	put_links(header);
@@ -1423,12 +1458,16 @@ static bool get_links(struct ctl_dir *dir,
 
 // ARM10C 20160702
 // header: &(kmem_cache#29-oX)->header
+// ARM10C 20160709
+// header: kmem_cache#25-oX
 static int insert_links(struct ctl_table_header *head)
 {
 	struct ctl_table_set *root_set = &sysctl_table_root.default_set;
 	// root_set: &sysctl_table_root.default_set
+	// root_set: &sysctl_table_root.default_set
 
 	struct ctl_dir *core_parent = NULL;
+	// core_parent: NULL
 	// core_parent: NULL
 
 	struct ctl_table_header *links;
@@ -1436,8 +1475,11 @@ static int insert_links(struct ctl_table_header *head)
 
 	// head->set: (&(kmem_cache#29-oX)->header)->set: &sysctl_table_root.default_set,
 	// root_set: &sysctl_table_root.default_set
+	// head->set: (kmem_cache#25-oX)->set: &sysctl_table_root.default_set,
+	// root_set: &sysctl_table_root.default_set
 	if (head->set == root_set)
 		return 0;
+		// return 0
 		// return 0
 
 	core_parent = xlate_dir(root_set, head->parent);
@@ -1605,39 +1647,41 @@ struct ctl_table_header *__register_sysctl_table(
 	// &sysctl_lock을 이용한 spin unlock 수행
 
 	/* Find the directory for the ctl_table */
-	// path: kmem_cache#23-oX: "kernel/", name: kmem_cache#23-oX: "kernel/"
+	// [f1] path: kmem_cache#23-oX: "kernel/", name: kmem_cache#23-oX: "kernel/"
 	for (name = path; name; name = nextname) {
 		int namelen;
 
-		// name: kmem_cache#23-oX: "kernel/"
-		// strchr(kmem_cache#23-oX, '/'): kmem_cache#23-oX 의 '/' 위치의 주소값
+		// [f2] name: kmem_cache#23-oX: "kernel/" 의 '/' 위치의 주소값+1: NULL
+
+		// [f1] name: kmem_cache#23-oX: "kernel/"
+		// [f1] strchr(kmem_cache#23-oX, '/'): kmem_cache#23-oX 의 '/' 위치의 주소값
 		nextname = strchr(name, '/');
-		// nextname: kmem_cache#23-oX: "kernel/" 의 '/' 위치의 주소값
+		// [f1] nextname: kmem_cache#23-oX: "kernel/" 의 '/' 위치의 주소값
 
-		// nextname: kmem_cache#23-oX: "kernel/" 의 '/' 위치의 주소값
+		// [f1] nextname: kmem_cache#23-oX: "kernel/" 의 '/' 위치의 주소값
 		if (nextname) {
-			// nextname: kmem_cache#23-oX: "kernel/" 의 '/' 위치의 주소값,
-			// name: kmem_cache#23-oX: "kernel/"
+			// [f1] nextname: kmem_cache#23-oX: "kernel/" 의 '/' 위치의 주소값,
+			// [f1] name: kmem_cache#23-oX: "kernel/"
 			namelen = nextname - name;
-			// namelen: 6
+			// [f1] namelen: 6
 
-			// nextname: kmem_cache#23-oX: "kernel/" 의 '/' 위치의 주소값
+			// [f1] nextname: kmem_cache#23-oX: "kernel/" 의 '/' 위치의 주소값
 			nextname++;
-			// nextname: kmem_cache#23-oX: "kernel/" 의 '/' 위치의 주소값+1
+			// [f1] nextname: kmem_cache#23-oX: "kernel/" 의 '/' 위치의 주소값+1
 		} else {
 			namelen = strlen(name);
 		}
 
-		// namelen: 6
+		// [f1] namelen: 6
 		if (namelen == 0)
 			continue;
 
-		// dir: &(&sysctl_table_root.default_set)->dir, name: kmem_cache#23-oX: "kernel/", namelen: 6
-		// get_subdir(&(&sysctl_table_root.default_set)->dir, "kernel/", 6): kmem_cache#29-oX
+		// [f1] dir: &(&sysctl_table_root.default_set)->dir, name: kmem_cache#23-oX: "kernel/", namelen: 6
+		// [f1] get_subdir(&(&sysctl_table_root.default_set)->dir, "kernel/", 6): kmem_cache#29-oX
 		dir = get_subdir(dir, name, namelen);
-		// dir: kmem_cache#29-oX
+		// [f1] dir: kmem_cache#29-oX
 
-		// get_subdir 에서 한일:
+		// [f1] get_subdir 에서 한일:
 		// struct ctl_dir: 36, struct ctl_node: 16, struct ctl_table: 34 * 2, char: 7
 		// 만큼의 메모리 kmem_cache#29-oX 를 할당 받음
 		//
@@ -1672,15 +1716,21 @@ struct ctl_table_header *__register_sysctl_table(
 		// (&(&(&sysctl_table_root.default_set)->dir)->header)->nreg: 2
 		// (&(kmem_cache#29-oX)->header)->nreg: 1
 
-		// dir: kmem_cache#29-oX, IS_ERR(kmem_cache#29-oX): 0
+		// [f1] dir: kmem_cache#29-oX, IS_ERR(kmem_cache#29-oX): 0
 		if (IS_ERR(dir))
 			goto fail;
 
 // 2016/07/02 종료
+// 2016/07/09 시작
 
 	}
 
 	spin_lock(&sysctl_lock);
+
+	// spin_unlock에서 한일:
+	// &sysctl_lock을 이용한 spin unlock 수행
+
+	// dir: kmem_cache#29-oX, header: kmem_cache#25-oX
 	if (insert_header(dir, header))
 		goto fail_put_dir_locked;
 
