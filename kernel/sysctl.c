@@ -1693,9 +1693,102 @@ int __init sysctl_init(void)
 {
 	struct ctl_table_header *hdr;
 
+	// register_sysctl_table(sysctl_base_table): kmem_cache#27-oX
 	hdr = register_sysctl_table(sysctl_base_table);
-	kmemleak_not_leak(hdr);
+	// hdr: kmem_cache#27-oX
+
+	// register_sysctl_table 에서 한일:
+	// struct ctl_table_header 의 메모리 +  struct ctl_table_header 의 포인터 메모리 * 2 를 할당 받음 kmem_cache#27-oX
+	//
+	// struct ctl_table_header 의 메모리 + struct ctl_node 의 메모리 46 개를 할당 받음 kmem_cache#25-oX
+	//
+	// (kmem_cache#25-oX)->ctl_table: kmem_cache#24-oX
+	// (kmem_cache#25-oX)->ctl_table_arg: kmem_cache#24-oX
+	// (kmem_cache#25-oX)->used: 0
+	// (kmem_cache#25-oX)->count: 1
+	// (kmem_cache#25-oX)->nreg: 1
+	// (kmem_cache#25-oX)->unregistering: NULL
+	// (kmem_cache#25-oX)->root: &sysctl_table_root
+	// (kmem_cache#25-oX)->set: &sysctl_table_root.default_set
+	// (kmem_cache#25-oX)->parent: NULL
+	// (kmem_cache#25-oX)->node: &(kmem_cache#25-oX)[1] (struct ctl_node)
+	// (&(kmem_cache#25-oX)[1...46] (struct ctl_node))->header: kmem_cache#25-oX
+	//
+	// (&(&sysctl_table_root.default_set)->dir)->header.nreg: 2
+	//
+	// struct ctl_dir: 36, struct ctl_node: 16, struct ctl_table: 34 * 2, char: 7
+	// 만큼의 메모리 kmem_cache#29-oX 를 할당 받음
+	//
+	// (kmem_cache#29-oX + 120): "kernel"
+	// ((kmem_cache#29-oX + 52)[0] (struct ctl_table)).procname: (kmem_cache#29-oX + 120): "kernel"
+	// ((kmem_cache#29-oX + 52)[0] (struct ctl_table)).mode: 0040555
+	// (&(kmem_cache#29-oX)->header)->ctl_table: (kmem_cache#29-oX + 52) (struct ctl_table)
+	// (&(kmem_cache#29-oX)->header)->ctl_table_arg: (kmem_cache#29-oX + 52) (struct ctl_table)
+	// (&(kmem_cache#29-oX)->header)->used: 0
+	// (&(kmem_cache#29-oX)->header)->count: 1
+	// (&(kmem_cache#29-oX)->header)->nreg: 1
+	// (&(kmem_cache#29-oX)->header)->unregistering: NULL
+	// (&(kmem_cache#29-oX)->header)->root: (&sysctl_table_root.default_set)->dir.header.root
+	// (&(kmem_cache#29-oX)->header)->set: &sysctl_table_root.default_set
+	// (&(kmem_cache#29-oX)->header)->parent: NULL
+	// (&(kmem_cache#29-oX)->header)->node: (kmem_cache#29-oX + 36) (struct ctl_node)
+	// ((kmem_cache#29-oX + 36) (struct ctl_node))->header: &(kmem_cache#29-oX)->header
+	//
+	// (&(&sysctl_table_root.default_set)->dir)->header.nreg: 3
+	// (&(kmem_cache#29-oX)->header)->parent: &(&sysctl_table_root.default_set)->dir
+	//
+	// (&((kmem_cache#29-oX + 36) (struct ctl_node)).node).__rb_parent_color: NULL
+	// (&((kmem_cache#29-oX + 36) (struct ctl_node)).node)->rb_left: NULL
+	// (&((kmem_cache#29-oX + 36) (struct ctl_node)).node)->rb_right: NULL
+	// (&(&sysctl_table_root.default_set)->dir)->root.rb_node: &((kmem_cache#29-oX + 36) (struct ctl_node)).node
+	//
+	// RB Tree &((kmem_cache#29-oX + 36) (struct ctl_node)).node 을 black node 로 추가
+	/*
+	//                          proc-b
+	//                         (kernel)
+	*/
+	// (&(&(&sysctl_table_root.default_set)->dir)->header)->nreg: 2
+	// (&(kmem_cache#29-oX)->header)->nreg: 1
+	//
+	// (kmem_cache#29-oX)->header.nreg: 2
+	// (kmem_cache#25-oX)->parent: kmem_cache#29-oX
+	//
+	// (&(&(kmem_cache#25-oX)[1] (struct ctl_node)).node).__rb_parent_color: NULL
+	// (&(&(kmem_cache#25-oX)[1] (struct ctl_node)).node)->rb_left: NULL
+	// (&(&(kmem_cache#25-oX)[1] (struct ctl_node)).node)->rb_right: NULL
+	// &(kmem_cache#29-oX)->root.rb_node: &(&(kmem_cache#25-oX)[1] (struct ctl_node)).node
+	// (&(&(kmem_cache#25-oX)[1] (struct ctl_node) + 1).node).__rb_parent_color: &(&(kmem_cache#25-oX)[1] (struct ctl_node)).node
+	// (&(&(kmem_cache#25-oX)[1] (struct ctl_node) + 1).node)->rb_left: NULL
+	// (&(&(kmem_cache#25-oX)[1] (struct ctl_node) + 1).node)->rb_right: NULL
+	// (&(&(kmem_cache#25-oX)[1] (struct ctl_node)).node)->rb_right: &(&(kmem_cache#25-oX)[1] (struct ctl_node) + 1).node
+	//
+	// &(&(kmem_cache#25-oX)[1] (struct ctl_node) + 1).node 을 node 로 추가 후 rbtree 로 구성
+	// (kern_table 의 2 번째 index의 값)
+	/*
+	//                       kern_table-b
+	//                 (sched_child_runs_first)
+	//                                      \
+	//                                        kern_table-r
+	//                                  (sched_min_granularity_ns)
+	//
+	// ..... kern_table 의 index 수만큼 RB Tree를 구성
+	// 아래 링크의 RB Tree 그림 참고
+	// http://neuromancer.kr/t/150-2016-07-09-proc-root-init/313
+	//
+	// TODO: kern_table 의 rbtree 그림을 그려야함
+	*/
+	// (kmem_cache#25-oX)->ctl_table_arg: kmem_cache#24-oX
+	// (kmem_cache#27-oX)[1] (struct ctl_table_header): kmem_cache#25-oX
+	//
+	// kern_table index 만큼 kern_table[...].child 맴버값을 보고 dir, files 의 RB Tree 를 구성함
+	//
+	// sysctl_base_table index 만큼 sysctl_base_table[...].child 맴버값을 보고 recursive 하게 dir, files 의 RB Tree 를 구성함
+
+	// hdr: kmem_cache#27-oX
+	kmemleak_not_leak(hdr); // null function
+
 	return 0;
+	// return 0
 }
 
 #endif /* CONFIG_SYSCTL */
