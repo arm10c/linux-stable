@@ -385,6 +385,8 @@ static inline raw_spinlock_t *spinlock_check(spinlock_t *lock)
 // &sbinfo->stat_lock: &(kmem_cache#29-oX (struct shmem_sb_info))->stat_lock
 // ARM10C 20160604
 // &ent->pde_unload_lock: &(kmem_cache#29-oX (struct proc_dir_entry))->pde_unload_lock
+// ARM10C 20160716
+// &freezer->lock: &(kmem_cache#29-o0 (struct freezer))->lock
 #define spin_lock_init(_lock)				\
 do {							\
 	spinlock_check(_lock);				\

@@ -153,6 +153,8 @@ __mutex_lock_slowpath(atomic_t *lock_count);
 // &sysfs_mutex
 // ARM10C 20160611
 // &net_mutex
+// ARM10C 20160716
+// &cgroup_mutex
 void __sched mutex_lock(struct mutex *lock)
 {
 	might_sleep(); // null function

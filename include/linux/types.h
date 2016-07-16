@@ -236,6 +236,7 @@ typedef unsigned long irq_hw_number_t;
 // ARM10C 20160402
 // ARM10C 20160409
 // ARM10C 20160604
+// ARM10C 20160716
 typedef struct {
 	int counter;
 } atomic_t;
@@ -311,6 +312,7 @@ struct callback_head {
 // ARM10C 20151024
 // ARM10C 20151114
 // ARM10C 20160625
+// ARM10C 20160716
 // sizeof(rcu_head): 8 bytes
 #define rcu_head callback_head
 

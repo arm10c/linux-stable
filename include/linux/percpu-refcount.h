@@ -53,6 +53,8 @@
 struct percpu_ref;
 typedef void (percpu_ref_func_t)(struct percpu_ref *);
 
+// ARM10C 20160716
+// sizeof(struct percpu_ref): 20 bytes
 struct percpu_ref {
 	atomic_t		count;
 	/*

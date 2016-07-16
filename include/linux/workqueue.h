@@ -114,6 +114,7 @@ enum {
 // ARM10C 20150718
 // ARM10C 20151031
 // ARM10C 20160402
+// ARM10C 20160716
 // sizeof(struct work_struct): 16 bytes
 struct work_struct {
 	atomic_long_t data;
