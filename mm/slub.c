@@ -6941,6 +6941,8 @@ EXPORT_SYMBOL(ksize);
 // old_name: (kmem_cache#30-oX (struct kobject))->name: NULL
 // ARM10C 20160409
 // info: kmem_cache#30-oX (struct subprocess_info)
+// ARM10C 20160716
+// new_path: kmem_cache#23-oX
 void kfree(const void *x)
 {
 	struct page *page;

@@ -935,6 +935,8 @@ asmlinkage void __init start_kernel(void)
 
 #ifdef CONFIG_PROC_FS // CONFIG_PROC_FS=y
 	proc_root_init();
+	// proc filesystem을 등록 하고 proc을 사용하기 위한 dentry, inode 생성 후
+	// sysctl_base_table 에 등록된 kernel, vm, fs, debug, dev의 dir, files 를 recursive 하게 RB Tree 를 구성함
 #endif
 	cgroup_init();
 	cpuset_init();

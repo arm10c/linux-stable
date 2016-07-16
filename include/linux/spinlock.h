@@ -527,6 +527,8 @@ do {									\
 // &proc_subdir_lock
 // ARM10C 20160702
 // &sysctl_lock
+// ARM10C 20160716
+// &sysctl_lock
 static inline void spin_unlock(spinlock_t *lock)
 {
 	raw_spin_unlock(&lock->rlock);
