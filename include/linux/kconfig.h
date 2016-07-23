@@ -20,21 +20,25 @@
 /*
 // ARM10C 20150822
 // ARM10C 20160123
+// ARM10C 20160716
 */
 #define config_enabled(cfg) _config_enabled(cfg)
 /*
 // ARM10C 20150822
 // ARM10C 20160123
+// ARM10C 20160716
 */
 #define _config_enabled(value) __config_enabled(__ARG_PLACEHOLDER_##value)
 /*
 // ARM10C 20150822
 // ARM10C 20160123
+// ARM10C 20160716
 */
 #define __config_enabled(arg1_or_junk) ___config_enabled(arg1_or_junk 1, 0)
 /*
 // ARM10C 20150822
 // ARM10C 20160123
+// ARM10C 20160716
 */
 #define ___config_enabled(__ignored, val, ...) val
 
@@ -60,6 +64,7 @@
  */
 /*
 // ARM10C 20150822
+// ARM10C 20160716
 */
 #define IS_BUILTIN(option) config_enabled(option)
 
@@ -69,6 +74,7 @@
  */
 /*
 // ARM10C 20150822
+// ARM10C 20160716
 */
 #define IS_MODULE(option) config_enabled(option##_MODULE)
 

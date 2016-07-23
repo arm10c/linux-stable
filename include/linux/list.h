@@ -254,6 +254,8 @@ extern void __list_add(struct list_head *new,
 // &inode->i_sb->s_inodes: &(kmem_cache#4-oX)->i_sb->s_inodes
 // ARM10C 20160521
 // &mnt->mnt_list: &(kmem_cache#2-oX (struct mount))->mnt_list, &new_ns->list: &(kmem_cache#30-oX (struct mnt_namespace))->list
+// ARM10C 20160716
+// &ss->sibling: &(&debug_subsys)->sibling
 static inline void list_add(struct list_head *new, struct list_head *head)
 {
 	__list_add(new, head, head->next);

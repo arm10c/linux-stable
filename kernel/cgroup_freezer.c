@@ -39,6 +39,8 @@ enum freezer_state_flags {
 	CGROUP_FREEZING		= CGROUP_FREEZING_SELF | CGROUP_FREEZING_PARENT,
 };
 
+// ARM10C 20160716
+// sizeof(struct freezer): 84 bytes
 struct freezer {
 	struct cgroup_subsys_state	css;
 	unsigned int			state;
@@ -86,17 +88,34 @@ static const char *freezer_state_strs(unsigned int state)
 
 struct cgroup_subsys freezer_subsys;
 
+// ARM10C 20160716
+// (&cgroup_dummy_root.top_cgroup)->subsys[3]: NULL
 static struct cgroup_subsys_state *
 freezer_css_alloc(struct cgroup_subsys_state *parent_css)
 {
 	struct freezer *freezer;
 
+	// sizeof(struct freezer): 84 bytes, GFP_KERNEL: 0xD0
+	// kzalloc(84, GFP_KERNEL: 0xD0): kmem_cache#29-o0 (struct freezer)
 	freezer = kzalloc(sizeof(struct freezer), GFP_KERNEL);
+	// freezer: kmem_cache#29-o0 (struct freezer)
+
+	// freezer: kmem_cache#29-o0 (struct freezer)
 	if (!freezer)
 		return ERR_PTR(-ENOMEM);
 
+	// &freezer->lock: &(kmem_cache#29-o0 (struct freezer))->lock
 	spin_lock_init(&freezer->lock);
+
+	// spin_lock_init에서 한일:
+	// (&(kmem_cache#29-o0 (struct freezer))->lock)->raw_lock: { { 0 } }
+	// (&(kmem_cache#29-o0 (struct freezer))->lock)->magic: 0xdead4ead
+	// (&(kmem_cache#29-o0 (struct freezer))->lock)->owner: 0xffffffff
+	// (&(kmem_cache#29-o0 (struct freezer))->lock)->owner_cpu: 0xffffffff
+
+	// &freezer->css: &(kmem_cache#29-o0 (struct freezer))->css
 	return &freezer->css;
+	// return &(kmem_cache#29-o0 (struct freezer))->css
 }
 
 /**
@@ -107,6 +126,8 @@ freezer_css_alloc(struct cgroup_subsys_state *parent_css)
  * parent's freezing state while holding both parent's and our
  * freezer->lock.
  */
+// ARM10C 20160716
+// css: &(kmem_cache#29-o0 (struct freezer))->css
 static int freezer_css_online(struct cgroup_subsys_state *css)
 {
 	struct freezer *freezer = css_freezer(css);
@@ -475,6 +496,7 @@ static struct cftype files[] = {
 };
 
 // ARM10C 20150822
+// ARM10C 20160716
 struct cgroup_subsys freezer_subsys = {
 	.name		= "freezer",
 	.css_alloc	= freezer_css_alloc,

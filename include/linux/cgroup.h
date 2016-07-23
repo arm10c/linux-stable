@@ -22,7 +22,7 @@
 #include <linux/fs.h>
 #include <linux/percpu-refcount.h>
 
-#ifdef CONFIG_CGROUPS
+#ifdef CONFIG_CGROUPS // CONFIG_CGROUPS=y
 
 struct cgroupfs_root;
 struct cgroup_subsys;
@@ -32,6 +32,7 @@ struct css_id;
 struct eventfd_ctx;
 
 extern int cgroup_init_early(void);
+// ARM10C 20160716
 extern int cgroup_init(void);
 extern void cgroup_fork(struct task_struct *p);
 extern void cgroup_post_fork(struct task_struct *p);
@@ -50,6 +51,7 @@ extern int proc_cgroup_show(struct seq_file *, void *);
  */
 #define SUBSYS(_x) _x ## _subsys_id,
 // ARM10C 20150822
+// ARM10C 20160716
 //
 // cgroup_subsys.h 의 config를 IS_BUILTIN(option) 확장한 결과:
 // SUBSYS(debug): debug_subsys_id,
@@ -84,6 +86,8 @@ enum cgroup_subsys_id {
 
 /* Per-subsystem/per-cgroup state maintained by the system. */
 // ARM10C 20150822
+// ARM10C 20160716
+// sizeof(struct cgroup_subsys_state): 64 bytes
 struct cgroup_subsys_state {
 	/* the cgroup that this css is attached to */
 	struct cgroup *cgroup;
@@ -623,6 +627,7 @@ int cgroup_taskset_size(struct cgroup_taskset *tset);
 
 // ARM10C 20150808
 // ARM10C 20150822
+// ARM10C 20160716
 struct cgroup_subsys {
 	struct cgroup_subsys_state *(*css_alloc)(struct cgroup_subsys_state *parent_css);
 	int (*css_online)(struct cgroup_subsys_state *css);

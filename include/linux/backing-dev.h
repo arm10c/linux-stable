@@ -72,6 +72,7 @@ struct bdi_writeback {
 // ARM10C 20160123
 // ARM10C 20160319
 // ARM10C 20160528
+// ARM10C 20160716
 struct backing_dev_info {
 	struct list_head bdi_list;
 	unsigned long ra_pages;	/* max readahead in PAGE_CACHE_SIZE units */
