@@ -1109,6 +1109,8 @@ static inline notrace void rcu_read_unlock_sched_notrace(void)
 // pa[0]->ary[0]: (kmem_cache#21-o7 (struct idr_layer))->ary[0]: NULL, bitmap: kmem_cache#27-oX (struct ida_bitmap)
 // ARM10C 20160716
 // css->cgroup->subsys: (&cgroup_dummy_root.top_cgroup)->subsys[0], css: kmem_cache#30-oX (struct cgroup_subsys_state)
+// ARM10C 20160723
+// css->cgroup->subsys: (&cgroup_dummy_root.top_cgroup)->subsys[3], css: &(kmem_cache#29-oX (struct freezer))->css
 #define rcu_assign_pointer(p, v)		\
 	__rcu_assign_pointer((p), (v), __rcu)
 

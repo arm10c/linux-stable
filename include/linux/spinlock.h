@@ -213,7 +213,7 @@ static inline void do_raw_spin_unlock(raw_spinlock_t *lock) __releases(lock)
 // &logbuf_lock
 #define raw_spin_lock(lock)	_raw_spin_lock(lock)
 
-#ifdef CONFIG_DEBUG_LOCK_ALLOC
+#ifdef CONFIG_DEBUG_LOCK_ALLOC // CONFIG_DEBUG_LOCK_ALLOC=n
 # define raw_spin_lock_nested(lock, subclass) \
 	_raw_spin_lock_nested(lock, subclass)
 
@@ -223,6 +223,8 @@ static inline void do_raw_spin_unlock(raw_spinlock_t *lock) __releases(lock)
 		 _raw_spin_lock_nest_lock(lock, &(nest_lock)->dep_map);	\
 	 } while (0)
 #else
+// ARM10C 20160723
+// &(&(kmem_cache#29-oX (struct freezer))->lock)->rlock, SINGLE_DEPTH_NESTING: 1
 # define raw_spin_lock_nested(lock, subclass)		_raw_spin_lock(lock)
 # define raw_spin_lock_nest_lock(lock, nest_lock)	_raw_spin_lock(lock)
 #endif
@@ -351,6 +353,8 @@ static inline void do_raw_spin_unlock(raw_spinlock_t *lock) __releases(lock)
 // ARM10C 20151205
 // &inode->i_lock: &(kmem_cache#4-oX)->i_lock
 // ARM10C 20160409
+// ARM10C 20160723
+// lock: &(kmem_cache#29-oX (struct freezer))->lock
 static inline raw_spinlock_t *spinlock_check(spinlock_t *lock)
 {
 	return &lock->rlock;
@@ -452,6 +456,10 @@ static inline int spin_trylock(spinlock_t *lock)
 	return raw_spin_trylock(&lock->rlock);
 }
 
+// ARM10C 20160723
+// spinlock_check(&(kmem_cache#29-oX (struct freezer))->lock): &(&(kmem_cache#29-oX (struct freezer))->lock)->rlock
+//
+// &freezer->lock: &(kmem_cache#29-oX (struct freezer))->lock, SINGLE_DEPTH_NESTING: 1
 #define spin_lock_nested(lock, subclass)			\
 do {								\
 	raw_spin_lock_nested(spinlock_check(lock), subclass);	\
@@ -531,6 +539,8 @@ do {									\
 // &sysctl_lock
 // ARM10C 20160716
 // &sysctl_lock
+// ARM10C 20160723
+// &freezer->lock: &(kmem_cache#29-oX (struct freezer))->lock
 static inline void spin_unlock(spinlock_t *lock)
 {
 	raw_spin_unlock(&lock->rlock);

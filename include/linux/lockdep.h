@@ -470,6 +470,8 @@ struct lock_class_key { };
 
 // ARM10C 20150822
 // &cgroup_mutex
+// ARM10C 20160723
+// &cgroup_mutex
 #define lockdep_assert_held(l)			do { (void)(l); } while (0)
 
 #define lockdep_recursing(tsk)			(0)
@@ -547,6 +549,7 @@ static inline void print_irqtrace_events(struct task_struct *curr)
  * of nesting should define their own lock-nesting subclasses.)
  */
 // ARM10C 20151114
+// ARM10C 20160723
 // SINGLE_DEPTH_NESTING: 1
 #define SINGLE_DEPTH_NESTING			1
 

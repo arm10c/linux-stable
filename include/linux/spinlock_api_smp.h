@@ -23,6 +23,7 @@ int in_lock_functions(unsigned long addr);
 
 // ARM10C 20140405
 // ARM10C 20140517
+// ARM10C 20160723
 void __lockfunc _raw_spin_lock(raw_spinlock_t *lock)		__acquires(lock);
 void __lockfunc _raw_spin_lock_nested(raw_spinlock_t *lock, int subclass)
 								__acquires(lock);
@@ -159,6 +160,8 @@ static inline void __raw_spin_lock_bh(raw_spinlock_t *lock)
 // ARM10C 20140405
 // ARM10C 20140517
 // &lock->rlock: &(&contig_page_data->node_zones[0].lock)->rlock
+// ARM10C 20160723
+// &(&(kmem_cache#29-oX (struct freezer))->lock)->rlock
 static inline void __raw_spin_lock(raw_spinlock_t *lock)
 {
 	preempt_disable();

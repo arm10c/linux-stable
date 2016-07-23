@@ -29,17 +29,26 @@
  * for whatever reason.  IOW, a cgroup has FREEZING_PARENT set if one of
  * its ancestors has FREEZING_SELF set.
  */
+// ARM10C 20160723
 enum freezer_state_flags {
+	// CGROUP_FREEZER_ONLINE: 1
 	CGROUP_FREEZER_ONLINE	= (1 << 0), /* freezer is fully online */
+	// CGROUP_FREEZING_SELF: 2
 	CGROUP_FREEZING_SELF	= (1 << 1), /* this freezer is freezing */
+	// CGROUP_FREEZING_PARENT: 4
 	CGROUP_FREEZING_PARENT	= (1 << 2), /* the parent freezer is freezing */
+	// CGROUP_FROZEN: 8
 	CGROUP_FROZEN		= (1 << 3), /* this and its descendants frozen */
 
 	/* mask for all FREEZING flags */
+	// CGROUP_FREEZING_SELF: 2
+	// CGROUP_FREEZING_PARENT: 4
+	// CGROUP_FREEZING: 6
 	CGROUP_FREEZING		= CGROUP_FREEZING_SELF | CGROUP_FREEZING_PARENT,
 };
 
 // ARM10C 20160716
+// ARM10C 20160723
 // sizeof(struct freezer): 84 bytes
 struct freezer {
 	struct cgroup_subsys_state	css;
@@ -47,9 +56,16 @@ struct freezer {
 	spinlock_t			lock;
 };
 
+// ARM10C 20160723
+// css: &(kmem_cache#29-oX (struct freezer))->css
+// ARM10C 20160723
+// NULL
 static inline struct freezer *css_freezer(struct cgroup_subsys_state *css)
 {
+	// css: &(kmem_cache#29-oX (struct freezer))->css
+	// container_of(&(kmem_cache#29-oX (struct freezer))->css, struct freezer, css): kmem_cache#29-oX (struct freezer)
 	return css ? container_of(css, struct freezer, css) : NULL;
+	// return kmem_cache#29-oX (struct freezer)
 }
 
 static inline struct freezer *task_freezer(struct task_struct *task)
@@ -57,9 +73,14 @@ static inline struct freezer *task_freezer(struct task_struct *task)
 	return css_freezer(task_css(task, freezer_subsys_id));
 }
 
+// ARM10C 20160723
+// freezer: kmem_cache#29-oX (struct freezer)
 static struct freezer *parent_freezer(struct freezer *freezer)
 {
+	// &freezer->css: &(kmem_cache#29-oX (struct freezer))->css,
+	// css_parent(&(kmem_cache#29-oX (struct freezer))->css): NULL, css_freezer(NULL): NULL
 	return css_freezer(css_parent(&freezer->css));
+	// return NULL
 }
 
 bool cgroup_freezing(struct task_struct *task)
@@ -127,33 +148,56 @@ freezer_css_alloc(struct cgroup_subsys_state *parent_css)
  * freezer->lock.
  */
 // ARM10C 20160716
-// css: &(kmem_cache#29-o0 (struct freezer))->css
+// css: &(kmem_cache#29-oX (struct freezer))->css
 static int freezer_css_online(struct cgroup_subsys_state *css)
 {
+	// css: &(kmem_cache#29-oX (struct freezer))->css
+	// css_freezer(&(kmem_cache#29-oX (struct freezer))->css): kmem_cache#29-oX (struct freezer)
 	struct freezer *freezer = css_freezer(css);
+	// freezer: kmem_cache#29-oX (struct freezer)
+
+	// freezer: kmem_cache#29-oX (struct freezer)
+	// parent_freezer(kmem_cache#29-oX (struct freezer)): NULL
 	struct freezer *parent = parent_freezer(freezer);
+	// parent: NULL
 
 	/*
 	 * The following double locking and freezing state inheritance
 	 * guarantee that @cgroup can never escape ancestors' freezing
 	 * states.  See css_for_each_descendant_pre() for details.
 	 */
+	// parent: NULL
 	if (parent)
 		spin_lock_irq(&parent->lock);
+
+	// &freezer->lock: &(kmem_cache#29-oX (struct freezer))->lock, SINGLE_DEPTH_NESTING: 1
 	spin_lock_nested(&freezer->lock, SINGLE_DEPTH_NESTING);
 
-	freezer->state |= CGROUP_FREEZER_ONLINE;
+	// spin_lock_nested 에서 한일:
+	// &(kmem_cache#29-oX (struct freezer))->lock 을 이용한 spin lock 수행
 
+	// freezer->state: (kmem_cache#29-oX (struct freezer))->state: 0, CGROUP_FREEZER_ONLINE: 1
+	freezer->state |= CGROUP_FREEZER_ONLINE;
+	// freezer->state: (kmem_cache#29-oX (struct freezer))->state: 1
+
+	// parent: NULL, CGROUP_FREEZING: 6
 	if (parent && (parent->state & CGROUP_FREEZING)) {
 		freezer->state |= CGROUP_FREEZING_PARENT | CGROUP_FROZEN;
 		atomic_inc(&system_freezing_cnt);
 	}
 
+	// &freezer->lock: &(kmem_cache#29-oX (struct freezer))->lock
 	spin_unlock(&freezer->lock);
+
+	// spin_unlock 에서 한일:
+	// &(kmem_cache#29-oX (struct freezer))->lock 을 이용한 spin unlock 수행
+
+	// parent: NULL
 	if (parent)
 		spin_unlock_irq(&parent->lock);
 
 	return 0;
+	// return 0
 }
 
 /**

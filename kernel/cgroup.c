@@ -105,6 +105,24 @@ EXPORT_SYMBOL_GPL(cgroup_mutex);	/* only for lockdep */
 static DEFINE_MUTEX(cgroup_mutex);
 #endif
 
+// ARM10C 20160723
+// DEFINE_MUTEX(cgroup_root_mutex):
+// struct mutex cgroup_root_mutex =
+// { .count = { (1) }
+//    , .wait_lock =
+//    (spinlock_t )
+//    { { .rlock =
+//	  {
+//	  .raw_lock = { { 0 } },
+//	  .magic = 0xdead4ead,
+//	  .owner_cpu = -1,
+//	  .owner = 0xffffffff,
+//	  }
+//    } }
+//    , .wait_list =
+//    { &(cgroup_root_mutex.wait_list), &(cgroup_root_mutex.wait_list) }
+//    , .magic = &cgroup_root_mutex
+// }
 static DEFINE_MUTEX(cgroup_root_mutex);
 
 /*
@@ -331,6 +349,7 @@ static int notify_on_release(const struct cgroup *cgrp)
  *
  * Should be called under cgroup_mutex.
  */
+// ARM10C 20160723
 #define for_each_subsys(ss, i)						\
 	for ((i) = 0; (i) < CGROUP_SUBSYS_COUNT; (i)++)			\
 		if (({ lockdep_assert_held(&cgroup_mutex);		\
@@ -431,6 +450,7 @@ struct cgrp_cset_link {
 // ARM10C 20150808
 // ARM10C 20150815
 // ARM10C 20150822
+// ARM10C 20160723
 static struct css_set init_css_set;
 // ARM10C 20150815
 static struct cgrp_cset_link init_cgrp_cset_link;
@@ -452,17 +472,38 @@ static int css_set_count;
 #define CSS_SET_HASH_BITS	7
 static DEFINE_HASHTABLE(css_set_table, CSS_SET_HASH_BITS);
 
+// ARM10C 20160723
+// init_css_set.subsys
 static unsigned long css_set_hash(struct cgroup_subsys_state *css[])
 {
 	unsigned long key = 0UL;
+	// key: 0
+
 	struct cgroup_subsys *ss;
 	int i;
 
+	// i: 0, CGROUP_SUBSYS_COUNT: 4, cgroup_subsys[0]: &debug_subsys,
 	for_each_subsys(ss, i)
+	// for ((i) = 0; (i) < CGROUP_SUBSYS_COUNT; (i)++)
+	//   if (({ lockdep_assert_held(&cgroup_mutex); !((ss) = cgroup_subsys[i]); })) { }
+	//   else
+		// key: 0, css[0]: init_css_set.subsys[0]: kmem_cache#30-oX (struct cgroup_subsys_state)
+		// key: 0xXXXXXXXX, css[1]: init_css_set.subsys[1]: &root_task_group.css
+		// key: 0xXXXXXXXX, css[2]: init_css_set.subsys[2]: &root_cpuacct.css
+		// key: 0xXXXXXXXX, css[3]: init_css_set.subsys[3]: &(kmem_cache#29-oX (struct freezer))->css
 		key += (unsigned long)css[i];
-	key = (key >> 16) ^ key;
+		// key: 0xXXXXXXXX
+		// key: 0xXXXXXXXX
+		// key: 0xXXXXXXXX
+		// key: 0xXXXXXXXX
 
+	// key: 0xXXXXXXXX
+	key = (key >> 16) ^ key;
+	// key: 0xXXXXXXXX
+
+	// key: 0xXXXXXXXX
 	return key;
+	// return 0xXXXXXXXX
 }
 
 /*
@@ -4559,13 +4600,13 @@ static void init_css(struct cgroup_subsys_state *css, struct cgroup_subsys *ss,
 // ARM10C 20160716
 // css: kmem_cache#30-oX (struct cgroup_subsys_state)
 // ARM10C 20160716
-// css: &(kmem_cache#29-o0 (struct freezer))->css
+// css: &(kmem_cache#29-oX (struct freezer))->css
 static int online_css(struct cgroup_subsys_state *css)
 {
 	// css->ss: (&root_task_group.css)->ss: &cpu_cgroup_subsys
 	// css->ss: (&root_cpuacct.css)->ss: &cpuacct_subsys
 	// css->ss: (kmem_cache#30-oX (struct cgroup_subsys_state))->ss: &debug_subsys
-	// css->ss: (&(kmem_cache#29-o0 (struct freezer))->css)->ss: &freezer_subsys
+	// css->ss: (&(kmem_cache#29-oX (struct freezer))->css)->ss: &freezer_subsys
 	struct cgroup_subsys *ss = css->ss;
 	// ss: &cpu_cgroup_subsys
 	// ss: &cpuacct_subsys
@@ -4581,6 +4622,7 @@ static int online_css(struct cgroup_subsys_state *css)
 	lockdep_assert_held(&cgroup_mutex); // null function
 
 // 2016/07/16 종료
+// 2016/07/23 시작
 
 	// ss->css_online: (&cpu_cgroup_subsys)->css_online: cpu_cgroup_css_online
 	// ss->css_online: (&cpuacct_subsys)->css_online: NULL
@@ -4590,13 +4632,17 @@ static int online_css(struct cgroup_subsys_state *css)
 		// ss->css_online: (&cpu_cgroup_subsys)->css_online: cpu_cgroup_css_online,
 		// css: &root_task_group.css
 		// cpu_cgroup_css_online(&root_task_group.css): 0
-		//
 		// ss->css_online: (&freezer_subsys)->css_online: freezer_css_online,
-		// css: &(kmem_cache#29-o0 (struct freezer))->css
-		// freezer_css_online(&(kmem_cache#29-o0 (struct freezer))->css): 0
+		// css: &(kmem_cache#29-oX (struct freezer))->css
+		// freezer_css_online(&(kmem_cache#29-oX (struct freezer))->css): 0
 		ret = ss->css_online(css);
 		// ret: 0
+		// ret: 0
 
+		// freezer_css_online 에서 한일:
+		// (kmem_cache#29-oX (struct freezer))->state: 1
+
+	// ret: 0
 	// ret: 0
 	// ret: 0
 	// ret: 0
@@ -4604,10 +4650,12 @@ static int online_css(struct cgroup_subsys_state *css)
 		// css->flags: (&root_task_group.css)->flags: 1, CSS_ONLINE: 2
 		// css->flags: (&root_cpuacct.css)->flags: 1, CSS_ONLINE: 2
 		// css->flags: (kmem_cache#30-oX (struct cgroup_subsys_state))->flags: 1, CSS_ONLINE: 2
+		// css->flags: (&(kmem_cache#29-oX (struct freezer))->css)->flags: 1, CSS_ONLINE: 2
 		css->flags |= CSS_ONLINE;
 		// css->flags: (&root_task_group.css)->flags: 0x3
 		// css->flags: (&root_cpuacct.css)->flags: 0x3
 		// css->flags: (kmem_cache#30-oX (struct cgroup_subsys_state))->flags: 0x3
+		// css->flags: (&(kmem_cache#29-oX (struct freezer))->css)->flags: 0x3
 
 		// css->cgroup: (&root_task_group.css)->cgroup: &cgroup_dummy_root.top_cgroup
 		// css->cgroup->nr_css: (&cgroup_dummy_root.top_cgroup)->nr_css: 0
@@ -4615,10 +4663,13 @@ static int online_css(struct cgroup_subsys_state *css)
 		// css->cgroup->nr_css: (&cgroup_dummy_root.top_cgroup)->nr_css: 1
 		// css->cgroup: (kmem_cache#30-oX (struct cgroup_subsys_state))->cgroup: &cgroup_dummy_root.top_cgroup
 		// css->cgroup->nr_css: (&cgroup_dummy_root.top_cgroup)->nr_css: 2
+		// css->cgroup: (&(kmem_cache#29-oX (struct freezer))->css)->cgroup: &cgroup_dummy_root.top_cgroup
+		// css->cgroup->nr_css: (&cgroup_dummy_root.top_cgroup)->nr_css: 3
 		css->cgroup->nr_css++;
 		// css->cgroup->nr_css: (&cgroup_dummy_root.top_cgroup)->nr_css: 1
 		// css->cgroup->nr_css: (&cgroup_dummy_root.top_cgroup)->nr_css: 2
 		// css->cgroup->nr_css: (&cgroup_dummy_root.top_cgroup)->nr_css: 3
+		// css->cgroup->nr_css: (&cgroup_dummy_root.top_cgroup)->nr_css: 4
 
 		// ss->subsys_id: (&cpu_cgroup_subsys)->subsys_id: 1,
 		// css->cgroup: (&root_task_group.css)->cgroup: &cgroup_dummy_root.top_cgroup
@@ -4627,8 +4678,11 @@ static int online_css(struct cgroup_subsys_state *css)
 		// css->cgroup: (&root_cpuacct.css)->cgroup: &cgroup_dummy_root.top_cgroup
 		// css->cgroup->subsys: (&cgroup_dummy_root.top_cgroup)->subsys[2], css: &root_cpuacct.css
 		// ss->subsys_id: (&debug_subsys)->subsys_id: 0,
-		// css->cgroup: (&root_cpuacct.css)->cgroup: &cgroup_dummy_root.top_cgroup
+		// css->cgroup: (kmem_cache#30-oX (struct cgroup_subsys_state))->cgroup: &cgroup_dummy_root.top_cgroup
 		// css->cgroup->subsys: (&cgroup_dummy_root.top_cgroup)->subsys[0], css: kmem_cache#30-oX (struct cgroup_subsys_state)
+		// ss->subsys_id: (&freezer_subsys)->subsys_id: 3,
+		// css->cgroup: (&(kmem_cache#29-oX (struct freezer))->css)->cgroup: &cgroup_dummy_root.top_cgroup
+		// css->cgroup->subsys: (&cgroup_dummy_root.top_cgroup)->subsys[3], css: &(kmem_cache#29-oX (struct freezer))->css
 		rcu_assign_pointer(css->cgroup->subsys[ss->subsys_id], css);
 
 		// rcu_assign_pointer에서 한일:
@@ -4639,12 +4693,17 @@ static int online_css(struct cgroup_subsys_state *css)
 
 		// rcu_assign_pointer에서 한일:
 		// css->cgroup->nr_css: (&cgroup_dummy_root.top_cgroup)->subsys[0]: kmem_cache#30-oX (struct cgroup_subsys_state)
+
+		// rcu_assign_pointer에서 한일:
+		// css->cgroup->nr_css: (&cgroup_dummy_root.top_cgroup)->subsys[3]: &(kmem_cache#29-oX (struct freezer))->css
 	}
 
 	// ret: 0
 	// ret: 0
 	// ret: 0
+	// ret: 0
 	return ret;
+	// return 0
 	// return 0
 	// return 0
 	// return 0
@@ -5311,32 +5370,32 @@ static void __init cgroup_init_subsys(struct cgroup_subsys *ss)
 	// ss->css_alloc: (&freezer_subsys)->css_alloc: freezer_css_alloc
 	// cgroup_dummy_top: &cgroup_dummy_root.top_cgroup, ss: &freezer_subsys
 	// cgroup_css(&cgroup_dummy_root.top_cgroup, &freezer_subsys): (&cgroup_dummy_root.top_cgroup)->subsys[3]
-	// freezer_css_alloc((&cgroup_dummy_root.top_cgroup)->subsys[3]): &(kmem_cache#29-o0 (struct freezer))->css
+	// freezer_css_alloc((&cgroup_dummy_root.top_cgroup)->subsys[3]): &(kmem_cache#29-oX (struct freezer))->css
 	css = ss->css_alloc(cgroup_css(cgroup_dummy_top, ss));
 	// css: &root_task_group.css
 	// css: &root_cpuacct.css
 	// css: kmem_cache#30-oX (struct cgroup_subsys_state)
-	// css: &(kmem_cache#29-o0 (struct freezer))->css
+	// css: &(kmem_cache#29-oX (struct freezer))->css
 
 	// freezer_css_alloc 에서 한일:
-	// struct freezer 만큼 메모리를 할당 받음 kmem_cache#29-o0 (struct freezer)
+	// struct freezer 만큼 메모리를 할당 받음 kmem_cache#29-oX (struct freezer)
 	//
-	// (&(kmem_cache#29-o0 (struct freezer))->lock)->raw_lock: { { 0 } }
-	// (&(kmem_cache#29-o0 (struct freezer))->lock)->magic: 0xdead4ead
-	// (&(kmem_cache#29-o0 (struct freezer))->lock)->owner: 0xffffffff
-	// (&(kmem_cache#29-o0 (struct freezer))->lock)->owner_cpu: 0xffffffff
+	// (&(kmem_cache#29-oX (struct freezer))->lock)->raw_lock: { { 0 } }
+	// (&(kmem_cache#29-oX (struct freezer))->lock)->magic: 0xdead4ead
+	// (&(kmem_cache#29-oX (struct freezer))->lock)->owner: 0xffffffff
+	// (&(kmem_cache#29-oX (struct freezer))->lock)->owner_cpu: 0xffffffff
 
 	/* We don't handle early failures gracefully */
 	// css: &root_task_group.css, IS_ERR(&root_task_group.css): 0
 	// css: &root_cpuacct.css, IS_ERR(&root_cpuacct.css): 0
 	// css: kmem_cache#30-oX (struct cgroup_subsys_state), IS_ERR(kmem_cache#30-oX (struct cgroup_subsys_state)): 0
-	// css: &(kmem_cache#29-o0 (struct freezer))->css, IS_ERR(&(kmem_cache#29-o0 (struct freezer))->css): 0
+	// css: &(kmem_cache#29-oX (struct freezer))->css, IS_ERR(&(kmem_cache#29-oX (struct freezer))->css): 0
 	BUG_ON(IS_ERR(css));
 
 	// css: &root_task_group.css, ss: &cpu_cgroup_subsys, cgroup_dummy_top: &cgroup_dummy_root.top_cgroup
 	// css: &root_cpuacct.css, ss: &cpuacct_subsys, cgroup_dummy_top: &cgroup_dummy_root.top_cgroup
 	// css: kmem_cache#30-oX (struct cgroup_subsys_state), ss: &debug_subsys, cgroup_dummy_top: &cgroup_dummy_root.top_cgroup
-	// css: &(kmem_cache#29-o0 (struct freezer))->css, ss: &freezer_subsys, cgroup_dummy_top: &cgroup_dummy_root.top_cgroup
+	// css: &(kmem_cache#29-oX (struct freezer))->css, ss: &freezer_subsys, cgroup_dummy_top: &cgroup_dummy_root.top_cgroup
 	init_css(css, ss, cgroup_dummy_top);
 
 	// init_css(&root_task_group.css)에서 한일:
@@ -5355,9 +5414,9 @@ static void __init cgroup_init_subsys(struct cgroup_subsys *ss)
 	// (kmem_cache#30-oX (struct cgroup_subsys_state))->flags: 1
 
 	// init_css(&(kmem_cache#29-o0 (struct freezer))->css)에서 한일:
-	// (&(kmem_cache#29-o0 (struct freezer))->css)->cgroup: &cgroup_dummy_root.top_cgroup
-	// (&(kmem_cache#29-o0 (struct freezer))->css)->ss: &freezer_subsys
-	// (&(kmem_cache#29-o0 (struct freezer))->css)->flags: 1
+	// (&(kmem_cache#29-oX (struct freezer))->css)->cgroup: &cgroup_dummy_root.top_cgroup
+	// (&(kmem_cache#29-oX (struct freezer))->css)->ss: &freezer_subsys
+	// (&(kmem_cache#29-oX (struct freezer))->css)->flags: 1
 
 	/* Update the init_css_set to contain a subsys
 	 * pointer to this state - since the subsystem is
@@ -5366,12 +5425,12 @@ static void __init cgroup_init_subsys(struct cgroup_subsys *ss)
 	// ss->subsys_id: (&cpu_cgroup_subsys)->subsys_id: 1, css: &root_task_group.css
 	// ss->subsys_id: (&cpuacct_subsys)->subsys_id: 2, css: &root_cpuacct.css
 	// ss->subsys_id: (&cpuacct_subsys)->subsys_id: 0, css: kmem_cache#30-oX (struct cgroup_subsys_state)
-	// ss->subsys_id: (&freezer_subsys)->subsys_id: 3, css: &(kmem_cache#29-o0 (struct freezer))->css
+	// ss->subsys_id: (&freezer_subsys)->subsys_id: 3, css: &(kmem_cache#29-oX (struct freezer))->css
 	init_css_set.subsys[ss->subsys_id] = css;
 	// init_css_set.subsys[1]: &root_task_group.css
 	// init_css_set.subsys[2]: &root_cpuacct.css
 	// init_css_set.subsys[0]: kmem_cache#30-oX (struct cgroup_subsys_state)
-	// init_css_set.subsys[3]: &(kmem_cache#29-o0 (struct freezer))->css
+	// init_css_set.subsys[3]: &(kmem_cache#29-oX (struct freezer))->css
 
 	// need_forkexit_callback: 0, ss->fork: (&cpu_cgroup_subsys)->fork: NULL, ss->exit: (&cpu_cgroup_subsys)->exit: cpu_cgroup_exit
 	// need_forkexit_callback: 1, ss->fork: (&cpuacct_subsys)->fork: NULL, ss->exit: (&cpuacct_subsys)->exit: NULL
@@ -5395,8 +5454,7 @@ static void __init cgroup_init_subsys(struct cgroup_subsys *ss)
 	// css: &root_task_group.css, online_css(&root_task_group.css): 0
 	// css: &root_cpuacct.css, online_css(&root_cpuacct.css): 0
 	// css: kmem_cache#30-oX (struct cgroup_subsys_state), online_css(kmem_cache#30-oX (struct cgroup_subsys_state)): 0
-	//
-	// css: &(kmem_cache#29-o0 (struct freezer))->css, online_css(&(kmem_cache#29-o0 (struct freezer))->css): 0
+	// css: &(kmem_cache#29-oX (struct freezer))->css, online_css(&(kmem_cache#29-oX (struct freezer))->css): 0
 	BUG_ON(online_css(css));
 
 	// online_css(&root_task_group.css)에서 한일:
@@ -5414,7 +5472,16 @@ static void __init cgroup_init_subsys(struct cgroup_subsys *ss)
 	// (&cgroup_dummy_root.top_cgroup)->nr_css: 3
 	// (&cgroup_dummy_root.top_cgroup)->subsys[0]: kmem_cache#30-oX (struct cgroup_subsys_state)
 
+	// online_css(&(kmem_cache#29-oX (struct freezer))->css)에서 한일:
+	// (kmem_cache#29-oX (struct freezer))->state: 1
+	// (&(kmem_cache#29-oX (struct freezer))->css)->flags: 0x3
+	// (&cgroup_dummy_root.top_cgroup)->nr_css: 4
+	// (&cgroup_dummy_root.top_cgroup)->subsys[3]: &(kmem_cache#29-oX (struct freezer))->css
+
 	mutex_unlock(&cgroup_mutex);
+
+	// mutex_unlock에서 한일:
+	// &cgroup_mutex 을 사용하여 mutex unlock을 수행
 
 	// mutex_unlock에서 한일:
 	// &cgroup_mutex 을 사용하여 mutex unlock을 수행
@@ -5430,6 +5497,7 @@ static void __init cgroup_init_subsys(struct cgroup_subsys *ss)
 	// ss->module: (&cpu_cgroup_subsys)->module: NULL
 	// ss->module: (&cpuacct_subsys)->module: NULL
 	// ss->module: (&debug_subsys)->module: NULL
+	// ss->module: (&freezer_subsys)->module: NULL
 	BUG_ON(ss->module);
 }
 
@@ -5908,7 +5976,7 @@ int __init cgroup_init(void)
 	if (err)
 		return err;
 
-	// CGROUP_BUILTIN_SUBSYS_COUNT: 4,  
+	// CGROUP_BUILTIN_SUBSYS_COUNT: 4
 	for_each_builtin_subsys(ss, i) {
 	// for ((i) = 0; (i) < CGROUP_BUILTIN_SUBSYS_COUNT && (((ss) = cgroup_subsys[i]) || true); (i)++)
 
@@ -5950,14 +6018,63 @@ int __init cgroup_init(void)
 			// (kmem_cache#30-oX (struct cgroup_subsys_state))->flags: 0x3
 			// (&cgroup_dummy_root.top_cgroup)->nr_css: 3
 			// (&cgroup_dummy_root.top_cgroup)->subsys[0]: kmem_cache#30-oX (struct cgroup_subsys_state)
+
+			// cgroup_init_subsys(&freezer_subsys) 에서 한일:
+			// (&(&freezer_subsys)->cftsets)->next: &(&freezer_subsys)->cftsets
+			// (&(&freezer_subsys)->cftsets)->prev: &(&freezer_subsys)->cftsets
+			//
+			// (&files[0])->ss: &freezer_subsys
+			// (&files[1])->ss: &freezer_subsys
+			// (&files[2])->ss: &freezer_subsys
+			// (&freezer_subsys)->base_cftset.cfts: files
+			//
+			// HEAD list인 &(&freezer_subsys)->cftsets에 &(&freezer_subsys)->base_cftset.node을 tail에 추가
+			//
+			// HEAD list인 &cgroup_dummy_root.subsys_list에 &(&freezer_subsys)->sibling을 추가
+			// (&freezer_subsys)->root: &cgroup_dummy_root
+			//
+			// struct freezer 만큼 메모리를 할당 받음 kmem_cache#29-oX (struct freezer)
+			//
+			// (&(kmem_cache#29-oX (struct freezer))->lock)->raw_lock: { { 0 } }
+			// (&(kmem_cache#29-oX (struct freezer))->lock)->magic: 0xdead4ead
+			// (&(kmem_cache#29-oX (struct freezer))->lock)->owner: 0xffffffff
+			// (&(kmem_cache#29-oX (struct freezer))->lock)->owner_cpu: 0xffffffff
+			//
+			// (&(kmem_cache#29-oX (struct freezer))->css)->cgroup: &cgroup_dummy_root.top_cgroup
+			// (&(kmem_cache#29-oX (struct freezer))->css)->ss: &freezer_subsys
+			// (&(kmem_cache#29-oX (struct freezer))->css)->flags: 1
+			//
+			// init_css_set.subsys[3]: &(kmem_cache#29-oX (struct freezer))->css
+			//
+			// need_forkexit_callback: 1
+			//
+			// (kmem_cache#29-oX (struct freezer))->state: 1
+			// (&(kmem_cache#29-oX (struct freezer))->css)->flags: 0x3
+			// (&cgroup_dummy_root.top_cgroup)->nr_css: 4
+			// (&cgroup_dummy_root.top_cgroup)->subsys[3]: &(kmem_cache#29-oX (struct freezer))->css
 	}
 
 	/* allocate id for the dummy hierarchy */
 	mutex_lock(&cgroup_mutex);
+
+	// mutex_lock에서 한일:
+	// &cgroup_mutex 을 사용하여 mutex lock을 수행
+
 	mutex_lock(&cgroup_root_mutex);
 
+	// mutex_lock에서 한일:
+	// &cgroup_root_mutex 을 사용하여 mutex lock을 수행
+
 	/* Add init_css_set to the hash table */
+	// css_set_hash(init_css_set.subsys): 0xXXXXXXXX
 	key = css_set_hash(init_css_set.subsys);
+	// key: 0xXXXXXXXX
+
+	// css_set_hash 에서 한일:
+	// init_css_set.subsys 를 이용하여 hash key 값 생성, key: 0xXXXXXXXX
+
+// 2016/07/23 종료
+
 	hash_add(css_set_table, &init_css_set.hlist, key);
 
 	BUG_ON(cgroup_init_root_id(&cgroup_dummy_root, 0, 1));

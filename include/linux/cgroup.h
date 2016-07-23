@@ -52,6 +52,7 @@ extern int proc_cgroup_show(struct seq_file *, void *);
 #define SUBSYS(_x) _x ## _subsys_id,
 // ARM10C 20150822
 // ARM10C 20160716
+// ARM10C 20160723
 //
 // cgroup_subsys.h 의 config를 IS_BUILTIN(option) 확장한 결과:
 // SUBSYS(debug): debug_subsys_id,
@@ -386,6 +387,7 @@ struct cgroupfs_root {
 
 // ARM10C 20150808
 // ARM10C 20150919
+// ARM10C 20160723
 struct css_set {
 
 	/* Reference count */
@@ -415,6 +417,7 @@ struct css_set {
 	 * during subsystem registration (at boot time) and modular subsystem
 	 * loading/unloading.
 	 */
+	// CGROUP_SUBSYS_COUNT: 4
 	struct cgroup_subsys_state *subsys[CGROUP_SUBSYS_COUNT];
 
 	/* For RCU-protected deletion */
@@ -628,6 +631,7 @@ int cgroup_taskset_size(struct cgroup_taskset *tset);
 // ARM10C 20150808
 // ARM10C 20150822
 // ARM10C 20160716
+// ARM10C 20160723
 struct cgroup_subsys {
 	struct cgroup_subsys_state *(*css_alloc)(struct cgroup_subsys_state *parent_css);
 	int (*css_online)(struct cgroup_subsys_state *css);
@@ -703,11 +707,15 @@ struct cgroup_subsys {
  */
 // ARM10C 20150822
 // css: &root_task_group.css
+// ARM10C 20160723
+// &freezer->css: &(kmem_cache#29-oX (struct freezer))->css
 static inline
 struct cgroup_subsys_state *css_parent(struct cgroup_subsys_state *css)
 {
 	// css->parent: (&root_task_group.css)->parent: NULL
+	// css->parent: (&(kmem_cache#29-oX (struct freezer))->css)->parent: NULL
 	return css->parent;
+	// return NULL
 	// return NULL
 }
 
