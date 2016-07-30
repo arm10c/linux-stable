@@ -30,10 +30,12 @@
 #define IDR_BITS 8
 // ARM10C 20140920
 // ARM10C 20151107
+// ARM10C 20160730
 // IDR_BITS: 8
 // IDR_SIZE: 0x100
 #define IDR_SIZE (1 << IDR_BITS)
 // ARM10C 20151107
+// ARM10C 20160730
 // IDR_BITS: 8
 // IDR_MASK: 0xFF
 #define IDR_MASK ((1 << IDR_BITS)-1)
@@ -57,6 +59,7 @@ struct idr_layer {
 
 // ARM10C 20150808
 // ARM10C 20151031
+// ARM10C 20160730
 // sizeof(struct idr): 40 bytes
 struct idr {
 	struct idr_layer __rcu	*hint;	/* the last layer allocated from */
@@ -93,10 +96,53 @@ struct idr {
 //          }
 //      } },
 // }
+// ARM10C 20160730
+// #define IDR_INIT(cgroup_hierarchy_idr):
+// {
+//      .lock =
+//      (spinlock_t )
+//      { { .rlock =
+//          {
+//            .raw_lock = { { 0 } },
+//            .magic = 0xdead4ead,
+//            .owner_cpu = -1,
+//            .owner = 0xffffffff,
+//          }
+//      } },
+// }
 #define IDR_INIT(name)							\
 {									\
 	.lock			= __SPIN_LOCK_UNLOCKED(name.lock),	\
 }
+// ARM10C 20160730
+// IDR_INIT(cgroup_hierarchy_idr):
+// {
+//      .lock =
+//      (spinlock_t )
+//      { { .rlock =
+//          {
+//            .raw_lock = { { 0 } },
+//            .magic = 0xdead4ead,
+//            .owner_cpu = -1,
+//            .owner = 0xffffffff,
+//          }
+//      } },
+// }
+//
+// #define DEFINE_IDR(cgroup_hierarchy_idr):
+// struct idr name =
+// {
+//      .lock =
+//      (spinlock_t )
+//      { { .rlock =
+//          {
+//            .raw_lock = { { 0 } },
+//            .magic = 0xdead4ead,
+//            .owner_cpu = -1,
+//            .owner = 0xffffffff,
+//          }
+//      } },
+// }
 #define DEFINE_IDR(name)	struct idr name = IDR_INIT(name)
 
 /**

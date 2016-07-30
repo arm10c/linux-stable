@@ -110,6 +110,8 @@ static inline void atomic_add(int i, atomic_t *v)
 
 // ARM10C 20160319
 // LAST_INO_BATCH: 1024, &shared_last_ino
+// ARM10C 20160730
+// 1, &kref->refcount: &(&(kmem_cache#30-oX (struct kobject) (fs))->kref)->refcount
 static inline int atomic_add_return(int i, atomic_t *v)
 {
 	unsigned long tmp;
@@ -303,6 +305,8 @@ static inline int __atomic_add_unless(atomic_t *v, int a, int u)
 // ARM10C 20160409
 // &running_helpers
 #define atomic_dec_and_test(v)	(atomic_sub_return(1, v) == 0)
+// ARM10C 20160730
+// &kref->refcount: &(&(kmem_cache#30-oX (struct kobject) (fs))->kref)->refcount
 #define atomic_inc_return(v)    (atomic_add_return(1, v))
 #define atomic_dec_return(v)    (atomic_sub_return(1, v))
 #define atomic_sub_and_test(i, v) (atomic_sub_return(i, v) == 0)

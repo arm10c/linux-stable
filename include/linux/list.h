@@ -977,6 +977,7 @@ static inline void list_splice_tail_init(struct list_head *list,
  * You lose the ability to access the tail in O(1).
  */
 
+// ARM10C 20160730
 #define HLIST_HEAD_INIT { .first = NULL }
 #define HLIST_HEAD(name) struct hlist_head name = {  .first = NULL }
 // ARM10C 20151031
@@ -1098,6 +1099,8 @@ static inline void hlist_del_init(struct hlist_node *n)
 // &inode->i_hash: &(kmem_cache#4-oX)->i_hash, head: 256KB의 메모리 공간 + 계산된 hash index 값
 // ARM10C 20151219
 // &dentry->d_alias: (kmem_cache#5-oX)->d_alias, &inode->i_dentry: &(kmem_cache#4-oX)->i_dentry
+// ARM10C 20160730
+// &init_css_set.hlist, &css_set_table[계산된 hash index 값]
 static inline void hlist_add_head(struct hlist_node *n, struct hlist_head *h)
 {
 	// h->first: (&clk_root_list)->first: NULL

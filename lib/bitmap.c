@@ -55,18 +55,32 @@ int __bitmap_empty(const unsigned long *bitmap, int bits)
 }
 EXPORT_SYMBOL(__bitmap_empty);
 
+// ARM10C 20160730
+// src: (kmem_cache#21-oX (struct idr_layer) (idr object 8))->bitmap, nbit: 0x100
 int __bitmap_full(const unsigned long *bitmap, int bits)
 {
+	// bits: 0x100, BITS_PER_LONG: 32
 	int k, lim = bits/BITS_PER_LONG;
+	// lim: 8
+
+	// lim: 8
 	for (k = 0; k < lim; ++k)
+		// k: 0, bitmap[0]: (kmem_cache#21-oX (struct idr_layer) (idr object 8))->bitmap[0]
 		if (~bitmap[k])
 			return 0;
 
+		// k: 1...7 수행
+	
+	// 위 loop에서 한일:
+	// (kmem_cache#21-oX (struct idr_layer) (idr object 8))->bitmap 값이 1로 setting 되어 있는지 확인
+
+	// bits: 0x100, BITS_PER_LONG: 32
 	if (bits % BITS_PER_LONG)
 		if (~bitmap[k] & BITMAP_LAST_WORD_MASK(bits))
 			return 0;
 
 	return 1;
+	// return 1
 }
 EXPORT_SYMBOL(__bitmap_full);
 

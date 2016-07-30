@@ -40,6 +40,7 @@ typedef __kernel_mode_t		mode_t;
 // ARM10C 20160116
 // ARM10C 20160319
 // ARM10C 20160604
+// ARM10C 20160730
 typedef unsigned short		umode_t;
 // ARM10C 20160604
 typedef __u32			nlink_t;
@@ -266,6 +267,7 @@ struct list_head {
 // ARM10C 20140322
 // ARM10C 20151024
 // ARM10C 20151121
+// ARM10C 20160730
 // sizeof(struct hlist_head): 4 bytes
 struct hlist_head {
 	struct hlist_node *first;

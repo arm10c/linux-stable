@@ -175,6 +175,8 @@ extern int bitmap_ord_to_pos(const unsigned long *bitmap, int n, int bits);
 // ARM10C 20141004
 // ARM10C 20150418
 // ARM10C 20150523
+// ARM10C 20160730
+// nbits: 0x100
 #define small_const_nbits(nbits) \
 	(__builtin_constant_p(nbits) && (nbits) <= BITS_PER_LONG)
 
@@ -347,12 +349,21 @@ static inline int bitmap_empty(const unsigned long *src, int nbits)
 		return __bitmap_empty(src, nbits);
 }
 
+// ARM10C 20160730
+// p->bitmap: (kmem_cache#21-oX (struct idr_layer) (idr object 8))->bitmap, IDR_SIZE: 0x100
 static inline int bitmap_full(const unsigned long *src, int nbits)
 {
+	// nbits: 0x100, small_const_nbits(0x100): 0
 	if (small_const_nbits(nbits))
 		return ! (~(*src) & BITMAP_LAST_WORD_MASK(nbits));
 	else
+		// src: (kmem_cache#21-oX (struct idr_layer) (idr object 8))->bitmap, nbit: 0x100
+		// __bitmap_full((kmem_cache#21-oX (struct idr_layer) (idr object 8))->bitmap, 0x100): 1
 		return __bitmap_full(src, nbits);
+		// return 1
+
+		// __bitmap_full 에서 한일:
+		// (kmem_cache#21-oX (struct idr_layer) (idr object 8))->bitmap 값이 1로 setting 되어 있는지 확인
 }
 
 // ARM10C 20140215

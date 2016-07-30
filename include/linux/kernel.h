@@ -69,6 +69,8 @@
 // ARM10C 20140301
 // ARM10C 20140719
 // ARM10C 20141004
+// ARM10C 20160730
+// css_set_table
 #define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]) + __must_be_array(arr))
 
 /*
@@ -215,6 +217,7 @@ extern int _cond_resched(void);
 // ARM10C 20140920
 // ARM10C 20150704
 // ARM10C 20151114
+// ARM10C 20160730
 // might_resched(): NULL function
 # define might_sleep() do { might_resched(); } while (0)
 #endif
@@ -224,6 +227,8 @@ extern int _cond_resched(void);
 // ARM10C 20140628
 // ARM10C 20140705
 // ARM10C 20140719
+// ARM10C 20160730
+// 0x10u
 #define might_sleep_if(cond) do { if (cond) might_sleep(); } while (0)
 
 /*

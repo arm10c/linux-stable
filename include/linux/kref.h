@@ -46,13 +46,20 @@ static inline void kref_init(struct kref *kref)
  * kref_get - increment refcount for object.
  * @kref: object.
  */
+// ARM10C 20160730
+// &kobj->kref: &(kmem_cache#30-oX (struct kobject) (fs))->kref
 static inline void kref_get(struct kref *kref)
 {
 	/* If refcount was 0 before incrementing then we have a race
 	 * condition when this kref is freeing by some other thread right now.
 	 * In this case one should use kref_get_unless_zero()
 	 */
+	// &kref->refcount: &(&(kmem_cache#30-oX (struct kobject) (fs))->kref)->refcount
+	// atomic_inc_return(&(&(kmem_cache#30-oX (struct kobject) (fs))->kref)->refcount): 1
 	WARN_ON_ONCE(atomic_inc_return(&kref->refcount) < 2);
+
+	// atomic_inc_return 에서 한일::
+	// (&(kmem_cache#30-oX (struct kobject) (fs))->kref)->refcount: 1
 }
 
 /**

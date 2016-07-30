@@ -116,6 +116,7 @@ struct vm_area_struct;
 // ARM10C 20140614
 // ARM10C 20141004
 // ARM10C 20151003
+// ARM10C 20160730
 // ___GFP_WAIT: 0x10u
 // __GFP_WAIT: 0x10u
 #define __GFP_WAIT	((__force gfp_t)___GFP_WAIT)	/* Can wait and reschedule? */
@@ -138,6 +139,7 @@ struct vm_area_struct;
 // __GFP_COLD: 0x100u
 #define __GFP_COLD	((__force gfp_t)___GFP_COLD)	/* Cache-cold page required */
 // ARM10C 20140426
+// ARM10C 20160730
 // ___GFP_NOWARN: 0x200u
 // __GFP_NOWARN: 0x200u
 #define __GFP_NOWARN	((__force gfp_t)___GFP_NOWARN)	/* Suppress page allocation failure warning */
@@ -285,6 +287,7 @@ struct vm_area_struct;
 // ARM10C 20160625
 // ARM10C 20160702
 // ARM10C 20160716
+// ARM10C 20160730
 // __GFP_WAIT: 0x10
 // __GFP_IO: 0x40
 // __GFP_FS: 0x80

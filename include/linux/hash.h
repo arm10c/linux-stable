@@ -71,6 +71,8 @@ static __always_inline u64 hash_64(u64 val, unsigned int bits)
 // zone->wait_table_bits: (&(kmem_cache#4-oX)->i_state의 zone의 주소)->wait_table_bits
 // ARM10C 20160116
 // ptr: NULL, bits: 31
+// ARM10C 20160730
+// hash_min(0xXXXXXXXX, 7)
 static inline u32 hash_32(u32 val, unsigned int bits)
 {
 	/* On some cpus multiply is faster, on others gcc will do shifts */

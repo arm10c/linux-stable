@@ -328,6 +328,8 @@ static void sysfs_deactivate(struct sysfs_dirent *sd)
 
 // ARM10C 20160116
 // &sd->s_ino: &(kmem_cache#1-oX (struct sysfs_dirent))->s_ino
+// ARM10C 20160730
+// &sd->s_ino: &(kmem_cache#1-oX (struct sysfs_dirent))->s_ino
 static int sysfs_alloc_ino(unsigned int *pino)
 {
 	int ino, rc;
@@ -341,11 +343,16 @@ static int sysfs_alloc_ino(unsigned int *pino)
 	// [re] spin_lock에서 한일:
 	// &sysfs_ino_lock을 사용하여 spin lock을 수행
 
+	// spin_lock에서 한일:
+	// &sysfs_ino_lock을 사용하여 spin lock을 수행
+
 	// ida_get_new_above(&sysfs_ino_ida, 2, &ino): -11
 	// [re] ida_get_new_above(&sysfs_ino_ida, 2, &ino): 0
+	// ida_get_new_above(&sysfs_ino_ida, 2, &ino): 0
 	rc = ida_get_new_above(&sysfs_ino_ida, 2, &ino);
 	// rc: -11
 	// [re] rc: 0
+	// rc: 0
 
 	// ida_get_new_above에서 한일:
 	// (&(&sysfs_ino_ida)->idr)->id_free: NULL 이므로 -11 을 리턴함
@@ -364,8 +371,22 @@ static int sysfs_alloc_ino(unsigned int *pino)
 	// (&sysfs_ino_ida)->free_bitmap: NULL
 	// kmem_cache#27-oX (struct ida_bitmap) 메모리을 0으로 초기화
 	// (kmem_cache#27-oX (struct ida_bitmap))->bitmap 의 2 bit를 1로 set 수행
+	// (kmem_cache#27-oX (struct ida_bitmap))->nr_busy: 1
 	//
 	// ino: 2
+	//
+	// kmem_cache인 kmem_cache#21 에서 할당한 object인 kmem_cache#21-oX (idr object 7) 의 memory 공간을 반환함
+
+	// ida_get_new_above에서 한일:
+	// (&(&sysfs_ino_ida)->idr)->top: kmem_cache#21-oX (struct idr_layer) (idr object 8)
+	// (&(&sysfs_ino_ida)->idr)->layers: 1
+	// (&(&sysfs_ino_ida)->idr)->id_free: (idr object new 0)
+	// (&(&sysfs_ino_ida)->idr)->id_free_cnt: 7
+	//
+	// (kmem_cache#27-oX (struct ida_bitmap))->bitmap 의 3 bit를 1로 set 수행
+	// (kmem_cache#27-oX (struct ida_bitmap))->nr_busy: 2
+	//
+	// ino: 3
 	//
 	// kmem_cache인 kmem_cache#21 에서 할당한 object인 kmem_cache#21-oX (idr object 7) 의 memory 공간을 반환함
 
@@ -377,8 +398,12 @@ static int sysfs_alloc_ino(unsigned int *pino)
 	// [re] spin_unlock에서 한일:
 	// &sysfs_ino_lock을 사용하여 spin unlock을 수행
 
+	// spin_unlock에서 한일:
+	// &sysfs_ino_lock을 사용하여 spin unlock을 수행
+
 	// rc: -11, EAGAIN: 11
 	// [re] rc: 0, EAGAIN: 11
+	// rc: 0, EAGAIN: 11
 	if (rc == -EAGAIN) {
 		// GFP_KERNEL: 0xD0
 		// ida_pre_get(&sysfs_ino_ida, 0xD0): 1
@@ -408,12 +433,16 @@ static int sysfs_alloc_ino(unsigned int *pino)
 
 
 	// [re] *pino: *(&(kmem_cache#1-oX (struct sysfs_dirent))->s_ino), ino: 2
+	// *pino: *(&(kmem_cache#1-oX (struct sysfs_dirent))->s_ino), ino: 3
 	*pino = ino;
 	// [re] *pino: *(&(kmem_cache#1-oX (struct sysfs_dirent))->s_ino): 2
+	// *pino: *(&(kmem_cache#1-oX (struct sysfs_dirent))->s_ino): 3
 
 	// [re] rc: 0
+	// rc: 0
 	return rc;
 	// [re] return 0
+	// return 0
 }
 
 static void sysfs_free_ino(unsigned int ino)
@@ -531,13 +560,17 @@ const struct dentry_operations sysfs_dentry_ops = {
 
 // ARM10C 20160116
 // name: "fs", mode: 0x41ED, SYSFS_DIR: 0x0001
+// ARM10C 20160730
+// name: "cgroup", mode: 0x41ED, SYSFS_DIR: 0x0001
 struct sysfs_dirent *sysfs_new_dirent(const char *name, umode_t mode, int type)
 {
 	char *dup_name = NULL;
 	// dup_name: NULL
+	// dup_name: NULL
 
 	struct sysfs_dirent *sd;
 
+	// type: 0x0001, SYSFS_COPY_NAME: 0x9
 	// type: 0x0001, SYSFS_COPY_NAME: 0x9
 	if (type & SYSFS_COPY_NAME) {
 		name = dup_name = kstrdup(name, GFP_KERNEL);
@@ -547,9 +580,13 @@ struct sysfs_dirent *sysfs_new_dirent(const char *name, umode_t mode, int type)
 
 	// sysfs_dir_cachep: kmem_cache#1, GFP_KERNEL: 0xD0
 	// kmem_cache_zalloc(kmem_cache#1, GFP_KERNEL: 0xD0): kmem_cache#1-oX (struct sysfs_dirent)
+	// sysfs_dir_cachep: kmem_cache#1, GFP_KERNEL: 0xD0
+	// kmem_cache_zalloc(kmem_cache#1, GFP_KERNEL: 0xD0): kmem_cache#1-oX (struct sysfs_dirent)
 	sd = kmem_cache_zalloc(sysfs_dir_cachep, GFP_KERNEL);
 	// sd: kmem_cache#1-oX (struct sysfs_dirent)
+	// sd: kmem_cache#1-oX (struct sysfs_dirent)
 
+	// sd: kmem_cache#1-oX (struct sysfs_dirent)
 	// sd: kmem_cache#1-oX (struct sysfs_dirent)
 	if (!sd)
 		goto err_out1;
@@ -557,6 +594,8 @@ struct sysfs_dirent *sysfs_new_dirent(const char *name, umode_t mode, int type)
 // 2016/02/27 종료
 // 2016/03/05 시작
 
+	// &sd->s_ino: &(kmem_cache#1-oX (struct sysfs_dirent))->s_ino
+	// sysfs_alloc_ino(&(kmem_cache#1-oX (struct sysfs_dirent))->s_ino): 0
 	// &sd->s_ino: &(kmem_cache#1-oX (struct sysfs_dirent))->s_ino
 	// sysfs_alloc_ino(&(kmem_cache#1-oX (struct sysfs_dirent))->s_ino): 0
 	if (sysfs_alloc_ino(&sd->s_ino))
@@ -597,32 +636,61 @@ struct sysfs_dirent *sysfs_new_dirent(const char *name, umode_t mode, int type)
 	//
 	// (kmem_cache#1-oX (struct sysfs_dirent))->s_ino: 2
 
+	// sysfs_alloc_ino에서 한일:
+	// (&(&sysfs_ino_ida)->idr)->top: kmem_cache#21-oX (struct idr_layer) (idr object 8)
+	// (&(&sysfs_ino_ida)->idr)->layers: 1
+	// (&(&sysfs_ino_ida)->idr)->id_free: (idr object new 0)
+	// (&(&sysfs_ino_ida)->idr)->id_free_cnt: 7
+	//
+	// (kmem_cache#27-oX (struct ida_bitmap))->bitmap 의 3 bit를 1로 set 수행
+	// (kmem_cache#27-oX (struct ida_bitmap))->nr_busy: 2
+	//
+	// kmem_cache인 kmem_cache#21 에서 할당한 object인 kmem_cache#21-oX (idr object 7) 의 memory 공간을 반환함
+	//
+	// *(&(kmem_cache#1-oX (struct sysfs_dirent))->s_ino): 3
+
+	// &sd->s_count,: &(kmem_cache#1-oX (struct sysfs_dirent))->s_count
 	// &sd->s_count,: &(kmem_cache#1-oX (struct sysfs_dirent))->s_count
 	atomic_set(&sd->s_count, 1);
 
 	// atomic_set에서 한일:
 	// &sd->s_count,: (&(kmem_cache#1-oX (struct sysfs_dirent))->s_count)->counter: 1
 
+	// atomic_set에서 한일:
+	// &sd->s_count,: (&(kmem_cache#1-oX (struct sysfs_dirent))->s_count)->counter: 1
+
+	// &sd->s_active,: &(kmem_cache#1-oX (struct sysfs_dirent))->s_active
 	// &sd->s_active,: &(kmem_cache#1-oX (struct sysfs_dirent))->s_active
 	atomic_set(&sd->s_active, 0);
 
 	// atomic_set에서 한일:
 	// &sd->s_active: (&(kmem_cache#1-oX (struct sysfs_dirent))->s_active)->counter: 0
 
+	// atomic_set에서 한일:
+	// &sd->s_active: (&(kmem_cache#1-oX (struct sysfs_dirent))->s_active)->counter: 0
+
+	// sd->s_name,: (kmem_cache#1-oX (struct sysfs_dirent))->s_name, name: "fs"
 	// sd->s_name,: (kmem_cache#1-oX (struct sysfs_dirent))->s_name, name: "fs"
 	sd->s_name = name;
 	// sd->s_name: (kmem_cache#1-oX (struct sysfs_dirent))->s_name: "fs"
+	// sd->s_name: (kmem_cache#1-oX (struct sysfs_dirent))->s_name: "cgroup"
 
+	// sd->s_mode: (kmem_cache#1-oX (struct sysfs_dirent))->s_mode, mode: 0x41ED
 	// sd->s_mode: (kmem_cache#1-oX (struct sysfs_dirent))->s_mode, mode: 0x41ED
 	sd->s_mode = mode;
 	// sd->s_mode: (kmem_cache#1-oX (struct sysfs_dirent))->s_mode: 0x41ED
+	// sd->s_mode: (kmem_cache#1-oX (struct sysfs_dirent))->s_mode: 0x41ED
 
+	// sd->s_flags,: (kmem_cache#1-oX (struct sysfs_dirent))->s_flags, type: 0x1, SYSFS_FLAG_REMOVED: 0x02000
 	// sd->s_flags,: (kmem_cache#1-oX (struct sysfs_dirent))->s_flags, type: 0x1, SYSFS_FLAG_REMOVED: 0x02000
 	sd->s_flags = type | SYSFS_FLAG_REMOVED;
 	// sd->s_flags: (kmem_cache#1-oX (struct sysfs_dirent))->s_flags: 0x2001
+	// sd->s_flags: (kmem_cache#1-oX (struct sysfs_dirent))->s_flags: 0x2001
 
 	// sd: kmem_cache#1-oX (struct sysfs_dirent)
+	// sd: kmem_cache#1-oX (struct sysfs_dirent)
 	return sd;
+	// return kmem_cache#1-oX (struct sysfs_dirent)
 	// return kmem_cache#1-oX (struct sysfs_dirent)
 
  err_out2:
@@ -1012,13 +1080,18 @@ EXPORT_SYMBOL_GPL(sysfs_get_dirent_ns);
 // ARM10C 20160116
 // kobj: kmem_cache#30-oX (struct kobject), parent_sd: &sysfs_root, type: 0,
 // kobject_name(kmem_cache#30-oX (struct kobject)): "fs", ns: NULL, &sd
+// ARM10C 20160730
+// kobj: kmem_cache#30-oX (struct kobject) (cgroup), parent_sd: kmem_cache#1-oX (struct sysfs_dirent) (fs), type: 0
+// kobject_name(kmem_cache#30-oX (struct kobject) (cgroup)): "cgroup", ns: NULL, &sd
 static int create_dir(struct kobject *kobj, struct sysfs_dirent *parent_sd,
 		      enum kobj_ns_type type,
 		      const char *name, const void *ns,
 		      struct sysfs_dirent **p_sd)
 {
 	// S_IFDIR: 0040000, S_IRWXU: 00700, S_IRUGO: 00444, S_IXUGO: 00111
+	// S_IFDIR: 0040000, S_IRWXU: 00700, S_IRUGO: 00444, S_IXUGO: 00111
 	umode_t mode = S_IFDIR | S_IRWXU | S_IRUGO | S_IXUGO;
+	// mode: 0x41ED
 	// mode: 0x41ED
 
 	struct sysfs_addrm_cxt acxt;
@@ -1028,8 +1101,11 @@ static int create_dir(struct kobject *kobj, struct sysfs_dirent *parent_sd,
 	/* allocate */
 	// name: "fs", mode: 0x41ED, SYSFS_DIR: 0x0001
 	// sysfs_new_dirent("fs", 0x41ED, 0x0001): kmem_cache#1-oX (struct sysfs_dirent)
+	// name: "cgroup", mode: 0x41ED, SYSFS_DIR: 0x0001
+	// sysfs_new_dirent("cgroup", 0x41ED, 0x0001): kmem_cache#1-oX (struct sysfs_dirent)
 	sd = sysfs_new_dirent(name, mode, SYSFS_DIR);
-	// sd: kmem_cache#1-oX (struct sysfs_dirent)
+	// sd: kmem_cache#1-oX (struct sysfs_dirent) (fs)
+	// sd: kmem_cache#1-oX (struct sysfs_dirent) (cgroup)
 
 	// sysfs_new_dirent에서 한일:
 	// sysfs_dir_cachep: kmem_cache#1을 이용하여 struct sysfs_dirent 메모리를 할당받음
@@ -1075,21 +1151,52 @@ static int create_dir(struct kobject *kobj, struct sysfs_dirent *parent_sd,
 	// (kmem_cache#1-oX (struct sysfs_dirent))->s_mode: 0x41ED
 	// (kmem_cache#1-oX (struct sysfs_dirent))->s_flags: 0x2001
 
+	// sysfs_new_dirent에서 한일:
+	// sysfs_dir_cachep: kmem_cache#1을 이용하여 struct sysfs_dirent 메모리를 할당받음
+	// kmem_cache#1-oX (struct sysfs_dirent)
+	//
+	// (&(&sysfs_ino_ida)->idr)->top: kmem_cache#21-oX (struct idr_layer) (idr object 8)
+	// (&(&sysfs_ino_ida)->idr)->layers: 1
+	// (&(&sysfs_ino_ida)->idr)->id_free: (idr object new 0)
+	// (&(&sysfs_ino_ida)->idr)->id_free_cnt: 7
+	//
+	// (kmem_cache#27-oX (struct ida_bitmap))->bitmap 의 3 bit를 1로 set 수행
+	// (kmem_cache#27-oX (struct ida_bitmap))->nr_busy: 2
+	//
+	// kmem_cache인 kmem_cache#21 에서 할당한 object인 kmem_cache#21-oX (idr object 7) 의 memory 공간을 반환함
+	//
+	// *(&(kmem_cache#1-oX (struct sysfs_dirent))->s_ino): 3
+	//
+	// (&(kmem_cache#1-oX (struct sysfs_dirent))->s_count)->counter: 1
+	// (&(kmem_cache#1-oX (struct sysfs_dirent))->s_active)->counter: 0
+	// (kmem_cache#1-oX (struct sysfs_dirent))->s_name: "cgroup"
+	// (kmem_cache#1-oX (struct sysfs_dirent))->s_mode: 0x41ED
+	// (kmem_cache#1-oX (struct sysfs_dirent))->s_flags: 0x2001
+
 	// sd: kmem_cache#1-oX (struct sysfs_dirent)
+	// sd: kmem_cache#1-oX (struct sysfs_dirent) (cgroup)
 	if (!sd)
 		return -ENOMEM;
 
 	// sd->s_flags: (kmem_cache#1-oX (struct sysfs_dirent))->s_flags: 0x2001, type: 0, SYSFS_NS_TYPE_SHIFT: 8
+	// sd->s_flags: (kmem_cache#1-oX (struct sysfs_dirent))->s_flags: 0x2001, type: 0, SYSFS_NS_TYPE_SHIFT: 8
 	sd->s_flags |= (type << SYSFS_NS_TYPE_SHIFT);
+	// sd->s_flags: (kmem_cache#1-oX (struct sysfs_dirent))->s_flags: 0x2001
 	// sd->s_flags: (kmem_cache#1-oX (struct sysfs_dirent))->s_flags: 0x2001
 
 	// sd->s_ns: (kmem_cache#1-oX (struct sysfs_dirent))->s_ns, ns: NULL
+	// sd->s_ns: (kmem_cache#1-oX (struct sysfs_dirent))->s_ns, ns: NULL
 	sd->s_ns = ns;
+	// sd->s_ns: (kmem_cache#1-oX (struct sysfs_dirent))->s_ns: NULL
 	// sd->s_ns: (kmem_cache#1-oX (struct sysfs_dirent))->s_ns: NULL
 
 	// sd->s_dir.kobj: (kmem_cache#1-oX (struct sysfs_dirent))->s_dir.kobj, kobj: kmem_cache#30-oX (struct kobject)
+	// sd->s_dir.kobj: (kmem_cache#1-oX (struct sysfs_dirent))->s_dir.kobj, kobj: kmem_cache#30-oX (struct kobject)
 	sd->s_dir.kobj = kobj;
 	// sd->s_dir.kobj: (kmem_cache#1-oX (struct sysfs_dirent))->s_dir.kobj: kmem_cache#30-oX (struct kobject)
+	// sd->s_dir.kobj: (kmem_cache#1-oX (struct sysfs_dirent))->s_dir.kobj: kmem_cache#30-oX (struct kobject)
+
+// 2016/07/30 종료
 
 	/* link in */
 	sysfs_addrm_start(&acxt);
@@ -1159,19 +1266,26 @@ int sysfs_create_subdir(struct kobject *kobj, const char *name,
  */
 // ARM10C 20160116
 // kobj: kmem_cache#30-oX (struct kobject)
+// ARM10C 20160730
+// kobj: kmem_cache#30-oX (struct kobject)
 static enum kobj_ns_type sysfs_read_ns_type(struct kobject *kobj)
 {
 	const struct kobj_ns_type_operations *ops;
 	enum kobj_ns_type type;
 
-	// kobj: kmem_cache#30-oX (struct kobject), kobj_child_ns_ops(kmem_cache#30-oX (struct kobject)): NULL
+	// kobj: kmem_cache#30-oX (struct kobject) (fs), kobj_child_ns_ops(kmem_cache#30-oX (struct kobject) (fs)): NULL
+	// kobj: kmem_cache#30-oX (struct kobject) (cgroup), kobj_child_ns_ops(kmem_cache#30-oX (struct kobject) (cgroup)): NULL
 	ops = kobj_child_ns_ops(kobj);
+	// ops: NULL
 	// ops: NULL
 
 	// ops: NULL
+	// ops: NULL
 	if (!ops)
 		// KOBJ_NS_TYPE_NONE: 0
+		// KOBJ_NS_TYPE_NONE: 0
 		return KOBJ_NS_TYPE_NONE;
+		// return 0
 		// return 0
 
 	type = ops->type;
@@ -1189,35 +1303,51 @@ static enum kobj_ns_type sysfs_read_ns_type(struct kobject *kobj)
  */
 // ARM10C 20160116
 // kobj: kmem_cache#30-oX (struct kobject), kobject_namespace(kmem_cache#30-oX (struct kobject)): NULL
+// ARM10C 20160730
+// kobj: kmem_cache#30-oX (struct kobject), kobject_namespace(kmem_cache#30-oX (struct kobject)): NULL
 int sysfs_create_dir_ns(struct kobject *kobj, const void *ns)
 {
 	enum kobj_ns_type type;
 	struct sysfs_dirent *parent_sd, *sd;
 	int error = 0;
 	// error: 0
+	// error: 0
 
+	// kobj: kmem_cache#30-oX (struct kobject)
 	// kobj: kmem_cache#30-oX (struct kobject)
 	BUG_ON(!kobj);
 
 	// kobj->parent: (kmem_cache#30-oX (struct kobject))->parent: NULL
+	// kobj->parent: (kmem_cache#30-oX (struct kobject))->parent: kmem_cache#30-oX (struct kobject) (fs)
 	if (kobj->parent)
+		// kobj->parent->sd: ((kmem_cache#30-oX (struct kobject))->parent: kmem_cache#30-oX (struct kobject) (fs))->sd:
+		// kmem_cache#1-oX (struct sysfs_dirent) (fs)
 		parent_sd = kobj->parent->sd;
+		// parent_sd: kmem_cache#1-oX (struct sysfs_dirent) (fs)
 	else
 		parent_sd = &sysfs_root;
 		// parent_sd: &sysfs_root
 
 	// parent_sd: &sysfs_root
+	// parent_sd: kmem_cache#1-oX (struct sysfs_dirent) (fs)
 	if (!parent_sd)
 		return -ENOENT;
 
-	// kobj: kmem_cache#30-oX (struct kobject),
+	// kobj: kmem_cache#30-oX (struct kobject) (fs),
+	// sysfs_read_ns_type(kmem_cache#30-oX (struct kobject)): 0
+	// kobj: kmem_cache#30-oX (struct kobject) (cgroup),
 	// sysfs_read_ns_type(kmem_cache#30-oX (struct kobject)): 0
 	type = sysfs_read_ns_type(kobj);
+	// type: 0
 	// type: 0
 
 	// kobj: kmem_cache#30-oX (struct kobject), parent_sd: &sysfs_root, type: 0
 	// kobject_name(kmem_cache#30-oX (struct kobject)): "fs", ns: NULL
 	// create_dir(kmem_cache#30-oX (struct kobject), &sysfs_root, 0, "fs", NULL, &sd): 0
+	//
+	// kobj: kmem_cache#30-oX (struct kobject) (cgroup), parent_sd: kmem_cache#1-oX (struct sysfs_dirent) (fs), type: 0
+	// kobject_name(kmem_cache#30-oX (struct kobject) (cgroup)): "cgroup", ns: NULL
+	// create_dir(kmem_cache#30-oX (struct kobject) (cgroup), kmem_cache#1-oX (struct sysfs_dirent) (fs), 0, "cgroup", NULL, &sd): 0
 	error = create_dir(kobj, parent_sd, type, kobject_name(kobj), ns, &sd);
 	// error: 0
 

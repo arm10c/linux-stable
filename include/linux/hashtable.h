@@ -12,6 +12,11 @@
 #include <linux/hash.h>
 #include <linux/rculist.h>
 
+// ARM10C 20160730
+// CSS_SET_HASH_BITS: 7
+// #define DEFINE_HASHTABLE(css_set_table, 7):
+// struct hlist_head css_set_table[1 << (7)] =
+// { [0 ... ((1 << (7)) - 1)] = HLIST_HEAD_INIT }
 #define DEFINE_HASHTABLE(name, bits)						\
 	struct hlist_head name[1 << (bits)] =					\
 			{ [0 ... ((1 << (bits)) - 1)] = HLIST_HEAD_INIT }
@@ -19,10 +24,23 @@
 #define DECLARE_HASHTABLE(name, bits)                                   	\
 	struct hlist_head name[1 << (bits)]
 
+// ARM10C 20160730
+// ARRAY_SIZE(css_set_table): 128
+//
+// HASH_SIZE(css_set_table): 128
 #define HASH_SIZE(name) (ARRAY_SIZE(name))
+// ARM10C 20160730
+// HASH_SIZE(css_set_table): 128
+// ilog2(128): 7
+//
+// HASH_BITS(css_set_table): 7
 #define HASH_BITS(name) ilog2(HASH_SIZE(name))
 
 /* Use hash_32 when possible to allow for fast 32bit hashing in 64bit kernels. */
+// ARM10C 20160730
+// NOTE: 0xXXXXXXXX 이 4 보다 작다고 가정하고 분석 진행
+//
+// hash_min(0xXXXXXXXX, 7)
 #define hash_min(val, bits)							\
 	(sizeof(val) <= 4 ? hash_32(val, bits) : hash_long(val, bits))
 
@@ -52,6 +70,12 @@ static inline void __hash_init(struct hlist_head *ht, unsigned int sz)
  * @node: the &struct hlist_node of the object to be added
  * @key: the key of the object to be added
  */
+// ARM10C 20160730
+// HASH_BITS(css_set_table): 7
+// hash_min(0xXXXXXXXX, 7): 계산된 hash index 값
+//
+// #define hash_add(css_set_table, &init_css_set.hlist, 0xXXXXXXXX):
+// hlist_add_head(&init_css_set.hlist, &css_set_table[계산된 hash index 값])
 #define hash_add(hashtable, node, key)						\
 	hlist_add_head(node, &hashtable[hash_min(key, HASH_BITS(hashtable))])
 

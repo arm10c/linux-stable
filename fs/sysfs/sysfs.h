@@ -62,6 +62,7 @@ struct sysfs_inode_attrs {
 // ARM10C 20151031
 // ARM10C 20151121
 // ARM10C 20160116
+// ARM10C 20160730
 // sizeof(struct sysfs_dirent): 64 bytes
 struct sysfs_dirent {
 	atomic_t		s_count;
@@ -202,6 +203,7 @@ static inline bool sysfs_ignore_lockdep(struct sysfs_dirent *sd)
  */
 // ARM10C 20160116
 // ARM10C 20160123
+// ARM10C 20160730
 // sizeof(struct sysfs_addrm_cxt): 4 bytes
 struct sysfs_addrm_cxt {
 	struct sysfs_dirent	*removed;

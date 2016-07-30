@@ -106,6 +106,7 @@ static DEFINE_MUTEX(cgroup_mutex);
 #endif
 
 // ARM10C 20160723
+// ARM10C 20160730
 // DEFINE_MUTEX(cgroup_root_mutex):
 // struct mutex cgroup_root_mutex =
 // { .count = { (1) }
@@ -164,11 +165,13 @@ static struct cgroup_subsys *cgroup_subsys[CGROUP_SUBSYS_COUNT] = {
  */
 // ARM10C 20150808
 // ARM10C 20150822
+// ARM10C 20160730
 static struct cgroupfs_root cgroup_dummy_root;
 
 /* dummy_top is a shorthand for the dummy hierarchy's top cgroup */
 // ARM10C 20150815
 // ARM10C 20150822
+// ARM10C 20160730
 // cgroup_dummy_top: &cgroup_dummy_root.top_cgroup
 static struct cgroup * const cgroup_dummy_top = &cgroup_dummy_root.top_cgroup;
 
@@ -225,6 +228,21 @@ static int cgroup_root_count;
  * rules as other root ops - both cgroup_mutex and cgroup_root_mutex for
  * writes, either for reads.
  */
+// ARM10C 20160730
+// DEFINE_IDR(cgroup_hierarchy_idr):
+// struct idr name =
+// {
+//      .lock =
+//      (spinlock_t )
+//      { { .rlock =
+//          {
+//            .raw_lock = { { 0 } },
+//            .magic = 0xdead4ead,
+//            .owner_cpu = -1,
+//            .owner = 0xffffffff,
+//          }
+//      } },
+// }
 static DEFINE_IDR(cgroup_hierarchy_idr);
 
 // ARM10C 20150808
@@ -451,6 +469,7 @@ struct cgrp_cset_link {
 // ARM10C 20150815
 // ARM10C 20150822
 // ARM10C 20160723
+// ARM10C 20160730
 static struct css_set init_css_set;
 // ARM10C 20150815
 static struct cgrp_cset_link init_cgrp_cset_link;
@@ -469,7 +488,16 @@ static int css_set_count;
  * an existing css_set. This hash doesn't (currently) take into
  * account cgroups in empty hierarchies.
  */
+// ARM10C 20160730
+// CSS_SET_HASH_BITS: 7
 #define CSS_SET_HASH_BITS	7
+
+// ARM10C 20160730
+// HLIST_HEAD_INIT: { .first = NULL }
+//
+// DEFINE_HASHTABLE(css_set_table, 7):
+// struct hlist_head css_set_table[1 << (7)] =
+// { [0 ... ((1 << (7)) - 1)] = { .first = NULL } }
 static DEFINE_HASHTABLE(css_set_table, CSS_SET_HASH_BITS);
 
 // ARM10C 20160723
@@ -1645,20 +1673,48 @@ static void init_cgroup_root(struct cgroupfs_root *root)
 	// (&(&(&cgroup_dummy_root)->cgroup_idr)->lock)->owner_cpu: 0xffffffff
 }
 
+// ARM10C 20160730
+// &cgroup_dummy_root, 0, 1
 static int cgroup_init_root_id(struct cgroupfs_root *root, int start, int end)
 {
 	int id;
 
-	lockdep_assert_held(&cgroup_mutex);
-	lockdep_assert_held(&cgroup_root_mutex);
+	lockdep_assert_held(&cgroup_mutex); // null function
+	lockdep_assert_held(&cgroup_root_mutex); // null function
 
+	// root: &cgroup_dummy_root, start: 0, end: 1, GFP_KERNEL: 0xD0
+	// idr_alloc_cyclic(&cgroup_hierarchy_idr, &cgroup_dummy_root, 0, 1, 0xD0): 0
 	id = idr_alloc_cyclic(&cgroup_hierarchy_idr, root, start, end,
 			      GFP_KERNEL);
+	// id: 0
+
+	// idr_alloc_cyclic 에서 한일:
+	// idr_layer_cache: kmem_cache#21 을 사용하여 struct idr_layer 만큼의 메모리를 할당 받음
+	// kmem_cache#21-oX (struct idr_layer)
+	//
+	// (&(&cgroup_hierarchy_idr)->idr)->layers: 1
+	// (&(&cgroup_hierarchy_idr)->idr)->top: kmem_cache#21-oX (struct idr_layer)
+	//
+	// (kmem_cache#21-oX (struct idr_layer))->layer: 0
+	// pa[0]: kmem_cache#21-oX (struct idr_layer)
+	//
+	// (&cgroup_hierarchy_idr)->hint: kmem_cache#21-oX (struct idr_layer)
+	// (kmem_cache#21-oX (struct idr_layer))->ary[0]: &cgroup_dummy_root
+	// (kmem_cache#21-oX (struct idr_layer))->count: 1
+	// (kmem_cache#21-oX (struct idr_layer))->bitmap 의 0 bit를 1로 set 함
+	//
+	// (&cgroup_hierarchy_idr)->cur: 1
+
+	// id: 0
 	if (id < 0)
 		return id;
 
+	// root->hierarchy_id: (&cgroup_dummy_root)->hierarchy_id, id: 0
 	root->hierarchy_id = id;
+	// root->hierarchy_id: (&cgroup_dummy_root)->hierarchy_id: 0
+
 	return 0;
+	// return 0
 }
 
 static void cgroup_exit_root_id(struct cgroupfs_root *root)
@@ -2016,6 +2072,7 @@ static struct file_system_type cgroup_fs_type = {
 	.kill_sb = cgroup_kill_sb,
 };
 
+// ARM10C 20160730
 static struct kobject *cgroup_kobj;
 
 /**
@@ -6074,18 +6131,74 @@ int __init cgroup_init(void)
 	// init_css_set.subsys 를 이용하여 hash key 값 생성, key: 0xXXXXXXXX
 
 // 2016/07/23 종료
+// 2016/07/30 시작
 
+	// key: 0xXXXXXXXX
 	hash_add(css_set_table, &init_css_set.hlist, key);
 
+	// hash_add에서 한일:
+	// key: 0xXXXXXXXX 값에 맞는 css_set_table의 hash index 값을 찾음
+	//
+	// (&init_css_set.hlist)->next: NULL
+	// (&css_set_table[계산된 hash index 값])->first: &init_css_set.hlist
+	// (&init_css_set.hlist)->pprev: &(&css_set_table[계산된 hash index 값])->first
+
+	// cgroup_init_root_id(&cgroup_dummy_root, 0, 1): 0
 	BUG_ON(cgroup_init_root_id(&cgroup_dummy_root, 0, 1));
 
+	// cgroup_init_root_id 에서 한일:
+	// idr_layer_cache: kmem_cache#21 을 사용하여 struct idr_layer 만큼의 메모리를 할당 받음
+	// kmem_cache#21-oX (struct idr_layer)
+	//
+	// (&(&cgroup_hierarchy_idr)->idr)->layers: 1
+	// (&(&cgroup_hierarchy_idr)->idr)->top: kmem_cache#21-oX (struct idr_layer)
+	//
+	// (kmem_cache#21-oX (struct idr_layer))->layer: 0
+	// pa[0]: kmem_cache#21-oX (struct idr_layer)
+	//
+	// (&cgroup_hierarchy_idr)->hint: kmem_cache#21-oX (struct idr_layer)
+	// (kmem_cache#21-oX (struct idr_layer))->ary[0]: &cgroup_dummy_root
+	// (kmem_cache#21-oX (struct idr_layer))->count: 1
+	// (kmem_cache#21-oX (struct idr_layer))->bitmap 의 0 bit를 1로 set 함
+	//
+	// (&cgroup_hierarchy_idr)->cur: 1
+	// (&cgroup_dummy_root)->hierarchy_id: 0
+
+	// GFP_KERNEL: 0xD0, cgroup_dummy_top: &cgroup_dummy_root.top_cgroup
+	// idr_alloc(&cgroup_dummy_root.cgroup_idr, &cgroup_dummy_root.top_cgroup, 0, 1, 0xD0): 0
 	err = idr_alloc(&cgroup_dummy_root.cgroup_idr, cgroup_dummy_top,
 			0, 1, GFP_KERNEL);
+	// err: 0
+
+	// idr_alloc 에서 한일:
+	// idr_layer_cache: kmem_cache#21 을 사용하여 struct idr_layer 만큼의 메모리를 할당 받음
+	// kmem_cache#21-oX (struct idr_layer)
+	//
+	// (&(&cgroup_dummy_root.cgroup_idr)->idr)->layers: 1
+	// (&(&cgroup_dummy_root.cgroup_idr)->idr)->top: kmem_cache#21-oX (struct idr_layer)
+	//
+	// (kmem_cache#21-oX (struct idr_layer))->layer: 0
+	// pa[0]: kmem_cache#21-oX (struct idr_layer)
+	//
+	// (&cgroup_dummy_root.cgroup_idr)->hint: kmem_cache#21-oX (struct idr_layer)
+	// (kmem_cache#21-oX (struct idr_layer))->ary[0]: &cgroup_dummy_root.top_cgroup
+	// (kmem_cache#21-oX (struct idr_layer))->count: 1
+	// (kmem_cache#21-oX (struct idr_layer))->bitmap 의 0 bit를 1로 set 함
+
+	// err: 0
 	BUG_ON(err < 0);
 
 	mutex_unlock(&cgroup_root_mutex);
+
+	// mutex_unlock에서 한일:
+	// &cgroup_root_mutex 을 사용하여 mutex unlock을 수행
+
 	mutex_unlock(&cgroup_mutex);
 
+	// mutex_unlock에서 한일:
+	// &cgroup_mutex 을 사용하여 mutex unlock을 수행
+
+	// fs_kobj: kmem_cache#30-oX (struct kobject)
 	cgroup_kobj = kobject_create_and_add("cgroup", fs_kobj);
 	if (!cgroup_kobj) {
 		err = -ENOMEM;

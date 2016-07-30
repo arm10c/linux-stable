@@ -1039,6 +1039,8 @@ extern void *__kmalloc_node_track_caller(size_t, gfp_t, int, unsigned long);
 // mnt_cache: kmem_cache#2, GFP_KERNEL: 0xD0
 // ARM10C 20160416
 // idr_layer_cache: kmem_cache#21, gfp_mask: 0xD0
+// ARM10C 20160730
+// idr_layer_cache: kmem_cache#21, 0x2D0
 static inline void *kmem_cache_zalloc(struct kmem_cache *k, gfp_t flags)
 {
 	// k: &boot_kmem_cache, flags: GFP_NOWAIT: 0, __GFP_ZERO: 0x8000u

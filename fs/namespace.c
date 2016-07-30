@@ -109,6 +109,7 @@ static DECLARE_RWSEM(namespace_sem);
 
 /* /sys/fs */
 // ARM10C 20160109
+// ARM10C 20160730
 struct kobject *fs_kobj;
 EXPORT_SYMBOL_GPL(fs_kobj);
 

@@ -343,6 +343,7 @@ enum {
  * internal to cgroup core.  Don't access directly from controllers.
  */
 // ARM10C 20150808
+// ARM10C 20160730
 struct cgroupfs_root {
 	struct super_block *sb;
 
@@ -388,6 +389,7 @@ struct cgroupfs_root {
 // ARM10C 20150808
 // ARM10C 20150919
 // ARM10C 20160723
+// ARM10C 20160730
 struct css_set {
 
 	/* Reference count */
