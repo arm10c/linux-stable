@@ -1,7 +1,7 @@
-# Kernel study ARM
+# Neurulamcer.kr - ARM Linux Kernel study 
 
-##### The Linux Kernel review for ARMv7 3.13.0 (exynos 5420)
-##### Community name: kernel study a10C team
+##### The Linux Kernel review about ARMv7 3.13.0 (exynos 5420)
+##### Community name: Neuromancer.kr : kernel study 
 ##### Target Soc    : Samsung Exynos 5420 (ARMv7 A7&A15)
 ##### Kernel version: Linux kernel 3.13.x
   - 1st: 3.9.6
@@ -10,6 +10,8 @@
   - current : 3.13.x
   
 # HISTORY
+* 153th (2016/07/30) week [153차](https://github.com/hephaex/kernel_review/blob/master/a10c_153.md)
+ - cgroup_init()
 * 152th (2016/07/23) week [152차](https://github.com/hephaex/kernel_review/blob/master/a10c_152.md)
  - cgroup_init()
 * 151th (2016/07/16) week [151차](https://github.com/hephaex/kernel_review/blob/master/a10c_151.md)
