@@ -93,6 +93,9 @@ static DEFINE_IDA(sysfs_ino_ida);
 // ARM10C 20160116
 // sd->s_name: (kmem_cache#1-oX (struct sysfs_dirent))->s_name: "fs",
 // sd->s_ns: (kmem_cache#1-oX (struct sysfs_dirent))->s_ns: NULL
+// ARM10C 20160813
+// sd->s_name: (kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_name: "cgroup"
+// sd->s_ns: (kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_ns: NULL
 static unsigned int sysfs_name_hash(const char *name, const void *ns)
 {
 	// init_name_hash(): 0
@@ -163,25 +166,37 @@ static int sysfs_sd_compare(const struct sysfs_dirent *left,
  */
 // ARM10C 20160116
 // sd: kmem_cache#1-oX (struct sysfs_dirent)
+// ARM10C 20160813
+// sd: kmem_cache#1-oX (struct sysfs_dirent) (cgroup)
 static int sysfs_link_sibling(struct sysfs_dirent *sd)
 {
 	// &sd->s_parent: &(kmem_cache#1-oX (struct sysfs_dirent))->s_parent: &sysfs_root
 	// &sd->s_parent->s_dir.children.rb_node: &(&sysfs_root)->s_dir.children.rb_node
+	// &sd->s_parent: &(kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_parent: kmem_cache#1-oX (struct sysfs_dirent) (fs)
+	// &sd->s_parent->s_dir.children.rb_node: &(kmem_cache#1-oX (struct sysfs_dirent) (fs))->s_dir.children.rb_node
 	struct rb_node **node = &sd->s_parent->s_dir.children.rb_node;
 	// node: &(&sysfs_root)->s_dir.children.rb_node
+	// node: &(kmem_cache#1-oX (struct sysfs_dirent) (fs))->s_dir.children.rb_node
 
 	struct rb_node *parent = NULL;
+	// parent: NULL
 	// parent: NULL
 
 	// sd: kmem_cache#1-oX (struct sysfs_dirent),
 	// sysfs_type(kmem_cache#1-oX (struct sysfs_dirent)): 0x1, SYSFS_DIR: 0x0001
+	// sd: kmem_cache#1-oX (struct sysfs_dirent) (cgroup),
+	// sysfs_type(kmem_cache#1-oX (struct sysfs_dirent) (cgroup)): 0x1, SYSFS_DIR: 0x0001
 	if (sysfs_type(sd) == SYSFS_DIR)
 		// sd->s_parent: (kmem_cache#1-oX (struct sysfs_dirent))->s_parent: &sysfs_root
 		// sd->s_parent->s_dir.subdirs: (&sysfs_root)->s_dir.subdirs: 0
+		// sd->s_parent: (kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_parent: kmem_cache#1-oX (struct sysfs_dirent) (fs)
+		// sd->s_parent->s_dir.subdirs: (kmem_cache#1-oX (struct sysfs_dirent) (fs))->s_dir.subdirs: 0
 		sd->s_parent->s_dir.subdirs++;
 		// sd->s_parent->s_dir.subdirs: (&sysfs_root)->s_dir.subdirs: 1
+		// sd->s_parent->s_dir.subdirs: (kmem_cache#1-oX (struct sysfs_dirent) (fs))->s_dir.subdirs: 1
 
 	// *node: (&sysfs_root)->s_dir.children.rb_node: NULL
+	// *node: (kmem_cache#1-oX (struct sysfs_dirent) (fs))->s_dir.children.rb_node: NULL
 	while (*node) {
 		struct sysfs_dirent *pos;
 		int result;
@@ -198,6 +213,7 @@ static int sysfs_link_sibling(struct sysfs_dirent *sd)
 	}
 	/* add new node and rebalance the tree */
 	// &sd->s_rb: &(kmem_cache#1-oX (struct sysfs_dirent))->s_rb, parent: NULL, node: &(&sysfs_root)->s_dir.children.rb_node
+	// &sd->s_rb: &(kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_rb, parent: NULL, node: &(kmem_cache#1-oX (struct sysfs_dirent) (fs))->s_dir.children.rb_node
 	rb_link_node(&sd->s_rb, parent, node);
 
 	// rb_link_node에서 한일:
@@ -206,9 +222,18 @@ static int sysfs_link_sibling(struct sysfs_dirent *sd)
 	// (&(kmem_cache#1-oX (struct sysfs_dirent))->s_rb)->rb_right: NULL
 	// (&sysfs_root)->s_dir.children.rb_node: &(kmem_cache#1-oX (struct sysfs_dirent))->s_rb
 
+	// rb_link_node에서 한일:
+	// (&(kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_rb)->__rb_parent_color: NULL
+	// (&(kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_rb)->rb_left: NULL
+	// (&(kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_rb)->rb_right: NULL
+	// &(kmem_cache#1-oX (struct sysfs_dirent) (fs))->s_dir.children.rb_node: &(kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_rb
+
 	// &sd->s_rb: &(kmem_cache#1-oX (struct sysfs_dirent))->s_rb,
 	// &sd->s_parent: &(kmem_cache#1-oX (struct sysfs_dirent))->s_parent: &sysfs_root,
 	// &sd->s_parent->s_dir.children: &(&sysfs_root)->s_dir.children
+	// &sd->s_rb: &(kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_rb,
+	// &sd->s_parent: &(kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_parent: kmem_cache#1-oX (struct sysfs_dirent) (fs),
+	// &sd->s_parent->s_dir.children: &(kmem_cache#1-oX (struct sysfs_dirent) (fs))->s_dir.children
 	rb_insert_color(&sd->s_rb, &sd->s_parent->s_dir.children);
 
 	// NOTE:
@@ -222,7 +247,19 @@ static int sysfs_link_sibling(struct sysfs_dirent *sd)
 	//              /            \
 	*/
 
+	// NOTE:
+	// inode의 값을 나타내는 (kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_ino: 3 값을 이용하여
+	// rb_node를 INODE(3) 주석을 달기로 함
+
+	// rb_insert_color에서 한일:
+	// rbtree 조건에 맞게 tree 구성 및 안정화 작업 수행
+	/*
+	//                INODE(3)-b
+	//              /            \
+	*/
+
 	return 0;
+	// return 0
 	// return 0
 }
 
@@ -714,6 +751,8 @@ struct sysfs_dirent *sysfs_new_dirent(const char *name, umode_t mode, int type)
  */
 // ARM10C 20160116
 // &acxt
+// ARM10C 20160813
+// &acxt
 void sysfs_addrm_start(struct sysfs_addrm_cxt *acxt)
 	__acquires(sysfs_mutex)
 {
@@ -752,6 +791,8 @@ void sysfs_addrm_start(struct sysfs_addrm_cxt *acxt)
  */
 // ARM10C 20160116
 // acxt: &acxt, sd: kmem_cache#1-oX (struct sysfs_dirent), parent_sd: &sysfs_root
+// ARM10C 20160813
+// acxt: &acxt, sd: kmem_cache#1-oX (struct sysfs_dirent) (cgroup), parent_sd: kmem_cache#1-oX (struct sysfs_dirent) (fs)
 int __sysfs_add_one(struct sysfs_addrm_cxt *acxt, struct sysfs_dirent *sd,
 		    struct sysfs_dirent *parent_sd)
 {
@@ -760,6 +801,8 @@ int __sysfs_add_one(struct sysfs_addrm_cxt *acxt, struct sysfs_dirent *sd,
 
 	// parent_sd: &sysfs_root, sysfs_ns_type(&sysfs_root): 0,
 	// sd->s_ns: (kmem_cache#1-oX (struct sysfs_dirent))->s_ns: NULL
+	// parent_sd: kmem_cache#1-oX (struct sysfs_dirent) (fs), sysfs_ns_type(kmem_cache#1-oX (struct sysfs_dirent) (fs)): 0,
+	// sd->s_ns: (kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_ns: NULL
 	if (!!sysfs_ns_type(parent_sd) != !!sd->s_ns) {
 		WARN(1, KERN_WARNING "sysfs: ns %s in '%s' for '%s'\n",
 			sysfs_ns_type(parent_sd) ? "required" : "invalid",
@@ -771,17 +814,28 @@ int __sysfs_add_one(struct sysfs_addrm_cxt *acxt, struct sysfs_dirent *sd,
 	// sd->s_name: (kmem_cache#1-oX (struct sysfs_dirent))->s_name: "fs"
 	// sd->s_ns: (kmem_cache#1-oX (struct sysfs_dirent))->s_ns: NULL
 	// sysfs_name_hash("fs", NULL): 계산된 hash index 값
+	// sd->s_hash: (kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_hash,
+	// sd->s_name: (kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_name: "cgroup"
+	// sd->s_ns: (kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_ns: NULL
+	// sysfs_name_hash("cgroup", NULL): 계산된 hash index 값
 	sd->s_hash = sysfs_name_hash(sd->s_name, sd->s_ns);
 	// sd->s_hash: (kmem_cache#1-oX (struct sysfs_dirent))->s_hash: 계산된 hash index 값
+	// sd->s_hash: (kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_hash: 계산된 hash index 값
 
 	// sd->s_parent: (kmem_cache#1-oX (struct sysfs_dirent))->s_parent,
 	// parent_sd: &sysfs_root, sysfs_get(&sysfs_root): &sysfs_root
+	// sd->s_parent: (kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_parent,
+	// parent_sd: kmem_cache#1-oX (struct sysfs_dirent) (fs), sysfs_get(kmem_cache#1-oX (struct sysfs_dirent) (fs)): kmem_cache#1-oX (struct sysfs_dirent) (fs)
 	sd->s_parent = sysfs_get(parent_sd);
 	// sd->s_parent: (kmem_cache#1-oX (struct sysfs_dirent))->s_parent: &sysfs_root
+	// sd->s_parent: (kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_parent: kmem_cache#1-oX (struct sysfs_dirent) (fs)
 
 	// sd: kmem_cache#1-oX (struct sysfs_dirent)
 	// sysfs_link_sibling(kmem_cache#1-oX (struct sysfs_dirent)): 0
+	// sd: kmem_cache#1-oX (struct sysfs_dirent) (cgroup)
+	// sysfs_link_sibling(kmem_cache#1-oX (struct sysfs_dirent) (cgroup)): 0
 	ret = sysfs_link_sibling(sd);
+	// ret: 0
 	// ret: 0
 
 	// sysfs_link_sibling에서 한일:
@@ -801,6 +855,25 @@ int __sysfs_add_one(struct sysfs_addrm_cxt *acxt, struct sysfs_dirent *sd,
 	//              /            \
 	*/
 
+	// sysfs_link_sibling에서 한일:
+	// (kmem_cache#1-oX (struct sysfs_dirent) (fs))->s_dir.subdirs: 1
+	//
+	// (&(kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_rb)->__rb_parent_color: NULL
+	// (&(kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_rb)->rb_left: NULL
+	// (&(kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_rb)->rb_right: NULL
+	// &(kmem_cache#1-oX (struct sysfs_dirent) (fs))->s_dir.children.rb_node: &(kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_rb
+	//
+	// inode의 값을 나타내는 (kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_ino: 3 값을 이용하여
+	// rb_node를 INODE(3) 주석을 달기로 함
+	//
+	// rb_insert_color에서 한일:
+	// rbtree 조건에 맞게 tree 구성 및 안정화 작업 수행
+	/*
+	//                INODE(3)-b
+	//              /            \
+	*/
+
+	// ret: 0
 	// ret: 0
 	if (ret)
 		return ret;
@@ -810,9 +883,12 @@ int __sysfs_add_one(struct sysfs_addrm_cxt *acxt, struct sysfs_dirent *sd,
 
 	/* Update timestamps on the parent */
 	// parent_sd->s_iattr: (&sysfs_root)->s_iattr: NULL
+	// parent_sd->s_iattr: (kmem_cache#1-oX (struct sysfs_dirent) (fs))->s_iattr: NULL
 	ps_iattr = parent_sd->s_iattr;
 	// ps_iattr: NULL
+	// ps_iattr: NULL
 
+	// ps_iattr: NULL
 	// ps_iattr: NULL
 	if (ps_iattr) {
 		struct iattr *ps_iattrs = &ps_iattr->ia_iattr;
@@ -821,10 +897,13 @@ int __sysfs_add_one(struct sysfs_addrm_cxt *acxt, struct sysfs_dirent *sd,
 
 	/* Mark the entry added into directory tree */
 	// sd->s_flags: (kmem_cache#1-oX (struct sysfs_dirent))->s_flags: 0x2001, SYSFS_FLAG_REMOVED: 0x02000
+	// sd->s_flags: (kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_flags: 0x2001, SYSFS_FLAG_REMOVED: 0x02000
 	sd->s_flags &= ~SYSFS_FLAG_REMOVED;
 	// sd->s_flags: (kmem_cache#1-oX (struct sysfs_dirent))->s_flags: 0x1
+	// sd->s_flags: (kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_flags: 0x1
 
 	return 0;
+	// return 0
 	// return 0
 }
 
@@ -886,6 +965,8 @@ void sysfs_warn_dup(struct sysfs_dirent *parent, const char *name)
  */
 // ARM10C 20160116
 // &acxt, sd: kmem_cache#1-oX (struct sysfs_dirent), parent_sd: &sysfs_root
+// ARM10C 20160813
+// sd: kmem_cache#1-oX (struct sysfs_dirent) (cgroup), parent_sd: kmem_cache#1-oX (struct sysfs_dirent) (fs)
 int sysfs_add_one(struct sysfs_addrm_cxt *acxt, struct sysfs_dirent *sd,
 		  struct sysfs_dirent *parent_sd)
 {
@@ -893,7 +974,10 @@ int sysfs_add_one(struct sysfs_addrm_cxt *acxt, struct sysfs_dirent *sd,
 
 	// acxt: &acxt, sd: kmem_cache#1-oX (struct sysfs_dirent), parent_sd: &sysfs_root
 	// __sysfs_add_one(&acxt, kmem_cache#1-oX (struct sysfs_dirent), &sysfs_root): 0
+	// acxt: &acxt, sd: kmem_cache#1-oX (struct sysfs_dirent) (cgroup), parent_sd: kmem_cache#1-oX (struct sysfs_dirent) (fs)
+	// __sysfs_add_one(&acxt, kmem_cache#1-oX (struct sysfs_dirent) (cgroup), kmem_cache#1-oX (struct sysfs_dirent) (fs)): 0
 	ret = __sysfs_add_one(acxt, sd, parent_sd);
+	// ret: 0
 	// ret: 0
 
 	// __sysfs_add_one에서 한일:
@@ -917,12 +1001,37 @@ int sysfs_add_one(struct sysfs_addrm_cxt *acxt, struct sysfs_dirent *sd,
 	//              /            \
 	*/
 
+	// __sysfs_add_one에서 한일:
+	// (kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_hash: 계산된 hash index 값
+	// (kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_parent: kmem_cache#1-oX (struct sysfs_dirent) (fs)
+	// (kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_flags: 0x1
+	//
+	// (kmem_cache#1-oX (struct sysfs_dirent) (fs))->s_dir.subdirs: 1
+	//
+	// (&(kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_rb)->__rb_parent_color: NULL
+	// (&(kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_rb)->rb_left: NULL
+	// (&(kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_rb)->rb_right: NULL
+	// &(kmem_cache#1-oX (struct sysfs_dirent) (fs))->s_dir.children.rb_node: &(kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_rb
+	//
+	// inode의 값을 나타내는 (kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_ino: 3 값을 이용하여
+	// rb_node를 INODE(3) 주석을 달기로 함
+	//
+	// rb_insert_color에서 한일:
+	// rbtree 조건에 맞게 tree 구성 및 안정화 작업 수행
+	/*
+	//                INODE(3)-b
+	//              /            \
+	*/
+
+	// ret: 0, EEXIST: 17
 	// ret: 0, EEXIST: 17
 	if (ret == -EEXIST)
 		sysfs_warn_dup(parent_sd, sd->s_name);
 
 	// ret: 0
+	// ret: 0
 	return ret;
+	// return 0
 	// return 0
 }
 
@@ -979,6 +1088,8 @@ static void sysfs_remove_one(struct sysfs_addrm_cxt *acxt,
  *	sysfs_mutex is released.
  */
 // ARM10C 20160123
+// &acxt
+// ARM10C 20160813
 // &acxt
 void sysfs_addrm_finish(struct sysfs_addrm_cxt *acxt)
 	__releases(sysfs_mutex)
@@ -1179,24 +1290,25 @@ static int create_dir(struct kobject *kobj, struct sysfs_dirent *parent_sd,
 		return -ENOMEM;
 
 	// sd->s_flags: (kmem_cache#1-oX (struct sysfs_dirent))->s_flags: 0x2001, type: 0, SYSFS_NS_TYPE_SHIFT: 8
-	// sd->s_flags: (kmem_cache#1-oX (struct sysfs_dirent))->s_flags: 0x2001, type: 0, SYSFS_NS_TYPE_SHIFT: 8
+	// sd->s_flags: (kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_flags: 0x2001, type: 0, SYSFS_NS_TYPE_SHIFT: 8
 	sd->s_flags |= (type << SYSFS_NS_TYPE_SHIFT);
 	// sd->s_flags: (kmem_cache#1-oX (struct sysfs_dirent))->s_flags: 0x2001
-	// sd->s_flags: (kmem_cache#1-oX (struct sysfs_dirent))->s_flags: 0x2001
+	// sd->s_flags: (kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_flags: 0x2001
 
 	// sd->s_ns: (kmem_cache#1-oX (struct sysfs_dirent))->s_ns, ns: NULL
-	// sd->s_ns: (kmem_cache#1-oX (struct sysfs_dirent))->s_ns, ns: NULL
+	// sd->s_ns: (kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_ns, ns: NULL
 	sd->s_ns = ns;
 	// sd->s_ns: (kmem_cache#1-oX (struct sysfs_dirent))->s_ns: NULL
-	// sd->s_ns: (kmem_cache#1-oX (struct sysfs_dirent))->s_ns: NULL
+	// sd->s_ns: (kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_ns: NULL
 
 	// sd->s_dir.kobj: (kmem_cache#1-oX (struct sysfs_dirent))->s_dir.kobj, kobj: kmem_cache#30-oX (struct kobject)
-	// sd->s_dir.kobj: (kmem_cache#1-oX (struct sysfs_dirent))->s_dir.kobj, kobj: kmem_cache#30-oX (struct kobject)
+	// sd->s_dir.kobj: (kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_dir.kobj, kobj: kmem_cache#30-oX (struct kobject)
 	sd->s_dir.kobj = kobj;
 	// sd->s_dir.kobj: (kmem_cache#1-oX (struct sysfs_dirent))->s_dir.kobj: kmem_cache#30-oX (struct kobject)
-	// sd->s_dir.kobj: (kmem_cache#1-oX (struct sysfs_dirent))->s_dir.kobj: kmem_cache#30-oX (struct kobject)
+	// sd->s_dir.kobj: (kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_dir.kobj: kmem_cache#30-oX (struct kobject)
 
 // 2016/07/30 종료
+// 2016/08/13 시작
 
 	/* link in */
 	sysfs_addrm_start(&acxt);
@@ -1205,9 +1317,16 @@ static int create_dir(struct kobject *kobj, struct sysfs_dirent *parent_sd,
 	// struct sysfs_addrm_cxt의 acxt 맴버값을 0으로 초기화 함
 	// &sysfs_mutex을 이용하여 mutex lock을 수행
 
+	// sysfs_addrm_start에서 한일:
+	// struct sysfs_addrm_cxt의 acxt 맴버값을 0으로 초기화 함
+	// &sysfs_mutex을 이용하여 mutex lock을 수행
+
 	// sd: kmem_cache#1-oX (struct sysfs_dirent), parent_sd: &sysfs_root
 	// sysfs_add_one(&acxt, kmem_cache#1-oX (struct sysfs_dirent), &sysfs_root): 0
+	// sd: kmem_cache#1-oX (struct sysfs_dirent) (cgroup), parent_sd: kmem_cache#1-oX (struct sysfs_dirent) (fs)
+	// sysfs_add_one(&acxt, kmem_cache#1-oX (struct sysfs_dirent) (cgroup), kmem_cache#1-oX (struct sysfs_dirent) (fs)): 0
 	rc = sysfs_add_one(&acxt, sd, parent_sd);
+	// rc: 0
 	// rc: 0
 
 	// sysfs_add_one에서 한일:
@@ -1231,21 +1350,51 @@ static int create_dir(struct kobject *kobj, struct sysfs_dirent *parent_sd,
 	//              /            \
 	*/
 
+	// sysfs_add_one에서 한일:
+	// (kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_hash: 계산된 hash index 값
+	// (kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_parent: kmem_cache#1-oX (struct sysfs_dirent) (fs)
+	// (kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_flags: 0x1
+	//
+	// (kmem_cache#1-oX (struct sysfs_dirent) (fs))->s_dir.subdirs: 1
+	//
+	// (&(kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_rb)->__rb_parent_color: NULL
+	// (&(kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_rb)->rb_left: NULL
+	// (&(kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_rb)->rb_right: NULL
+	// &(kmem_cache#1-oX (struct sysfs_dirent) (fs))->s_dir.children.rb_node: &(kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_rb
+	//
+	// inode의 값을 나타내는 (kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_ino: 3 값을 이용하여
+	// rb_node를 INODE(3) 주석을 달기로 함
+	//
+	// rb_insert_color에서 한일:
+	// rbtree 조건에 맞게 tree 구성 및 안정화 작업 수행
+	/*
+	//                INODE(3)-b
+	//              /            \
+	*/
+
 	sysfs_addrm_finish(&acxt);
 
 	// sysfs_addrm_finish에서 한일:
 	// &sysfs_mutex을 이용하여 mutex unlock을 수행
 
+	// sysfs_addrm_finish에서 한일:
+	// &sysfs_mutex을 이용하여 mutex unlock을 수행
+
+	// rc: 0
 	// rc: 0
 	if (rc == 0)
 		// *p_sd: sd, sd: kmem_cache#1-oX (struct sysfs_dirent)
+		// *p_sd: sd, sd: kmem_cache#1-oX (struct sysfs_dirent) (cgroup)
 		*p_sd = sd;
 		// *p_sd: sd: kmem_cache#1-oX (struct sysfs_dirent)
+		// *p_sd: sd: kmem_cache#1-oX (struct sysfs_dirent) (cgroup)
 	else
 		sysfs_put(sd);
 
 	// rc: 0
+	// rc: 0
 	return rc;
+	// return 0
 	// return 0
 }
 
@@ -1344,11 +1493,11 @@ int sysfs_create_dir_ns(struct kobject *kobj, const void *ns)
 	// kobj: kmem_cache#30-oX (struct kobject), parent_sd: &sysfs_root, type: 0
 	// kobject_name(kmem_cache#30-oX (struct kobject)): "fs", ns: NULL
 	// create_dir(kmem_cache#30-oX (struct kobject), &sysfs_root, 0, "fs", NULL, &sd): 0
-	//
 	// kobj: kmem_cache#30-oX (struct kobject) (cgroup), parent_sd: kmem_cache#1-oX (struct sysfs_dirent) (fs), type: 0
 	// kobject_name(kmem_cache#30-oX (struct kobject) (cgroup)): "cgroup", ns: NULL
 	// create_dir(kmem_cache#30-oX (struct kobject) (cgroup), kmem_cache#1-oX (struct sysfs_dirent) (fs), 0, "cgroup", NULL, &sd): 0
 	error = create_dir(kobj, parent_sd, type, kobject_name(kobj), ns, &sd);
+	// error: 0
 	// error: 0
 
 	// create_dir에서 한일:
@@ -1396,14 +1545,64 @@ int sysfs_create_dir_ns(struct kobject *kobj, const void *ns)
 	*/
 	// sd: kmem_cache#1-oX (struct sysfs_dirent)
 
+	// create_dir에서 한일:
+	// sysfs_dir_cachep: kmem_cache#1을 이용하여 struct sysfs_dirent 메모리를 할당받음
+	// kmem_cache#1-oX (struct sysfs_dirent) (cgroup)
+	//
+	// (&(&sysfs_ino_ida)->idr)->top: kmem_cache#21-oX (struct idr_layer) (idr object 8)
+	// (&(&sysfs_ino_ida)->idr)->layers: 1
+	// (&(&sysfs_ino_ida)->idr)->id_free: (idr object new 0)
+	// (&(&sysfs_ino_ida)->idr)->id_free_cnt: 7
+	//
+	// (kmem_cache#27-oX (struct ida_bitmap))->bitmap 의 3 bit를 1로 set 수행
+	// (kmem_cache#27-oX (struct ida_bitmap))->nr_busy: 2
+	//
+	// kmem_cache인 kmem_cache#21 에서 할당한 object인 kmem_cache#21-oX (idr object 7) 의 memory 공간을 반환함
+	//
+	// *(&(kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_ino): 3
+	//
+	// (&(kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_count)->counter: 1
+	// (&(kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_active)->counter: 0
+	// (kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_name: "cgroup"
+	// (kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_mode: 0x41ED
+	// (kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_flags: 0x2001
+	// (kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_ns: NULL
+	// (kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_dir.kobj: kmem_cache#30-oX (struct kobject)
+	// (kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_hash: 계산된 hash index 값
+	// (kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_parent: kmem_cache#1-oX (struct sysfs_dirent) (fs)
+	// (kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_flags: 0x1
+	//
+	// (kmem_cache#1-oX (struct sysfs_dirent) (fs))->s_dir.subdirs: 1
+	//
+	// (&(kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_rb)->__rb_parent_color: NULL
+	// (&(kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_rb)->rb_left: NULL
+	// (&(kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_rb)->rb_right: NULL
+	// &(kmem_cache#1-oX (struct sysfs_dirent) (fs))->s_dir.children.rb_node: &(kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_rb
+	//
+	// inode의 값을 나타내는 (kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_ino: 3 값을 이용하여
+	// rb_node를 INODE(3) 주석을 달기로 함
+	//
+	// rb_insert_color에서 한일:
+	// rbtree 조건에 맞게 tree 구성 및 안정화 작업 수행
+	/*
+	//                INODE(3)-b
+	//              /            \
+	*/
+	// sd:  kmem_cache#1-oX (struct sysfs_dirent) (cgroup)
+
+	// error: 0
 	// error: 0
 	if (!error)
 		// kobj->sd: (kmem_cache#30-oX (struct kobject))->sd, sd: kmem_cache#1-oX (struct sysfs_dirent)
+		// kobj->sd: (kmem_cache#30-oX (struct kobject))->sd, sd: kmem_cache#1-oX (struct sysfs_dirent) (cgroup)
 		kobj->sd = sd;
 		// kobj->sd: (kmem_cache#30-oX (struct kobject))->sd: kmem_cache#1-oX (struct sysfs_dirent)
+		// kobj->sd: (kmem_cache#30-oX (struct kobject))->sd: kmem_cache#1-oX (struct sysfs_dirent) (cgroup)
 
 	// error: 0
+	// error: 0
 	return error;
+	// return 0
 	// return 0
 }
 

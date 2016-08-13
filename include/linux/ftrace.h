@@ -645,9 +645,10 @@ static inline void __ftrace_enabled_restore(int enabled)
 # define trace_preempt_off(a0, a1) do { } while (0)
 #endif
 
-#ifdef CONFIG_FTRACE_MCOUNT_RECORD
+#ifdef CONFIG_FTRACE_MCOUNT_RECORD // CONFIG_FTRACE_MCOUNT_RECORD=n
 extern void ftrace_init(void);
 #else
+// ARM10C 20160813
 static inline void ftrace_init(void) { }
 #endif
 

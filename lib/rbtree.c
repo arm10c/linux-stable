@@ -489,6 +489,9 @@ static const struct rb_augment_callbacks dummy_callbacks = {
 // node: &(&(kmem_cache#25-oX)[1] (struct ctl_node) + 1).node,
 // head->parent: (kmem_cache#25-oX)->parent: kmem_cache#29-oX
 // &head->parent->root: &(kmem_cache#29-oX)->root
+// ARM10C 20160813
+// &sd->s_rb: &(kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_rb,
+// &sd->s_parent->s_dir.children: &(kmem_cache#1-oX (struct sysfs_dirent) (fs))->s_dir.children
 void rb_insert_color(struct rb_node *node, struct rb_root *root)
 {
 	// node: &(kmem_cache#30-o9)->rb_node, root: &vmap_area_root

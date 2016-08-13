@@ -218,6 +218,7 @@ extern int _cond_resched(void);
 // ARM10C 20150704
 // ARM10C 20151114
 // ARM10C 20160730
+// ARM10C 20160813
 // might_resched(): NULL function
 # define might_sleep() do { might_resched(); } while (0)
 #endif

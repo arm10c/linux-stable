@@ -591,12 +591,14 @@ extern void efi_map_pal_code (void);
 extern void efi_memmap_walk (efi_freemem_callback_t callback, void *arg);
 extern void efi_gettimeofday (struct timespec *ts);
 extern void efi_enter_virtual_mode (void);	/* switch EFI to virtual mode, if possible */
-#ifdef CONFIG_X86
+#ifdef CONFIG_X86 // CONFIG_X86=n
 extern void efi_late_init(void);
 extern void efi_free_boot_services(void);
 extern efi_status_t efi_query_variable_store(u32 attributes, unsigned long size);
 #else
+// ARM10C 20160813
 static inline void efi_late_init(void) {}
+// ARM10C 20160813
 static inline void efi_free_boot_services(void) {}
 
 static inline efi_status_t efi_query_variable_store(u32 attributes, unsigned long size)
@@ -654,10 +656,11 @@ extern int __init efi_setup_pcdp_console(char *);
 #define EFI_MEMMAP		4	/* Can we use EFI memory map? */
 #define EFI_64BIT		5	/* Is the firmware 64-bit? */
 
-#ifdef CONFIG_EFI
+#ifdef CONFIG_EFI // CONFIG_EFI=n
 # ifdef CONFIG_X86
 extern int efi_enabled(int facility);
 # else
+// ARM10C 20160813
 static inline int efi_enabled(int facility)
 {
 	return 1;

@@ -12,6 +12,7 @@ struct vm_area_struct;		/* vma defining user mapping in mm_types.h */
 /* bits in flags of vmalloc's vm_struct below */
 // ARM10C 20131130
 // ARM10C 20141025
+// ARM10C 20160813
 // VM_IOREMAP: 0x00000001
 #define VM_IOREMAP		0x00000001	/* ioremap() and friends */
 #define VM_ALLOC		0x00000002	/* vmalloc() */
@@ -32,6 +33,7 @@ struct vm_area_struct;		/* vma defining user mapping in mm_types.h */
 // ARM10C 20131116
 // ARM10C 20140726
 // ARM10C 20141025
+// ARM10C 20160813
 // sizeof(struct vm_struct): 32 bytes
 struct vm_struct {
 	struct vm_struct	*next;
@@ -106,6 +108,8 @@ void vmalloc_sync_all(void);
  *	Lowlevel-APIs (not for driver use!)
  */
 
+// ARM10C 20160813
+// area: kmem_cache#30-oX (vm_struct)
 static inline size_t get_vm_area_size(const struct vm_struct *area)
 {
 	/* return actual size without guard page */

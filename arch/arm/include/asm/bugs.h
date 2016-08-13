@@ -10,9 +10,10 @@
 #ifndef __ASM_BUGS_H
 #define __ASM_BUGS_H
 
-#ifdef CONFIG_MMU
+#ifdef CONFIG_MMU // CONFIG_MMU=y
 extern void check_writebuffer_bugs(void);
 
+// ARM10C 20160813
 #define check_bugs() check_writebuffer_bugs()
 #else
 #define check_bugs() do { } while (0)

@@ -172,7 +172,7 @@ struct sfi_gpio_table_entry {
 
 typedef int (*sfi_table_handler) (struct sfi_table_header *table);
 
-#ifdef CONFIG_SFI
+#ifdef CONFIG_SFI // CONFIG_SFI=n
 extern void __init sfi_init(void);
 extern int __init sfi_platform_init(void);
 extern void __init sfi_init_late(void);
@@ -191,6 +191,7 @@ static inline void sfi_init(void)
 {
 }
 
+// ARM10C 20160813
 static inline void sfi_init_late(void)
 {
 }

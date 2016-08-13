@@ -31,6 +31,8 @@ extern struct proc_dir_entry *proc_create_data(const char *, umode_t,
 // "tty/ldiscs", 0, NULL, &tty_ldiscs_proc_fops
 // ARM10C 20160611
 // "tty/drivers", 0, NULL, &proc_tty_drivers_operations
+// ARM10C 20160813
+// "cgroups", 0, NULL, &proc_cgroupstats_operations
 static inline struct proc_dir_entry *proc_create(
 	const char *name, umode_t mode, struct proc_dir_entry *parent,
 	const struct file_operations *proc_fops)

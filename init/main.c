@@ -939,21 +939,26 @@ asmlinkage void __init start_kernel(void)
 	// sysctl_base_table 에 등록된 kernel, vm, fs, debug, dev의 dir, files 를 recursive 하게 RB Tree 를 구성함
 #endif
 	cgroup_init();
-	cpuset_init();
-	taskstats_init_early();
-	delayacct_init();
+	// cgroup에서 사용하는 sub system 인 debug_subsys, cpu_cgroup_subsys, cpuacct_subsys, freezer_subsys 를 등록 하고
+	// init_css_set.subsys 를 이용하여 hash key 값 생성, cgroup 을 위한 kobject 를 생성, cgroup용 fils system type을 추가 하여
+	// filesystem 에 등록함, cgroup 을 위한 proc 생성.
+
+	cpuset_init(); // null function
+	taskstats_init_early(); // null function
+	delayacct_init(); // null function
 
 	check_bugs();
 
-	acpi_early_init(); /* before LAPIC and SMP init */
-	sfi_init_late();
+	acpi_early_init(); /* before LAPIC and SMP init */  // null function
+	sfi_init_late(); // null function
 
+	// efi_enabled(EFI_RUNTIME_SERVICES): 1
 	if (efi_enabled(EFI_RUNTIME_SERVICES)) {
-		efi_late_init();
-		efi_free_boot_services();
+		efi_late_init(); // null function
+		efi_free_boot_services(); // null function
 	}
 
-	ftrace_init();
+	ftrace_init(); // null function
 
 	/* Do the rest non-__init'ed, we're now alive */
 	rest_init();

@@ -229,20 +229,33 @@ static int __init check_writebuffer(unsigned long *p1, unsigned long *p2)
 	return val != zero;
 }
 
+// ARM10C 20160813
 void __init check_writebuffer_bugs(void)
 {
 	struct page *page;
 	const char *reason;
 	unsigned long v = 1;
+	// v: 1
 
 	printk(KERN_INFO "CPU: Testing write buffer coherency: ");
 
+	// GFP_KERNEL: 0xD0
+	// alloc_page(GFP_KERNEL): page 1개(4K)의 할당된 메모리 주소
 	page = alloc_page(GFP_KERNEL);
+	// page: page 1개(4K)의 할당된 메모리 주소
+
+	// page: page 1개(4K)의 할당된 메모리 주소
 	if (page) {
 		unsigned long *p1, *p2;
+
+		// PAGE_KERNEL: pgprot_kernel에 0x200 를 or 한 값
+		// L_PTE_MT_MASK: 0x3c, L_PTE_MT_BUFFERABLE: 0x4
+		// __pgprot_modify(pgprot_kernel에 0x200 를 or 한 값, 0x3c, 0x04): pgprot_kernel에 0x204 를 or 한 값
 		pgprot_t prot = __pgprot_modify(PAGE_KERNEL,
 					L_PTE_MT_MASK, L_PTE_MT_BUFFERABLE);
+		// prot: pgprot_kernel에 0x204 를 or 한 값
 
+		// page: page 1개(4K)의 할당된 메모리 주소, VM_IOREMAP: 0x00000001, prot: pgprot_kernel에 0x204 를 or 한 값
 		p1 = vmap(&page, 1, VM_IOREMAP, prot);
 		p2 = vmap(&page, 1, VM_IOREMAP, prot);
 

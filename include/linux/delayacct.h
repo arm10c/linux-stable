@@ -28,7 +28,7 @@
 #define DELAYACCT_PF_SWAPIN	0x00000001	/* I am doing a swapin */
 #define DELAYACCT_PF_BLKIO	0x00000002	/* I am waiting on IO */
 
-#ifdef CONFIG_TASK_DELAY_ACCT
+#ifdef CONFIG_TASK_DELAY_ACCT // CONFIG_TASK_DELAY_ACCT=n
 
 extern int delayacct_on;	/* Delay accounting turned on/off */
 extern struct kmem_cache *delayacct_cache;
@@ -126,6 +126,7 @@ static inline void delayacct_set_flag(int flag)
 {}
 static inline void delayacct_clear_flag(int flag)
 {}
+// ARM10C 20160813
 static inline void delayacct_init(void)
 {}
 static inline void delayacct_tsk_init(struct task_struct *tsk)

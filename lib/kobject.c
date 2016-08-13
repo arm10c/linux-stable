@@ -60,6 +60,8 @@ const void *kobject_namespace(struct kobject *kobj)
  */
 // ARM10C 20160123
 // kobj: kmem_cache#30-oX (struct kobject)
+// ARM10C 20160813
+// kobj: kmem_cache#30-oX (struct kobject)
 static int populate_dir(struct kobject *kobj)
 {
 	// kobj: kmem_cache#30-oX (struct kobject)
@@ -149,13 +151,63 @@ static int create_dir(struct kobject *kobj)
 	//
 	// (kmem_cache#30-oX (struct kobject))->sd: kmem_cache#1-oX (struct sysfs_dirent)
 
+	// sysfs_create_dir_ns에서 한일:
+	// sysfs_dir_cachep: kmem_cache#1을 이용하여 struct sysfs_dirent 메모리를 할당받음
+	// kmem_cache#1-oX (struct sysfs_dirent) (cgroup)
+	//
+	// (&(&sysfs_ino_ida)->idr)->top: kmem_cache#21-oX (struct idr_layer) (idr object 8)
+	// (&(&sysfs_ino_ida)->idr)->layers: 1
+	// (&(&sysfs_ino_ida)->idr)->id_free: (idr object new 0)
+	// (&(&sysfs_ino_ida)->idr)->id_free_cnt: 7
+	//
+	// (kmem_cache#27-oX (struct ida_bitmap))->bitmap 의 3 bit를 1로 set 수행
+	// (kmem_cache#27-oX (struct ida_bitmap))->nr_busy: 2
+	//
+	// kmem_cache인 kmem_cache#21 에서 할당한 object인 kmem_cache#21-oX (idr object 7) 의 memory 공간을 반환함
+	//
+	// *(&(kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_ino): 3
+	//
+	// (&(kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_count)->counter: 1
+	// (&(kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_active)->counter: 0
+	// (kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_name: "cgroup"
+	// (kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_mode: 0x41ED
+	// (kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_flags: 0x2001
+	// (kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_ns: NULL
+	// (kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_dir.kobj: kmem_cache#30-oX (struct kobject)
+	// (kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_hash: 계산된 hash index 값
+	// (kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_parent: kmem_cache#1-oX (struct sysfs_dirent) (fs)
+	// (kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_flags: 0x1
+	//
+	// (kmem_cache#1-oX (struct sysfs_dirent) (fs))->s_dir.subdirs: 1
+	//
+	// (&(kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_rb)->__rb_parent_color: NULL
+	// (&(kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_rb)->rb_left: NULL
+	// (&(kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_rb)->rb_right: NULL
+	// &(kmem_cache#1-oX (struct sysfs_dirent) (fs))->s_dir.children.rb_node: &(kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_rb
+	//
+	// inode의 값을 나타내는 (kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_ino: 3 값을 이용하여
+	// rb_node를 INODE(3) 주석을 달기로 함
+	//
+	// rb_insert_color에서 한일:
+	// rbtree 조건에 맞게 tree 구성 및 안정화 작업 수행
+	/*
+	//                INODE(3)-b
+	//              /            \
+	*/
+	// (kmem_cache#30-oX (struct kobject))->sd: kmem_cache#1-oX (struct sysfs_dirent) (cgroup)
+
+	// error: 0
 	// error: 0
 	if (!error) {
 		// kobj: kmem_cache#30-oX (struct kobject)
 		// populate_dir(kmem_cache#30-oX (struct kobject)): 0
+		// kobj: kmem_cache#30-oX (struct kobject)
+		// populate_dir(kmem_cache#30-oX (struct kobject)): 0
 		error = populate_dir(kobj);
 		// error: 0
+		// error: 0
 
+		// error: 0
 		// error: 0
 		if (error)
 			sysfs_remove_dir(kobj);
@@ -166,13 +218,19 @@ static int create_dir(struct kobject *kobj)
 	 * extra reference so that it stays until @kobj is gone.
 	 */
 	// kobj->sd: (kmem_cache#30-oX (struct kobject))->sd: kmem_cache#1-oX (struct sysfs_dirent)
+	// kobj->sd: (kmem_cache#30-oX (struct kobject))->sd: kmem_cache#1-oX (struct sysfs_dirent) (cgroup)
 	sysfs_get(kobj->sd);
 	
 	// sysfs_get에서 한일:
 	// (kmem_cache#1-oX (struct sysfs_dirent))->s_count: 2
+	
+	// sysfs_get에서 한일:
+	// (kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_count: 2
 
 	// error: 0
+	// error: 0
 	return error;
+	// return 0
 	// return 0
 }
 
@@ -362,6 +420,7 @@ static int kobject_add_internal(struct kobject *kobj)
 	// kobj: kmem_cache#30-oX (struct kobject), create_dir(kmem_cache#30-oX (struct kobject)): 0
 	error = create_dir(kobj);
 	// error: 0
+	// error: 0
 
 	// create_dir에서 한일:
 	// sysfs_dir_cachep: kmem_cache#1을 이용하여 struct sysfs_dirent 메모리를 할당받음
@@ -431,6 +490,54 @@ static int kobject_add_internal(struct kobject *kobj)
 	//
 	// (kmem_cache#1-oX (struct sysfs_dirent))->s_count: 2
 
+	// create_dir에서 한일:
+	// sysfs_dir_cachep: kmem_cache#1을 이용하여 struct sysfs_dirent 메모리를 할당받음
+	// kmem_cache#1-oX (struct sysfs_dirent) (cgroup)
+	//
+	// (&(&sysfs_ino_ida)->idr)->top: kmem_cache#21-oX (struct idr_layer) (idr object 8)
+	// (&(&sysfs_ino_ida)->idr)->layers: 1
+	// (&(&sysfs_ino_ida)->idr)->id_free: (idr object new 0)
+	// (&(&sysfs_ino_ida)->idr)->id_free_cnt: 7
+	//
+	// (kmem_cache#27-oX (struct ida_bitmap))->bitmap 의 3 bit를 1로 set 수행
+	// (kmem_cache#27-oX (struct ida_bitmap))->nr_busy: 2
+	//
+	// kmem_cache인 kmem_cache#21 에서 할당한 object인 kmem_cache#21-oX (idr object 7) 의 memory 공간을 반환함
+	//
+	// *(&(kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_ino): 3
+	//
+	// (&(kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_count)->counter: 1
+	// (&(kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_active)->counter: 0
+	// (kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_name: "cgroup"
+	// (kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_mode: 0x41ED
+	// (kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_flags: 0x2001
+	// (kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_ns: NULL
+	// (kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_dir.kobj: kmem_cache#30-oX (struct kobject)
+	// (kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_hash: 계산된 hash index 값
+	// (kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_parent: kmem_cache#1-oX (struct sysfs_dirent) (fs)
+	// (kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_flags: 0x1
+	//
+	// (kmem_cache#1-oX (struct sysfs_dirent) (fs))->s_dir.subdirs: 1
+	//
+	// (&(kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_rb)->__rb_parent_color: NULL
+	// (&(kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_rb)->rb_left: NULL
+	// (&(kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_rb)->rb_right: NULL
+	// &(kmem_cache#1-oX (struct sysfs_dirent) (fs))->s_dir.children.rb_node: &(kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_rb
+	//
+	// inode의 값을 나타내는 (kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_ino: 3 값을 이용하여
+	// rb_node를 INODE(3) 주석을 달기로 함
+	//
+	// rb_insert_color에서 한일:
+	// rbtree 조건에 맞게 tree 구성 및 안정화 작업 수행
+	/*
+	//                INODE(3)-b
+	//              /            \
+	*/
+	// (kmem_cache#30-oX (struct kobject))->sd: kmem_cache#1-oX (struct sysfs_dirent) (cgroup)
+	//
+	// (kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_count: 2
+
+	// error: 0
 	// error: 0
 	if (error) {
 		kobj_kset_leave(kobj);
@@ -449,11 +556,15 @@ static int kobject_add_internal(struct kobject *kobj)
 			     parent ? kobject_name(parent) : "'none'");
 	} else
 		// kobj->state_in_sysfs: (kmem_cache#30-oX (struct kobject))->state_in_sysfs
+		// kobj->state_in_sysfs: (kmem_cache#30-oX (struct kobject))->state_in_sysfs
 		kobj->state_in_sysfs = 1;
+		// kobj->state_in_sysfs: (kmem_cache#30-oX (struct kobject))->state_in_sysfs: 1
 		// kobj->state_in_sysfs: (kmem_cache#30-oX (struct kobject))->state_in_sysfs: 1
 
 	// error: 0
+	// error: 0
 	return error;
+	// return 0
 	// return 0
 }
 
@@ -710,6 +821,56 @@ static int kobject_add_varg(struct kobject *kobj, struct kobject *parent,
 	// (kmem_cache#1-oX (struct sysfs_dirent))->s_count: 2
 	//
 	// (kmem_cache#30-oX (struct kobject))->state_in_sysfs: 1
+
+	// kobject_add_internal에서 한일:
+	// (&(kmem_cache#30-oX (struct kobject) (fs))->kref)->refcount: 1
+	//
+	// sysfs_dir_cachep: kmem_cache#1을 이용하여 struct sysfs_dirent 메모리를 할당받음
+	// kmem_cache#1-oX (struct sysfs_dirent) (cgroup)
+	//
+	// (&(&sysfs_ino_ida)->idr)->top: kmem_cache#21-oX (struct idr_layer) (idr object 8)
+	// (&(&sysfs_ino_ida)->idr)->layers: 1
+	// (&(&sysfs_ino_ida)->idr)->id_free: (idr object new 0)
+	// (&(&sysfs_ino_ida)->idr)->id_free_cnt: 7
+	//
+	// (kmem_cache#27-oX (struct ida_bitmap))->bitmap 의 3 bit를 1로 set 수행
+	// (kmem_cache#27-oX (struct ida_bitmap))->nr_busy: 2
+	//
+	// kmem_cache인 kmem_cache#21 에서 할당한 object인 kmem_cache#21-oX (idr object 7) 의 memory 공간을 반환함
+	//
+	// *(&(kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_ino): 3
+	//
+	// (&(kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_count)->counter: 1
+	// (&(kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_active)->counter: 0
+	// (kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_name: "cgroup"
+	// (kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_mode: 0x41ED
+	// (kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_flags: 0x2001
+	// (kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_ns: NULL
+	// (kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_dir.kobj: kmem_cache#30-oX (struct kobject)
+	// (kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_hash: 계산된 hash index 값
+	// (kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_parent: kmem_cache#1-oX (struct sysfs_dirent) (fs)
+	// (kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_flags: 0x1
+	//
+	// (kmem_cache#1-oX (struct sysfs_dirent) (fs))->s_dir.subdirs: 1
+	//
+	// (&(kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_rb)->__rb_parent_color: NULL
+	// (&(kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_rb)->rb_left: NULL
+	// (&(kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_rb)->rb_right: NULL
+	// &(kmem_cache#1-oX (struct sysfs_dirent) (fs))->s_dir.children.rb_node: &(kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_rb
+	//
+	// inode의 값을 나타내는 (kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_ino: 3 값을 이용하여
+	// rb_node를 INODE(3) 주석을 달기로 함
+	//
+	// rb_insert_color에서 한일:
+	// rbtree 조건에 맞게 tree 구성 및 안정화 작업 수행
+	/*
+	//                INODE(3)-b
+	//              /            \
+	*/
+	// (kmem_cache#30-oX (struct kobject))->sd: kmem_cache#1-oX (struct sysfs_dirent) (cgroup)
+	// (kmem_cache#30-oX (struct kobject))->state_in_sysfs: 1
+	//
+	// (kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_count: 2
 }
 
 /**
@@ -772,9 +933,10 @@ int kobject_add(struct kobject *kobj, struct kobject *parent,
 
 	// kobj: kmem_cache#30-oX (struct kobject), parent: NULL, fmt: "%s", args: "fs"
 	// kobject_add_varg(kmem_cache#30-oX (struct kobject), NULL, "%s", "fs"): 0
-	//
 	// kobj: kmem_cache#30-oX (struct kobject), parent: kmem_cache#30-oX (struct kobject), fmt: "%s", args: "cgroup"
+	// kobject_add_varg(kmem_cache#30-oX (struct kobject), kmem_cache#30-oX (struct kobject), "%s", "cgroup"): 0
 	retval = kobject_add_varg(kobj, parent, fmt, args);
+	// retval: 0
 	// retval: 0
 
 	// kobject_add_varg에서 한일:
@@ -852,14 +1014,74 @@ int kobject_add(struct kobject *kobj, struct kobject *parent,
 	//
 	// (kmem_cache#30-oX (struct kobject))->state_in_sysfs: 1
 
+	// kobject_add_varg에서 한일:
+	// struct kobject의 멤버 name에 메모리를 할당하고 string 값을 만듬
+	// (kmem_cache#30-oX (struct kobject))->name: kmem_cache#30-oX: "cgroup"
+	// (kmem_cache#30-oX (struct kobject))->parent: kmem_cache#30-oX (struct kobject) (fs)
+	//
+	// (&(kmem_cache#30-oX (struct kobject) (fs))->kref)->refcount: 1
+	//
+	// sysfs_dir_cachep: kmem_cache#1을 이용하여 struct sysfs_dirent 메모리를 할당받음
+	// kmem_cache#1-oX (struct sysfs_dirent) (cgroup)
+	//
+	// (&(&sysfs_ino_ida)->idr)->top: kmem_cache#21-oX (struct idr_layer) (idr object 8)
+	// (&(&sysfs_ino_ida)->idr)->layers: 1
+	// (&(&sysfs_ino_ida)->idr)->id_free: (idr object new 0)
+	// (&(&sysfs_ino_ida)->idr)->id_free_cnt: 7
+	//
+	// (kmem_cache#27-oX (struct ida_bitmap))->bitmap 의 3 bit를 1로 set 수행
+	// (kmem_cache#27-oX (struct ida_bitmap))->nr_busy: 2
+	//
+	// kmem_cache인 kmem_cache#21 에서 할당한 object인 kmem_cache#21-oX (idr object 7) 의 memory 공간을 반환함
+	//
+	// *(&(kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_ino): 3
+	//
+	// (&(kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_count)->counter: 1
+	// (&(kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_active)->counter: 0
+	// (kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_name: "cgroup"
+	// (kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_mode: 0x41ED
+	// (kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_flags: 0x2001
+	// (kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_ns: NULL
+	// (kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_dir.kobj: kmem_cache#30-oX (struct kobject)
+	// (kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_hash: 계산된 hash index 값
+	// (kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_parent: kmem_cache#1-oX (struct sysfs_dirent) (fs)
+	// (kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_flags: 0x1
+	//
+	// (kmem_cache#1-oX (struct sysfs_dirent) (fs))->s_dir.subdirs: 1
+	//
+	// (&(kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_rb)->__rb_parent_color: NULL
+	// (&(kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_rb)->rb_left: NULL
+	// (&(kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_rb)->rb_right: NULL
+	// &(kmem_cache#1-oX (struct sysfs_dirent) (fs))->s_dir.children.rb_node: &(kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_rb
+	//
+	// inode의 값을 나타내는 (kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_ino: 3 값을 이용하여
+	// rb_node를 INODE(3) 주석을 달기로 함
+	//
+	// rb_insert_color에서 한일:
+	// rbtree 조건에 맞게 tree 구성 및 안정화 작업 수행
+	/*
+	//                INODE(3)-b
+	//              /            \
+	*/
+	// (kmem_cache#30-oX (struct kobject))->sd: kmem_cache#1-oX (struct sysfs_dirent) (cgroup)
+	// (kmem_cache#30-oX (struct kobject))->state_in_sysfs: 1
+	//
+	// (kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_count: 2
+
 	// (args): (((char *) &("%s")) + 4): "fs"
+	// (args): (((char *) &("%s")) + 4): "cgroup"
 	va_end(args);
 
 	// va_end에서 한일:
 	// (args): NULL
 
+	// va_end에서 한일:
+	// (args): NULL
+
+	// retval: 0
 	// retval: 0
 	return retval;
+	// return 0
 	// return 0
 }
 EXPORT_SYMBOL(kobject_add);
@@ -1264,9 +1486,10 @@ struct kobject *kobject_create_and_add(const char *name, struct kobject *parent)
 
 	// kobj: kmem_cache#30-oX (struct kobject), parent: NULL, name: "fs"
 	// kobject_add(kmem_cache#30-oX (struct kobject), NULL, "%s", "fs"): 0
-	//
 	// kobj: kmem_cache#30-oX (struct kobject), parent: kmem_cache#30-oX (struct kobject), name: "cgroup"
+	// kobject_add(kmem_cache#30-oX (struct kobject), kmem_cache#30-oX (struct kobject), "%s", "cgroup"): 0
 	retval = kobject_add(kobj, parent, "%s", name);
+	// retval: 0
 	// retval: 0
 
 	// kobject_add에서 한일:
@@ -1344,6 +1567,61 @@ struct kobject *kobject_create_and_add(const char *name, struct kobject *parent)
 	//
 	// (kmem_cache#30-oX (struct kobject))->state_in_sysfs: 1
 
+	// kobject_add에서 한일:
+	// struct kobject의 멤버 name에 메모리를 할당하고 string 값을 만듬
+	// (kmem_cache#30-oX (struct kobject))->name: kmem_cache#30-oX: "cgroup"
+	// (kmem_cache#30-oX (struct kobject))->parent: kmem_cache#30-oX (struct kobject) (fs)
+	//
+	// (&(kmem_cache#30-oX (struct kobject) (fs))->kref)->refcount: 1
+	//
+	// sysfs_dir_cachep: kmem_cache#1을 이용하여 struct sysfs_dirent 메모리를 할당받음
+	// kmem_cache#1-oX (struct sysfs_dirent) (cgroup)
+	//
+	// (&(&sysfs_ino_ida)->idr)->top: kmem_cache#21-oX (struct idr_layer) (idr object 8)
+	// (&(&sysfs_ino_ida)->idr)->layers: 1
+	// (&(&sysfs_ino_ida)->idr)->id_free: (idr object new 0)
+	// (&(&sysfs_ino_ida)->idr)->id_free_cnt: 7
+	//
+	// (kmem_cache#27-oX (struct ida_bitmap))->bitmap 의 3 bit를 1로 set 수행
+	// (kmem_cache#27-oX (struct ida_bitmap))->nr_busy: 2
+	//
+	// kmem_cache인 kmem_cache#21 에서 할당한 object인 kmem_cache#21-oX (idr object 7) 의 memory 공간을 반환함
+	//
+	// *(&(kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_ino): 3
+	//
+	// (&(kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_count)->counter: 1
+	// (&(kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_active)->counter: 0
+	// (kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_name: "cgroup"
+	// (kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_mode: 0x41ED
+	// (kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_flags: 0x2001
+	// (kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_ns: NULL
+	// (kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_dir.kobj: kmem_cache#30-oX (struct kobject)
+	// (kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_hash: 계산된 hash index 값
+	// (kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_parent: kmem_cache#1-oX (struct sysfs_dirent) (fs)
+	// (kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_flags: 0x1
+	//
+	// (kmem_cache#1-oX (struct sysfs_dirent) (fs))->s_dir.subdirs: 1
+	//
+	// (&(kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_rb)->__rb_parent_color: NULL
+	// (&(kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_rb)->rb_left: NULL
+	// (&(kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_rb)->rb_right: NULL
+	// &(kmem_cache#1-oX (struct sysfs_dirent) (fs))->s_dir.children.rb_node: &(kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_rb
+	//
+	// inode의 값을 나타내는 (kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_ino: 3 값을 이용하여
+	// rb_node를 INODE(3) 주석을 달기로 함
+	//
+	// rb_insert_color에서 한일:
+	// rbtree 조건에 맞게 tree 구성 및 안정화 작업 수행
+	/*
+	//                INODE(3)-b
+	//              /            \
+	*/
+	// (kmem_cache#30-oX (struct kobject))->sd: kmem_cache#1-oX (struct sysfs_dirent) (cgroup)
+	// (kmem_cache#30-oX (struct kobject))->state_in_sysfs: 1
+	//
+	// (kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_count: 2
+
+	// retval: 0
 	// retval: 0
 	if (retval) {
 		printk(KERN_WARNING "%s: kobject_add error: %d\n",
@@ -1353,7 +1631,9 @@ struct kobject *kobject_create_and_add(const char *name, struct kobject *parent)
 	}
 
 	// kobj: kmem_cache#30-oX (struct kobject)
+	// kobj: kmem_cache#30-oX (struct kobject)
 	return kobj;
+	// return kmem_cache#30-oX (struct kobject)
 	// return kmem_cache#30-oX (struct kobject)
 }
 EXPORT_SYMBOL_GPL(kobject_create_and_add);

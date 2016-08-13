@@ -2066,6 +2066,7 @@ static void cgroup_kill_sb(struct super_block *sb) {
 	cgroup_free_root(root);
 }
 
+// ARM10C 20160813
 static struct file_system_type cgroup_fs_type = {
 	.name = "cgroup",
 	.mount = cgroup_mount,
@@ -6199,13 +6200,91 @@ int __init cgroup_init(void)
 	// &cgroup_mutex 을 사용하여 mutex unlock을 수행
 
 	// fs_kobj: kmem_cache#30-oX (struct kobject)
+	// kobject_create_and_add("cgroup", kmem_cache#30-oX (struct kobject)): kmem_cache#30-oX (struct kobject)
 	cgroup_kobj = kobject_create_and_add("cgroup", fs_kobj);
+	// cgroup_kobj: kmem_cache#30-oX (struct kobject)
+
+	// kobject_create_and_add 에서 한일:
+	// struct kobject의 메모리를 할당받음 kmem_cache#30-oX (struct kobject)
+	// (&(kmem_cache#30-oX (struct kobject))->kref)->refcount: 1
+	// (&(kmem_cache#30-oX (struct kobject))->entry)->next: &(kmem_cache#30-oX (struct kobject))->entry
+	// (&(kmem_cache#30-oX (struct kobject))->entry)->prev: &(kmem_cache#30-oX (struct kobject))->entry
+	// (kmem_cache#30-oX (struct kobject))->state_in_sysfs: 0
+	// (kmem_cache#30-oX (struct kobject))->state_add_uevent_sent: 0
+	// (kmem_cache#30-oX (struct kobject))->state_remove_uevent_sent: 0
+	// (kmem_cache#30-oX (struct kobject))->state_initialized: 1
+	// (kmem_cache#30-oX (struct kobject))->ktype: &dynamic_kobj_ktype
+	//
+	// struct kobject의 멤버 name에 메모리를 할당하고 string 값을 만듬
+	// (kmem_cache#30-oX (struct kobject))->name: kmem_cache#30-oX: "cgroup"
+	// (kmem_cache#30-oX (struct kobject))->parent: kmem_cache#30-oX (struct kobject) (fs)
+	//
+	// (&(kmem_cache#30-oX (struct kobject) (fs))->kref)->refcount: 1
+	//
+	// sysfs_dir_cachep: kmem_cache#1을 이용하여 struct sysfs_dirent 메모리를 할당받음
+	// kmem_cache#1-oX (struct sysfs_dirent) (cgroup)
+	//
+	// (&(&sysfs_ino_ida)->idr)->top: kmem_cache#21-oX (struct idr_layer) (idr object 8)
+	// (&(&sysfs_ino_ida)->idr)->layers: 1
+	// (&(&sysfs_ino_ida)->idr)->id_free: (idr object new 0)
+	// (&(&sysfs_ino_ida)->idr)->id_free_cnt: 7
+	//
+	// (kmem_cache#27-oX (struct ida_bitmap))->bitmap 의 3 bit를 1로 set 수행
+	// (kmem_cache#27-oX (struct ida_bitmap))->nr_busy: 2
+	//
+	// kmem_cache인 kmem_cache#21 에서 할당한 object인 kmem_cache#21-oX (idr object 7) 의 memory 공간을 반환함
+	//
+	// *(&(kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_ino): 3
+	//
+	// (&(kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_count)->counter: 1
+	// (&(kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_active)->counter: 0
+	// (kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_name: "cgroup"
+	// (kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_mode: 0x41ED
+	// (kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_flags: 0x2001
+	// (kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_ns: NULL
+	// (kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_dir.kobj: kmem_cache#30-oX (struct kobject)
+	// (kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_hash: 계산된 hash index 값
+	// (kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_parent: kmem_cache#1-oX (struct sysfs_dirent) (fs)
+	// (kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_flags: 0x1
+	//
+	// (kmem_cache#1-oX (struct sysfs_dirent) (fs))->s_dir.subdirs: 1
+	//
+	// (&(kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_rb)->__rb_parent_color: NULL
+	// (&(kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_rb)->rb_left: NULL
+	// (&(kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_rb)->rb_right: NULL
+	// &(kmem_cache#1-oX (struct sysfs_dirent) (fs))->s_dir.children.rb_node: &(kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_rb
+	//
+	// inode의 값을 나타내는 (kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_ino: 3 값을 이용하여
+	// rb_node를 INODE(3) 주석을 달기로 함
+	//
+	// rb_insert_color에서 한일:
+	// rbtree 조건에 맞게 tree 구성 및 안정화 작업 수행
+	/*
+	//                INODE(3)-b
+	//              /            \
+	*/
+	// (kmem_cache#30-oX (struct kobject))->sd: kmem_cache#1-oX (struct sysfs_dirent) (cgroup)
+	// (kmem_cache#30-oX (struct kobject))->state_in_sysfs: 1
+	//
+	// (kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_count: 2
+
+	// cgroup_kobj: kmem_cache#30-oX (struct kobject)
 	if (!cgroup_kobj) {
 		err = -ENOMEM;
 		goto out;
 	}
 
+	// register_filesystem(&cgroup_fs_type): 0
 	err = register_filesystem(&cgroup_fs_type);
+	// err: 0
+
+	// register_filesystem에서 한일:
+	// (&proc_fs_type)->next: &cgroup_fs_type
+	//
+	// file system 연결 결과
+	// file_systems: sysfs_fs_type -> rootfs_fs_type -> shmem_fs_type -> bd_type -> proc_fs_type -> cgroup_fs_type
+
+	// err: 0
 	if (err < 0) {
 		kobject_put(cgroup_kobj);
 		goto out;
@@ -6213,11 +6292,65 @@ int __init cgroup_init(void)
 
 	proc_create("cgroups", 0, NULL, &proc_cgroupstats_operations);
 
+	// proc_create 에서 한일:
+	// struct proc_dir_entry 만큼 메모리를 할당 받음 kmem_cache#29-oX (struct proc_dir_entry)
+	//
+	// (kmem_cache#29-oX (struct proc_dir_entry))->name: "cgroups"
+	// (kmem_cache#29-oX (struct proc_dir_entry))->namelen: 7
+	// (kmem_cache#29-oX (struct proc_dir_entry))->mode: 0100444
+	// (kmem_cache#29-oX (struct proc_dir_entry))->nlink: 1
+	// (&(kmem_cache#29-oX (struct proc_dir_entry))->count)->counter: 1
+	// &(kmem_cache#29-oX (struct proc_dir_entry))->pde_unload_lock을 이용한 spin lock 초기화 수행
+	// ((&(kmem_cache#29-oX (struct proc_dir_entry))->pde_unload_lock)->rlock)->raw_lock: { { 0 } }
+	// ((&(kmem_cache#29-oX (struct proc_dir_entry))->pde_unload_lock)->rlock)->magic: 0xdead4ead
+	// ((&(kmem_cache#29-oX (struct proc_dir_entry))->pde_unload_lock)->rlock)->owner: 0xffffffff
+	// ((&(kmem_cache#29-oX (struct proc_dir_entry))->pde_unload_lock)->rlock)->owner_cpu: 0xffffffff
+	// &(kmem_cache#29-oX (struct proc_dir_entry))->pde_openers->i_sb_list->next: &(kmem_cache#29-oX (struct proc_dir_entry))->pde_openers->i_sb_list
+	// &(kmem_cache#29-oX (struct proc_dir_entry))->pde_openers->i_sb_list->prev: &(kmem_cache#29-oX (struct proc_dir_entry))->pde_openers->i_sb_list
+	//
+	// parent: &proc_root
+	//
+	// (kmem_cache#29-oX (struct proc_dir_entry))->proc_fops: &proc_cgroupstats_operations
+	// (kmem_cache#29-oX (struct proc_dir_entry))->data: NULL
+	//
+	// idr_layer_cache를 사용하여 struct idr_layer 의 메모리 kmem_cache#21-oX를 1 개를 할당 받음
+	//
+	// (&(&proc_inum_ida)->idr)->id_free 이 idr object new 5번을 가르킴
+	// |
+	// |-> ---------------------------------------------------------------------------------------------------------------------------
+	//     | idr object new 6         | idr object new 0     | idr object 6         | idr object 5         | .... | idr object 0     |
+	//     ---------------------------------------------------------------------------------------------------------------------------
+	//     | ary[0]: idr object new 0 | ary[0]: idr object 6 | ary[0]: idr object 5 | ary[0]: idr object 4 | .... | ary[0]: NULL     |
+	//     ---------------------------------------------------------------------------------------------------------------------------
+	//
+	// (&(&proc_inum_ida)->idr)->id_free: kmem_cache#21-oX (idr object new 6)
+	// (&(&proc_inum_ida)->idr)->id_free_cnt: 8
+	//
+	// (&(&proc_inum_ida)->idr)->top: kmem_cache#21-oX (struct idr_layer) (idr object 8)
+	// (&(&proc_inum_ida)->idr)->layers: 1
+	// (&(&proc_inum_ida)->idr)->id_free: (idr object new 0)
+	// (&(&proc_inum_ida)->idr)->id_free_cnt: 7
+	//
+	// (kmem_cache#27-oX (struct ida_bitmap))->bitmap 의 6 bit를 1로 set 수행
+	// (kmem_cache#27-oX (struct ida_bitmap))->nr_busy: 7
+	//
+	// kmem_cache인 kmem_cache#21 에서 할당한 object인 kmem_cache#21-oX (idr object new 6) 의 memory 공간을 반환함
+	//
+	// (kmem_cache#29-oX (struct proc_dir_entry))->low_ino: 0xF0000006
+	// (kmem_cache#29-oX (struct proc_dir_entry))->proc_iops: &proc_file_inode_operations
+	// (kmem_cache#29-oX (struct proc_dir_entry))->next: NULL
+	// (kmem_cache#29-oX (struct proc_dir_entry))->parent: &proc_root
+	//
+	// (&proc_root)->subdir: kmem_cache#29-oX (struct proc_dir_entry)
+
 out:
+	// err: 0
 	if (err)
 		bdi_destroy(&cgroup_backing_dev_info);
 
+	// err: 0
 	return err;
+	// return 0
 }
 
 static int __init cgroup_wq_init(void)
@@ -6329,6 +6462,7 @@ static int cgroupstats_open(struct inode *inode, struct file *file)
 	return single_open(file, proc_cgroupstats_show, NULL);
 }
 
+// ARM10C 20160813
 static const struct file_operations proc_cgroupstats_operations = {
 	.open = cgroupstats_open,
 	.read = seq_read,

@@ -63,6 +63,7 @@ static unsigned int ecc_mask __initdata = 0;
 // ARM10C 20131102
 pgprot_t pgprot_user;
 // ARM10C 20131102
+// ARM10C 20160813
 pgprot_t pgprot_kernel;
 pgprot_t pgprot_hyp_device;
 // ARM10C 20131102

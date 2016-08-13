@@ -178,6 +178,7 @@
 #define L_PTE_USER		(_AT(pteval_t, 1) << 8)
 // ARM10C 20131123
 // ARM10C 20141025
+// ARM10C 20160813
 // L_PTE_XN: 0x200
 #define L_PTE_XN		(_AT(pteval_t, 1) << 9)
 // ARM10C 20141025
@@ -192,6 +193,8 @@
  * pre-ARMv6 CPUs cacheable and bufferable bits:   XXCB
  */
 #define L_PTE_MT_UNCACHED	(_AT(pteval_t, 0x00) << 2)	/* 0000 */
+// ARM10C 20160813
+// L_PTE_MT_BUFFERABLE: 0x4
 #define L_PTE_MT_BUFFERABLE	(_AT(pteval_t, 0x01) << 2)	/* 0001 */
 #define L_PTE_MT_WRITETHROUGH	(_AT(pteval_t, 0x02) << 2)	/* 0010 */
 #define L_PTE_MT_WRITEBACK	(_AT(pteval_t, 0x03) << 2)	/* 0011 */
@@ -203,6 +206,8 @@
 #define L_PTE_MT_DEV_NONSHARED	(_AT(pteval_t, 0x0c) << 2)	/* 1100 */
 #define L_PTE_MT_DEV_WC		(_AT(pteval_t, 0x09) << 2)	/* 1001 */
 #define L_PTE_MT_DEV_CACHED	(_AT(pteval_t, 0x0b) << 2)	/* 1011 */
+// ARM10C 20160813
+// L_PTE_MT_MASK: 0x3c
 #define L_PTE_MT_MASK		(_AT(pteval_t, 0x0f) << 2)
 
 #ifndef __ASSEMBLY__

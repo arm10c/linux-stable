@@ -142,12 +142,16 @@ struct sysfs_dirent {
 // sd: &sysfs_root
 // ARM10C 20160116
 // sd: kmem_cache#1-oX (struct sysfs_dirent)
+// ARM10C 20160813
+// sd: kmem_cache#1-oX (struct sysfs_dirent) (cgroup)
 static inline unsigned int sysfs_type(struct sysfs_dirent *sd)
 {
 	// sd->s_flags: (&sysfs_root)->s_flags: 0x1, SYSFS_TYPE_MASK: 0x00ff
 	// sd->s_flags: (&sysfs_root)->s_flags: 0x1, SYSFS_TYPE_MASK: 0x00ff
 	// sd->s_flags: (kmem_cache#1-oX (struct sysfs_dirent))->s_flags: 0x2001, SYSFS_TYPE_MASK: 0x00ff
+	// sd->s_flags: (kmem_cache#1-oX (struct sysfs_dirent) (cgroup))->s_flags: 0x2001, SYSFS_TYPE_MASK: 0x00ff
 	return sd->s_flags & SYSFS_TYPE_MASK;
+	// return 0x1
 	// return 0x1
 	// return 0x1
 	// return 0x1
@@ -159,10 +163,14 @@ static inline unsigned int sysfs_type(struct sysfs_dirent *sd)
  */
 // ARM10C 20160116
 // parent_sd: &sysfs_root
+// ARM10C 20160813
+// parent_sd: kmem_cache#1-oX (struct sysfs_dirent) (fs)
 static inline enum kobj_ns_type sysfs_ns_type(struct sysfs_dirent *sd)
 {
 	// sd->s_flags; (&sysfs_root)->s_flags: 0x1, SYSFS_NS_TYPE_MASK: 0xf00, SYSFS_NS_TYPE_SHIFT: 8
+	// sd->s_flags; (kmem_cache#1-oX (struct sysfs_dirent) (fs))->s_flags: 0x1, SYSFS_NS_TYPE_MASK: 0xf00, SYSFS_NS_TYPE_SHIFT: 8
 	return (sd->s_flags & SYSFS_NS_TYPE_MASK) >> SYSFS_NS_TYPE_SHIFT;
+	// return 0
 	// return 0
 }
 
@@ -270,6 +278,8 @@ int sysfs_rename(struct sysfs_dirent *sd, struct sysfs_dirent *new_parent_sd,
 // sd: &sysfs_root
 // ARM10C 20160123
 // sd: kmem_cache#1-oX (struct sysfs_dirent)
+// ARM10C 20160813
+// sd: kmem_cache#1-oX (struct sysfs_dirent) (fs)
 static inline struct sysfs_dirent *__sysfs_get(struct sysfs_dirent *sd)
 {
 	// sd: &sysfs_root

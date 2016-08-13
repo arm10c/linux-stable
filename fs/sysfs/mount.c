@@ -1260,6 +1260,10 @@ out_err:
 // parent_sd: &sysfs_root
 // ARM10C 20160123
 // kmem_cache#1-oX (struct sysfs_dirent)
+// ARM10C 20160813
+// parent_sd: kmem_cache#1-oX (struct sysfs_dirent) (fs)
+// ARM10C 20160813
+// kobj->sd: (kmem_cache#30-oX (struct kobject))->sd: kmem_cache#1-oX (struct sysfs_dirent) (cgroup)
 struct sysfs_dirent *sysfs_get(struct sysfs_dirent *sd)
 {
 	// sd: &sysfs_root
@@ -1268,6 +1272,9 @@ struct sysfs_dirent *sysfs_get(struct sysfs_dirent *sd)
 	// __sysfs_get(&sysfs_root): &sysfs_root
 	// sd: kmem_cache#1-oX (struct sysfs_dirent)
 	// __sysfs_get(kmem_cache#1-oX (struct sysfs_dirent)): kmem_cache#1-oX (struct sysfs_dirent)
+	//
+	// sd: kmem_cache#1-oX (struct sysfs_dirent) (fs)
+	// __sysfs_get(kmem_cache#1-oX (struct sysfs_dirent) (fs)): kmem_cache#1-oX (struct sysfs_dirent) (fs)
 	return __sysfs_get(sd);
 	// return &sysfs_root
 	// return &sysfs_root
@@ -1281,6 +1288,9 @@ struct sysfs_dirent *sysfs_get(struct sysfs_dirent *sd)
 
 	// __sysfs_get에서 한일:
 	// (kmem_cache#1-oX (struct sysfs_dirent))->s_count: 2
+
+	// __sysfs_get에서 한일:
+	// (kmem_cache#1-oX (struct sysfs_dirent) (fs))->s_count: 3
 }
 EXPORT_SYMBOL_GPL(sysfs_get);
 

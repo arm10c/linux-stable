@@ -178,6 +178,9 @@ static int vmap_pud_range(pgd_t *pgd, unsigned long addr,
  *
  * Ie. pte at addr+N*PAGE_SIZE shall point to pfn corresponding to pages[N]
  */
+// ARM10C 20160813
+// start: 할당 받은 가상 주소값, end: 할당 받은 가상 주소값+ 0x1000,
+// prot: pgprot_kernel에 0x204 를 or 한 값, pages: &(page 1개(4K)의 할당된 메모리 주소)
 static int vmap_page_range_noflush(unsigned long start, unsigned long end,
 				   pgprot_t prot, struct page **pages)
 {
@@ -199,11 +202,18 @@ static int vmap_page_range_noflush(unsigned long start, unsigned long end,
 	return nr;
 }
 
+// ARM10C 20160813
+// addr: 할당 받은 가상 주소값, end: 할당 받은 가상 주소값+ 0x1000,
+// prot: pgprot_kernel에 0x204 를 or 한 값, *pages: &(page 1개(4K)의 할당된 메모리 주소)
 static int vmap_page_range(unsigned long start, unsigned long end,
 			   pgprot_t prot, struct page **pages)
 {
 	int ret;
 
+// 2016/08/13 종료
+
+	// start: 할당 받은 가상 주소값, end: 할당 받은 가상 주소값+ 0x1000,
+	// prot: pgprot_kernel에 0x204 를 or 한 값, pages: &(page 1개(4K)의 할당된 메모리 주소)
 	ret = vmap_page_range_noflush(start, end, prot, pages);
 	flush_cache_vmap(start, end);
 	return ret;
@@ -2284,12 +2294,23 @@ void unmap_kernel_range(unsigned long addr, unsigned long size)
 	flush_tlb_kernel_range(addr, end);
 }
 
+// ARM10C 20160813
+// area: kmem_cache#30-oX (vm_struct), prot: pgprot_kernel에 0x204 를 or 한 값, pages: &&(page 1개(4K)의 할당된 메모리 주소)
 int map_vm_area(struct vm_struct *area, pgprot_t prot, struct page ***pages)
 {
+	// area->addr: (kmem_cache#30-oX (vm_struct))->addr: 할당 받은 가상 주소값
 	unsigned long addr = (unsigned long)area->addr;
+	// addr: 할당 받은 가상 주소값
+
+	// addr: 할당 받은 가상 주소값, area: kmem_cache#30-oX (vm_struct)
+	// get_vm_area_size(kmem_cache#30-oX (vm_struct)): 0x1000
 	unsigned long end = addr + get_vm_area_size(area);
+	// end: 할당 받은 가상 주소값+ 0x1000
+
 	int err;
 
+	// addr: 할당 받은 가상 주소값, end: 할당 받은 가상 주소값+ 0x1000,
+	// prot: pgprot_kernel에 0x204 를 or 한 값, *pages: &(page 1개(4K)의 할당된 메모리 주소)
 	err = vmap_page_range(addr, end, prot, *pages);
 	if (err > 0) {
 		*pages += err;
@@ -2746,6 +2767,8 @@ struct vm_struct *get_vm_area(unsigned long size, unsigned long flags)
 // size: 0x30000, VM_IOREMAP: 0x00000001, caller: __builtin_return_address(0)
 // ARM10C 20150321
 // size: 0x1000, VM_IOREMAP: 0x00000001, caller: __builtin_return_address(0)
+// ARM10C 20160813
+// 0x1000, flags: 0x00000001, __builtin_return_address(0)
 struct vm_struct *get_vm_area_caller(unsigned long size, unsigned long flags,
 				const void *caller)
 {
@@ -2927,6 +2950,8 @@ EXPORT_SYMBOL(vunmap);
  *	Maps @count pages from @pages into contiguous kernel virtual
  *	space.
  */
+// ARM10C 20160813
+// page: &(page 1개(4K)의 할당된 메모리 주소), 1, VM_IOREMAP: 0x00000001, prot: pgprot_kernel에 0x204 를 or 한 값
 void *vmap(struct page **pages, unsigned int count,
 		unsigned long flags, pgprot_t prot)
 {
@@ -2934,14 +2959,21 @@ void *vmap(struct page **pages, unsigned int count,
 
 	might_sleep();
 
+	// count: 1, totalram_pages: 총 free된 page 수
 	if (count > totalram_pages)
 		return NULL;
 
+	// count: 1, PAGE_SHIFT: 12, flags: 0x00000001
+	// get_vm_area_caller(0x1000, 0x00000001, __builtin_return_address(0)): kmem_cache#30-oX (vm_struct)
 	area = get_vm_area_caller((count << PAGE_SHIFT), flags,
 					__builtin_return_address(0));
+	// area: kmem_cache#30-oX (vm_struct)
+
+	// area: kmem_cache#30-oX (vm_struct)
 	if (!area)
 		return NULL;
 
+	// area: kmem_cache#30-oX (vm_struct), prot: pgprot_kernel에 0x204 를 or 한 값, pages: &(page 1개(4K)의 할당된 메모리 주소)
 	if (map_vm_area(area, prot, &pages)) {
 		vunmap(area->addr);
 		return NULL;

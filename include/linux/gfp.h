@@ -288,6 +288,7 @@ struct vm_area_struct;
 // ARM10C 20160702
 // ARM10C 20160716
 // ARM10C 20160730
+// ARM10C 20160813
 // __GFP_WAIT: 0x10
 // __GFP_IO: 0x40
 // __GFP_FS: 0x80
@@ -656,6 +657,8 @@ __alloc_pages(gfp_t gfp_mask, unsigned int order,
 // numa_node_id(): 0, flags: 0x201200, order: 0
 // ARM10C 20141101
 // numa_node_id(): 0, gfp_mask: PGALLOC_GFP: 0x2084D0, order: 0
+// ARM10C 20160813
+// 0, GFP_KERNEL: 0xD0, 0
 static inline struct page *alloc_pages_node(int nid, gfp_t gfp_mask,
 						unsigned int order)
 {
@@ -704,11 +707,15 @@ extern struct page *alloc_pages_vma(gfp_t gfp_mask, int order,
 // ARM10C 20141101
 // numa_node_id(): 0
 // gfp_mask: PGALLOC_GFP: 0x2084D0, order: 0
+// ARM10C 20160813
+// GFP_KERNEL: 0xD0, 0
 #define alloc_pages(gfp_mask, order) \
 		alloc_pages_node(numa_node_id(), gfp_mask, order)
 #define alloc_pages_vma(gfp_mask, order, vma, addr, node)	\
 	alloc_pages(gfp_mask, order)
 #endif
+// ARM10C 20160813
+// GFP_KERNEL: 0xD0
 #define alloc_page(gfp_mask) alloc_pages(gfp_mask, 0)
 #define alloc_page_vma(gfp_mask, vma, addr)			\
 	alloc_pages_vma(gfp_mask, 0, vma, addr, numa_node_id())
