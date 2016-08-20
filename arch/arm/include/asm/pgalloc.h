@@ -72,6 +72,7 @@ extern void pgd_free(struct mm_struct *mm, pgd_t *pgd);
 
 // ARM10C 20141101
 // pte: migratetype이 MIGRATE_UNMOVABLE인 page의 가상주소
+// ARM10C 20160820
 static inline void clean_pte_table(pte_t *pte)
 {
 	// pte: migratetype이 MIGRATE_UNMOVABLE인 page의 가상주소
@@ -98,6 +99,7 @@ static inline void clean_pte_table(pte_t *pte)
  */
 // ARM10C 20141101
 // &init_mm, addr: 0xf0000000
+// ARM10C 20160820
 static inline pte_t *
 pte_alloc_one_kernel(struct mm_struct *mm, unsigned long addr)
 {
@@ -161,6 +163,7 @@ static inline void pte_free(struct mm_struct *mm, pgtable_t pte)
 // pmd: 0xc0007FF8, __pa(pte): 0x4F7FD000,
 // ARM10C 20141101
 // pmdp: 0xc0004780, migratetype이 MIGRATE_UNMOVABLE인 page의 물리주소, _PAGE_KERNEL_TABLE: 0x11
+// ARM10C 20160820
 static inline void __pmd_populate(pmd_t *pmdp, phys_addr_t pte,
 				  pmdval_t prot)
 {
@@ -184,6 +187,7 @@ static inline void __pmd_populate(pmd_t *pmdp, phys_addr_t pte,
  */
 // ARM10C 20141101
 // &init_mm, pmd: 0xc0004780, new: migratetype이 MIGRATE_UNMOVABLE인 page의 가상주소
+// ARM10C 20160820
 static inline void
 pmd_populate_kernel(struct mm_struct *mm, pmd_t *pmdp, pte_t *ptep)
 {

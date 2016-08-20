@@ -194,11 +194,13 @@ extern pgd_t swapper_pg_dir[PTRS_PER_PGD];
 /* to find an entry in a page-table-directory */
 // ARM10C 20131102
 // ARM10C 20141025
+// ARM10C 20160820
 // PGDIR_SHIFT:	21
 #define pgd_index(addr)		((addr) >> PGDIR_SHIFT)
 
 // ARM10C 20131102
 // ARM10C 20141025
+// ARM10C 20160820
 // 연산결과 swapper_pg_dir : 0xc0004000
 //.pgd = swapper_pg_dir
 #define pgd_offset(mm, addr)	((mm)->pgd + pgd_index(addr))
@@ -207,10 +209,12 @@ extern pgd_t swapper_pg_dir[PTRS_PER_PGD];
 // ARM10C 20131102
 // ARM10C 20131109
 // ARM10C 20141025
+// ARM10C 20160820
 #define pgd_offset_k(addr)	pgd_offset(&init_mm, addr)
 
 // ARM10C 20131109
 // ARM10C 20141101
+// ARM10C 20160820
 #define pmd_none(pmd)		(!pmd_val(pmd))
 #define pmd_present(pmd)	(pmd_val(pmd))
 
@@ -218,6 +222,7 @@ extern pgd_t swapper_pg_dir[PTRS_PER_PGD];
 // pmd: 0x6F7FD8XX
 // ARM10C 20141101
 // *pmd: *(0xc0004780)
+// ARM10C 20160820
 static inline pte_t *pmd_page_vaddr(pmd_t pmd)
 {
 	// pmd_val(pmd): 0x6F7FD8XX, PHYS_MASK: 0xFFFFFFFF, PAGE_MASK: 0xFFFFF000
@@ -241,6 +246,7 @@ static inline pte_t *pmd_page_vaddr(pmd_t pmd)
 // ARM10C 20141101
 // addr: 0xf0000000
 // pte_index(0xf0000000): 0
+// ARM10C 20160820
 #define pte_index(addr)		(((addr) >> PAGE_SHIFT) & (PTRS_PER_PTE - 1))
 
 // ARM10C 20131123
@@ -251,6 +257,7 @@ static inline pte_t *pmd_page_vaddr(pmd_t pmd)
 // pmd: 0xc0004780, addr: 0xf0000000
 // pmd_page_vaddr(*(0xc0004780)): 0xc0004780이 가리키는 pte의 시작주소, pte_index(0xf0000000): 0
 // pte_offset_kernel(0xc0004780,0xf0000000): 0xc0004780이 가리키는 pte의 시작주소
+// ARM10C 20160820
 #define pte_offset_kernel(pmd,addr)	(pmd_page_vaddr(*(pmd)) + pte_index(addr))
 
 #define pte_offset_map(pmd,addr)	(__pte_map(pmd) + pte_index(addr))
@@ -264,15 +271,18 @@ static inline pte_t *pmd_page_vaddr(pmd_t pmd)
 // pfn: 0x10481, prot: 0x653
 // __pfn_to_phys(0x10481): 0x10481000, pgprot_val(0x653): 0x653
 // pfn_pte(0x10481,0x653): 0x10481653
+// ARM10C 20160820
 #define pfn_pte(pfn,prot)	__pte(__pfn_to_phys(pfn) | pgprot_val(prot))
 
 #define pte_page(pte)		pfn_to_page(pte_pfn(pte))
+// ARM10C 20160820
 #define mk_pte(page,prot)	pfn_pte(page_to_pfn(page), prot)
 
 #define pte_clear(mm,addr,ptep)	set_pte_ext(ptep, __pte(0), 0)
 
 // ARM10C 20141101
 // *pte: *(0xc0004780이 가리키는 pte의 시작주소)
+// ARM10C 20160820
 #define pte_none(pte)		(!pte_val(pte))
 // ARM10C 20141101
 // L_PTE_PRESENT: 0x1
@@ -302,6 +312,7 @@ extern void __sync_icache_dcache(pte_t pteval);
 
 // ARM10C 20141101
 // &init_mm, addr: 0xf0000000, pte: 0xc0004780이 가리키는 pte의 시작주소, pfn_pte(0x10481,0x653): 0x10481653
+// ARM10C 20160820
 static inline void set_pte_at(struct mm_struct *mm, unsigned long addr,
 			      pte_t *ptep, pte_t pteval)
 {

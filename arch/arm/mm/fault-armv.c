@@ -213,20 +213,58 @@ void update_mmu_cache(struct vm_area_struct *vma, unsigned long addr,
  * we have several shared mappings of the same object in user
  * space.
  */
+// ARM10C 20160820
+// p1: 할당받은 page의 mmu에 반영된 가상주소, p2: 할당받은 page의 mmu에 반영된 가상주소
 static int __init check_writebuffer(unsigned long *p1, unsigned long *p2)
 {
 	register unsigned long zero = 0, one = 1, val;
+	// zero: 0, one: 1
 
 	local_irq_disable();
+
+	// local_irq_disable 에서 한일:
+	// interrupt disable 수행
+
 	mb();
+
+	// mb 에서 한일:
+	// data sync barrier 작업 수행
+
+	// *p1: *(할당받은 page의 mmu에 반영된 가상주소), one: 1
 	*p1 = one;
+	// *p1: *(할당받은 page의 mmu에 반영된 가상주소): 1
+
 	mb();
+
+	// mb 에서 한일:
+	// data sync barrier 작업 수행
+
+	// *p2: *(할당받은 page의 mmu에 반영된 가상주소), zero: 0
 	*p2 = zero;
+	// *p2: *(할당받은 page의 mmu에 반영된 가상주소): 0
+
 	mb();
+
+	// mb 에서 한일:
+	// data sync barrier 작업 수행
+
+	// *p1: *(할당받은 page의 mmu에 반영된 가상주소): 1
 	val = *p1;
+	// val: 1
+
 	mb();
+
+	// mb 에서 한일:
+	// data sync barrier 작업 수행
+
 	local_irq_enable();
+
+	// local_irq_disable 에서 한일:
+	// interrupt enable 수행
+
+	// val: 1, zero: 0
 	return val != zero;
+	// return 0
 }
 
 // ARM10C 20160813
@@ -256,17 +294,42 @@ void __init check_writebuffer_bugs(void)
 		// prot: pgprot_kernel에 0x204 를 or 한 값
 
 		// page: page 1개(4K)의 할당된 메모리 주소, VM_IOREMAP: 0x00000001, prot: pgprot_kernel에 0x204 를 or 한 값
+		// vmap(page 1개(4K)의 할당된 메모리 주소, 1, 0x00000001, pgprot_kernel에 0x204 를 or 한 값): 할당받은 page의 mmu에 반영된 가상주소
 		p1 = vmap(&page, 1, VM_IOREMAP, prot);
-		p2 = vmap(&page, 1, VM_IOREMAP, prot);
+		// p1: 할당받은 page의 mmu에 반영된 가상주소
 
+		// vmap 에서 한일:
+		// 할당 받은 가상 주소값을 가지고 있는 page table section 하위 pte table을 갱신함
+		// cache의 값을 전부 메모리에 반영
+
+		// page: page 1개(4K)의 할당된 메모리 주소, VM_IOREMAP: 0x00000001, prot: pgprot_kernel에 0x204 를 or 한 값
+		// vmap(page 1개(4K)의 할당된 메모리 주소, 1, 0x00000001, pgprot_kernel에 0x204 를 or 한 값): 할당받은 page의 mmu에 반영된 가상주소
+		p2 = vmap(&page, 1, VM_IOREMAP, prot);
+		// p2: 할당받은 page의 mmu에 반영된 가상주소
+
+		// vmap 에서 한일:
+		// 할당 받은 가상 주소값을 가지고 있는 page table section 하위 pte table을 갱신함
+		// cache의 값을 전부 메모리에 반영
+
+		// p1: 할당받은 page의 mmu에 반영된 가상주소, p2: 할당받은 page의 mmu에 반영된 가상주소
 		if (p1 && p2) {
+			// p1: 할당받은 page의 mmu에 반영된 가상주소, p2: 할당받은 page의 mmu에 반영된 가상주소
+			// check_writebuffer(할당받은 page의 mmu에 반영된 가상주소, 할당받은 page의 mmu에 반영된 가상주소): 0
 			v = check_writebuffer(p1, p2);
+			// v: 0
+
+			// check_writebuffer에서 한일:
+			// 할당받은 page의 mmu에 반영된 가상주소 값을 써서 비교함
+
 			reason = "enabling work-around";
 		} else {
 			reason = "unable to map memory\n";
 		}
 
+		// p1: 할당받은 page의 mmu에 반영된 가상주소
 		vunmap(p1);
+
+		// p2: 할당받은 page의 mmu에 반영된 가상주소
 		vunmap(p2);
 		put_page(page);
 	} else {

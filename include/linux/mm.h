@@ -68,6 +68,9 @@ extern unsigned long sysctl_admin_reserve_kbytes;
 #define PAGE_ALIGN(addr) ALIGN(addr, PAGE_SIZE)
 
 /* test whether an address (unsigned long or pointer) is aligned to PAGE_SIZE */
+// ARM10C 20160820
+// PAGE_SIZE: 0x1000
+// addr: 할당받은 page의 mmu에 반영된 가상주소
 #define PAGE_ALIGNED(addr)	IS_ALIGNED((unsigned long)addr, PAGE_SIZE)
 
 /*
@@ -1625,6 +1628,7 @@ static inline void pgtable_page_dtor(struct page *page)
 
 // ARM10C 20141101
 // pmd: 0xc0004780, addr: 0xf0000000
+// ARM10C 20160820
 #define pte_alloc_kernel(pmd, address)			\
 	((unlikely(pmd_none(*(pmd))) && __pte_alloc_kernel(pmd, address))? \
 		NULL: pte_offset_kernel(pmd, address))

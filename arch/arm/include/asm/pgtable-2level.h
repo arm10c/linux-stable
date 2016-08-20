@@ -226,6 +226,7 @@
 // ARM10C 20131102
 // ARM10C 20141101
 // pud: 0xc0004780, addr: 0xf0000000
+// ARM10C 20160820
 static inline pmd_t *pmd_offset(pud_t *pud, unsigned long addr)
 {
 	return (pmd_t *)pud;
@@ -252,6 +253,7 @@ static inline pmd_t *pmd_offset(pud_t *pud, unsigned long addr)
 /* we don't need complex calculations here as the pmd is folded into the pgd */
 // ARM10C 20141101
 // addr: 0xf0000000, end: 0xf0001000
+// ARM10C 20160820
 #define pmd_addr_end(addr,end) (end)
 
 // ARM10C 20131123

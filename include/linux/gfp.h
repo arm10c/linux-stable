@@ -732,6 +732,7 @@ void *alloc_pages_exact_nid(int nid, size_t size, gfp_t gfp_mask);
 
 // ARM10C 20141101
 // PGALLOC_GFP: 0x2084D0
+// ARM10C 20160820
 #define __get_free_page(gfp_mask) \
 		__get_free_pages((gfp_mask), 0)
 

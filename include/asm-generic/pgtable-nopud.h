@@ -10,6 +10,7 @@
  * us to conceptually access the pgd entry that this pud is folded into
  * without casting.
  */
+// ARM10C 20160820
 typedef struct { pgd_t pgd; } pud_t;
 
 #define PUD_SHIFT	PGDIR_SHIFT
@@ -23,6 +24,7 @@ typedef struct { pgd_t pgd; } pud_t;
  * into the pgd entry)
  */
 // ARM10C 20141101
+// ARM10C 20160820
 static inline int pgd_none(pgd_t pgd)		{ return 0; }
 static inline int pgd_bad(pgd_t pgd)		{ return 0; }
 static inline int pgd_present(pgd_t pgd)	{ return 1; }

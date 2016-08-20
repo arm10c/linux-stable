@@ -627,6 +627,7 @@ static inline void __flush_bp_all(void)
  *	PMD entries.
  */
 // ARM10C 20131109
+// ARM10C 20160820
 static inline void flush_pmd_entry(void *pmd)
 {
 	// __cpu_tlb_flags: 0

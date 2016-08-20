@@ -17,6 +17,7 @@
 #define isb(option) __asm__ __volatile__ ("isb " #option : : : "memory")
 // ARM10C 20131109
 // ARM10C 20160402
+// ARM10C 20160820
 #define dsb(option) __asm__ __volatile__ ("dsb " #option : : : "memory")
 // ARM10C 20131109
 // ARM10C 20140621
@@ -46,9 +47,10 @@
 #define dmb(x) __asm__ __volatile__ ("" : : : "memory")
 #endif
 
-#ifdef CONFIG_ARCH_HAS_BARRIERS
+#ifdef CONFIG_ARCH_HAS_BARRIERS // CONFIG_ARCH_HAS_BARRIERSa=n
 #include <mach/barriers.h>
-#elif defined(CONFIG_ARM_DMA_MEM_BUFFERABLE) || defined(CONFIG_SMP)
+#elif defined(CONFIG_ARM_DMA_MEM_BUFFERABLE) || defined(CONFIG_SMP) // CONFIG_ARM_DMA_MEM_BUFFERABLE=y, CONFIG_SMP=y
+// ARM10C 20160820
 #define mb()		do { dsb(); outer_sync(); } while (0)
 #define rmb()		dsb()
 #define wmb()		do { dsb(st); outer_sync(); } while (0)

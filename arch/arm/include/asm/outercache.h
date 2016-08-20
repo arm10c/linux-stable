@@ -97,13 +97,14 @@ static inline void outer_resume(void) { }
 
 #endif
 
-#ifdef CONFIG_OUTER_CACHE_SYNC
+#ifdef CONFIG_OUTER_CACHE_SYNC // CONFIG_OUTER_CACHE_SYNC=n
 static inline void outer_sync(void)
 {
 	if (outer_cache.sync)
 		outer_cache.sync();
 }
 #else
+// ARM10C 20160820
 static inline void outer_sync(void)
 { }
 #endif

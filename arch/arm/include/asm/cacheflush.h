@@ -362,6 +362,8 @@ extern void flush_kernel_dcache_page(struct page *);
  */
 // ARM10C 20141101
 // start: 0xf0000000, end: 0xf0001000
+// ARM10C 20160820
+// start: 할당 받은 가상 주소값, end: 할당 받은 가상 주소값+ 0x1000
 static inline void flush_cache_vmap(unsigned long start, unsigned long end)
 {
 	// cache_is_vipt_nonaliasing()): 0

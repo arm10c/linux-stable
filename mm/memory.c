@@ -594,6 +594,7 @@ int __pte_alloc(struct mm_struct *mm, struct vm_area_struct *vma,
 
 // ARM10C 20141101
 // pmd: 0xc0004780, addr: 0xf0000000
+// ARM10C 20160820
 int __pte_alloc_kernel(pmd_t *pmd, unsigned long address)
 {
 	// addr: 0xf0000000

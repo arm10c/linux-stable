@@ -64,6 +64,7 @@
 #define ALIGN(x, a)		__ALIGN_KERNEL((x), (a))
 #define __ALIGN_MASK(x, mask)	__ALIGN_KERNEL_MASK((x), (mask))
 #define PTR_ALIGN(p, a)		((typeof(p))ALIGN((unsigned long)(p), (a)))
+// ARM10C 20160820
 #define IS_ALIGNED(x, a)		(((x) & ((typeof(x))(a) - 1)) == 0)
 
 // ARM10C 20140301
@@ -219,6 +220,7 @@ extern int _cond_resched(void);
 // ARM10C 20151114
 // ARM10C 20160730
 // ARM10C 20160813
+// ARM10C 20160820
 // might_resched(): NULL function
 # define might_sleep() do { might_resched(); } while (0)
 #endif

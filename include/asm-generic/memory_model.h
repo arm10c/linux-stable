@@ -65,6 +65,7 @@
 //	(unsigned long)(__pg - __section_mem_map_addr(__nr_to_section(__sec)));
 //	pfn offset이 계산됨
 //})
+// ARM10C 20160820
 #define __page_to_pfn(pg)					\
 ({	const struct page *__pg = (pg);				\
 	int __sec = page_to_section(__pg);			\
@@ -99,6 +100,7 @@
 
 // ARM10C 20140118
 // ARM10C 20140531
+// ARM10C 20160820
 #define page_to_pfn __page_to_pfn
 // ARM10C 20140118
 // ARM10C 20140329

@@ -3659,6 +3659,7 @@ EXPORT_SYMBOL(__alloc_pages_nodemask);
 // PGALLOC_GFP: 0x2084D0, 0
 // ARM10C 20151024
 // gfp_mask: 0x20, order: 2
+// ARM10C 20160820
 unsigned long __get_free_pages(gfp_t gfp_mask, unsigned int order)
 {
 	struct page *page;

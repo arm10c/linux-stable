@@ -112,6 +112,10 @@ static void vunmap_page_range(unsigned long addr, unsigned long end)
 	} while (pgd++, addr = next, addr != end);
 }
 
+// ARM10C 20160820
+// pmd: 할당 받은 가상 주소값에 맞는 MMU table의 section 값(pmd 1mb),
+// addr: 할당 받은 가상 주소값, next: 할당 받은 가상 주소값+ 0x1000,
+// prot: pgprot_kernel에 0x204 를 or 한 값, pages: &(page 1개(4K)의 할당된 메모리 주소), nr: &nr
 static int vmap_pte_range(pmd_t *pmd, unsigned long addr,
 		unsigned long end, pgprot_t prot, struct page **pages, int *nr)
 {
@@ -122,54 +126,143 @@ static int vmap_pte_range(pmd_t *pmd, unsigned long addr,
 	 * callers keep track of where we're up to.
 	 */
 
+	// pmd: 할당 받은 가상 주소값에 맞는 MMU table의 section 값(pmd 1mb), addr: 할당 받은 가상 주소값
+	// pte_alloc_kernel(할당 받은 가상 주소값에 맞는 MMU table의 section 값(pmd 1mb), 할당 받은 가상 주소값)
+	// 할당 받은 가상 주소값의 pte 값
 	pte = pte_alloc_kernel(pmd, addr);
+	// pte: 할당 받은 가상 주소값의 pte 값
+
+	// pte: 할당 받은 가상 주소값의 pte 값
 	if (!pte)
 		return -ENOMEM;
 	do {
+		// pages: &(page 1개(4K)의 할당된 메모리 주소), *nr: nr: 0
 		struct page *page = pages[*nr];
+		// page: page 1개(4K)의 할당된 메모리 주소
 
+		// pte: 할당 받은 가상 주소값의 pte 값, pte_none(*(할당 받은 가상 주소값의 pte 값)): 1
 		if (WARN_ON(!pte_none(*pte)))
 			return -EBUSY;
+
+		// page: page 1개(4K)의 할당된 메모리 주소
 		if (WARN_ON(!page))
 			return -ENOMEM;
+
+		// addr: 할당 받은 가상 주소값, pte: 할당 받은 가상 주소값의 pte 값,
+		// page: page 1개(4K)의 할당된 메모리 주소, prot: pgprot_kernel에 0x204 를 or 한 값
+		// mk_pte(page 1개(4K)의 할당된 메모리 주소, pgprot_kernel에 0x204 를 or 한 값): page 1개(4K)의 hw pte 값
 		set_pte_at(&init_mm, addr, pte, mk_pte(page, prot));
+
+		// set_pte_at에서 한일:
+		// 할당 받은 가상 주소값의 pte 값을 page 1개(4K)의 hw pte 값을 갱신
+		// (linux pgtable과 hardware pgtable의 값 같이 갱신)
+
+		// *nr: nr: 0
 		(*nr)++;
+		// *nr: nr: 1
+
+		// pte: 할당 받은 가상 주소값의 pte 값, PAGE_SIZE: 0x1000
+		// addr: 할당 받은 가상 주소값, end: 할당 받은 가상 주소값+ 0x1000
 	} while (pte++, addr += PAGE_SIZE, addr != end);
+
+	// 위 loop 에서 한일:
+	// 할당 받은 가상 주소값을 가지고 있는 page table section 하위 pte table을 갱신함
+
 	return 0;
+	// return 0
 }
 
+// ARM10C 20160820
+// pud: 할당 받은 가상 주소값에 맞는 MMU table의 section 값,
+// addr: 할당 받은 가상 주소값, next: 할당 받은 가상 주소값+ 0x1000,
+// prot: pgprot_kernel에 0x204 를 or 한 값, pages: &(page 1개(4K)의 할당된 메모리 주소), nr: &nr
 static int vmap_pmd_range(pud_t *pud, unsigned long addr,
 		unsigned long end, pgprot_t prot, struct page **pages, int *nr)
 {
 	pmd_t *pmd;
 	unsigned long next;
 
+	// pud: 할당 받은 가상 주소값에 맞는 MMU table의 section 값, addr: 할당 받은 가상 주소값
+	// pmd_alloc(&init_mm, 할당 받은 가상 주소값에 맞는 MMU table의 section 값, 할당 받은 가상 주소값):
+	// 할당 받은 가상 주소값에 맞는 MMU table의 section 값(pmd 1mb)
 	pmd = pmd_alloc(&init_mm, pud, addr);
+	// pmd: 할당 받은 가상 주소값에 맞는 MMU table의 section 값(pmd 1mb)
+
+	// pmd: 할당 받은 가상 주소값에 맞는 MMU table의 section 값(pmd 1mb)
 	if (!pmd)
 		return -ENOMEM;
 	do {
+		// addr: 할당 받은 가상 주소값, end: 할당 받은 가상 주소값+ 0x1000
+		// pmd_addr_end(할당 받은 가상 주소값, 할당 받은 가상 주소값+ 0x1000):
+		// 할당 받은 가상 주소값에 맞는 MMU table의 다음 section 값
 		next = pmd_addr_end(addr, end);
+		// next: 할당 받은 가상 주소값+ 0x1000
+
+		// pmd: 할당 받은 가상 주소값에 맞는 MMU table의 section 값(pmd 1mb),
+		// addr: 할당 받은 가상 주소값, next: 할당 받은 가상 주소값+ 0x1000,
+		// prot: pgprot_kernel에 0x204 를 or 한 값, pages: &(page 1개(4K)의 할당된 메모리 주소), nr: &nr
+		// vmap_pte_range(할당 받은 가상 주소값에 맞는 MMU table의 section 값(pmd 1mb),
+		// 할당 받은 가상 주소값, 할당 받은 가상 주소값+ 0x1000,
+		// pgprot_kernel에 0x204 를 or 한 값, &(page 1개(4K)의 할당된 메모리 주소), &nr): 0
 		if (vmap_pte_range(pmd, addr, next, prot, pages, nr))
 			return -ENOMEM;
+
+		// vmap_pte_range 에서 한일:
+		// 할당 받은 가상 주소값을 가지고 있는 page table section 2개의 하위 pte table을 갱신함
+
+		// pmd: 할당 받은 가상 주소값에 맞는 MMU table의 section 값(pmd 1mb),
+		// next: 할당 받은 가상 주소값에 맞는 MMU table의 다음 section 값,
+		// addr: 할당 받은 가상 주소값, end: 할당 받은 가상 주소값에 맞는 MMU table의 다음 section 값
 	} while (pmd++, addr = next, addr != end);
+
 	return 0;
+	// return 0
 }
 
+// ARM10C 20160820
+// pgd: 할당 받은 가상 주소값에 맞는 MMU table의 section 값,
+// addr: 할당 받은 가상 주소값, next: 할당 받은 가상 주소값+ 0x1000,
+// prot: pgprot_kernel에 0x204 를 or 한 값, pages: &(page 1개(4K)의 할당된 메모리 주소)
 static int vmap_pud_range(pgd_t *pgd, unsigned long addr,
 		unsigned long end, pgprot_t prot, struct page **pages, int *nr)
 {
 	pud_t *pud;
 	unsigned long next;
 
+	// pgd: 할당 받은 가상 주소값에 맞는 MMU table의 section 값, addr: 할당 받은 가상 주소값
+	// pud_alloc(&init_mm, 할당 받은 가상 주소값에 맞는 MMU table의 section 값, addr: 할당 받은 가상 주소값):
+	// pgd: 할당 받은 가상 주소값에 맞는 MMU table의 section 값
 	pud = pud_alloc(&init_mm, pgd, addr);
+	// pud: 할당 받은 가상 주소값에 맞는 MMU table의 section 값
+
+	// pud: 할당 받은 가상 주소값에 맞는 MMU table의 section 값
 	if (!pud)
 		return -ENOMEM;
 	do {
+		// addr: 할당 받은 가상 주소값, end: 할당 받은 가상 주소값+ 0x1000
+		// pud_addr_end(할당 받은 가상 주소값, 할당 받은 가상 주소값+ 0x1000):
+		// 할당 받은 가상 주소값에 맞는 MMU table의 다음 section 값
 		next = pud_addr_end(addr, end);
+		// next: 할당 받은 가상 주소값+ 0x1000
+
+		// pud: 할당 받은 가상 주소값에 맞는 MMU table의 section 값,
+		// addr: 할당 받은 가상 주소값, next: 할당 받은 가상 주소값+ 0x1000,
+		// prot: pgprot_kernel에 0x204 를 or 한 값, pages: &(page 1개(4K)의 할당된 메모리 주소), nr: &nr
+		// vmap_pmd_range( 할당 받은 가상 주소값에 맞는 MMU table의 section 값,
+		// 할당 받은 가상 주소값, 할당 받은 가상 주소값+ 0x1000,
+		// pgprot_kernel에 0x204 를 or 한 값, pages: &(page 1개(4K)의 할당된 메모리 주소), &nr): 0
 		if (vmap_pmd_range(pud, addr, next, prot, pages, nr))
 			return -ENOMEM;
+
+		// vmap_pmd_range 에서 한일:
+		// 할당 받은 가상 주소값을 가지고 있는 page table section 하위 pte table을 갱신함
+
+		// pud: 할당 받은 가상 주소값에 맞는 MMU table의 section 값,
+		// addr: 할당 받은 가상 주소값, next: 할당 받은 가상 주소값+ 0x1000, end: 할당 받은 가상 주소값+ 0x1000
 	} while (pud++, addr = next, addr != end);
+
 	return 0;
+	// return 0
 }
 
 /*
@@ -186,20 +279,54 @@ static int vmap_page_range_noflush(unsigned long start, unsigned long end,
 {
 	pgd_t *pgd;
 	unsigned long next;
-	unsigned long addr = start;
-	int err = 0;
-	int nr = 0;
 
+	// start: 할당 받은 가상 주소값
+	unsigned long addr = start;
+	// addr: 할당 받은 가상 주소값
+
+	int err = 0;
+	// err: 0
+
+	int nr = 0;
+	// nr: 0
+
+	// addr: 할당 받은 가상 주소값, end: 할당 받은 가상 주소값+ 0x1000
 	BUG_ON(addr >= end);
+
+	// addr: 할당 받은 가상 주소값, pgd_offset_k(할당 받은 가상 주소값): 할당 받은 가상 주소값에 맞는 MMU table의 section 값
 	pgd = pgd_offset_k(addr);
+	// pgd: 할당 받은 가상 주소값에 맞는 MMU table의 section 값
+
 	do {
+		// addr: 할당 받은 가상 주소값, end: 할당 받은 가상 주소값+ 0x1000
+		// pgd_addr_end(할당 받은 가상 주소값, 할당 받은 가상 주소값+ 0x1000): 할당 받은 가상 주소값에 맞는 MMU table의 다음 section 값
 		next = pgd_addr_end(addr, end);
+		// next: 할당 받은 가상 주소값+ 0x1000
+
+		// pgd: 할당 받은 가상 주소값에 맞는 MMU table의 section 값,
+		// addr: 할당 받은 가상 주소값, next: 할당 받은 가상 주소값+ 0x1000,
+		// prot: pgprot_kernel에 0x204 를 or 한 값, pages: &(page 1개(4K)의 할당된 메모리 주소)
+		// vmap_pud_range(할당 받은 가상 주소값에 맞는 MMU table의 section 값,
+		// 할당 받은 가상 주소값, 할당 받은 가상 주소값+ 0x1000,
+		// pgprot_kernel에 0x204 를 or 한 값, pages: &(page 1개(4K)의 할당된 메모리 주소), &nr): 0
 		err = vmap_pud_range(pgd, addr, next, prot, pages, &nr);
+		// err: 0
+
+		// vmap_pud_range 에서 한일:
+		// 할당 받은 가상 주소값을 가지고 있는 page table section 하위 pte table을 갱신함
+		// nr: 1
+
+		// err: 0
 		if (err)
 			return err;
+
+		// pgd: 할당 받은 가상 주소값에 맞는 MMU table의 section 값,
+		// addr: 할당 받은 가상 주소값, next: 할당 받은 가상 주소값+ 0x1000, end: 할당 받은 가상 주소값+ 0x1000,
 	} while (pgd++, addr = next, addr != end);
 
+	// nr: 1
 	return nr;
+	// return 1
 }
 
 // ARM10C 20160813
@@ -211,12 +338,27 @@ static int vmap_page_range(unsigned long start, unsigned long end,
 	int ret;
 
 // 2016/08/13 종료
+// 2016/08/20 시작
 
 	// start: 할당 받은 가상 주소값, end: 할당 받은 가상 주소값+ 0x1000,
 	// prot: pgprot_kernel에 0x204 를 or 한 값, pages: &(page 1개(4K)의 할당된 메모리 주소)
+	// vmap_page_range_noflush( 할당 받은 가상 주소값, 할당 받은 가상 주소값+ 0x1000,
+	// pgprot_kernel에 0x204 를 or 한 값, &(page 1개(4K)의 할당된 메모리 주소)): 1
 	ret = vmap_page_range_noflush(start, end, prot, pages);
+	// ret: 1
+
+	// vmap_page_range_noflush 에서 한일:
+	// 할당 받은 가상 주소값을 가지고 있는 page table section 하위 pte table을 갱신함
+
+	// start: 할당 받은 가상 주소값, end: 할당 받은 가상 주소값+ 0x1000
 	flush_cache_vmap(start, end);
+
+	// flush_cache_vmap 에서 한일:
+	// cache의 값을 전부 메모리에 반영
+
+	// ret: 1
 	return ret;
+	// return 1
 }
 
 int is_vmalloc_or_module_addr(const void *x)
@@ -288,6 +430,7 @@ EXPORT_SYMBOL(vmalloc_to_pfn);
 #define VM_VM_AREA	0x04
 
 // ARM10C 20141025
+// ARM10C 20160820
 static DEFINE_SPINLOCK(vmap_area_lock);
 /* Export for kexec only */
 // ARM10C 20141108
@@ -295,6 +438,7 @@ LIST_HEAD(vmap_area_list);
 // ARM10C 20140809
 // ARM10C 20141025
 // ARM10C 20141108
+// ARM10C 20160820
 // RB_ROOT: (struct rb_root) { NULL, }
 static struct rb_root vmap_area_root = RB_ROOT;
 
@@ -316,14 +460,22 @@ static unsigned long cached_align;
 // ARM10C 20140809
 static unsigned long vmap_area_pcpu_hole;
 
+// ARM10C 20160820
+// addr: 할당받은 page의 mmu에 반영된 가상주소
 static struct vmap_area *__find_vmap_area(unsigned long addr)
 {
 	struct rb_node *n = vmap_area_root.rb_node;
+	// n: vmap_area_root.rb_node
 
+	// n: vmap_area_root.rb_node
 	while (n) {
 		struct vmap_area *va;
 
+		// n: vmap_area_root.rb_node: rb tree의 root (CHID)
 		va = rb_entry(n, struct vmap_area, rb_node);
+		// va : rb tree의 root (CHID) 의 struct vmap_area 의 시작 주소
+
+		// addr: 할당받은 page의 mmu에 반영된 가상주소, va->va_start: rb tree의 root (CHID) 의 가상주소
 		if (addr < va->va_start)
 			n = n->rb_left;
 		else if (addr >= va->va_end)
@@ -331,6 +483,10 @@ static struct vmap_area *__find_vmap_area(unsigned long addr)
 		else
 			return va;
 	}
+
+	// 위 loop에서 한일:
+	// vmap_area_root.rb_node 에서 가지고 있는 rb tree의 주소를 기준으로
+	// 할당받은 page의 mmu에 반영된 가상주소의 vmap_area 의 위치를 찾음
 
 	return NULL;
 }
@@ -1632,15 +1788,34 @@ static void free_unmap_vmap_area(struct vmap_area *va)
 	free_unmap_vmap_area_noflush(va);
 }
 
+// ARM10C 20160820
+// addr: 할당받은 page의 mmu에 반영된 가상주소
 static struct vmap_area *find_vmap_area(unsigned long addr)
 {
 	struct vmap_area *va;
 
 	spin_lock(&vmap_area_lock);
+
+	// spin_lock 에서 한일:
+	// &vmap_area_lock 을 이용한 spin lock 수행
+
+	// addr: 할당받은 page의 mmu에 반영된 가상주소
+	// __find_vmap_area(할당받은 page의 mmu에 반영된 가상주소): 할당받은 page의 mmu에 반영된 가상주소 가 포함된 vmap_area 주소
 	va = __find_vmap_area(addr);
+	// va: 할당받은 page의 mmu에 반영된 가상주소 가 포함된 vmap_area 주소
+
+	// __find_vmap_area 에서 한일:
+	// vmap_area_root.rb_node 에서 가지고 있는 rb tree의 주소를 기준으로
+	// 할당받은 page의 mmu에 반영된 가상주소의 vmap_area 의 위치를 찾음
+
 	spin_unlock(&vmap_area_lock);
 
+	// spin_unlock 에서 한일:
+	// &vmap_area_lock 을 이용한 spin unlock 수행
+
+	// va: 할당받은 page의 mmu에 반영된 가상주소 가 포함된 vmap_area 주소
 	return va;
+	// return 할당받은 page의 mmu에 반영된 가상주소 가 포함된 vmap_area 주소
 }
 
 static void free_unmap_vmap_area_addr(unsigned long addr)
@@ -2311,13 +2486,29 @@ int map_vm_area(struct vm_struct *area, pgprot_t prot, struct page ***pages)
 
 	// addr: 할당 받은 가상 주소값, end: 할당 받은 가상 주소값+ 0x1000,
 	// prot: pgprot_kernel에 0x204 를 or 한 값, *pages: &(page 1개(4K)의 할당된 메모리 주소)
+	// vmap_page_range(addr: 할당 받은 가상 주소값, 할당 받은 가상 주소값+ 0x1000,
+	// pgprot_kernel에 0x204 를 or 한 값, &(page 1개(4K)의 할당된 메모리 주소)): 1
 	err = vmap_page_range(addr, end, prot, *pages);
+	// err: 1
+
+	// vmap_page_range 에서 한일:
+	// 할당 받은 가상 주소값을 가지고 있는 page table section 하위 pte table을 갱신함
+	// cache의 값을 전부 메모리에 반영
+
+	// err: 1
 	if (err > 0) {
+		// *pages: &(page 1개(4K)의 할당된 메모리 주소), err: 1
 		*pages += err;
+		// *pages: &(page 1개(4K)의 할당된 메모리 주소) + 1
+
+		// err: 1
 		err = 0;
+		// err: 0
 	}
 
+	// err: 0
 	return err;
+	// return 0
 }
 EXPORT_SYMBOL_GPL(map_vm_area);
 
@@ -2828,11 +3019,23 @@ struct vm_struct *find_vm_area(const void *addr)
  *	This function returns the found VM area, but using it is NOT safe
  *	on SMP machines, except for its size or flags.
  */
+// ARM10C 20160820
+// addr: 할당받은 page의 mmu에 반영된 가상주소
 struct vm_struct *remove_vm_area(const void *addr)
 {
 	struct vmap_area *va;
 
+	// addr: 할당받은 page의 mmu에 반영된 가상주소
+	// find_vmap_area(할당받은 page의 mmu에 반영된 가상주소): 할당받은 page의 mmu에 반영된 가상주소 가 포함된 vmap_area 주소
 	va = find_vmap_area((unsigned long)addr);
+	// va: 할당받은 page의 mmu에 반영된 가상주소 가 포함된 vmap_area 주소
+
+	// find_vmap_area 에서 한일:
+	// vmap_area_root.rb_node 에서 가지고 있는 rb tree의 주소를 기준으로
+	// 할당받은 page의 mmu에 반영된 가상주소의 vmap_area 의 위치를 찾음
+
+// 2016/8/20 종료
+
 	if (va && va->flags & VM_VM_AREA) {
 		struct vm_struct *vm = va->vm;
 
@@ -2850,17 +3053,22 @@ struct vm_struct *remove_vm_area(const void *addr)
 	return NULL;
 }
 
+// ARM10C 20160820
+// addr: 할당받은 page의 mmu에 반영된 가상주소
 static void __vunmap(const void *addr, int deallocate_pages)
 {
 	struct vm_struct *area;
 
+	// addr: 할당받은 page의 mmu에 반영된 가상주소
 	if (!addr)
 		return;
 
+	// addr: 할당받은 page의 mmu에 반영된 가상주소
 	if (WARN(!PAGE_ALIGNED(addr), "Trying to vfree() bad address (%p)\n",
 			addr))
 		return;
 
+	// addr: 할당받은 page의 mmu에 반영된 가상주소
 	area = remove_vm_area(addr);
 	if (unlikely(!area)) {
 		WARN(1, KERN_ERR "Trying to vfree() nonexistent vm area (%p)\n",
@@ -2931,11 +3139,17 @@ EXPORT_SYMBOL(vfree);
  *
  *	Must not be called in interrupt context.
  */
+// ARM10C 20160820
+// p1: 할당받은 page의 mmu에 반영된 가상주소
 void vunmap(const void *addr)
 {
+	// in_interrupt(): 0
 	BUG_ON(in_interrupt());
-	might_sleep();
+	might_sleep(); // null function
+
+	// addr: 할당받은 page의 mmu에 반영된 가상주소
 	if (addr)
+		// addr: 할당받은 page의 mmu에 반영된 가상주소
 		__vunmap(addr, 0);
 }
 EXPORT_SYMBOL(vunmap);
@@ -2974,12 +3188,19 @@ void *vmap(struct page **pages, unsigned int count,
 		return NULL;
 
 	// area: kmem_cache#30-oX (vm_struct), prot: pgprot_kernel에 0x204 를 or 한 값, pages: &(page 1개(4K)의 할당된 메모리 주소)
+	// map_vm_area(kmem_cache#30-oX (vm_struct), pgprot_kernel에 0x204 를 or 한 값, &(page 1개(4K)의 할당된 메모리 주소)): 0
 	if (map_vm_area(area, prot, &pages)) {
 		vunmap(area->addr);
 		return NULL;
 	}
 
+	// map_vm_area 에서 한일:
+	// 할당 받은 가상 주소값을 가지고 있는 page table section 하위 pte table을 갱신함
+	// cache의 값을 전부 메모리에 반영
+
+	// area->addr: (kmem_cache#30-oX (vm_struct))->addr: 할당받은 page의 가상주소
 	return area->addr;
+	// return 할당받은 page의 mmu에 반영된 가상주소
 }
 EXPORT_SYMBOL(vmap);
 
