@@ -10,6 +10,8 @@
   - current : 3.13.x
   
 # HISTORY
+* 156th (2016/08/27) week [156차](https://github.com/hephaex/kernel_review/blob/master/a10c_156.md)
+ - rest_init()
 * 155th (2016/08/20) week [155차](https://github.com/hephaex/kernel_review/blob/master/a10c_155.md)
  - cgroup_init()
 * 154th (2016/08/13) week [154차](https://github.com/hephaex/kernel_review/blob/master/a10c_154.md)
