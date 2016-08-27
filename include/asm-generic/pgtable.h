@@ -80,13 +80,29 @@ int pmdp_clear_flush_young(struct vm_area_struct *vma,
 #endif
 
 #ifndef __HAVE_ARCH_PTEP_GET_AND_CLEAR
+// ARM10C 20160827
+// &init_mm,
+// addr: (할당받은 page의 mmu에 반영된 가상주소 가 포함된 vmap_area 주소)->va_start,
+// pte: 가상주소에 매핑 되어 있는 pte 값
 static inline pte_t ptep_get_and_clear(struct mm_struct *mm,
 				       unsigned long address,
 				       pte_t *ptep)
 {
+	// *ptep: *(가상주소에 매핑 되어 있는 pte 값)
 	pte_t pte = *ptep;
+	// pte: *(가상주소에 매핑 되어 있는 pte 값)
+
+	// mm: &init_mm,
+	// address: (할당받은 page의 mmu에 반영된 가상주소 가 포함된 vmap_area 주소)->va_start,
+	// ptep: 가상주소에 매핑 되어 있는 pte 값
 	pte_clear(mm, address, ptep);
+
+	// pte_clear 에서 한일:
+	// 가상주소에 매핑 되어 있는 pte 에 값을 0 으로 초기화 함
+
+	// pte: *(가상주소에 매핑 되어 있는 pte 값)
 	return pte;
+	// return *(가상주소에 매핑 되어 있는 pte 값)
 }
 #endif
 
@@ -247,6 +263,7 @@ static inline int pmd_same(pmd_t pmd_a, pmd_t pmd_b)
 // addr: 0xf0000000, end: 0xf0001000
 // pgd_addr_end(0xf0000000, 0xf0001000): 0xf0001000
 // ARM10C 20160820
+// ARM10C 20160827
 #define pgd_addr_end(addr, end)						\
 ({	unsigned long __boundary = ((addr) + PGDIR_SIZE) & PGDIR_MASK;	\
 	(__boundary - 1 < (end) - 1)? __boundary: (end);		\
@@ -276,37 +293,61 @@ void pgd_clear_bad(pgd_t *);
 void pud_clear_bad(pud_t *);
 void pmd_clear_bad(pmd_t *);
 
+// ARM10C 20160827
+// pgd: 가상주소가 포함되어 있는 pgd 값
 static inline int pgd_none_or_clear_bad(pgd_t *pgd)
 {
+	// *pgd: *(가상주소가 포함되어 있는 pgd 값)
+	// pgd_none(*(가상주소가 포함되어 있는 pgd 값)): 0
 	if (pgd_none(*pgd))
 		return 1;
+
+	// *pgd: *(가상주소가 포함되어 있는 pgd 값)
+	// pgd_bad(*(가상주소가 포함되어 있는 pgd 값)): 0
 	if (unlikely(pgd_bad(*pgd))) {
 		pgd_clear_bad(pgd);
 		return 1;
 	}
 	return 0;
+	// return 0
 }
 
+// ARM10C 20160827
+// pud: 가상주소가 포함되어 있는 pgd 값
 static inline int pud_none_or_clear_bad(pud_t *pud)
 {
+	// *pgd: *(가상주소가 포함되어 있는 pgd 값)
+	// pgd_none(*(가상주소가 포함되어 있는 pgd 값)): 0
 	if (pud_none(*pud))
 		return 1;
+
+	// *pgd: *(가상주소가 포함되어 있는 pgd 값)
+	// pgd_bad(*(가상주소가 포함되어 있는 pgd 값)): 0
 	if (unlikely(pud_bad(*pud))) {
 		pud_clear_bad(pud);
 		return 1;
 	}
 	return 0;
+	// return 0
 }
 
+// ARM10C 20160827
+// pmd: 가상주소가 포함되어 있는 pgd 값
 static inline int pmd_none_or_clear_bad(pmd_t *pmd)
 {
+	// *pgd: *(가상주소가 포함되어 있는 pgd 값)
+	// pmd_none(*(가상주소가 포함되어 있는 pgd 값)): 0
 	if (pmd_none(*pmd))
 		return 1;
+
+	// *pgd: *(가상주소가 포함되어 있는 pgd 값)
+	// pmd_bad(*(가상주소가 포함되어 있는 pgd 값)): 0
 	if (unlikely(pmd_bad(*pmd))) {
 		pmd_clear_bad(pmd);
 		return 1;
 	}
 	return 0;
+	// return 0
 }
 
 static inline pte_t __ptep_modify_prot_start(struct mm_struct *mm,

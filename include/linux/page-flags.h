@@ -154,6 +154,7 @@ enum pageflags {
 // TESTPAGEFLAG(Active, active):
 // static inline int PageActive(const struct page *page)
 // { return test_bit(PG_active, &page->flags); }
+// ARM10C 20160827
 #define TESTPAGEFLAG(uname, lname)					\
 static inline int Page##uname(const struct page *page)			\
 			{ return test_bit(PG_##lname, &page->flags); }
@@ -199,6 +200,7 @@ static inline void __SetPage##uname(struct page *page)			\
 // __CLEARPAGEFLAG(Active, active)
 // static inline void __ClearPageActive(struct page *page)
 // { __clear_bit(PG_active, &page->flags); }
+// ARM10C 20160827
 #define __CLEARPAGEFLAG(uname, lname)					\
 static inline void __ClearPage##uname(struct page *page)		\
 			{ __clear_bit(PG_##lname, &page->flags); }
@@ -265,6 +267,7 @@ TESTPAGEFLAG(Locked, locked)
 PAGEFLAG(Error, error) TESTCLEARFLAG(Error, error)
 PAGEFLAG(Referenced, referenced) TESTCLEARFLAG(Referenced, referenced)
 PAGEFLAG(Dirty, dirty) TESTSCFLAG(Dirty, dirty) __CLEARPAGEFLAG(Dirty, dirty)
+// ARM10C 20160827
 PAGEFLAG(LRU, lru) __CLEARPAGEFLAG(LRU, lru)
 // ARM10C 20140621
 PAGEFLAG(Active, active) __CLEARPAGEFLAG(Active, active)
@@ -439,6 +442,7 @@ static inline void ClearPageCompound(struct page *page)
  */
 // ARM10C 20140405
 // ARM10C 20151024
+// ARM10C 20160827
 TESTPAGEFLAG(Compound, compound)
 __SETPAGEFLAG(Head, compound)  __CLEARPAGEFLAG(Head, compound)
 

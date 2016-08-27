@@ -11,6 +11,7 @@
  * without casting.
  */
 // ARM10C 20160820
+// ARM10C 20160827
 typedef struct { pgd_t pgd; } pud_t;
 
 #define PUD_SHIFT	PGDIR_SHIFT
@@ -25,7 +26,9 @@ typedef struct { pgd_t pgd; } pud_t;
  */
 // ARM10C 20141101
 // ARM10C 20160820
+// ARM10C 20160827
 static inline int pgd_none(pgd_t pgd)		{ return 0; }
+// ARM10C 20160827
 static inline int pgd_bad(pgd_t pgd)		{ return 0; }
 static inline int pgd_present(pgd_t pgd)	{ return 1; }
 static inline void pgd_clear(pgd_t *pgd)	{ }
@@ -39,6 +42,7 @@ static inline void pgd_clear(pgd_t *pgd)	{ }
 #define set_pgd(pgdptr, pgdval)			set_pud((pud_t *)(pgdptr), (pud_t) { pgdval })
 
 // ARM10C 20131102
+// ARM10C 20160827
 static inline pud_t * pud_offset(pgd_t * pgd, unsigned long address)
 {
 	return (pud_t *)pgd;

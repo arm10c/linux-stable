@@ -329,13 +329,39 @@ void __init check_writebuffer_bugs(void)
 		// p1: 할당받은 page의 mmu에 반영된 가상주소
 		vunmap(p1);
 
+		// vunmap 한일:
+		// vmap_area_root.rb_node 에서 가지고 있는 rb tree의 주소를 기준으로
+		// 할당받은 page의 mmu에 반영된 가상주소의 vmap_area 의 위치를 찾음
+		// cache 에 있는 변화된 값을 실제 메모리에 전부 반영
+		// 가상주소에 매핑 되어 있는 pte 에 값을 0 으로 초기화 함
+		// free 되는 page 수를 계산하여 vmap_lazy_nr 에 더함
+		// vmap_lazy_nr 이 0x2000 개가 넘을 경우 purge를 수행
+		// &(할당받은 page의 mmu에 반영된 가상주소 가 포함된 vmap_area 주소)->vm 의 page 주소를 구하고, 등록된 kmem_cache 주소를 찾음
+		// &(할당받은 page의 mmu에 반영된 가상주소 가 포함된 vmap_area 주소)->vm 의 object 을 등록된 kmem_cache 를 이용하여 free 하도록 함
+
 		// p2: 할당받은 page의 mmu에 반영된 가상주소
 		vunmap(p2);
+
+		// vunmap 한일:
+		// vmap_area_root.rb_node 에서 가지고 있는 rb tree의 주소를 기준으로
+		// 할당받은 page의 mmu에 반영된 가상주소의 vmap_area 의 위치를 찾음
+		// cache 에 있는 변화된 값을 실제 메모리에 전부 반영
+		// 가상주소에 매핑 되어 있는 pte 에 값을 0 으로 초기화 함
+		// free 되는 page 수를 계산하여 vmap_lazy_nr 에 더함
+		// vmap_lazy_nr 이 0x2000 개가 넘을 경우 purge를 수행
+		// &(할당받은 page의 mmu에 반영된 가상주소 가 포함된 vmap_area 주소)->vm 의 page 주소를 구하고, 등록된 kmem_cache 주소를 찾음
+		// &(할당받은 page의 mmu에 반영된 가상주소 가 포함된 vmap_area 주소)->vm 의 object 을 등록된 kmem_cache 를 이용하여 free 하도록 함
+
+		// page: page 1개(4K)의 할당된 메모리 주소
 		put_page(page);
+
+		// put_page 에서 한일:
+		// page 1개(4K)의 할당된 메모리 주소를 buddy 에 0 order를 갖는 free 한 page list에 등록함
 	} else {
 		reason = "unable to grab page\n";
 	}
 
+	// v: 0
 	if (v) {
 		printk("failed, %s\n", reason);
 		shared_pte_mask = L_PTE_MT_UNCACHED;

@@ -12,6 +12,7 @@
 #include <asm/uaccess.h>
 
 // ARM10C 20150808
+// ARM10C 20160827
 static struct signal_struct init_signals = INIT_SIGNALS(init_signals);
 // ARM10C 20150808
 static struct sighand_struct init_sighand = INIT_SIGHAND(init_sighand);
@@ -21,6 +22,7 @@ static struct sighand_struct init_sighand = INIT_SIGHAND(init_sighand);
 // ARM10C 20140913
 // ARM10C 20150808
 // ARM10C 20160521
+// ARM10C 20160827
 // INIT_TASK(init_task):
 // {
 //    .state            = 0,

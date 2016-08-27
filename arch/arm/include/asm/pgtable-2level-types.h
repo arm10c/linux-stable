@@ -54,6 +54,7 @@ typedef struct { pteval_t pgprot; } pgprot_t;
  */
 // ARM10C 20131102
 // ARM10C 20160820
+// ARM10C 20160827
 typedef pteval_t pte_t;
 // ARM10C 20160820
 // ARM10C 20160820
@@ -61,12 +62,14 @@ typedef pmdval_t pmd_t;
 // ARM10C 20131026
 // ARM10C 20150919
 // ARM10C 20160820
+// ARM10C 20160827
 typedef pmdval_t pgd_t[2];
 // ARM10C 20131102
 typedef pteval_t pgprot_t;
 
 // ARM10C 20141101
 // ARM10C 20160820
+// ARM10C 20160827
 #define pte_val(x)      (x)
 // ARM10C 20131109
 // ARM10C 20141101
@@ -81,6 +84,7 @@ typedef pteval_t pgprot_t;
 // ARM10C 20131123
 // ARM10C 20141101
 // ARM10C 20160820
+// ARM10C 20160827
 #define __pte(x)        (x)
 // ARM10C 20131102
 #define __pmd(x)        (x)

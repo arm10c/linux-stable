@@ -114,6 +114,7 @@ extern const struct cpumask *const cpu_active_mask;
 
 #if NR_CPUS > 1 // NR_CPUS: 4
 // ARM10C 20160604
+// ARM10C 20160827
 // cpu_online_mask: 0x1
 // num_online_cpus(): 1
 #define num_online_cpus()	cpumask_weight(cpu_online_mask)

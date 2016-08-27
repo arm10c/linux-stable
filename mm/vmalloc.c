@@ -58,57 +58,164 @@ static void free_work(struct work_struct *w)
 
 /*** Page table manipulation functions ***/
 
+// ARM10C 20160827
+// pmd: 가상주소가 포함되어 있는 pgd 값
+// addr: (할당받은 page의 mmu에 반영된 가상주소 가 포함된 vmap_area 주소)->va_start,
+// next: (할당받은 page의 mmu에 반영된 가상주소 가 포함된 vmap_area 주소)->va_end
 static void vunmap_pte_range(pmd_t *pmd, unsigned long addr, unsigned long end)
 {
 	pte_t *pte;
 
+	// pmd: 가상주소가 포함되어 있는 pgd 값
+	// addr: (할당받은 page의 mmu에 반영된 가상주소 가 포함된 vmap_area 주소)->va_start,
 	pte = pte_offset_kernel(pmd, addr);
+	// pte: 가상주소에 매핑 되어 있는 pte 값
+
 	do {
+		// addr: (할당받은 page의 mmu에 반영된 가상주소 가 포함된 vmap_area 주소)->va_start,
+		// pte: 가상주소에 매핑 되어 있는 pte 값
+		// ptep_get_and_clear(&init_mm, (할당받은 page의 mmu에 반영된 가상주소 가 포함된 vmap_area 주소)->va_start,
+		// 가상주소에 매핑 되어 있는 pte 값): *(가상주소에 매핑 되어 있는 pte 값)
 		pte_t ptent = ptep_get_and_clear(&init_mm, addr, pte);
+		// ptent: *(가상주소에 매핑 되어 있는 pte 값)
+
+		// ptep_get_and_clear 에서 한일:
+		// 가상주소에 매핑 되어 있는 pte 에 값을 0 으로 초기화 함
+
+		// ptent: *(가상주소에 매핑 되어 있는 pte 값)
+		// pte_none(*(가상주소에 매핑 되어 있는 pte 값)): 1
+		// pte_present(*(가상주소에 매핑 되어 있는 pte 값)): 1
 		WARN_ON(!pte_none(ptent) && !pte_present(ptent));
+
+		// pte: 가상주소에 매핑 되어 있는 pte 값, PAGE_SIZE: 0x1000
+		// addr: (할당받은 page의 mmu에 반영된 가상주소 가 포함된 vmap_area 주소)->va_start,
+		// end: (할당받은 page의 mmu에 반영된 가상주소 가 포함된 vmap_area 주소)->va_end
 	} while (pte++, addr += PAGE_SIZE, addr != end);
 }
 
+// ARM10C 20160827
+// pud: 가상주소가 포함되어 있는 pgd 값
+// addr: (할당받은 page의 mmu에 반영된 가상주소 가 포함된 vmap_area 주소)->va_start,
+// next: (할당받은 page의 mmu에 반영된 가상주소 가 포함된 vmap_area 주소)->va_end
 static void vunmap_pmd_range(pud_t *pud, unsigned long addr, unsigned long end)
 {
 	pmd_t *pmd;
 	unsigned long next;
 
+	// pud: 가상주소가 포함되어 있는 pgd 값
+	// addr: (할당받은 page의 mmu에 반영된 가상주소 가 포함된 vmap_area 주소)->va_start,
 	pmd = pmd_offset(pud, addr);
+	// pmd: 가상주소가 포함되어 있는 pgd 값
+
 	do {
+		// addr: (할당받은 page의 mmu에 반영된 가상주소 가 포함된 vmap_area 주소)->va_start,
+		// end: (할당받은 page의 mmu에 반영된 가상주소 가 포함된 vmap_area 주소)->va_end
 		next = pmd_addr_end(addr, end);
+		// next: (할당받은 page의 mmu에 반영된 가상주소 가 포함된 vmap_area 주소)->va_end
+
+		// pmd: 가상주소가 포함되어 있는 pgd 값
+		// pmd_none_or_clear_bad(가상주소가 포함되어 있는 pgd 값): 0
 		if (pmd_none_or_clear_bad(pmd))
 			continue;
+
+		// pmd: 가상주소가 포함되어 있는 pgd 값
+		// addr: (할당받은 page의 mmu에 반영된 가상주소 가 포함된 vmap_area 주소)->va_start,
+		// next: (할당받은 page의 mmu에 반영된 가상주소 가 포함된 vmap_area 주소)->va_end
 		vunmap_pte_range(pmd, addr, next);
+
+		// vunmap_pte_range 에서 한일:
+		// 가상주소에 매핑 되어 있는 pte 에 값을 0 으로 초기화 함
+
+		// pmd: 가상주소가 포함되어 있는 pgd 값
+		// addr: (할당받은 page의 mmu에 반영된 가상주소 가 포함된 vmap_area 주소)->va_start,
+		// next: (할당받은 page의 mmu에 반영된 가상주소 가 포함된 vmap_area 주소)->va_end,
+		// end: (할당받은 page의 mmu에 반영된 가상주소 가 포함된 vmap_area 주소)->va_end
 	} while (pmd++, addr = next, addr != end);
 }
 
+// ARM10C 20160827
+// pgd: 가상주소가 포함되어 있는 pgd 값,
+// addr: (할당받은 page의 mmu에 반영된 가상주소 가 포함된 vmap_area 주소)->va_start,
+// next: (할당받은 page의 mmu에 반영된 가상주소 가 포함된 vmap_area 주소)->va_end
 static void vunmap_pud_range(pgd_t *pgd, unsigned long addr, unsigned long end)
 {
 	pud_t *pud;
 	unsigned long next;
 
+	// pgd: 가상주소가 포함되어 있는 pgd 값,
+	// addr: (할당받은 page의 mmu에 반영된 가상주소 가 포함된 vmap_area 주소)->va_start
+	// pud_offset(가상주소가 포함되어 있는 pgd 값, (할당받은 page의 mmu에 반영된 가상주소 가 포함된 vmap_area 주소)->va_start):
+	// 가상주소가 포함되어 있는 pgd 값
 	pud = pud_offset(pgd, addr);
+	// pud: 가상주소가 포함되어 있는 pgd 값
+
 	do {
+		// addr: (할당받은 page의 mmu에 반영된 가상주소 가 포함된 vmap_area 주소)->va_start,
+		// end: (할당받은 page의 mmu에 반영된 가상주소 가 포함된 vmap_area 주소)->va_end
 		next = pud_addr_end(addr, end);
+		// next: (할당받은 page의 mmu에 반영된 가상주소 가 포함된 vmap_area 주소)->va_end
+
+		// pud: 가상주소가 포함되어 있는 pgd 값
+		// pud_none_or_clear_bad(가상주소가 포함되어 있는 pgd 값): 0
 		if (pud_none_or_clear_bad(pud))
 			continue;
+
+		// pud: 가상주소가 포함되어 있는 pgd 값
+		// addr: (할당받은 page의 mmu에 반영된 가상주소 가 포함된 vmap_area 주소)->va_start,
+		// next: (할당받은 page의 mmu에 반영된 가상주소 가 포함된 vmap_area 주소)->va_end
 		vunmap_pmd_range(pud, addr, next);
+
+		// vunmap_pmd_range 에서 한일:
+		// 가상주소에 매핑 되어 있는 pte 에 값을 0 으로 초기화 함
+
+		// pud: 가상주소가 포함되어 있는 pgd 값
+		// addr: (할당받은 page의 mmu에 반영된 가상주소 가 포함된 vmap_area 주소)->va_start,
+		// next: (할당받은 page의 mmu에 반영된 가상주소 가 포함된 vmap_area 주소)->va_end,
+		// end: (할당받은 page의 mmu에 반영된 가상주소 가 포함된 vmap_area 주소)->va_end
 	} while (pud++, addr = next, addr != end);
 }
 
+// ARM10C 20160827
+// va->va_start: (할당받은 page의 mmu에 반영된 가상주소 가 포함된 vmap_area 주소)->va_start,
+// va->va_end: (할당받은 page의 mmu에 반영된 가상주소 가 포함된 vmap_area 주소)->va_end
 static void vunmap_page_range(unsigned long addr, unsigned long end)
 {
 	pgd_t *pgd;
 	unsigned long next;
 
+	// addr: (할당받은 page의 mmu에 반영된 가상주소 가 포함된 vmap_area 주소)->va_start,
+	// end: (할당받은 page의 mmu에 반영된 가상주소 가 포함된 vmap_area 주소)->va_end
 	BUG_ON(addr >= end);
+
+	// addr: (할당받은 page의 mmu에 반영된 가상주소 가 포함된 vmap_area 주소)->va_start
+	// pgd_offset_k((할당받은 page의 mmu에 반영된 가상주소 가 포함된 vmap_area 주소)->va_start):
+	// 가상주소가 포함되어 있는 pgd 값
 	pgd = pgd_offset_k(addr);
+
+	// pgd: 가상주소가 포함되어 있는 pgd 값
 	do {
+		// addr: (할당받은 page의 mmu에 반영된 가상주소 가 포함된 vmap_area 주소)->va_start,
+		// end: (할당받은 page의 mmu에 반영된 가상주소 가 포함된 vmap_area 주소)->va_end
 		next = pgd_addr_end(addr, end);
+		// next: (할당받은 page의 mmu에 반영된 가상주소 가 포함된 vmap_area 주소)->va_end
+
+		// pgd: 가상주소가 포함되어 있는 pgd 값
+		// pgd_none_or_clear_bad(가상주소가 포함되어 있는 pgd 값): 0
 		if (pgd_none_or_clear_bad(pgd))
 			continue;
+
+		// pgd: 가상주소가 포함되어 있는 pgd 값,
+		// addr: (할당받은 page의 mmu에 반영된 가상주소 가 포함된 vmap_area 주소)->va_start,
+		// next: (할당받은 page의 mmu에 반영된 가상주소 가 포함된 vmap_area 주소)->va_end
 		vunmap_pud_range(pgd, addr, next);
+
+		// vunmap_pud_range 에서 한일:
+		// 가상주소에 매핑 되어 있는 pte 에 값을 0 으로 초기화 함
+
+		// pgd: 가상주소가 포함되어 있는 pgd 값
+		// addr: (할당받은 page의 mmu에 반영된 가상주소 가 포함된 vmap_area 주소)->va_start,
+		// next: (할당받은 page의 mmu에 반영된 가상주소 가 포함된 vmap_area 주소)->va_end,
+		// end: (할당받은 page의 mmu에 반영된 가상주소 가 포함된 vmap_area 주소)->va_end
 	} while (pgd++, addr = next, addr != end);
 }
 
@@ -422,15 +529,19 @@ EXPORT_SYMBOL(vmalloc_to_pfn);
 
 /*** Global kva allocator ***/
 
+// ARM10C 20160827
+// VM_LAZY_FREE: 0x01
 #define VM_LAZY_FREE	0x01
 #define VM_LAZY_FREEING	0x02
 // ARM10C 20140809
 // ARM10C 20141025
+// ARM10C 20160827
 // VM_VM_AREA: 0x04
 #define VM_VM_AREA	0x04
 
 // ARM10C 20141025
 // ARM10C 20160820
+// ARM10C 20160827
 static DEFINE_SPINLOCK(vmap_area_lock);
 /* Export for kexec only */
 // ARM10C 20141108
@@ -1607,11 +1718,21 @@ static void free_vmap_area(struct vmap_area *va)
 /*
  * Clear the pagetable entries of a given vmap_area
  */
+// ARM10C 20160827
+// va: 할당받은 page의 mmu에 반영된 가상주소 가 포함된 vmap_area 주소
 static void unmap_vmap_area(struct vmap_area *va)
 {
+	// va->va_start: (할당받은 page의 mmu에 반영된 가상주소 가 포함된 vmap_area 주소)->va_start,
+	// va->va_end: (할당받은 page의 mmu에 반영된 가상주소 가 포함된 vmap_area 주소)->va_end
 	vunmap_page_range(va->va_start, va->va_end);
+
+	// vunmap_page_range 에서 한일:
+	// 가상주소에 매핑 되어 있는 pte 에 값을 0 으로 초기화 함
 }
 
+// ARM10C 20160827
+// va->va_start: (할당받은 page의 mmu에 반영된 가상주소 가 포함된 vmap_area 주소)->va_start,
+// va->va_end: (할당받은 page의 mmu에 반영된 가상주소 가 포함된 vmap_area 주소)->va_end
 static void vmap_debug_free_range(unsigned long start, unsigned long end)
 {
 	/*
@@ -1627,7 +1748,7 @@ static void vmap_debug_free_range(unsigned long start, unsigned long end)
 	 * debugging doesn't do a broadcast TLB flush so it is a lot
 	 * faster).
 	 */
-#ifdef CONFIG_DEBUG_PAGEALLOC
+#ifdef CONFIG_DEBUG_PAGEALLOC // CONFIG_DEBUG_PAGEALLOC=n
 	vunmap_page_range(start, end);
 	flush_tlb_kernel_range(start, end);
 #endif
@@ -1649,15 +1770,22 @@ static void vmap_debug_free_range(unsigned long start, unsigned long end)
  * code, and it will be simple to change the scale factor if we find that it
  * becomes a problem on bigger systems.
  */
+// ARM10C 20160827
 static unsigned long lazy_max_pages(void)
 {
 	unsigned int log;
 
+	// num_online_cpus(): 1, fls(1): 1
 	log = fls(num_online_cpus());
+	// log: 1
 
+	// log: 1, PAGE_SIZE: 0x1000
 	return log * (32UL * 1024 * 1024 / PAGE_SIZE);
+	// return 0x2000 (8K)
 }
 
+// ARM10C 20160827
+// ATOMIC_INIT(0): { (0) }
 static atomic_t vmap_lazy_nr = ATOMIC_INIT(0);
 
 /* for per-CPU blocks */
@@ -1761,10 +1889,22 @@ static void purge_vmap_area_lazy(void)
  * and flush_cache_vunmap had been called for the correct range
  * previously.
  */
+// ARM10C 20160827
+// va: 할당받은 page의 mmu에 반영된 가상주소 가 포함된 vmap_area 주소
 static void free_vmap_area_noflush(struct vmap_area *va)
 {
+	// va->flags: (할당받은 page의 mmu에 반영된 가상주소 가 포함된 vmap_area 주소)->flags, VM_LAZY_FREE: 0x01
 	va->flags |= VM_LAZY_FREE;
+	// va->flags: (할당받은 page의 mmu에 반영된 가상주소 가 포함된 vmap_area 주소)->flags: VM_LAZY_FREE: 0x01 이 mask 된 값
+
+	// va->va_end: (할당받은 page의 mmu에 반영된 가상주소 가 포함된 vmap_area 주소)->va_end,
+	// va->va_start: (할당받은 page의 mmu에 반영된 가상주소 가 포함된 vmap_area 주소)->va_start, PAGE_SHIFT: 12
 	atomic_add((va->va_end - va->va_start) >> PAGE_SHIFT, &vmap_lazy_nr);
+
+	// atomic_add 에서 한일:
+	// free 되는 page 수를 계산하여 vmap_lazy_nr 에 더함
+
+	// lazy_max_pages(): 0x2000
 	if (unlikely(atomic_read(&vmap_lazy_nr) > lazy_max_pages()))
 		try_purge_vmap_area_lazy();
 }
@@ -1773,19 +1913,45 @@ static void free_vmap_area_noflush(struct vmap_area *va)
  * Free and unmap a vmap area, caller ensuring flush_cache_vunmap had been
  * called for the correct range previously.
  */
+// ARM10C 20160827
+// va: 할당받은 page의 mmu에 반영된 가상주소 가 포함된 vmap_area 주소
 static void free_unmap_vmap_area_noflush(struct vmap_area *va)
 {
+	// va: 할당받은 page의 mmu에 반영된 가상주소 가 포함된 vmap_area 주소
 	unmap_vmap_area(va);
+
+	// unmap_vmap_area 에서 한일:
+	// 가상주소에 매핑 되어 있는 pte 에 값을 0 으로 초기화 함
+
+	// va: 할당받은 page의 mmu에 반영된 가상주소 가 포함된 vmap_area 주소
 	free_vmap_area_noflush(va);
+
+	// free_vmap_area_noflush 에서 한일:
+	// free 되는 page 수를 계산하여 vmap_lazy_nr 에 더함
+	// vmap_lazy_nr 이 0x2000 개가 넘을 경우 purge를 수행
 }
 
 /*
  * Free and unmap a vmap area
  */
+// ARM10C 20160827
+// va: 할당받은 page의 mmu에 반영된 가상주소 가 포함된 vmap_area 주소
 static void free_unmap_vmap_area(struct vmap_area *va)
 {
+	// va->va_start: (할당받은 page의 mmu에 반영된 가상주소 가 포함된 vmap_area 주소)->va_start,
+	// va->va_end: (할당받은 page의 mmu에 반영된 가상주소 가 포함된 vmap_area 주소)->va_end
 	flush_cache_vunmap(va->va_start, va->va_end);
+
+	// flush_cache_vunmap 에서 한일:
+	// cache 에 있는 변화된 값을 실제 메모리에 전부 반영
+
+	// va: 할당받은 page의 mmu에 반영된 가상주소 가 포함된 vmap_area 주소
 	free_unmap_vmap_area_noflush(va);
+
+	// free_unmap_vmap_area_noflush 에서 한일:
+	// 가상주소에 매핑 되어 있는 pte 에 값을 0 으로 초기화 함
+	// free 되는 page 수를 계산하여 vmap_lazy_nr 에 더함
+	// vmap_lazy_nr 이 0x2000 개가 넘을 경우 purge를 수행
 }
 
 // ARM10C 20160820
@@ -3035,26 +3201,64 @@ struct vm_struct *remove_vm_area(const void *addr)
 	// 할당받은 page의 mmu에 반영된 가상주소의 vmap_area 의 위치를 찾음
 
 // 2016/8/20 종료
+// 2016/8/27 시작
 
+	// NOTE:
+	// va 의 맵버 변수들 값을 정확히 알수 없음
+	// va->flags: (할당받은 page의 mmu에 반영된 가상주소 가 포함된 vmap_area 주소)->flags
+	// 값에 VM_VM_AREA: 0x04 값이 있다고 가정하고 분석
+
+	// va: 할당받은 page의 mmu에 반영된 가상주소 가 포함된 vmap_area 주소,
+	// va->flags: (할당받은 page의 mmu에 반영된 가상주소 가 포함된 vmap_area 주소)->flags, VM_VM_AREA: 0x04
 	if (va && va->flags & VM_VM_AREA) {
+		// va->vm: (할당받은 page의 mmu에 반영된 가상주소 가 포함된 vmap_area 주소)->vm
 		struct vm_struct *vm = va->vm;
+		// vm: &(할당받은 page의 mmu에 반영된 가상주소 가 포함된 vmap_area 주소)->vm
 
 		spin_lock(&vmap_area_lock);
+
+		// spin_lock 에서 한일:
+		// &vmap_area_lock 을 이용한 spin lock 수행
+
+		// va->vm: (할당받은 page의 mmu에 반영된 가상주소 가 포함된 vmap_area 주소)->vm
 		va->vm = NULL;
+		// va->vm: (할당받은 page의 mmu에 반영된 가상주소 가 포함된 vmap_area 주소)->vm: NULL
+
+		// va->flags: (할당받은 page의 mmu에 반영된 가상주소 가 포함된 vmap_area 주소)->flags, VM_VM_AREA: 0x04
 		va->flags &= ~VM_VM_AREA;
+		// va->flags: (할당받은 page의 mmu에 반영된 가상주소 가 포함된 vmap_area 주소)->flags: VM_VM_AREA 값이 umask 된 값
+
 		spin_unlock(&vmap_area_lock);
 
-		vmap_debug_free_range(va->va_start, va->va_end);
-		free_unmap_vmap_area(va);
-		vm->size -= PAGE_SIZE;
+		// spin_unlock 에서 한일:
+		// &vmap_area_lock 을 이용한 spin unlock 수행
 
+		// va->va_start: (할당받은 page의 mmu에 반영된 가상주소 가 포함된 vmap_area 주소)->va_start,
+		// va->va_end: (할당받은 page의 mmu에 반영된 가상주소 가 포함된 vmap_area 주소)->va_end
+		vmap_debug_free_range(va->va_start, va->va_end); // null function
+
+		// va: 할당받은 page의 mmu에 반영된 가상주소 가 포함된 vmap_area 주소
+		free_unmap_vmap_area(va);
+
+		// free_unmap_vmap_area 에서 한일:
+		// cache 에 있는 변화된 값을 실제 메모리에 전부 반영
+		// 가상주소에 매핑 되어 있는 pte 에 값을 0 으로 초기화 함
+		// free 되는 page 수를 계산하여 vmap_lazy_nr 에 더함
+		// vmap_lazy_nr 이 0x2000 개가 넘을 경우 purge를 수행
+
+		// va->size: (할당받은 page의 mmu에 반영된 가상주소 가 포함된 vmap_area 주소)->size, PAGE_SIZE: 0x1000
+		vm->size -= PAGE_SIZE;
+		// va->size: (할당받은 page의 mmu에 반영된 가상주소 가 포함된 vmap_area 주소)->size: 0x1000 를 뺀 값
+
+		// vm: &(할당받은 page의 mmu에 반영된 가상주소 가 포함된 vmap_area 주소)->vm
 		return vm;
+		// return &(할당받은 page의 mmu에 반영된 가상주소 가 포함된 vmap_area 주소)->vm
 	}
 	return NULL;
 }
 
 // ARM10C 20160820
-// addr: 할당받은 page의 mmu에 반영된 가상주소
+// addr: 할당받은 page의 mmu에 반영된 가상주소, 0
 static void __vunmap(const void *addr, int deallocate_pages)
 {
 	struct vm_struct *area;
@@ -3069,16 +3273,34 @@ static void __vunmap(const void *addr, int deallocate_pages)
 		return;
 
 	// addr: 할당받은 page의 mmu에 반영된 가상주소
+	// remove_vm_area(할당받은 page의 mmu에 반영된 가상주소): &(할당받은 page의 mmu에 반영된 가상주소 가 포함된 vmap_area 주소)->vm
 	area = remove_vm_area(addr);
+	// area: &(할당받은 page의 mmu에 반영된 가상주소 가 포함된 vmap_area 주소)->vm
+
+	// remove_vm_area 에서 한일:
+	// vmap_area_root.rb_node 에서 가지고 있는 rb tree의 주소를 기준으로
+	// 할당받은 page의 mmu에 반영된 가상주소의 vmap_area 의 위치를 찾음
+	// cache 에 있는 변화된 값을 실제 메모리에 전부 반영
+	// 가상주소에 매핑 되어 있는 pte 에 값을 0 으로 초기화 함
+	// free 되는 page 수를 계산하여 vmap_lazy_nr 에 더함
+	// vmap_lazy_nr 이 0x2000 개가 넘을 경우 purge를 수행
+
+	// area: &(할당받은 page의 mmu에 반영된 가상주소 가 포함된 vmap_area 주소)->vm
 	if (unlikely(!area)) {
 		WARN(1, KERN_ERR "Trying to vfree() nonexistent vm area (%p)\n",
 				addr);
 		return;
 	}
 
-	debug_check_no_locks_freed(addr, area->size);
-	debug_check_no_obj_freed(addr, area->size);
+	// addr: 할당받은 page의 mmu에 반영된 가상주소,
+	// area->size: (&(할당받은 page의 mmu에 반영된 가상주소 가 포함된 vmap_area 주소)->vm)->size
+	debug_check_no_locks_freed(addr, area->size); // null function
 
+	// addr: 할당받은 page의 mmu에 반영된 가상주소,
+	// area->size: (&(할당받은 page의 mmu에 반영된 가상주소 가 포함된 vmap_area 주소)->vm)->size
+	debug_check_no_obj_freed(addr, area->size); // null function
+
+	// deallocate_pages: 0
 	if (deallocate_pages) {
 		int i;
 
@@ -3095,8 +3317,15 @@ static void __vunmap(const void *addr, int deallocate_pages)
 			kfree(area->pages);
 	}
 
+	// area: &(할당받은 page의 mmu에 반영된 가상주소 가 포함된 vmap_area 주소)->vm
 	kfree(area);
+
+	// kfree 에서 한일:
+	// &(할당받은 page의 mmu에 반영된 가상주소 가 포함된 vmap_area 주소)->vm 의 page 주소를 구하고, 등록된 kmem_cache 주소를 찾음
+	// &(할당받은 page의 mmu에 반영된 가상주소 가 포함된 vmap_area 주소)->vm 의 object 을 등록된 kmem_cache 를 이용하여 free 하도록 함
+
 	return;
+	// return
 }
  
 /**
@@ -3151,6 +3380,16 @@ void vunmap(const void *addr)
 	if (addr)
 		// addr: 할당받은 page의 mmu에 반영된 가상주소
 		__vunmap(addr, 0);
+
+		// __vunmap 에서 한일:
+		// vmap_area_root.rb_node 에서 가지고 있는 rb tree의 주소를 기준으로
+		// 할당받은 page의 mmu에 반영된 가상주소의 vmap_area 의 위치를 찾음
+		// cache 에 있는 변화된 값을 실제 메모리에 전부 반영
+		// 가상주소에 매핑 되어 있는 pte 에 값을 0 으로 초기화 함
+		// free 되는 page 수를 계산하여 vmap_lazy_nr 에 더함
+		// vmap_lazy_nr 이 0x2000 개가 넘을 경우 purge를 수행
+		// &(할당받은 page의 mmu에 반영된 가상주소 가 포함된 vmap_area 주소)->vm 의 page 주소를 구하고, 등록된 kmem_cache 주소를 찾음
+		// &(할당받은 page의 mmu에 반영된 가상주소 가 포함된 vmap_area 주소)->vm 의 object 을 등록된 kmem_cache 를 이용하여 free 하도록 함
 }
 EXPORT_SYMBOL(vunmap);
 

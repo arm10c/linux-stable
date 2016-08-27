@@ -238,6 +238,7 @@ typedef unsigned long irq_hw_number_t;
 // ARM10C 20160409
 // ARM10C 20160604
 // ARM10C 20160716
+// ARM10C 20160827
 typedef struct {
 	int counter;
 } atomic_t;

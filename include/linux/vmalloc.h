@@ -35,6 +35,7 @@ struct vm_area_struct;		/* vma defining user mapping in mm_types.h */
 // ARM10C 20141025
 // ARM10C 20160813
 // ARM10C 20160820
+// ARM10C 20160827
 // sizeof(struct vm_struct): 32 bytes
 struct vm_struct {
 	struct vm_struct	*next;
@@ -51,6 +52,7 @@ struct vm_struct {
 // ARM10C 20140809
 // ARM10C 20141025
 // ARM10C 20160820
+// ARM10C 20160827
 // sizeof(struct vmap_area): 52 bytes
 struct vmap_area {
 	unsigned long va_start;

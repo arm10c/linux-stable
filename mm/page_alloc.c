@@ -1987,6 +1987,8 @@ void mark_free_pages(struct zone *zone)
  */
 // ARM10C 20140412
 // page: 0x20000 (pfn), cold: 0
+// ARM10C 20160827
+// page: page 1개(4K)의 할당된 메모리 주소, 0
 void free_hot_cold_page(struct page *page, int cold)
 {
 	// page: 0x20000 (pfn)

@@ -39,6 +39,7 @@
 #undef  pud_addr_end
 // ARM10C 20141101
 // ARM10C 20160820
+// ARM10C 20160827
 #define pud_addr_end(addr, end)		(end)
 
 #endif

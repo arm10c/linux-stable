@@ -49,8 +49,11 @@ static DEFINE_PER_CPU(struct pagevec, lru_deactivate_pvecs);
  * This path almost never happens for VM activity - pages are normally
  * freed via pagevecs.  But it gets used by networking.
  */
+// ARM10C 20160827
+// page: page 1개(4K)의 할당된 메모리 주소
 static void __page_cache_release(struct page *page)
 {
+	// page: page 1개(4K)의 할당된 메모리 주소
 	if (PageLRU(page)) {
 		struct zone *zone = page_zone(page);
 		struct lruvec *lruvec;
@@ -65,10 +68,18 @@ static void __page_cache_release(struct page *page)
 	}
 }
 
+// ARM10C 20160827
+// page: page 1개(4K)의 할당된 메모리 주소
 static void __put_single_page(struct page *page)
 {
+	// page: page 1개(4K)의 할당된 메모리 주소
 	__page_cache_release(page);
+
+	// page: page 1개(4K)의 할당된 메모리 주소
 	free_hot_cold_page(page, 0);
+
+	// free_hot_cold_page 에서 한일:
+	// page 1개(4K)의 할당된 메모리 주소를 buddy 에 0 order를 갖는 free 한 page list에 등록함
 }
 
 static void __put_compound_page(struct page *page)
@@ -197,12 +208,21 @@ out_put_single:
 	}
 }
 
+// ARM10C 20160827
+// page: page 1개(4K)의 할당된 메모리 주소
 void put_page(struct page *page)
 {
+	// page: page 1개(4K)의 할당된 메모리 주소,
+	// PageCompound(page 1개(4K)의 할당된 메모리 주소): 0
+	// put_page_testzero(page 1개(4K)의 할당된 메모리 주소): 1
 	if (unlikely(PageCompound(page)))
 		put_compound_page(page);
 	else if (put_page_testzero(page))
+		// page: page 1개(4K)의 할당된 메모리 주소
 		__put_single_page(page);
+
+		// __put_single_page 에서 한일:
+		// page 1개(4K)의 할당된 메모리 주소를 buddy 에 0 order를 갖는 free 한 page list에 등록함
 }
 EXPORT_SYMBOL(put_page);
 

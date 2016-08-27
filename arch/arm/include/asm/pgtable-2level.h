@@ -217,6 +217,7 @@
  * the pud: the pud entry is never bad, always exists, and can't be set or
  * cleared.
  */
+// ARM10C 20160827
 #define pud_none(pud)		(0)
 #define pud_bad(pud)		(0)
 #define pud_present(pud)	(1)
@@ -227,12 +228,14 @@
 // ARM10C 20141101
 // pud: 0xc0004780, addr: 0xf0000000
 // ARM10C 20160820
+// ARM10C 20160827
 static inline pmd_t *pmd_offset(pud_t *pud, unsigned long addr)
 {
 	return (pmd_t *)pud;
 }
 
 // ARM10C 20131109
+// ARM10C 20160827
 #define pmd_bad(pmd)		(pmd_val(pmd) & 2)
 
 #define copy_pmd(pmdpd,pmdps)		\
@@ -254,6 +257,7 @@ static inline pmd_t *pmd_offset(pud_t *pud, unsigned long addr)
 // ARM10C 20141101
 // addr: 0xf0000000, end: 0xf0001000
 // ARM10C 20160820
+// ARM10C 20160827
 #define pmd_addr_end(addr,end) (end)
 
 // ARM10C 20131123
@@ -261,6 +265,7 @@ static inline pmd_t *pmd_offset(pud_t *pud, unsigned long addr)
 // ptep: 0xEF7FD1F0, pte: 0x4F7FEXXX, ext:0
 // ARM10C 20141101
 // ptep: 0xc0004780이 가리키는 pte의 시작주소, pteval: 0x10481653, ext: 0
+// ARM10C 20160827
 #define set_pte_ext(ptep,pte,ext) cpu_set_pte_ext(ptep,pte,ext)
 
 /*

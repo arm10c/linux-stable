@@ -26,6 +26,7 @@ extern unsigned int cacheid;
 #define cache_is_vivt()			cacheid_is(CACHEID_VIVT)
 #define cache_is_vipt()			cacheid_is(CACHEID_VIPT)
 // ARM10C 20141101
+// ARM10C 20160827
 // CACHEID_VIPT_NONALIASING: 0x2
 #define cache_is_vipt_nonaliasing()	cacheid_is(CACHEID_VIPT_NONALIASING)
 // ARM10C 20131019
@@ -83,6 +84,7 @@ extern unsigned int cacheid;
 // ARM10C 20130914
 // ARM10C 20130928
 // ARM10C 20141101
+// ARM10C 20160827
 // CACHEID_VIPT_NONALIASING: 0x2
 static inline unsigned int __attribute__((pure)) cacheid_is(unsigned int mask)
 {

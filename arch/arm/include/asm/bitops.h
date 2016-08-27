@@ -325,6 +325,7 @@ static inline int constant_fls(int x)
 // fls(0x30000): 18
 // ARM10C 20151024
 // size : 3
+// ARM10C 20160827
 static inline int fls(int x)
 {
 	int ret;

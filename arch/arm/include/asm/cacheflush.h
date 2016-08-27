@@ -129,6 +129,7 @@ extern struct cpu_cache_fns cpu_cache;
 #define __cpuc_flush_icache_all		cpu_cache.flush_icache_all
 // ARM10C 20131130
 // ARM10C 20141101
+// ARM10C 20160827
 // cpu_cache.flush_kern_all: v7_flush_kern_cache_all
 #define __cpuc_flush_kern_all		cpu_cache.flush_kern_all
 #define __cpuc_flush_kern_louis		cpu_cache.flush_kern_louis
@@ -233,6 +234,7 @@ static inline void __flush_icache_all(void)
 
 // ARM10C 20131130
 // ARM10C 20141101
+// ARM10C 20160827
 #define flush_cache_all()		__cpuc_flush_kern_all()
 
 static inline void vivt_flush_cache_mm(struct mm_struct *mm)
@@ -378,10 +380,17 @@ static inline void flush_cache_vmap(unsigned long start, unsigned long end)
 		dsb(ishst);
 }
 
+// ARM10C 20160827
+// va->va_start: (할당받은 page의 mmu에 반영된 가상주소 가 포함된 vmap_area 주소)->va_start,
+// va->va_end: (할당받은 page의 mmu에 반영된 가상주소 가 포함된 vmap_area 주소)->va_end
 static inline void flush_cache_vunmap(unsigned long start, unsigned long end)
 {
+	// cache_is_vipt_nonaliasing(): 0
 	if (!cache_is_vipt_nonaliasing())
 		flush_cache_all();
+
+		// flush_cache_all 에서 한일:
+		// cache 에 있는 변화된 값을 실제 메모리에 전부 반영
 }
 
 /*

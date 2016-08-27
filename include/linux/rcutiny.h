@@ -123,10 +123,11 @@ static inline void exit_rcu(void)
 {
 }
 
-#ifdef CONFIG_DEBUG_LOCK_ALLOC
+#ifdef CONFIG_DEBUG_LOCK_ALLOC // CONFIG_DEBUG_LOCK_ALLOC=n
 extern int rcu_scheduler_active __read_mostly;
 extern void rcu_scheduler_starting(void);
 #else /* #ifdef CONFIG_DEBUG_LOCK_ALLOC */
+// ARM10C 20160827
 static inline void rcu_scheduler_starting(void)
 {
 }

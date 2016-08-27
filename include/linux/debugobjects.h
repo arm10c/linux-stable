@@ -106,6 +106,7 @@ extern void debug_check_no_obj_freed(const void *address, unsigned long size);
 #else
 // ARM10C 20140405
 // ARM10C 20141206
+// ARM10C 20160827
 static inline void
 debug_check_no_obj_freed(const void *address, unsigned long size) { }
 #endif

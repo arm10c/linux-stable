@@ -26,6 +26,7 @@
 // ARM10C 20151205
 // ARM10C 20160402
 // ARM10C 20160409
+// ARM10C 20160827
 #define ATOMIC_INIT(i)	{ (i) }
 
 #ifdef __KERNEL__
@@ -91,6 +92,7 @@
 // 1, &running_helpers
 // ARM10C 20160521
 // 1,, &ns->count: &(kmem_cache#30-oX (struct mnt_namespace))->count
+// ARM10C 20160827
 static inline void atomic_add(int i, atomic_t *v)
 {
 	unsigned long tmp;

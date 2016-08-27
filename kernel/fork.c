@@ -1156,6 +1156,8 @@ init_task_pid(struct task_struct *task, enum pid_type type, struct pid *pid)
  * parts of the process environment (as per the clone
  * flags). The actual kick-off is left to the caller.
  */
+// ARM10C 20160827
+// clone_flags: 0x00800B00, stack_start: kernel_init, stack_size: 0, child_tidptr: 0, NULL, trace: 0
 static struct task_struct *copy_process(unsigned long clone_flags,
 					unsigned long stack_start,
 					unsigned long stack_size,
@@ -1166,9 +1168,11 @@ static struct task_struct *copy_process(unsigned long clone_flags,
 	int retval;
 	struct task_struct *p;
 
+	// clone_flags: 0x00800B00, CLONE_NEWNS: 0x00020000, CLONE_FS: 0x00000200
 	if ((clone_flags & (CLONE_NEWNS|CLONE_FS)) == (CLONE_NEWNS|CLONE_FS))
 		return ERR_PTR(-EINVAL);
 
+	// clone_flags: 0x00800B00, CLONE_NEWUSER: 0x10000000, CLONE_FS: 0x00000200
 	if ((clone_flags & (CLONE_NEWUSER|CLONE_FS)) == (CLONE_NEWUSER|CLONE_FS))
 		return ERR_PTR(-EINVAL);
 
@@ -1176,6 +1180,7 @@ static struct task_struct *copy_process(unsigned long clone_flags,
 	 * Thread groups must share signals as well, and detached threads
 	 * can only be started up within the thread group.
 	 */
+	// clone_flags: 0x00800B00, CLONE_THREAD: 0x00010000, CLONE_SIGHAND: 0x00000800
 	if ((clone_flags & CLONE_THREAD) && !(clone_flags & CLONE_SIGHAND))
 		return ERR_PTR(-EINVAL);
 
@@ -1184,8 +1189,11 @@ static struct task_struct *copy_process(unsigned long clone_flags,
 	 * thread groups also imply shared VM. Blocking this case allows
 	 * for various simplifications in other code.
 	 */
+	// clone_flags: 0x00800B00, CLONE_SIGHAND: 0x00000800, CLONE_VM: 0x00000100
 	if ((clone_flags & CLONE_SIGHAND) && !(clone_flags & CLONE_VM))
 		return ERR_PTR(-EINVAL);
+
+// 2016/08/27 종료
 
 	/*
 	 * Siblings of global init remain as zombies on exit since they are
@@ -1193,6 +1201,9 @@ static struct task_struct *copy_process(unsigned long clone_flags,
 	 * multi-rooted process trees, prevent global and container-inits
 	 * from creating siblings.
 	 */
+	// clone_flags: 0x00800B00, CLONE_PARENT: 0x00008000, SIGNAL_UNKILLABLE: 0x00000040
+	// current->signal->flags
+	// current: &init_task
 	if ((clone_flags & CLONE_PARENT) &&
 				current->signal->flags & SIGNAL_UNKILLABLE)
 		return ERR_PTR(-EINVAL);
@@ -1593,6 +1604,8 @@ struct task_struct *fork_idle(int cpu)
  * It copies the process, and if successful kick-starts
  * it and waits for it to finish using the VM if required.
  */
+// ARM10C 20160827
+// flags: 0x00800B00, fn: kernel_init, arg: NULL, NULL, NULL
 long do_fork(unsigned long clone_flags,
 	      unsigned long stack_start,
 	      unsigned long stack_size,
@@ -1601,6 +1614,8 @@ long do_fork(unsigned long clone_flags,
 {
 	struct task_struct *p;
 	int trace = 0;
+	// trace: 0
+
 	long nr;
 
 	/*
@@ -1609,6 +1624,7 @@ long do_fork(unsigned long clone_flags,
 	 * requested, no event is reported; otherwise, report if the event
 	 * for the type of forking is enabled.
 	 */
+	// clone_flags: 0x00800B00, CLONE_UNTRACED: 0x00800000
 	if (!(clone_flags & CLONE_UNTRACED)) {
 		if (clone_flags & CLONE_VFORK)
 			trace = PTRACE_EVENT_VFORK;
@@ -1621,6 +1637,7 @@ long do_fork(unsigned long clone_flags,
 			trace = 0;
 	}
 
+	// clone_flags: 0x00800B00, stack_start: kernel_init, stack_size: 0, child_tidptr: 0, trace: 0
 	p = copy_process(clone_flags, stack_start, stack_size,
 			 child_tidptr, NULL, trace);
 	/*
@@ -1662,8 +1679,12 @@ long do_fork(unsigned long clone_flags,
 /*
  * Create a kernel thread.
  */
+// ARM10C 20160827
+// kernel_init, NULL, 0x00000A00
 pid_t kernel_thread(int (*fn)(void *), void *arg, unsigned long flags)
 {
+	// flags: 0x00000A00, CLONE_VM: 0x00000100, CLONE_UNTRACED: 0x00800000,
+	// fn: kernel_init, arg: NULL
 	return do_fork(flags|CLONE_VM|CLONE_UNTRACED, (unsigned long)fn,
 		(unsigned long)arg, NULL, NULL);
 }

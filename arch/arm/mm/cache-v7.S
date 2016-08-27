@@ -187,6 +187,7 @@ ENDPROC(v7_flush_dcache_all)
  */
 // ARM10C 20131130
 // ARM10C 20141101
+// ARM10C 20160827
 ENTRY(v7_flush_kern_cache_all)
  ARM(	stmfd	sp!, {r4-r5, r7, r9-r11, lr}	)
  THUMB(	stmfd	sp!, {r4-r7, r9-r11, lr}	)

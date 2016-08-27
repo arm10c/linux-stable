@@ -438,16 +438,18 @@ static void __init setup_command_line(char *command_line)
 
 static __initdata DECLARE_COMPLETION(kthreadd_done);
 
+// ARM10C 20160827
 static noinline void __init_refok rest_init(void)
 {
 	int pid;
 
-	rcu_scheduler_starting();
+	rcu_scheduler_starting(); // null function
 	/*
 	 * We need to spawn init first so that it obtains pid 1, however
 	 * the init task will end up wanting to create kthreads, which, if
 	 * we schedule it before we create kthreadd, will OOPS.
 	 */
+	// CLONE_FS: 0x00000200, CLONE_SIGHAND: 0x00000800
 	kernel_thread(kernel_init, NULL, CLONE_FS | CLONE_SIGHAND);
 	numa_default_policy();
 	pid = kernel_thread(kthreadd, NULL, CLONE_FS | CLONE_FILES);
@@ -948,6 +950,8 @@ asmlinkage void __init start_kernel(void)
 	delayacct_init(); // null function
 
 	check_bugs();
+	// page 2개를 할당 받고 할당 받은 메모리에값을 쓰고 비교하여
+	// 메모리 동작을 테스트 수행한 이후 다시 메모리를 반환함
 
 	acpi_early_init(); /* before LAPIC and SMP init */  // null function
 	sfi_init_late(); // null function
@@ -1149,6 +1153,7 @@ static int try_to_run_init_process(const char *init_filename)
 
 static noinline void __init kernel_init_freeable(void);
 
+// ARM10C 20160827
 static int __ref kernel_init(void *unused)
 {
 	int ret;

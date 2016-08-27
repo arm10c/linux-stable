@@ -316,6 +316,8 @@ static inline int get_freepage_migratetype(struct page *page)
  */
 // ARM10C 20140329
 // page: 0x20000의 해당하는 struct page의 1st page
+// ARM10C 20160827
+// page: page 1개(4K)의 할당된 메모리 주소
 static inline int put_page_testzero(struct page *page)
 {
 	// atomic_read(&page->_count): 1

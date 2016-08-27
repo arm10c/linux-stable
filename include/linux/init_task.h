@@ -55,6 +55,7 @@ extern struct fs_struct init_fs;
 #define INIT_CPUSET_SEQ(tsk)
 #endif
 
+// ARM10C 20160827
 #define INIT_SIGNALS(sig) {						\
 	.nr_threads	= 1,						\
 	.wait_chldexit	= __WAIT_QUEUE_HEAD_INITIALIZER(sig.wait_chldexit),\
