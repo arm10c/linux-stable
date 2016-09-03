@@ -260,6 +260,9 @@ static inline void put_cred(const struct cred *_cred)
  * since nobody else can modify it.
  */
 // ARM10C 20160319
+// ARM10C 20160903
+// current: &init_task
+// current->cred: (&init_task)->cred: &init_cred
 #define current_cred() \
 	rcu_dereference_protected(current->cred, 1)
 

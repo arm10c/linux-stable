@@ -110,6 +110,8 @@
 // &sem->wait_lock: &(&(kmem_cache#25-oX (struct super_block))->s_umount)->wait_lock
 // ARM10C 20151205
 // &inode->i_lock: (&(kmem_cache#4-oX)->i_lock)->rlock
+// ARM10C 20160903
+// &p->pi_lock: &(kmem_cache#15-oX (struct task_struct))->pi_lock
 # define raw_spin_lock_init(lock)				\
 do {								\
 	static struct lock_class_key __key;	/* struct lock_class_key { }; */	\

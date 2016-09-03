@@ -732,6 +732,7 @@ static inline pte_t maybe_mkwrite(pte_t pte, struct vm_area_struct *vma)
 // NODES_PGSHIFT: 0
 #define NODES_PGSHIFT		(NODES_PGOFF * (NODES_WIDTH != 0))
 // ARM10C 20140118
+// ARM10C 20160903
 // ZONES_PGSHIFT : 26
 #define ZONES_PGSHIFT		(ZONES_PGOFF * (ZONES_WIDTH != 0))
 #define LAST_CPUPID_PGSHIFT	(LAST_CPUPID_PGOFF * (LAST_CPUPID_WIDTH != 0))
@@ -766,6 +767,7 @@ static inline pte_t maybe_mkwrite(pte_t pte, struct vm_area_struct *vma)
 #endif
 
 // ARM10C 20140118
+// ARM10C 20160903
 // ZONES_WIDTH: 2
 // ZONES_MASK : 3
 #define ZONES_MASK		((1UL << ZONES_WIDTH) - 1)
@@ -783,6 +785,7 @@ static inline pte_t maybe_mkwrite(pte_t pte, struct vm_area_struct *vma)
 #define ZONEID_MASK		((1UL << ZONEID_SHIFT) - 1)
 
 // ARM10C 20140118
+// ARM10C 20160903
 static inline enum zone_type page_zonenum(const struct page *page)
 {
 	return (page->flags >> ZONES_PGSHIFT) & ZONES_MASK;
@@ -959,6 +962,8 @@ static inline bool cpupid_match_pid(struct task_struct *task, int cpupid)
 // ARM10C 20140628
 // ARM10C 20151212
 // virt_to_page(&(kmem_cache#4-oX)->i_state): &(kmem_cache#4-oX)->i_state의 page 주소
+// ARM10C 20160903
+// virt_to_page(할당 받은 page 2개의 메로리의 가상 주소): 할당 받은 page 2개의 메로리의 가상 주소
 static inline struct zone *page_zone(const struct page *page)
 {
 	// NODE_DATA(page_to_nid(page)): &contig_page_data
@@ -1059,6 +1064,7 @@ static inline void set_page_address(struct page *page, void *address)
 // ARM10C 20140125
 // ARM10C 20140531
 // ARM10C 20141101
+// ARM10C 20160903
 void *page_address(const struct page *page);
 void set_page_address(struct page *page, void *virtual);
 void page_address_init(void);	// ARM10C this 

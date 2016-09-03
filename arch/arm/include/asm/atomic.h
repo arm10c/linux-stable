@@ -27,6 +27,7 @@
 // ARM10C 20160402
 // ARM10C 20160409
 // ARM10C 20160827
+// ARM10C 20160903
 #define ATOMIC_INIT(i)	{ (i) }
 
 #ifdef __KERNEL__
@@ -43,6 +44,8 @@
 // &sd->s_count: &(&sysfs_root)->s_count
 // ARM10C 20160402
 // &kmod_concurrent
+// ARM10C 20160903
+// &p->real_cred->user->processes: &(&root_user)->processes
 #define atomic_read(v)	(*(volatile int *)&(v)->counter)
 // ARM10C 20140118
 // ARM10C 20140322
@@ -75,6 +78,8 @@
 // &new_ns->count: (kmem_cache#30-oX (struct mnt_namespace))->count
 // ARM10C 20160604
 // &ent->count: &(kmem_cache#29-oX (struct proc_dir_entry))->count
+// ARM10C 20160903
+// &tsk->usage: &(kmem_cache#15-oX (struct task_struct))->usage, 2
 #define atomic_set(v,i)	(((v)->counter) = (i))
 
 #if __LINUX_ARM_ARCH__ >= 6

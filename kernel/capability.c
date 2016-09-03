@@ -377,13 +377,17 @@ bool has_capability_noaudit(struct task_struct *t, int cap)
  * This sets PF_SUPERPRIV on the task if the capability is available on the
  * assumption that it's about to be used.
  */
+// ARM10C 20160903
+// &init_user_ns, cap: 24
 bool ns_capable(struct user_namespace *ns, int cap)
 {
+	// cap: 24, cap_valid(24): 1
 	if (unlikely(!cap_valid(cap))) {
 		printk(KERN_CRIT "capable() called with invalid cap=%u\n", cap);
 		BUG();
 	}
 
+	// current_cred(): (&init_task)->cred: &init_cred, ns: &init_user_ns, cap: 24
 	if (security_capable(current_cred(), ns, cap) == 0) {
 		current->flags |= PF_SUPERPRIV;
 		return true;
@@ -426,8 +430,11 @@ EXPORT_SYMBOL(file_ns_capable);
  * This sets PF_SUPERPRIV on the task if the capability is available on the
  * assumption that it's about to be used.
  */
+// ARM10C 20160903
+// CAP_SYS_RESOURCE: 24
 bool capable(int cap)
 {
+	// cap: 24
 	return ns_capable(&init_user_ns, cap);
 }
 EXPORT_SYMBOL(capable);

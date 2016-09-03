@@ -46,6 +46,22 @@
 static struct hlist_head *pid_hash;
 // ARM10C 20140322
 static unsigned int pidhash_shift = 4;
+// ARM10C 20160903
+// INIT_STRUCT_PID:
+// {
+//     .count        = { (1) },
+//     .tasks        = {
+//         { .first = NULL },
+//         { .first = NULL },
+//         { .first = NULL },
+//     },
+//     .level        = 0,
+//     .numbers      = { {
+//         .nr        = 0,
+//         .ns        = &init_pid_ns,
+//         .pid_chain    = { .next = NULL, .pprev = NULL },
+//     }, }
+// }
 struct pid init_struct_pid = INIT_STRUCT_PID;
 
 // ARM10C 20150912
@@ -79,6 +95,7 @@ static inline int mk_pid(struct pid_namespace *pid_ns,
  * the scheme scales to up to 4 million PIDs, runtime.
  */
 // ARM10C 20150912
+// ARM10C 20160903
 struct pid_namespace init_pid_ns = {
 	.kref = {
 		.refcount       = ATOMIC_INIT(2),
@@ -554,9 +571,14 @@ pid_t task_tgid_nr_ns(struct task_struct *tsk, struct pid_namespace *ns)
 }
 EXPORT_SYMBOL(task_tgid_nr_ns);
 
+// ARM10C 20160903
+// current: &init_task
 struct pid_namespace *task_active_pid_ns(struct task_struct *tsk)
 {
+	// tsk: &init_task, task_pid(&init_task): &init_struct_pid
+	// ns_of_pid(&init_struct_pid): &init_pid_ns
 	return ns_of_pid(task_pid(tsk));
+	// return &init_pid_ns
 }
 EXPORT_SYMBOL_GPL(task_active_pid_ns);
 

@@ -525,6 +525,8 @@ static __always_inline void *__kmalloc_node(size_t size, gfp_t flags, int node)
 // s: kmem_cache#28, gfpflags: 0x80D0, node: 0
 // ARM10C 20141025
 // s: kmem_cache#30, gfpflags: 0x80D0, node: -1
+// ARM10C 20160903
+// task_struct_cachep: kmem_cache#15, GFP_KERNEL: 0xD0, node: 0
 static __always_inline void *kmem_cache_alloc_node(struct kmem_cache *s, gfp_t flags, int node)
 {
 	// s: &boot_kmem_cache_node, flags: GFP_KERNEL: 0xD0

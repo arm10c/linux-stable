@@ -173,6 +173,23 @@ static inline void mutex_destroy(struct mutex *lock) {}
 //    { &(cpu_hotplug.lock.wait_list), &(cpu_hotplug.lock.wait_list) }
 //    , .magic = &cpu_hotplug.lock
 // }
+// ARM10C 20160903
+// __MUTEX_INITIALIZER(init_signals.cred_guard_mutex):
+// { .count = { (1) }
+//    , .wait_lock =
+//    (spinlock_t )
+//    { { .rlock =
+//	  {
+//	  .raw_lock = { { 0 } },
+//	  .magic = 0xdead4ead,
+//	  .owner_cpu = -1,
+//	  .owner = 0xffffffff,
+//	  }
+//    } }
+//    , .wait_list =
+//    { &(init_signals.cred_guard_mutex.wait_list), &(init_signals.cred_guard_mutex.wait_list) }
+//    , .magic = &init_signals.cred_guard_mutex
+// }
 #define __MUTEX_INITIALIZER(lockname) \
 		{ .count = ATOMIC_INIT(1) \
 		, .wait_lock = __SPIN_LOCK_UNLOCKED(lockname.wait_lock) \

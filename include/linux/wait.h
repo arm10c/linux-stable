@@ -106,6 +106,34 @@ struct task_struct;
 //                        } }
 //     .task_list       = { &(running_helpers_waitq).task_list, &(running_helpers_waitq).task_list }
 // }
+// ARM10C 20160903
+// #define __WAIT_QUEUE_HEAD_INITIALIZER(init_signals.wait_chldexit):
+// {
+//     .lock            = (spinlock_t )
+//                        { { .rlock =
+//                            {
+//                              .raw_lock = { { 0 } },
+//                              .magic = 0xdead4ead,
+//                              .owner_cpu = -1,
+//                              .owner = 0xffffffff,
+//                            }
+//                        } }
+//     .task_list       = { &(init_signals.wait_chldexit).task_list, &(init_signals.wait_chldexit).task_list }
+// }
+// ARM10C 20160903
+// #define __WAIT_QUEUE_HEAD_INITIALIZER(init_sighand.signalfd_wqh):
+// {
+//     .lock            = (spinlock_t )
+//                        { { .rlock =
+//                            {
+//                              .raw_lock = { { 0 } },
+//                              .magic = 0xdead4ead,
+//                              .owner_cpu = -1,
+//                              .owner = 0xffffffff,
+//                            }
+//                        } }
+//     .task_list       = { &(init_sighand.signalfd_wqh).task_list, &(init_sighand.signalfd_wqh).task_list }
+// }
 #define __WAIT_QUEUE_HEAD_INITIALIZER(name) {				\
 	.lock		= __SPIN_LOCK_UNLOCKED(name.lock),		\
 	.task_list	= { &(name).task_list, &(name).task_list } }

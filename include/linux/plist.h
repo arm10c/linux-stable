@@ -134,6 +134,8 @@ struct plist_node {
 // &rt_rq->pushable_tasks: &(&(runqueues)->rt)->pushable_tasks
 // ARM10C 20140913
 // &init_task.pi_waiters
+// ARM10C 20160903
+// &p->pi_waiters: &(kmem_cache#15-oX (struct task_struct))->pi_waiters
 static inline void
 plist_head_init(struct plist_head *head)
 {

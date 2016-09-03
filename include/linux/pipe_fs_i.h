@@ -44,6 +44,7 @@ struct pipe_buffer {
  *	@bufs: the circular array of pipe buffers
  **/
 // ARM10C 20150919
+// ARM10C 20160903
 struct pipe_inode_info {
 	struct mutex mutex;
 	wait_queue_head_t wait;

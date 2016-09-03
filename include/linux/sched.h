@@ -393,6 +393,7 @@ extern int get_dumpable(struct mm_struct *mm);
 #define MMF_INIT_MASK		(MMF_DUMPABLE_MASK | MMF_DUMP_FILTER_MASK)
 
 // ARM10C 20150919
+// ARM10C 20160903
 // sizeof(struct sighand_struct): 1324 bytes
 struct sighand_struct {
 	atomic_t		count;
@@ -457,6 +458,13 @@ struct task_cputime {
 #define virt_exp	utime
 #define sched_exp	sum_exec_runtime
 
+// ARM10C 20160903
+// #define INIT_CPUTIME:
+//     (struct task_cputime) {
+//         .utime = 0,
+//         .stime = 0,
+//         .sum_exec_runtime = 0,
+//     }
 #define INIT_CPUTIME	\
 	(struct task_cputime) {					\
 		.utime = 0,					\
@@ -511,6 +519,7 @@ struct autogroup;
  * the locking of signal_struct.
  */
 // ARM10C 20150919
+// ARM10C 20160903
 // sizeof(struct signal_struct): 536 bytes
 struct signal_struct {
 	atomic_t		sigcnt;
@@ -688,28 +697,29 @@ static inline int signal_group_exit(const struct signal_struct *sig)
 /*
  * Some day this will be a full-fledged user tracking system..
  */
+// ARM10C 20160903
 struct user_struct {
 	atomic_t __count;	/* reference count */
 	atomic_t processes;	/* How many processes does this user have? */
 	atomic_t files;		/* How many open files does this user have? */
 	atomic_t sigpending;	/* How many pending signals does this user have? */
-#ifdef CONFIG_INOTIFY_USER
+#ifdef CONFIG_INOTIFY_USER // CONFIG_INOTIFY_USER=y
 	atomic_t inotify_watches; /* How many inotify watches does this user have? */
 	atomic_t inotify_devs;	/* How many inotify devs does this user have opened? */
 #endif
-#ifdef CONFIG_FANOTIFY
+#ifdef CONFIG_FANOTIFY // CONFIG_FANOTIFY=n
 	atomic_t fanotify_listeners;
 #endif
-#ifdef CONFIG_EPOLL
+#ifdef CONFIG_EPOLL // CONFIG_EPOLL=y
 	atomic_long_t epoll_watches; /* The number of file descriptors currently watched */
 #endif
-#ifdef CONFIG_POSIX_MQUEUE
+#ifdef CONFIG_POSIX_MQUEUE // CONFIG_POSIX_MQUEUE=n
 	/* protected by mq_lock	*/
 	unsigned long mq_bytes;	/* How many bytes can be allocated to mqueue? */
 #endif
 	unsigned long locked_shm; /* How many pages of mlocked shm ? */
 
-#ifdef CONFIG_KEYS
+#ifdef CONFIG_KEYS // CONFIG_KEYS=n
 	struct key *uid_keyring;	/* UID specific keyring */
 	struct key *session_keyring;	/* UID's default session keyring */
 #endif
@@ -718,7 +728,7 @@ struct user_struct {
 	struct hlist_node uidhash_node;
 	kuid_t uid;
 
-#ifdef CONFIG_PERF_EVENTS
+#ifdef CONFIG_PERF_EVENTS // CONFIG_PERF_EVENTS=n
 	atomic_long_t locked_vm;
 #endif
 };
@@ -728,6 +738,8 @@ extern int uids_sysfs_init(void);
 extern struct user_struct *find_user(kuid_t);
 
 extern struct user_struct root_user;
+// ARM10C 20160903
+// INIT_USER: (&root_user)
 #define INIT_USER (&root_user)
 
 
@@ -1098,6 +1110,7 @@ enum perf_event_task_context {
 // ARM10C 20151121
 // ARM10C 20160528
 // ARM10C 20160827
+// ARM10C 20160903
 // sizeof(struct task_struct): 815 bytes
 struct task_struct {
 	volatile long state;	/* -1 unrunnable, 0 runnable, >0 stopped */
@@ -1552,9 +1565,14 @@ static inline void task_numa_free(struct task_struct *p)
 }
 #endif
 
+// ARM10C 20160903
+// tsk: &init_task
 static inline struct pid *task_pid(struct task_struct *task)
 {
+	// PIDTYPE_PID: 0
+	// task->pids[0].pid: (&init_task)->pids[0].pid: &init_struct_pid
 	return task->pids[PIDTYPE_PID].pid;
+	// return &init_struct_pid
 }
 
 static inline struct pid *task_tgid(struct task_struct *task)
@@ -2438,18 +2456,46 @@ static inline void threadgroup_unlock(struct task_struct *tsk) {}
 // ARM10C 20140913
 // p: &init_task
 // task_thread_info(&init_task): ((struct thread_info *)(&init_task)->stack)
+// ARM10C 20160903
+// p: kmem_cache#15-oX (struct task_struct)
+// ARM10C 20160903
+// org: &init_task
+// ARM10C 20160903
+// tsk: kmem_cache#15-oX (struct task_struct)
+// ARM10C 20160903
+// p: kmem_cache#15-oX (struct task_struct)
 #define task_thread_info(task)	((struct thread_info *)(task)->stack)
 #define task_stack_page(task)	((task)->stack)
 
+// ARM10C 20160903
+// tsk: kmem_cache#15-oX (struct task_struct), orig: &init_task
 static inline void setup_thread_stack(struct task_struct *p, struct task_struct *org)
 {
+	// p: kmem_cache#15-oX (struct task_struct),
+	// *task_thread_info(kmem_cache#15-oX (struct task_struct)):
+	// *((struct thread_info *)(kmem_cache#15-oX (struct task_struct))->stack): *(할당 받은 page 2개의 메로리의 가상 주소)
+	// org: &init_task,
+	// *task_thread_info(&init_task): *((struct thread_info *)(&init_task)->stack): init_thread_info
 	*task_thread_info(p) = *task_thread_info(org);
+	// *(할당 받은 page 2개의 메로리의 가상 주소): init_thread_info
+
+	// p: kmem_cache#15-oX (struct task_struct),
+	// task_thread_info(kmem_cache#15-oX (struct task_struct))->task:
+	// ((struct thread_info *)(kmem_cache#15-oX (struct task_struct))->stack)->task:
+	// ((struct thread_info *) 할당 받은 page 2개의 메로리의 가상 주소)->task
 	task_thread_info(p)->task = p;
+	// ((struct thread_info *) 할당 받은 page 2개의 메로리의 가상 주소)->task: kmem_cache#15-oX (struct task_struct),
 }
 
+// ARM10C 20160903
+// tsk: kmem_cache#15-oX (struct task_struct)
 static inline unsigned long *end_of_stack(struct task_struct *p)
 {
+	// p: kmem_cache#15-oX (struct task_struct)
+	// task_thread_info(kmem_cache#15-oX (struct task_struct)):
+	// ((struct thread_info *)(kmem_cache#15-oX (struct task_struct))->stack): 할당 받은 page 2개의 메로리의 가상 주소
 	return (unsigned long *)(task_thread_info(p) + 1);
+	// return (unsigned long *)(할당 받은 page 2개의 메로리의 가상 주소 + 1)
 }
 
 #endif
@@ -2484,9 +2530,17 @@ static inline void set_tsk_thread_flag(struct task_struct *tsk, int flag)
 	set_ti_thread_flag(task_thread_info(tsk), flag);
 }
 
+// ARM10C 20160903
+// tsk: kmem_cache#15-oX (struct task_struct), TIF_NEED_RESCHED: 1
 static inline void clear_tsk_thread_flag(struct task_struct *tsk, int flag)
 {
+	// tsk: kmem_cache#15-oX (struct task_struct), flag: 1
+	// ((struct thread_info *)(kmem_cache#15-oX (struct task_struct))->stack): 할당 받은 page 2개의 메로리의 가상 주소
+	// task_thread_info(kmem_cache#15-oX (struct task_struct)): ((struct thread_info *)(할당 받은 page 2개의 메로리의 가상 주소), flag: 1
 	clear_ti_thread_flag(task_thread_info(tsk), flag);
+
+	// clear_ti_thread_flag 에서 한일:
+	// (((struct thread_info *)(할당 받은 page 2개의 메로리의 가상 주소))->flags 의 1 bit 값을 clear 수행
 }
 
 static inline int test_and_set_tsk_thread_flag(struct task_struct *tsk, int flag)
@@ -2509,9 +2563,15 @@ static inline void set_tsk_need_resched(struct task_struct *tsk)
 	set_tsk_thread_flag(tsk,TIF_NEED_RESCHED);
 }
 
+// ARM10C 20160903
+// tsk: kmem_cache#15-oX (struct task_struct)
 static inline void clear_tsk_need_resched(struct task_struct *tsk)
 {
+	// tsk: kmem_cache#15-oX (struct task_struct), TIF_NEED_RESCHED: 1
 	clear_tsk_thread_flag(tsk,TIF_NEED_RESCHED);
+
+	// clear_tsk_thread_flag 에서 한일:
+	// (((struct thread_info *)(할당 받은 page 2개의 메로리의 가상 주소))->flags 의 1 bit 값을 clear 수행
 }
 
 static inline int test_tsk_need_resched(struct task_struct *tsk)
@@ -2844,10 +2904,17 @@ static inline void mm_init_owner(struct mm_struct *mm, struct task_struct *p)
 }
 #endif /* CONFIG_MM_OWNER */
 
+// ARM10C 20160903
+// p: kmem_cache#15-oX (struct task_struct), RLIMIT_NPROC: 6
 static inline unsigned long task_rlimit(const struct task_struct *tsk,
 		unsigned int limit)
 {
+	// limit: 6
+	// tsk->signal: (kmem_cache#15-oX (struct task_struct))->signal: &init_signals
+	// tsk->signal->rlim[6].rlim_cur: (&init_signals)->rlim[6].rlim_cur: 0
+	// ACCESS_ONCE((&init_signals)->rlim[6].rlim_cur): 0
 	return ACCESS_ONCE(tsk->signal->rlim[limit].rlim_cur);
+	// return 0
 }
 
 static inline unsigned long task_rlimit_max(const struct task_struct *tsk,

@@ -86,6 +86,9 @@ struct hlist_head uidhash_table[UIDHASH_SZ];
 static DEFINE_SPINLOCK(uidhash_lock);
 
 /* root_user.__count is 1, for init task cred */
+// ARM10C 20160903
+// ATOMIC_INIT(1): { (0) }
+// ATOMIC_INIT(1): { (1) }
 struct user_struct root_user = {
 	.__count	= ATOMIC_INIT(1),
 	.processes	= ATOMIC_INIT(1),

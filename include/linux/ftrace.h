@@ -761,6 +761,8 @@ static inline void unpause_graph_tracing(void)
 // ARM10C 20150808
 #define INIT_FTRACE_GRAPH
 
+// ARM10C 20160903
+// p: kmem_cache#15-oX (struct task_struct)
 static inline void ftrace_graph_init_task(struct task_struct *t) { }
 static inline void ftrace_graph_exit_task(struct task_struct *t) { }
 // ARM10C 20140913

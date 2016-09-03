@@ -575,6 +575,8 @@ static inline void rcu_preempt_sleep_check(void)
 	})
 // ARM10C 20160319
 // current->cred, 1, __rcu
+// ARM10C 20160903
+// current->cred: (&init_task)->cred: &init_cred, 1
 #define __rcu_dereference_protected(p, c, space) \
 	({ \
 		rcu_lockdep_assert(c, "suspicious rcu_dereference_protected()" \
@@ -817,6 +819,8 @@ static inline void rcu_preempt_sleep_check(void)
  */
 // ARM10C 20160319
 // current->cred, 1
+// ARM10C 20160903
+// current->cred: (&init_task)->cred: &init_cred, 1
 #define rcu_dereference_protected(p, c) \
 	__rcu_dereference_protected((p), (c), __rcu)
 

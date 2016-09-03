@@ -211,13 +211,17 @@ static int kthread(void *_create)
 }
 
 /* called from do_fork() to get node information for about to be created task */
+// ARM10C 20160903
+// orig: &init_task
 int tsk_fork_get_node(struct task_struct *tsk)
 {
-#ifdef CONFIG_NUMA
+#ifdef CONFIG_NUMA // CONFIG_NUMA=n
 	if (tsk == kthreadd_task)
 		return tsk->pref_node_fork;
 #endif
+	// numa_node_id(): 0
 	return numa_node_id();
+	// return 0
 }
 
 static void create_kthread(struct kthread_create_info *create)

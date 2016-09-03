@@ -34,6 +34,9 @@ static struct kmem_cache *cred_jar;
  * The initial credentials for the initial task
  */
 // ARM10C 20160319
+// ARM10C 20160903
+// INIT_USER: (&root_user)
+// CAP_FULL_SET: ((kernel_cap_t){{ 0xFFFFFFFF, 0xFFFFFFFF }})
 struct cred init_cred = {
 	.usage			= ATOMIC_INIT(4),
 #ifdef CONFIG_DEBUG_CREDENTIALS

@@ -7,6 +7,7 @@
 // ARM10C 20150912
 // ARM10C 20150919
 // ARM10C 20151003
+// ARM10C 20160903
 enum pid_type
 {
 	// PIDTYPE_PID: 0
@@ -68,6 +69,7 @@ struct upid {
 // ARM10C 20150912
 // ARM10C 20150919
 // ARM10C 20151003
+// ARM10C 20160903
 // sizeof(struct pid): 44 bytes
 struct pid
 {
@@ -149,12 +151,23 @@ extern void disable_pid_allocation(struct pid_namespace *ns);
  * 	is expected to be non-NULL. If @pid is NULL, caller should handle
  * 	the resulting NULL pid-ns.
  */
+// ARM10C 20160903
+// &init_struct_pid
 static inline struct pid_namespace *ns_of_pid(struct pid *pid)
 {
 	struct pid_namespace *ns = NULL;
+	// ns: NULL
+
+	// pid: &init_struct_pid
 	if (pid)
+		// pid->level: (&init_struct_pid)->level: 0
+		// pid->numbers[0].ns: (&init_struct_pid)->numbers[0].ns: &init_pid_ns
 		ns = pid->numbers[pid->level].ns;
+		// ns: &init_pid_ns
+
+	// ns: &init_pid_ns
 	return ns;
+	// return &init_pid_ns
 }
 
 /*

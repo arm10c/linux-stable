@@ -20,6 +20,7 @@
 // ARM10C 20151114
 // ARM10C 20160116
 // ARM10C 20160213
+// ARM10C 20160903
 // EAGAIN: 11
 #define	EAGAIN		11	/* Try again */
 // ARM10C 20151031
@@ -27,6 +28,7 @@
 // ARM10C 20160319
 // ARM10C 20160625
 // ARM10C 20160702
+// ARM10C 20160903
 // ENOMEM: 12
 #define	ENOMEM		12	/* Out of memory */
 #define	EACCES		13	/* Permission denied */

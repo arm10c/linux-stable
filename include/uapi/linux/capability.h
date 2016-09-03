@@ -289,6 +289,8 @@ struct vfs_cap_data {
 /* Override max number of consoles on console allocation */
 /* Override max number of keymaps */
 
+// ARM10C 20160903
+// CAP_SYS_RESOURCE: 24
 #define CAP_SYS_RESOURCE     24
 
 /* Allow manipulation of system clock */
@@ -343,10 +345,19 @@ struct vfs_cap_data {
 
 /* Allow preventing system suspends */
 
+// ARM10C 20160903
+// CAP_BLOCK_SUSPEND: 36
 #define CAP_BLOCK_SUSPEND    36
 
+// ARM10C 20160903
+// CAP_BLOCK_SUSPEND: 36
+// CAP_LAST_CAP: 36
 #define CAP_LAST_CAP         CAP_BLOCK_SUSPEND
 
+// ARM10C 20160903
+// CAP_LAST_CAP: 36
+//
+// cap: 24
 #define cap_valid(x) ((x) >= 0 && (x) <= CAP_LAST_CAP)
 
 /*

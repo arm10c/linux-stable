@@ -22,7 +22,11 @@
 
 /* Fixed constants first: */
 #undef NR_OPEN
+// ARM10C 20160903
+// INR_OPEN_CUR: 0x400
 #define INR_OPEN_CUR 1024	/* Initial setting for nfile rlimits */
+// ARM10C 20160903
+// INR_OPEN_MAX: 0x1000
 #define INR_OPEN_MAX 4096	/* Hard limit for nfile rlimits */
 
 #define BLOCK_SIZE_BITS 10

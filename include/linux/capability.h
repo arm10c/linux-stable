@@ -24,6 +24,7 @@
 extern int file_caps_enabled;
 
 // ARM10C 20150919
+// ARM10C 20160903
 // _KERNEL_CAPABILITY_U32S: 2
 typedef struct kernel_cap_struct {
 	__u32 cap[_KERNEL_CAPABILITY_U32S];
@@ -84,6 +85,8 @@ extern const kernel_cap_t __cap_init_eff_set;
 #else /* HAND-CODED capability initializers */
 
 # define CAP_EMPTY_SET    ((kernel_cap_t){{ 0, 0 }})
+// ARM10C 20160903
+// CAP_FULL_SET: ((kernel_cap_t){{ 0xFFFFFFFF, 0xFFFFFFFF }})
 # define CAP_FULL_SET     ((kernel_cap_t){{ ~0, ~0 }})
 # define CAP_FS_SET       ((kernel_cap_t){{ CAP_FS_MASK_B0 \
 				    | CAP_TO_MASK(CAP_LINUX_IMMUTABLE), \

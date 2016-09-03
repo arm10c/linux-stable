@@ -123,11 +123,17 @@ void __weak arch_release_task_struct(struct task_struct *tsk)
 
 #ifndef CONFIG_ARCH_TASK_STRUCT_ALLOCATOR // CONFIG_ARCH_TASK_STRUCT_ALLOCATOR=n
 // ARM10C 20150919
+// ARM10C 20160903
 static struct kmem_cache *task_struct_cachep;
 
+// ARM10C 20160903
+// node: 0
 static inline struct task_struct *alloc_task_struct_node(int node)
 {
+	// task_struct_cachep: kmem_cache#15, GFP_KERNEL: 0xD0, node: 0
+	// kmem_cache_alloc_node(kmem_cache#15, GFP_KERNEL: 0xD0, 0): kmem_cache#15-oX (struct task_struct)
 	return kmem_cache_alloc_node(task_struct_cachep, GFP_KERNEL, node);
+	// return kmem_cache#15-oX (struct task_struct)
 }
 
 static inline void free_task_struct(struct task_struct *tsk)
@@ -147,13 +153,21 @@ void __weak arch_release_thread_info(struct thread_info *ti)
  * kmemcache based allocator.
  */
 # if THREAD_SIZE >= PAGE_SIZE // THREAD_SIZE: 8192, PAGE_SIZE: 0x1000
+// ARM10C 20160903
+// tsk: kmem_cache#15-oX (struct task_struct), node: 0
 static struct thread_info *alloc_thread_info_node(struct task_struct *tsk,
 						  int node)
 {
+	// node: 0, THREADINFO_GFP_ACCOUNTED: 0x3000D0, THREAD_SIZE_ORDER: 1
+	// alloc_pages_node(0, 0x3000D0, 1): 할당 받은 page 2개의 메로리 주소
 	struct page *page = alloc_pages_node(node, THREADINFO_GFP_ACCOUNTED,
 					     THREAD_SIZE_ORDER);
+	// page: 할당 받은 page 2개의 메로리 주소
 
+	// page: 할당 받은 page 2개의 메로리 주소
+	// page_address(할당 받은 page 2개의 메로리 주소): 할당 받은 page 2개의 메로리의 가상 주소
 	return page ? page_address(page) : NULL;
+	// return 할당 받은 page 2개의 메로리의 가상 주소
 }
 
 static inline void free_thread_info(struct thread_info *ti)
@@ -207,11 +221,22 @@ struct kmem_cache *vm_area_cachep;
 // ARM10C 20150919
 static struct kmem_cache *mm_cachep;
 
+// ARM10C 20160903
+// ti: 할당 받은 page 2개의 메로리의 가상 주소, 1
 static void account_kernel_stack(struct thread_info *ti, int account)
 {
+	// ti: 할당 받은 page 2개의 메로리의 가상 주소
+	// virt_to_page(할당 받은 page 2개의 메로리의 가상 주소): 할당 받은 page 2개의 메로리의 가상 주소
+	// page_zone(할당 받은 page 2개의 메로리의 가상 주소): &(&contig_page_data)->node_zones[0]
 	struct zone *zone = page_zone(virt_to_page(ti));
+	// zone: &(&contig_page_data)->node_zones[0]
 
+	// zone: &(&contig_page_data)->node_zones[0], NR_KERNEL_STACK: 16, account: 1
 	mod_zone_page_state(zone, NR_KERNEL_STACK, account);
+
+	// mod_zone_page_state 에서 한일:
+	// (&contig_page_data)->node_zones[0].vm_stat[16]: 1 을 더함
+	// vmstat.c의 vm_stat[16] 전역 변수에도 1을 더함
 }
 
 void free_task(struct task_struct *tsk)
@@ -265,8 +290,8 @@ void __init fork_init(unsigned long mempages)
 {
 #ifndef CONFIG_ARCH_TASK_STRUCT_ALLOCATOR // CONFIG_ARCH_TASK_STRUCT_ALLOCATOR=n
 #ifndef ARCH_MIN_TASKALIGN
-// L1_CACHE_BYTES: 64
-// ARCH_MIN_TASKALIGN: 64
+	// L1_CACHE_BYTES: 64
+	// ARCH_MIN_TASKALIGN: 64
 #define ARCH_MIN_TASKALIGN	L1_CACHE_BYTES
 #endif
 	/* create a slab on which task_structs can be allocated */
@@ -275,7 +300,7 @@ void __init fork_init(unsigned long mempages)
 	// kmem_cache_create("task_struct", 815, 64, 0x00040000, NULL): kmem_cache#15
 	task_struct_cachep =
 		kmem_cache_create("task_struct", sizeof(struct task_struct),
-			ARCH_MIN_TASKALIGN, SLAB_PANIC | SLAB_NOTRACK, NULL);
+				ARCH_MIN_TASKALIGN, SLAB_PANIC | SLAB_NOTRACK, NULL);
 	// task_struct_cachep: kmem_cache#15
 #endif
 
@@ -313,42 +338,96 @@ void __init fork_init(unsigned long mempages)
 	// init_task.signal->rlim[11].rlim_max: 총 free된 page 수 / 32
 }
 
+// ARM10C 20160903
+// tsk: kmem_cache#15-oX (struct task_struct), current: &init_task
 int __attribute__((weak)) arch_dup_task_struct(struct task_struct *dst,
-					       struct task_struct *src)
+		struct task_struct *src)
 {
+	// *dst: *(kmem_cache#15-oX (struct task_struct)), *src: init_task
 	*dst = *src;
+	// *dst: *(kmem_cache#15-oX (struct task_struct)): init_task 를 복사한 값
+
 	return 0;
+	// return 0
 }
 
+// ARM10C 20160903
+// current: &init_task
 static struct task_struct *dup_task_struct(struct task_struct *orig)
 {
 	struct task_struct *tsk;
 	struct thread_info *ti;
 	unsigned long *stackend;
+
+	// orig: &init_task, tsk_fork_get_node(&init_task): 0
 	int node = tsk_fork_get_node(orig);
+	// node: 0
+
 	int err;
 
+	// node: 0, alloc_task_struct_node(0): kmem_cache#15-oX (struct task_struct)
 	tsk = alloc_task_struct_node(node);
+	// tsk: kmem_cache#15-oX (struct task_struct)
+
+	// tsk: kmem_cache#15-oX (struct task_struct)
 	if (!tsk)
 		return NULL;
 
+	// tsk: kmem_cache#15-oX (struct task_struct), node: 0
+	// alloc_thread_info_node(kmem_cache#15-oX (struct task_struct), 0): 할당 받은 page 2개의 메로리의 가상 주소
 	ti = alloc_thread_info_node(tsk, node);
+	// ti: 할당 받은 page 2개의 메로리의 가상 주소
+
+	// ti: 할당 받은 page 2개의 메로리의 가상 주소
 	if (!ti)
 		goto free_tsk;
 
+	// tsk: kmem_cache#15-oX (struct task_struct), orig: &init_task
+	// arch_dup_task_struct(kmem_cache#15-oX (struct task_struct), &init_task): 0
 	err = arch_dup_task_struct(tsk, orig);
+	// err: 0
+
+	// arch_dup_task_struct 에서 한일:
+	// 할당 받은 kmem_cache#15-oX (struct task_struct) 메모리에 init_task 값을 전부 할당함
+
+	// err: 0
 	if (err)
 		goto free_ti;
 
+	// tsk->stack: (kmem_cache#15-oX (struct task_struct))->stack,
+	// ti: 할당 받은 page 2개의 메로리의 가상 주소
 	tsk->stack = ti;
+	// tsk->stack: (kmem_cache#15-oX (struct task_struct))->stack: 할당 받은 page 2개의 메로리의 가상 주소
 
+	// tsk: kmem_cache#15-oX (struct task_struct), orig: &init_task
 	setup_thread_stack(tsk, orig);
-	clear_user_return_notifier(tsk);
-	clear_tsk_need_resched(tsk);
-	stackend = end_of_stack(tsk);
-	*stackend = STACK_END_MAGIC;	/* for overflow detection */
 
-#ifdef CONFIG_CC_STACKPROTECTOR
+	// setup_thread_stack 에서 한일:
+	// 할당 받은 kmem_cache#15-oX (struct task_struct) 의 stack의 값을 init_task 의 stack 값에서 전부 복사함
+	// 복사된 struct thread_info 의 task 주소값을 할당 받은 kmem_cache#15-oX (struct task_struct)로 변경함
+	//
+	// *(할당 받은 page 2개의 메로리의 가상 주소): init_thread_info
+	// ((struct thread_info *) 할당 받은 page 2개의 메로리의 가상 주소)->task: kmem_cache#15-oX (struct task_struct),
+
+	// tsk: kmem_cache#15-oX (struct task_struct)
+	clear_user_return_notifier(tsk); // null function
+
+	// tsk: kmem_cache#15-oX (struct task_struct)
+	clear_tsk_need_resched(tsk);
+
+	// clear_tsk_need_resched 에서 한일:
+	// (((struct thread_info *)(할당 받은 page 2개의 메로리의 가상 주소))->flags 의 1 bit 값을 clear 수행
+
+	// tsk: kmem_cache#15-oX (struct task_struct)
+	// end_of_stack(kmem_cache#15-oX (struct task_struct)): (unsigned long *)(할당 받은 page 2개의 메로리의 가상 주소 + 1)
+	stackend = end_of_stack(tsk);
+	// stackend: (unsigned long *)(할당 받은 page 2개의 메로리의 가상 주소 + 1)
+
+	// *stackend: *((unsigned long *)(할당 받은 page 2개의 메로리의 가상 주소 + 1)), STACK_END_MAGIC: 0x57AC6E9D
+	*stackend = STACK_END_MAGIC;	/* for overflow detection */
+	// *stackend: *((unsigned long *)(할당 받은 page 2개의 메로리의 가상 주소 + 1)): 0x57AC6E9D
+
+#ifdef CONFIG_CC_STACKPROTECTOR // CONFIG_CC_STACKPROTECTOR=n
 	tsk->stack_canary = get_random_int();
 #endif
 
@@ -356,16 +435,33 @@ static struct task_struct *dup_task_struct(struct task_struct *orig)
 	 * One for us, one for whoever does the "release_task()" (usually
 	 * parent)
 	 */
+	// &tsk->usage: &(kmem_cache#15-oX (struct task_struct))->usage
 	atomic_set(&tsk->usage, 2);
-#ifdef CONFIG_BLK_DEV_IO_TRACE
+
+	// atomic_set 에서 한일:
+	// (&(kmem_cache#15-oX (struct task_struct))->usage)->counter: 2
+
+#ifdef CONFIG_BLK_DEV_IO_TRACE // CONFIG_BLK_DEV_IO_TRACE=n
 	tsk->btrace_seq = 0;
 #endif
+	// tsk->splice_pipe: (kmem_cache#15-oX (struct task_struct))->splice_pipe
 	tsk->splice_pipe = NULL;
-	tsk->task_frag.page = NULL;
+	// tsk->splice_pipe: (kmem_cache#15-oX (struct task_struct))->splice_pipe: NULL
 
+	// tsk->task_frag.page: (kmem_cache#15-oX (struct task_struct))->task_frag.page
+	tsk->task_frag.page = NULL;
+	// tsk->task_frag.page: (kmem_cache#15-oX (struct task_struct))->task_frag.page: NULL
+
+	// ti: 할당 받은 page 2개의 메로리의 가상 주소
 	account_kernel_stack(ti, 1);
 
+	// account_kernel_stack 에서 한일:
+	// (&contig_page_data)->node_zones[0].vm_stat[16]: 1 을 더함
+	// vmstat.c의 vm_stat[16] 전역 변수에도 1을 더함
+
+	// tsk: kmem_cache#15-oX (struct task_struct)
 	return tsk;
+	// return kmem_cache#15-oX (struct task_struct)
 
 free_ti:
 	free_thread_info(ti);
@@ -413,7 +509,7 @@ static int dup_mmap(struct mm_struct *mm, struct mm_struct *oldmm)
 
 		if (mpnt->vm_flags & VM_DONTCOPY) {
 			vm_stat_account(mm, mpnt->vm_flags, mpnt->vm_file,
-							-vma_pages(mpnt));
+					-vma_pages(mpnt));
 			continue;
 		}
 		charge = 0;
@@ -455,7 +551,7 @@ static int dup_mmap(struct mm_struct *mm, struct mm_struct *oldmm)
 						&mapping->i_mmap_nonlinear);
 			else
 				vma_interval_tree_insert_after(tmp, mpnt,
-							&mapping->i_mmap);
+						&mapping->i_mmap);
 			flush_dcache_mmap_unlock(mapping);
 			mutex_unlock(&mapping->i_mmap_mutex);
 		}
@@ -588,7 +684,7 @@ static void check_mm(struct mm_struct *mm)
 
 		if (unlikely(x))
 			printk(KERN_ALERT "BUG: Bad rss-counter state "
-					  "mm:%p idx:%d val:%ld\n", mm, i, x);
+					"mm:%p idx:%d val:%ld\n", mm, i, x);
 	}
 
 #if defined(CONFIG_TRANSPARENT_HUGEPAGE) && !USE_SPLIT_PMD_PTLOCKS
@@ -743,7 +839,7 @@ static void complete_vfork_done(struct task_struct *tsk)
 }
 
 static int wait_for_vfork_done(struct task_struct *child,
-				struct completion *vfork)
+		struct completion *vfork)
 {
 	int killed;
 
@@ -806,7 +902,7 @@ void mm_release(struct task_struct *tsk, struct mm_struct *mm)
 	 */
 	if (tsk->clear_child_tid) {
 		if (!(tsk->flags & PF_SIGNALED) &&
-		    atomic_read(&mm->mm_users) > 1) {
+				atomic_read(&mm->mm_users) > 1) {
 			/*
 			 * We don't check the error code - if userspace has
 			 * not set up a proper pointer then tough luck.
@@ -1090,7 +1186,7 @@ static int copy_signal(unsigned long clone_flags, struct task_struct *tsk)
 	sig->oom_score_adj_min = current->signal->oom_score_adj_min;
 
 	sig->has_child_subreaper = current->signal->has_child_subreaper ||
-				   current->signal->is_child_subreaper;
+		current->signal->is_child_subreaper;
 
 	mutex_init(&sig->cred_guard_mutex);
 
@@ -1113,12 +1209,26 @@ SYSCALL_DEFINE1(set_tid_address, int __user *, tidptr)
 	return task_pid_vnr(current);
 }
 
+// ARM10C 20160903
+// p: kmem_cache#15-oX (struct task_struct)
 static void rt_mutex_init_task(struct task_struct *p)
 {
+	// &p->pi_lock: &(kmem_cache#15-oX (struct task_struct))->pi_lock
 	raw_spin_lock_init(&p->pi_lock);
-#ifdef CONFIG_RT_MUTEXES
+
+	// raw_spin_lock_init에서 한일:
+	// &(kmem_cache#15-oX (struct task_struct))->pi_lock을 사용한 spinlock 초기화
+
+#ifdef CONFIG_RT_MUTEXES // CONFIG_RT_MUTEXES=y
+	// &p->pi_waiters: &(kmem_cache#15-oX (struct task_struct))->pi_waiters
 	plist_head_init(&p->pi_waiters);
+
+	// plist_head_init 에서 한일:
+	// &(kmem_cache#15-oX (struct task_struct))->pi_waiters 리스트 초기화
+
+	// p->pi_blocked_on: (kmem_cache#15-oX (struct task_struct))->pi_blocked_on
 	p->pi_blocked_on = NULL;
+	// p->pi_blocked_on: (kmem_cache#15-oX (struct task_struct))->pi_blocked_on: NULL
 #endif
 }
 
@@ -1142,10 +1252,10 @@ static void posix_cpu_timers_init(struct task_struct *tsk)
 	INIT_LIST_HEAD(&tsk->cpu_timers[2]);
 }
 
-static inline void
+	static inline void
 init_task_pid(struct task_struct *task, enum pid_type type, struct pid *pid)
 {
-	 task->pids[type].pid = pid;
+	task->pids[type].pid = pid;
 }
 
 /*
@@ -1159,11 +1269,11 @@ init_task_pid(struct task_struct *task, enum pid_type type, struct pid *pid)
 // ARM10C 20160827
 // clone_flags: 0x00800B00, stack_start: kernel_init, stack_size: 0, child_tidptr: 0, NULL, trace: 0
 static struct task_struct *copy_process(unsigned long clone_flags,
-					unsigned long stack_start,
-					unsigned long stack_size,
-					int __user *child_tidptr,
-					struct pid *pid,
-					int trace)
+		unsigned long stack_start,
+		unsigned long stack_size,
+		int __user *child_tidptr,
+		struct pid *pid,
+		int trace)
 {
 	int retval;
 	struct task_struct *p;
@@ -1193,7 +1303,8 @@ static struct task_struct *copy_process(unsigned long clone_flags,
 	if ((clone_flags & CLONE_SIGHAND) && !(clone_flags & CLONE_VM))
 		return ERR_PTR(-EINVAL);
 
-// 2016/08/27 종료
+	// 2016/08/27 종료
+	// 2016/09/03 시작
 
 	/*
 	 * Siblings of global init remain as zombies on exit since they are
@@ -1202,10 +1313,10 @@ static struct task_struct *copy_process(unsigned long clone_flags,
 	 * from creating siblings.
 	 */
 	// clone_flags: 0x00800B00, CLONE_PARENT: 0x00008000, SIGNAL_UNKILLABLE: 0x00000040
-	// current->signal->flags
-	// current: &init_task
+	// current: &init_task, current->signal: &init_signals
+	// current->signal->flags: (&init_signals)->flags: 0
 	if ((clone_flags & CLONE_PARENT) &&
-				current->signal->flags & SIGNAL_UNKILLABLE)
+			current->signal->flags & SIGNAL_UNKILLABLE)
 		return ERR_PTR(-EINVAL);
 
 	/*
@@ -1213,34 +1324,97 @@ static struct task_struct *copy_process(unsigned long clone_flags,
 	 * do not allow it to share a thread group or signal handlers or
 	 * parent with the forking task.
 	 */
+	// clone_flags: 0x00800B00, CLONE_SIGHAND: 0x00000800
 	if (clone_flags & CLONE_SIGHAND) {
+		// clone_flags: 0x00800B00, CLONE_NEWUSER: 0x10000000, CLONE_NEWPID: 0x20000000
+		// current: &init_task, task_active_pid_ns(&init_task): &init_pid_ns,
+		// current->nsproxy: (&init_task)->nsproxy: &init_nsproxy,
+		// current->nsproxy->pid_ns_for_children: (&init_nsproxy)->pid_ns_for_children: &init_pid_ns
 		if ((clone_flags & (CLONE_NEWUSER | CLONE_NEWPID)) ||
-		    (task_active_pid_ns(current) !=
-				current->nsproxy->pid_ns_for_children))
+				(task_active_pid_ns(current) !=
+				 current->nsproxy->pid_ns_for_children))
 			return ERR_PTR(-EINVAL);
 	}
 
+	// clone_flags: 0x00800B00, security_task_create(0x00800B00): 0
 	retval = security_task_create(clone_flags);
+	// retval: 0
+
+	// retval: 0
 	if (retval)
 		goto fork_out;
 
+	// ENOMEM: 12
 	retval = -ENOMEM;
+	// retval: -12
+
+	// current: &init_task
+	// dup_task_struct(&init_task): kmem_cache#15-oX (struct task_struct)
 	p = dup_task_struct(current);
+	// p: kmem_cache#15-oX (struct task_struct)
+
+	// dup_task_struct 에서 한일:
+	// struct task_struct 만큼의 메모리를 할당 받음
+	// kmem_cache#15-oX (struct task_struct)
+	//
+	// struct thread_info 를 구성 하기 위한 메모리를 할당 받음 (8K)
+	// 할당 받은 page 2개의 메로리의 가상 주소
+	//
+	// 할당 받은 kmem_cache#15-oX (struct task_struct) 메모리에 init_task 값을 전부 할당함
+	//
+	// (kmem_cache#15-oX (struct task_struct))->stack: 할당 받은 page 2개의 메로리의 가상 주소
+	//
+	// 할당 받은 kmem_cache#15-oX (struct task_struct) 의 stack의 값을 init_task 의 stack 값에서 전부 복사함
+	// 복사된 struct thread_info 의 task 주소값을 할당 받은 kmem_cache#15-oX (struct task_struct)로 변경함
+	// *(할당 받은 page 2개의 메로리의 가상 주소): init_thread_info
+	// ((struct thread_info *) 할당 받은 page 2개의 메로리의 가상 주소)->task: kmem_cache#15-oX (struct task_struct)
+	//
+	// (((struct thread_info *)(할당 받은 page 2개의 메로리의 가상 주소))->flags 의 1 bit 값을 clear 수행
+	//
+	// *((unsigned long *)(할당 받은 page 2개의 메로리의 가상 주소 + 1)): 0x57AC6E9D
+	//
+	// (&(kmem_cache#15-oX (struct task_struct))->usage)->counter: 2
+	// (kmem_cache#15-oX (struct task_struct))->splice_pipe: NULL
+	// (kmem_cache#15-oX (struct task_struct))->task_frag.page: NULL
+	//
+	// (&contig_page_data)->node_zones[0].vm_stat[16]: 1 을 더함
+	// vmstat.c의 vm_stat[16] 전역 변수에도 1을 더함
+
+	// p: kmem_cache#15-oX (struct task_struct)
 	if (!p)
 		goto fork_out;
 
-	ftrace_graph_init_task(p);
-	get_seccomp_filter(p);
+	// p: kmem_cache#15-oX (struct task_struct)
+	ftrace_graph_init_task(p); // null function
 
+	// p: kmem_cache#15-oX (struct task_struct)
+	get_seccomp_filter(p); // null function
+
+	// p: kmem_cache#15-oX (struct task_struct)
 	rt_mutex_init_task(p);
 
-#ifdef CONFIG_PROVE_LOCKING
+	// rt_mutex_init_task 한일:
+	// &(kmem_cache#15-oX (struct task_struct))->pi_lock을 사용한 spinlock 초기화
+	// &(kmem_cache#15-oX (struct task_struct))->pi_waiters 리스트 초기화
+	// (kmem_cache#15-oX (struct task_struct))->pi_blocked_on: NULL
+
+#ifdef CONFIG_PROVE_LOCKING // CONFIG_PROVE_LOCKING=n
 	DEBUG_LOCKS_WARN_ON(!p->hardirqs_enabled);
 	DEBUG_LOCKS_WARN_ON(!p->softirqs_enabled);
 #endif
+	// EAGAIN: 11
 	retval = -EAGAIN;
+	// retval: -11
+
+	// p: kmem_cache#15-oX (struct task_struct)
+	// p->real_cred: (kmem_cache#15-oX (struct task_struct))->real_cred: &init_cred,
+	// p->real_cred->user: (&init_cred)->user: &root_user,
+	// &p->real_cred->user->processes: &(&root_user)->processes, atomic_read(&(&root_user)->processes): 1
+	// RLIMIT_NPROC: 6, task_rlimit(kmem_cache#15-oX (struct task_struct), 6): 0
 	if (atomic_read(&p->real_cred->user->processes) >=
 			task_rlimit(p, RLIMIT_NPROC)) {
+		// p->real_cred->user: (&init_cred)->user: &root_user, INIT_USER: (&root_user)
+		// CAP_SYS_RESOURCE: 24
 		if (p->real_cred->user != INIT_USER &&
 		    !capable(CAP_SYS_RESOURCE) && !capable(CAP_SYS_ADMIN))
 			goto bad_fork_free;

@@ -59,6 +59,8 @@ struct mm_struct;
 
 /* If capable should audit the security request */
 #define SECURITY_CAP_NOAUDIT 0
+// ARM10C 20160903
+// SECURITY_CAP_AUDIT: 1
 #define SECURITY_CAP_AUDIT 1
 
 /* LSM Agnostic defines for sb_set_mnt_opts */
@@ -1943,9 +1945,12 @@ static inline int security_capset(struct cred *new,
 	return cap_capset(new, old, effective, inheritable, permitted);
 }
 
+// ARM10C 20160903
+// current_cred(): (&init_task)->cred: &init_cred, ns: &init_user_ns, cap: 24
 static inline int security_capable(const struct cred *cred,
 				   struct user_namespace *ns, int cap)
 {
+	// cred: &init_cred, ns: &init_user_ns, cap: 24, SECURITY_CAP_AUDIT: 1
 	return cap_capable(cred, ns, cap, SECURITY_CAP_AUDIT);
 }
 
@@ -2336,9 +2341,12 @@ static inline int security_file_open(struct file *file,
 	return 0;
 }
 
+// ARM10C 20160903
+// clone_flags: 0x00800B00
 static inline int security_task_create(unsigned long clone_flags)
 {
 	return 0;
+	// return 0
 }
 
 static inline void security_task_free(struct task_struct *task)

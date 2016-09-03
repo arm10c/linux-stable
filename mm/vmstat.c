@@ -96,6 +96,7 @@ void vm_events_fold_cpu(int cpu)
 // ARM10C 20140412
 // ARM10C 20140419
 // ARM10C 20151003
+// ARM10C 20160903
 // NR_VM_ZONE_STAT_ITEMS: 29
 // __cacheline_aligned_in_smp:
 // __attribute__((__aligned__(64), __section__(".data..cacheline_aligned")))
@@ -565,6 +566,8 @@ EXPORT_SYMBOL(dec_zone_page_state);
 // &(&contig_page_data)->node_zones[ZONE_NORMAL], NR_SLAB_UNRECLAIMABLE: 14, 1
 // ARM10C 20140628
 // &(&contig_page_data)->node_zones[ZONE_NORMAL], NR_SLAB_UNRECLAIMABLE: 14, 1
+// ARM10C 20160903
+// zone: &(&contig_page_data)->node_zones[0], NR_KERNEL_STACK: 16, account: 1
 void mod_zone_page_state(struct zone *zone, enum zone_stat_item item,
 					int delta)
 {

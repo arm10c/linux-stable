@@ -40,7 +40,34 @@
 extern struct files_struct init_files;
 extern struct fs_struct init_fs;
 
-#ifdef CONFIG_CGROUPS
+#ifdef CONFIG_CGROUPS // CONFIG_CGROUPS=y
+// ARM10C 20160903
+// __RWSEM_INITIALIZER(init_signals.group_rwsem):
+// {
+//     0x00000000L,
+//     (raw_spinlock_t)
+//     {
+//        .raw_lock = { { 0 } },
+//        .magic = 0xdead4ead,
+//        .owner_cpu = -1,
+//        .owner = 0xffffffff,
+//     },
+//     { &((init_signals.group_rwsem).wait_list), &((init_signals.group_rwsem).wait_list) }
+//  }
+//
+// #define INIT_GROUP_RWSEM(init_signals):
+// .group_rwsem =
+// {
+//     0x00000000L,
+//     (raw_spinlock_t)
+//     {
+//        .raw_lock = { { 0 } },
+//        .magic = 0xdead4ead,
+//        .owner_cpu = -1,
+//        .owner = 0xffffffff,
+//     },
+//     { &((init_signals.group_rwsem).wait_list), &((init_signals.group_rwsem).wait_list) }
+//  }
 #define INIT_GROUP_RWSEM(sig)						\
 	.group_rwsem = __RWSEM_INITIALIZER(sig.group_rwsem),
 #else
@@ -56,6 +83,186 @@ extern struct fs_struct init_fs;
 #endif
 
 // ARM10C 20160827
+// ARM10C 20160903
+// __WAIT_QUEUE_HEAD_INITIALIZER(init_signals.wait_chldexit):
+// {
+//     .lock            = (spinlock_t )
+//                        { { .rlock =
+//                            {
+//                              .raw_lock = { { 0 } },
+//                              .magic = 0xdead4ead,
+//                              .owner_cpu = -1,
+//                              .owner = 0xffffffff,
+//                            }
+//                        } }
+//     .task_list       = { &(init_signals.wait_chldexit).task_list, &(init_signals.wait_chldexit).task_list }
+// }
+// LIST_HEAD_INIT(init_signals.shared_pending.list):
+// { &(init_signals.shared_pending.list), &(init_signals.shared_pending.list) }
+// LIST_HEAD_INIT(init_signals.posix_timers):
+// { &(init_signals.posix_timers), &(init_signals.posix_timers) }
+// INIT_CPU_TIMERS(init_signals.cpu_timers):
+// {
+//     { &(init_signals.cpu_timers[0]), &(init_signals.cpu_timers[0]) },
+//     { &(init_signals.cpu_timers[1]), &(init_signals.cpu_timers[1]) },
+//     { &(init_signals.cpu_timers[2]), &(init_signals.cpu_timers[2]) },
+// }
+// INIT_RLIMITS:
+// {
+//     [0]    = {  0xFFFFFFFF,  0xFFFFFFFF },
+//     [1]    = {  0xFFFFFFFF,  0xFFFFFFFF },
+//     [2]    = {  0xFFFFFFFF,  0xFFFFFFFF },
+//     [3]    = {    0x800000,  0xFFFFFFFF },
+//     [4]    = {           0,  0xFFFFFFFF },
+//     [5]    = {  0xFFFFFFFF,  0xFFFFFFFF },
+//     [6]    = {           0,           0 },
+//     [7]    = {       0x400,      0x1000 },
+//     [8]    = {     0x10000,     0x10000 },
+//     [9]    = {  0xFFFFFFFF,  0xFFFFFFFF },
+//     [10]   = {  0xFFFFFFFF,  0xFFFFFFFF },
+//     [11]   = {           0,           0 },
+//     [12]   = {     0xC8000,     0xC8000 },
+//     [13]   = {           0,           0 },
+//     [14]   = {           0,           0 },
+//     [15]   = {  0xFFFFFFFF,  0xFFFFFFFF },
+// }
+// INIT_CPUTIME:
+// (struct task_cputime) {
+//     .utime = 0,
+//     .stime = 0,
+//     .sum_exec_runtime = 0,
+// }
+// __RAW_SPIN_LOCK_UNLOCKED(init_signals.cputimer.lock):
+// (raw_spinlock_t)
+// {
+//    .raw_lock = { { 0 } },
+//    .magic = 0xdead4ead,
+//    .owner_cpu = -1,
+//    .owner = 0xffffffff,
+// }
+// __MUTEX_INITIALIZER(init_signals.cred_guard_mutex):
+// { .count = { (1) }
+//    , .wait_lock =
+//    (spinlock_t )
+//    { { .rlock =
+//          {
+//              .raw_lock = { { 0 } },
+//              .magic = 0xdead4ead,
+//              .owner_cpu = -1,
+//              .owner = 0xffffffff,
+//          }
+//    } }
+//    , .wait_list =
+//    { &(init_signals.cred_guard_mutex.wait_list), &(init_signals.cred_guard_mutex.wait_list) }
+//    , .magic = &init_signals.cred_guard_mutex
+// }
+// INIT_GROUP_RWSEM(init_signals):
+// .group_rwsem =
+// {
+//     0x00000000L,
+//     (raw_spinlock_t)
+//     {
+//        .raw_lock = { { 0 } },
+//        .magic = 0xdead4ead,
+//        .owner_cpu = -1,
+//        .owner = 0xffffffff,
+//     },
+//     { &((init_signals.group_rwsem).wait_list), &((init_signals.group_rwsem).wait_list) }
+//  }
+//
+// #define INIT_SIGNALS(init_signals):
+// {
+//     .nr_threads = 1,
+//     .wait_chldexit =
+//     {
+//         .lock = (spinlock_t )
+//         { { .rlock =
+//               {
+//                    .raw_lock = { { 0 } },
+//                    .magic = 0xdead4ead,
+//                    .owner_cpu = -1,
+//                    .owner = 0xffffffff,
+//                }
+//         } }
+//         .task_list = { &(init_signals.wait_chldexit).task_list, &(init_signals.wait_chldexit).task_list }
+//     },
+//     .shared_pending = {
+//                           .list = { &(init_signals.shared_pending.list), &(init_signals.shared_pending.list) },
+//                           .signal =  {{0}}
+//                        },
+//     .posix_timers = { &(init_signals.posix_timers), &(init_signals.posix_timers) },
+//     .cpu_timers =
+//     {
+//         { &(init_signals.cpu_timers[0]), &(init_signals.cpu_timers[0]) },
+//         { &(init_signals.cpu_timers[1]), &(init_signals.cpu_timers[1]) },
+//         { &(init_signals.cpu_timers[2]), &(init_signals.cpu_timers[2]) },
+//     }
+//     .rlim =
+//     {
+//         [0]    = {  0xFFFFFFFF,  0xFFFFFFFF },
+//         [1]    = {  0xFFFFFFFF,  0xFFFFFFFF },
+//         [2]    = {  0xFFFFFFFF,  0xFFFFFFFF },
+//         [3]    = {    0x800000,  0xFFFFFFFF },
+//         [4]    = {           0,  0xFFFFFFFF },
+//         [5]    = {  0xFFFFFFFF,  0xFFFFFFFF },
+//         [6]    = {           0,           0 },
+//         [7]    = {       0x400,      0x1000 },
+//         [8]    = {     0x10000,     0x10000 },
+//         [9]    = {  0xFFFFFFFF,  0xFFFFFFFF },
+//         [10]   = {  0xFFFFFFFF,  0xFFFFFFFF },
+//         [11]   = {           0,           0 },
+//         [12]   = {     0xC8000,     0xC8000 },
+//         [13]   = {           0,           0 },
+//         [14]   = {           0,           0 },
+//         [15]   = {  0xFFFFFFFF,  0xFFFFFFFF },
+//     },
+//     .cputimer        = {
+//         .cputime =
+//         (struct task_cputime) {
+//             .utime = 0,
+//             .stime = 0,
+//             .sum_exec_runtime = 0,
+//         },
+//
+//         .running = 0,
+//         .lock =
+//         (raw_spinlock_t)
+//         {
+//            .raw_lock = { { 0 } },
+//            .magic = 0xdead4ead,
+//            .owner_cpu = -1,
+//            .owner = 0xffffffff,
+//         },
+//     },
+//     .cred_guard_mutex =
+//     { .count = { (1) }
+//        , .wait_lock =
+//        (spinlock_t )
+//        { { .rlock =
+//              {
+//                  .raw_lock = { { 0 } },
+//                  .magic = 0xdead4ead,
+//                  .owner_cpu = -1,
+//                  .owner = 0xffffffff,
+//              }
+//        } }
+//        , .wait_list =
+//        { &(init_signals.cred_guard_mutex.wait_list), &(init_signals.cred_guard_mutex.wait_list) }
+//        , .magic = &init_signals.cred_guard_mutex
+//     },
+//     .group_rwsem =
+//     {
+//         0x00000000L,
+//         (raw_spinlock_t)
+//         {
+//            .raw_lock = { { 0 } },
+//            .magic = 0xdead4ead,
+//            .owner_cpu = -1,
+//            .owner = 0xffffffff,
+//         },
+//         { &((init_signals.group_rwsem).wait_list), &((init_signals.group_rwsem).wait_list) }
+//     }
+// }
 #define INIT_SIGNALS(sig) {						\
 	.nr_threads	= 1,						\
 	.wait_chldexit	= __WAIT_QUEUE_HEAD_INITIALIZER(sig.wait_chldexit),\
@@ -77,6 +284,60 @@ extern struct fs_struct init_fs;
 
 extern struct nsproxy init_nsproxy;
 
+// ARM10C 20160903
+// ATOMIC_INIT(1): { (1) }
+// __SPIN_LOCK_UNLOCKED(init_sighand.siglock):
+// (spinlock_t )
+// { { .rlock =
+//     {
+//         .raw_lock = { { 0 } },
+//         .magic = 0xdead4ead,
+//         .owner_cpu = -1,
+//         .owner = 0xffffffff,
+//     }
+// } }
+// __WAIT_QUEUE_HEAD_INITIALIZER(init_sighand.signalfd_wqh):
+// {
+//     .lock            = (spinlock_t )
+//                        { { .rlock =
+//                            {
+//                              .raw_lock = { { 0 } },
+//                              .magic = 0xdead4ead,
+//                              .owner_cpu = -1,
+//                              .owner = 0xffffffff,
+//                            }
+//                        } }
+//     .task_list       = { &(init_sighand.signalfd_wqh).task_list, &(init_sighand.signalfd_wqh).task_list }
+// }
+//
+// #define INIT_SIGHAND(init_sighand):
+// {
+//     .count        = { (1) },
+//     .action       = { { { .sa_handler = SIG_DFL, } }, },
+//     .siglock      =
+//     (spinlock_t )
+//     { { .rlock =
+//         {
+//             .raw_lock = { { 0 } },
+//             .magic = 0xdead4ead,
+//             .owner_cpu = -1,
+//             .owner = 0xffffffff,
+//         }
+//     } },
+//     .signalfd_wqh =
+//     {
+//         .lock = (spinlock_t )
+//         { { .rlock =
+//             {
+//                 .raw_lock = { { 0 } },
+//                 .magic = 0xdead4ead,
+//                 .owner_cpu = -1,
+//                 .owner = 0xffffffff,
+//             }
+//         } }
+//         .task_list = { &(init_sighand.signalfd_wqh).task_list, &(init_sighand.signalfd_wqh).task_list }
+//     },
+// }
 #define INIT_SIGHAND(sighand) {						\
 	.count		= ATOMIC_INIT(1), 				\
 	.action		= { { { .sa_handler = SIG_DFL, } }, },		\
@@ -86,6 +347,24 @@ extern struct nsproxy init_nsproxy;
 
 extern struct group_info init_groups;
 
+// ARM10C 20160903
+// ATOMIC_INIT(1): { (1) }
+//
+// #define INIT_STRUCT_PID:
+// {
+//     .count        = { (1) },
+//     .tasks        = {
+//         { .first = NULL },
+//         { .first = NULL },
+//         { .first = NULL },
+//     },
+//     .level        = 0,
+//     .numbers      = { {
+//         .nr        = 0,
+//         .ns        = &init_pid_ns,
+//         .pid_chain    = { .next = NULL, .pprev = NULL },
+//     }, }
+// }
 #define INIT_STRUCT_PID {						\
 	.count 		= ATOMIC_INIT(1),				\
 	.tasks		= {						\
@@ -522,6 +801,14 @@ extern struct task_group root_task_group;
 // 	{ &(init_task.cpu_timers[0]), &(init_task.cpu_timers[0]) },
 // 	{ &(init_task.cpu_timers[1]), &(init_task.cpu_timers[1]) },
 // 	{ &(init_task.cpu_timers[2]), &(init_task.cpu_timers[2]) },
+// }
+//
+// ARM10C 20160903
+// INIT_CPU_TIMERS(init_signals.cpu_timers):
+// {
+// 	{ &(init_signals.cpu_timers[0]), &(init_signals.cpu_timers[0]) },
+// 	{ &(init_signals.cpu_timers[1]), &(init_signals.cpu_timers[1]) },
+// 	{ &(init_signals.cpu_timers[2]), &(init_signals.cpu_timers[2]) },
 // }
 #define INIT_CPU_TIMERS(cpu_timers)					\
 {									\

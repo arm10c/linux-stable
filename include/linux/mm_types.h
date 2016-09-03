@@ -61,6 +61,7 @@ struct address_space;
 // ARM10C 20151003
 // ARM10C 20151031
 // ARM10C 20160813
+// ARM10C 20160903
 // sizeof(struct page): 32 bytes
 struct page {
 	/* First double word block */
@@ -245,6 +246,7 @@ struct page {
 ;
 
 // ARM10C 20150919
+// ARM10C 20160903
 // sizeof(struct page_frag): 8 bytes
 struct page_frag {
 	struct page *page;

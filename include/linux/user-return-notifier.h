@@ -1,7 +1,7 @@
 #ifndef _LINUX_USER_RETURN_NOTIFIER_H
 #define _LINUX_USER_RETURN_NOTIFIER_H
 
-#ifdef CONFIG_USER_RETURN_NOTIFIER
+#ifdef CONFIG_USER_RETURN_NOTIFIER // CONFIG_USER_RETURN_NOTIFIER=n
 
 #include <linux/list.h>
 #include <linux/sched.h>
@@ -42,6 +42,7 @@ static inline void propagate_user_return_notify(struct task_struct *prev,
 
 static inline void fire_user_return_notifiers(void) {}
 
+// ARM10C 20160903
 static inline void clear_user_return_notifier(struct task_struct *p) {}
 
 #endif

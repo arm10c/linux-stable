@@ -31,6 +31,7 @@ static struct kmem_cache *nsproxy_cachep;
 
 // ARM10C 20150808
 // ARM10C 20160521
+// ARM10C 20160903
 struct nsproxy init_nsproxy = {
 	.count			= ATOMIC_INIT(1),
 	.uts_ns			= &init_uts_ns,

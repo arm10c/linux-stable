@@ -15,6 +15,10 @@
 #include <linux/compiler.h>
 #include <asm/fpstate.h>
 
+/*
+// ARM10C 20160903
+// THREAD_SIZE_ORDER: 1
+*/
 #define THREAD_SIZE_ORDER	1
 /*
 // ARM10C 20150919
@@ -66,6 +70,8 @@ struct arm_restart_block {
  */
 // ARM10C 20140913
 // ARM10C 20160402
+// ARM10C 20160903
+// ARM10C 20160903
 struct thread_info {
 	unsigned long		flags;		/* low level flags */
 	int			preempt_count;	/* 0 => preemptable, <0 => bug */
@@ -190,6 +196,7 @@ extern int vfp_restore_user_hwstate(struct user_vfp __user *,
 /*
 // ARM10C 20140322
 // ARM10C 20160402
+// ARM10C 20160903
 // TIF_NEED_RESCHED: 1
 */
 #define TIF_NEED_RESCHED	1

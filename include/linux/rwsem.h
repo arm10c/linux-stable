@@ -83,6 +83,19 @@ static inline int rwsem_is_locked(struct rw_semaphore *sem)
 //     },
 //     { &((shrinker_rwsem).wait_list), &((shrinker_rwsem).wait_list) }
 //  }
+// ARM10C 20160903
+// #define __RWSEM_INITIALIZER(init_signals.group_rwsem):
+// {
+//     0x00000000L,
+//     (raw_spinlock_t)
+//     {
+//        .raw_lock = { { 0 } },
+//        .magic = 0xdead4ead,
+//        .owner_cpu = -1,
+//        .owner = 0xffffffff,
+//     },
+//     { &((init_signals.group_rwsem).wait_list), &((init_signals.group_rwsem).wait_list) }
+//  }
 #define __RWSEM_INITIALIZER(name)			\
 	{ RWSEM_UNLOCKED_VALUE,				\
 	  __RAW_SPIN_LOCK_UNLOCKED(name.wait_lock),	\

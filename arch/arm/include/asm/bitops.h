@@ -152,6 +152,7 @@ ____atomic_test_and_change_bit(unsigned int bit, volatile unsigned long *p)
  * Native endian assembly bitops.  nr = 0 -> word 0 bit 0.
  */
 extern void _set_bit(int nr, volatile unsigned long * p);
+// ARM10C 20160903
 extern void _clear_bit(int nr, volatile unsigned long * p);
 extern void _change_bit(int nr, volatile unsigned long * p);
 extern int _test_and_set_bit(int nr, volatile unsigned long * p);
@@ -201,7 +202,9 @@ extern int _find_next_bit_be(const unsigned long *p, int size, int offset);
 // ARM10C 20150509
 // 0, &ts->check_clocks: [pcp0] &(&tick_cpu_sched)->check_clocks
 #define set_bit(nr,p)			ATOMIC_BITOP(set_bit,nr,p)  // _set_bit(nr,p)로 치환
-#define clear_bit(nr,p)			ATOMIC_BITOP(clear_bit,nr,p)
+// ARM10C 20160903
+// flag: 1, &ti->flags: &(((struct thread_info *)(할당 받은 page 2개의 메로리의 가상 주소))->flags
+#define clear_bit(nr,p)			ATOMIC_BITOP(clear_bit,nr,p)  // _clear_bit(nr,p)로 치환
 #define change_bit(nr,p)		ATOMIC_BITOP(change_bit,nr,p)
 // ARM10C 20131207
 // ARM10C 20140621

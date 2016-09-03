@@ -13,6 +13,7 @@
 #define CLONE_FS	0x00000200	/* set if fs info shared between processes */
 #define CLONE_FILES	0x00000400	/* set if open files shared between processes */
 // ARM10C 20160827
+// ARM10C 20160903
 // CLONE_SIGHAND: 0x00000800
 #define CLONE_SIGHAND	0x00000800	/* set if signal handlers and blocked signals shared */
 #define CLONE_PTRACE	0x00002000	/* set if we want to let tracing continue on the child too */
@@ -40,8 +41,11 @@
 #define CLONE_NEWUTS		0x04000000	/* New utsname group? */
 #define CLONE_NEWIPC		0x08000000	/* New ipcs */
 // ARM10C 20160827
+// ARM10C 20160903
 // CLONE_NEWUSER: 0x10000000
 #define CLONE_NEWUSER		0x10000000	/* New user namespace */
+// ARM10C 20160903
+// CLONE_NEWPID: 0x20000000
 #define CLONE_NEWPID		0x20000000	/* New pid namespace */
 #define CLONE_NEWNET		0x40000000	/* New network namespace */
 #define CLONE_IO		0x80000000	/* Clone io context */

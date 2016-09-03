@@ -55,12 +55,20 @@ extern long do_no_restart_syscall(struct restart_block *parm);
 
 #ifdef __KERNEL__
 
-#ifdef CONFIG_DEBUG_STACK_USAGE
+#ifdef CONFIG_DEBUG_STACK_USAGE // CONFIG_DEBUG_STACK_USAGE=n
 # define THREADINFO_GFP		(GFP_KERNEL | __GFP_NOTRACK | __GFP_ZERO)
 #else
+// ARM10C 20160903
+// GFP_KERNEL: 0xD0
+// __GFP_NOTRACK: 0x200000u
+// THREADINFO_GFP: 0x2000D0
 # define THREADINFO_GFP		(GFP_KERNEL | __GFP_NOTRACK)
 #endif
 
+// ARM10C 20160903
+// THREADINFO_GFP: 0x2000D0
+// __GFP_KMEMCG: 0x100000
+// THREADINFO_GFP_ACCOUNTED: 0x3000D0
 #define THREADINFO_GFP_ACCOUNTED (THREADINFO_GFP | __GFP_KMEMCG)
 
 /*
@@ -73,9 +81,15 @@ static inline void set_ti_thread_flag(struct thread_info *ti, int flag)
 	set_bit(flag, (unsigned long *)&ti->flags);
 }
 
+// ARM10C 20160903
+// task_thread_info(kmem_cache#15-oX (struct task_struct)): ((struct thread_info *)(할당 받은 page 2개의 메로리의 가상 주소), flag: 1
 static inline void clear_ti_thread_flag(struct thread_info *ti, int flag)
 {
+	// flag: 1, &ti->flags: &(((struct thread_info *)(할당 받은 page 2개의 메로리의 가상 주소))->flags
 	clear_bit(flag, (unsigned long *)&ti->flags);
+
+	// clear_bit 에서 한일:
+	// (((struct thread_info *)(할당 받은 page 2개의 메로리의 가상 주소))->flags 의 1 bit 값을 clear 수행
 }
 
 static inline int test_and_set_ti_thread_flag(struct thread_info *ti, int flag)

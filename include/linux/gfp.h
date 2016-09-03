@@ -50,6 +50,8 @@ struct vm_area_struct;
 #define ___GFP_THISNODE		0x40000u
 // ARM10C 20140426
 #define ___GFP_RECLAIMABLE	0x80000u
+// ARM10C 20160903
+// ___GFP_KMEMCG: 0x100000u
 #define ___GFP_KMEMCG		0x100000u
 // ARM10C 20140426
 #define ___GFP_NOTRACK		0x200000u
@@ -198,12 +200,16 @@ struct vm_area_struct;
 #define __GFP_RECLAIMABLE ((__force gfp_t)___GFP_RECLAIMABLE) /* Page is reclaimable */
 // ARM10C 20140426
 // ARM10C 20141101
+// ARM10C 20160903
 // ___GFP_NOTRACK: 0x200000u
 // __GFP_NOTRACK: 0x200000u
 #define __GFP_NOTRACK	((__force gfp_t)___GFP_NOTRACK)  /* Don't track with kmemcheck */
 
 #define __GFP_NO_KSWAPD	((__force gfp_t)___GFP_NO_KSWAPD)
 #define __GFP_OTHER_NODE ((__force gfp_t)___GFP_OTHER_NODE) /* On behalf of other node */
+// ARM10C 20160903
+// ___GFP_KMEMCG: 0x100000u
+// __GFP_KMEMCG: 0x100000
 #define __GFP_KMEMCG	((__force gfp_t)___GFP_KMEMCG) /* Allocation comes from a memcg-accounted resource */
 // ARM10C 20140510
 // ___GFP_WRITE: 0x1000000u
@@ -289,6 +295,7 @@ struct vm_area_struct;
 // ARM10C 20160716
 // ARM10C 20160730
 // ARM10C 20160813
+// ARM10C 20160903
 // __GFP_WAIT: 0x10
 // __GFP_IO: 0x40
 // __GFP_FS: 0x80
@@ -659,6 +666,8 @@ __alloc_pages(gfp_t gfp_mask, unsigned int order,
 // numa_node_id(): 0, gfp_mask: PGALLOC_GFP: 0x2084D0, order: 0
 // ARM10C 20160813
 // 0, GFP_KERNEL: 0xD0, 0
+// ARM10C 20160903
+// node: 0, THREADINFO_GFP_ACCOUNTED: 0x3000D0, THREAD_SIZE_ORDER: 1
 static inline struct page *alloc_pages_node(int nid, gfp_t gfp_mask,
 						unsigned int order)
 {

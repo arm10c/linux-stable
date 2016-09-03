@@ -46,6 +46,7 @@
 
 // ARM10C 20140111
 // ARM10C 20140412
+// ARM10C 20160903
 enum {
 	MIGRATE_UNMOVABLE,
 	MIGRATE_RECLAIMABLE,
@@ -133,6 +134,7 @@ struct zone_padding {
 // ARM10C 20140419
 // ARM10C 20140510
 // ARM10C 20160528
+// ARM10C 20160903
 enum zone_stat_item {
 	/* First 128 byte cacheline (assuming 64 bit words) */
 	// NR_FREE_PAGES: 0
@@ -160,6 +162,7 @@ enum zone_stat_item {
 	// NR_SLAB_UNRECLAIMABLE: 14
 	NR_SLAB_UNRECLAIMABLE,
 	NR_PAGETABLE,		/* used for pagetables */
+	// NR_KERNEL_STACK: 16
 	NR_KERNEL_STACK,
 	/* Second 128 byte cacheline */
 	// NR_UNSTABLE_NFS: 17
@@ -321,6 +324,7 @@ struct per_cpu_pageset {
 #endif /* !__GENERATING_BOUNDS.H */
 
 // ARM10C 20140308
+// ARM10C 20160903
 enum zone_type {
 #ifdef CONFIG_ZONE_DMA	// ARM10C CONFIG_ZONE_DMA = n
 	/*
@@ -380,6 +384,7 @@ enum zone_type {
 // ARM10C 20150912
 // ARM10C 20151212
 // ARM10C 20160528
+// ARM10C 20160903
 struct zone {
 	/* Fields commonly accessed by the page allocator */
 

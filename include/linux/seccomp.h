@@ -74,7 +74,7 @@ static inline int seccomp_mode(struct seccomp *s)
 }
 #endif /* CONFIG_SECCOMP */
 
-#ifdef CONFIG_SECCOMP_FILTER
+#ifdef CONFIG_SECCOMP_FILTER // CONFIG_SECCOMP_FILTER=n
 extern void put_seccomp_filter(struct task_struct *tsk);
 extern void get_seccomp_filter(struct task_struct *tsk);
 extern u32 seccomp_bpf_load(int off);
@@ -83,6 +83,8 @@ static inline void put_seccomp_filter(struct task_struct *tsk)
 {
 	return;
 }
+// ARM10C 20160903
+// p: kmem_cache#15-oX (struct task_struct)
 static inline void get_seccomp_filter(struct task_struct *tsk)
 {
 	return;

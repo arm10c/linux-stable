@@ -20,6 +20,8 @@
 
 #define MQ_PRIO_MAX 	32768
 /* per-uid limit of kernel memory used by mqueue, in bytes */
+// ARM10C 20160903
+// MQ_BYTES_MAX: 0xC8000
 #define MQ_BYTES_MAX	819200
 
 struct mq_attr {

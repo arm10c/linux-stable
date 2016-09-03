@@ -25,6 +25,7 @@ struct bsd_acct_struct;
 
 // ARM10C 20150718
 // ARM10C 20150912
+// ARM10C 20160903
 struct pid_namespace {
 	struct kref kref;
 	struct pidmap pidmap[PIDMAP_ENTRIES];

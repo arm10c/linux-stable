@@ -74,6 +74,12 @@
 // ARM10C 20151121
 // LIST_HEAD_INIT(shrinker_list):
 // { &(shrinker_list), &(shrinker_list) }
+// ARM10C 20160903
+// LIST_HEAD_INIT(init_signals.shared_pending.list):
+// { &(init_signals.shared_pending.list), &(init_signals.shared_pending.list) }
+// ARM10C 20160903
+// LIST_HEAD_INIT(init_signals.posix_timers):
+// { &(init_signals.posix_timers), &(init_signals.posix_timers) }
 #define LIST_HEAD_INIT(name) { &(name), &(name) }
 
 // ARM10C 20131116

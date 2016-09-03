@@ -40,6 +40,7 @@ struct	rusage {
 };
 
 // ARM10C 20150919
+// ARM10C 20160903
 // sizeof(struct rlimit): 8 bytes
 struct rlimit {
 	unsigned long	rlim_cur;
@@ -64,12 +65,17 @@ struct rlimit64 {
  * Limit the stack by to some sane default: root can always
  * increase this limit if needed..  8MB seems reasonable.
  */
+// ARM10C 20160903
+// _STK_LIM: 0x800000
 #define _STK_LIM	(8*1024*1024)
 
 /*
  * GPG2 wants 64kB of mlocked memory, to make sure pass phrases
  * and other sensitive information are never written to disk.
  */
+// ARM10C 20160903
+// PAGE_SIZE: 0x1000
+// MLOCK_LIMIT: 0x10000
 #define MLOCK_LIMIT	((PAGE_SIZE > 64*1024) ? PAGE_SIZE : 64*1024)
 
 /*

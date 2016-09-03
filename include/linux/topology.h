@@ -222,6 +222,7 @@ static inline void set_cpu_numa_node(int cpu, int node)
 // ARM10C 20140628
 // ARM10C 20140719
 // ARM10C 20141115
+// ARM10C 20160903
 static inline int numa_node_id(void)
 {
 	// raw_smp_processor_id(): 0, cpu_to_node(0): 0
