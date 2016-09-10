@@ -25,6 +25,7 @@ extern int file_caps_enabled;
 
 // ARM10C 20150919
 // ARM10C 20160903
+// ARM10C 20160910
 // _KERNEL_CAPABILITY_U32S: 2
 typedef struct kernel_cap_struct {
 	__u32 cap[_KERNEL_CAPABILITY_U32S];
@@ -101,6 +102,10 @@ extern const kernel_cap_t __cap_init_eff_set;
 
 #define cap_raise(c, flag)  ((c).cap[CAP_TO_INDEX(flag)] |= CAP_TO_MASK(flag))
 #define cap_lower(c, flag)  ((c).cap[CAP_TO_INDEX(flag)] &= ~CAP_TO_MASK(flag))
+// ARM10C 20160910
+// cred->cap_effective: (&init_cred)->cap_effective, cap: 24
+// ARM10C 20160910
+// cred->cap_effective: (&init_cred)->cap_effective, cap: 21
 #define cap_raised(c, flag) ((c).cap[CAP_TO_INDEX(flag)] & CAP_TO_MASK(flag))
 
 #define CAP_BOP_ALL(c, a, b, OP)                                    \

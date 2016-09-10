@@ -379,18 +379,31 @@ bool has_capability_noaudit(struct task_struct *t, int cap)
  */
 // ARM10C 20160903
 // &init_user_ns, cap: 24
+// ARM10C 20160910
+// &init_user_ns, cap: 21
 bool ns_capable(struct user_namespace *ns, int cap)
 {
 	// cap: 24, cap_valid(24): 1
+	// cap: 21, cap_valid(21): 1
 	if (unlikely(!cap_valid(cap))) {
 		printk(KERN_CRIT "capable() called with invalid cap=%u\n", cap);
 		BUG();
 	}
 
 	// current_cred(): (&init_task)->cred: &init_cred, ns: &init_user_ns, cap: 24
+	// security_capable(&init_cred, &init_user_ns, 24): 0
+	// current_cred(): (&init_task)->cred: &init_cred, ns: &init_user_ns, cap: 21
+	// security_capable(&init_cred, &init_user_ns, 21): 0
 	if (security_capable(current_cred(), ns, cap) == 0) {
+		// current->flags: (&init_task)->flags: 0x00200000, PF_SUPERPRIV: 0x00000100
+		// current->flags: (&init_task)->flags: 0x00200000, PF_SUPERPRIV: 0x00000100
 		current->flags |= PF_SUPERPRIV;
+		// current->flags: (&init_task)->flags: 0x00200100
+		// current->flags: (&init_task)->flags: 0x00200100
+
 		return true;
+		// return true
+		// return true
 	}
 	return false;
 }
@@ -432,10 +445,21 @@ EXPORT_SYMBOL(file_ns_capable);
  */
 // ARM10C 20160903
 // CAP_SYS_RESOURCE: 24
+// ARM10C 20160910
+// CAP_SYS_ADMIN: 21
 bool capable(int cap)
 {
-	// cap: 24
+	// cap: 24, ns_capable(&init_user_ns, 24): true
+	// cap: 21, ns_capable(&init_user_ns, 21): true
 	return ns_capable(&init_user_ns, cap);
+	// return true
+	// return true
+
+	// ns_capable 에서 한일:
+	// (&init_task)->flags: 0x00200100
+
+	// ns_capable 에서 한일:
+	// (&init_task)->flags: 0x00200100
 }
 EXPORT_SYMBOL(capable);
 

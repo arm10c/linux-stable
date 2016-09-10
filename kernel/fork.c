@@ -1303,8 +1303,8 @@ static struct task_struct *copy_process(unsigned long clone_flags,
 	if ((clone_flags & CLONE_SIGHAND) && !(clone_flags & CLONE_VM))
 		return ERR_PTR(-EINVAL);
 
-	// 2016/08/27 종료
-	// 2016/09/03 시작
+// 2016/08/27 종료
+// 2016/09/03 시작
 
 	/*
 	 * Siblings of global init remain as zombies on exit since they are
@@ -1414,14 +1414,40 @@ static struct task_struct *copy_process(unsigned long clone_flags,
 	if (atomic_read(&p->real_cred->user->processes) >=
 			task_rlimit(p, RLIMIT_NPROC)) {
 		// p->real_cred->user: (&init_cred)->user: &root_user, INIT_USER: (&root_user)
-		// CAP_SYS_RESOURCE: 24
+		// CAP_SYS_RESOURCE: 24, capable(24): true, CAP_SYS_ADMIN: 21, capable(21): true
 		if (p->real_cred->user != INIT_USER &&
 		    !capable(CAP_SYS_RESOURCE) && !capable(CAP_SYS_ADMIN))
 			goto bad_fork_free;
-	}
-	current->flags &= ~PF_NPROC_EXCEEDED;
 
+		// capable 에서 한일:
+		// (&init_task)->flags: 0x00200100
+	}
+
+	// current->flags: (&init_task)->flags: 0x00200100, PF_NPROC_EXCEEDED: 0x00001000
+	current->flags &= ~PF_NPROC_EXCEEDED;
+	// current->flags: (&init_task)->flags: 0x00200100
+
+	// retval: -11, p: kmem_cache#15-oX (struct task_struct), clone_flags: 0x00800B00
+	// copy_creds(kmem_cache#15-oX (struct task_struct), 0x00800B00): 0
 	retval = copy_creds(p, clone_flags);
+	// retval: 0
+
+	// copy_creds 에서 한일:
+	// struct cred 만큼의 메모리를 할당 받음
+	// kmem_cache#16-oX (struct cred)
+	//
+	// kmem_cache#16-oX (struct cred) 에 init_cred 에 있는 맴버값 전부를 복사함
+	// (&(kmem_cache#16-oX (struct cred))->usage)->counter: 1
+	// (&(&init_groups)->usage)->counter: 3
+	// (&(&root_user)->__count)->counter: 2
+	// (&(&root_user)->processes)->counter: 2
+	//
+	// (&(kmem_cache#16-oX (struct cred))->usage)->counter: 2
+	//
+	// (kmem_cache#15-oX (struct task_struct))->cred: kmem_cache#16-oX (struct cred)
+	// (kmem_cache#15-oX (struct task_struct))->real_cred: kmem_cache#16-oX (struct cred)
+
+	// retval: 0
 	if (retval < 0)
 		goto bad_fork_free;
 

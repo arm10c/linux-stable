@@ -698,6 +698,7 @@ static inline int signal_group_exit(const struct signal_struct *sig)
  * Some day this will be a full-fledged user tracking system..
  */
 // ARM10C 20160903
+// ARM10C 20160910
 struct user_struct {
 	atomic_t __count;	/* reference count */
 	atomic_t processes;	/* How many processes does this user have? */
@@ -1758,10 +1759,14 @@ extern void thread_group_cputime_adjusted(struct task_struct *p, cputime_t *ut, 
 #define PF_WQ_WORKER	0x00000020	/* I'm a workqueue worker */
 #define PF_FORKNOEXEC	0x00000040	/* forked but didn't exec */
 #define PF_MCE_PROCESS  0x00000080      /* process policy on mce errors */
+// ARM10C 20160910
+// PF_SUPERPRIV: 0x00000100
 #define PF_SUPERPRIV	0x00000100	/* used super-user privileges */
 #define PF_DUMPCORE	0x00000200	/* dumped core */
 #define PF_SIGNALED	0x00000400	/* killed by a signal */
 #define PF_MEMALLOC	0x00000800	/* Allocating memory */
+// ARM10C 20160910
+// PF_NPROC_EXCEEDED: 0x00001000
 #define PF_NPROC_EXCEEDED 0x00001000	/* set_user noticed that RLIMIT_NPROC was exceeded */
 #define PF_USED_MATH	0x00002000	/* if unset the fpu must be initialized before use */
 #define PF_USED_ASYNC	0x00004000	/* used async_schedule*(), used by module init */
@@ -2117,10 +2122,20 @@ extern struct task_struct *find_task_by_pid_ns(pid_t nr,
 
 /* per-UID process charging. */
 extern struct user_struct * alloc_uid(kuid_t);
+
+// ARM10C 20160910
+// new->user: (kmem_cache#16-oX (struct cred))->user: &root_user
 static inline struct user_struct *get_uid(struct user_struct *u)
 {
+	// &u->__count: &(&root_user)->__count
 	atomic_inc(&u->__count);
+
+	// atomic_inc 에서 한일:
+	// (&(&root_user)->__count)->counter: 2
+
+	// u: &root_user
 	return u;
+	// return &root_user
 }
 extern void free_uid(struct user_struct *);
 

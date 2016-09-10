@@ -28,6 +28,7 @@
 // ARM10C 20160409
 // ARM10C 20160827
 // ARM10C 20160903
+// ARM10C 20160910
 #define ATOMIC_INIT(i)	{ (i) }
 
 #ifdef __KERNEL__
@@ -80,6 +81,8 @@
 // &ent->count: &(kmem_cache#29-oX (struct proc_dir_entry))->count
 // ARM10C 20160903
 // &tsk->usage: &(kmem_cache#15-oX (struct task_struct))->usage, 2
+// ARM10C 20160910
+// &new->usage: &(kmem_cache#16-oX (struct cred))->usage, 1
 #define atomic_set(v,i)	(((v)->counter) = (i))
 
 #if __LINUX_ARM_ARCH__ >= 6
@@ -297,6 +300,14 @@ static inline int __atomic_add_unless(atomic_t *v, int a, int u)
 // &running_helpers
 // ARM10C 20160521
 // &ns->count: &(kmem_cache#30-oX (struct mnt_namespace))->count
+// ARM10C 20160910
+// &gi->usage: &((kmem_cache#16-oX (struct cred))->group_info)->usage
+// ARM10C 20160910
+// &u->__count: &(&root_user)->__count
+// ARM10C 20160910
+// new->user->processes: (&root_user)->processes
+// ARM10C 20160910
+// &cred->usage: &(kmem_cache#16-oX (struct cred))->usage
 #define atomic_inc(v)		atomic_add(1, v)
 // ARM10C 20150912
 // ARM10C 20160319

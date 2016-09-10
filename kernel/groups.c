@@ -9,6 +9,8 @@
 #include <asm/uaccess.h>
 
 /* init to 2 - one for init_task, one to ensure it is never freed */
+// ARM10C 20160910
+// ATOMIC_INIT(2): { (2) }
 struct group_info init_groups = { .usage = ATOMIC_INIT(2) };
 
 struct group_info *groups_alloc(int gidsetsize)

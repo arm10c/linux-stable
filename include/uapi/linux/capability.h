@@ -262,6 +262,8 @@ struct vfs_cap_data {
 /* Allow setting encryption key on loopback filesystem */
 /* Allow setting zone reclaim policy */
 
+// ARM10C 20160910
+// CAP_SYS_ADMIN: 21
 #define CAP_SYS_ADMIN        21
 
 /* Allow use of reboot() */
@@ -356,15 +358,24 @@ struct vfs_cap_data {
 
 // ARM10C 20160903
 // CAP_LAST_CAP: 36
-//
 // cap: 24
+// ARM10C 20160910
+// cap: 21
 #define cap_valid(x) ((x) >= 0 && (x) <= CAP_LAST_CAP)
 
 /*
  * Bit location of each capability (used by user-space library and kernel)
  */
 
+// ARM10C 20160910
+// cap: 24
+// ARM10C 20160910
+// cap: 21
 #define CAP_TO_INDEX(x)     ((x) >> 5)        /* 1 << 5 == bits in __u32 */
+// ARM10C 20160910
+// cap: 24
+// ARM10C 20160910
+// cap: 21
 #define CAP_TO_MASK(x)      (1 << ((x) & 31)) /* mask for indexed __u32 */
 
 

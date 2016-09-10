@@ -29,6 +29,7 @@ struct inode;
 #define NGROUPS_SMALL		32
 #define NGROUPS_PER_BLOCK	((unsigned int)(PAGE_SIZE / sizeof(kgid_t)))
 
+// ARM10C 20160910
 struct group_info {
 	atomic_t	usage;
 	int		ngroups;
@@ -46,10 +47,19 @@ struct group_info {
  * If the caller is accessing a task's credentials, they must hold the RCU read
  * lock when reading.
  */
+// ARM10C 20160910
+// new->group_info: (kmem_cache#16-oX (struct cred))->group_info: &init_groups
 static inline struct group_info *get_group_info(struct group_info *gi)
 {
+	// &gi->usage: &(&init_groups)->usage
 	atomic_inc(&gi->usage);
+
+	// atomic_inc 에서 한일:
+	// (&(&init_groups)->usage)->counter: 3
+
+	// gi: &init_groups
 	return gi;
+	// return &init_groups
 }
 
 /**
@@ -102,6 +112,7 @@ extern int in_egroup_p(kgid_t);
 // ARM10C 20150919
 // ARM10C 20151003
 // ARM10C 20160319
+// ARM10C 20160910
 // sizeof(struct cred): 92 bytes
 struct cred {
 	atomic_t	usage;
@@ -163,7 +174,7 @@ extern void __init cred_init(void);
 /*
  * check for validity of credentials
  */
-#ifdef CONFIG_DEBUG_CREDENTIALS
+#ifdef CONFIG_DEBUG_CREDENTIALS // CONFIG_DEBUG_CREDENTIALS=n
 extern void __invalid_creds(const struct cred *, const char *, unsigned);
 extern void __validate_process_creds(struct task_struct *,
 				     const char *, unsigned);
@@ -189,12 +200,19 @@ do {								\
 
 extern void validate_creds_for_do_exit(struct task_struct *);
 #else
+// ARM10C 20160910
+// new: kmem_cache#16-oX (struct cred)
+// ARM10C 20160910
+// cred: kmem_cache#16-oX (struct cred)
+// ARM10C 20160910
+// new: kmem_cache#16-oX (struct cred)
 static inline void validate_creds(const struct cred *cred)
 {
 }
 static inline void validate_creds_for_do_exit(struct task_struct *tsk)
 {
 }
+// ARM10C 20160910
 static inline void validate_process_creds(void)
 {
 }
@@ -207,10 +225,19 @@ static inline void validate_process_creds(void)
  * Get a reference on the specified set of new credentials.  The caller must
  * release the reference.
  */
+// ARM10C 20160910
+// nonconst_cred: kmem_cache#16-oX (struct cred)
 static inline struct cred *get_new_cred(struct cred *cred)
 {
+	// &cred->usage: &(kmem_cache#16-oX (struct cred))->usage
 	atomic_inc(&cred->usage);
+
+	// atomic_inc 에서 한일:
+	// (&(kmem_cache#16-oX (struct cred))->usage)->counter: 2
+
+	// cred: kmem_cache#16-oX (struct cred)
 	return cred;
+	// return kmem_cache#16-oX (struct cred)
 }
 
 /**
@@ -226,11 +253,24 @@ static inline struct cred *get_new_cred(struct cred *cred)
  * accidental alteration of a set of credentials that should be considered
  * immutable.
  */
+// ARM10C 20160910
+// new: kmem_cache#16-oX (struct cred)
 static inline const struct cred *get_cred(const struct cred *cred)
 {
+	// cred: kmem_cache#16-oX (struct cred)
 	struct cred *nonconst_cred = (struct cred *) cred;
-	validate_creds(cred);
+	// nonconst_cred: kmem_cache#16-oX (struct cred)
+
+	// cred: kmem_cache#16-oX (struct cred)
+	validate_creds(cred); // null function 
+
+	// nonconst_cred: kmem_cache#16-oX (struct cred)
+	// get_new_cred(kmem_cache#16-oX (struct cred)): kmem_cache#16-oX (struct cred)
 	return get_new_cred(nonconst_cred);
+	// return kmem_cache#16-oX (struct cred)
+
+	// get_new_cred 에서 한일:
+	// (&(kmem_cache#16-oX (struct cred))->usage)->counter: 2
 }
 
 /**

@@ -22,6 +22,7 @@
 // CLONE_PARENT: 0x00008000
 #define CLONE_PARENT	0x00008000	/* set if we want to have the same parent as the cloner */
 // ARM10C 20160827
+// ARM10C 20160910
 // CLONE_THREAD: 0x00010000
 #define CLONE_THREAD	0x00010000	/* Same thread group? */
 // ARM10C 20160827
@@ -42,6 +43,7 @@
 #define CLONE_NEWIPC		0x08000000	/* New ipcs */
 // ARM10C 20160827
 // ARM10C 20160903
+// ARM10C 20160910
 // CLONE_NEWUSER: 0x10000000
 #define CLONE_NEWUSER		0x10000000	/* New user namespace */
 // ARM10C 20160903

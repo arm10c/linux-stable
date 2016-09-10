@@ -75,14 +75,19 @@ int cap_netlink_send(struct sock *sk, struct sk_buff *skb)
  */
 // ARM10C 20160903
 // cred: &init_cred, ns: &init_user_ns, cap: 24, SECURITY_CAP_AUDIT: 1
+// ARM10C 20160910
+// cred: &init_cred, ns: &init_user_ns, cap: 21, SECURITY_CAP_AUDIT: 1
 int cap_capable(const struct cred *cred, struct user_namespace *targ_ns,
 		int cap, int audit)
 {
 	// targ_ns: &init_user_ns
+	// targ_ns: &init_user_ns
 	struct user_namespace *ns = targ_ns;
+	// ns: &init_user_ns
 	// ns: &init_user_ns
 
 // 2016/09/03 종료
+// 2016/09/10 시작
 
 	/* See if cred has the capability in the target user namespace
 	 * by examining the target user namespace and all of the target
@@ -91,9 +96,15 @@ int cap_capable(const struct cred *cred, struct user_namespace *targ_ns,
 	for (;;) {
 		/* Do we have the necessary capabilities? */
 		// ns: &init_user_ns, cred->user_ns: (&init_cred)->user_ns: &init_user_ns
+		// ns: &init_user_ns, cred->user_ns: (&init_cred)->user_ns: &init_user_ns
 		if (ns == cred->user_ns)
-			// cred->cap_effective: (&init_cred)->cap_effective:
+			// cred->cap_effective: (&init_cred)->cap_effective, cap: 24
+			// cap_raised((&init_cred)->cap_effective, 24): 0x1000000
+			// cred->cap_effective: (&init_cred)->cap_effective, cap: 21
+			// cap_raised((&init_cred)->cap_effective, 21): 0x200000
 			return cap_raised(cred->cap_effective, cap) ? 0 : -EPERM;
+			// return 0
+			// return 0
 
 		/* Have we tried all of the parent namespaces? */
 		if (ns == &init_user_ns)

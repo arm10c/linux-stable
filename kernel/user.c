@@ -87,6 +87,7 @@ static DEFINE_SPINLOCK(uidhash_lock);
 
 /* root_user.__count is 1, for init task cred */
 // ARM10C 20160903
+// ARM10C 20160910
 // ATOMIC_INIT(1): { (0) }
 // ATOMIC_INIT(1): { (1) }
 struct user_struct root_user = {

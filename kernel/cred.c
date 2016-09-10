@@ -28,6 +28,7 @@
 #endif
 
 // ARM10C 20150919
+// ARM10C 20160910
 static struct kmem_cache *cred_jar;
 
 /*
@@ -35,6 +36,7 @@ static struct kmem_cache *cred_jar;
  */
 // ARM10C 20160319
 // ARM10C 20160903
+// ARM10C 20160910
 // INIT_USER: (&root_user)
 // CAP_FULL_SET: ((kernel_cap_t){{ 0xFFFFFFFF, 0xFFFFFFFF }})
 struct cred init_cred = {
@@ -63,9 +65,11 @@ struct cred init_cred = {
 	.group_info		= &init_groups,
 };
 
+// ARM10C 20160910
+// new: kmem_cache#16-oX (struct cred), 0
 static inline void set_cred_subscribers(struct cred *cred, int n)
 {
-#ifdef CONFIG_DEBUG_CREDENTIALS
+#ifdef CONFIG_DEBUG_CREDENTIALS // CONFIG_DEBUG_CREDENTIALS=n
 	atomic_set(&cred->subscribers, n);
 #endif
 }
@@ -79,9 +83,11 @@ static inline int read_cred_subscribers(const struct cred *cred)
 #endif
 }
 
+// ARM10C 20160910
+// new: kmem_cache#16-oX (struct cred), 2
 static inline void alter_cred_subscribers(const struct cred *_cred, int n)
 {
-#ifdef CONFIG_DEBUG_CREDENTIALS
+#ifdef CONFIG_DEBUG_CREDENTIALS // CONFIG_DEBUG_CREDENTIALS=n
 	struct cred *cred = (struct cred *) _cred;
 
 	atomic_add(n, &cred->subscribers);
@@ -239,44 +245,90 @@ error:
  *
  * Call commit_creds() or abort_creds() to clean up.
  */
+// ARM10C 20160910
 struct cred *prepare_creds(void)
 {
+	// current: &init_task
 	struct task_struct *task = current;
+	// task: &init_task
+
 	const struct cred *old;
 	struct cred *new;
 
-	validate_process_creds();
+	validate_process_creds(); // null function
 
+	// cred_jar: kmem_cache#16, GFP_KERNEL: 0xD0
+	// kmem_cache_alloc(kmem_cache#16, GFP_KERNEL: 0xD0): kmem_cache#16-oX (struct cred)
 	new = kmem_cache_alloc(cred_jar, GFP_KERNEL);
+	// new: kmem_cache#16-oX (struct cred)
+
+	// new: kmem_cache#16-oX (struct cred)
 	if (!new)
 		return NULL;
 
+	// new: kmem_cache#16-oX (struct cred)
 	kdebug("prepare_creds() alloc %p", new);
+	// "prepare_creds() alloc 0xXXXXXXXX"
 
+	// task->cred: (&init_task)->cred: &init_cred
 	old = task->cred;
+	// old: &init_cred
+
+	// new: kmem_cache#16-oX (struct cred), old: &init_cred, sizeof(struct cred): 92 bytes
 	memcpy(new, old, sizeof(struct cred));
 
+	// memcpy 에서 한일:
+	// kmem_cache#16-oX (struct cred) 에 init_cred 에 있는 맴버값 전부를 복사함
+
+	// &new->usage: &(kmem_cache#16-oX (struct cred))->usage
 	atomic_set(&new->usage, 1);
-	set_cred_subscribers(new, 0);
+
+	// atomic_set 에서 한일:
+	// (&(kmem_cache#16-oX (struct cred))->usage)->counter: 1
+
+	// new: kmem_cache#16-oX (struct cred)
+	set_cred_subscribers(new, 0); // null function
+
+	// new->group_info: (kmem_cache#16-oX (struct cred))->group_info: &init_groups
+	// get_group_info(&init_groups): &init_groups
 	get_group_info(new->group_info);
+
+	// get_group_info 에서 한일:
+	// (&(&init_groups)->usage)->counter: 3
+
+	// new->user: (kmem_cache#16-oX (struct cred))->user: &root_user
+	// get_uid(&root_user): &root_user
 	get_uid(new->user);
+
+	// get_uid 에서 한일:
+	// (&(&root_user)->__count)->counter: 2
+
+	// new->user_ns: (kmem_cache#16-oX (struct cred))->user_ns: &init_user_ns
+	// get_user_ns(&init_user_ns): &init_user_ns
 	get_user_ns(new->user_ns);
 
-#ifdef CONFIG_KEYS
+#ifdef CONFIG_KEYS // CONFIG_KEYS=n
 	key_get(new->session_keyring);
 	key_get(new->process_keyring);
 	key_get(new->thread_keyring);
 	key_get(new->request_key_auth);
 #endif
 
-#ifdef CONFIG_SECURITY
+#ifdef CONFIG_SECURITY // CONFIG_SECURITY=n
 	new->security = NULL;
 #endif
 
+	// new: kmem_cache#16-oX (struct cred), old: &init_cred, GFP_KERNEL: 0xD0
+	// security_prepare_creds(kmem_cache#16-oX (struct cred), &init_cred, 0xD0): 0
 	if (security_prepare_creds(new, old, GFP_KERNEL) < 0)
 		goto error;
-	validate_creds(new);
+
+	// new: kmem_cache#16-oX (struct cred)
+	validate_creds(new); // null function
+
+	// new: kmem_cache#16-oX (struct cred)
 	return new;
+	// return kmem_cache#16-oX (struct cred)
 
 error:
 	abort_creds(new);
@@ -318,13 +370,16 @@ struct cred *prepare_exec_creds(void)
  * The new process gets the current process's subjective credentials as its
  * objective and subjective credentials
  */
+// ARM10C 20160910
+// p: kmem_cache#15-oX (struct task_struct), clone_flags: 0x00800B00
 int copy_creds(struct task_struct *p, unsigned long clone_flags)
 {
 	struct cred *new;
 	int ret;
 
+	// clone_flags: 0x00800B00, CLONE_THREAD: 0x00010000
 	if (
-#ifdef CONFIG_KEYS
+#ifdef CONFIG_KEYS // CONFIG_KEYS=n
 		!p->cred->thread_keyring &&
 #endif
 		clone_flags & CLONE_THREAD
@@ -339,17 +394,31 @@ int copy_creds(struct task_struct *p, unsigned long clone_flags)
 		return 0;
 	}
 
+	// prepare_creds(): kmem_cache#16-oX (struct cred)
 	new = prepare_creds();
+	// new: kmem_cache#16-oX (struct cred)
+
+	// prepare_creds 에서 한일:
+	// struct cred 만큼의 메모리를 할당 받음
+	// kmem_cache#16-oX (struct cred)
+	//
+	// kmem_cache#16-oX (struct cred) 에 init_cred 에 있는 맴버값 전부를 복사함
+	// (&(kmem_cache#16-oX (struct cred))->usage)->counter: 1
+	// (&(&init_groups)->usage)->counter: 3
+	// (&(&root_user)->__count)->counter: 2
+
+	// new: kmem_cache#16-oX (struct cred)
 	if (!new)
 		return -ENOMEM;
 
+	// clone_flags: 0x00800B00, CLONE_NEWUSER: 0x10000000
 	if (clone_flags & CLONE_NEWUSER) {
 		ret = create_user_ns(new);
 		if (ret < 0)
 			goto error_put;
 	}
 
-#ifdef CONFIG_KEYS
+#ifdef CONFIG_KEYS // CONFIG_KEYS=n
 	/* new threads get their own thread keyrings if their parent already
 	 * had one */
 	if (new->thread_keyring) {
@@ -368,11 +437,32 @@ int copy_creds(struct task_struct *p, unsigned long clone_flags)
 	}
 #endif
 
+	// new: kmem_cache#16-oX (struct cred),
+	// new->user: (kmem_cache#16-oX (struct cred))->user: &root_user,
+	// &new->user->processes: &(&root_user)->processes
 	atomic_inc(&new->user->processes);
+
+	// atomic_inc 에서 한일:
+	// (&(&root_user)->processes)->counter: 2
+
+	// p->cred: (kmem_cache#15-oX (struct task_struct))->cred,
+	// p->real_cred: (kmem_cache#15-oX (struct task_struct))->real_cred,
+	// new: kmem_cache#16-oX (struct cred), get_cred(kmem_cache#16-oX (struct cred)): kmem_cache#16-oX (struct cred)
 	p->cred = p->real_cred = get_cred(new);
-	alter_cred_subscribers(new, 2);
-	validate_creds(new);
+	// p->cred: (kmem_cache#15-oX (struct task_struct))->cred: kmem_cache#16-oX (struct cred)
+	// p->real_cred: (kmem_cache#15-oX (struct task_struct))->real_cred: kmem_cache#16-oX (struct cred)
+
+	// get_cred 에서 한일:
+	// (&(kmem_cache#16-oX (struct cred))->usage)->counter: 2
+
+	// new: kmem_cache#16-oX (struct cred)
+	alter_cred_subscribers(new, 2); // null function
+
+	// new: kmem_cache#16-oX (struct cred)
+	validate_creds(new); // null function
+
 	return 0;
+	// return 0
 
 error_put:
 	put_cred(new);

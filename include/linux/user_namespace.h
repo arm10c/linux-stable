@@ -68,6 +68,8 @@ extern ssize_t proc_projid_map_write(struct file *, const char __user *, size_t,
 
 // ARM10C 20160514
 // user_ns: &init_user_ns
+// ARM10C 20160910
+// new->user_ns: (kmem_cache#16-oX (struct cred))->user_ns: &init_user_ns
 static inline struct user_namespace *get_user_ns(struct user_namespace *ns)
 {
 	return &init_user_ns;

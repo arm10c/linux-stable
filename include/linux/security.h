@@ -1947,11 +1947,18 @@ static inline int security_capset(struct cred *new,
 
 // ARM10C 20160903
 // current_cred(): (&init_task)->cred: &init_cred, ns: &init_user_ns, cap: 24
+// ARM10C 20160910
+// current_cred(): (&init_task)->cred: &init_cred, ns: &init_user_ns, cap: 21
 static inline int security_capable(const struct cred *cred,
 				   struct user_namespace *ns, int cap)
 {
 	// cred: &init_cred, ns: &init_user_ns, cap: 24, SECURITY_CAP_AUDIT: 1
+	// cap_capable(&init_cred, &init_user_ns, 24, 1): 0
+	// cred: &init_cred, ns: &init_user_ns, cap: 21, SECURITY_CAP_AUDIT: 1
+	// cap_capable(&init_cred, &init_user_ns, 21, 1): 0
 	return cap_capable(cred, ns, cap, SECURITY_CAP_AUDIT);
+	// return 0
+	// return 0
 }
 
 static inline int security_capable_noaudit(const struct cred *cred,
@@ -2360,6 +2367,8 @@ static inline int security_cred_alloc_blank(struct cred *cred, gfp_t gfp)
 static inline void security_cred_free(struct cred *cred)
 { }
 
+// ARM10C 20160910
+// new: kmem_cache#16-oX (struct cred), old: &init_cred, GFP_KERNEL: 0xD0
 static inline int security_prepare_creds(struct cred *new,
 					 const struct cred *old,
 					 gfp_t gfp)
