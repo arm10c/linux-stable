@@ -72,6 +72,7 @@ struct arm_restart_block {
 // ARM10C 20160402
 // ARM10C 20160903
 // ARM10C 20160903
+// ARM10C 20160910
 struct thread_info {
 	unsigned long		flags;		/* low level flags */
 	int			preempt_count;	/* 0 => preemptable, <0 => bug */

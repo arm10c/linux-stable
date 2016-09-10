@@ -35,18 +35,21 @@
 // ARM10C 20150418
 // ARM10C 20151205
 // ARM10C 20160319
+// ARM10C 20160910
 static struct timekeeper timekeeper;
 // ARM10C 20150103
 static DEFINE_RAW_SPINLOCK(timekeeper_lock);
 // ARM10C 20150103
 // ARM10C 20150418
 // ARM10C 20151205
+// ARM10C 20160910
 static seqcount_t timekeeper_seq;
 // ARM10C 20150103
 static struct timekeeper shadow_timekeeper;
 
 /* flag for if timekeeping is suspended */
 // ARM10C 20150418
+// ARM10C 20160910
 int __read_mostly timekeeping_suspended;
 
 /* Flag for if there is a persistent clock on this platform */
@@ -283,6 +286,8 @@ static inline u32 get_arch_timeoffset(void) { return 0; }
 #endif
 
 // ARM10C 20150418
+// tk: &timekeeper
+// ARM10C 20160910
 // tk: &timekeeper
 static inline s64 timekeeping_get_ns(struct timekeeper *tk)
 {
@@ -522,26 +527,57 @@ EXPORT_SYMBOL_GPL(ktime_get);
  * clock and the wall_to_monotonic offset and stores the result
  * in normalized timespec format in the variable pointed to by @ts.
  */
+// ARM10C 20160910
+// &p->start_time: &(kmem_cache#15-oX (struct task_struct))->start_time
 void ktime_get_ts(struct timespec *ts)
 {
 	struct timekeeper *tk = &timekeeper;
+	// tk: &timekeeper
+
 	struct timespec tomono;
 	s64 nsec;
 	unsigned int seq;
 
+	// timekeeping_suspended: 0
 	WARN_ON(timekeeping_suspended);
 
 	do {
+		// read_seqcount_begin(&timekeeper_seq): 2
 		seq = read_seqcount_begin(&timekeeper_seq);
-		ts->tv_sec = tk->xtime_sec;
-		nsec = timekeeping_get_ns(tk);
-		tomono = tk->wall_to_monotonic;
+		// seq: 2
 
+		// ts->tv_sec: (&(kmem_cache#15-oX (struct task_struct))->start_time)->tv_sec,
+		// tk->xtime_sec: (&timekeeper)->xtime_sec: 현재시간 sec 값
+		ts->tv_sec = tk->xtime_sec;
+		// ts->tv_sec: (&(kmem_cache#15-oX (struct task_struct))->start_time)->tv_sec: 현재시간 sec 값
+
+		// tk: &timekeeper, timekeeping_get_ns(&timekeeper): 현재의 nsec 값
+		nsec = timekeeping_get_ns(tk);
+		// nsec: 현재의 nsec 값
+
+		// tk->wall_to_monotonic: (&timekeeper)->wall_to_monotonic
+		tomono = tk->wall_to_monotonic;
+		// tomono: (&timekeeper)->wall_to_monotonic
+
+		// seq: 2, read_seqcount_retry(&timekeeper_seq, 2): 
 	} while (read_seqcount_retry(&timekeeper_seq, seq));
 
+	// ts->tv_sec: (&(kmem_cache#15-oX (struct task_struct))->start_time)->tv_sec: 현재시간 sec 값,
+	// tomono.tv_sec: (&timekeeper)->wall_to_monotonic.tv_sec
 	ts->tv_sec += tomono.tv_sec;
+	// ts->tv_sec: (&(kmem_cache#15-oX (struct task_struct))->start_time)->tv_sec: 현재시간 sec 값
+
+	// ts->tv_nsec: (&(kmem_cache#15-oX (struct task_struct))->start_time)->tv_nsec
 	ts->tv_nsec = 0;
+	// ts->tv_nsec: (&(kmem_cache#15-oX (struct task_struct))->start_time)->tv_nsec: 0
+
+	// ts: &(kmem_cache#15-oX (struct task_struct))->start_time,
+	// nsec: 현재의 nsec 값, tomono.tv_nsec: (&timekeeper)->wall_to_monotonic.tv_nsec
 	timespec_add_ns(ts, nsec + tomono.tv_nsec);
+
+	// timespec_add_ns 에서 한일:
+	// (&(kmem_cache#15-oX (struct task_struct))->start_time)->tv_sec: 현재의 sec 값 + 현재의 nsec 값 / 1000000000L
+	// (&(kmem_cache#15-oX (struct task_struct))->start_time)->tv_nsec: 현재의 nsec 값 % 1000000000L
 }
 EXPORT_SYMBOL_GPL(ktime_get_ts);
 
@@ -1814,11 +1850,19 @@ EXPORT_SYMBOL_GPL(ktime_get_boottime);
  * monotonic_to_bootbased - Convert the monotonic time to boot based.
  * @ts:		pointer to the timespec to be converted
  */
+// ARM10C 20160910
+// &p->real_start_time: &(kmem_cache#15-oX (struct task_struct))->real_start_time
 void monotonic_to_bootbased(struct timespec *ts)
 {
 	struct timekeeper *tk = &timekeeper;
+	// tk: &timekeeper
 
+	// *ts: (kmem_cache#15-oX (struct task_struct))->real_start_time,
+	// tk->total_sleep_time: (&timekeeper)->total_sleep_time
+	// timespec_add((kmem_cache#15-oX (struct task_struct))->real_start_time, (&timekeeper)->total_sleep_time):
+	// { normalized 된 sec 값, normalized 된 nsec 값}
 	*ts = timespec_add(*ts, tk->total_sleep_time);
+	// *ts: (kmem_cache#15-oX (struct task_struct))->real_start_time: { normalized 된 sec 값, normalized 된 nsec 값}
 }
 EXPORT_SYMBOL_GPL(monotonic_to_bootbased);
 

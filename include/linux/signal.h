@@ -25,6 +25,7 @@ struct sigqueue {
 #define SIGQUEUE_PREALLOC	1
 
 // ARM10C 20150919
+// ARM10C 20160910
 // sizeof(struct sigpending): 8 bytes
 struct sigpending {
 	struct list_head list;
@@ -156,14 +157,23 @@ _SIG_SET_OP(signotset, _sig_not)
 #undef _SIG_SET_OP
 #undef _sig_not
 
+// ARM10C 20160910
+// &sig->signal: &(&(kmem_cache#15-oX (struct task_struct))->pending)->signal
 static inline void sigemptyset(sigset_t *set)
 {
+	// _NSIG_WORDS: 2
 	switch (_NSIG_WORDS) {
 	default:
 		memset(set, 0, sizeof(sigset_t));
 		break;
-	case 2: set->sig[1] = 0;
-	case 1:	set->sig[0] = 0;
+	case 2:
+		// set->sig[1]: (&(&(kmem_cache#15-oX (struct task_struct))->pending)->signal)->sig[1]
+		set->sig[1] = 0;
+		// set->sig[1]: (&(&(kmem_cache#15-oX (struct task_struct))->pending)->signal)->sig[1]: 0
+	case 1:
+		// set->sig[0]: (&(&(kmem_cache#15-oX (struct task_struct))->pending)->signal)->sig[0]
+		set->sig[0] = 0;
+		// set->sig[0]: (&(&(kmem_cache#15-oX (struct task_struct))->pending)->signal)->sig[0]: 0
 		break;
 	}
 }
@@ -223,10 +233,23 @@ static inline void siginitsetinv(sigset_t *set, unsigned long mask)
 
 #endif /* __HAVE_ARCH_SIG_SETOPS */
 
+// ARM10C 20160910
+// &p->pending: &(kmem_cache#15-oX (struct task_struct))->pending
 static inline void init_sigpending(struct sigpending *sig)
 {
+	// &sig->signal: &(&(kmem_cache#15-oX (struct task_struct))->pending)->signal
 	sigemptyset(&sig->signal);
+
+	// sigemptyset 에서 한일:
+	// (&(&(kmem_cache#15-oX (struct task_struct))->pending)->signal)->sig[1]: 0
+	// (&(&(kmem_cache#15-oX (struct task_struct))->pending)->signal)->sig[0]: 0
+
+	// &sig->list: &(&(kmem_cache#15-oX (struct task_struct))->pending)->list
 	INIT_LIST_HEAD(&sig->list);
+
+	// INIT_LIST_HEAD 에서 한일:
+	// (&(&(kmem_cache#15-oX (struct task_struct))->pending)->list)->next: &(&(kmem_cache#15-oX (struct task_struct))->pending)->list
+	// (&(&(kmem_cache#15-oX (struct task_struct))->pending)->list)->prev: &(&(kmem_cache#15-oX (struct task_struct))->pending)->list
 }
 
 extern void flush_sigqueue(struct sigpending *queue);

@@ -11,6 +11,7 @@
  */
 
 #ifndef __kernel_long_t
+// ARM10C 20160910
 typedef long		__kernel_long_t;
 // ARM10C 20140607
 typedef unsigned long	__kernel_ulong_t;
@@ -99,6 +100,7 @@ typedef __kernel_long_t	__kernel_off_t;
 // ARM10C 20160604
 typedef long long	__kernel_loff_t;
 // ARM10C 20150103
+// ARM10C 20160910
 typedef __kernel_long_t	__kernel_time_t;
 typedef __kernel_long_t	__kernel_clock_t;
 typedef int		__kernel_timer_t;

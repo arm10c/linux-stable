@@ -108,6 +108,7 @@ struct audit_names {
 
 /* The per-task audit context. */
 // ARM10C 20150919
+// ARM10C 20160910
 struct audit_context {
 	int		    dummy;	/* must be the first element */
 	int		    in_syscall;	/* 1 if task is in a syscall */

@@ -363,6 +363,9 @@ EXPORT_SYMBOL(mktime);
 // -tk->wall_to_monotonic.tv_nsec: -(&timekeeper)->wall_to_monotonic.tv_nsec: 0
 // ARM10C 20150103
 // &tmp, -wtm.tv_sec: tmp.tv_sec: 0, -wtm.tv_nsec: tmp.tv_nsec: 0
+// ARM10C 20160910
+// &ts_delta, (kmem_cache#15-oX (struct task_struct))->real_start_time.tv_sec + (&timekeeper)->total_sleep_time.tv_sec,
+// (kmem_cache#15-oX (struct task_struct))->real_start_time.tv_nsec + (&timekeeper)->total_sleep_time.tv_nsec
 void set_normalized_timespec(struct timespec *ts, time_t sec, s64 nsec)
 {
 	// nsec: 0, NSEC_PER_SEC: 1000000000L

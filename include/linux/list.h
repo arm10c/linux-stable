@@ -187,6 +187,8 @@
 // &new_ns->list: (kmem_cache#30-oX (struct mnt_namespace))->list
 // ARM10C 20160611
 // &ent->pde_openers: &(kmem_cache#29-oX (struct proc_dir_entry))->pde_openers
+// ARM10C 20160910
+// &p->children: &(kmem_cache#15-oX (struct task_struct))->children
 static inline void INIT_LIST_HEAD(struct list_head *list)
 {
 	list->next = list;

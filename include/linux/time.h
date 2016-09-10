@@ -25,6 +25,7 @@ extern struct timezone sys_tz;
 // ARM10C 20150523
 // ARM10C 20150530
 // ARM10C 20150620
+// ARM10C 20160910
 // NSEC_PER_SEC: 1000000000L
 #define NSEC_PER_SEC	1000000000L
 #define FSEC_PER_SEC	1000000000000000LL
@@ -75,13 +76,27 @@ extern struct timespec timespec_add_safe(const struct timespec lhs,
 					 const struct timespec rhs);
 
 
+// ARM10C 20160910
+// *ts: (kmem_cache#15-oX (struct task_struct))->real_start_time,
+// tk->total_sleep_time: (&timekeeper)->total_sleep_time
 static inline struct timespec timespec_add(struct timespec lhs,
 						struct timespec rhs)
 {
 	struct timespec ts_delta;
+
+	// lhs.tv_sec: (kmem_cache#15-oX (struct task_struct))->real_start_time.tv_sec,
+	// rhs.tv_sec: (&timekeeper)->total_sleep_time.tv_sec,
+	// lhs.tv_nsec: (kmem_cache#15-oX (struct task_struct))->real_start_time.tv_nsec,
+	// rhs.tv_nsec: (&timekeeper)->total_sleep_time.tv_nsec
 	set_normalized_timespec(&ts_delta, lhs.tv_sec + rhs.tv_sec,
 				lhs.tv_nsec + rhs.tv_nsec);
+
+	// set_normalized_timespec 에서 한일:
+	// (&ts_delta)->tv_sec: normalized 된 sec 값
+	// (&ts_delta)->tv_nsec: normalized 된 nsec 값
+
 	return ts_delta;
+	// return ts_delta
 }
 
 /*
@@ -194,6 +209,8 @@ extern void do_gettimeofday(struct timeval *tv);
 extern int do_settimeofday(const struct timespec *tv);
 extern int do_sys_settimeofday(const struct timespec *tv,
 			       const struct timezone *tz);
+// ARM10C 20160910
+// &p->start_time: &(kmem_cache#15-oX (struct task_struct))->start_time
 #define do_posix_clock_monotonic_gettime(ts) ktime_get_ts(ts)
 extern long do_utimes(int dfd, const char __user *filename, struct timespec *times, int flags);
 struct itimerval;
@@ -298,10 +315,24 @@ extern struct timeval ns_to_timeval(const s64 nsec);
  * This must always be inlined because its used from the x86-64 vdso,
  * which cannot call other kernel functions.
  */
+// ARM10C 20160910
+// ts: &(kmem_cache#15-oX (struct task_struct))->start_time,
+// nsec: 현재의 nsec 값 + (&timekeeper)->wall_to_monotonic.tv_nsec
 static __always_inline void timespec_add_ns(struct timespec *a, u64 ns)
 {
+	// a->tv_sec: (&(kmem_cache#15-oX (struct task_struct))->start_time)->tv_sec,
+	// a->tv_nsec: (&(kmem_cache#15-oX (struct task_struct))->start_time)->tv_nsec, ns: 현재의 nsec 값, NSEC_PER_SEC: 1000000000L,
+	// __iter_div_u64_rem((&(kmem_cache#15-oX (struct task_struct))->start_time)->tv_nsec + 현재의 nsec 값, 1000000000L, &ns): 현재의 nsec 값 / 1000000000L
 	a->tv_sec += __iter_div_u64_rem(a->tv_nsec + ns, NSEC_PER_SEC, &ns);
+	// a->tv_sec: (&(kmem_cache#15-oX (struct task_struct))->start_time)->tv_sec: 현재의 sec 값 + 현재의 nsec 값 / 1000000000L
+
+	// __iter_div_u64_rem 에서 한일:
+	// 현재의 nsec 값을 1000000000L 나눈 목과 나머지를 구함
+	// ns: 현재의 nsec 값 % 1000000000L
+
+	// a->tv_nsec: (&(kmem_cache#15-oX (struct task_struct))->start_time)->tv_nsec, ns: 현재의 nsec 값 % 1000000000L
 	a->tv_nsec = ns;
+	// a->tv_nsec: (&(kmem_cache#15-oX (struct task_struct))->start_time)->tv_nsec: 현재의 nsec 값 % 1000000000L
 }
 
 #endif

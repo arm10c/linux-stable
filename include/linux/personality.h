@@ -24,6 +24,7 @@ extern int		__set_personality(unsigned int);
  */
 typedef void (*handler_t)(int, struct pt_regs *);
 
+// ARM10C 20160910
 struct exec_domain {
 	const char		*name;		/* name of the execdomain */
 	handler_t		handler;	/* handler for syscalls */

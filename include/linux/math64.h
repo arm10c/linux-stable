@@ -127,11 +127,15 @@ static inline s64 div_s64(s64 dividend, s32 divisor)
 
 u32 iter_div_u64_rem(u64 dividend, u32 divisor, u64 *remainder);
 
+// ARM10C 20160910
+// (&(kmem_cache#15-oX (struct task_struct))->start_time)->tv_nsec + ns: 현재의 nsec 값, NSEC_PER_SEC: 1000000000L, &ns
 static __always_inline u32
 __iter_div_u64_rem(u64 dividend, u32 divisor, u64 *remainder)
 {
 	u32 ret = 0;
+	// ret: 0
 
+	// dividend: (&(kmem_cache#15-oX (struct task_struct))->start_time)->tv_nsec + ns: 현재의 nsec 값, divisor: 1000000000L
 	while (dividend >= divisor) {
 		/* The following asm() prevents the compiler from
 		   optimising this loop into a modulo operation.  */
@@ -141,9 +145,17 @@ __iter_div_u64_rem(u64 dividend, u32 divisor, u64 *remainder)
 		ret++;
 	}
 
-	*remainder = dividend;
+	// 위 loop  수행 결과
+	// 현재의 nsec 값을 1000000000L 나눈 목과 나머지를 구함
+	// ret: 현재의 nsec 값 / 1000000000L
 
+	// *remainder: *(&ns), dividend: 현재의 nsec 값 % 1000000000L
+	*remainder = dividend;
+	// *remainder: *(&ns): 현재의 nsec 값 % 1000000000L
+
+	// ret: 현재의 nsec 값 / 1000000000L
 	return ret;
+	// return 현재의 nsec 값 / 1000000000L
 }
 
 #if defined(CONFIG_ARCH_SUPPORTS_INT128) && defined(__SIZEOF_INT128__)

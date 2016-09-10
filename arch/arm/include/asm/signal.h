@@ -13,6 +13,7 @@
 // _NSIG_BPW: 32
 #define _NSIG_BPW	32
 // ARM10C 20150919
+// ARM10C 20160910
 // _NSIG: 64
 // _NSIG_BPW: 32
 // _NSIG_WORDS: 2
@@ -21,6 +22,7 @@
 typedef unsigned long old_sigset_t;		/* at least 32 bits */
 
 // ARM10C 20150919
+// ARM10C 20160910
 // _NSIG_WORDS: 2
 // sizeof(struct sigset_t): 8 bytes
 typedef struct {

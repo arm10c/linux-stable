@@ -377,6 +377,7 @@ enum {
 
 #if USE_SPLIT_PTE_PTLOCKS && defined(CONFIG_MMU) // USE_SPLIT_PTE_PTLOCKS: 1, CONFIG_MMU=y
 // ARM10C 20140920
+// ARM10C 20160910
 #define SPLIT_RSS_COUNTING
 /* per-thread cached information, */
 // ARM10C 20150919
@@ -389,6 +390,7 @@ struct task_rss_stat {
 #endif /* USE_SPLIT_PTE_PTLOCKS */
 
 // ARM10C 20150919
+// ARM10C 20160910
 // sizeof(struct mm_rss_stat): 12 bytes
 struct mm_rss_stat {
 	// NR_MM_COUNTERS: 3

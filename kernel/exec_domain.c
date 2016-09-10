@@ -34,6 +34,7 @@ static unsigned long ident_map[32] = {
 	24,	25,	26,	27,	28,	29,	30,	31
 };
 
+// ARM10C 20160910
 struct exec_domain default_exec_domain = {
 	.name		= "Linux",		/* name */
 	.handler	= default_handler,	/* lcall7 causes a seg fault. */

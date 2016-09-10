@@ -447,6 +447,7 @@ struct cputime {
  * of them in parallel.
  */
 // ARM10C 20150919
+// ARM10C 20160910
 // sizeof(struct task_cputime): 16 bytes
 struct task_cputime {
 	cputime_t utime;
@@ -1112,6 +1113,7 @@ enum perf_event_task_context {
 // ARM10C 20160528
 // ARM10C 20160827
 // ARM10C 20160903
+// ARM10C 20160910
 // sizeof(struct task_struct): 815 bytes
 struct task_struct {
 	volatile long state;	/* -1 unrunnable, 0 runnable, >0 stopped */
@@ -1755,8 +1757,11 @@ extern void thread_group_cputime_adjusted(struct task_struct *p, cputime_t *ut, 
 #define PF_EXITPIDONE	0x00000008	/* pi exit done on shut down */
 #define PF_VCPU		0x00000010	/* I'm a virtual CPU */
 // ARM10C 20160402
+// ARM10C 20160910
 // PF_WQ_WORKER: 0x00000020
 #define PF_WQ_WORKER	0x00000020	/* I'm a workqueue worker */
+// ARM10C 20160910
+// PF_FORKNOEXEC: 0x00000040
 #define PF_FORKNOEXEC	0x00000040	/* forked but didn't exec */
 #define PF_MCE_PROCESS  0x00000080      /* process policy on mce errors */
 // ARM10C 20160910
@@ -1869,22 +1874,39 @@ extern void task_clear_jobctl_trapping(struct task_struct *task);
 extern void task_clear_jobctl_pending(struct task_struct *task,
 				      unsigned int mask);
 
-#ifdef CONFIG_PREEMPT_RCU
+#ifdef CONFIG_PREEMPT_RCU // CONFIG_PREEMPT_RCU=y
 
 #define RCU_READ_UNLOCK_BLOCKED (1 << 0) /* blocked while in RCU read-side. */
 #define RCU_READ_UNLOCK_NEED_QS (1 << 1) /* RCU core needs CPU response. */
 
+// ARM10C 20160910
+// p: kmem_cache#15-oX (struct task_struct)
 static inline void rcu_copy_process(struct task_struct *p)
 {
+	// p->rcu_read_lock_nesting: (kmem_cache#15-oX (struct task_struct))->rcu_read_lock_nesting
 	p->rcu_read_lock_nesting = 0;
+	// p->rcu_read_lock_nesting: (kmem_cache#15-oX (struct task_struct))->rcu_read_lock_nesting: 0
+
+	// p->rcu_read_unlock_special: (kmem_cache#15-oX (struct task_struct))->rcu_read_unlock_special
 	p->rcu_read_unlock_special = 0;
-#ifdef CONFIG_TREE_PREEMPT_RCU
+	// p->rcu_read_unlock_special: (kmem_cache#15-oX (struct task_struct))->rcu_read_unlock_special: 0
+
+#ifdef CONFIG_TREE_PREEMPT_RCU // CONFIG_TREE_PREEMPT_RCU=y
+	// p->rcu_blocked_node: (kmem_cache#15-oX (struct task_struct))->rcu_blocked_node
 	p->rcu_blocked_node = NULL;
+	// p->rcu_blocked_node: (kmem_cache#15-oX (struct task_struct))->rcu_blocked_node: NULL
 #endif /* #ifdef CONFIG_TREE_PREEMPT_RCU */
-#ifdef CONFIG_RCU_BOOST
+
+#ifdef CONFIG_RCU_BOOST // CONFIG_RCU_BOOST=n
 	p->rcu_boost_mutex = NULL;
 #endif /* #ifdef CONFIG_RCU_BOOST */
+
+	// &p->rcu_node_entry: &(kmem_cache#15-oX (struct task_struct))->rcu_node_entry
 	INIT_LIST_HEAD(&p->rcu_node_entry);
+
+	// INIT_LIST_HEAD 에서 한일:
+	// (&(kmem_cache#15-oX (struct task_struct))->rcu_node_entry)->next: &(kmem_cache#15-oX (struct task_struct))->rcu_node_entry
+	// (&(kmem_cache#15-oX (struct task_struct))->rcu_node_entry)->prev: &(kmem_cache#15-oX (struct task_struct))->rcu_node_entry
 }
 
 #else
@@ -2478,6 +2500,8 @@ static inline void threadgroup_unlock(struct task_struct *tsk) {}
 // ARM10C 20160903
 // tsk: kmem_cache#15-oX (struct task_struct)
 // ARM10C 20160903
+// p: kmem_cache#15-oX (struct task_struct)
+// ARM10C 20160910
 // p: kmem_cache#15-oX (struct task_struct)
 #define task_thread_info(task)	((struct thread_info *)(task)->stack)
 #define task_stack_page(task)	((task)->stack)

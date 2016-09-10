@@ -6,7 +6,7 @@
 
 #include <linux/sched.h>
 
-#ifdef CONFIG_TASK_IO_ACCOUNTING
+#ifdef CONFIG_TASK_IO_ACCOUNTING // CONFIG_TASK_IO_ACCOUNTING=n
 static inline void task_io_account_read(size_t bytes)
 {
 	current->ioac.read_bytes += bytes;
@@ -77,6 +77,8 @@ static inline void task_io_account_cancelled_write(size_t bytes)
 {
 }
 
+// ARM10C 20160910
+// p->ioac: (kmem_cache#15-oX (struct task_struct))->ioac
 static inline void task_io_accounting_init(struct task_io_accounting *ioac)
 {
 }
