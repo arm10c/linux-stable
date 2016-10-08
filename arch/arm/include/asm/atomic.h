@@ -101,6 +101,8 @@
 // ARM10C 20160521
 // 1,, &ns->count: &(kmem_cache#30-oX (struct mnt_namespace))->count
 // ARM10C 20160827
+// ARM10C 20161008
+// &cset->refcount: &((&init_task)->cgroups)->refcount
 static inline void atomic_add(int i, atomic_t *v)
 {
 	unsigned long tmp;
@@ -308,6 +310,8 @@ static inline int __atomic_add_unless(atomic_t *v, int a, int u)
 // new->user->processes: (&root_user)->processes
 // ARM10C 20160910
 // &cred->usage: &(kmem_cache#16-oX (struct cred))->usage
+// ARM10C 20161008
+// &cset->refcount: &((&init_task)->cgroups)->refcount
 #define atomic_inc(v)		atomic_add(1, v)
 // ARM10C 20150912
 // ARM10C 20160319

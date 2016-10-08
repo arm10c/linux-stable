@@ -80,6 +80,7 @@ unsigned long long __attribute__((weak)) sched_clock(void)
 EXPORT_SYMBOL_GPL(sched_clock);
 
 // ARM10C 20150912
+// ARM10C 20161008
 __read_mostly int sched_clock_running;
 
 #ifdef CONFIG_HAVE_UNSTABLE_SCHED_CLOCK // CONFIG_HAVE_UNSTABLE_SCHED_CLOCK=n
@@ -356,12 +357,17 @@ void sched_clock_init(void)
 	// sched_clock_running: 1
 }
 
+// ARM10C 20161008
+// 0
 u64 sched_clock_cpu(int cpu)
 {
+	// sched_clock_running: 1
 	if (unlikely(!sched_clock_running))
 		return 0;
 
+	// sched_clock(): 현재의 schedule 시간값
 	return sched_clock();
+	// return 현재의 schedule 시간값
 }
 
 u64 cpu_clock(int cpu)

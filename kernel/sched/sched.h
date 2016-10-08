@@ -61,6 +61,8 @@ extern void update_cpu_load_active(struct rq *this_rq);
 # define scale_load(w)		((w) << SCHED_LOAD_RESOLUTION)
 # define scale_load_down(w)	((w) >> SCHED_LOAD_RESOLUTION)
 #else
+// ARM10C 20140830
+// SCHED_LOAD_RESOLUTION: 0
 # define SCHED_LOAD_RESOLUTION	0
 // ARM10C 20140913
 // 1024
@@ -68,9 +70,18 @@ extern void update_cpu_load_active(struct rq *this_rq);
 # define scale_load_down(w)	(w)
 #endif
 
+// ARM10C 20140830
+// SCHED_LOAD_RESOLUTION: 0
+// SCHED_LOAD_SHIFT: 10
 #define SCHED_LOAD_SHIFT	(10 + SCHED_LOAD_RESOLUTION)
+// ARM10C 20140830
+// SCHED_LOAD_SHIFT: 10
+// SCHED_LOAD_SCALE: 0x400
 #define SCHED_LOAD_SCALE	(1L << SCHED_LOAD_SHIFT)
 
+// ARM10C 20140830
+// SCHED_LOAD_SCALE: 0x400
+// NICE_0_LOAD: 0x400
 #define NICE_0_LOAD		SCHED_LOAD_SCALE
 #define NICE_0_SHIFT		SCHED_LOAD_SHIFT
 
@@ -144,6 +155,7 @@ struct cfs_bandwidth {
 };
 
 /* task group related information */
+// ARM10C 20140830
 // ARM10C 20150822
 // ARM10C 20150919
 struct task_group {
@@ -183,7 +195,10 @@ struct task_group {
 	struct cfs_bandwidth cfs_bandwidth;
 };
 
-#ifdef CONFIG_FAIR_GROUP_SCHED
+#ifdef CONFIG_FAIR_GROUP_SCHED // CONFIG_FAIR_GROUP_SCHED=y
+// ARM10C 20140830
+// NICE_0_LOAD: 0x400
+// ROOT_TASK_GROUP_LOAD: 0x400
 #define ROOT_TASK_GROUP_LOAD	NICE_0_LOAD
 
 /*
@@ -255,6 +270,7 @@ struct cfs_bandwidth { };
 
 /* CFS-related fields in a runqueue */
 // ARM10C 20140830
+// ARM10C 20161008
 struct cfs_rq {
 	struct load_weight load;
 	unsigned int nr_running, h_nr_running;
@@ -290,7 +306,7 @@ struct cfs_rq {
 	u64 last_decay;
 	atomic_long_t removed_load;
 
-#ifdef CONFIG_FAIR_GROUP_SCHED // CONFIG_FAIR_GROUP_SCHED=n
+#ifdef CONFIG_FAIR_GROUP_SCHED // CONFIG_FAIR_GROUP_SCHED=y
 	/* Required to track per-cpu representation of a task_group */
 	u32 tg_runnable_contrib;
 	unsigned long tg_load_contrib;
@@ -307,7 +323,7 @@ struct cfs_rq {
 #endif /* CONFIG_FAIR_GROUP_SCHED */
 #endif /* CONFIG_SMP */
 
-#ifdef CONFIG_FAIR_GROUP_SCHED // CONFIG_FAIR_GROUP_SCHED=n
+#ifdef CONFIG_FAIR_GROUP_SCHED // CONFIG_FAIR_GROUP_SCHED=y
 	struct rq *rq;	/* cpu runqueue to which this cfs_rq is attached */
 
 	/*
@@ -347,7 +363,7 @@ static inline int rt_bandwidth_enabled(void)
 struct rt_rq {
 	struct rt_prio_array active;
 	unsigned int rt_nr_running;
-#if defined CONFIG_SMP || defined CONFIG_RT_GROUP_SCHED // CONFIG_SMP=y, CONFIG_RT_GROUP_SCHED=n
+#if defined CONFIG_SMP || defined CONFIG_RT_GROUP_SCHED // CONFIG_SMP=y, CONFIG_RT_GROUP_SCHED=y
 	struct {
 		int curr; /* highest queued rt task prio */
 #ifdef CONFIG_SMP // CONFIG_SMP=y
@@ -367,7 +383,7 @@ struct rt_rq {
 	/* Nests inside the rq lock: */
 	raw_spinlock_t rt_runtime_lock;
 
-#ifdef CONFIG_RT_GROUP_SCHED // CONFIG_RT_GROUP_SCHED=n
+#ifdef CONFIG_RT_GROUP_SCHED // CONFIG_RT_GROUP_SCHED=y
 	unsigned long rt_nr_boosted;
 
 	struct rq *rq;
@@ -417,6 +433,7 @@ extern struct root_domain def_root_domain;
 // ARM10C 20140830
 // ARM10C 20140913
 // ARM10C 20150606
+// ARM10C 20161008
 struct rq {
 	/* runqueue lock: */
 	raw_spinlock_t lock;
@@ -430,7 +447,6 @@ struct rq {
 	unsigned int nr_numa_running;
 	unsigned int nr_preferred_running;
 #endif
-	// ARM10C 20140913
 	#define CPU_LOAD_IDX_MAX 5
 	unsigned long cpu_load[CPU_LOAD_IDX_MAX];
 	unsigned long last_load_update_tick;
@@ -551,16 +567,21 @@ struct rq {
 	struct sched_avg avg;
 };
 
+// ARM10C 20161008
+// rq: [pcp0] &runqueues
 static inline int cpu_of(struct rq *rq)
 {
-#ifdef CONFIG_SMP
+#ifdef CONFIG_SMP // CONFIG_SMP=y
+	// rq->cpu: [pcp0] (&runqueues)->cpu: 0
 	return rq->cpu;
+	// return 0
 #else
 	return 0;
 #endif
 }
 
 // ARM10C 20140830
+// ARM10C 20161008
 // DECLARE_PER_CPU(struct rq, runqueues):
 // extern __attribute__((section(".data..percpu" ""))) __typeof__(struct rq) runqueues
 DECLARE_PER_CPU(struct rq, runqueues);
@@ -584,8 +605,12 @@ DECLARE_PER_CPU(struct rq, runqueues);
 //  	} while (0)
 //  	(&(runqueues) + (pcpu_unit_offsets[0] + __per_cpu_start에서의pcpu_base_addr의 옵셋);
 // })
+// ARM10C 20140830
 // ARM10C 20150606
+// cpu_rq(0): [pcp0] &runqueues
 #define cpu_rq(cpu)		(&per_cpu(runqueues, (cpu)))
+// ARM10C 20161008
+// __get_cpu_var(runqueues): [pcp0] runqueues
 #define this_rq()		(&__get_cpu_var(runqueues))
 #define task_rq(p)		cpu_rq(task_cpu(p))
 #define cpu_curr(cpu)		(cpu_rq(cpu)->curr)
@@ -1068,6 +1093,7 @@ static const u32 prio_to_wmult[40] = {
 
 // ARM10C 20140913
 // ARM10C 20150919
+// ARM10C 20161008
 struct sched_class {
 	const struct sched_class *next;
 

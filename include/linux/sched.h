@@ -136,6 +136,7 @@ print_cfs_rq(struct seq_file *m, int cpu, struct cfs_rq *cfs_rq);
  * mistake.
  */
 // ARM10C 20140913
+// ARM10C 20161008
 // TASK_RUNNING: 0
 #define TASK_RUNNING		0
 // ARM10C 20160409
@@ -1044,6 +1045,7 @@ struct sched_statistics {
 
 // ARM10C 20140913
 // ARM10C 20150919
+// ARM10C 20161008
 // sizeof(struct sched_entity): 100 bytes
 struct sched_entity {
 	struct load_weight	load;		/* for load-balancing */
@@ -1076,6 +1078,7 @@ struct sched_entity {
 #endif
 };
 
+// ARM10C 20140830
 // ARM10C 20151003
 // sizeof(struct sched_rt_entity): 36 bytes
 struct sched_rt_entity {
@@ -1114,6 +1117,7 @@ enum perf_event_task_context {
 // ARM10C 20160827
 // ARM10C 20160903
 // ARM10C 20160910
+// ARM10C 20161008
 // sizeof(struct task_struct): 815 bytes
 struct task_struct {
 	volatile long state;	/* -1 unrunnable, 0 runnable, >0 stopped */
@@ -2409,14 +2413,26 @@ static inline int thread_group_empty(struct task_struct *p)
  * It must not be nested with write_lock_irq(&tasklist_lock),
  * neither inside nor outside.
  */
+// ARM10C 20161008
+// current: &init_task
 static inline void task_lock(struct task_struct *p)
 {
+	// &p->alloc_lock: &(&init_task)->alloc_lock
 	spin_lock(&p->alloc_lock);
+
+	// spin_lock 에서 한일:
+	// &(&init_task)->alloc_lock 을 사용하여 spin lock 수행
 }
 
+// ARM10C 20161008
+// current: &init_task
 static inline void task_unlock(struct task_struct *p)
 {
+	// &p->alloc_lock: &(&init_task)->alloc_lock
 	spin_unlock(&p->alloc_lock);
+
+	// spin_unlock 에서 한일:
+	// &(&init_task)->alloc_lock 을 사용하여 spin unlock 수행
 }
 
 extern struct sighand_struct *__lock_task_sighand(struct task_struct *tsk,

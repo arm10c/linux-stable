@@ -34,6 +34,8 @@
 // p->prio: init_task->prio: 120
 // ARM10C 20160604
 // p->prio: (&init_task)->prio: 120
+// ARM10C 20161008
+// p->prio: (kmem_cache#15-oX (struct task_struct))->prio: 120
 static inline int rt_prio(int prio)
 {
 	// prio: 120, MAX_RT_PRIO: 100

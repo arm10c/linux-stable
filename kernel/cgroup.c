@@ -586,9 +586,15 @@ static void __put_css_set(struct css_set *cset, int taskexit)
 /*
  * refcounted get/put for css_set objects
  */
+// ARM10C 20161008
+// (&init_task)->cgroups
 static inline void get_css_set(struct css_set *cset)
 {
+	// &cset->refcount: &((&init_task)->cgroups)->refcount
 	atomic_inc(&cset->refcount);
+
+	// atomic_inc 에서 한일:
+	// ((&init_task)->cgroups)->refcount: 1
 }
 
 static inline void put_css_set(struct css_set *cset)
@@ -6486,13 +6492,40 @@ static const struct file_operations proc_cgroupstats_operations = {
  * At the point that cgroup_fork() is called, 'current' is the parent
  * task, and the passed argument 'child' points to the child task.
  */
+// ARM10C 20161008
+// p: kmem_cache#15-oX (struct task_struct)
 void cgroup_fork(struct task_struct *child)
 {
+	// current: &init_task
 	task_lock(current);
+
+	// task_lock 에서 한일:
+	// &(&init_task)->alloc_lock 을 사용하여 spin lock 수행
+
+	// current: &init_task, task_css_set(&init_task): (&init_task)->cgroups
 	get_css_set(task_css_set(current));
+
+	// get_css_set 에서 한일:
+	// rcu reference의 값 (&init_task)->cgroups 이 유요한지 체크하고 그 값을 리턴함
+	// ((&init_task)->cgroups)->refcount: 1
+
+	// child->cgroups: (kmem_cache#15-oX (struct task_struct))->cgroups,
+	// current->cgroups: (&init_task)->cgroups
 	child->cgroups = current->cgroups;
+	// child->cgroups: (kmem_cache#15-oX (struct task_struct))->cgroups: (&init_task)->cgroups
+
+	// current: &init_task
 	task_unlock(current);
+
+	// task_unlock 에서 한일:
+	// &(&init_task)->alloc_lock 을 사용하여 spin unlock 수행
+
+	// &child->cg_list: &(kmem_cache#15-oX (struct task_struct))->cg_list
 	INIT_LIST_HEAD(&child->cg_list);
+
+	// INIT_LIST_HEAD 에서 한일:
+	// (&(kmem_cache#15-oX (struct task_struct))->cg_list)->next: &(kmem_cache#15-oX (struct task_struct))->cg_list
+	// (&(kmem_cache#15-oX (struct task_struct))->cg_list)->prev: &(kmem_cache#15-oX (struct task_struct))->cg_list
 }
 
 /**

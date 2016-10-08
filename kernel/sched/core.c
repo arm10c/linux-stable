@@ -120,16 +120,30 @@ DEFINE_PER_CPU_SHARED_ALIGNED(struct rq, runqueues);
 
 static void update_rq_clock_task(struct rq *rq, s64 delta);
 
+// ARM10C 20161008
+// rq: [pcp0] &runqueues
 void update_rq_clock(struct rq *rq)
 {
 	s64 delta;
 
+	// rq->skip_clock_update: [pcp0] (&runqueues)->skip_clock_update: 0
 	if (rq->skip_clock_update > 0)
 		return;
 
+	// rq: [pcp0] &runqueues, cpu_of([pcp0] &runqueues): 0
+	// sched_clock_cpu(0): 현재의 schedule 시간값, rq->clock: [pcp0] (&runqueues)->clock: 0
 	delta = sched_clock_cpu(cpu_of(rq)) - rq->clock;
+	// delta: 현재의 schedule 시간값
+
+	// rq->clock: [pcp0] (&runqueues)->clock: 0, delta: 현재의 schedule 시간값
 	rq->clock += delta;
+	// rq->clock: [pcp0] (&runqueues)->clock: 현재의 schedule 시간값
+
+	// rq: [pcp0] &runqueues, delta: 현재의 schedule 시간값
 	update_rq_clock_task(rq, delta);
+
+	// update_rq_clock_task 에서 한일:
+	// [pcp0] (&runqueues)->clock_task: 현재의 schedule 시간값
 }
 
 /*
@@ -860,16 +874,18 @@ void deactivate_task(struct rq *rq, struct task_struct *p, int flags)
 	dequeue_task(rq, p, flags);
 }
 
+// ARM10C 20161008
+// rq: [pcp0] &runqueues, delta: 현재의 schedule 시간값
 static void update_rq_clock_task(struct rq *rq, s64 delta)
 {
 /*
  * In theory, the compile should just see 0 here, and optimize out the call
  * to sched_rt_avg_update. But I don't trust it...
  */
-#if defined(CONFIG_IRQ_TIME_ACCOUNTING) || defined(CONFIG_PARAVIRT_TIME_ACCOUNTING)
+#if defined(CONFIG_IRQ_TIME_ACCOUNTING) || defined(CONFIG_PARAVIRT_TIME_ACCOUNTING) // CONFIG_IRQ_TIME_ACCOUNTING=n, CONFIG_PARAVIRT_TIME_ACCOUNTING=n
 	s64 steal = 0, irq_delta = 0;
 #endif
-#ifdef CONFIG_IRQ_TIME_ACCOUNTING
+#ifdef CONFIG_IRQ_TIME_ACCOUNTING // CONFIG_IRQ_TIME_ACCOUNTING=n
 	irq_delta = irq_time_read(cpu_of(rq)) - rq->prev_irq_time;
 
 	/*
@@ -893,7 +909,7 @@ static void update_rq_clock_task(struct rq *rq, s64 delta)
 	rq->prev_irq_time += irq_delta;
 	delta -= irq_delta;
 #endif
-#ifdef CONFIG_PARAVIRT_TIME_ACCOUNTING
+#ifdef CONFIG_PARAVIRT_TIME_ACCOUNTING // CONFIG_PARAVIRT_TIME_ACCOUNTING=n
 	if (static_key_false((&paravirt_steal_rq_enabled))) {
 		u64 st;
 
@@ -912,9 +928,11 @@ static void update_rq_clock_task(struct rq *rq, s64 delta)
 	}
 #endif
 
+	// rq->clock_task: [pcp0] (&runqueues)->clock_task: 0, delta: 현재의 schedule 시간값
 	rq->clock_task += delta;
+	// rq->clock_task: [pcp0] (&runqueues)->clock_task: 현재의 schedule 시간값
 
-#if defined(CONFIG_IRQ_TIME_ACCOUNTING) || defined(CONFIG_PARAVIRT_TIME_ACCOUNTING)
+#if defined(CONFIG_IRQ_TIME_ACCOUNTING) || defined(CONFIG_PARAVIRT_TIME_ACCOUNTING) // CONFIG_IRQ_TIME_ACCOUNTING=n, CONFIG_PARAVIRT_TIME_ACCOUNTING=n
 	if ((irq_delta + steal) && sched_feat(NONTASK_POWER))
 		sched_rt_avg_update(rq, irq_delta + steal);
 #endif
@@ -1773,6 +1791,8 @@ int wake_up_state(struct task_struct *p, unsigned int state)
  */
 // ARM10C 20140913
 // 0, idle: &init_task
+// ARM10C 20161008
+// clone_flags: 0x00800B00, p: kmem_cache#15-oX (struct task_struct)
 static void __sched_fork(unsigned long clone_flags, struct task_struct *p)
 {
 	// p->on_rq: (&init_task)->on_rq
@@ -1886,27 +1906,52 @@ int sysctl_numa_balancing(struct ctl_table *table, int write,
 /*
  * fork()/clone()-time setup:
  */
+// ARM10C 20161008
+// clone_flags: 0x00800B00, p: kmem_cache#15-oX (struct task_struct)
 void sched_fork(unsigned long clone_flags, struct task_struct *p)
 {
 	unsigned long flags;
-	int cpu = get_cpu();
 
+	// get_cpu(): 0
+	int cpu = get_cpu();
+	// cpu: 0
+
+	// clone_flags: 0x00800B00, p: kmem_cache#15-oX (struct task_struct)
 	__sched_fork(clone_flags, p);
+
+	// __sched_fork에서 한일:
+	// (&kmem_cache#15-oX (struct task_struct))->on_rq: 0
+	// (&kmem_cache#15-oX (struct task_struct))->se.on_rq: 0
+	// (&kmem_cache#15-oX (struct task_struct))->se.exec_start: 0
+	// (&kmem_cache#15-oX (struct task_struct))->se.sum_exec_runtime: 0
+	// (&kmem_cache#15-oX (struct task_struct))->se.prev_sum_exec_runtime: 0
+	// (&kmem_cache#15-oX (struct task_struct))->se.nr_migrations: 0
+	// (&kmem_cache#15-oX (struct task_struct))->se.vruntime: 0
+	// &(&kmem_cache#15-oX (struct task_struct))->se.group_node의 리스트 초기화
+	// &(&kmem_cache#15-oX (struct task_struct))->rt.run_list의 리스트 초기화
+
 	/*
 	 * We mark the process as running here. This guarantees that
 	 * nobody will actually run it, and a signal or other external
 	 * event cannot wake it up and insert it on the runqueue either.
 	 */
+
+	// p->state: (kmem_cache#15-oX (struct task_struct))->state, TASK_RUNNING: 0
 	p->state = TASK_RUNNING;
+	// p->state: (kmem_cache#15-oX (struct task_struct))->state: 0
 
 	/*
 	 * Make sure we do not leak PI boosting priority to the child.
 	 */
+	// p->prio: (kmem_cache#15-oX (struct task_struct))->prio,
+	// current: &init_task, current->normal_prio: (&init_task)->normal_prio: 120
 	p->prio = current->normal_prio;
+	// p->prio: (kmem_cache#15-oX (struct task_struct))->prio: 120
 
 	/*
 	 * Revert to default priority/policy on fork if requested.
 	 */
+	// p->>sched_reset_on_fork: (kmem_cache#15-oX (struct task_struct))->sched_reset_on_fork: 0
 	if (unlikely(p->sched_reset_on_fork)) {
 		if (task_has_rt_policy(p)) {
 			p->policy = SCHED_NORMAL;
@@ -1925,10 +1970,18 @@ void sched_fork(unsigned long clone_flags, struct task_struct *p)
 		p->sched_reset_on_fork = 0;
 	}
 
+	// p->prio: (kmem_cache#15-oX (struct task_struct))->prio: 120, rt_prio(120): 0
 	if (!rt_prio(p->prio))
+		// p->sched_class: (kmem_cache#15-oX (struct task_struct))->sched_class
 		p->sched_class = &fair_sched_class;
+		// p->sched_class: (kmem_cache#15-oX (struct task_struct))->sched_class: &fair_sched_class
 
+	// p->sched_class: (kmem_cache#15-oX (struct task_struct))->sched_class: &fair_sched_class,
+	// p->sched_class->task_fork: (&fair_sched_class)->task_fork: task_fork_fair
 	if (p->sched_class->task_fork)
+		// p->sched_class->task_fork: (&fair_sched_class)->task_fork: task_fork_fair,
+		// p: kmem_cache#15-oX (struct task_struct),
+		// task_fork_fair(kmem_cache#15-oX (struct task_struct))
 		p->sched_class->task_fork(p);
 
 	/*
@@ -6451,8 +6504,12 @@ int in_sched_functions(unsigned long addr)
  * Default task group.
  * Every task in system belongs to this group at bootup.
  */
+// ARM10C 20140830
 // ARM10C 20150822
 struct task_group root_task_group;
+// ARM10C 20140830
+// #define LIST_HEAD(task_groups):
+// struct list_head task_groups = { &(task_groups), &(task_groups) }
 LIST_HEAD(task_groups);
 #endif
 
@@ -6465,33 +6522,59 @@ void __init sched_init(void)
 	unsigned long alloc_size = 0, ptr;
 	// alloc_size: 0
 
-#ifdef CONFIG_FAIR_GROUP_SCHED // CONFIG_FAIR_GROUP_SCHED=n
+#ifdef CONFIG_FAIR_GROUP_SCHED // CONFIG_FAIR_GROUP_SCHED=y
+	// alloc_size: 0, nr_cpu_ids: 4, sizeof(void **): 4
 	alloc_size += 2 * nr_cpu_ids * sizeof(void **);
+	// alloc_size: 32
 #endif
-#ifdef CONFIG_RT_GROUP_SCHED // CONFIG_RT_GROUP_SCHED=n
+#ifdef CONFIG_RT_GROUP_SCHED // CONFIG_RT_GROUP_SCHED=y
+	// alloc_size: 32, nr_cpu_ids: 4, sizeof(void **): 4
 	alloc_size += 2 * nr_cpu_ids * sizeof(void **);
+	// alloc_size: 64
 #endif
 #ifdef CONFIG_CPUMASK_OFFSTACK // CONFIG_CPUMASK_OFFSTACK=n
 	alloc_size += num_possible_cpus() * cpumask_size();
 #endif
-	// alloc_size: 0
+	// alloc_size: 64
 	if (alloc_size) {
+		// alloc_size: 64, GFP_NOWAIT: 0, kzalloc(64, 0): kmem_cache#30-oX
 		ptr = (unsigned long)kzalloc(alloc_size, GFP_NOWAIT);
+		// ptr: kmem_cache#30-oX
 
-#ifdef CONFIG_FAIR_GROUP_SCHED // CONFIG_FAIR_GROUP_SCHED=n
+#ifdef CONFIG_FAIR_GROUP_SCHED // CONFIG_FAIR_GROUP_SCHED=y
+		// ptr: kmem_cache#30-oX
 		root_task_group.se = (struct sched_entity **)ptr;
-		ptr += nr_cpu_ids * sizeof(void **);
+		// root_task_group.se: (struct sched_entity **) kmem_cache#30-oX
 
-		root_task_group.cfs_rq = (struct cfs_rq **)ptr;
+		// ptr: kmem_cache#30-oX, nr_cpu_ids: 4, sizeof(void **): 4
 		ptr += nr_cpu_ids * sizeof(void **);
+		// ptr: kmem_cache#30-oX + 16
+
+		// ptr: kmem_cache#30-oX + 16
+		root_task_group.cfs_rq = (struct cfs_rq **)ptr;
+		// root_task_group.cfs_rq: (struct cfs_rq **) (kmem_cache#30-oX + 16)
+
+		// ptr: kmem_cache#30-oX + 16, nr_cpu_ids: 4, sizeof(void **): 4
+		ptr += nr_cpu_ids * sizeof(void **);
+		// ptr: kmem_cache#30-oX + 32
 
 #endif /* CONFIG_FAIR_GROUP_SCHED */
-#ifdef CONFIG_RT_GROUP_SCHED // CONFIG_RT_GROUP_SCHED=n
+#ifdef CONFIG_RT_GROUP_SCHED // CONFIG_RT_GROUP_SCHED=y
+		// ptr: kmem_cache#30-oX + 32
 		root_task_group.rt_se = (struct sched_rt_entity **)ptr;
-		ptr += nr_cpu_ids * sizeof(void **);
+		// root_task_group.rt_se: (struct sched_rt_entity **) (kmem_cache#30-oX + 32)
 
-		root_task_group.rt_rq = (struct rt_rq **)ptr;
+		// ptr: kmem_cache#30-oX + 32, nr_cpu_ids: 4, sizeof(void **): 4
 		ptr += nr_cpu_ids * sizeof(void **);
+		// ptr: kmem_cache#30-oX + 48
+
+		// ptr: kmem_cache#30-oX + 48
+		root_task_group.rt_rq = (struct rt_rq **)ptr;
+		// root_task_group.rt_rq: (struct rt_rq **) (kmem_cache#30-oX + 48)
+
+		// ptr: kmem_cache#30-oX + 48, nr_cpu_ids: 4, sizeof(void **): 4
+		ptr += nr_cpu_ids * sizeof(void **);
+		// ptr: kmem_cache#30-oX + 64
 
 #endif /* CONFIG_RT_GROUP_SCHED */
 #ifdef CONFIG_CPUMASK_OFFSTACK // CONFIG_CPUMASK_OFFSTACK=n
@@ -6525,16 +6608,40 @@ void __init sched_init(void)
 	// (&(&(&def_rt_bandwidth)->rt_period_timer)->node)->node의 RB Tree의 초기화
 	// &(&def_rt_bandwidth)->rt_period_timer.function: sched_rt_period_timer
 
-#ifdef CONFIG_RT_GROUP_SCHED // CONFIG_RT_GROUP_SCHED=n
+#ifdef CONFIG_RT_GROUP_SCHED // CONFIG_RT_GROUP_SCHED=y
+	// global_rt_period(): 1000000000, global_rt_runtime() 950000000
 	init_rt_bandwidth(&root_task_group.rt_bandwidth,
 			global_rt_period(), global_rt_runtime());
+
+	// init_rt_bandwidth에서 한일:
+	// (&root_task_group.rt_bandwidth)->rt_period: 1000000000
+	// (&root_task_group.rt_bandwidth)->rt_runtime: 950000000
+	// &(&root_task_group.rt_bandwidth)->rt_runtime_lock을 사용한 spinlock 초기화
+	// (&root_task_group.rt_bandwidth)->rt_period_timer의 값을 0으로 초기화
+	// &(&root_task_group.rt_bandwidth)->rt_period_timer)->base: [pcp0] &(&hrtimer_bases)->clock_base[0]
+	// (&(&(&root_task_group.rt_bandwidth)->rt_period_timer)->node)->node의 RB Tree의 초기화
+	// &(&root_task_group.rt_bandwidth)->rt_period_timer.function: sched_rt_period_timer
 #endif /* CONFIG_RT_GROUP_SCHED */
 
-#ifdef CONFIG_CGROUP_SCHED // CONFIG_CGROUP_SCHED=n
+#ifdef CONFIG_CGROUP_SCHED // CONFIG_CGROUP_SCHED=y
 	list_add(&root_task_group.list, &task_groups);
+
+	// list_add 에서 한일:
+	// list head인 task_groups 에 root_task_group.list 를 추가함
+
 	INIT_LIST_HEAD(&root_task_group.children);
+
+	// INIT_LIST_HEAD 에서 한일:
+	// (&root_task_group.children)->next: &root_task_group.children
+	// (&root_task_group.children)->prev: &root_task_group.children
+
 	INIT_LIST_HEAD(&root_task_group.siblings);
-	autogroup_init(&init_task);
+
+	// INIT_LIST_HEAD 에서 한일:
+	// (&root_task_group.siblings)->next: &root_task_group.siblings
+	// (&root_task_group.siblings)->prev: &root_task_group.siblings
+
+	autogroup_init(&init_task); // null function
 
 #endif /* CONFIG_CGROUP_SCHED */
 
@@ -6605,9 +6712,18 @@ void __init sched_init(void)
 // 2014/08/30 종료
 // 2014/09/13 시작
 
-#ifdef CONFIG_FAIR_GROUP_SCHED // CONFIG_FAIR_GROUP_SCHED=n
+#ifdef CONFIG_FAIR_GROUP_SCHED // CONFIG_FAIR_GROUP_SCHED=y
+		// ROOT_TASK_GROUP_LOAD: 0x400
 		root_task_group.shares = ROOT_TASK_GROUP_LOAD;
+		// root_task_group.shares: 0x400
+
+		// [pcp0] &rq->leaf_cfs_rq_list: &(&runqueues)->leaf_cfs_rq_list
 		INIT_LIST_HEAD(&rq->leaf_cfs_rq_list);
+
+		// INIT_LIST_HEAD 에서 한일:
+		// (&(&runqueues)->leaf_cfs_rq_list)->next: &(&runqueues)->leaf_cfs_rq_list
+		// (&(&runqueues)->leaf_cfs_rq_list)->prev: &(&runqueues)->leaf_cfs_rq_list
+
 		/*
 		 * How much cpu bandwidth does root_task_group get?
 		 *
@@ -6627,8 +6743,16 @@ void __init sched_init(void)
 		 * We achieve this by letting root_task_group's tasks sit
 		 * directly in rq->cfs (i.e root_task_group->se[] = NULL).
 		 */
-		init_cfs_bandwidth(&root_task_group.cfs_bandwidth);
+		init_cfs_bandwidth(&root_task_group.cfs_bandwidth); // null function
+
+		// [pcp0] &rq->cfs: &(&runqueues)->cfs, i: 0
 		init_tg_cfs_entry(&root_task_group, &rq->cfs, NULL, i, NULL);
+
+		// init_tg_cfs_entry 에서 한일:
+		// (&(&runqueues)->cfs)->tg: &root_task_group
+		// (&(&runqueues)->cfs)->rq: [pcp0] &runqueues
+		// (&root_task_group)->cfs_rq[0]: [pcp0] &(&runqueues)->cfs
+		// (&root_task_group)->se[0]: NULL
 #endif /* CONFIG_FAIR_GROUP_SCHED */
 
 		// [pcp0] rq->rt.rt_runtime: (&runqueues)->rt.rt_runtime,
@@ -6636,8 +6760,16 @@ void __init sched_init(void)
 		rq->rt.rt_runtime = def_rt_bandwidth.rt_runtime;
 		// [pcp0] rq->rt.rt_runtime: (&runqueues)->rt.rt_runtime: 950000000
 
-#ifdef CONFIG_RT_GROUP_SCHED // CONFIG_RT_GROUP_SCHED=n
+#ifdef CONFIG_RT_GROUP_SCHED // CONFIG_RT_GROUP_SCHED=y
+		// [pcp0] &rq->leaf_rt_rq_list: &(&runqueues)->leaf_rt_rq_list
 		INIT_LIST_HEAD(&rq->leaf_rt_rq_list);
+
+		// INIT_LIST_HEAD 에서 한일:
+		// (&(&runqueues)->leaf_rt_rq_list)->next: &(&runqueues)->leaf_rt_rq_list
+		// (&(&runqueues)->leaf_rt_rq_list)->prev: &(&runqueues)->leaf_rt_rq_list
+
+// 2016/10/08 종료
+
 		init_tg_rt_entry(&root_task_group, &rq->rt, NULL, i, NULL);
 #endif
 

@@ -243,7 +243,7 @@ const struct sched_class fair_sched_class;
  * CFS operations on generic schedulable entities:
  */
 
-#ifdef CONFIG_FAIR_GROUP_SCHED
+#ifdef CONFIG_FAIR_GROUP_SCHED // CONFIG_FAIR_GROUP_SCHED=y
 
 /* cpu runqueue to which this cfs_rq is attached */
 static inline struct rq *rq_of(struct cfs_rq *cfs_rq)
@@ -266,9 +266,13 @@ static inline struct task_struct *task_of(struct sched_entity *se)
 #define for_each_sched_entity(se) \
 		for (; se; se = se->parent)
 
+// ARM10C 20161008
+// current: &init_task
 static inline struct cfs_rq *task_cfs_rq(struct task_struct *p)
 {
+	// p->se.cfs_rq: (&init_task)->se.cfs_rq: NULL
 	return p->se.cfs_rq;
+	// return NULL
 }
 
 /* runqueue on which this entity is (to be) queued */
@@ -2854,7 +2858,7 @@ entity_tick(struct cfs_rq *cfs_rq, struct sched_entity *curr, int queued)
  * CFS bandwidth control machinery
  */
 
-#ifdef CONFIG_CFS_BANDWIDTH
+#ifdef CONFIG_CFS_BANDWIDTH // CONFIG_CFS_BANDWIDTH=n
 
 #ifdef HAVE_JUMP_LABEL
 static struct static_key __cfs_bandwidth_used;
@@ -3588,9 +3592,11 @@ static inline int throttled_lb_pair(struct task_group *tg,
 	return 0;
 }
 
+// ARM10C 20140830
 void init_cfs_bandwidth(struct cfs_bandwidth *cfs_b) {}
 
-#ifdef CONFIG_FAIR_GROUP_SCHED
+#ifdef CONFIG_FAIR_GROUP_SCHED // CONFIG_FAIR_GROUP_SCHED=y
+// ARM10C 20161008
 static void init_cfs_rq_runtime(struct cfs_rq *cfs_rq) {}
 #endif
 
@@ -6943,18 +6949,44 @@ static void task_tick_fair(struct rq *rq, struct task_struct *curr, int queued)
  *  - child not yet on the tasklist
  *  - preemption disabled
  */
+// ARM10C 20161008
+// kmem_cache#15-oX (struct task_struct)
 static void task_fork_fair(struct task_struct *p)
 {
 	struct cfs_rq *cfs_rq;
+
+	// &p->se: &(kmem_cache#15-oX (struct task_struct))->se
 	struct sched_entity *se = &p->se, *curr;
+	// se: &(kmem_cache#15-oX (struct task_struct))->se
+
+	// smp_processor_id(): 0
 	int this_cpu = smp_processor_id();
+	// this_cpu: 0
+
+	// this_rq(): [pcp0] &runqueues
 	struct rq *rq = this_rq();
+	// rq: [pcp0] &runqueues
+
 	unsigned long flags;
 
+	// &rq->lock: [pcp0] &(&runqueues)->lock
 	raw_spin_lock_irqsave(&rq->lock, flags);
 
+	// raw_spin_lock_irqsave 에서 한일:
+	// [pcp0] &(&runqueues)->lock 을 사용하여 spin lock 을 수행하고 cpsr 값을 flags 저장함
+
+	// rq: [pcp0] &runqueues
 	update_rq_clock(rq);
 
+	// update_rq_clock 에서 한일:
+	// 현재의 schedule 시간값과 기존의 (&runqueues)->clock 의 값의 차이값을
+	// [pcp0] (&runqueues)->clock, [pcp0] (&runqueues)->clock_task 의 값에 더해 갱신함
+	//
+	// [pcp0] (&runqueues)->clock: schedule 시간 차이값
+	// [pcp0] (&runqueues)->clock_task: schedule 시간 차이값
+
+	// current: &init_task
+	// task_cfs_rq(&init_task): NULL
 	cfs_rq = task_cfs_rq(current);
 	curr = cfs_rq->curr;
 
@@ -7237,22 +7269,40 @@ void unregister_fair_sched_group(struct task_group *tg, int cpu)
 	raw_spin_unlock_irqrestore(&rq->lock, flags);
 }
 
+// ARM10C 20140830
+// &root_task_group, [pcp0] &rq->cfs: &(&runqueues)->cfs, NULL, i: 0, NULL
 void init_tg_cfs_entry(struct task_group *tg, struct cfs_rq *cfs_rq,
 			struct sched_entity *se, int cpu,
 			struct sched_entity *parent)
 {
+	// cpu: 0, cpu_rq(0): [pcp0] &runqueues
 	struct rq *rq = cpu_rq(cpu);
+	// rq: [pcp0] &runqueues
 
+	// cfs_rq->tg: (&(&runqueues)->cfs)->tg, &root_task_group
 	cfs_rq->tg = tg;
-	cfs_rq->rq = rq;
-	init_cfs_rq_runtime(cfs_rq);
+	// cfs_rq->tg: (&(&runqueues)->cfs)->tg: &root_task_group
 
+	// cfs_rq->rq: (&(&runqueues)->cfs)->rq, rq: [pcp0] &runqueues
+	cfs_rq->rq = rq;
+	// cfs_rq->rq: (&(&runqueues)->cfs)->rq: [pcp0] &runqueues
+
+	// cfs_rq: [pcp0] &(&runqueues)->cfs
+	init_cfs_rq_runtime(cfs_rq); // null function
+
+	// cpu: 0, tg->cfs_rq[0]: (&root_task_group)->cfs_rq[0], cfs_rq: [pcp0] &(&runqueues)->cfs
 	tg->cfs_rq[cpu] = cfs_rq;
+	// tg->cfs_rq[0]: (&root_task_group)->cfs_rq[0]: [pcp0] &(&runqueues)->cfs
+
+	// cpu: 0, tg->se[0]: (&root_task_group)->se[0], se: NULL
 	tg->se[cpu] = se;
+	// tg->se[0]: (&root_task_group)->se[0]: NULL
 
 	/* se could be NULL for root_task_group */
+	// se: NULL
 	if (!se)
 		return;
+		// return 수행
 
 	if (!parent)
 		se->cfs_rq = &rq->cfs;
@@ -7337,6 +7387,7 @@ static unsigned int get_rr_interval_fair(struct rq *rq, struct task_struct *task
  * All the scheduling class methods:
  */
 // ARM10C 20140913
+// ARM10C 20161008
 const struct sched_class fair_sched_class = {
 	.next			= &idle_sched_class,
 	.enqueue_task		= enqueue_task_fair,

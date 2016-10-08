@@ -34,6 +34,7 @@ struct eventfd_ctx;
 extern int cgroup_init_early(void);
 // ARM10C 20160716
 extern int cgroup_init(void);
+// ARM10C 20161008
 extern void cgroup_fork(struct task_struct *p);
 extern void cgroup_post_fork(struct task_struct *p);
 extern void cgroup_exit(struct task_struct *p, int run_callbacks);
@@ -390,6 +391,7 @@ struct cgroupfs_root {
 // ARM10C 20150919
 // ARM10C 20160723
 // ARM10C 20160730
+// ARM10C 20161008
 struct css_set {
 
 	/* Reference count */
@@ -734,13 +736,15 @@ struct cgroup_subsys_state *css_parent(struct cgroup_subsys_state *css)
  * The caller can also specify additional allowed conditions via @__c, such
  * as locks used during the cgroup_subsys::attach() methods.
  */
-#ifdef CONFIG_PROVE_RCU
+#ifdef CONFIG_PROVE_RCU // CONFIG_PROVE_RCU=n
 extern struct mutex cgroup_mutex;
 #define task_css_set_check(task, __c)					\
 	rcu_dereference_check((task)->cgroups,				\
 		lockdep_is_held(&(task)->alloc_lock) ||			\
 		lockdep_is_held(&cgroup_mutex) || (__c))
 #else
+// ARM10C 20161008
+// task: &init_task, false
 #define task_css_set_check(task, __c)					\
 	rcu_dereference((task)->cgroups)
 #endif
@@ -763,9 +767,17 @@ extern struct mutex cgroup_mutex;
  *
  * See task_css_set_check().
  */
+// ARM10C 20161008
+// current: &init_task
 static inline struct css_set *task_css_set(struct task_struct *task)
 {
+	// task: &init_task
+	// task_css_set_check(&init_task, false): (&init_task)->cgroups
 	return task_css_set_check(task, false);
+	// return (&init_task)->cgroups
+
+	// task_css_set_check 에서 한일:
+	// rcu reference의 값이 유요한지 체크하고 그 값을 리턴함
 }
 
 /**

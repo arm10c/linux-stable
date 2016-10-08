@@ -520,6 +520,7 @@ static inline void rcu_preempt_sleep_check(void)
 // ARM10C 20141122
 // ARM10C 20150606
 // ARM10C 20160319
+// ARM10C 20161008
 #define rcu_dereference_sparse(p, space)
 #endif /* #else #ifdef __CHECKER__ */
 
@@ -564,6 +565,18 @@ static inline void rcu_preempt_sleep_check(void)
 // 	smp_read_barrier_depends();
 // 	((typeof(*([pcp0] &prunqueues)->sd) __force __kernel *)(_________p1));
 // })
+//
+// ARM10C 20161008
+// (&init_task)->cgroups, 1, __rcu
+// #define __rcu_dereference_check((&init_task)->cgroups, 1, __rcu):
+// ({
+// 	typeof(*(&init_task)->cgroups) *_________p1 = (typeof(*(&init_task)->cgroups)*__force )ACCESS_ONCE((&init_task)->cgroups);
+// 	rcu_lockdep_assert(1, "suspicious rcu_dereference_check()" " usage");
+// 	rcu_dereference_sparse((&init_task)->cgroups, __rcu);
+// 	smp_read_barrier_depends();
+// 	((typeof(*(&init_task)->cgroups) __force __kernel *)(_________p1));
+// })
+//
 #define __rcu_dereference_check(p, c, space) \
 	({ \
 		typeof(*p) *_________p1 = (typeof(*p)*__force )ACCESS_ONCE(p); \
@@ -726,6 +739,10 @@ static inline void rcu_preempt_sleep_check(void)
 //
 // cgrp->subsys[2]: (&cgroup_dummy_root.top_cgroup)->subsys[2], 0
 // #define rcu_dereference_check((&cgroup_dummy_root.top_cgroup)->subsys[2], 0): (&cgroup_dummy_root.top_cgroup)->subsys[2]
+// ARM10C 20161008
+// (&init_task)->cgroups, 0
+// rcu_read_lock_held(): 1
+//
 #define rcu_dereference_check(p, c) \
 	__rcu_dereference_check((p), rcu_read_lock_held() || (c), __rcu)
 
@@ -831,6 +848,8 @@ static inline void rcu_preempt_sleep_check(void)
  *
  * This is a simple wrapper around rcu_dereference_check().
  */
+// ARM10C 20161008
+// (&init_task)->cgroups
 #define rcu_dereference(p) rcu_dereference_check(p, 0)
 
 /**

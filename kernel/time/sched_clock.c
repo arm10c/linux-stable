@@ -20,6 +20,7 @@
 
 // ARM10C 20140913
 // ARM10C 20150530
+// ARM10C 20161008
 struct clock_data {
 	ktime_t wrap_kt;
 	u64 epoch_ns;
@@ -40,6 +41,7 @@ core_param(irqtime, irqtime, int, 0400);
 
 // ARM10C 20140913
 // ARM10C 20150530
+// ARM10C 20161008
 // NSEC_PER_SEC: 1000000000L, HZ: 100
 static struct clock_data cd = {
 	.mult	= NSEC_PER_SEC / HZ,
@@ -51,6 +53,7 @@ static u64 __read_mostly sched_clock_mask;
 
 // ARM10C 20140913
 // ARM10C 20150530
+// ARM10C 20161008
 static u64 notrace jiffy_sched_clock_read(void)
 {
 	/*
@@ -71,6 +74,7 @@ static u64 notrace read_sched_clock_32_wrapper(void)
 
 // ARM10C 20140913
 // ARM10C 20150530
+// ARM10C 20161008
 static u64 __read_mostly (*read_sched_clock)(void) = jiffy_sched_clock_read;
 
 // ARM10C 20140913
@@ -91,6 +95,7 @@ static inline u64 notrace cyc_to_ns(u64 cyc, u32 mult, u32 shift)
 }
 
 // ARM10C 20140913
+// ARM10C 20161008
 unsigned long long notrace sched_clock(void)
 {
 	u64 epoch_ns;

@@ -251,6 +251,8 @@ static inline void do_raw_spin_unlock(raw_spinlock_t *lock) __releases(lock)
 // &q->lock: &(&running_helpers_waitq)->lock, flags
 // ARM10C 20160611
 // &devtree_lock, flags
+// ARM10C 20161008
+// &rq->lock: [pcp0] &(&runqueues)->lock, flags
 #define raw_spin_lock_irqsave(lock, flags)			\
 	do {						\
 		typecheck(unsigned long, flags);	\
@@ -444,6 +446,8 @@ do {							\
 // &proc_subdir_lock
 // ARM10C 20160702
 // &sysctl_lock
+// ARM10C 20161008
+// &p->alloc_lock: &(&init_task)->alloc_lock
 static inline void spin_lock(spinlock_t *lock)
 {
 	// lock->rlock: (&contig_page_data->node_zones[0].lock)->rlock
@@ -545,6 +549,8 @@ do {									\
 // &sysctl_lock
 // ARM10C 20160723
 // &freezer->lock: &(kmem_cache#29-oX (struct freezer))->lock
+// ARM10C 20161008
+// &p->alloc_lock: &(&init_task)->alloc_lock
 static inline void spin_unlock(spinlock_t *lock)
 {
 	raw_spin_unlock(&lock->rlock);

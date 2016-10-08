@@ -1,4 +1,4 @@
-#ifdef CONFIG_SCHED_AUTOGROUP
+#ifdef CONFIG_SCHED_AUTOGROUP // CONFIG_SCHED_AUTOGROUP=n
 
 #include <linux/kref.h>
 #include <linux/rwsem.h>
@@ -41,6 +41,7 @@ extern int autogroup_path(struct task_group *tg, char *buf, int buflen);
 
 #else /* !CONFIG_SCHED_AUTOGROUP */
 
+// ARM10C 20140830
 static inline void autogroup_init(struct task_struct *init_task) {  }
 static inline void autogroup_free(struct task_group *tg) { }
 static inline bool task_group_is_autogroup(struct task_group *tg)

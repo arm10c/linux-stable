@@ -85,6 +85,7 @@
 // ARM10C 20131116
 // ARM10C 20131130
 // ARM10C 20141108
+// ARM10C 20140830
 // ARM10C 20150919
 // ARM10C 20151114
 // ARM10C 20151121
@@ -97,6 +98,13 @@
 // ARM10C 20140315
 // &waiter->list->next: list, &waiter->list->prev: list
 // ARM10C 20140809
+// ARM10C 20140830
+// &root_task_group.children
+// ARM10C 20140830
+// &root_task_group.siblings
+// ARM10C 20140830
+// [pcp0] &rq->leaf_cfs_rq_list: &(&runqueues)->leaf_cfs_rq_list
+// ARM10C 20140830
 // ARM10C 20141004
 // ARM10C 20150103
 // ARM10C 20150620
@@ -189,6 +197,8 @@
 // &ent->pde_openers: &(kmem_cache#29-oX (struct proc_dir_entry))->pde_openers
 // ARM10C 20160910
 // &p->children: &(kmem_cache#15-oX (struct task_struct))->children
+// ARM10C 20161008
+// &child->cg_list: &(kmem_cache#15-oX (struct task_struct))->cg_list
 static inline void INIT_LIST_HEAD(struct list_head *list)
 {
 	list->next = list;
@@ -241,6 +251,8 @@ extern void __list_add(struct list_head *new,
  */
 // ARM10C 20140301
 // new: &dchunk->list, head: &pcpu_slot[11]
+// ARM10C 20140830
+// &root_task_group.list, &task_groups
 // ARM10C 20150411
 // &dev->list: [pcp0] (&(&percpu_mct_tick)->evt)->list, &clockevent_devices
 // ARM10C 20150523

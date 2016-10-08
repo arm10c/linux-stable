@@ -39,6 +39,8 @@ static enum hrtimer_restart sched_rt_period_timer(struct hrtimer *timer)
 
 // ARM10C 20140830
 // &def_rt_bandwidth, global_rt_period(): 1000000000, global_rt_runtime(): 950000000
+// ARM10C 20140830
+// &root_task_group.rt_bandwidth, global_rt_period(): 1000000000, global_rt_runtime() 950000000
 void init_rt_bandwidth(struct rt_bandwidth *rt_b, u64 period, u64 runtime)
 {
 	// rt_b->rt_period: (&def_rt_bandwidth)->rt_period, period: 1000000000,

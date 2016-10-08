@@ -95,6 +95,7 @@
 #define read_barrier_depends()		do { } while(0)
 // ARM10C 20141122
 // ARM10C 20150606
+// ARM10C 20161008
 #define smp_read_barrier_depends()	do { } while(0)
 
 #define set_mb(var, value)	do { var = value; smp_mb(); } while (0)

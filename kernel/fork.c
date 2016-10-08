@@ -1663,11 +1663,24 @@ static struct task_struct *copy_process(unsigned long clone_flags,
 	// p->audit_context: (kmem_cache#15-oX (struct task_struct))->audit_context: NULL
 
 // 2016/09/10 종료
+// 2016/10/08 시작
 
+	// clone_flags: 0x00800B00, CLONE_THREAD: 0x00010000
 	if (clone_flags & CLONE_THREAD)
 		threadgroup_change_begin(current);
+
+	// p: kmem_cache#15-oX (struct task_struct)
 	cgroup_fork(p);
-#ifdef CONFIG_NUMA
+
+	// cgroup_fork 에서 한일:
+	// rcu reference의 값 (&init_task)->cgroups 이 유요한지 체크하고 그 값을 리턴함
+	// ((&init_task)->cgroups)->refcount: 1
+	// (kmem_cache#15-oX (struct task_struct))->cgroups: (&init_task)->cgroups
+	//
+	// (&(kmem_cache#15-oX (struct task_struct))->cg_list)->next: &(kmem_cache#15-oX (struct task_struct))->cg_list
+	// (&(kmem_cache#15-oX (struct task_struct))->cg_list)->prev: &(kmem_cache#15-oX (struct task_struct))->cg_list
+
+#ifdef CONFIG_NUMA // CONFIG_NUMA=n
 	p->mempolicy = mpol_dup(p->mempolicy);
 	if (IS_ERR(p->mempolicy)) {
 		retval = PTR_ERR(p->mempolicy);
@@ -1676,12 +1689,12 @@ static struct task_struct *copy_process(unsigned long clone_flags,
 	}
 	mpol_fix_fork_child_flag(p);
 #endif
-#ifdef CONFIG_CPUSETS
+#ifdef CONFIG_CPUSETS // CONFIG_CPUSETS=n
 	p->cpuset_mem_spread_rotor = NUMA_NO_NODE;
 	p->cpuset_slab_spread_rotor = NUMA_NO_NODE;
 	seqcount_init(&p->mems_allowed_seq);
 #endif
-#ifdef CONFIG_TRACE_IRQFLAGS
+#ifdef CONFIG_TRACE_IRQFLAGS // CONFIG_TRACE_IRQFLAGS=n
 	p->irq_events = 0;
 	p->hardirqs_enabled = 0;
 	p->hardirq_enable_ip = 0;
@@ -1696,25 +1709,28 @@ static struct task_struct *copy_process(unsigned long clone_flags,
 	p->hardirq_context = 0;
 	p->softirq_context = 0;
 #endif
-#ifdef CONFIG_LOCKDEP
+#ifdef CONFIG_LOCKDEP // CONFIG_LOCKDEP=n
 	p->lockdep_depth = 0; /* no locks held yet */
 	p->curr_chain_key = 0;
 	p->lockdep_recursion = 0;
 #endif
 
-#ifdef CONFIG_DEBUG_MUTEXES
+#ifdef CONFIG_DEBUG_MUTEXES // CONFIG_DEBUG_MUTEXES=y
+	// p->blocked_on: (kmem_cache#15-oX (struct task_struct))->blocked_on
 	p->blocked_on = NULL; /* not blocked yet */
+	// p->blocked_on: (kmem_cache#15-oX (struct task_struct))->blocked_on: NULL
 #endif
-#ifdef CONFIG_MEMCG
+#ifdef CONFIG_MEMCG // CONFIG_MEMCG=n
 	p->memcg_batch.do_batch = 0;
 	p->memcg_batch.memcg = NULL;
 #endif
-#ifdef CONFIG_BCACHE
+#ifdef CONFIG_BCACHE // CONFIG_BCACHE=n
 	p->sequential_io	= 0;
 	p->sequential_io_avg	= 0;
 #endif
 
 	/* Perform scheduler related setup. Assign this task to a CPU. */
+	// clone_flags: 0x00800B00, p: kmem_cache#15-oX (struct task_struct)
 	sched_fork(clone_flags, p);
 
 	retval = perf_event_init_task(p);

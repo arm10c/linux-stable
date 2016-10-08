@@ -23,6 +23,7 @@
 #define CLONE_PARENT	0x00008000	/* set if we want to have the same parent as the cloner */
 // ARM10C 20160827
 // ARM10C 20160910
+// ARM10C 20161008
 // CLONE_THREAD: 0x00010000
 #define CLONE_THREAD	0x00010000	/* Same thread group? */
 // ARM10C 20160827
