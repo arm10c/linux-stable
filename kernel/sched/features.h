@@ -9,6 +9,7 @@ SCHED_FEAT(GENTLE_FAIR_SLEEPERS, true)
  * Place new tasks ahead so that they do not starve already running
  * tasks
  */
+// ARM10C 20161015
 SCHED_FEAT(START_DEBIT, true)
 
 /*
@@ -65,7 +66,7 @@ SCHED_FEAT(LB_MIN, false)
  * at runtime if running on a NUMA machine. Can be controlled via
  * numa_balancing=
  */
-#ifdef CONFIG_NUMA_BALANCING
+#ifdef CONFIG_NUMA_BALANCING // CONFIG_NUMA_BALANCING=n
 SCHED_FEAT(NUMA,	false)
 
 /*

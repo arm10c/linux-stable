@@ -170,19 +170,32 @@ static inline u64 mul_u64_u32_shr(u64 a, u32 mul, unsigned int shift)
 #else
 
 #ifndef mul_u64_u32_shr
+// ARM10C 20161015
+// delta_exec: 6000000, fact: 0xFFFFFC00, shift: 32
 static inline u64 mul_u64_u32_shr(u64 a, u32 mul, unsigned int shift)
 {
 	u32 ah, al;
 	u64 ret;
 
+	// a: 6000000
 	al = a;
-	ah = a >> 32;
+	// al: 6000000
 
+	// a: 6000000
+	ah = a >> 32;
+	// ah: 0
+
+	// al: 6000000, mul: 0xFFFFFC00, shift: 32
 	ret = ((u64)al * mul) >> shift;
+	// ret: 0x5B8D7E
+
+	// ah: 0
 	if (ah)
 		ret += ((u64)ah * mul) << (32 - shift);
 
+	// ret: 0x5B8D7E
 	return ret;
+	// return 0x5B8D7E
 }
 #endif /* mul_u64_u32_shr */
 

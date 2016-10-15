@@ -987,6 +987,7 @@ struct pipe_inode_info;
 struct uts_namespace;
 
 // ARM10C 20140913
+// ARM10C 20161015
 // sizeof(struct load_weight): 8 bytes
 struct load_weight {
 	unsigned long weight;
@@ -1046,6 +1047,7 @@ struct sched_statistics {
 // ARM10C 20140913
 // ARM10C 20150919
 // ARM10C 20161008
+// ARM10C 20161015
 // sizeof(struct sched_entity): 100 bytes
 struct sched_entity {
 	struct load_weight	load;		/* for load-balancing */
@@ -1064,7 +1066,7 @@ struct sched_entity {
 	struct sched_statistics statistics;
 #endif
 
-#ifdef CONFIG_FAIR_GROUP_SCHED // CONFIG_FAIR_GROUP_SCHED=n
+#ifdef CONFIG_FAIR_GROUP_SCHED // CONFIG_FAIR_GROUP_SCHED=y
 	struct sched_entity	*parent;
 	/* rq on which this entity is (to be) queued: */
 	struct cfs_rq		*cfs_rq;

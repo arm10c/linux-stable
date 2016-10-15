@@ -198,22 +198,44 @@ void free_rt_sched_group(struct task_group *tg)
 	kfree(tg->rt_se);
 }
 
+// ARM10C 20140830
+// &root_task_group, [pcp0] &rq->rt: &(&runqueues)->rt, NULL, i: 0, NULL
 void init_tg_rt_entry(struct task_group *tg, struct rt_rq *rt_rq,
 		struct sched_rt_entity *rt_se, int cpu,
 		struct sched_rt_entity *parent)
 {
+	// cpu: 0, cpu_rq(0): [pcp0] &runqueues
 	struct rq *rq = cpu_rq(cpu);
+	// rq: [pcp0] &runqueues
 
+	// [pcp0] rt_rq->highest_prio.curr: [pcp0] (&(&runqueues)->rt)->highest_prio.curr, MAX_RT_PRIO: 100
 	rt_rq->highest_prio.curr = MAX_RT_PRIO;
+	// [pcp0] rt_rq->highest_prio.curr: [pcp0] (&(&runqueues)->rt)->highest_prio.curr: 100
+
+	// [pcp0] rt_rq->rt_nr_boosted: [pcp0] (&(&runqueues)->rt)->rt_nr_boosted
 	rt_rq->rt_nr_boosted = 0;
+	// [pcp0] rt_rq->rt_nr_boosted: [pcp0] (&(&runqueues)->rt)->rt_nr_boosted: 0
+
+	// [pcp0] rt_rq->rq: [pcp0] (&(&runqueues)->rt)->rq, rq: [pcp0] &runqueues
 	rt_rq->rq = rq;
+	// [pcp0] rt_rq->rq: [pcp0] (&(&runqueues)->rt)->rq: [pcp0] &runqueues
+
+	// [pcp0] rt_rq->tg: [pcp0] (&(&runqueues)->rt)->tg, tg: &root_task_group
 	rt_rq->tg = tg;
+	// [pcp0] rt_rq->tg: [pcp0] (&(&runqueues)->rt)->tg: &root_task_group
 
+	// cpu: 0, tg->rt_rq[0]: (&root_task_group)->rt_rq[0], rt_rq: [pcp0] &(&runqueues)->rt
 	tg->rt_rq[cpu] = rt_rq;
-	tg->rt_se[cpu] = rt_se;
+	// tg->rt_rq[0]: (&root_task_group)->rt_rq[0]: [pcp0] &(&runqueues)->rt
 
+	// cpu: 0, tg->rt_se[0]: (&root_task_group)->rt_se[0], rt_se: NULL
+	tg->rt_se[cpu] = rt_se;
+	// tg->rt_se[0]: (&root_task_group)->rt_se[0]: NULL
+
+	// rt_se: NULL
 	if (!rt_se)
 		return;
+		// return 수행
 
 	if (!parent)
 		rt_se->rt_rq = &rq->rt;

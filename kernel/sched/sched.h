@@ -66,7 +66,11 @@ extern void update_cpu_load_active(struct rq *this_rq);
 # define SCHED_LOAD_RESOLUTION	0
 // ARM10C 20140913
 // 1024
+// ARM10C 20161015
+// lw->weight: (&lw)->weight: 1024
 # define scale_load(w)		(w)
+// ARM10C 20161015
+// weight: 1024
 # define scale_load_down(w)	(w)
 #endif
 
@@ -80,6 +84,7 @@ extern void update_cpu_load_active(struct rq *this_rq);
 #define SCHED_LOAD_SCALE	(1L << SCHED_LOAD_SHIFT)
 
 // ARM10C 20140830
+// ARM10C 20161015
 // SCHED_LOAD_SCALE: 0x400
 // NICE_0_LOAD: 0x400
 #define NICE_0_LOAD		SCHED_LOAD_SCALE
@@ -156,6 +161,7 @@ struct cfs_bandwidth {
 
 /* task group related information */
 // ARM10C 20140830
+// ARM10C 20140913
 // ARM10C 20150822
 // ARM10C 20150919
 struct task_group {
@@ -271,6 +277,7 @@ struct cfs_bandwidth { };
 /* CFS-related fields in a runqueue */
 // ARM10C 20140830
 // ARM10C 20161008
+// ARM10C 20161015
 struct cfs_rq {
 	struct load_weight load;
 	unsigned int nr_running, h_nr_running;
@@ -621,9 +628,13 @@ static inline u64 rq_clock(struct rq *rq)
 	return rq->clock;
 }
 
+// ARM10C 20161015
+// rq_of([pcp0] &(&runqueues)->cfs): [pcp0] &runqueues
 static inline u64 rq_clock_task(struct rq *rq)
 {
+	// rq->clock_task: [pcp0] (&runqueues)->clock_task: 현재의 schedule 시간값
 	return rq->clock_task;
+	// return 현재의 schedule 시간값
 }
 
 #ifdef CONFIG_NUMA_BALANCING
@@ -764,7 +775,7 @@ extern int group_balance_cpu(struct sched_group *sg);
 #include "stats.h"
 #include "auto_group.h"
 
-#ifdef CONFIG_CGROUP_SCHED // CONFIG_CGROUP_SCHED=n
+#ifdef CONFIG_CGROUP_SCHED // CONFIG_CGROUP_SCHED=y
 
 /*
  * Return the group to which this tasks belongs.
@@ -779,33 +790,49 @@ extern int group_balance_cpu(struct sched_group *sg);
  * Instead we use a 'copy' which is updated from sched_move_task() while
  * holding both task_struct::pi_lock and rq::lock.
  */
+// ARM10C 20140913
+// p: &init_task
 static inline struct task_group *task_group(struct task_struct *p)
 {
+	// p->sched_task_group: (&init_task)->sched_task_group: &root_task_group
 	return p->sched_task_group;
+	// return &root_task_group
 }
 
 /* Change a task's cfs_rq and parent entity if it moves across CPUs/groups */
+// ARM10C 20140913
+// p: &init_task, cpu: 0
 static inline void set_task_rq(struct task_struct *p, unsigned int cpu)
 {
-#if defined(CONFIG_FAIR_GROUP_SCHED) || defined(CONFIG_RT_GROUP_SCHED)
+#if defined(CONFIG_FAIR_GROUP_SCHED) || defined(CONFIG_RT_GROUP_SCHED) // CONFIG_FAIR_GROUP_SCHED=y,  CONFIG_RT_GROUP_SCHED=y
+	// p: &init_task, task_group(&init_task): &root_task_group
 	struct task_group *tg = task_group(p);
+	// tg: &root_task_group
 #endif
 
-#ifdef CONFIG_FAIR_GROUP_SCHED
+#ifdef CONFIG_FAIR_GROUP_SCHED // CONFIG_FAIR_GROUP_SCHED=y
+	// p->se.cfs_rq: (&init_task)->se.cfs_rq, cpu: 0, tg->cfs_rq[0]: (&root_task_group)->cfs_rq[0]: [pcp0] &(&runqueues)->cfs
 	p->se.cfs_rq = tg->cfs_rq[cpu];
+	// p->se.cfs_rq: (&init_task)->se.cfs_rq: [pcp0] &(&runqueues)->cfs
+
+	// p->se.parent: (&init_task)->se.parent, cpu: 0, tg->se[0]: (&root_task_group)->se[0]: NULL
 	p->se.parent = tg->se[cpu];
+	// p->se.parent: (&init_task)->se.parent: NULL
 #endif
 
-#ifdef CONFIG_RT_GROUP_SCHED
+#ifdef CONFIG_RT_GROUP_SCHED // CONFIG_RT_GROUP_SCHED=y
+	// p->rt.rt_rq: (&init_task)->rt.rt_rq, cpu: 0, tg->rt_rq[0]: (&root_task_group)->rt_rq[0]: [pcp0] &(&runqueues)->rt
 	p->rt.rt_rq  = tg->rt_rq[cpu];
+	// p->rt.rt_rq: (&init_task)->rt.rt_rq: [pcp0] &(&runqueues)->rt
+
+	// p->rt.parent: (&init_task)->rt.parent, cpu: 0, tg->rt_se[0]: (&root_task_group)->rt_se[0]: NULL
 	p->rt.parent = tg->rt_se[cpu];
+	// p->rt.parent: (&init_task)->rt.parent: NULL
 #endif
 }
 
 #else /* CONFIG_CGROUP_SCHED */
 
-// ARM10C 20140913
-// p: &init_task, cpu: 0
 static inline void set_task_rq(struct task_struct *p, unsigned int cpu) { }
 static inline struct task_group *task_group(struct task_struct *p)
 {
@@ -816,10 +843,18 @@ static inline struct task_group *task_group(struct task_struct *p)
 
 // ARM10C 20140913
 // idle: &init_task, cpu: 0
+// ARM10C 20161015
+// p: kmem_cache#15-oX (struct task_struct), this_cpu: 0
 static inline void __set_task_cpu(struct task_struct *p, unsigned int cpu)
 {
 	// p: &init_task, cpu: 0
-	set_task_rq(p, cpu); // null function
+	set_task_rq(p, cpu);
+
+	// set_task_rq 에서 한일:
+	// (&init_task)->se.cfs_rq: [pcp0] &(&runqueues)->cfs
+	// (&init_task)->se.parent: NULL
+	// (&init_task)->rt.rt_rq: [pcp0] &(&runqueues)->rt
+	// (&init_task)->rt.parent: NULL
 
 #ifdef CONFIG_SMP // CONFIG_SMP=y
 	/*
@@ -856,17 +891,34 @@ static inline void __set_task_cpu(struct task_struct *p, unsigned int cpu)
 
 extern const_debug unsigned int sysctl_sched_features;
 
+// ARM10C 20161015
 #define SCHED_FEAT(name, enabled)	\
 	__SCHED_FEAT_##name ,
 
+// ARM10C 20161015
 enum {
 #include "features.h"
+	// __SCHED_FEAT_GENTLE_FAIR_SLEEPERS,
+	// __SCHED_FEAT_START_DEBIT,
+	// __SCHED_FEAT_NEXT_BUDDY,
+	// __SCHED_FEAT_LAST_BUDDY,
+	// __SCHED_FEAT_CACHE_HOT_BUDDY,
+	// __SCHED_FEAT_WAKEUP_PREEMPTION,
+	// __SCHED_FEAT_ARCH_POWER,
+	// __SCHED_FEAT_HRTICK,
+	// __SCHED_FEAT_DOUBLE_TICK,
+	// __SCHED_FEAT_LB_BIAS,
+	// __SCHED_FEAT_NONTASK_POWER,
+	// __SCHED_FEAT_TTWU_QUEUE,
+	// __SCHED_FEAT_FORCE_SD_OVERLAP,
+	// __SCHED_FEAT_RT_RUNTIME_SHARE,
+	// __SCHED_FEAT_LB_MIN,
 	__SCHED_FEAT_NR,
 };
 
 #undef SCHED_FEAT
 
-#if defined(CONFIG_SCHED_DEBUG) && defined(HAVE_JUMP_LABEL)
+#if defined(CONFIG_SCHED_DEBUG) && defined(HAVE_JUMP_LABEL) // CONFIG_SCHED_DEBUG=y, HAVE_JUMP_LABEL: undefined
 static __always_inline bool static_branch__true(struct static_key *key)
 {
 	return static_key_true(key); /* Not out of line branch. */
@@ -890,6 +942,8 @@ static __always_inline bool static_branch_##name(struct static_key *key) \
 extern struct static_key sched_feat_keys[__SCHED_FEAT_NR];
 #define sched_feat(x) (static_branch_##x(&sched_feat_keys[__SCHED_FEAT_##x]))
 #else /* !(SCHED_DEBUG && HAVE_JUMP_LABEL) */
+// ARM10C 20161015
+// sysctl_sched_features: 0x2e7b, __SCHED_FEAT_START_DEBIT: 1
 #define sched_feat(x) (sysctl_sched_features & (1UL << __SCHED_FEAT_##x))
 #endif /* SCHED_DEBUG && HAVE_JUMP_LABEL */
 

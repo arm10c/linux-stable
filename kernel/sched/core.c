@@ -150,9 +150,22 @@ void update_rq_clock(struct rq *rq)
  * Debugging: various feature bits
  */
 
+// ARM10C 20161015
 #define SCHED_FEAT(name, enabled)	\
 	(1UL << __SCHED_FEAT_##name) * enabled |
 
+// ARM10C 20161015
+// SCHED_FEAT(GENTLE_FAIR_SLEEPERS, true): 0x1 |
+// SCHED_FEAT(START_DEBIT, true): 0x2 |
+// SCHED_FEAT(LAST_BUDDY, true): 0x8 |
+// SCHED_FEAT(CACHE_HOT_BUDDY, true): 0x10 |
+// SCHED_FEAT(WAKEUP_PREEMPTION, true): 0x20 |
+// SCHED_FEAT(ARCH_POWER, true): 0x40 |
+// SCHED_FEAT(LB_BIAS, true): 0x200 |
+// SCHED_FEAT(NONTASK_POWER, true): 0x400 |
+// SCHED_FEAT(TTWU_QUEUE, true): 0x800 |
+// SCHED_FEAT(RT_RUNTIME_SHARE, true): 0x2000 |
+// sysctl_sched_features: 0x2e7b
 const_debug unsigned int sysctl_sched_features =
 #include "features.h"
 	0;
@@ -1976,6 +1989,8 @@ void sched_fork(unsigned long clone_flags, struct task_struct *p)
 		p->sched_class = &fair_sched_class;
 		// p->sched_class: (kmem_cache#15-oX (struct task_struct))->sched_class: &fair_sched_class
 
+// 2016/10/15 종료
+
 	// p->sched_class: (kmem_cache#15-oX (struct task_struct))->sched_class: &fair_sched_class,
 	// p->sched_class->task_fork: (&fair_sched_class)->task_fork: task_fork_fair
 	if (p->sched_class->task_fork)
@@ -1983,6 +1998,8 @@ void sched_fork(unsigned long clone_flags, struct task_struct *p)
 		// p: kmem_cache#15-oX (struct task_struct),
 		// task_fork_fair(kmem_cache#15-oX (struct task_struct))
 		p->sched_class->task_fork(p);
+
+		// task_fork_fair 에서 한일:
 
 	/*
 	 * The child is not yet in the pid-hash so no cgroup attach races,
@@ -4139,6 +4156,7 @@ void init_idle(struct task_struct *idle, int cpu)
 
 	// idle: init_task
 	__sched_fork(0, idle);
+
 	// __sched_fork에서 한일:
 	// (&init_task)->on_rq: 0
 	// (&init_task)->se.on_rq: 0
@@ -4160,6 +4178,7 @@ void init_idle(struct task_struct *idle, int cpu)
 
 	// idle: &init_task, cpu: 0, cpumask_of(0): &cpu_bit_bitmap[1][0]
 	do_set_cpus_allowed(idle, cpumask_of(cpu));
+
 	// do_set_cpus_allowed에서 한일:
 	// (&init_task)->cpus_allowed->bits[0]: 1
 	// (&init_task)->nr_cpus_allowed: 1
@@ -4175,16 +4194,23 @@ void init_idle(struct task_struct *idle, int cpu)
 	 * Silence PROVE_RCU
 	 */
 	rcu_read_lock();
+
 	// rcu_read_lock에서 한일:
 	// (&init_task)->rcu_read_lock_nesting: 1
 
 	// idle: &init_task, cpu: 0
 	__set_task_cpu(idle, cpu);
+
 	// __set_task_cpu에서 한일:
+	// (&init_task)->se.cfs_rq: [pcp0] &(&runqueues)->cfs
+	// (&init_task)->se.parent: NULL
+	// (&init_task)->rt.rt_rq: [pcp0] &(&runqueues)->rt
+	// (&init_task)->rt.parent: NULL
 	// ((struct thread_info *)(&init_task)->stack)->cpu: 0
 	// (&init_task)->wake_cpu: 0
 
 	rcu_read_unlock();
+
 	// rcu_read_unlock에서 한일:
 	// (&init_task)->rcu_read_lock_nesting: 0
 
@@ -6769,8 +6795,19 @@ void __init sched_init(void)
 		// (&(&runqueues)->leaf_rt_rq_list)->prev: &(&runqueues)->leaf_rt_rq_list
 
 // 2016/10/08 종료
+// 2016/10/15 시작
 
+		// [pcp0] &rq->rt: &(&runqueues)->rt, i: 0
 		init_tg_rt_entry(&root_task_group, &rq->rt, NULL, i, NULL);
+
+		// init_tg_rt_entry 에서 한일:
+		// [pcp0] (&(&runqueues)->rt)->highest_prio.curr: 100
+		// [pcp0] (&(&runqueues)->rt)->rt_nr_boosted: 0
+		// [pcp0] (&(&runqueues)->rt)->rq: [pcp0] &runqueues
+		// [pcp0] (&(&runqueues)->rt)->tg: &root_task_group
+		//
+		// (&root_task_group)->rt_rq[0]: [pcp0] &(&runqueues)->rt
+		// (&root_task_group)->rt_se[0]: NULL
 #endif
 
 		// CPU_LOAD_IDX_MAX: 5
@@ -6928,6 +6965,10 @@ void __init sched_init(void)
 	// (&init_task)->se.exec_start: 0
 	// (&init_task)->cpus_allowed->bits[0]: 1
 	// (&init_task)->nr_cpus_allowed: 1
+	// (&init_task)->se.cfs_rq: [pcp0] &(&runqueues)->cfs
+	// (&init_task)->se.parent: NULL
+	// (&init_task)->rt.rt_rq: [pcp0] &(&runqueues)->rt
+	// (&init_task)->rt.parent: NULL
 	// ((struct thread_info *)(&init_task)->stack)->cpu: 0
 	// (&init_task)->wake_cpu: 0
 	// [pcpu0] (&runqueues)->curr: &init_task

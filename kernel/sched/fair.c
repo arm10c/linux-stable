@@ -46,6 +46,8 @@
  * (to see the precise effective timeslice length of your workload,
  *  run vmstat and monitor the context-switches (cs) field)
  */
+// ARM10C 20161015
+// sysctl_sched_latency: 6000000ULL
 unsigned int sysctl_sched_latency = 6000000ULL;
 unsigned int normalized_sysctl_sched_latency = 6000000ULL;
 
@@ -71,12 +73,15 @@ unsigned int normalized_sysctl_sched_min_granularity = 750000ULL;
 /*
  * is kept at sysctl_sched_latency / sysctl_sched_min_granularity
  */
+// ARM10C 20161015
+// sched_nr_latency: 8
 static unsigned int sched_nr_latency = 8;
 
 /*
  * After fork, child runs first. If set to 0 (default) then
  * parent will (try to) run first.
  */
+// ARM10C 20161015
 unsigned int sysctl_sched_child_runs_first __read_mostly;
 
 /*
@@ -114,10 +119,17 @@ unsigned int __read_mostly sysctl_sched_shares_window = 10000000UL;
 unsigned int sysctl_sched_cfs_bandwidth_slice = 5000UL;
 #endif
 
+// ARM10C 20161015
+// &lw, 1024
 static inline void update_load_add(struct load_weight *lw, unsigned long inc)
 {
+	// lw->weight: (&lw)->weight: 0, inc: 1024
 	lw->weight += inc;
+	// lw->weight: (&lw)->weight: 1024
+
+	// lw->inv_weight: (&lw)->inv_weight
 	lw->inv_weight = 0;
+	// lw->inv_weight: (&lw)->inv_weight: 0
 }
 
 static inline void update_load_sub(struct load_weight *lw, unsigned long dec)
@@ -179,24 +191,37 @@ void sched_init_granularity(void)
 	update_sysctl();
 }
 
+// ARM10C 20161015
+// WMULT_CONST: 0xFFFFFFFF
 #define WMULT_CONST	(~0U)
+// ARM10C 20161015
+// WMULT_SHIFT: 32
 #define WMULT_SHIFT	32
 
+// ARM10C 20161015
+// lw: &lw
 static void __update_inv_weight(struct load_weight *lw)
 {
 	unsigned long w;
 
+	// lw->inv_weight: (&lw)->inv_weight: 0
 	if (likely(lw->inv_weight))
 		return;
 
+	// lw->weight: (&lw)->weight: 1024
+	// scale_load_down(1024): 1024
 	w = scale_load_down(lw->weight);
+	// w: 1024
 
+	// BITS_PER_LONG: 32, w: 1024, WMULT_CONST: 0xFFFFFFFF, w: 1024
 	if (BITS_PER_LONG > 32 && unlikely(w >= WMULT_CONST))
 		lw->inv_weight = 1;
 	else if (unlikely(!w))
 		lw->inv_weight = WMULT_CONST;
 	else
+		// lw->inv_weight: (&lw)->inv_weight: 0, WMULT_CONST: 0xFFFFFFFF, w: 1024
 		lw->inv_weight = WMULT_CONST / w;
+		// lw->inv_weight: (&lw)->inv_weight: 0x3FFFFF
 }
 
 /*
@@ -211,13 +236,25 @@ static void __update_inv_weight(struct load_weight *lw)
  * Or, weight =< lw.weight (because lw.weight is the runqueue weight), thus
  * weight/lw.weight <= 1, and therefore our shift will also be positive.
  */
+// ARM10C 20161015
+// slice: 6000000, se->load.weight: (&(kmem_cache#15-oX (struct task_struct))->se)->load.weight: 1024, load: &lw
 static u64 __calc_delta(u64 delta_exec, unsigned long weight, struct load_weight *lw)
 {
+	// weight: 1024, scale_load_down(1024): 1024
 	u64 fact = scale_load_down(weight);
-	int shift = WMULT_SHIFT;
+	// fact: 1024
 
+	// WMULT_SHIFT: 32
+	int shift = WMULT_SHIFT;
+	// shift: 32
+
+	// lw: &lw
 	__update_inv_weight(lw);
 
+	// __update_inv_weight 에서 한일:
+	// (&lw)->inv_weight: 0x3FFFFF
+
+	// fact: 1024
 	if (unlikely(fact >> 32)) {
 		while (fact >> 32) {
 			fact >>= 1;
@@ -226,14 +263,20 @@ static u64 __calc_delta(u64 delta_exec, unsigned long weight, struct load_weight
 	}
 
 	/* hint to use a 32x32->64 mul */
+	// fact: 1024, (&lw)->inv_weight: 0x3FFFFF
 	fact = (u64)(u32)fact * lw->inv_weight;
+	// fact: 0xFFFFFC00
 
+	// fact: 0xFFFFFC00
 	while (fact >> 32) {
 		fact >>= 1;
 		shift--;
 	}
 
+	// delta_exec: 6000000, fact: 0xFFFFFC00, shift: 32
+	// mul_u64_u32_shr(6000000, 0xFFFFFC00, 32): 0x5B8D7E
 	return mul_u64_u32_shr(delta_exec, fact, shift);
+	// return 0x5B8D7E
 }
 
 
@@ -246,9 +289,13 @@ const struct sched_class fair_sched_class;
 #ifdef CONFIG_FAIR_GROUP_SCHED // CONFIG_FAIR_GROUP_SCHED=y
 
 /* cpu runqueue to which this cfs_rq is attached */
+// ARM10C 20161015
+// cfs_rq: [pcp0] &(&runqueues)->cfs
 static inline struct rq *rq_of(struct cfs_rq *cfs_rq)
 {
+	// cfs_rq->rq: [pcp0] (&(&runqueues)->cfs)->rq: [pcp0] &runqueues
 	return cfs_rq->rq;
+	// return [pcp0] &runqueues
 }
 
 /* An entity is a task if it doesn't "own" a runqueue */
@@ -263,6 +310,7 @@ static inline struct task_struct *task_of(struct sched_entity *se)
 }
 
 /* Walk up scheduling entities hierarchy */
+// ARM10C 20161015
 #define for_each_sched_entity(se) \
 		for (; se; se = se->parent)
 
@@ -270,15 +318,19 @@ static inline struct task_struct *task_of(struct sched_entity *se)
 // current: &init_task
 static inline struct cfs_rq *task_cfs_rq(struct task_struct *p)
 {
-	// p->se.cfs_rq: (&init_task)->se.cfs_rq: NULL
+	// p->se.cfs_rq: (&init_task)->se.cfs_rq: [pcp0] &(&runqueues)->cfs
 	return p->se.cfs_rq;
-	// return NULL
+	// return [pcp0] &(&runqueues)->cfs
 }
 
 /* runqueue on which this entity is (to be) queued */
+// ARM10C 20161015
+// se: &(kmem_cache#15-oX (struct task_struct))->se
 static inline struct cfs_rq *cfs_rq_of(struct sched_entity *se)
 {
+	// se->cfs_rq: (kmem_cache#15-oX (struct task_struct))->se.cfs_rq: [pcp0] &(&runqueues)->cfs
 	return se->cfs_rq;
+	// return [pcp0] &(&runqueues)->cfs
 }
 
 /* runqueue "owned" by this group */
@@ -456,13 +508,23 @@ void account_cfs_rq_runtime(struct cfs_rq *cfs_rq, u64 delta_exec);
  * Scheduling class tree data structure manipulation methods:
  */
 
+// ARM10C 20161015
+// se->vruntime: (&(kmem_cache#15-oX (struct task_struct))->se)->vruntime: 0, vruntime: 0x4B8D7E
 static inline u64 max_vruntime(u64 max_vruntime, u64 vruntime)
 {
+	// vruntime: 0x4B8D7E, max_vruntime: 0
 	s64 delta = (s64)(vruntime - max_vruntime);
-	if (delta > 0)
-		max_vruntime = vruntime;
+	// delta: 0x4B8D7E
 
+	// delta: 0x4B8D7E
+	if (delta > 0)
+		// max_vruntime: 0, vruntime: 0x4B8D7E
+		max_vruntime = vruntime;
+		// max_vruntime: 0x4B8D7E
+
+	// max_vruntime: 0x4B8D7E
 	return max_vruntime;
+	// return 0x4B8D7E
 }
 
 static inline u64 min_vruntime(u64 min_vruntime, u64 vruntime)
@@ -474,6 +536,8 @@ static inline u64 min_vruntime(u64 min_vruntime, u64 vruntime)
 	return min_vruntime;
 }
 
+// ARM10C 20161015
+// curr: NULL, se: &(kmem_cache#15-oX (struct task_struct))->se
 static inline int entity_before(struct sched_entity *a,
 				struct sched_entity *b)
 {
@@ -619,12 +683,17 @@ int sched_proc_update_handler(struct ctl_table *table, int write,
 /*
  * delta /= w
  */
+// ARM10C 20161015
+// 0x5B8D7E, se: &(kmem_cache#15-oX (struct task_struct))->se
 static inline u64 calc_delta_fair(u64 delta, struct sched_entity *se)
 {
+	// se->load.weight: (&(kmem_cache#15-oX (struct task_struct))->se)->load.weight: 1024, NICE_0_LOAD: 0x400
 	if (unlikely(se->load.weight != NICE_0_LOAD))
 		delta = __calc_delta(delta, NICE_0_LOAD, &se->load);
 
+	// delta: 0x5B8D7E
 	return delta;
+	// return 0x5B8D7E
 }
 
 /*
@@ -635,17 +704,27 @@ static inline u64 calc_delta_fair(u64 delta, struct sched_entity *se)
  *
  * p = (nr <= nl) ? l : l*nr/nl
  */
+// ARM10C 20161015
+// 1
 static u64 __sched_period(unsigned long nr_running)
 {
+	// sysctl_sched_latency: 6000000ULL
 	u64 period = sysctl_sched_latency;
-	unsigned long nr_latency = sched_nr_latency;
+	// period: 6000000
 
+	// sched_nr_latency: 8
+	unsigned long nr_latency = sched_nr_latency;
+	// nr_latency: 8
+
+	// nr_running: 1, nr_latency: 8
 	if (unlikely(nr_running > nr_latency)) {
 		period = sysctl_sched_min_granularity;
 		period *= nr_running;
 	}
 
+	// period: 6000000
 	return period;
+	// return 6000000
 }
 
 /*
@@ -654,26 +733,65 @@ static u64 __sched_period(unsigned long nr_running)
  *
  * s = p*P[w/rw]
  */
+// ARM10C 20161015
+// cfs_rq: [pcp0] &(&runqueues)->cfs, se: &(kmem_cache#15-oX (struct task_struct))->se
 static u64 sched_slice(struct cfs_rq *cfs_rq, struct sched_entity *se)
 {
+	// cfs_rq->nr_running: [pcp0] (&(&runqueues)->cfs)->nr_running: 0,
+	// se->on_rq: (&(kmem_cache#15-oX (struct task_struct))->se)->on_rq: 0, __sched_period(1): 6000000
 	u64 slice = __sched_period(cfs_rq->nr_running + !se->on_rq);
+	// slice: 6000000
 
+	// se: &(kmem_cache#15-oX (struct task_struct))->se
 	for_each_sched_entity(se) {
+	// for ( ; &(kmem_cache#15-oX (struct task_struct))->se;
+	//         &(kmem_cache#15-oX (struct task_struct))->se = (&(kmem_cache#15-oX (struct task_struct))->se)->parent)
+
+		// [f2] (&(kmem_cache#15-oX (struct task_struct))->se)->parent: NULL
+		// [f2] &(kmem_cache#15-oX (struct task_struct))->se: NULL
+
 		struct load_weight *load;
 		struct load_weight lw;
 
+		// [f1] cfs_rq: [pcp0] &(&runqueues)->cfs, se: &(kmem_cache#15-oX (struct task_struct))->se
+		// [f1] cfs_rq_of(&(kmem_cache#15-oX (struct task_struct))->se): [pcp0] &(&runqueues)->cfs
 		cfs_rq = cfs_rq_of(se);
+		// [f1] cfs_rq: [pcp0] &(&runqueues)->cfs
+
+		// [f1] &cfs_rq->load: [pcp0] &(&(&runqueues)->cfs)->load
 		load = &cfs_rq->load;
+		// [f1] load: [pcp0] &(&(&runqueues)->cfs)->load
 
+		// [f1] se->on_rq: (&(kmem_cache#15-oX (struct task_struct))->se)->on_rq: 0
 		if (unlikely(!se->on_rq)) {
+			// [f1] cfs_rq->load: [pcp0] (&(&runqueues)->cfs)->load: {0, 0}
 			lw = cfs_rq->load;
+			// [f1] lw: {0, 0}
 
+			// [f1] se->load.weight: (&(kmem_cache#15-oX (struct task_struct))->se)->load.weight: 1024
 			update_load_add(&lw, se->load.weight);
+
+			// [f1] update_load_add 에서 한일:
+			// (&lw)->weight: 1024
+			// (&lw)->inv_weight: 0
+
+			// [f1] load: [pcp0] &(&(&runqueues)->cfs)->load
 			load = &lw;
+			// [f1] load: &lw
 		}
+
+		// [f1] slice: 6000000, se->load.weight: (&(kmem_cache#15-oX (struct task_struct))->se)->load.weight: 1024, load: &lw
+		// [f1] __calc_delta(6000000, 1024, &lw): 0x5B8D7E
 		slice = __calc_delta(slice, se->load.weight, load);
+		// [f1] slice: 0x5B8D7E
+
+		// [f1] __calc_delta 에서 한일:
+		// (&lw)->inv_weight: 0x3FFFFF
 	}
+
+	// slice: 0x5B8D7E
 	return slice;
+	// return 0x5B8D7E
 }
 
 /*
@@ -681,9 +799,15 @@ static u64 sched_slice(struct cfs_rq *cfs_rq, struct sched_entity *se)
  *
  * vs = s/w
  */
+// ARM10C 20161015
+// cfs_rq: [pcp0] &(&runqueues)->cfs, se: &(kmem_cache#15-oX (struct task_struct))->se
 static u64 sched_vslice(struct cfs_rq *cfs_rq, struct sched_entity *se)
 {
+	// cfs_rq: [pcp0] &(&runqueues)->cfs, se: &(kmem_cache#15-oX (struct task_struct))->se
+	// sched_slice([pcp0] &(&runqueues)->cfs, &(kmem_cache#15-oX (struct task_struct))->se): 0x5B8D7E
+	// calc_delta_fair(0x5B8D7E, &(kmem_cache#15-oX (struct task_struct))->se): 0x5B8D7E
 	return calc_delta_fair(sched_slice(cfs_rq, se), se);
+	// return 0x5B8D7E
 }
 
 #ifdef CONFIG_SMP
@@ -711,14 +835,25 @@ void init_task_runnable_average(struct task_struct *p)
 /*
  * Update the current task's runtime statistics.
  */
+// ARM10C 20161015
+// cfs_rq: [pcp0] &(&runqueues)->cfs
 static void update_curr(struct cfs_rq *cfs_rq)
 {
+	// cfs_rq->curr: [pcp0] (&(&runqueues)->cfs)->curr: NULL
 	struct sched_entity *curr = cfs_rq->curr;
+	// curr: NULL
+
+	// cfs_rq: [pcp0] &(&runqueues)->cfs, rq_of([pcp0] &(&runqueues)->cfs): [pcp0] &runqueues
+	// rq_clock_task([pcp0] &runqueues): 현재의 [pcp0] &runqueues 의 schedule 시간값
 	u64 now = rq_clock_task(rq_of(cfs_rq));
+	// now: 현재의 [pcp0] &runqueues 의 schedule 시간값
+
 	u64 delta_exec;
 
+	// curr: NULL
 	if (unlikely(!curr))
 		return;
+		// return 수행
 
 	delta_exec = now - curr->exec_start;
 	if (unlikely((s64)delta_exec <= 0))
@@ -2519,10 +2654,14 @@ static void check_spread(struct cfs_rq *cfs_rq, struct sched_entity *se)
 #endif
 }
 
+// ARM10C 20161015
+// cfs_rq: [pcp0] &(&runqueues)->cfs, se: &(kmem_cache#15-oX (struct task_struct))->se, 1
 static void
 place_entity(struct cfs_rq *cfs_rq, struct sched_entity *se, int initial)
 {
+	// cfs_rq->min_vruntime: [pcp0] (&(&runqueues)->cfs)->min_vruntime: 0xFFFFFFFFFFF00000
 	u64 vruntime = cfs_rq->min_vruntime;
+	// vruntime: 0xFFFFFFFFFFF00000
 
 	/*
 	 * The 'current' period is already promised to the current tasks,
@@ -2530,10 +2669,16 @@ place_entity(struct cfs_rq *cfs_rq, struct sched_entity *se, int initial)
 	 * little, place the new task so that it fits in the slot that
 	 * stays open at the end.
 	 */
+	// initial: 1, sched_feat(START_DEBIT): 2
 	if (initial && sched_feat(START_DEBIT))
+		// vruntime: 0xFFFFFFFFFFF00000,
+		// cfs_rq: [pcp0] &(&runqueues)->cfs, se: &(kmem_cache#15-oX (struct task_struct))->se
+		// sched_vslice([pcp0] &(&runqueues)->cfs, &(kmem_cache#15-oX (struct task_struct))->se): 0x5B8D7E
 		vruntime += sched_vslice(cfs_rq, se);
+		// vruntime: 0x4B8D7E
 
 	/* sleeps up to a single latency don't count. */
+	// initial: 1
 	if (!initial) {
 		unsigned long thresh = sysctl_sched_latency;
 
@@ -2548,7 +2693,10 @@ place_entity(struct cfs_rq *cfs_rq, struct sched_entity *se, int initial)
 	}
 
 	/* ensure we never gain time by being placed backwards. */
+	// se->vruntime: (&(kmem_cache#15-oX (struct task_struct))->se)->vruntime: 0, vruntime: 0x4B8D7E
+	// max_vruntime(0, 0x4B8D7E): 0x4B8D7E
 	se->vruntime = max_vruntime(se->vruntime, vruntime);
+	// se->vruntime: (&(kmem_cache#15-oX (struct task_struct))->se)->vruntime: 0x4B8D7E
 }
 
 static void check_enqueue_throttle(struct cfs_rq *cfs_rq);
@@ -6985,10 +7133,13 @@ static void task_fork_fair(struct task_struct *p)
 	// [pcp0] (&runqueues)->clock: schedule 시간 차이값
 	// [pcp0] (&runqueues)->clock_task: schedule 시간 차이값
 
-	// current: &init_task
-	// task_cfs_rq(&init_task): NULL
+	// current: &init_task, task_cfs_rq(&init_task): [pcp0] &(&runqueues)->cfs
 	cfs_rq = task_cfs_rq(current);
+	// cfs_rq: [pcp0] &(&runqueues)->cfs
+
+	// cfs_rq->curr: [pcp0] (&(&runqueues)->cfs)->curr: NULL
 	curr = cfs_rq->curr;
+	// curr: NULL
 
 	/*
 	 * Not only the cpu but also the task_group of the parent might have
@@ -6997,15 +7148,40 @@ static void task_fork_fair(struct task_struct *p)
 	 * of child point to valid ones.
 	 */
 	rcu_read_lock();
+
+	// rcu_read_lock 에서 한일:
+	// rcu read lock 수행
+
+	// p: kmem_cache#15-oX (struct task_struct), this_cpu: 0
 	__set_task_cpu(p, this_cpu);
+
+	// __set_task_cpu에서 한일:
+	// (kmem_cache#15-oX (struct task_struct))->se.cfs_rq: [pcp0] &(&runqueues)->cfs
+	// (kmem_cache#15-oX (struct task_struct))->se.parent: NULL
+	// (kmem_cache#15-oX (struct task_struct))->rt.rt_rq: [pcp0] &(&runqueues)->rt
+	// (kmem_cache#15-oX (struct task_struct))->rt.parent: NULL
+	// ((struct thread_info *)(kmem_cache#15-oX (struct task_struct))->stack)->cpu: 0
+	// (kmem_cache#15-oX (struct task_struct))->wake_cpu: 0
+
 	rcu_read_unlock();
 
+	// rcu_read_unlock 에서 한일:
+	// rcu read unlock 수행
+
+	// cfs_rq: [pcp0] &(&runqueues)->cfs
 	update_curr(cfs_rq);
 
+	// curr: NULL
 	if (curr)
 		se->vruntime = curr->vruntime;
+
+	// cfs_rq: [pcp0] &(&runqueues)->cfs, se: &(kmem_cache#15-oX (struct task_struct))->se
 	place_entity(cfs_rq, se, 1);
 
+	// place_entity 에서 한일:
+	// (&(kmem_cache#15-oX (struct task_struct))->se)->vruntime: 0x4B8D7E
+
+	// sysctl_sched_child_runs_first: 0, curr: NULL, se: &(kmem_cache#15-oX (struct task_struct))->se
 	if (sysctl_sched_child_runs_first && curr && entity_before(curr, se)) {
 		/*
 		 * Upon rescheduling, sched_class::put_prev_task() will place
@@ -7015,9 +7191,16 @@ static void task_fork_fair(struct task_struct *p)
 		resched_task(rq->curr);
 	}
 
+	// se->vruntime: (&(kmem_cache#15-oX (struct task_struct))->se)->vruntimea: 0x4B8D7E,
+	// cfs_rq->min_vruntime: [pcp0] (&(&runqueues)->cfs)->min_vruntime: 0xFFFFFFFFFFF00000
 	se->vruntime -= cfs_rq->min_vruntime;
+	// se->vruntime: (&(kmem_cache#15-oX (struct task_struct))->se)->vruntimea: 0x5B8D7E
 
+	// &rq->lock: [pcp0] &(&runqueues)->lock
 	raw_spin_unlock_irqrestore(&rq->lock, flags);
+
+	// raw_spin_unlock_irqrestore 에서 한일:
+	// [pcp0] &(&runqueues)->lock 을 사용하여 spin unlock 을 수행하고 flags 저장된 cpsr 값을 복원함
 }
 
 /*
