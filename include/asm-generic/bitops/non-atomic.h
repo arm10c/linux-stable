@@ -32,6 +32,8 @@ static inline void __set_bit(int nr, volatile unsigned long *addr)
 // ARM10C 20140118
 // bitidx + start_bitidx : 0, bitmap : &mem_section[0][2]->pageblock_flags
 // ARM10C 20140621
+// ARM10C 20161029
+// fd: 0, fdt->open_fds: (&(kmem_cache#12-oX (struct files_struct))->fdtab)->open_fds
 static inline void __clear_bit(int nr, volatile unsigned long *addr)
 {
 	// mask : 0x1

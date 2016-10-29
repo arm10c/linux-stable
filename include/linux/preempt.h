@@ -13,6 +13,8 @@
  * We use the MSB mostly because its available; see <linux/preempt_mask.h> for
  * the other bits -- can't include that header due to inclusion hell.
  */
+// ARM10C 20161029
+// PREEMPT_NEED_RESCHED: 0x80000000
 #define PREEMPT_NEED_RESCHED	0x80000000
 
 #include <asm/preempt.h>
@@ -27,6 +29,7 @@ extern void preempt_count_add(int val);
 extern void preempt_count_sub(int val);
 // ARM10C 20140614
 // ARM10C 20160402
+// ARM10C 20161029
 #define preempt_count_dec_and_test() ({ preempt_count_sub(1); should_resched(); })
 #else
 #define preempt_count_add(val)	__preempt_count_add(val)
@@ -86,6 +89,7 @@ do { \
 // ARM10C 20140628
 // ARM10C 20141206
 // ARM10C 20160402
+// ARM10C 20161029
 #define preempt_enable() \
 do { \
 	barrier(); \

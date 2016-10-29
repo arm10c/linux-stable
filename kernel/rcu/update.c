@@ -220,7 +220,7 @@ void wait_rcu_gp(call_rcu_func_t crf)
 }
 EXPORT_SYMBOL_GPL(wait_rcu_gp);
 
-#ifdef CONFIG_PROVE_RCU
+#ifdef CONFIG_PROVE_RCU // CONFIG_PROVE_RCU=n
 /*
  * wrapper function to avoid #include problems.
  */

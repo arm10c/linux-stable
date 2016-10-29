@@ -199,6 +199,10 @@
 // &p->children: &(kmem_cache#15-oX (struct task_struct))->children
 // ARM10C 20161008
 // &child->cg_list: &(kmem_cache#15-oX (struct task_struct))->cg_list
+// ARM10C 20161029
+// &node->prio_list: &(&(kmem_cache#15-oX (struct task_struct))->pushable_tasks)->prio_list
+// ARM10C 20161029
+// &node->node_list: &(&(kmem_cache#15-oX (struct task_struct))->pushable_tasks)->node_list
 static inline void INIT_LIST_HEAD(struct list_head *list)
 {
 	list->next = list;

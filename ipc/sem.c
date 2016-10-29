@@ -134,6 +134,7 @@ struct sem_undo {
  * that may be shared among all a CLONE_SYSVSEM task group.
  */
 // ARM10C 20150919
+// ARM10C 20161029
 struct sem_undo_list {
 	atomic_t		refcnt;
 	spinlock_t		lock;
@@ -2000,11 +2001,14 @@ SYSCALL_DEFINE3(semop, int, semid, struct sembuf __user *, tsops,
  * parent and child tasks.
  */
 
+// ARM10C 20161029
+// clone_flags: 0x00800B00, p: kmem_cache#15-oX (struct task_struct)
 int copy_semundo(unsigned long clone_flags, struct task_struct *tsk)
 {
 	struct sem_undo_list *undo_list;
 	int error;
 
+	// clone_flags: 0x00800B00, CLONE_SYSVSEM: 0x00040000
 	if (clone_flags & CLONE_SYSVSEM) {
 		error = get_undo_list(&undo_list);
 		if (error)
@@ -2012,9 +2016,12 @@ int copy_semundo(unsigned long clone_flags, struct task_struct *tsk)
 		atomic_inc(&undo_list->refcnt);
 		tsk->sysvsem.undo_list = undo_list;
 	} else 
+		// tsk->sysvsem.undo_list: (kmem_cache#15-oX (struct task_struct))->sysvsem.undo_list
 		tsk->sysvsem.undo_list = NULL;
+		// tsk->sysvsem.undo_list: (kmem_cache#15-oX (struct task_struct))->sysvsem.undo_list: NULL
 
 	return 0;
+	// return 0
 }
 
 /*

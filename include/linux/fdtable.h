@@ -20,11 +20,13 @@
  * as this is the granularity returned by copy_fdset().
  */
 // ARM10C 20150919
+// ARM10C 20161029
 // BITS_PER_LONG: 32
 // NR_OPEN_DEFAULT: 32
 #define NR_OPEN_DEFAULT BITS_PER_LONG
 
 // ARM10C 20150919
+// ARM10C 20161029
 // sizeof(struct fdtable): 24 bytes
 struct fdtable {
 	unsigned int max_fds;
@@ -48,6 +50,8 @@ static inline bool fd_is_open(int fd, const struct fdtable *fdt)
  * Open file table structure
  */
 // ARM10C 20150919
+// ARM10C 20161029
+// NR_OPEN_DEFAULT: 32
 // sizeof(struct files_struct): 188 bytes
 struct files_struct {
   /*
@@ -67,12 +71,16 @@ struct files_struct {
 	struct file __rcu * fd_array[NR_OPEN_DEFAULT];
 };
 
+// ARM10C 20161029
+// oldf: &init_files, (&init_files)->ftd
 #define rcu_dereference_check_fdtable(files, fdtfd) \
 	(rcu_dereference_check((fdtfd), \
 			       lockdep_is_held(&(files)->file_lock) || \
 			       atomic_read(&(files)->count) == 1 || \
 			       rcu_my_thread_group_empty()))
 
+// ARM10C 20161029
+// oldf: &init_files
 #define files_fdtable(files) \
 		(rcu_dereference_check_fdtable((files), (files)->fdt))
 

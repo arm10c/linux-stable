@@ -152,6 +152,8 @@ TRACE_EVENT(sched_switch,
 /*
  * Tracepoint for a task being migrated:
  */
+// ARM10C 20161029
+// p: kmem_cache#15-oX (struct task_struct), new_cpu: 0
 TRACE_EVENT(sched_migrate_task,
 
 	TP_PROTO(struct task_struct *p, int dest_cpu),

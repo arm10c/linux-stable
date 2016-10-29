@@ -845,6 +845,8 @@ static inline struct task_group *task_group(struct task_struct *p)
 // idle: &init_task, cpu: 0
 // ARM10C 20161015
 // p: kmem_cache#15-oX (struct task_struct), this_cpu: 0
+// ARM10C 20161029
+// p: kmem_cache#15-oX (struct task_struct), new_cpu: 0
 static inline void __set_task_cpu(struct task_struct *p, unsigned int cpu)
 {
 	// p: &init_task, cpu: 0

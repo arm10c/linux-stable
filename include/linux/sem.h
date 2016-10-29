@@ -31,6 +31,8 @@ struct sysv_sem {
 	struct sem_undo_list *undo_list;
 };
 
+// ARM10C 20161029
+// clone_flags: 0x00800B00, p: kmem_cache#15-oX (struct task_struct)
 extern int copy_semundo(unsigned long clone_flags, struct task_struct *tsk);
 extern void exit_sem(struct task_struct *tsk);
 

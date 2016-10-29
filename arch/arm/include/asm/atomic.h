@@ -47,6 +47,8 @@
 // &kmod_concurrent
 // ARM10C 20160903
 // &p->real_cred->user->processes: &(&root_user)->processes
+// ARM10C 20161029
+// &(&init_files)->count
 #define atomic_read(v)	(*(volatile int *)&(v)->counter)
 // ARM10C 20140118
 // ARM10C 20140322
@@ -83,6 +85,8 @@
 // &tsk->usage: &(kmem_cache#15-oX (struct task_struct))->usage, 2
 // ARM10C 20160910
 // &new->usage: &(kmem_cache#16-oX (struct cred))->usage, 1
+// ARM10C 20161029
+// &newf->count: &(kmem_cache#12-oX (struct files_struct))->count, 1
 #define atomic_set(v,i)	(((v)->counter) = (i))
 
 #if __LINUX_ARM_ARCH__ >= 6

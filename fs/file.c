@@ -220,23 +220,43 @@ static inline void __set_open_fd(int fd, struct fdtable *fdt)
 	__set_bit(fd, fdt->open_fds);
 }
 
+// ARM10C 20161029
+// 0, new_fdt: &(kmem_cache#12-oX (struct files_struct))->fdtab
 static inline void __clear_open_fd(int fd, struct fdtable *fdt)
 {
+	// fd: 0, fdt->open_fds: (&(kmem_cache#12-oX (struct files_struct))->fdtab)->open_fds
 	__clear_bit(fd, fdt->open_fds);
+
+	// __clear_bit 에서 한일:
+	//( &(kmem_cache#12-oX (struct files_struct))->fdtab)->open_fds 의 0 bit 를 clear 함
 }
 
+// ARM10C 20161029
+// old_fdt: (&init_files)->ftd: &init_files.fdtab
 static int count_open_files(struct fdtable *fdt)
 {
+	// fdt->max_fds: (&init_files.fdtab)->max_fds: 32
 	int size = fdt->max_fds;
+	// size: 32
+
 	int i;
 
 	/* Find the last open fd */
+	// size: 32, BITS_PER_LONG: 32
 	for (i = size / BITS_PER_LONG; i > 0; ) {
+		// i: 1, fdt->open_fds[0]: (&init_files.fdtab)->open_fds[0]: init_files.open_fds_init: NULL
 		if (fdt->open_fds[--i])
 			break;
+		// i: 0
 	}
+
+	// i: 0, BITS_PER_LONG: 32
 	i = (i + 1) * BITS_PER_LONG;
+	// i: 32
+
+	// i: 32
 	return i;
+	// return 32
 }
 
 /*
@@ -244,6 +264,8 @@ static int count_open_files(struct fdtable *fdt)
  * passed in files structure.
  * errorp will be valid only when the returned files_struct is NULL.
  */
+// ARM10C 20161029
+// oldf: &init_files, &error
 struct files_struct *dup_fd(struct files_struct *oldf, int *errorp)
 {
 	struct files_struct *newf;
@@ -251,28 +273,85 @@ struct files_struct *dup_fd(struct files_struct *oldf, int *errorp)
 	int open_files, size, i;
 	struct fdtable *old_fdt, *new_fdt;
 
+	// *errorp: *(&error), ENOMEM: 12
 	*errorp = -ENOMEM;
+	// *errorp: *(&error): -12
+
+	// files_cachep: kmem_cache#12, GFP_KERNEL: 0xD0
+	// kmem_cache_alloc(kmem_cache#12, 0xD0): kmem_cache#12-oX (struct files_struct)
 	newf = kmem_cache_alloc(files_cachep, GFP_KERNEL);
+	// newf: kmem_cache#12-oX (struct files_struct)
+
+	// newf: kmem_cache#12-oX (struct files_struct)
 	if (!newf)
 		goto out;
 
+	// &newf->count: &(kmem_cache#12-oX (struct files_struct))->count
 	atomic_set(&newf->count, 1);
 
-	spin_lock_init(&newf->file_lock);
-	newf->next_fd = 0;
-	new_fdt = &newf->fdtab;
-	new_fdt->max_fds = NR_OPEN_DEFAULT;
-	new_fdt->close_on_exec = newf->close_on_exec_init;
-	new_fdt->open_fds = newf->open_fds_init;
-	new_fdt->fd = &newf->fd_array[0];
+	// atomic_set 에서 한일:
+	// (kmem_cache#12-oX (struct files_struct))->count: 1
 
+	// &newf->file_lock: &(kmem_cache#12-oX (struct files_struct))->file_lock
+	spin_lock_init(&newf->file_lock);
+
+	// spin_lock_init에서 한일:
+	// &(kmem_cache#12-oX (struct files_struct))->file_lock을 이용한 spin lock 초기화 수행
+	//
+	// ((&(kmem_cache#12-oX (struct files_struct))->file_lock)->rlock)->raw_lock: { { 0 } }
+	// ((&(kmem_cache#12-oX (struct files_struct))->file_lock)->rlock)->magic: 0xdead4ead
+	// ((&(kmem_cache#12-oX (struct files_struct))->file_lock)->rlock)->owner: 0xffffffff
+	// ((&(kmem_cache#12-oX (struct files_struct))->file_lock)->rlock)->owner_cpu: 0xffffffff
+
+	// newf->next_fd: (kmem_cache#12-oX (struct files_struct))->next_fd
+	newf->next_fd = 0;
+	// newf->next_fd: (kmem_cache#12-oX (struct files_struct))->next_fd: 0
+
+	// &newf->fdtab: &(kmem_cache#12-oX (struct files_struct))->fdtab
+	new_fdt = &newf->fdtab;
+	// new_fdt: &(kmem_cache#12-oX (struct files_struct))->fdtab
+
+	// new_fdt->max_fds: (&(kmem_cache#12-oX (struct files_struct))->fdtab)->max_fds, NR_OPEN_DEFAULT: 32
+	new_fdt->max_fds = NR_OPEN_DEFAULT;
+	// new_fdt->max_fds: (&(kmem_cache#12-oX (struct files_struct))->fdtab)->max_fds: 32
+
+	// new_fdt->close_on_exec: (&(kmem_cache#12-oX (struct files_struct))->fdtab)->close_on_exec,
+	// newf->close_on_exec_init: (kmem_cache#12-oX (struct files_struct))->close_on_exec_init
+	new_fdt->close_on_exec = newf->close_on_exec_init;
+	// new_fdt->close_on_exec: (&(kmem_cache#12-oX (struct files_struct))->fdtab)->close_on_exec: (kmem_cache#12-oX (struct files_struct))->close_on_exec_init
+
+	// new_fdt->open_fds: (&(kmem_cache#12-oX (struct files_struct))->fdtab)->open_fds,
+	// newf->open_fds_init: (kmem_cache#12-oX (struct files_struct))->open_fds_init
+	new_fdt->open_fds = newf->open_fds_init;
+	// new_fdt->open_fds: (&(kmem_cache#12-oX (struct files_struct))->fdtab)->open_fds: (kmem_cache#12-oX (struct files_struct))->open_fds_init
+
+	// new_fdt->fd: (&(kmem_cache#12-oX (struct files_struct))->fdtab)->fd,
+	// &newf->fd_array[0]: &(kmem_cache#12-oX (struct files_struct))->fd_array[0]
+	new_fdt->fd = &newf->fd_array[0];
+	// new_fdt->fd: (&(kmem_cache#12-oX (struct files_struct))->fdtab)->fd: &(kmem_cache#12-oX (struct files_struct))->fd_array[0]
+
+	// &oldf->file_lock: &(&init_files)->file_lock
 	spin_lock(&oldf->file_lock);
+
+	// spin_lock 에서 한일:
+	// &(&init_files)->file_lock 을 사용하여 spin lock 수행
+
+	// oldf: &init_files, files_fdtable(&init_files): (&init_files)->ftd
 	old_fdt = files_fdtable(oldf);
+	// old_fdt: (&init_files)->ftd: &init_files.fdtab
+
+	// files_fdtable 에서 한일:
+	// 가장 최신의 (&init_files)->ftd 값을 읽어옴
+
+	// old_fdt: (&init_files)->ftd: &init_files.fdtab
+	// count_open_files(&init_files.fdtab): 32
 	open_files = count_open_files(old_fdt);
+	// open_files: 32
 
 	/*
 	 * Check whether we need to allocate a larger fd array and fd set.
 	 */
+	// open_files: 32, new_fdt->max_fds: (&(kmem_cache#12-oX (struct files_struct))->fdtab)->max_fds: 32
 	while (unlikely(open_files > new_fdt->max_fds)) {
 		spin_unlock(&oldf->file_lock);
 
@@ -302,14 +381,36 @@ struct files_struct *dup_fd(struct files_struct *oldf, int *errorp)
 		open_files = count_open_files(old_fdt);
 	}
 
+	// old_fdt->fd: (&init_files.fdtab)->fd: &init_files.fd_array[0]
 	old_fds = old_fdt->fd;
-	new_fds = new_fdt->fd;
+	// old_fds: &init_files.fd_array[0]
 
+	// new_fdt->fd: (&(kmem_cache#12-oX (struct files_struct))->fdtab)->fd: &(kmem_cache#12-oX (struct files_struct))->fd_array[0]
+	new_fds = new_fdt->fd;
+	// new_fds: &(kmem_cache#12-oX (struct files_struct))->fd_array[0]
+
+	// new_fdt->open_fds: (&(kmem_cache#12-oX (struct files_struct))->fdtab)->open_fds: (kmem_cache#12-oX (struct files_struct))->open_fds_init,
+	// old_fdt->open_fds: (&init_files.fdtab)->open_fds: init_files.open_fds_init: NULL, open_files: 32
 	memcpy(new_fdt->open_fds, old_fdt->open_fds, open_files / 8);
+
+	// memcpy 에서 한일:
+	// (kmem_cache#12-oX (struct files_struct))->open_fds_init 에 init_files.open_fds_init 값을 복사
+	// (kmem_cache#12-oX (struct files_struct))->open_fds_init: NULL
+
+	// new_fdt->close_on_exec: (&(kmem_cache#12-oX (struct files_struct))->fdtab)->close_on_exec: (kmem_cache#12-oX (struct files_struct))->close_on_exec_init,
+	// old_fdt->close_on_exec: (&init_files.fdtab)->close_on_exec: init_files.close_on_exec_init: NULL, open_files: 32
 	memcpy(new_fdt->close_on_exec, old_fdt->close_on_exec, open_files / 8);
 
+	// memcpy 에서 한일:
+	// (kmem_cache#12-oX (struct files_struct))->close_on_exec_init 에 init_files.close_on_exec_init 값을 복사
+	// (kmem_cache#12-oX (struct files_struct))->close_on_exec_init: NULL
+
+	// open_files: 32
 	for (i = open_files; i != 0; i--) {
+		// i: 32, *old_fds: init_files.fd_array[0]: NULL
 		struct file *f = *old_fds++;
+		// f: NULL, old_fds: &init_files.fd_array[1]
+
 		if (f) {
 			get_file(f);
 		} else {
@@ -319,18 +420,44 @@ struct files_struct *dup_fd(struct files_struct *oldf, int *errorp)
 			 * is partway through open().  So make sure that this
 			 * fd is available to the new process.
 			 */
+			// open_files: 32, i: 32, new_fdt: &(kmem_cache#12-oX (struct files_struct))->fdtab
 			__clear_open_fd(open_files - i, new_fdt);
+
+			// __clear_open_fd 에서 한일:
+			// (&(kmem_cache#12-oX (struct files_struct))->fdtab)->open_fds 의 0 bit 를 clear 함
 		}
+		// *new_fds: (kmem_cache#12-oX (struct files_struct))->fd_array[0], f: NULL
 		rcu_assign_pointer(*new_fds++, f);
+
+		// rcu_assign_pointer 에서 한일:
+		// (kmem_cache#12-oX (struct files_struct))->fd_array[0]: NULL
+
+		// i: 31 ... 1 loop 수행
 	}
+
+	// 위 loop 가 한일:
+	// (&(kmem_cache#12-oX (struct files_struct))->fdtab)->open_fds 의 0~31 bit 를 clear 함
+	// (kmem_cache#12-oX (struct files_struct))->fd_array[0...31]: NULL
+
+	// &oldf->file_lock: &(&init_files)->file_lock
 	spin_unlock(&oldf->file_lock);
 
+	// spin_unlock 에서 한일:
+	// &(&init_files)->file_lock 을 사용하여 spin unlock 수행
+
 	/* compute the remainder to be cleared */
+	// new_fdt->max_fds: (&(kmem_cache#12-oX (struct files_struct))->fdtab)->max_fds: 32, open_files: 32, sizeof(struct file *): 4
 	size = (new_fdt->max_fds - open_files) * sizeof(struct file *);
+	// size: 0
 
 	/* This is long word aligned thus could use a optimized version */
+	// new_fds: &(kmem_cache#12-oX (struct files_struct))->fd_array[0], size: 0
 	memset(new_fds, 0, size);
 
+	// memset 에서 한일:
+	// &(kmem_cache#12-oX (struct files_struct))->fd_array[0] 에 값을 size 0 만큼 0 으로 set 함
+
+	// new_fdt->max_fds: (&(kmem_cache#12-oX (struct files_struct))->fdtab)->max_fds: 32, open_files: 32
 	if (new_fdt->max_fds > open_files) {
 		int left = (new_fdt->max_fds - open_files) / 8;
 		int start = open_files / BITS_PER_LONG;
@@ -339,9 +466,15 @@ struct files_struct *dup_fd(struct files_struct *oldf, int *errorp)
 		memset(&new_fdt->close_on_exec[start], 0, left);
 	}
 
+	// newf->fdt: (kmem_cache#12-oX (struct files_struct))->fdt, new_fdt: &(kmem_cache#12-oX (struct files_struct))->fdtab
 	rcu_assign_pointer(newf->fdt, new_fdt);
 
+	// rcu_assign_pointer 에서 한일:
+	// (kmem_cache#12-oX (struct files_struct))->fdt: &(kmem_cache#12-oX (struct files_struct))->fdtab
+
+	// newf: kmem_cache#12-oX (struct files_struct)
 	return newf;
+	// return kmem_cache#12-oX (struct files_struct)
 
 out_release:
 	kmem_cache_free(files_cachep, newf);
@@ -449,6 +582,8 @@ void __init files_defer_init(void)
 }
 
 // ARM10C 20150808
+// ARM10C 20161029
+// NR_OPEN_DEFAULT: 32
 struct files_struct init_files = {
 	.count		= ATOMIC_INIT(1),
 	.fdt		= &init_files.fdtab,

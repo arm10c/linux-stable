@@ -7194,7 +7194,7 @@ static void task_fork_fair(struct task_struct *p)
 	// se->vruntime: (&(kmem_cache#15-oX (struct task_struct))->se)->vruntimea: 0x4B8D7E,
 	// cfs_rq->min_vruntime: [pcp0] (&(&runqueues)->cfs)->min_vruntime: 0xFFFFFFFFFFF00000
 	se->vruntime -= cfs_rq->min_vruntime;
-	// se->vruntime: (&(kmem_cache#15-oX (struct task_struct))->se)->vruntimea: 0x5B8D7E
+	// se->vruntime: (&(kmem_cache#15-oX (struct task_struct))->se)->vruntime: 0x5B8D7E
 
 	// &rq->lock: [pcp0] &(&runqueues)->lock
 	raw_spin_unlock_irqrestore(&rq->lock, flags);

@@ -4,6 +4,7 @@
 #include <linux/thread_info.h>
 
 // ARM10C 20140913
+// ARM10C 20161029
 // PREEMPT_ENABLED: 0
 #define PREEMPT_ENABLED	(0)
 
@@ -31,9 +32,17 @@ static __always_inline void preempt_count_set(int pc)
 /*
  * must be macros to avoid header recursion hell
  */
+// ARM10C 20161029
+// PREEMPT_NEED_RESCHED: 0x80000000
+//
+// p: kmem_cache#15-oX (struct task_struct)
 #define task_preempt_count(p) \
 	(task_thread_info(p)->preempt_count & ~PREEMPT_NEED_RESCHED)
 
+// ARM10C 20161029
+// PREEMPT_DISABLED: 1
+//
+// p: kmem_cache#15-oX (struct task_struct)
 #define init_task_preempt_count(p) do { \
 	task_thread_info(p)->preempt_count = PREEMPT_DISABLED; \
 } while (0)
@@ -99,10 +108,14 @@ static __always_inline bool __preempt_count_dec_and_test(void)
  * Returns true when we need to resched and can (barring IRQ state).
  */
 // ARM10C 20160402
+// ARM10C 20161029
 static __always_inline bool should_resched(void)
 {
 	// preempt_count(): 0x40000001, tif_need_resched(): 0
+	// preempt_count(): 0, tif_need_resched(): 0
 	return unlikely(!preempt_count() && tif_need_resched());
+	// return 0
+	// return 0
 }
 
 #ifdef CONFIG_PREEMPT // CONFIG_PREEMPT=y

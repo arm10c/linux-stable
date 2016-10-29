@@ -11,6 +11,8 @@
 // ARM10C 20160827
 // CLONE_FS: 0x00000200
 #define CLONE_FS	0x00000200	/* set if fs info shared between processes */
+// ARM10C 20161029
+// CLONE_FILES: 0x00000400
 #define CLONE_FILES	0x00000400	/* set if open files shared between processes */
 // ARM10C 20160827
 // ARM10C 20160903
@@ -29,6 +31,8 @@
 // ARM10C 20160827
 // CLONE_NEWNS: 0x00020000
 #define CLONE_NEWNS	0x00020000	/* New namespace group? */
+// ARM10C 20161029
+// CLONE_SYSVSEM: 0x00040000
 #define CLONE_SYSVSEM	0x00040000	/* share system V SEM_UNDO semantics */
 #define CLONE_SETTLS	0x00080000	/* create a new TLS for the child */
 #define CLONE_PARENT_SETTID	0x00100000	/* set the TID in the parent */

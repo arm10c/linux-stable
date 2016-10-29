@@ -577,6 +577,16 @@ static inline void rcu_preempt_sleep_check(void)
 // 	((typeof(*(&init_task)->cgroups) __force __kernel *)(_________p1));
 // })
 //
+// ARM10C 20161029
+// (&init_files)->ftd, 1, __rcu
+// #define __rcu_dereference_check((&init_task)->ftd, 1, __rcu):
+// ({
+// 	typeof(*(&init_task)->ftd) *_________p1 = (typeof(*(&init_task)->ftd)*__force )ACCESS_ONCE((&init_task)->ftd);
+// 	rcu_lockdep_assert(1, "suspicious rcu_dereference_check()" " usage");
+// 	rcu_dereference_sparse((&init_task)->ftd, __rcu);
+// 	smp_read_barrier_depends();
+// 	((typeof(*(&init_task)->ftd) __force __kernel *)(_________p1));
+// })
 #define __rcu_dereference_check(p, c, space) \
 	({ \
 		typeof(*p) *_________p1 = (typeof(*p)*__force )ACCESS_ONCE(p); \
@@ -654,6 +664,18 @@ static inline void rcu_preempt_sleep_check(void)
 // do {
 //      smp_wmb();
 //      ((kmem_cache#21-o7 (struct idr_layer))->ary[0]) = (typeof(*kmem_cache#27-oX (struct ida_bitmap)) __force space *)(kmem_cache#27-oX (struct ida_bitmap));
+// } while (0)
+// ARM10C 20161029
+// #define __rcu_assign_pointer((kmem_cache#12-oX (struct files_struct))->fd_array[0], NULL, __rcu):
+// do {
+//     smp_wmb();
+//     ((kmem_cache#12-oX (struct files_struct))->fd_array[0]) = (typeof(*NULL) __force __rcu *)(NULL);
+// } while (0)
+// ARM10C 20161029
+// #define __rcu_assign_pointer((kmem_cache#12-oX (struct files_struct))->fdt, &(kmem_cache#12-oX (struct files_struct))->fdtab, __rcu):
+// do {
+//     smp_wmb();
+//     ((kmem_cache#12-oX (struct files_struct))->fdt) = (typeof(*&(kmem_cache#12-oX (struct files_struct))->fdtab) __force __rcu *)(&(kmem_cache#12-oX (struct files_struct))->fdtab);
 // } while (0)
 #define __rcu_assign_pointer(p, v, space)	\
 	do { \
@@ -742,7 +764,8 @@ static inline void rcu_preempt_sleep_check(void)
 // ARM10C 20161008
 // (&init_task)->cgroups, 0
 // rcu_read_lock_held(): 1
-//
+// ARM10C 20161029
+// (&init_files)->ftd, 1
 #define rcu_dereference_check(p, c) \
 	__rcu_dereference_check((p), rcu_read_lock_held() || (c), __rcu)
 
@@ -1140,6 +1163,10 @@ static inline notrace void rcu_read_unlock_sched_notrace(void)
 // idr->hint: (&cgroup_hierarchy_idr)->hint, pa[0]: kmem_cache#21-oX (struct idr_layer)
 // ARM10C 20160730
 // pa[0]->ary[0]: (kmem_cache#21-oX (struct idr_layer))->ary[0], ptr: &cgroup_dummy_root
+// ARM10C 20161029
+// *new_fds: (kmem_cache#12-oX (struct files_struct))->fd_array[0], f: NULL
+// ARM10C 20161029
+// newf->fdt: (kmem_cache#12-oX (struct files_struct))->fdt, new_fdt: &(kmem_cache#12-oX (struct files_struct))->fdtab
 #define rcu_assign_pointer(p, v)		\
 	__rcu_assign_pointer((p), (v), __rcu)
 

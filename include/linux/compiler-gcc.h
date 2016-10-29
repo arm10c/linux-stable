@@ -18,6 +18,7 @@
 // ARM10C 20141227
 // ARM10C 20160326
 // ARM10C 20160402
+// ARM10C 20161029
 // 컴파일러적으로 memory barrier 를 만들어 줌
 // http://studyfoss.egloos.com/5128961
 #define barrier() __asm__ __volatile__("": : :"memory")

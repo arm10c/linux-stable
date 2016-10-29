@@ -137,6 +137,7 @@ print_cfs_rq(struct seq_file *m, int cpu, struct cfs_rq *cfs_rq);
  */
 // ARM10C 20140913
 // ARM10C 20161008
+// ARM10C 20161029
 // TASK_RUNNING: 0
 #define TASK_RUNNING		0
 // ARM10C 20160409
@@ -154,6 +155,8 @@ print_cfs_rq(struct seq_file *m, int cpu, struct cfs_rq *cfs_rq);
 /* in tsk->state again */
 #define TASK_DEAD		64
 #define TASK_WAKEKILL		128
+// ARM10C 20161029
+// TASK_WAKING: 256
 #define TASK_WAKING		256
 #define TASK_PARKED		512
 #define TASK_STATE_MAX		1024
@@ -474,7 +477,9 @@ struct task_cputime {
 		.sum_exec_runtime = 0,				\
 	}
 
-#ifdef CONFIG_PREEMPT_COUNT
+#ifdef CONFIG_PREEMPT_COUNT // CONFIG_PREEMPT_COUNT=y
+// PREEMPT_ENABLED: 0
+// PREEMPT_DISABLED: 1
 #define PREEMPT_DISABLED	(1 + PREEMPT_ENABLED)
 #else
 #define PREEMPT_DISABLED	PREEMPT_ENABLED
@@ -2521,6 +2526,8 @@ static inline void threadgroup_unlock(struct task_struct *tsk) {}
 // p: kmem_cache#15-oX (struct task_struct)
 // ARM10C 20160910
 // p: kmem_cache#15-oX (struct task_struct)
+// ARM10C 20161029
+// p: kmem_cache#15-oX (struct task_struct)
 #define task_thread_info(task)	((struct thread_info *)(task)->stack)
 #define task_stack_page(task)	((task)->stack)
 
@@ -2868,11 +2875,17 @@ static inline void ptrace_signal_wake_up(struct task_struct *t, bool resume)
 /*
  * Wrappers for p->thread_info->cpu access. No-op on UP.
  */
-#ifdef CONFIG_SMP
+#ifdef CONFIG_SMP // CONFIG_SMP=y
 
+// ARM10C 20161029
+// p: kmem_cache#15-oX (struct task_struct)
 static inline unsigned int task_cpu(const struct task_struct *p)
 {
+	// p: kmem_cache#15-oX (struct task_struct)
+	// task_thread_info(kmem_cache#15-oX (struct task_struct)): ((struct thread_info *)(kmem_cache#15-oX (struct task_struct))->stack)
+	// task_thread_info(kmem_cache#15-oX (struct task_struct))->cpu: ((struct thread_info *)(kmem_cache#15-oX (struct task_struct))->stack)->cpu: 0
 	return task_thread_info(p)->cpu;
+	// return 0
 }
 
 static inline int task_node(const struct task_struct *p)

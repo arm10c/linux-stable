@@ -151,11 +151,27 @@ plist_head_init(struct plist_head *head)
  * @node:	&struct plist_node pointer
  * @prio:	initial node priority
  */
+// ARM10C 20161029
+// &p->pushable_tasks: &(kmem_cache#15-oX (struct task_struct))->pushable_tasks, MAX_PRIO: 140
 static inline void plist_node_init(struct plist_node *node, int prio)
 {
+	// node->prio: (&(kmem_cache#15-oX (struct task_struct))->pushable_tasks)->prio, prio: 140
 	node->prio = prio;
+	// node->prio: (&(kmem_cache#15-oX (struct task_struct))->pushable_tasks)->prio: 140
+
+	// &node->prio_list: &(&(kmem_cache#15-oX (struct task_struct))->pushable_tasks)->prio_list
 	INIT_LIST_HEAD(&node->prio_list);
+
+	// INIT_LIST_HEAD 에서 한일:
+	// (&(&(kmem_cache#15-oX (struct task_struct))->pushable_tasks)->prio_list)->next: &(&(kmem_cache#15-oX (struct task_struct))->pushable_tasks)->prio_list
+	// (&(&(kmem_cache#15-oX (struct task_struct))->pushable_tasks)->prio_list)->prev: &(&(kmem_cache#15-oX (struct task_struct))->pushable_tasks)->prio_list
+
+	// &node->node_list: &(&(kmem_cache#15-oX (struct task_struct))->pushable_tasks)->node_list
 	INIT_LIST_HEAD(&node->node_list);
+
+	// INIT_LIST_HEAD 에서 한일:
+	// (&(&(kmem_cache#15-oX (struct task_struct))->pushable_tasks)->node_list)->next: &(&(kmem_cache#15-oX (struct task_struct))->pushable_tasks)->node_list
+	// (&(&(kmem_cache#15-oX (struct task_struct))->pushable_tasks)->node_list)->prev: &(&(kmem_cache#15-oX (struct task_struct))->pushable_tasks)->node_list
 }
 
 extern void plist_add(struct plist_node *node, struct plist_head *head);

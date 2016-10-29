@@ -201,6 +201,7 @@ static inline void kick_all_cpus_sync(void) {  }
 // ARM10C 20161008
 // smp_processor_id(): 0
 #define get_cpu()		({ preempt_disable(); smp_processor_id(); })
+// ARM10C 20161029
 #define put_cpu()		preempt_enable()
 
 /*

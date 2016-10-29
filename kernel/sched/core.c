@@ -1075,18 +1075,22 @@ void check_preempt_curr(struct rq *rq, struct task_struct *p, int flags)
 		rq->skip_clock_update = 1;
 }
 
-#ifdef CONFIG_SMP
+#ifdef CONFIG_SMP // CONFIG_SMP=y
+// ARM10C 20161029
+// p: kmem_cache#15-oX (struct task_struct), cpu: 0
 void set_task_cpu(struct task_struct *p, unsigned int new_cpu)
 {
-#ifdef CONFIG_SCHED_DEBUG
+#ifdef CONFIG_SCHED_DEBUG // CONFIG_SCHED_DEBUG=y
 	/*
 	 * We should never call set_task_cpu() on a blocked task,
 	 * ttwu() will sort out the placement.
 	 */
+	// p->state: (kmem_cache#15-oX (struct task_struct))->state: 0, TASK_RUNNING: 0, TASK_WAKING: 256
+	// p: kmem_cache#15-oX (struct task_struct), PREEMPT_ACTIVE: 0x8000000
 	WARN_ON_ONCE(p->state != TASK_RUNNING && p->state != TASK_WAKING &&
 			!(task_preempt_count(p) & PREEMPT_ACTIVE));
 
-#ifdef CONFIG_LOCKDEP
+#ifdef CONFIG_LOCKDEP // CONFIG_LOCKDEP=n
 	/*
 	 * The caller should hold either p->pi_lock or rq->lock, when changing
 	 * a task's CPU. ->pi_lock for waking tasks, rq->lock for runnable tasks.
@@ -1102,8 +1106,11 @@ void set_task_cpu(struct task_struct *p, unsigned int new_cpu)
 #endif
 #endif
 
+	// p: kmem_cache#15-oX (struct task_struct), new_cpu: 0
 	trace_sched_migrate_task(p, new_cpu);
 
+	// p: kmem_cache#15-oX (struct task_struct), new_cpu: 0
+	// task_cpu(kmem_cache#15-oX (struct task_struct)): 0,  new_cpu: 0
 	if (task_cpu(p) != new_cpu) {
 		if (p->sched_class->migrate_task_rq)
 			p->sched_class->migrate_task_rq(p, new_cpu);
@@ -1111,7 +1118,16 @@ void set_task_cpu(struct task_struct *p, unsigned int new_cpu)
 		perf_sw_event(PERF_COUNT_SW_CPU_MIGRATIONS, 1, NULL, 0);
 	}
 
+	// p: kmem_cache#15-oX (struct task_struct), new_cpu: 0
 	__set_task_cpu(p, new_cpu);
+
+	// __set_task_cpu에서 한일:
+	// (kmem_cache#15-oX (struct task_struct))->se.cfs_rq: [pcp0] &(&runqueues)->cfs
+	// (kmem_cache#15-oX (struct task_struct))->se.parent: NULL
+	// (kmem_cache#15-oX (struct task_struct))->rt.rt_rq: [pcp0] &(&runqueues)->rt
+	// (kmem_cache#15-oX (struct task_struct))->rt.parent: NULL
+	// ((struct thread_info *)(kmem_cache#15-oX (struct task_struct))->stack)->cpu: 0
+	// (kmem_cache#15-oX (struct task_struct))->wake_cpu: 0
 }
 
 static void __migrate_swap_task(struct task_struct *p, int cpu)
@@ -1990,6 +2006,7 @@ void sched_fork(unsigned long clone_flags, struct task_struct *p)
 		// p->sched_class: (kmem_cache#15-oX (struct task_struct))->sched_class: &fair_sched_class
 
 // 2016/10/15 종료
+// 2016/10/29 시작
 
 	// p->sched_class: (kmem_cache#15-oX (struct task_struct))->sched_class: &fair_sched_class,
 	// p->sched_class->task_fork: (&fair_sched_class)->task_fork: task_fork_fair
@@ -2000,6 +2017,20 @@ void sched_fork(unsigned long clone_flags, struct task_struct *p)
 		p->sched_class->task_fork(p);
 
 		// task_fork_fair 에서 한일:
+		// 현재의 schedule 시간값과 기존의 (&runqueues)->clock 의 값의 차이값을
+		// [pcp0] (&runqueues)->clock, [pcp0] (&runqueues)->clock_task 의 값에 더해 갱신함
+		//
+		// [pcp0] (&runqueues)->clock: schedule 시간 차이값
+		// [pcp0] (&runqueues)->clock_task: schedule 시간 차이값
+		//
+		// (kmem_cache#15-oX (struct task_struct))->se.cfs_rq: [pcp0] &(&runqueues)->cfs
+		// (kmem_cache#15-oX (struct task_struct))->se.parent: NULL
+		// (kmem_cache#15-oX (struct task_struct))->rt.rt_rq: [pcp0] &(&runqueues)->rt
+		// (kmem_cache#15-oX (struct task_struct))->rt.parent: NULL
+		// ((struct thread_info *)(kmem_cache#15-oX (struct task_struct))->stack)->cpu: 0
+		// (kmem_cache#15-oX (struct task_struct))->wake_cpu: 0
+		//
+		// (&(kmem_cache#15-oX (struct task_struct))->se)->vruntime: 0x5B8D7E
 
 	/*
 	 * The child is not yet in the pid-hash so no cgroup attach races,
@@ -2008,20 +2039,55 @@ void sched_fork(unsigned long clone_flags, struct task_struct *p)
 	 *
 	 * Silence PROVE_RCU.
 	 */
+	// &p->pi_lock: &(kmem_cache#15-oX (struct task_struct))->pi_lock
 	raw_spin_lock_irqsave(&p->pi_lock, flags);
+
+	// raw_spin_lock_irqsave 에서 한일:
+	// &(kmem_cache#15-oX (struct task_struct))->pi_lock 을 사용하여 spin lock 을 수행하고 cpsr 값을 flags 저장함
+
+	// p: kmem_cache#15-oX (struct task_struct), cpu: 0
 	set_task_cpu(p, cpu);
+
+	// set_task_cpu 에서 한일:
+	// (kmem_cache#15-oX (struct task_struct))->se.cfs_rq: [pcp0] &(&runqueues)->cfs
+	// (kmem_cache#15-oX (struct task_struct))->se.parent: NULL
+	// (kmem_cache#15-oX (struct task_struct))->rt.rt_rq: [pcp0] &(&runqueues)->rt
+	// (kmem_cache#15-oX (struct task_struct))->rt.parent: NULL
+	// ((struct thread_info *)(kmem_cache#15-oX (struct task_struct))->stack)->cpu: 0
+	// (kmem_cache#15-oX (struct task_struct))->wake_cpu: 0
+
+	// &p->pi_lock: &(kmem_cache#15-oX (struct task_struct))->pi_lock
 	raw_spin_unlock_irqrestore(&p->pi_lock, flags);
 
-#if defined(CONFIG_SCHEDSTATS) || defined(CONFIG_TASK_DELAY_ACCT)
+	// raw_spin_unlock_irqrestore 에서 한일:
+	// &(kmem_cache#15-oX (struct task_struct))->pi_lock 을 사용하여 spin unlock 을 수행하고 flags 저장된 cpsr 값을 복원함
+
+#if defined(CONFIG_SCHEDSTATS) || defined(CONFIG_TASK_DELAY_ACCT) // CONFIG_SCHEDSTATS=n, CONFIG_TASK_DELAY_ACCT=n
 	if (likely(sched_info_on()))
 		memset(&p->sched_info, 0, sizeof(p->sched_info));
 #endif
-#if defined(CONFIG_SMP)
+#if defined(CONFIG_SMP) // CONFIG_SMP=y
+	// p->on_cpu: (kmem_cache#15-oX (struct task_struct))->on_cpu
 	p->on_cpu = 0;
+	// p->on_cpu: (kmem_cache#15-oX (struct task_struct))->on_cpu: 0
 #endif
+	// p: kmem_cache#15-oX (struct task_struct)
 	init_task_preempt_count(p);
-#ifdef CONFIG_SMP
+
+	// init_task_preempt_count 에서 한일:
+	// ((struct thread_info *)(kmem_cache#15-oX (struct task_struct))->stack)->preempt_count: 1
+
+#ifdef CONFIG_SMP // CONFIG_SMP=y
+	// &p->pushable_tasks: &(kmem_cache#15-oX (struct task_struct))->pushable_tasks, MAX_PRIO: 140
 	plist_node_init(&p->pushable_tasks, MAX_PRIO);
+
+	// plist_node_init 에서 한일:
+	// (&(kmem_cache#15-oX (struct task_struct))->pushable_tasks)->prio: 140
+	//
+	// (&(&(kmem_cache#15-oX (struct task_struct))->pushable_tasks)->prio_list)->next: &(&(kmem_cache#15-oX (struct task_struct))->pushable_tasks)->prio_list
+	// (&(&(kmem_cache#15-oX (struct task_struct))->pushable_tasks)->prio_list)->prev: &(&(kmem_cache#15-oX (struct task_struct))->pushable_tasks)->prio_list
+	// (&(&(kmem_cache#15-oX (struct task_struct))->pushable_tasks)->node_list)->next: &(&(kmem_cache#15-oX (struct task_struct))->pushable_tasks)->node_list
+	// (&(&(kmem_cache#15-oX (struct task_struct))->pushable_tasks)->node_list)->prev: &(&(kmem_cache#15-oX (struct task_struct))->pushable_tasks)->node_list
 #endif
 
 	put_cpu();
@@ -2576,6 +2642,7 @@ EXPORT_SYMBOL(preempt_count_add);
 // ARM10C 20130907
 // ARM10C 20160402
 // 1
+// ARM10C 20161029
 void __kprobes preempt_count_sub(int val)
 {
 #ifdef CONFIG_DEBUG_PREEMPT // CONFIG_DEBUG_PREEMPT=y
