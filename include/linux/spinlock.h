@@ -112,6 +112,8 @@
 // &inode->i_lock: (&(kmem_cache#4-oX)->i_lock)->rlock
 // ARM10C 20160903
 // &p->pi_lock: &(kmem_cache#15-oX (struct task_struct))->pi_lock
+// ARM10C 20161105
+// &sig->cputimer.lock: &(kmem_cache#13-oX (struct signal_struct))->cputimer.lock
 # define raw_spin_lock_init(lock)				\
 do {								\
 	static struct lock_class_key __key;	/* struct lock_class_key { }; */	\
@@ -454,6 +456,8 @@ do {							\
 // &p->alloc_lock: &(&init_task)->alloc_lock
 // ARM10C 20161029
 // &oldf->file_lock: &(&init_files)->file_lock
+// ARM10C 20161105
+// &fs->lock: &(&init_fs)->lock
 static inline void spin_lock(spinlock_t *lock)
 {
 	// lock->rlock: (&contig_page_data->node_zones[0].lock)->rlock
@@ -559,6 +563,8 @@ do {									\
 // &p->alloc_lock: &(&init_task)->alloc_lock
 // ARM10C 20161029
 // &oldf->file_lock: &(&init_files)->file_lock
+// ARM10C 20161105
+// &fs->lock: &(&init_fs)->lock
 static inline void spin_unlock(spinlock_t *lock)
 {
 	raw_spin_unlock(&lock->rlock);

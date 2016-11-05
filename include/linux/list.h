@@ -203,6 +203,14 @@
 // &node->prio_list: &(&(kmem_cache#15-oX (struct task_struct))->pushable_tasks)->prio_list
 // ARM10C 20161029
 // &node->node_list: &(&(kmem_cache#15-oX (struct task_struct))->pushable_tasks)->node_list
+// ARM10C 20161105
+// &sig->posix_timers: &(kmem_cache#13-oX (struct signal_struct))->posix_timers
+// ARM10C 20161105
+// &sig->cpu_timers[0]): &(kmem_cache#13-oX (struct signal_struct))->cpu_timers[0]
+// ARM10C 20161105
+// &sig->cpu_timers[1]): &(kmem_cache#13-oX (struct signal_struct))->cpu_timers[1]
+// ARM10C 20161105
+// &sig->cpu_timers[2]): &(kmem_cache#13-oX (struct signal_struct))->cpu_timers[2]
 static inline void INIT_LIST_HEAD(struct list_head *list)
 {
 	list->next = list;

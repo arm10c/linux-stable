@@ -41,7 +41,9 @@
 #define switch_tls	switch_tls_v6
 #elif defined(CONFIG_CPU_32v6K) // CONFIG_CPU_32v6K=y
 // ARM10C 20131116
+// ARM10C 20161105
 #define tls_emu		0
+// ARM10C 20161105
 #define has_tls_reg		1
 #define switch_tls	switch_tls_v6k
 #else
@@ -51,14 +53,25 @@
 #endif
 
 #ifndef __ASSEMBLY__
+// ARM10C 20161105
 static inline unsigned long get_tpuser(void)
 {
 	unsigned long reg = 0;
+	// reg: 0
 
+	// A.R.M: B6.1.92 TPIDRURW, User Read/Write Thread ID Register, PMSA
+	// Provides a location where software executing at PL1 can store thread identifying information
+	// that is visible to unprivileged software, for OS management purposes
+
+	// has_tls_reg: 1, tls_emu: 0
 	if (has_tls_reg && !tls_emu)
 		__asm__("mrc p15, 0, %0, c13, c0, 2" : "=r" (reg));
 
+	// reg: TPIDRURW의 읽은 값
+
+	// reg: TPIDRURW의 읽은 값
 	return reg;
+	// return TPIDRURW의 읽은 값
 }
 #endif
 #endif	/* __ASMARM_TLS_H */

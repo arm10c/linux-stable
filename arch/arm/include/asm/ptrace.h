@@ -14,6 +14,8 @@
 
 #ifndef __ASSEMBLY__
 // ARM10C 20141227
+// ARM10C 20161105
+// sizeof(struct pt_regs): 72 bytes
 struct pt_regs {
 	unsigned long uregs[18];
 };

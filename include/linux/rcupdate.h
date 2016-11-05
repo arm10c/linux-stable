@@ -587,6 +587,27 @@ static inline void rcu_preempt_sleep_check(void)
 // 	smp_read_barrier_depends();
 // 	((typeof(*(&init_task)->ftd) __force __kernel *)(_________p1));
 // })
+// ARM10C 20161105
+// (kmem_cache#15-oX (struct task_struct))->real_cred, 0, __rcu
+// #define __rcu_dereference_check((kmem_cache#15-oX (struct task_struct))->real_cred, c, __rcu) \
+// ({
+// 	typeof(*(kmem_cache#15-oX (struct task_struct))->real_cred) *_________p1 =
+// 	(typeof(*(kmem_cache#15-oX (struct task_struct))->real_cred)*__force )ACCESS_ONCE((kmem_cache#15-oX (struct task_struct))->real_cred);
+// 	rcu_lockdep_assert(0, "suspicious rcu_dereference_check()" "usage");
+// 	rcu_dereference_sparse((kmem_cache#15-oX (struct task_struct))->real_cred, __rcu);
+// 	smp_read_barrier_depends();
+// 	((typeof(*(kmem_cache#15-oX (struct task_struct))->real_cred) __force __kernel *)(_________p1));
+// })
+// ARM10C 20161105
+// *nl: (&thread_notify_head)->head, 1, __rcu
+// #define __rcu_dereference_check((thread_notify_head)->head, 1, __rcu):
+// ({
+//      typeof(*(thread_notify_head)->head) *_________p1 = (typeof(*(thread_notify_head)->head)*__force )ACCESS_ONCE((thread_notify_head)->head);
+//      rcu_lockdep_assert(1, "suspicious rcu_dereference_check()" " usage");
+//      rcu_dereference_sparse((thread_notify_head)->head, __rcu);
+//      smp_read_barrier_depends();
+//      ((typeof(*(thread_notify_head)->head) __force __kernel *)(_________p1));
+// })
 #define __rcu_dereference_check(p, c, space) \
 	({ \
 		typeof(*p) *_________p1 = (typeof(*p)*__force )ACCESS_ONCE(p); \
@@ -766,6 +787,10 @@ static inline void rcu_preempt_sleep_check(void)
 // rcu_read_lock_held(): 1
 // ARM10C 20161029
 // (&init_files)->ftd, 1
+// ARM10C 20161105
+// (kmem_cache#15-oX (struct task_struct))->real_cred, 0
+// ARM10C 20161105
+// *nl: *(&(&thread_notify_head)->head), 1
 #define rcu_dereference_check(p, c) \
 	__rcu_dereference_check((p), rcu_read_lock_held() || (c), __rcu)
 
@@ -794,6 +819,8 @@ static inline void rcu_preempt_sleep_check(void)
 // root->rnode: (&irq_desc_tree)->rnode: kmem_cache#20-o1 (RADIX_LSB: 1)
 // ARM10C 20141122
 // *slot: (kmem_cache#20-o1)->slots[0]
+// ARM10C 20161105
+// *nl: *(&(&thread_notify_head)->head)
 #define rcu_dereference_raw(p) rcu_dereference_check(p, 1) /*@@@ needed? @@@*/
 
 /*
@@ -873,6 +900,8 @@ static inline void rcu_preempt_sleep_check(void)
  */
 // ARM10C 20161008
 // (&init_task)->cgroups
+// ARM10C 20161105
+// (kmem_cache#15-oX (struct task_struct))->real_cred
 #define rcu_dereference(p) rcu_dereference_check(p, 0)
 
 /**
@@ -936,6 +965,7 @@ static inline void rcu_preempt_sleep_check(void)
 // ARM10C 20140913
 // ARM10C 20150606
 // ARM10C 20161015
+// ARM10C 20161105
 static inline void rcu_read_lock(void)
 {
 	__rcu_read_lock();
@@ -973,6 +1003,7 @@ static inline void rcu_read_lock(void)
 // ARM10C 20140913
 // ARM10C 20150606
 // ARM10C 20161015
+// ARM10C 20161105
 static inline void rcu_read_unlock(void)
 {
 	// rcu_is_watching(): true

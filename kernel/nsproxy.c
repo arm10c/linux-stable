@@ -32,6 +32,7 @@ static struct kmem_cache *nsproxy_cachep;
 // ARM10C 20150808
 // ARM10C 20160521
 // ARM10C 20160903
+// ARM10C 20161105
 struct nsproxy init_nsproxy = {
 	.count			= ATOMIC_INIT(1),
 	.uts_ns			= &init_uts_ns,
@@ -125,16 +126,38 @@ out_ns:
  * called from clone.  This now handles copy for nsproxy and all
  * namespaces therein.
  */
+// ARM10C 20161105
+// clone_flags: 0x00800B00, p: kmem_cache#15-oX (struct task_struct)
 int copy_namespaces(unsigned long flags, struct task_struct *tsk)
 {
+	// tsk->nsproxy: (kmem_cache#15-oX (struct task_struct))->nsproxy: &init_nsproxy
 	struct nsproxy *old_ns = tsk->nsproxy;
+	// old_ns: &init_nsproxy
+
+	// tsk: kmem_cache#15-oX (struct task_struct)
+	// task_cred_xxx(kmem_cache#15-oX (struct task_struct), user_ns):
+	// (kmem_cache#15-oX (struct task_struct))->real_cred: kmem_cache#16-oX (struct cred)
 	struct user_namespace *user_ns = task_cred_xxx(tsk, user_ns);
+	// user_ns: kmem_cache#16-oX (struct cred)
+
+	// task_cred_xxx 에서 한일:
+	// 최신 (kmem_cache#15-oX (struct task_struct))->real_cred 에 등록된 값
+	// kmem_cache#16-oX (struct cred) 을 읽어옴
+
 	struct nsproxy *new_ns;
 
+	// flags: 0x00800B00, CLONE_NEWNS: 0x00020000, CLONE_NEWUTS: 0x04000000,
+	// CLONE_NEWIPC: 0x08000000, CLONE_NEWPID: 0x20000000, CLONE_NEWNET: 0x40000000
 	if (likely(!(flags & (CLONE_NEWNS | CLONE_NEWUTS | CLONE_NEWIPC |
 			      CLONE_NEWPID | CLONE_NEWNET)))) {
+		// old_ns: &init_nsproxy
 		get_nsproxy(old_ns);
+
+		// get_nsproxy 에서 한일:
+		// (&init_nsproxy)->count: { (2) }
+
 		return 0;
+		// return 0
 	}
 
 	if (!ns_capable(user_ns, CAP_SYS_ADMIN))

@@ -86,6 +86,10 @@ unsigned long get_wchan(struct task_struct *p);
 #define cpu_relax()			barrier()
 #endif
 
+// ARM10C 20161105
+// THREAD_START_SP: 8184
+// p: kmem_cache#15-oX (struct task_struct)
+// task_stack_page(kmem_cache#15-oX (struct task_struct)): (kmem_cache#15-oX (struct task_struct))->stack
 #define task_pt_regs(p) \
 	((struct pt_regs *)(THREAD_START_SP + task_stack_page(p)) - 1)
 

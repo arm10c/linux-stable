@@ -386,6 +386,8 @@ void ftrace_likely_update(struct ftrace_branch_data *f, int val, int expect);
 // ARM10C 20160903
 // ARM10C 20161008
 // tsk->signal->rlim[6].rlim_cur: (&init_signals)->rlim[6].rlim_cur: 0
+// ARM10C 20161105
+// sig->rlim[0].rlim_cur: (kmem_cache#13-oX (struct signal_struct))>rlim[0].rlim_cur
 */
 #define ACCESS_ONCE(x) (*(volatile typeof(x) *)&(x))
 

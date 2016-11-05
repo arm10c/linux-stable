@@ -584,7 +584,7 @@ extern struct tty_ldisc_ops tty_ldisc_N_TTY;
 extern void n_tty_inherit_ops(struct tty_ldisc_ops *ops);
 
 /* tty_audit.c */
-#ifdef CONFIG_AUDIT
+#ifdef CONFIG_AUDIT // CONFIG_AUDIT=n
 extern void tty_audit_add_data(struct tty_struct *tty, unsigned char *data,
 			       size_t size, unsigned icanon);
 extern void tty_audit_exit(void);
@@ -603,6 +603,8 @@ static inline void tty_audit_tiocsti(struct tty_struct *tty, char ch)
 static inline void tty_audit_exit(void)
 {
 }
+// ARM10C 20161105
+// sig: kmem_cache#13-oX (struct signal_struct)
 static inline void tty_audit_fork(struct signal_struct *sig)
 {
 }

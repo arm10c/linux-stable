@@ -29,9 +29,14 @@ static inline void thread_unregister_notifier(struct notifier_block *n)
 	atomic_notifier_chain_unregister(&thread_notify_head, n);
 }
 
+// ARM10C 20161105
+// THREAD_NOTIFY_COPY: 3, thread: ((struct thread_info *)(kmem_cache#15-oX (struct task_struct))->stack)
 static inline void thread_notify(unsigned long rc, struct thread_info *thread)
 {
 	extern struct atomic_notifier_head thread_notify_head;
+
+	// rc: 3, thread: ((struct thread_info *)(kmem_cache#15-oX (struct task_struct))->stack)
+	// atomic_notifier_call_chain(&thread_notify_head, 3, ((struct thread_info *)(kmem_cache#15-oX (struct task_struct))->stack)): 0
 	atomic_notifier_call_chain(&thread_notify_head, rc, thread);
 }
 
@@ -43,6 +48,8 @@ static inline void thread_notify(unsigned long rc, struct thread_info *thread)
 #define THREAD_NOTIFY_FLUSH	0
 #define THREAD_NOTIFY_EXIT	1
 #define THREAD_NOTIFY_SWITCH	2
+// ARM10C 20161105
+// THREAD_NOTIFY_COPY: 3
 #define THREAD_NOTIFY_COPY	3
 
 #endif

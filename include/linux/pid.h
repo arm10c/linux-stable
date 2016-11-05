@@ -8,6 +8,7 @@
 // ARM10C 20150919
 // ARM10C 20151003
 // ARM10C 20160903
+// ARM10C 20161105
 enum pid_type
 {
 	// PIDTYPE_PID: 0
@@ -57,6 +58,7 @@ enum pid_type
  */
 
 // ARM10C 20150912
+// ARM10C 20161105
 // sizeof(struct upid): 16 bytes
 struct upid {
 	/* Try to keep pid_chain in the same cacheline as nr for find_vpid */
@@ -70,6 +72,7 @@ struct upid {
 // ARM10C 20150919
 // ARM10C 20151003
 // ARM10C 20160903
+// ARM10C 20161105
 // sizeof(struct pid): 44 bytes
 struct pid
 {

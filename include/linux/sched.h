@@ -398,6 +398,7 @@ extern int get_dumpable(struct mm_struct *mm);
 
 // ARM10C 20150919
 // ARM10C 20160903
+// ARM10C 20161105
 // sizeof(struct sighand_struct): 1324 bytes
 struct sighand_struct {
 	atomic_t		count;
@@ -527,6 +528,7 @@ struct autogroup;
  */
 // ARM10C 20150919
 // ARM10C 20160903
+// ARM10C 20161105
 // sizeof(struct signal_struct): 536 bytes
 struct signal_struct {
 	atomic_t		sigcnt;
@@ -1125,6 +1127,7 @@ enum perf_event_task_context {
 // ARM10C 20160903
 // ARM10C 20160910
 // ARM10C 20161008
+// ARM10C 20161105
 // sizeof(struct task_struct): 815 bytes
 struct task_struct {
 	volatile long state;	/* -1 unrunnable, 0 runnable, >0 stopped */
@@ -1797,6 +1800,7 @@ extern void thread_group_cputime_adjusted(struct task_struct *p, cputime_t *ut, 
 #define PF_LESS_THROTTLE 0x00100000	/* Throttle me less: I clean memory */
 // ARM10C 20140510
 // ARM10C 20150808
+// ARM10C 20161105
 // PF_KTHREAD: 0x00200000
 #define PF_KTHREAD	0x00200000	/* I am a kernel thread */
 #define PF_RANDOMIZE	0x00400000	/* randomize virtual address space */
@@ -2061,7 +2065,7 @@ extern u64 scheduler_tick_max_deferment(void);
 static inline bool sched_can_stop_tick(void) { return false; }
 #endif
 
-#ifdef CONFIG_SCHED_AUTOGROUP
+#ifdef CONFIG_SCHED_AUTOGROUP // CONFIG_SCHED_AUTOGROUP=n
 extern void sched_autogroup_create_attach(struct task_struct *p);
 extern void sched_autogroup_detach(struct task_struct *p);
 extern void sched_autogroup_fork(struct signal_struct *sig);
@@ -2073,6 +2077,8 @@ extern int proc_sched_autogroup_set_nice(struct task_struct *p, int nice);
 #else
 static inline void sched_autogroup_create_attach(struct task_struct *p) { }
 static inline void sched_autogroup_detach(struct task_struct *p) { }
+// ARM10C 20161105
+// sig: kmem_cache#13-oX (struct signal_struct)
 static inline void sched_autogroup_fork(struct signal_struct *sig) { }
 static inline void sched_autogroup_exit(struct signal_struct *sig) { }
 #endif
@@ -2422,6 +2428,8 @@ static inline int thread_group_empty(struct task_struct *p)
  */
 // ARM10C 20161008
 // current: &init_task
+// ARM10C 20161105
+// current->group_leader: (&init_task)->group_leader: &init_task
 static inline void task_lock(struct task_struct *p)
 {
 	// &p->alloc_lock: &(&init_task)->alloc_lock
@@ -2433,6 +2441,8 @@ static inline void task_lock(struct task_struct *p)
 
 // ARM10C 20161008
 // current: &init_task
+// ARM10C 20161105
+// current->group_leader: (&init_task)->group_leader: &init_task
 static inline void task_unlock(struct task_struct *p)
 {
 	// &p->alloc_lock: &(&init_task)->alloc_lock
@@ -2528,7 +2538,11 @@ static inline void threadgroup_unlock(struct task_struct *tsk) {}
 // p: kmem_cache#15-oX (struct task_struct)
 // ARM10C 20161029
 // p: kmem_cache#15-oX (struct task_struct)
+// ARM10C 20161105
+// p: kmem_cache#15-oX (struct task_struct)
 #define task_thread_info(task)	((struct thread_info *)(task)->stack)
+// ARM10C 20161105
+// p: kmem_cache#15-oX (struct task_struct)
 #define task_stack_page(task)	((task)->stack)
 
 // ARM10C 20160903
@@ -2847,9 +2861,15 @@ static __always_inline bool need_resched(void)
 void thread_group_cputime(struct task_struct *tsk, struct task_cputime *times);
 void thread_group_cputimer(struct task_struct *tsk, struct task_cputime *times);
 
+// ARM10C 20161105
+// sig: kmem_cache#13-oX (struct signal_struct)
 static inline void thread_group_cputime_init(struct signal_struct *sig)
 {
+	// &sig->cputimer.lock: &(kmem_cache#13-oX (struct signal_struct))->cputimer.lock
 	raw_spin_lock_init(&sig->cputimer.lock);
+
+	// raw_spin_lock_init 에서 한일:
+	// &(kmem_cache#13-oX (struct signal_struct))->cputimer.lock 을 사용한 spinlock 초기화 수행
 }
 
 /*

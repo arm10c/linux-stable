@@ -4916,6 +4916,8 @@ static __always_inline void *slab_alloc(struct kmem_cache *s,
 // cred_jar: kmem_cache#16, GFP_KERNEL: 0xD0
 // ARM10C 20161029
 // files_cachep: kmem_cache#12, GFP_KERNEL: 0xD0
+// ARM10C 20161105
+// ns->pid_cachep: (&init_pid_ns)->pid_cachep: kmem_cache#19, GFP_KERNEL: 0xD0
 void *kmem_cache_alloc(struct kmem_cache *s, gfp_t gfpflags)
 {
 	// s: &boot_kmem_cache_node, gfpflags: GFP_KERNEL: 0xD0

@@ -94,6 +94,7 @@
 // ARM10C 20141004
 // ARM10C 20141129
 // ARM10C 20151114
+// ARM10C 20161105
 #define DIV_ROUND_UP(n,d) (((n) + (d) - 1) / (d))
 #define DIV_ROUND_UP_ULL(ll,d) \
 	({ unsigned long long _tmp = (ll)+(d)-1; do_div(_tmp, d); _tmp; })

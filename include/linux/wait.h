@@ -205,6 +205,8 @@ extern void __init_waitqueue_head(wait_queue_head_t *q, const char *name, struct
 // &s->s_writers.wait_unfrozen: &(kmem_cache#25-oX (struct super_block))->s_writers.wait_unfrozen
 // ARM10C 20160514
 // &new_ns->poll: &(kmem_cache#30-oX (struct mnt_namespace))->poll
+// ARM10C 20161105
+// &sig->wait_chldexit: &(kmem_cache#13-oX (struct signal_struct))->wait_chldexit
 #define init_waitqueue_head(q)				\
 	do {						\
 		static struct lock_class_key __key;	\

@@ -50,6 +50,7 @@
 #else
 #define USR_MODE	0x00000010
 // ARM10C 20141227
+// ARM10C 20161105
 // SVC_MODE: 0x00000013
 #define SVC_MODE	0x00000013
 #endif
@@ -127,11 +128,13 @@
  * has to be a multiple of 8.
  */
 #ifndef __KERNEL__
+// ARM10C 20161105
 struct pt_regs {
 	long uregs[18];
 };
 #endif /* __KERNEL__ */
 
+// ARM10C 20161105
 #define ARM_cpsr	uregs[16]
 #define ARM_pc		uregs[15]
 #define ARM_lr		uregs[14]

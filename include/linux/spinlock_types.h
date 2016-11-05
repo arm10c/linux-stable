@@ -323,6 +323,17 @@ typedef struct spinlock {
 //	      .owner = 0xffffffff,
 //	    }
 //	} }
+// ARM10C 20161105
+// #define __SPIN_LOCK_UNLOCKED(thread_notify_head.siglock):
+//	(spinlock_t )
+//	{ { .rlock =
+//	    {
+//	      .raw_lock = { { 0 } },
+//	      .magic = 0xdead4ead,
+//	      .owner_cpu = -1,
+//	      .owner = 0xffffffff,
+//	    }
+//	} }
 #define __SPIN_LOCK_UNLOCKED(lockname) \
 	(spinlock_t ) __SPIN_LOCK_INITIALIZER(lockname)
 

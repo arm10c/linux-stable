@@ -61,12 +61,14 @@ typedef	int (*notifier_fn_t)(struct notifier_block *nb,
 // ARM10C 20150404
 // ARM10C 20150620
 // ARM10C 20160604
+// ARM10C 20161105
 struct notifier_block {
 	notifier_fn_t notifier_call;
 	struct notifier_block __rcu *next;
 	int priority;
 };
 
+// ARM10C 20161105
 struct atomic_notifier_head {
 	spinlock_t lock;
 	struct notifier_block __rcu *head;
@@ -107,6 +109,32 @@ extern void srcu_init_notifier_head(struct srcu_notifier_head *nh);
 #define srcu_cleanup_notifier_head(name)	\
 		cleanup_srcu_struct(&(name)->srcu);
 
+// ARM10C 20161105
+// __SPIN_LOCK_UNLOCKED(thread_notify_head.siglock):
+// (spinlock_t )
+// { { .rlock =
+//     {
+//       .raw_lock = { { 0 } },
+//       .magic = 0xdead4ead,
+//       .owner_cpu = -1,
+//       .owner = 0xffffffff,
+//     }
+// } }
+//
+// #define ATOMIC_NOTIFIER_INIT(thread_notify_head):
+// {
+//     .lock =
+//     (spinlock_t )
+//     { { .rlock =
+//         {
+//           .raw_lock = { { 0 } },
+//           .magic = 0xdead4ead,
+//           .owner_cpu = -1,
+//           .owner = 0xffffffff,
+//         }
+//     } },
+//     .head = NULL
+// }
 #define ATOMIC_NOTIFIER_INIT(name) {				\
 		.lock = __SPIN_LOCK_UNLOCKED(name.lock),	\
 		.head = NULL }
@@ -121,6 +149,37 @@ extern void srcu_init_notifier_head(struct srcu_notifier_head *nh);
 		.head = NULL }
 /* srcu_notifier_heads cannot be initialized statically */
 
+// ARM10C 20161105
+// ATOMIC_NOTIFIER_INIT(thread_notify_head):
+// {
+//     .lock =
+//     (spinlock_t )
+//     { { .rlock =
+//         {
+//           .raw_lock = { { 0 } },
+//           .magic = 0xdead4ead,
+//           .owner_cpu = -1,
+//           .owner = 0xffffffff,
+//         }
+//     } },
+//     .head = NULL
+// }
+//
+// #define ATOMIC_NOTIFIER_HEAD(thread_notify_head):
+// struct atomic_notifier_head thread_notify_head =
+// {
+//     .lock =
+//     (spinlock_t )
+//     { { .rlock =
+//         {
+//           .raw_lock = { { 0 } },
+//           .magic = 0xdead4ead,
+//           .owner_cpu = -1,
+//           .owner = 0xffffffff,
+//         }
+//     } },
+//     .head = NULL
+// }
 #define ATOMIC_NOTIFIER_HEAD(name)				\
 	struct atomic_notifier_head name =			\
 		ATOMIC_NOTIFIER_INIT(name)
@@ -184,6 +243,8 @@ extern int srcu_notifier_call_chain(struct srcu_notifier_head *nh,
 extern int __srcu_notifier_call_chain(struct srcu_notifier_head *nh,
 	unsigned long val, void *v, int nr_to_call, int *nr_calls);
 
+// ARM10C 20161105
+// NOTIFY_DONE: 0x0000
 #define NOTIFY_DONE		0x0000		/* Don't care */
 // ARM10C 20140927
 // ARM10C 20150103

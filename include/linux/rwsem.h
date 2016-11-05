@@ -143,6 +143,8 @@ extern void __init_rwsem(struct rw_semaphore *sem, const char *name,
 // &s->s_umount: &(kmem_cache#25-oX (struct super_block))->s_umount
 // ARM10C 20160319
 // &s->s_dquot.dqptr_sem: &(kmem_cache#25-oX (struct super_block))->s_dquot.dqptr_sem
+// ARM10C 20161105
+// &sig->group_rwsem: &(kmem_cache#13-oX (struct signal_struct))->group_rwsem
 #define init_rwsem(sem)						\
 do {								\
 	static struct lock_class_key __key;			\

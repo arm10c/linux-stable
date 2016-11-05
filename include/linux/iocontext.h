@@ -96,6 +96,7 @@ struct io_cq {
  */
 // ARM10C 20150919
 // ARM10C 20160910
+// ARM10C 20161105
 struct io_context {
 	atomic_long_t refcount;
 	atomic_t active_ref;

@@ -9,16 +9,25 @@
 #include <linux/nsproxy.h>
 #include <linux/kref.h>
 
+// ARM10C 20161105
 struct pidmap {
        atomic_t nr_free;
        void *page;
 };
 
 // ARM10C 20150912
+// ARM10C 20161105
 // PAGE_SIZE: 0x1000
 // BITS_PER_PAGE: 0x8000
 #define BITS_PER_PAGE		(PAGE_SIZE * 8)
+// ARM10C 20161105
+// BITS_PER_PAGE: 0x8000
+// BITS_PER_PAGE_MASK: 0x7FFF
 #define BITS_PER_PAGE_MASK	(BITS_PER_PAGE-1)
+// ARM10C 20161105
+// PID_MAX_LIMIT: 0x8000
+// BITS_PER_PAGE: 0x8000
+// PIDMAP_ENTRIES: 1
 #define PIDMAP_ENTRIES		((PID_MAX_LIMIT+BITS_PER_PAGE-1)/BITS_PER_PAGE)
 
 struct bsd_acct_struct;
@@ -26,6 +35,7 @@ struct bsd_acct_struct;
 // ARM10C 20150718
 // ARM10C 20150912
 // ARM10C 20160903
+// ARM10C 20161105
 struct pid_namespace {
 	struct kref kref;
 	struct pidmap pidmap[PIDMAP_ENTRIES];

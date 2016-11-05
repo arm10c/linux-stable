@@ -47,6 +47,7 @@ static struct hlist_head *pid_hash;
 // ARM10C 20140322
 static unsigned int pidhash_shift = 4;
 // ARM10C 20160903
+// ARM10C 20161105
 // INIT_STRUCT_PID:
 // {
 //     .count        = { (1) },
@@ -65,6 +66,7 @@ static unsigned int pidhash_shift = 4;
 struct pid init_struct_pid = INIT_STRUCT_PID;
 
 // ARM10C 20150912
+// ARM10C 20161105
 // PID_MAX_DEFAULT: 0x8000
 int pid_max = PID_MAX_DEFAULT;
 
@@ -96,11 +98,13 @@ static inline int mk_pid(struct pid_namespace *pid_ns,
  */
 // ARM10C 20150912
 // ARM10C 20160903
+// ARM10C 20161105
 struct pid_namespace init_pid_ns = {
 	.kref = {
 		.refcount       = ATOMIC_INIT(2),
 	},
 	// BITS_PER_PAGE: 0x8000, ATOMIC_INIT(0x8000): 0x8000
+	// PIDMAP_ENTRIES: 1
 	.pidmap = {
 		[ 0 ... PIDMAP_ENTRIES-1] = { ATOMIC_INIT(BITS_PER_PAGE), NULL }
 	},
@@ -178,22 +182,45 @@ static void set_last_pid(struct pid_namespace *pid_ns, int base, int pid)
 	} while ((prev != last_write) && (pid_before(base, last_write, pid)));
 }
 
+// ARM10C 20161105
+// tmp: &init_pid_ns
 static int alloc_pidmap(struct pid_namespace *pid_ns)
 {
+	// pid_ns->last_pid: (&init_pid_ns)->last_pid: 0
 	int i, offset, max_scan, pid, last = pid_ns->last_pid;
+	// last: 0
+
 	struct pidmap *map;
 
+	// last: 0
 	pid = last + 1;
+	// pid: 1
+
+	// pid: 1, pid_max: 0x8000
 	if (pid >= pid_max)
 		pid = RESERVED_PIDS;
+
+	// pid: 1, PID_MAX_DEFAULT: 0x8000, BITS_PER_PAGE_MASK: 0x7FFF
 	offset = pid & BITS_PER_PAGE_MASK;
+	// offset: 1
+
+	// pid: 1, BITS_PER_PAGE: 0x8000
+	// &pid_ns->pidmap[0]: &(&init_pid_ns)->pidmap[0]
 	map = &pid_ns->pidmap[pid/BITS_PER_PAGE];
+	// map: &(&init_pid_ns)->pidmap[0]
+
 	/*
 	 * If last_pid points into the middle of the map->page we
 	 * want to scan this bitmap block twice, the second time
 	 * we start with offset == 0 (or RESERVED_PIDS).
 	 */
+	// pid_max: 0x8000, BITS_PER_PAGE: 0x8000, DIV_ROUND_UP(0x8000, 0x8000): 1, offset: 1
 	max_scan = DIV_ROUND_UP(pid_max, BITS_PER_PAGE) - !offset;
+	// max_scan: 1
+
+// 2016/11/05 종료
+
+	// max_scan: 1
 	for (i = 0; i <= max_scan; ++i) {
 		if (unlikely(!map->page)) {
 			void *page = kzalloc(PAGE_SIZE, GFP_KERNEL);
@@ -325,6 +352,8 @@ void free_pid(struct pid *pid)
 	call_rcu(&pid->rcu, delayed_put_pid);
 }
 
+// ARM10C 20161105
+// p->nsproxy->pid_ns_for_children: (&init_nsproxy)->pid_ns_for_children: &init_pid_ns
 struct pid *alloc_pid(struct pid_namespace *ns)
 {
 	struct pid *pid;
@@ -333,13 +362,26 @@ struct pid *alloc_pid(struct pid_namespace *ns)
 	struct pid_namespace *tmp;
 	struct upid *upid;
 
+	// ns->pid_cachep: (&init_pid_ns)->pid_cachep: kmem_cache#19, GFP_KERNEL: 0xD0
+	// kmem_cache_alloc(kmem_cache#19, 0xD0): kmem_cache#19-oX (struct pid)
 	pid = kmem_cache_alloc(ns->pid_cachep, GFP_KERNEL);
+	// pid: kmem_cache#19-oX (struct pid)
+
+	// pid: kmem_cache#19-oX (struct pid)
 	if (!pid)
 		goto out;
 
+	// ns: &init_pid_ns
 	tmp = ns;
+	// tmp: &init_pid_ns
+
+	// pid->level: (kmem_cache#19-oX (struct pid))->level, ns->level: (&init_pid_ns)->level: 0
 	pid->level = ns->level;
+	// pid->level: (kmem_cache#19-oX (struct pid))->level: 0
+
+	// ns->level: (&init_pid_ns)->level: 0
 	for (i = ns->level; i >= 0; i--) {
+		// tmp: &init_pid_ns
 		nr = alloc_pidmap(tmp);
 		if (nr < 0)
 			goto out_free;

@@ -22,11 +22,15 @@
 #define THREAD_SIZE_ORDER	1
 /*
 // ARM10C 20150919
+// ARM10C 20161105
 // THREAD_SIZE: 8192
 */
 #define THREAD_SIZE		8192
 /*
 // ARM10C 20130817
+// ARM10C 20161105
+// THREAD_SIZE: 8192
+// THREAD_START_SP: 8184
 */
 #define THREAD_START_SP		(THREAD_SIZE - 8)
 
@@ -40,6 +44,8 @@ struct exec_domain;
 
 typedef unsigned long mm_segment_t;
 
+// ARM10C 20161105
+// sizeof(struct cpu_context_save): 48 bytes
 struct cpu_context_save {
 	__u32	r4;
 	__u32	r5;
@@ -74,6 +80,7 @@ struct arm_restart_block {
 // ARM10C 20160903
 // ARM10C 20160910
 // ARM10C 20161029
+// ARM10C 20161105
 struct thread_info {
 	unsigned long		flags;		/* low level flags */
 	int			preempt_count;	/* 0 => preemptable, <0 => bug */

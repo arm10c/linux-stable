@@ -118,6 +118,7 @@ SYSCALL_DEFINE2(getitimer, int, which, struct itimerval __user *, value)
 /*
  * The timer is automagically restarted, when interval != 0
  */
+// ARM10C 20161105
 enum hrtimer_restart it_real_fn(struct hrtimer *timer)
 {
 	struct signal_struct *sig =

@@ -316,6 +316,8 @@ static inline void put_cred(const struct cred *_cred)
  * The result of this function should not be passed directly to get_cred();
  * rather get_task_cred() should be used instead.
  */
+// ARM10C 20161105
+// kmem_cache#15-oX (struct task_struct)
 #define __task_cred(task)	\
 	rcu_dereference((task)->real_cred)
 
@@ -359,6 +361,16 @@ static inline void put_cred(const struct cred *_cred)
 	__groups;					\
 })
 
+// ARM10C 20161105
+// tsk: kmem_cache#15-oX (struct task_struct), user_ns
+// #define task_cred_xxx(kmem_cache#15-oX (struct task_struct), user_ns):
+// ({
+//     __typeof__(((struct cred *)NULL)->user_ns) ___val;
+//     rcu_read_lock();
+//     ___val = __task_cred((kmem_cache#15-oX (struct task_struct)))->user_ns;
+//     rcu_read_unlock();
+//     ___val;
+// })
 #define task_cred_xxx(task, xxx)			\
 ({							\
 	__typeof__(((struct cred *)NULL)->xxx) ___val;	\

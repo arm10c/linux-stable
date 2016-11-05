@@ -83,6 +83,7 @@ ENDPROC(ret_to_user)
 /*
  * This is how we return from a fork.
  */
+ // ARM10C 20161105
 ENTRY(ret_from_fork)
 	bl	schedule_tail
 	cmp	r5, #0

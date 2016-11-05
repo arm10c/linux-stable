@@ -27,6 +27,7 @@ struct fs_struct;
  * nsproxy is copied.
  */
 // ARM10C 20151003
+// ARM10C 20161105
 // sizeof(struct nsproxy): 24 bytes
 struct nsproxy {
 	atomic_t count;
@@ -83,9 +84,15 @@ static inline void put_nsproxy(struct nsproxy *ns)
 	}
 }
 
+// ARM10C 20161105
+// old_ns: &init_nsproxy
 static inline void get_nsproxy(struct nsproxy *ns)
 {
+	// &ns->count: &(&init_nsproxy)->count
 	atomic_inc(&ns->count);
+
+	// atomic_inc 에서 한일:
+	// (&init_nsproxy)->count: { (2) }
 }
 
 #endif

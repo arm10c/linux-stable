@@ -313,6 +313,22 @@ void show_regs(struct pt_regs * regs)
 	dump_stack();
 }
 
+// ARM10C 20161105
+// ATOMIC_NOTIFIER_HEAD(thread_notify_head):
+// struct atomic_notifier_head thread_notify_head =
+// {
+//     .lock =
+//     (spinlock_t )
+//     { { .rlock =
+//         {
+//           .raw_lock = { { 0 } },
+//           .magic = 0xdead4ead,
+//           .owner_cpu = -1,
+//           .owner = 0xffffffff,
+//         }
+//     } },
+//     .head = NULL
+// }
 ATOMIC_NOTIFIER_HEAD(thread_notify_head);
 
 EXPORT_SYMBOL_GPL(thread_notify_head);
@@ -343,40 +359,85 @@ void release_thread(struct task_struct *dead_task)
 {
 }
 
+// ARM10C 20161105
 asmlinkage void ret_from_fork(void) __asm__("ret_from_fork");
 
+// ARM10C 20161105
+// clone_flags: 0x00800B00, stack_start: kernel_init, stack_size: 0, p: kmem_cache#15-oX (struct task_struct)
 int
 copy_thread(unsigned long clone_flags, unsigned long stack_start,
 	    unsigned long stk_sz, struct task_struct *p)
 {
+	// p: kmem_cache#15-oX (struct task_struct)
+	// task_thread_info(kmem_cache#15-oX (struct task_struct)):
+	// ((struct thread_info *)(kmem_cache#15-oX (struct task_struct))->stack: 할당 받은 page 2개의 메모리의 가상 주소)
 	struct thread_info *thread = task_thread_info(p);
-	struct pt_regs *childregs = task_pt_regs(p);
+	// thread: ((struct thread_info *)(kmem_cache#15-oX (struct task_struct))->stack)
 
+	// p: kmem_cache#15-oX (struct task_struct)
+	// task_pt_regs(kmem_cache#15-oX (struct task_struct)): ((struct pt_regs *)(kmem_cache#15-oX (struct task_struct))->stack + 8183)
+	struct pt_regs *childregs = task_pt_regs(p);
+	// childregs: ((struct pt_regs *)(kmem_cache#15-oX (struct task_struct))->stack + 8183)
+
+	// &thread->cpu_context: &((struct thread_info *)(kmem_cache#15-oX (struct task_struct))->stack)->cpu_context,
+	// sizeof(struct cpu_context_save): 48 bytes
 	memset(&thread->cpu_context, 0, sizeof(struct cpu_context_save));
 
+	// memset 이 한일:
+	// ((struct thread_info *)(kmem_cache#15-oX (struct task_struct))->stack)->cpu_context 의 값을 0으로 초기화 함
+
+	// p->flags: (kmem_cache#15-oX (struct task_struct))->flags: 0x00200040, PF_KTHREAD: 0x00200000
 	if (likely(!(p->flags & PF_KTHREAD))) {
 		*childregs = *current_pt_regs();
 		childregs->ARM_r0 = 0;
 		if (stack_start)
 			childregs->ARM_sp = stack_start;
 	} else {
+		// childregs: ((struct pt_regs *)(kmem_cache#15-oX (struct task_struct))->stack + 8183), sizeof(struct pt_regs): 72 bytes
 		memset(childregs, 0, sizeof(struct pt_regs));
+
+		// memset 이 한일:
+		// ((struct pt_regs *)(kmem_cache#15-oX (struct task_struct))->stack + 8183) 의 값을 0으로 초기화 함
+
+		// thread->cpu_context.r4: ((struct thread_info *)(kmem_cache#15-oX (struct task_struct))->stack)->cpu_context.r4, stk_sz: 0
 		thread->cpu_context.r4 = stk_sz;
+		// thread->cpu_context: ((struct thread_info *)(kmem_cache#15-oX (struct task_struct))->stack)->cpu_context.r4: 0
+
+		// thread->cpu_context.r5: ((struct thread_info *)(kmem_cache#15-oX (struct task_struct))->stack)->cpu_context.r5, stack_start: kernel_init
 		thread->cpu_context.r5 = stack_start;
+		// thread->cpu_context.r5: ((struct thread_info *)(kmem_cache#15-oX (struct task_struct))->stack)->cpu_context.r5: kernel_init
+
+		// childregs->ARM_cpsr: ((struct pt_regs *)(kmem_cache#15-oX (struct task_struct))->stack + 8183)->uregs[16], SVC_MODE: 0x00000013
 		childregs->ARM_cpsr = SVC_MODE;
+		// childregs->ARM_cpsr: ((struct pt_regs *)(kmem_cache#15-oX (struct task_struct))->stack + 8183)->uregs[16]: 0x00000013
 	}
+	// thread->cpu_context.pc: ((struct thread_info *)(kmem_cache#15-oX (struct task_struct))->stack)->cpu_context.pc
 	thread->cpu_context.pc = (unsigned long)ret_from_fork;
+	// thread->cpu_context.pc: ((struct thread_info *)(kmem_cache#15-oX (struct task_struct))->stack)->cpu_context.pc: ret_from_fork
+
+	// thread->cpu_context.sp: ((struct thread_info *)(kmem_cache#15-oX (struct task_struct))->stack)->cpu_context.sp,
+	// childregs: ((struct pt_regs *)(kmem_cache#15-oX (struct task_struct))->stack + 8183)
 	thread->cpu_context.sp = (unsigned long)childregs;
+	// thread->cpu_context.sp: ((struct thread_info *)(kmem_cache#15-oX (struct task_struct))->stack)->cpu_context.sp:
+	// ((struct pt_regs *)(kmem_cache#15-oX (struct task_struct))->stack + 8183)
 
-	clear_ptrace_hw_breakpoint(p);
+	// p: kmem_cache#15-oX (struct task_struct)
+	clear_ptrace_hw_breakpoint(p); // null function
 
+	// clone_flags: 0x00800B00, CLONE_SETTLS: 0x00080000
 	if (clone_flags & CLONE_SETTLS)
 		thread->tp_value[0] = childregs->ARM_r3;
-	thread->tp_value[1] = get_tpuser();
 
+	// thread->tp_value[1]: ((struct thread_info *)(kmem_cache#15-oX (struct task_struct))->stack)->tp_value[1],
+	// get_tpuser(): TPIDRURW의 읽은 값
+	thread->tp_value[1] = get_tpuser();
+	// thread->tp_value[1]: ((struct thread_info *)(kmem_cache#15-oX (struct task_struct))->stack)->tp_value[1]: TPIDRURW의 읽은 값
+
+	// THREAD_NOTIFY_COPY: 3, thread: ((struct thread_info *)(kmem_cache#15-oX (struct task_struct))->stack)
 	thread_notify(THREAD_NOTIFY_COPY, thread);
 
 	return 0;
+	// return 0
 }
 
 /*

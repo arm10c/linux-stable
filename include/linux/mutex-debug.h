@@ -37,6 +37,8 @@
 // &s->s_dquot.dqio_mutex: &(kmem_cache#25-oX (struct super_block))->s_dquot.dqio_mutex
 // ARM10C 20160319
 // &s->s_dquot.dqonoff_mutex: &(kmem_cache#25-oX (struct super_block))->s_dquot.dqonoff_mutex
+// ARM10C 20161105
+// &sig->cred_guard_mutex: &(kmem_cache#13-oX (struct signal_struct))->cred_guard_mutex
 #define mutex_init(mutex)						\
 do {									\
 	static struct lock_class_key __key;				\

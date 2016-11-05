@@ -1609,6 +1609,8 @@ static void __hrtimer_init(struct hrtimer *timer, clockid_t clock_id,
 // &rq->hrtick_timer: &(&runqueues)->hrtick_timer, CLOCK_MONOTONIC: 1, HRTIMER_MODE_REL: 1
 // ARM10C 20150530
 // &sched_clock_timer, CLOCK_MONOTONIC: 1, HRTIMER_MODE_REL: 1
+// ARM10C 20161105
+// &sig->real_timer: &(kmem_cache#13-oX (struct signal_struct))->real_timer, CLOCK_MONOTONIC: 1, HRTIMER_MODE_REL: 1
 void hrtimer_init(struct hrtimer *timer, clockid_t clock_id,
 		  enum hrtimer_mode mode)
 {

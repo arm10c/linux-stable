@@ -107,19 +107,29 @@ static int notifier_chain_unregister(struct notifier_block **nl,
  *	@returns:	notifier_call_chain returns the value returned by the
  *			last notifier function called.
  */
+// ARM10C 20161105
+// &nh->head: &(&thread_notify_head)->head, val:3, v: ((struct thread_info *)(kmem_cache#15-oX (struct task_struct))->stack),
+// nr_to_call:-1, nr_calls: NULL
 static int __kprobes notifier_call_chain(struct notifier_block **nl,
 					unsigned long val, void *v,
 					int nr_to_call,	int *nr_calls)
 {
+	// NOTIFY_DONE: 0x0000
 	int ret = NOTIFY_DONE;
+	// ret: 0
+
 	struct notifier_block *nb, *next_nb;
 
+	// *nl: *(&(&thread_notify_head)->head)
+	// rcu_dereference_raw((&thread_notify_head)->head): (thread_notify_head)->head: NULL
 	nb = rcu_dereference_raw(*nl);
+	// nb: NULL
 
+	// nb: NULL, nr_to_call: -1
 	while (nb && nr_to_call) {
 		next_nb = rcu_dereference_raw(nb->next);
 
-#ifdef CONFIG_DEBUG_NOTIFIERS
+#ifdef CONFIG_DEBUG_NOTIFIERS // CONFIG_DEBUG_NOTIFIERS=n
 		if (unlikely(!func_ptr_is_kernel_text(nb->notifier_call))) {
 			WARN(1, "Invalid notifier called!");
 			nb = next_nb;
@@ -136,7 +146,10 @@ static int __kprobes notifier_call_chain(struct notifier_block **nl,
 		nb = next_nb;
 		nr_to_call--;
 	}
+
+	// ret: 0
 	return ret;
+	// return 0
 }
 
 /*
@@ -208,6 +221,8 @@ EXPORT_SYMBOL_GPL(atomic_notifier_chain_unregister);
  *	Otherwise the return value is the return value
  *	of the last notifier function called.
  */
+// ARM10C 20161105
+// nh: &thread_notify_head, val: 3, v: ((struct thread_info *)(kmem_cache#15-oX (struct task_struct))->stack), -1, NULL
 int __kprobes __atomic_notifier_call_chain(struct atomic_notifier_head *nh,
 					unsigned long val, void *v,
 					int nr_to_call, int *nr_calls)
@@ -215,16 +230,36 @@ int __kprobes __atomic_notifier_call_chain(struct atomic_notifier_head *nh,
 	int ret;
 
 	rcu_read_lock();
+
+	// rcu_read_lock에서 한일:
+	// (&init_task)->rcu_read_lock_nesting: 1
+
+	// &nh->head: &(&thread_notify_head)->head, val:3, v: ((struct thread_info *)(kmem_cache#15-oX (struct task_struct))->stack),
+	// nr_to_call:-1, nr_calls: NULL
+	// notifier_call_chain(&(&thread_notify_head)->head, 3, ((struct thread_info *)(kmem_cache#15-oX (struct task_struct))->stack), -1, NULL): 0
 	ret = notifier_call_chain(&nh->head, val, v, nr_to_call, nr_calls);
+	// ret: 0
+
 	rcu_read_unlock();
+
+	// rcu_read_unlock에서 한일:
+	// (&init_task)->rcu_read_lock_nesting: 0
+
+	// ret: 0
 	return ret;
+	// return 0
 }
 EXPORT_SYMBOL_GPL(__atomic_notifier_call_chain);
 
+// ARM10C 20161105
+// &thread_notify_head, rc: 3, thread: ((struct thread_info *)(kmem_cache#15-oX (struct task_struct))->stack)
 int __kprobes atomic_notifier_call_chain(struct atomic_notifier_head *nh,
 		unsigned long val, void *v)
 {
+	// nh: &thread_notify_head, val: 3, v: ((struct thread_info *)(kmem_cache#15-oX (struct task_struct))->stack)
+	// __atomic_notifier_call_chain(&thread_notify_head, 3, ((struct thread_info *)(kmem_cache#15-oX (struct task_struct))->stack), -1, NULL): 0
 	return __atomic_notifier_call_chain(nh, val, v, -1, NULL);
+	// return 0
 }
 EXPORT_SYMBOL_GPL(atomic_notifier_call_chain);
 

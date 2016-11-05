@@ -5,7 +5,7 @@
 
 struct task_struct;
 
-#ifdef CONFIG_HAVE_HW_BREAKPOINT
+#ifdef CONFIG_HAVE_HW_BREAKPOINT // CONFIG_HAVE_HW_BREAKPOINT=n
 
 struct arch_hw_breakpoint_ctrl {
 		u32 __reserved	: 9,
@@ -131,6 +131,8 @@ void hw_breakpoint_pmu_read(struct perf_event *bp);
 int hw_breakpoint_slots(int type);
 
 #else
+// ARM10C 20161105
+// p: kmem_cache#15-oX (struct task_struct)
 static inline void clear_ptrace_hw_breakpoint(struct task_struct *tsk) {}
 
 #endif	/* CONFIG_HAVE_HW_BREAKPOINT */
