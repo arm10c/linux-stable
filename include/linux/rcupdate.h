@@ -589,7 +589,7 @@ static inline void rcu_preempt_sleep_check(void)
 // })
 // ARM10C 20161105
 // (kmem_cache#15-oX (struct task_struct))->real_cred, 0, __rcu
-// #define __rcu_dereference_check((kmem_cache#15-oX (struct task_struct))->real_cred, c, __rcu) \
+// #define __rcu_dereference_check((kmem_cache#15-oX (struct task_struct))->real_cred, c, __rcu):
 // ({
 // 	typeof(*(kmem_cache#15-oX (struct task_struct))->real_cred) *_________p1 =
 // 	(typeof(*(kmem_cache#15-oX (struct task_struct))->real_cred)*__force )ACCESS_ONCE((kmem_cache#15-oX (struct task_struct))->real_cred);
