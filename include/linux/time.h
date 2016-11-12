@@ -189,6 +189,7 @@ void timekeeping_inject_sleeptime(struct timespec *delta);
 // ARM10C 20151205
 // ARM10C 20160319
 // ARM10C 20160521
+// ARM10C 20161112
 #define CURRENT_TIME		(current_kernel_time())
 #define CURRENT_TIME_SEC	((struct timespec) { get_seconds(), 0 })
 

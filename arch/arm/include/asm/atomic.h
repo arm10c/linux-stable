@@ -30,6 +30,7 @@
 // ARM10C 20160903
 // ARM10C 20160910
 // ARM10C 20161105
+// ARM10C 20161112
 #define ATOMIC_INIT(i)	{ (i) }
 
 #ifdef __KERNEL__
@@ -325,12 +326,16 @@ static inline int __atomic_add_unless(atomic_t *v, int a, int u)
 // &current->sighand->count: &(&init_sighand)->count
 // ARM10C 20161105
 // &ns->count: &(&init_nsproxy)->count
+// ARM10C 20161112
+// &pde->count: &(&proc_root)->count
 #define atomic_inc(v)		atomic_add(1, v)
 // ARM10C 20150912
 // ARM10C 20160319
 // v: &(kmem_cache#4-oX (struct inode))->i_sb->s_remove_count
 // ARM10C 20160409
 // kmod_concurrent.counter: 1
+// ARM10C 20161112
+// &map->nr_free: &(&(&init_pid_ns)->pidmap[0])->nr_free
 #define atomic_dec(v)		atomic_sub(1, v)
 
 #define atomic_inc_and_test(v)	(atomic_add_return(1, v) == 0)

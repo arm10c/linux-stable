@@ -185,6 +185,8 @@ static void destroy_super(struct super_block *s)
 // type: &rootfs_fs_type, flags: 0
 // ARM10C 20160521
 // type: &bd_type, flags: 0x80000000
+// ARM10C 20161112
+// type: &proc_fs_type, flags:0x400000
 static struct super_block *alloc_super(struct file_system_type *type, int flags)
 {
 	// sizeof(struct super_block): 709 bytes, GFP_USER: 0x200D0
@@ -816,6 +818,8 @@ EXPORT_SYMBOL(generic_shutdown_super);
 // fs_type: &rootfs_fs_type, NULL, set_anon_super, flags: 0, NULL
 // ARM10C 20160521
 // fs_type: &bd_type, NULL, set_anon_super, flags: 0x80000000, NULL
+// ARM10C 20161112
+// fs_type: &proc_fs_type, proc_test_super, proc_set_super, flags: 0x400000, ns: &init_pid_ns
 struct super_block *sget(struct file_system_type *type,
 			int (*test)(struct super_block *,void *),
 			int (*set)(struct super_block *,void *),
@@ -823,6 +827,7 @@ struct super_block *sget(struct file_system_type *type,
 			void *data)
 {
 	struct super_block *s = NULL;
+	// s: NULL
 	// s: NULL
 	// s: NULL
 	// s: NULL
@@ -858,6 +863,12 @@ retry:
 	// [re] spin_lock에서 한일:
 	// [re] &sb_lock 을 사용한 spin lock 수행
 
+	// spin_lock에서 한일:
+	// &sb_lock 을 사용한 spin lock 수행
+
+	// [re] spin_lock에서 한일:
+	// [re] &sb_lock 을 사용한 spin lock 수행
+
 	// test: sysfs_test_super
 	// [re] test: sysfs_test_super
 	// test: NULL
@@ -866,11 +877,17 @@ retry:
 	// [re] test: NULL
 	// test: NULL
 	// [re] test: NULL
+	// test: proc_test_super
+	// [re] test: proc_test_super
 	if (test) {
 		// &type->fs_supers: &(&sysfs_fs_type)->fs_supers
 		// hlist_entry_safe((&(&sysfs_fs_type)->fs_supers)->first, struct super_block, s_instances): NULL
 		// [re] &type->fs_supers: &(&sysfs_fs_type)->fs_supers
 		// [re] hlist_entry_safe((&(&sysfs_fs_type)->fs_supers)->first, struct super_block, s_instances): NULL
+		// &type->fs_supers: &(&proc_fs_type)->fs_supers
+		// hlist_entry_safe((&(&proc_fs_type)->fs_supers)->first, struct super_block, s_instances): NULL
+		// [re] &type->fs_supers: &(&proc_fs_type)->fs_supers
+		// [re] hlist_entry_safe((&(&proc_fs_type)->fs_supers)->first, struct super_block, s_instances): NULL
 		hlist_for_each_entry(old, &type->fs_supers, s_instances) {
 		// for (old = hlist_entry_safe((&type->fs_supers)->first, typeof(*(old)), s_instances);
 		//      old; old = hlist_entry_safe((old)->s_instances.next, typeof(*(old)), s_instances))
@@ -896,8 +913,13 @@ retry:
 	// [re] s: kmem_cache#25-oX (struct super_block)
 	// s: NULL
 	// [re] s: kmem_cache#25-oX (struct super_block)
+	// s: NULL
+	// [re] s: kmem_cache#25-oX (struct super_block)
 	if (!s) {
 		spin_unlock(&sb_lock);
+
+		// spin_unlock에서 한일:
+		// &sb_lock 을 사용한 spin unlock 수행
 
 		// spin_unlock에서 한일:
 		// &sb_lock 을 사용한 spin unlock 수행
@@ -919,7 +941,10 @@ retry:
 		// alloc_super(&rootfs_fs_type, 0): kmem_cache#25-oX (struct super_block)
 		// type: &bd_type, flags: 0x80000000
 		// alloc_super(&bd_type, 0x80000000): kmem_cache#25-oX (struct super_block)
+		// type: &proc_fs_type, flags:0x400000
+		// alloc_super(&proc_fs_type, 0x400000): kmem_cache#25-oX (struct super_block)
 		s = alloc_super(type, flags);
+		// s: kmem_cache#25-oX (struct super_block)
 		// s: kmem_cache#25-oX (struct super_block)
 		// s: kmem_cache#25-oX (struct super_block)
 		// s: kmem_cache#25-oX (struct super_block)
@@ -1325,6 +1350,107 @@ retry:
 		// (kmem_cache#25-oX (struct super_block))->s_shrink.batch: 1024
 		// (kmem_cache#25-oX (struct super_block))->s_shrink.flags: 1
 
+		// alloc_super에서 한일:
+		// struct super_block 만큼의 메모리를 할당 받음 kmem_cache#25-oX (struct super_block)
+		//
+		// (&(&(&(&(kmem_cache#25-oX (struct super_block))->s_writers.counter[0...2])->lock)->wait_lock)->rlock)->raw_lock: { { 0 } }
+		// (&(&(&(&(kmem_cache#25-oX (struct super_block))->s_writers.counter[0...2])->lock)->wait_lock)->rlock)->magic: 0xdead4ead
+		// (&(&(&(&(kmem_cache#25-oX (struct super_block))->s_writers.counter[0...2])->lock)->wait_lock)->rlock)->owner: 0xffffffff
+		// (&(&(&(&(kmem_cache#25-oX (struct super_block))->s_writers.counter[0...2])->lock)->wait_lock)->rlock)->owner_cpu: 0xffffffff
+		// (&(&(kmem_cache#25-oX (struct super_block))->s_writers.counter[0...2])->list)->next: &(&(kmem_cache#25-oX (struct super_block))->s_writers.counter[0...2])->list
+		// (&(&(kmem_cache#25-oX (struct super_block))->s_writers.counter[0...2])->list)->prev: &(&(kmem_cache#25-oX (struct super_block))->s_writers.counter[0...2])->list
+		// (&(kmem_cache#25-oX (struct super_block))->s_writers.counter[0...2])->count: 0
+		// (&(kmem_cache#25-oX (struct super_block))->s_writers.counter[0...2])->counters: kmem_cache#26-o0 에서 할당된 4 bytes 메모리 주소
+		// list head 인 &percpu_counters에 &(&(kmem_cache#25-oX (struct super_block))->s_writers.counter[0...2])->list를 연결함
+		//
+		// &(&(kmem_cache#25-oX (struct super_block))->s_writers.wait)->lock을 사용한 spinlock 초기화
+		// &(&(kmem_cache#25-oX (struct super_block))->s_writers.wait)->task_list를 사용한 list 초기화
+		// &(&(kmem_cache#25-oX (struct super_block))->s_writers.wait_unfrozen)->lock을 사용한 spinlock 초기화
+		// &(&(kmem_cache#25-oX (struct super_block))->s_writers.wait_unfrozen)->task_list를 사용한 list 초기화
+		//
+		// (&(kmem_cache#25-oX (struct super_block))->s_instances)->next: NULL
+		// (&(kmem_cache#25-oX (struct super_block))->s_instances)->pprev: NULL
+		// (&(kmem_cache#25-oX (struct super_block))->s_anon)->first: NULL
+		//
+		// (&(kmem_cache#25-oX (struct super_block))->s_inodes)->next: &(kmem_cache#25-oX (struct super_block))->s_inodes
+		// (&(kmem_cache#25-oX (struct super_block))->s_inodes)->prev: &(kmem_cache#25-oX (struct super_block))->s_inodes
+		//
+		// (&(kmem_cache#25-oX (struct super_block))->s_dentry_lru)->node: kmem_cache#30-oX
+		// (&(&(kmem_cache#25-oX (struct super_block))->s_dentry_lru)->active_nodes)->bits[0]: 0
+		// ((&(kmem_cache#25-oX (struct super_block))->s_dentry_lru)->node[0].lock)->raw_lock: { { 0 } }
+		// ((&(kmem_cache#25-oX (struct super_block))->s_dentry_lru)->node[0].lock)->magic: 0xdead4ead
+		// ((&(kmem_cache#25-oX (struct super_block))->s_dentry_lru)->node[0].lock)->owner: 0xffffffff
+		// ((&(kmem_cache#25-oX (struct super_block))->s_dentry_lru)->node[0].lock)->owner_cpu: 0xffffffff
+		// ((&(kmem_cache#25-oX (struct super_block))->s_dentry_lru)->node[0].list)->next: (&(kmem_cache#25-oX (struct super_block))->s_dentry_lru)->node[0].list
+		// ((&(kmem_cache#25-oX (struct super_block))->s_dentry_lru)->node[0].list)->prev: (&(kmem_cache#25-oX (struct super_block))->s_dentry_lru)->node[0].list
+		// (&(kmem_cache#25-oX (struct super_block))->s_dentry_lru)->node[0].nr_items: 0
+		// (&(kmem_cache#25-oX (struct super_block))->s_inode_lru)->node: kmem_cache#30-oX
+		// (&(&(kmem_cache#25-oX (struct super_block))->s_inode_lru)->active_nodes)->bits[0]: 0
+		// ((&(kmem_cache#25-oX (struct super_block))->s_inode_lru)->node[0].lock)->raw_lock: { { 0 } }
+		// ((&(kmem_cache#25-oX (struct super_block))->s_inode_lru)->node[0].lock)->magic: 0xdead4ead
+		// ((&(kmem_cache#25-oX (struct super_block))->s_inode_lru)->node[0].lock)->owner: 0xffffffff
+		// ((&(kmem_cache#25-oX (struct super_block))->s_inode_lru)->node[0].lock)->owner_cpu: 0xffffffff
+		// ((&(kmem_cache#25-oX (struct super_block))->s_inode_lru)->node[0].list)->next: (&(kmem_cache#25-oX (struct super_block))->s_inode_lru)->node[0].list
+		// ((&(kmem_cache#25-oX (struct super_block))->s_inode_lru)->node[0].list)->prev: (&(kmem_cache#25-oX (struct super_block))->s_inode_lru)->node[0].list
+		// (&(kmem_cache#25-oX (struct super_block))->s_inode_lru)->node[0].nr_items: 0
+		//
+		// (&(kmem_cache#25-oX (struct super_block))->s_mounts)->next: &(kmem_cache#25-oX (struct super_block))->s_mounts
+		// (&(kmem_cache#25-oX (struct super_block))->s_mounts)->prev: &(kmem_cache#25-oX (struct super_block))->s_mounts
+		//
+		// (&(kmem_cache#25-oX (struct super_block))->s_umount)->activity: 0
+		// &(&(kmem_cache#25-oX (struct super_block))->s_umount)->wait_lock을 사용한 spinlock 초기화
+		// (&(&(kmem_cache#25-oX (struct super_block))->s_umount)->wait_list)->next: &(&(kmem_cache#25-oX (struct super_block))->s_umount)->wait_list
+		// (&(&(kmem_cache#25-oX (struct super_block))->s_umount)->wait_list)->prev: &(&(kmem_cache#25-oX (struct super_block))->s_umount)->wait_list
+		//
+		// (&(kmem_cache#25-oX (struct super_block))->s_umount)->activity: -1
+		//
+		// (&(kmem_cache#25-oX (struct super_block))->s_vfs_rename_mutex)->count: 1
+		// (&(kmem_cache#25-oX (struct super_block))->s_vfs_rename_mutex)->wait_lock)->rlock)->raw_lock: { { 0 } }
+		// (&(kmem_cache#25-oX (struct super_block))->s_vfs_rename_mutex)->wait_lock)->rlock)->magic: 0xdead4ead
+		// (&(kmem_cache#25-oX (struct super_block))->s_vfs_rename_mutex)->wait_lock)->rlock)->owner: 0xffffffff
+		// (&(kmem_cache#25-oX (struct super_block))->s_vfs_rename_mutex)->wait_lock)->rlock)->owner_cpu: 0xffffffff
+		// (&(&(kmem_cache#25-oX (struct super_block))->s_vfs_rename_mutex)->wait_list)->next: &(&(kmem_cache#25-oX (struct super_block))->s_vfs_rename_mutex)->wait_list
+		// (&(&(kmem_cache#25-oX (struct super_block))->s_vfs_rename_mutex)->wait_list)->prev: &(&(kmem_cache#25-oX (struct super_block))->s_vfs_rename_mutex)->wait_list
+		// (&(kmem_cache#25-oX (struct super_block))->s_vfs_rename_mutex)->onwer: NULL
+		// (&(kmem_cache#25-oX (struct super_block))->s_vfs_rename_mutex)->magic: &(kmem_cache#25-oX (struct super_block))->s_vfs_rename_mutex
+		// (&(kmem_cache#25-oX (struct super_block))->s_dquot.dqio_mutex)->count: 1
+		// (&(kmem_cache#25-oX (struct super_block))->s_dquot.dqio_mutex)->wait_lock)->rlock)->raw_lock: { { 0 } }
+		// (&(kmem_cache#25-oX (struct super_block))->s_dquot.dqio_mutex)->wait_lock)->rlock)->magic: 0xdead4ead
+		// (&(kmem_cache#25-oX (struct super_block))->s_dquot.dqio_mutex)->wait_lock)->rlock)->owner: 0xffffffff
+		// (&(kmem_cache#25-oX (struct super_block))->s_dquot.dqio_mutex)->wait_lock)->rlock)->owner_cpu: 0xffffffff
+		// (&(&(kmem_cache#25-oX (struct super_block))->s_dquot.dqio_mutex)->wait_list)->next: &(&(kmem_cache#25-oX (struct super_block))->s_dquot.dqio_mutex)->wait_list
+		// (&(&(kmem_cache#25-oX (struct super_block))->s_dquot.dqio_mutex)->wait_list)->prev: &(&(kmem_cache#25-oX (struct super_block))->s_dquot.dqio_mutex)->wait_list
+		// (&(kmem_cache#25-oX (struct super_block))->s_dquot.dqio_mutex)->onwer: NULL
+		// (&(kmem_cache#25-oX (struct super_block))->s_dquot.dqio_mutex)->magic: &(kmem_cache#25-oX (struct super_block))->s_dquot.dqio_mutex
+		// (&(kmem_cache#25-oX (struct super_block))->s_dquot.dqonoff_mutex)->count: 1
+		// (&(kmem_cache#25-oX (struct super_block))->s_dquot.dqonoff_mutex)->wait_lock)->rlock)->raw_lock: { { 0 } }
+		// (&(kmem_cache#25-oX (struct super_block))->s_dquot.dqonoff_mutex)->wait_lock)->rlock)->magic: 0xdead4ead
+		// (&(kmem_cache#25-oX (struct super_block))->s_dquot.dqonoff_mutex)->wait_lock)->rlock)->owner: 0xffffffff
+		// (&(kmem_cache#25-oX (struct super_block))->s_dquot.dqonoff_mutex)->wait_lock)->rlock)->owner_cpu: 0xffffffff
+		// (&(&(kmem_cache#25-oX (struct super_block))->s_dquot.dqonoff_mutex)->wait_list)->next: &(&(kmem_cache#25-oX (struct super_block))->s_dquot.dqonoff_mutex)->wait_list
+		// (&(&(kmem_cache#25-oX (struct super_block))->s_dquot.dqonoff_mutex)->wait_list)->prev: &(&(kmem_cache#25-oX (struct super_block))->s_dquot.dqonoff_mutex)->wait_list
+		// (&(kmem_cache#25-oX (struct super_block))->s_dquot.dqonoff_mutex)->onwer: NULL
+		// (&(kmem_cache#25-oX (struct super_block))->s_dquot.dqonoff_mutex)->magic: &(kmem_cache#25-oX (struct super_block))->s_dquot.dqonoff_mutex
+		// (&(kmem_cache#25-oX (struct super_block))->s_dquot.dqptr_sem)->activity: 0
+		// &(&(kmem_cache#25-oX (struct super_block))->s_dquot.dqptr_sem)->wait_lock을 사용한 spinlock 초기화
+		// (&(&(kmem_cache#25-oX (struct super_block))->s_dquot.dqptr_sem)->wait_list)->next: &(&(kmem_cache#25-oX (struct super_block))->s_dquot.dqptr_sem)->wait_list
+		// (&(&(kmem_cache#25-oX (struct super_block))->s_dquot.dqptr_sem)->wait_list)->prev: &(&(kmem_cache#25-oX (struct super_block))->s_dquot.dqptr_sem)->wait_list
+		//
+		// (kmem_cache#25-oX (struct super_block))->s_flags: 0x400000
+		// (kmem_cache#25-oX (struct super_block))->s_bdi: &default_backing_dev_info
+		// (kmem_cache#25-oX (struct super_block))->s_count: 1
+		// ((kmem_cache#25-oX (struct super_block))->s_active)->counter: 1
+		// (kmem_cache#25-oX (struct super_block))->s_maxbytes: 0x7fffffff
+		// (kmem_cache#25-oX (struct super_block))->s_op: &default_op
+		// (kmem_cache#25-oX (struct super_block))->s_time_gran: 1000000000
+		// (kmem_cache#25-oX (struct super_block))->cleancache_poolid: -1
+		// (kmem_cache#25-oX (struct super_block))->s_shrink.seeks: 2
+		// (kmem_cache#25-oX (struct super_block))->s_shrink.scan_objects: super_cache_scan
+		// (kmem_cache#25-oX (struct super_block))->s_shrink.count_objects: super_cache_count
+		// (kmem_cache#25-oX (struct super_block))->s_shrink.batch: 1024
+		// (kmem_cache#25-oX (struct super_block))->s_shrink.flags: 1
+
+		// s: kmem_cache#25-oX (struct super_block)
 		// s: kmem_cache#25-oX (struct super_block)
 		// s: kmem_cache#25-oX (struct super_block)
 		// s: kmem_cache#25-oX (struct super_block)
@@ -1332,6 +1458,7 @@ retry:
 		if (!s)
 			return ERR_PTR(-ENOMEM);
 		goto retry;
+		// goto retry
 		// goto retry
 		// goto retry
 		// goto retry
@@ -1346,7 +1473,10 @@ retry:
 	// [re] set_anon_super(kmem_cache#25-oX (struct super_block), NULL): 0
 	// [re] set: set_anon_super, s: kmem_cache#25-oX (struct super_block), data: NULL
 	// [re] set_anon_super(kmem_cache#25-oX (struct super_block), NULL): 0
+	// [re] set: proc_set_super, s: kmem_cache#25-oX (struct super_block), data: &init_pid_ns
+	// [re] proc_set_super(kmem_cache#25-oX (struct super_block), &init_pid_ns): 0
 	err = set(s, data);
+	// [re] err: 0
 	// [re] err: 0
 	// [re] err: 0
 	// [re] err: 0
@@ -1490,6 +1620,39 @@ retry:
 	//
 	// (kmem_cache#25-oX (struct super_block))->s_bdi: &noop_backing_dev_info
 
+	// [re] proc_set_super 에서 한일:
+	// idr_layer_cache를 사용하여 struct idr_layer 의 메모리 kmem_cache#21-oX를 1 개를 할당 받음
+	//
+	// (&(&unnamed_dev_ida)->idr)->id_free 이 idr object new 4번을 가르킴
+	// |
+	// |-> ---------------------------------------------------------------------------------------------------------------------------
+	//     | idr object new 4         | idr object new 0     | idr object 6         | idr object 5         | .... | idr object 0     |
+	//     ---------------------------------------------------------------------------------------------------------------------------
+	//     | ary[0]: idr object new 0 | ary[0]: idr object 6 | ary[0]: idr object 5 | ary[0]: idr object 4 | .... | ary[0]: NULL     |
+	//     ---------------------------------------------------------------------------------------------------------------------------
+	//
+	// (&(&unnamed_dev_ida)->idr)->id_free: kmem_cache#21-oX (idr object new 4)
+	// (&(&unnamed_dev_ida)->idr)->id_free_cnt: 8
+	//
+	// (&unnamed_dev_ida)->free_bitmap: kmem_cache#27-oX (struct ida_bitmap)
+	//
+	// (&(&unnamed_dev_ida)->idr)->top: kmem_cache#21-oX (struct idr_layer) (idr object 8)
+	// (&(&unnamed_dev_ida)->idr)->layers: 1
+	// (&(&unnamed_dev_ida)->idr)->id_free: (idr object new 0)
+	// (&(&unnamed_dev_ida)->idr)->id_free_cnt: 7
+	//
+	// (kmem_cache#27-oX (struct ida_bitmap))->bitmap 의 4 bit를 1로 set 수행
+	// (kmem_cache#27-oX (struct ida_bitmap))->nr_busy: 5
+	//
+	// kmem_cache인 kmem_cache#21 에서 할당한 object인 kmem_cache#21-oX (idr object new 4) 의 memory 공간을 반환함
+	//
+	// unnamed_dev_start: 5
+	//
+	// (kmem_cache#25-oX (struct super_block))->s_dev: 4
+	// (kmem_cache#25-oX (struct super_block))->s_bdi: &noop_backing_dev_info
+	// (kmem_cache#25-oX (struct super_block))->s_fs_info: &init_pid_ns
+
+	// [re] err: 0
 	// [re] err: 0
 	// [re] err: 0
 	// [re] err: 0
@@ -1505,11 +1668,13 @@ retry:
 	// [re] s->s_type: (kmem_cache#25-oX (struct super_block))->s_type, type: &shmem_fs_type
 	// [re] s->s_type: (kmem_cache#25-oX (struct super_block))->s_type, type: &rootfs_fs_type
 	// [re] s->s_type: (kmem_cache#25-oX (struct super_block))->s_type, type: &bd_type
+	// [re] s->s_type: (kmem_cache#25-oX (struct super_block))->s_type, type: &proc_fs_type
 	s->s_type = type;
 	// [re] s->s_type: (kmem_cache#25-oX (struct super_block))->s_type: &sysfs_fs_type
 	// [re] s->s_type: (kmem_cache#25-oX (struct super_block))->s_type: &shmem_fs_type
 	// [re] s->s_type: (kmem_cache#25-oX (struct super_block))->s_type: &rootfs_fs_type
 	// [re] s->s_type: (kmem_cache#25-oX (struct super_block))->s_type: &bd_type
+	// [re] s->s_type: (kmem_cache#25-oX (struct super_block))->s_type: &proc_fs_type
 
 	// [re] s->s_id: (kmem_cache#25-oX (struct super_block))->s_id, type->name: (&sysfs_fs_type)->name: "sysfs",
 	// [re] sizeof((kmem_cache#25-oX (struct super_block))->s_id): 32 bytes
@@ -1518,6 +1683,9 @@ retry:
 	// [re] s->s_id: (kmem_cache#25-oX (struct super_block))->s_id, type->name: (&shmem_fs_type)->name: "rootfs",
 	// [re] sizeof((kmem_cache#25-oX (struct super_block))->s_id): 32 bytes
 	// [re] s->s_id: (kmem_cache#25-oX (struct super_block))->s_id, type->name: (&bd_type)->name: "bdev",
+	// [re] sizeof((kmem_cache#25-oX (struct super_block))->s_id): 32 bytes
+	//
+	// [re] s->s_id: (kmem_cache#25-oX (struct super_block))->s_id, type->name: (&bd_type)->name: "proc",
 	// [re] sizeof((kmem_cache#25-oX (struct super_block))->s_id): 32 bytes
 	strlcpy(s->s_id, type->name, sizeof(s->s_id));
 
@@ -1533,6 +1701,10 @@ retry:
 	// [re] strlcpy에서 한일:
 	// s->s_id: (kmem_cache#25-oX (struct super_block))->s_id: "bdev"
 
+	// [re] strlcpy에서 한일:
+	// s->s_id: (kmem_cache#25-oX (struct super_block))->s_id: "proc"
+
+	// [re] s->s_list: (kmem_cache#25-oX (struct super_block))->s_list,
 	// [re] s->s_list: (kmem_cache#25-oX (struct super_block))->s_list,
 	// [re] s->s_list: (kmem_cache#25-oX (struct super_block))->s_list,
 	// [re] s->s_list: (kmem_cache#25-oX (struct super_block))->s_list,
@@ -1551,10 +1723,14 @@ retry:
 	// [re] list_add_tail에서 한일:
 	// list head인 &super_blocks 에 (kmem_cache#25-oX (struct super_block))->s_list을 tail에 추가
 
+	// [re] list_add_tail에서 한일:
+	// list head인 &super_blocks 에 (kmem_cache#25-oX (struct super_block))->s_list을 tail에 추가
+
 	// [re] &s->s_instances: &(kmem_cache#25-oX (struct super_block))->s_instances, &type->fs_supers: &(&sysfs_fs_type)->fs_supers
-	// [re] &s->s_instances: &(kmem_cache#25-oX (struct super_block))->s_instances, &type->fs_supers: &(&sysfs_fs_type)->fs_supers
-	// [re] &s->s_instances: &(kmem_cache#25-oX (struct super_block))->s_instances, &type->fs_supers: &(&sysfs_fs_type)->fs_supers
-	// [re] &s->s_instances: &(kmem_cache#25-oX (struct super_block))->s_instances, &type->fs_supers: &(&sysfs_fs_type)->fs_supers
+	// [re] &s->s_instances: &(kmem_cache#25-oX (struct super_block))->s_instances, &type->fs_supers: &(&shmem_fs_type)->fs_supers
+	// [re] &s->s_instances: &(kmem_cache#25-oX (struct super_block))->s_instances, &type->fs_supers: &(&rootfs_fs_type)->fs_supers
+	// [re] &s->s_instances: &(kmem_cache#25-oX (struct super_block))->s_instances, &type->fs_supers: &(&bd_type)->fs_supers
+	// [re] &s->s_instances: &(kmem_cache#25-oX (struct super_block))->s_instances, &type->fs_supers: &(&proc_fs_type)->fs_supers
 	hlist_add_head(&s->s_instances, &type->fs_supers);
 
 	// [re] hlist_add_head에서 한일:
@@ -1569,15 +1745,23 @@ retry:
 
 	// [re] hlist_add_head에서 한일:
 	// (&(kmem_cache#25-oX (struct super_block))->s_instances)->next: NULL
-	// (&(&shmem_fs_type)->fs_supers)->first: &(kmem_cache#25-oX (struct super_block))->s_instances
-	// (&(kmem_cache#25-oX (struct super_block))->s_instances)->pprev: &(&(&shmem_fs_type)->fs_supers)->first
+	// (&(&rootfs_fs_type)->fs_supers)->first: &(kmem_cache#25-oX (struct super_block))->s_instances
+	// (&(kmem_cache#25-oX (struct super_block))->s_instances)->pprev: &(&(&rootfs_fs_type)->fs_supers)->first
 
 	// [re] hlist_add_head에서 한일:
 	// (&(kmem_cache#25-oX (struct super_block))->s_instances)->next: NULL
-	// (&(&shmem_fs_type)->fs_supers)->first: &(kmem_cache#25-oX (struct super_block))->s_instances
-	// (&(kmem_cache#25-oX (struct super_block))->s_instances)->pprev: &(&(&shmem_fs_type)->fs_supers)->first
+	// (&(&bd_type)->fs_supers)->first: &(kmem_cache#25-oX (struct super_block))->s_instances
+	// (&(kmem_cache#25-oX (struct super_block))->s_instances)->pprev: &(&(&bd_type)->fs_supers)->first
+
+	// [re] hlist_add_head에서 한일:
+	// (&(kmem_cache#25-oX (struct super_block))->s_instances)->next: NULL
+	// (&(&proc_fs_type)->fs_supers)->first: &(kmem_cache#25-oX (struct super_block))->s_instances
+	// (&(kmem_cache#25-oX (struct super_block))->s_instances)->pprev: &(&(&proc_fs_type)->fs_supers)->first
 
 	spin_unlock(&sb_lock);
+
+	// [re] spin_unlock에서 한일:
+	// &sb_lock 을 사용한 spin unlock 수행
 
 	// [re] spin_unlock에서 한일:
 	// &sb_lock 을 사용한 spin unlock 수행
@@ -1595,11 +1779,13 @@ retry:
 	// [re] type: &shmem_fs_type
 	// [re] type: &rootfs_fs_type
 	// [re] type: &bd_type
+	// [re] type: &proc_fs_type
 	get_filesystem(type);
 
 // 2015/11/14 종료
 // 2015/11/21 시작
 
+	// [re] &s->s_shrink: &(kmem_cache#25-oX (struct super_block))->s_shrink
 	// [re] &s->s_shrink: &(kmem_cache#25-oX (struct super_block))->s_shrink
 	// [re] &s->s_shrink: &(kmem_cache#25-oX (struct super_block))->s_shrink
 	// [re] &s->s_shrink: &(kmem_cache#25-oX (struct super_block))->s_shrink
@@ -1626,11 +1812,18 @@ retry:
 	// (&(kmem_cache#25-oX (struct super_block))->s_shrink)->nr_deferred: kmem_cache#30-oX
 	// head list인 &shrinker_list에 &(&(kmem_cache#25-oX (struct super_block))->s_shrink)->list를 tail로 추가함
 
+	// register_shrinker에서 한일:
+	// (&(kmem_cache#25-oX (struct super_block))->s_shrink)->flags: 0
+	// (&(kmem_cache#25-oX (struct super_block))->s_shrink)->nr_deferred: kmem_cache#30-oX
+	// head list인 &shrinker_list에 &(&(kmem_cache#25-oX (struct super_block))->s_shrink)->list를 tail로 추가함
+
+	// s: kmem_cache#25-oX (struct super_block)
 	// s: kmem_cache#25-oX (struct super_block)
 	// s: kmem_cache#25-oX (struct super_block)
 	// s: kmem_cache#25-oX (struct super_block)
 	// s: kmem_cache#25-oX (struct super_block)
 	return s;
+	// return kmem_cache#25-oX (struct super_block)
 	// return kmem_cache#25-oX (struct super_block)
 	// return kmem_cache#25-oX (struct super_block)
 	// return kmem_cache#25-oX (struct super_block)
@@ -2003,12 +2196,15 @@ static int unnamed_dev_start = 0; /* don't bother trying below it */
 // &s->s_dev: &(kmem_cache#25-oX (struct super_block))->s_dev
 // ARM10C 20160521
 // &s->s_dev: &(kmem_cache#25-oX (struct super_block))->s_dev
+// ARM10C 20161112
+// &s->s_dev: &(kmem_cache#25-oX (struct super_block))->s_dev
 int get_anon_bdev(dev_t *p)
 {
 	int dev;
 	int error;
 
  retry:
+	// GFP_ATOMIC: 0x20u, ida_pre_get(&unnamed_dev_ida, GFP_ATOMIC: 0x20): 1
 	// GFP_ATOMIC: 0x20u, ida_pre_get(&unnamed_dev_ida, GFP_ATOMIC: 0x20): 1
 	// GFP_ATOMIC: 0x20u, ida_pre_get(&unnamed_dev_ida, GFP_ATOMIC: 0x20): 1
 	// GFP_ATOMIC: 0x20u, ida_pre_get(&unnamed_dev_ida, GFP_ATOMIC: 0x20): 1
@@ -2082,7 +2278,26 @@ int get_anon_bdev(dev_t *p)
 	//
 	// (&unnamed_dev_ida)->free_bitmap: kmem_cache#27-oX (struct ida_bitmap)
 
+	// ida_pre_get에서 한일:
+	// idr_layer_cache를 사용하여 struct idr_layer 의 메모리 kmem_cache#21-oX를 1 개를 할당 받음
+	//
+	// (&(&unnamed_dev_ida)->idr)->id_free 이 idr object new 4번을 가르킴
+	// |
+	// |-> ---------------------------------------------------------------------------------------------------------------------------
+	//     | idr object new 4         | idr object new 0     | idr object 6         | idr object 5         | .... | idr object 0     |
+	//     ---------------------------------------------------------------------------------------------------------------------------
+	//     | ary[0]: idr object new 0 | ary[0]: idr object 6 | ary[0]: idr object 5 | ary[0]: idr object 4 | .... | ary[0]: NULL     |
+	//     ---------------------------------------------------------------------------------------------------------------------------
+	//
+	// (&(&unnamed_dev_ida)->idr)->id_free: kmem_cache#21-oX (idr object new 4)
+	// (&(&unnamed_dev_ida)->idr)->id_free_cnt: 8
+	//
+	// (&unnamed_dev_ida)->free_bitmap: kmem_cache#27-oX (struct ida_bitmap)
+
 	spin_lock(&unnamed_dev_lock);
+
+	// spin_lock에서 한일:
+	// &unnamed_dev_lock을 이용한 spin lock 수행
 
 	// spin_lock에서 한일:
 	// &unnamed_dev_lock을 이용한 spin lock 수행
@@ -2104,7 +2319,10 @@ int get_anon_bdev(dev_t *p)
 	// ida_get_new_above((&unnamed_dev_ida, 2, &dev): 0
 	// unnamed_dev_start: 3
 	// ida_get_new_above((&unnamed_dev_ida, 3, &dev): 0
+	// unnamed_dev_start: 4
+	// ida_get_new_above((&unnamed_dev_ida, 4, &dev): 0
 	error = ida_get_new_above(&unnamed_dev_ida, unnamed_dev_start, &dev);
+	// error: 0
 	// error: 0
 	// error: 0
 	// error: 0
@@ -2169,6 +2387,20 @@ int get_anon_bdev(dev_t *p)
 	//
 	// dev: 3
 
+	// ida_get_new_above에서 한일:
+	// (&(&unnamed_dev_ida)->idr)->top: kmem_cache#21-oX (struct idr_layer) (idr object 8)
+	// (&(&unnamed_dev_ida)->idr)->layers: 1
+	// (&(&unnamed_dev_ida)->idr)->id_free: (idr object new 0)
+	// (&(&unnamed_dev_ida)->idr)->id_free_cnt: 7
+	//
+	// (kmem_cache#27-oX (struct ida_bitmap))->bitmap 의 4 bit를 1로 set 수행
+	// (kmem_cache#27-oX (struct ida_bitmap))->nr_busy: 5
+	//
+	// kmem_cache인 kmem_cache#21 에서 할당한 object인 kmem_cache#21-oX (idr object new 4) 의 memory 공간을 반환함
+	//
+	// dev: 4
+
+	// error: 0
 	// error: 0
 	// error: 0
 	// error: 0
@@ -2178,11 +2410,13 @@ int get_anon_bdev(dev_t *p)
 		// dev: 1
 		// dev: 2
 		// dev: 3
+		// dev: 4
 		unnamed_dev_start = dev + 1;
 		// unnamed_dev_start: 1
 		// unnamed_dev_start: 2
 		// unnamed_dev_start: 3
 		// unnamed_dev_start: 4
+		// unnamed_dev_start: 5
 
 	spin_unlock(&unnamed_dev_lock);
 
@@ -2198,6 +2432,10 @@ int get_anon_bdev(dev_t *p)
 	// spin_unlock에서 한일:
 	// &unnamed_dev_lock을 이용한 spin unlock 수행
 
+	// spin_unlock에서 한일:
+	// &unnamed_dev_lock을 이용한 spin unlock 수행
+
+	// error: 0, EAGAIN: 11
 	// error: 0, EAGAIN: 11
 	// error: 0, EAGAIN: 11
 	// error: 0, EAGAIN: 11
@@ -2212,6 +2450,7 @@ int get_anon_bdev(dev_t *p)
 	// dev: 1, MINORBITS: 20
 	// dev: 2, MINORBITS: 20
 	// dev: 3, MINORBITS: 20
+	// dev: 5, MINORBITS: 20
 	if (dev == (1 << MINORBITS)) {
 		spin_lock(&unnamed_dev_lock);
 		ida_remove(&unnamed_dev_ida, dev);
@@ -2224,13 +2463,16 @@ int get_anon_bdev(dev_t *p)
 	// *p: (kmem_cache#25-oX (struct super_block))->s_dev, dev: 1, MINORMASK: 0xfffff, MKDEV(0, 0): 0
 	// *p: (kmem_cache#25-oX (struct super_block))->s_dev, dev: 2, MINORMASK: 0xfffff, MKDEV(0, 0): 0
 	// *p: (kmem_cache#25-oX (struct super_block))->s_dev, dev: 3, MINORMASK: 0xfffff, MKDEV(0, 0): 0
+	// *p: (kmem_cache#25-oX (struct super_block))->s_dev, dev: 4, MINORMASK: 0xfffff, MKDEV(0, 0): 0
 	*p = MKDEV(0, dev & MINORMASK);
 	// *p: (kmem_cache#25-oX (struct super_block))->s_dev: 0
 	// *p: (kmem_cache#25-oX (struct super_block))->s_dev: 1
 	// *p: (kmem_cache#25-oX (struct super_block))->s_dev: 2
 	// *p: (kmem_cache#25-oX (struct super_block))->s_dev: 3
+	// *p: (kmem_cache#25-oX (struct super_block))->s_dev: 4
 
 	return 0;
+	// return 0
 	// return 0
 	// return 0
 	// return 0
@@ -2257,6 +2499,8 @@ EXPORT_SYMBOL(free_anon_bdev);
 // s: kmem_cache#25-oX (struct super_block), data: NULL
 // ARM10C 20160521
 // kmem_cache#25-oX (struct super_block), data: NULL
+// ARM10C 20161112
+// sb: kmem_cache#25-oX (struct super_block), NULL
 int set_anon_super(struct super_block *s, void *data)
 {
 	// &s->s_dev: &(kmem_cache#25-oX (struct super_block))->s_dev
@@ -2267,7 +2511,10 @@ int set_anon_super(struct super_block *s, void *data)
 	// get_anon_bdev(&(kmem_cache#25-oX (struct super_block))->s_dev): 0
 	// &s->s_dev: &(kmem_cache#25-oX (struct super_block))->s_dev
 	// get_anon_bdev(&(kmem_cache#25-oX (struct super_block))->s_dev): 0
+	// &s->s_dev: &(kmem_cache#25-oX (struct super_block))->s_dev
+	// get_anon_bdev(&(kmem_cache#25-oX (struct super_block))->s_dev): 0
 	int error = get_anon_bdev(&s->s_dev);
+	// error: 0
 	// error: 0
 	// error: 0
 	// error: 0
@@ -2402,6 +2649,37 @@ int set_anon_super(struct super_block *s, void *data)
 	//
 	// (kmem_cache#25-oX (struct super_block))->s_dev: 3
 
+	// get_anon_bdev에서 한일:
+	// idr_layer_cache를 사용하여 struct idr_layer 의 메모리 kmem_cache#21-oX를 1 개를 할당 받음
+	//
+	// (&(&unnamed_dev_ida)->idr)->id_free 이 idr object new 4번을 가르킴
+	// |
+	// |-> ---------------------------------------------------------------------------------------------------------------------------
+	//     | idr object new 4         | idr object new 0     | idr object 6         | idr object 5         | .... | idr object 0     |
+	//     ---------------------------------------------------------------------------------------------------------------------------
+	//     | ary[0]: idr object new 0 | ary[0]: idr object 6 | ary[0]: idr object 5 | ary[0]: idr object 4 | .... | ary[0]: NULL     |
+	//     ---------------------------------------------------------------------------------------------------------------------------
+	//
+	// (&(&unnamed_dev_ida)->idr)->id_free: kmem_cache#21-oX (idr object new 4)
+	// (&(&unnamed_dev_ida)->idr)->id_free_cnt: 8
+	//
+	// (&unnamed_dev_ida)->free_bitmap: kmem_cache#27-oX (struct ida_bitmap)
+	//
+	// (&(&unnamed_dev_ida)->idr)->top: kmem_cache#21-oX (struct idr_layer) (idr object 8)
+	// (&(&unnamed_dev_ida)->idr)->layers: 1
+	// (&(&unnamed_dev_ida)->idr)->id_free: (idr object new 0)
+	// (&(&unnamed_dev_ida)->idr)->id_free_cnt: 7
+	//
+	// (kmem_cache#27-oX (struct ida_bitmap))->bitmap 의 4 bit를 1로 set 수행
+	// (kmem_cache#27-oX (struct ida_bitmap))->nr_busy: 5
+	//
+	// kmem_cache인 kmem_cache#21 에서 할당한 object인 kmem_cache#21-oX (idr object new 4) 의 memory 공간을 반환함
+	//
+	// unnamed_dev_start: 5
+	//
+	// (kmem_cache#25-oX (struct super_block))->s_dev: 4
+
+	// error: 0
 	// error: 0
 	// error: 0
 	// error: 0
@@ -2411,7 +2689,9 @@ int set_anon_super(struct super_block *s, void *data)
 		// s->s_bdi: (kmem_cache#25-oX (struct super_block))->s_bdi
 		// s->s_bdi: (kmem_cache#25-oX (struct super_block))->s_bdi
 		// s->s_bdi: (kmem_cache#25-oX (struct super_block))->s_bdi
+		// s->s_bdi: (kmem_cache#25-oX (struct super_block))->s_bdi
 		s->s_bdi = &noop_backing_dev_info;
+		// s->s_bdi: (kmem_cache#25-oX (struct super_block))->s_bdi: &noop_backing_dev_info
 		// s->s_bdi: (kmem_cache#25-oX (struct super_block))->s_bdi: &noop_backing_dev_info
 		// s->s_bdi: (kmem_cache#25-oX (struct super_block))->s_bdi: &noop_backing_dev_info
 		// s->s_bdi: (kmem_cache#25-oX (struct super_block))->s_bdi: &noop_backing_dev_info
@@ -2421,7 +2701,9 @@ int set_anon_super(struct super_block *s, void *data)
 	// error: 0
 	// error: 0
 	// error: 0
+	// error: 0
 	return error;
+	// return 0
 	// return 0
 	// return 0
 	// return 0
@@ -3361,6 +3643,8 @@ EXPORT_SYMBOL(mount_single);
 // type: &rootfs_fs_type, flags: 0, name: "rootfs", data: NULL
 // ARM10C 20160521
 // type: &bd_type, flags: 0x400000, name: "bdev", data: NULL
+// ARM10C 20161112
+// type: &proc_fs_type, flags: 0x400000, name: "proc", data: &init_pid_ns
 struct dentry *
 mount_fs(struct file_system_type *type, int flags, const char *name, void *data)
 {
@@ -3371,7 +3655,9 @@ mount_fs(struct file_system_type *type, int flags, const char *name, void *data)
 	// secdata: NULL
 	// secdata: NULL
 	// secdata: NULL
+	// secdata: NULL
 
+	// ENOMEM: 12
 	// ENOMEM: 12
 	// ENOMEM: 12
 	// ENOMEM: 12
@@ -3381,17 +3667,28 @@ mount_fs(struct file_system_type *type, int flags, const char *name, void *data)
 	// error: -12
 	// error: -12
 	// error: -12
+	// error: -12
 
 	// data: NULL, type->fs_flags: (&sysfs_fs_type)->fs_flags: 8, FS_BINARY_MOUNTDATA: 2
 	// data: NULL, type->fs_flags: (&shmem_fs_type)->fs_flags: 8, FS_BINARY_MOUNTDATA: 2
 	// data: NULL, type->fs_flags: (&rootfs_fs_type)->fs_flags: 0, FS_BINARY_MOUNTDATA: 2
 	// data: NULL, type->fs_flags: (&bd_type)->fs_flags: 8, FS_BINARY_MOUNTDATA: 2
+	// data: &init_pid_ns, type->fs_flags: (&proc_fs_type)->fs_flags: 8, FS_BINARY_MOUNTDATA: 2
 	if (data && !(type->fs_flags & FS_BINARY_MOUNTDATA)) {
+		// secdata: NULL, alloc_secdata(): (char *)1
 		secdata = alloc_secdata();
+		// secdata: (char *)1
+
+		// secdata: (char *)1
 		if (!secdata)
 			goto out;
 
-		error = security_sb_copy_data(data, secdata);
+		// data: &init_pid_ns, secdata: (char *)1
+		// security_sb_copy_data(&init_pid_ns, (char *)1): 0
+		error = security_sb_copy_data(data, secdata); // null function
+		// error: 0
+
+		// error: 0
 		if (error)
 			goto out_free_secdata;
 	}
@@ -3408,6 +3705,10 @@ mount_fs(struct file_system_type *type, int flags, const char *name, void *data)
 	// type->mount: (&bd_type)->mount: bd_mount
 	// type: &bd_type, flags: 0x400000, name: "bdev", data: NULL
 	// bd_mount(&bd_type, 0x400000, "bdev", NULL): kmem_cache#5-oX (struct dentry)
+	//
+	// type->mount: (&proc_fs_type)->mount: proc_mount
+	// type: &proc_fs_type, flags: 0x400000, name: "proc", data: &init_pid_ns
+	// proc_mount(&proc_fs_type, 0x400000, "proc", &init_pid_ns): kmem_cache#5-oX (struct dentry)
 	root = type->mount(type, flags, name, data);
 	// root: kmem_cache#5-oX (struct dentry)
 	// root: kmem_cache#5-oX (struct dentry)

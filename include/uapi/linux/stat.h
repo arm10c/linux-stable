@@ -28,6 +28,7 @@
 // ARM10C 20160521
 // ARM10C 20160611
 // ARM10C 20160702
+// ARM10C 20161112
 // S_IFDIR: 0040000
 #define S_IFDIR  0040000
 // ARM10C 20160319
@@ -52,6 +53,7 @@
 // dp->mode: (kmem_cache#29-oX (struct proc_dir_entry))->mode: 0120777
 #define S_ISLNK(m)	(((m) & S_IFMT) == S_IFLNK)
 // ARM10C 20160611
+// ARM10C 20161112
 // S_IFMT: 00170000
 // S_IFREG: 0100000
 // mode: 0100000

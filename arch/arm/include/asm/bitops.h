@@ -155,6 +155,7 @@ extern void _set_bit(int nr, volatile unsigned long * p);
 // ARM10C 20160903
 extern void _clear_bit(int nr, volatile unsigned long * p);
 extern void _change_bit(int nr, volatile unsigned long * p);
+// ARM10C 20161112
 extern int _test_and_set_bit(int nr, volatile unsigned long * p);
 extern int _test_and_clear_bit(int nr, volatile unsigned long * p);
 extern int _test_and_change_bit(int nr, volatile unsigned long * p);
@@ -191,6 +192,7 @@ extern int _find_next_bit_be(const unsigned long *p, int size, int offset);
 // _test_and_set_bit
 // ARM10C 20140621
 // ARM10C 20160416
+// ARM10C 20161112
 #define ATOMIC_BITOP(name,nr,p)		_##name(nr,p)	// ARM10C this
 #endif
 
@@ -211,7 +213,9 @@ extern int _find_next_bit_be(const unsigned long *p, int size, int offset);
 // bitnum: 0, addr: &(MIGRATE_UNMOVABLE인 page)->flags
 // ARM10C 20160416
 // 0, &once
-#define test_and_set_bit(nr,p)		ATOMIC_BITOP(test_and_set_bit,nr,p)
+// ARM10C 20161112
+// offset: 1, map->page: (&(&init_pid_ns)->pidmap[0])->page: kmem_cache#25-oX
+#define test_and_set_bit(nr,p)		ATOMIC_BITOP(test_and_set_bit,nr,p) // _test_and_set_bit(nr,p)
 // ARM10C 20131207
 #define test_and_clear_bit(nr,p)	ATOMIC_BITOP(test_and_clear_bit,nr,p)
 #define test_and_change_bit(nr,p)	ATOMIC_BITOP(test_and_change_bit,nr,p)

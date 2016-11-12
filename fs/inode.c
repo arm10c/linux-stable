@@ -573,17 +573,23 @@ EXPORT_SYMBOL(clear_nlink);
  */
 // ARM10C 20151212
 // inode: kmem_cache#4-oX (struct inode), 2
+// ARM10C 20161112
+// inode: kmem_cache#4-oX (struct inode), de->nlink: (&proc_root)->nlink: 2
 void set_nlink(struct inode *inode, unsigned int nlink)
 {
+	// nlink: 2
 	// nlink: 2
 	if (!nlink) {
 		clear_nlink(inode);
 	} else {
 		/* Yes, some filesystems do change nlink from zero to one */
+		// inode->i_nlink: (kmem_cache#4-oX (struct inode))->i_nlink: 1
 		if (inode->i_nlink == 0)
 			atomic_long_dec(&inode->i_sb->s_remove_count);
 
+		// inode->__i_nlink: (kmem_cache#4-oX (struct inode))->__i_nlink, nlink: 2
 		inode->__i_nlink = nlink;
+		// inode->__i_nlink: (kmem_cache#4-oX (struct inode))->__i_nlink: 2
 	}
 }
 EXPORT_SYMBOL(set_nlink);
@@ -1216,6 +1222,8 @@ EXPORT_SYMBOL(get_next_ino);
  *	- quotas, fsnotify, writeback can't work
  */
 // ARM10C 20160319
+// sb: kmem_cache#25-oX (struct super_block)
+// ARM10C 20161112
 // sb: kmem_cache#25-oX (struct super_block)
 struct inode *new_inode_pseudo(struct super_block *sb)
 {

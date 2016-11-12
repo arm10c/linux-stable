@@ -91,6 +91,8 @@ static inline long __must_check PTR_ERR(__force const void *ptr)
 // subdir: 0xfffffffe
 // ARM10C 20160702
 // subdir: kmem_cache#29-oX
+// ARM10C 20161112
+// sb: kmem_cache#25-oX (struct super_block),
 static inline long __must_check IS_ERR(__force const void *ptr)
 {
 	return IS_ERR_VALUE((unsigned long)ptr);

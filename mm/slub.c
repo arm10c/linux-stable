@@ -6951,6 +6951,8 @@ EXPORT_SYMBOL(ksize);
 // new_path: kmem_cache#23-oX
 // ARM10C 20160827
 // area: &(할당받은 page의 mmu에 반영된 가상주소 가 포함된 vmap_area 주소)->vm
+// ARM10C 20161112
+// page: NULL
 void kfree(const void *x)
 {
 	struct page *page;

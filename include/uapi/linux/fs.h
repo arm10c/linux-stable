@@ -69,14 +69,20 @@ struct inodes_stat_t {
  * These are the fs-independent mount-flags: up to 32 flags are supported
  */
 #define MS_RDONLY	 1	/* Mount read-only */
+// ARM10C 20161112
+// MS_NOSUID: 0x2
 #define MS_NOSUID	 2	/* Ignore suid and sgid bits */
 #define MS_NODEV	 4	/* Disallow access to device special files */
+// ARM10C 20161112
+// MS_NOEXEC: 0x8
 #define MS_NOEXEC	 8	/* Disallow program execution */
 #define MS_SYNCHRONOUS	16	/* Writes are synced at once */
 #define MS_REMOUNT	32	/* Alter flags of a mounted FS */
 #define MS_MANDLOCK	64	/* Allow mandatory locks on an FS */
 #define MS_DIRSYNC	128	/* Directory modifications are synchronous */
 #define MS_NOATIME	1024	/* Do not update access times. */
+// ARM10C 20161112
+// MS_NODIRATIME: 0x800
 #define MS_NODIRATIME	2048	/* Do not update directory access times */
 #define MS_BIND		4096
 #define MS_MOVE		8192
@@ -98,6 +104,7 @@ struct inodes_stat_t {
 // ARM10C 20151031
 // ARM10C 20151114
 // ARM10C 20160319
+// ARM10C 20161112
 // MS_KERNMOUNT: 0x400000
 #define MS_KERNMOUNT	(1<<22) /* this is a kern_mount call */
 #define MS_I_VERSION	(1<<23) /* Update inode I_version field */

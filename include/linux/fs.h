@@ -541,6 +541,7 @@ struct posix_acl;
 // ARM10C 20160123
 // ARM10C 20160319
 // ARM10C 20160521
+// ARM10C 20161112
 // sizeof(struct inode): 394 bytes
 struct inode {
 	umode_t			i_mode;
@@ -1299,6 +1300,7 @@ struct sb_writers {
 // ARM10C 20160326
 // ARM10C 20160416
 // ARM10C 20160521
+// ARM10C 20161112
 // sizeof(struct super_block): 709 bytes
 struct super_block {
 	struct list_head	s_list;		/* Keep this first */
@@ -1670,6 +1672,7 @@ extern ssize_t vfs_writev(struct file *, const struct iovec __user *,
 // ARM10C 20151128
 // ARM10C 20160319
 // ARM10C 20160521
+// ARM10C 20161112
 struct super_operations {
    	struct inode *(*alloc_inode)(struct super_block *sb);
 	void (*destroy_inode)(struct inode *);
@@ -1915,6 +1918,7 @@ struct file_system_type {
 #define FS_HAS_SUBTYPE		4
 // ARM10C 20151114
 // ARM10C 20160319
+// ARM10C 20161112
 // FS_USERNS_MOUNT: 8
 #define FS_USERNS_MOUNT		8	/* Can be mounted by userns root */
 #define FS_USERNS_DEV_MOUNT	16 /* A userns mount does not imply MNT_NODEV */

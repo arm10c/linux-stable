@@ -179,9 +179,14 @@ static inline struct pid_namespace *ns_of_pid(struct pid *pid)
  * pid_ns->child_reaper is assigned in copy_process, we check
  * with the pid number.
  */
+// ARM10C 20161112
+// pid: kmem_cache#19-oX (struct pid)
 static inline bool is_child_reaper(struct pid *pid)
 {
+	// pid->level: (kmem_cache#19-oX (struct pid))->level: 0,
+	// pid->numbers[0].nr: (kmem_cache#19-oX (struct pid))->numbers[0].nr: 1
 	return pid->numbers[pid->level].nr == 1;
+	// return 1
 }
 
 /*

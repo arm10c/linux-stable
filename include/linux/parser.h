@@ -17,9 +17,12 @@ struct match_token {
 typedef struct match_token match_table_t[];
 
 /* Maximum number of arguments that match_token will find in a pattern */
+// ARM10C 20161112
+// MAX_OPT_ARGS: 3
 enum {MAX_OPT_ARGS = 3};
 
 /* Describe the location within a string of a substring */
+// ARM10C 20161112
 typedef struct {
 	char *from;
 	char *to;

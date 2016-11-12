@@ -126,6 +126,7 @@ static int proc_show_options(struct seq_file *seq, struct dentry *root)
 	return 0;
 }
 
+// ARM10C 20161112
 static const struct super_operations proc_sops = {
 	.alloc_inode	= proc_alloc_inode,
 	.destroy_inode	= proc_destroy_inode,
@@ -407,29 +408,137 @@ static const struct file_operations proc_reg_file_ops_no_compat = {
 };
 #endif
 
+// ARM10C 20161112
+// sb: kmem_cache#25-oX (struct super_block), &proc_root
 struct inode *proc_get_inode(struct super_block *sb, struct proc_dir_entry *de)
 {
+	// sb: kmem_cache#25-oX (struct super_block)
+	// new_inode_pseudo(kmem_cache#25-oX (struct super_block)): kmem_cache#4-oX (struct inode)
 	struct inode *inode = new_inode_pseudo(sb);
+	// inode: kmem_cache#4-oX (struct inode)
 
+	// new_inode_pseudo 에서 한일:
+	// struct inode 만큼의 메모리를 할당 받음 kmem_cache#4-oX (struct inode)
+	//
+	// (kmem_cache#4-oX (struct inode))->i_sb: kmem_cache#25-oX (struct super_block)
+	// (kmem_cache#4-oX (struct inode))->i_blkbits: 12
+	// (kmem_cache#4-oX (struct inode))->i_flags: 0
+	// (kmem_cache#4-oX (struct inode))->i_count: 1
+	// (kmem_cache#4-oX (struct inode))->i_op: &empty_iops
+	// (kmem_cache#4-oX (struct inode))->__i_nlink: 1
+	// (kmem_cache#4-oX (struct inode))->i_opflags: 0
+	// (kmem_cache#4-oX (struct inode))->i_uid: 0
+	// (kmem_cache#4-oX (struct inode))->i_gid: 0
+	// (kmem_cache#4-oX (struct inode))->i_count: 0
+	// (kmem_cache#4-oX (struct inode))->i_size: 0
+	// (kmem_cache#4-oX (struct inode))->i_blocks: 0
+	// (kmem_cache#4-oX (struct inode))->i_bytes: 0
+	// (kmem_cache#4-oX (struct inode))->i_generation: 0
+	// (kmem_cache#4-oX (struct inode))->i_pipe: NULL
+	// (kmem_cache#4-oX (struct inode))->i_bdev: NULL
+	// (kmem_cache#4-oX (struct inode))->i_cdev: NULL
+	// (kmem_cache#4-oX (struct inode))->i_rdev: 0
+	// (kmem_cache#4-oX (struct inode))->dirtied_when: 0
+	//
+	// &(kmem_cache#4-oX (struct inode))->i_lock을 이용한 spin lock 초기화 수행
+	//
+	// ((&(kmem_cache#4-oX (struct inode))->i_lock)->rlock)->raw_lock: { { 0 } }
+	// ((&(kmem_cache#4-oX (struct inode))->i_lock)->rlock)->magic: 0xdead4ead
+	// ((&(kmem_cache#4-oX (struct inode))->i_lock)->rlock)->owner: 0xffffffff
+	// ((&(kmem_cache#4-oX (struct inode))->i_lock)->rlock)->owner_cpu: 0xffffffff
+	//
+	// (&(kmem_cache#4-oX (struct inode))->i_mutex)->count: 1
+	// (&(&(&(kmem_cache#4-oX (struct inode))->i_mutex)->wait_lock)->rlock)->raw_lock: { { 0 } }
+	// (&(&(&(kmem_cache#4-oX (struct inode))->i_mutex)->wait_lock)->rlock)->magic: 0xdead4ead
+	// (&(&(&(kmem_cache#4-oX (struct inode))->i_mutex)->wait_lock)->rlock)->owner: 0xffffffff
+	// (&(&(&(kmem_cache#4-oX (struct inode))->i_mutex)->wait_lock)->rlock)->owner_cpu: 0xffffffff
+	// (&(&(kmem_cache#4-oX (struct inode))->i_mutex)->wait_list)->next: &(&(kmem_cache#4-oX (struct inode))->i_mutex)->wait_list
+	// (&(&(kmem_cache#4-oX (struct inode))->i_mutex)->wait_list)->prev: &(&(kmem_cache#4-oX (struct inode))->i_mutex)->wait_list
+	// (&(kmem_cache#4-oX (struct inode))->i_mutex)->onwer: NULL
+	// (&(kmem_cache#4-oX (struct inode))->i_mutex)->magic: &(kmem_cache#4-oX (struct inode))->i_mutex
+	//
+	// (kmem_cache#4-oX (struct inode))->i_dio_count: 0
+	//
+	// (&(kmem_cache#4-oX (struct inode))->i_data)->a_ops: &empty_aops
+	// (&(kmem_cache#4-oX (struct inode))->i_data)->host: kmem_cache#4-oX (struct inode)
+	// (&(kmem_cache#4-oX (struct inode))->i_data)->flags: 0
+	// (&(kmem_cache#4-oX (struct inode))->i_data)->flags: 0x200DA
+	// (&(kmem_cache#4-oX (struct inode))->i_data)->private_data: NULL
+	// (&(kmem_cache#4-oX (struct inode))->i_data)->backing_dev_info: &default_backing_dev_info
+	// (&(kmem_cache#4-oX (struct inode))->i_data)->writeback_index: 0
+	//
+	// (kmem_cache#4-oX (struct inode))->i_private: NULL
+	// (kmem_cache#4-oX (struct inode))->i_mapping: &(kmem_cache#4-oX (struct inode))->i_data
+	// (&(kmem_cache#4-oX (struct inode))->i_dentry)->first: NULL
+	// (kmem_cache#4-oX (struct inode))->i_acl: (void *)(0xFFFFFFFF),
+	// (kmem_cache#4-oX (struct inode))->i_default_acl: (void *)(0xFFFFFFFF)
+	// (kmem_cache#4-oX (struct inode))->i_fsnotify_mask: 0
+	//
+	// [pcp0] nr_inodes: 2
+	//
+	// (kmem_cache#4-oX (struct inode))->i_state: 0
+	// &(kmem_cache#4-oX (struct inode))->i_sb_list->next: &(kmem_cache#4-oX (struct inode))->i_sb_list
+	// &(kmem_cache#4-oX (struct inode))->i_sb_list->prev: &(kmem_cache#4-oX (struct inode))->i_sb_list
+
+	// inode: kmem_cache#4-oX (struct inode)
 	if (inode) {
+		// inode->i_ino: (kmem_cache#4-oX (struct inode))->i_ino, de->low_ino: (&proc_root)->low_ino: 1
 		inode->i_ino = de->low_ino;
-		inode->i_mtime = inode->i_atime = inode->i_ctime = CURRENT_TIME;
-		PROC_I(inode)->pde = de;
+		// inode->i_ino: (kmem_cache#4-oX (struct inode))->i_ino: 1
 
+		// inode->i_mtime: (kmem_cache#4-oX (struct inode))->i_mtime,
+		// inode->i_atime: (kmem_cache#4-oX (struct inode))->i_atime,
+		// inode->i_ctime: (kmem_cache#4-oX (struct inode))->i_ctime, CURRENT_TIME: 현재시간값
+		inode->i_mtime = inode->i_atime = inode->i_ctime = CURRENT_TIME;
+		// inode->i_mtime: (kmem_cache#4-oX (struct inode))->i_mtime: 현재시간값
+		// inode->i_atime: (kmem_cache#4-oX (struct inode))->i_atime: 현재시간값
+		// inode->i_ctime: (kmem_cache#4-oX (struct inode))->i_ctime: 현재시간값
+
+		// inode: kmem_cache#4-oX (struct inode),
+		// PROC_I(kmem_cache#4-oX (struct inode))->pde: (kmem_cache#4-oX (struct inode))->pde, de: &proc_root
+		PROC_I(inode)->pde = de;
+		// PROC_I(kmem_cache#4-oX (struct inode))->pde: (kmem_cache#4-oX (struct inode))->pde: &proc_root
+
+		// de->mode: (&proc_root)->mode: 0040555
 		if (de->mode) {
+			// inode->i_mode: (kmem_cache#4-oX (struct inode))->i_mode, de->mode: (&proc_root)->mode: 0040555
 			inode->i_mode = de->mode;
+			// inode->i_mode: (kmem_cache#4-oX (struct inode))->i_mode: 0040555
+
+			// inode->i_uid: (kmem_cache#4-oX (struct inode))->i_uid, de->uid: (&proc_root)->uid: 0
 			inode->i_uid = de->uid;
+			// inode->i_uid: (kmem_cache#4-oX (struct inode))->i_uid: 0
+
+			// inode->i_gid: (kmem_cache#4-oX (struct inode))->i_gid, de->gid: (&proc_root)->gid: 0
 			inode->i_gid = de->gid;
+			// inode->i_gid: (kmem_cache#4-oX (struct inode))->i_gid: 0
 		}
+
+		// de->size: (&proc_root)->size: 0
 		if (de->size)
 			inode->i_size = de->size;
+
+		// de->nlink: (&proc_root)->nlink: 2
 		if (de->nlink)
+			// inode: kmem_cache#4-oX (struct inode), de->nlink: (&proc_root)->nlink: 2
 			set_nlink(inode, de->nlink);
+
+			// set_nlink 에서 한일:
+			// (kmem_cache#4-oX (struct inode))->__i_nlink: 2
+
+		// de->proc_iops: (&proc_root)->proc_iops: &proc_root_inode_operations
 		WARN_ON(!de->proc_iops);
+
+		// inode->i_op: (kmem_cache#4-oX (struct inode))->i_op,
+		// de->proc_iops: (&proc_root)->proc_iops: &proc_root_inode_operations
 		inode->i_op = de->proc_iops;
+		// inode->i_op: (kmem_cache#4-oX (struct inode))->i_op: &proc_root_inode_operations
+
+		// de->proc_fops: (&proc_root)->proc_fops: &proc_root_operations
 		if (de->proc_fops) {
+			// inode->i_mode: (kmem_cache#4-oX (struct inode))->i_mode: 0040555, S_ISREG(0040555): 0
 			if (S_ISREG(inode->i_mode)) {
-#ifdef CONFIG_COMPAT
+#ifdef CONFIG_COMPAT // CONFIG_COMPAT=n
 				if (!de->proc_fops->compat_ioctl)
 					inode->i_fop =
 						&proc_reg_file_ops_no_compat;
@@ -437,31 +546,143 @@ struct inode *proc_get_inode(struct super_block *sb, struct proc_dir_entry *de)
 #endif
 					inode->i_fop = &proc_reg_file_ops;
 			} else {
+				// inode->i_fop: (kmem_cache#4-oX (struct inode))->i_fop,
+				// de->proc_fops: (&proc_root)->proc_fops: &proc_root_operations
 				inode->i_fop = de->proc_fops;
+				// inode->i_fop: (kmem_cache#4-oX (struct inode))->i_fop: &proc_root_operations
 			}
 		}
 	} else
 	       pde_put(de);
+
+	// inode: kmem_cache#4-oX (struct inode)
 	return inode;
+	// return kmem_cache#4-oX (struct inode)
 }
 
+// ARM10C 20161112
+// sb: kmem_cache#25-oX (struct super_block)
 int proc_fill_super(struct super_block *s)
 {
 	struct inode *root_inode;
 
+	// s->s_flags: (kmem_cache#25-oX (struct super_block))->s_flags: 0x400000,
+	// MS_NODIRATIME: 0x800, MS_NOSUID: 0x2, MS_NOEXEC: 0x8
 	s->s_flags |= MS_NODIRATIME | MS_NOSUID | MS_NOEXEC;
+	// s->s_flags: (kmem_cache#25-oX (struct super_block))->s_flags: 0x40080a
+
+	// s->s_blocksize: (kmem_cache#25-oX (struct super_block))->s_blocksize
 	s->s_blocksize = 1024;
+	// s->s_blocksize: (kmem_cache#25-oX (struct super_block))->s_blocksize: 1024
+
+	// s->s_blocksize_bits: (kmem_cache#25-oX (struct super_block))->s_blocksize_bits
 	s->s_blocksize_bits = 10;
+	// s->s_blocksize_bits: (kmem_cache#25-oX (struct super_block))->s_blocksize_bits: 10
+
+	// s->s_magic: (kmem_cache#25-oX (struct super_block))->s_magic, PROC_SUPER_MAGIC: 0x9fa0
 	s->s_magic = PROC_SUPER_MAGIC;
+	// s->s_magic: (kmem_cache#25-oX (struct super_block))->s_magic: 0x9fa0
+
+	// s->s_op: (kmem_cache#25-oX (struct super_block))->s_op
 	s->s_op = &proc_sops;
+	// s->s_op: (kmem_cache#25-oX (struct super_block))->s_op: &proc_sops
+
+	// s->s_time_gran: (kmem_cache#25-oX (struct super_block))->s_time_gran
 	s->s_time_gran = 1;
+	// s->s_time_gran: (kmem_cache#25-oX (struct super_block))->s_time_gran: 1
 	
 	pde_get(&proc_root);
+
+	// pde_get 에서 한일:
+	// (&proc_root)->count: { (2) }
+
+	// sb: kmem_cache#25-oX (struct super_block)
+	// proc_get_inode(kmem_cache#25-oX (struct super_block)): kmem_cache#4-oX (struct inode)
 	root_inode = proc_get_inode(s, &proc_root);
+	// root_inode: kmem_cache#4-oX (struct inode)
+
+	// proc_get_inode 에서 한일:
+	// struct inode 만큼의 메모리를 할당 받음 kmem_cache#4-oX (struct inode)
+	//
+	// (kmem_cache#4-oX (struct inode))->i_sb: kmem_cache#25-oX (struct super_block)
+	// (kmem_cache#4-oX (struct inode))->i_blkbits: 12
+	// (kmem_cache#4-oX (struct inode))->i_flags: 0
+	// (kmem_cache#4-oX (struct inode))->i_count: 1
+	// (kmem_cache#4-oX (struct inode))->i_op: &empty_iops
+	// (kmem_cache#4-oX (struct inode))->__i_nlink: 1
+	// (kmem_cache#4-oX (struct inode))->i_opflags: 0
+	// (kmem_cache#4-oX (struct inode))->i_uid: 0
+	// (kmem_cache#4-oX (struct inode))->i_gid: 0
+	// (kmem_cache#4-oX (struct inode))->i_count: 0
+	// (kmem_cache#4-oX (struct inode))->i_size: 0
+	// (kmem_cache#4-oX (struct inode))->i_blocks: 0
+	// (kmem_cache#4-oX (struct inode))->i_bytes: 0
+	// (kmem_cache#4-oX (struct inode))->i_generation: 0
+	// (kmem_cache#4-oX (struct inode))->i_pipe: NULL
+	// (kmem_cache#4-oX (struct inode))->i_bdev: NULL
+	// (kmem_cache#4-oX (struct inode))->i_cdev: NULL
+	// (kmem_cache#4-oX (struct inode))->i_rdev: 0
+	// (kmem_cache#4-oX (struct inode))->dirtied_when: 0
+	//
+	// &(kmem_cache#4-oX (struct inode))->i_lock을 이용한 spin lock 초기화 수행
+	//
+	// ((&(kmem_cache#4-oX (struct inode))->i_lock)->rlock)->raw_lock: { { 0 } }
+	// ((&(kmem_cache#4-oX (struct inode))->i_lock)->rlock)->magic: 0xdead4ead
+	// ((&(kmem_cache#4-oX (struct inode))->i_lock)->rlock)->owner: 0xffffffff
+	// ((&(kmem_cache#4-oX (struct inode))->i_lock)->rlock)->owner_cpu: 0xffffffff
+	//
+	// (&(kmem_cache#4-oX (struct inode))->i_mutex)->count: 1
+	// (&(&(&(kmem_cache#4-oX (struct inode))->i_mutex)->wait_lock)->rlock)->raw_lock: { { 0 } }
+	// (&(&(&(kmem_cache#4-oX (struct inode))->i_mutex)->wait_lock)->rlock)->magic: 0xdead4ead
+	// (&(&(&(kmem_cache#4-oX (struct inode))->i_mutex)->wait_lock)->rlock)->owner: 0xffffffff
+	// (&(&(&(kmem_cache#4-oX (struct inode))->i_mutex)->wait_lock)->rlock)->owner_cpu: 0xffffffff
+	// (&(&(kmem_cache#4-oX (struct inode))->i_mutex)->wait_list)->next: &(&(kmem_cache#4-oX (struct inode))->i_mutex)->wait_list
+	// (&(&(kmem_cache#4-oX (struct inode))->i_mutex)->wait_list)->prev: &(&(kmem_cache#4-oX (struct inode))->i_mutex)->wait_list
+	// (&(kmem_cache#4-oX (struct inode))->i_mutex)->onwer: NULL
+	// (&(kmem_cache#4-oX (struct inode))->i_mutex)->magic: &(kmem_cache#4-oX (struct inode))->i_mutex
+	//
+	// (kmem_cache#4-oX (struct inode))->i_dio_count: 0
+	//
+	// (&(kmem_cache#4-oX (struct inode))->i_data)->a_ops: &empty_aops
+	// (&(kmem_cache#4-oX (struct inode))->i_data)->host: kmem_cache#4-oX (struct inode)
+	// (&(kmem_cache#4-oX (struct inode))->i_data)->flags: 0
+	// (&(kmem_cache#4-oX (struct inode))->i_data)->flags: 0x200DA
+	// (&(kmem_cache#4-oX (struct inode))->i_data)->private_data: NULL
+	// (&(kmem_cache#4-oX (struct inode))->i_data)->backing_dev_info: &default_backing_dev_info
+	// (&(kmem_cache#4-oX (struct inode))->i_data)->writeback_index: 0
+	//
+	// (kmem_cache#4-oX (struct inode))->i_private: NULL
+	// (kmem_cache#4-oX (struct inode))->i_mapping: &(kmem_cache#4-oX (struct inode))->i_data
+	// (&(kmem_cache#4-oX (struct inode))->i_dentry)->first: NULL
+	// (kmem_cache#4-oX (struct inode))->i_acl: (void *)(0xFFFFFFFF),
+	// (kmem_cache#4-oX (struct inode))->i_default_acl: (void *)(0xFFFFFFFF)
+	// (kmem_cache#4-oX (struct inode))->i_fsnotify_mask: 0
+	//
+	// [pcp0] nr_inodes: 2
+	//
+	// (kmem_cache#4-oX (struct inode))->i_state: 0
+	// &(kmem_cache#4-oX (struct inode))->i_sb_list->next: &(kmem_cache#4-oX (struct inode))->i_sb_list
+	// &(kmem_cache#4-oX (struct inode))->i_sb_list->prev: &(kmem_cache#4-oX (struct inode))->i_sb_list
+	//
+	// (kmem_cache#4-oX (struct inode))->i_ino: 1
+	// (kmem_cache#4-oX (struct inode))->i_mtime: 현재시간값
+	// (kmem_cache#4-oX (struct inode))->i_atime: 현재시간값
+	// (kmem_cache#4-oX (struct inode))->i_ctime: 현재시간값
+	// (kmem_cache#4-oX (struct inode))->pde: &proc_root
+	// (kmem_cache#4-oX (struct inode))->i_mode: 0040555
+	// (kmem_cache#4-oX (struct inode))->i_uid: 0
+	// (kmem_cache#4-oX (struct inode))->i_gid: 0
+	// (kmem_cache#4-oX (struct inode))->__i_nlink: 2
+	// (kmem_cache#4-oX (struct inode))->i_op: &proc_root_inode_operations
+	// (kmem_cache#4-oX (struct inode))->i_fop: &proc_root_operations
+
+	// root_inode: kmem_cache#4-oX (struct inode)
 	if (!root_inode) {
 		pr_err("proc_fill_super: get root inode failed\n");
 		return -ENOMEM;
 	}
+
+// 2016/11/12 종료
 
 	s->s_root = d_make_root(root_inode);
 	if (!s->s_root) {

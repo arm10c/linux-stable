@@ -99,6 +99,7 @@ static inline int mk_pid(struct pid_namespace *pid_ns,
 // ARM10C 20150912
 // ARM10C 20160903
 // ARM10C 20161105
+// ARM10C 20161112
 struct pid_namespace init_pid_ns = {
 	.kref = {
 		.refcount       = ATOMIC_INIT(2),
@@ -131,6 +132,18 @@ EXPORT_SYMBOL_GPL(init_pid_ns);
  * For now it is easier to be safe than to prove it can't happen.
  */
 
+// ARM10C 20161112
+// DEFINE_SPINLOCK(pidmap_lock):
+// spinlock_t pidmap_lock =
+// (spinlock_t )
+// { { .rlock =
+//     {
+//       .raw_lock = { { 0 } },
+//       .magic = 0xdead4ead,
+//       .owner_cpu = -1,
+//       .owner = 0xffffffff,
+//     }
+// } }
 static  __cacheline_aligned_in_smp DEFINE_SPINLOCK(pidmap_lock);
 
 static void free_pidmap(struct upid *upid)
@@ -146,6 +159,8 @@ static void free_pidmap(struct upid *upid)
 /*
  * If we started walking pids at 'base', is 'a' seen before 'b'?
  */
+// ARM10C 20161112
+// base: 0, last_write: 0, pid: 1
 static int pid_before(int base, int a, int b)
 {
 	/*
@@ -154,7 +169,9 @@ static int pid_before(int base, int a, int b)
 	 * (a - base + MAXUINT) % MAXUINT < (b - base + MAXUINT) % MAXUINT
 	 * and that mapping orders 'a' and 'b' with respect to 'base'.
 	 */
+	// a: 0, base: 0, b: 1
 	return (unsigned)(a - base) < (unsigned)(b - base);
+	// return 1
 }
 
 /*
@@ -172,13 +189,30 @@ static int pid_before(int base, int a, int b)
  *
  * 'pid' is the pid that we eventually found.
  */
+// ARM10C 20161112
+// pid_ns: &init_pid_ns, last: 0, pid: 1
 static void set_last_pid(struct pid_namespace *pid_ns, int base, int pid)
 {
 	int prev;
+
+	// base: 0
 	int last_write = base;
+	// last_write: 0
+
 	do {
+		// last_write: 0
 		prev = last_write;
+		// prev: 0
+
+		// &pid_ns->last_pid: &(&init_pid_ns)->last_pid: 0, prev: 0, pid: 1
+		// cmpxchg(&(&init_pid_ns)->last_pid, 0, 1): 0
 		last_write = cmpxchg(&pid_ns->last_pid, prev, pid);
+		// last_write: 0
+
+		// cmpxchg 에서 한일:
+		// &(&init_pid_ns)->last_pid 을 1 로 변경함
+
+		// base: 0, prev: 0, last_write: 0, pid: 1, pid_before(0, 0, 1): 1
 	} while ((prev != last_write) && (pid_before(base, last_write, pid)));
 }
 
@@ -219,31 +253,74 @@ static int alloc_pidmap(struct pid_namespace *pid_ns)
 	// max_scan: 1
 
 // 2016/11/05 종료
+// 2016/11/12 시작
 
 	// max_scan: 1
 	for (i = 0; i <= max_scan; ++i) {
+		// map->page: (&(&init_pid_ns)->pidmap[0])->page: NULL
 		if (unlikely(!map->page)) {
+			// PAGE_SIZE: 0x1000, GFP_KERNEL: 0xD0
+			// kzalloc(0x1000, 0xD0): kmem_cache#25-oX
 			void *page = kzalloc(PAGE_SIZE, GFP_KERNEL);
+			// page: kmem_cache#25-oX
+
 			/*
 			 * Free the page if someone raced with us
 			 * installing it:
 			 */
 			spin_lock_irq(&pidmap_lock);
+
+			// spin_lock_irq 에서 한일:
+			// pidmap_lock 을 사용한 spin lock 수행
+
+			// map->page: (&(&init_pid_ns)->pidmap[0])->page: NULL
 			if (!map->page) {
+				// map->page: (&(&init_pid_ns)->pidmap[0])->page: NULL, page: kmem_cache#25-oX
 				map->page = page;
+				// map->page: (&(&init_pid_ns)->pidmap[0])->page: kmem_cache#25-oX
+
+				// page: kmem_cache#25-oX
 				page = NULL;
+				// page: NULL
 			}
 			spin_unlock_irq(&pidmap_lock);
+
+			// spin_unlock_irq 에서 한일:
+			// pidmap_lock 을 사용한 spin unlock 수행
+
+			// page: NULL
 			kfree(page);
+
+			// map->page: (&(&init_pid_ns)->pidmap[0])->page: kmem_cache#25-oX
 			if (unlikely(!map->page))
 				break;
 		}
+
+		// &map->nr_free: &(&(&init_pid_ns)->pidmap[0])->nr_free,
+		// atomic_read(&(&(&init_pid_ns)->pidmap[0])->nr_free): 0x8000
 		if (likely(atomic_read(&map->nr_free))) {
 			for ( ; ; ) {
+				// offset: 1, map->page: (&(&init_pid_ns)->pidmap[0])->page: kmem_cache#25-oX
+				// test_and_set_bit(1, kmem_cache#25-oX): 0
 				if (!test_and_set_bit(offset, map->page)) {
+					// test_and_set_bit 에서 한일:
+					// kmem_cache#25-oX 의 1 bit 의 값을 1 으로 set 하고 이전 값 0 을 읽어서 리턴함
+
+					// &map->nr_free: &(&(&init_pid_ns)->pidmap[0])->nr_free
 					atomic_dec(&map->nr_free);
+
+					// atomic_dec 에서 한일:
+					// (&(&init_pid_ns)->pidmap[0])->nr_free: { (0x7FFF) }
+
+					// pid_ns: &init_pid_ns, last: 0, pid: 1
 					set_last_pid(pid_ns, last, pid);
+
+					// set_last_pid 에서 한일:
+					// &(&init_pid_ns)->last_pid 을 1 로 변경함
+
+					// pid: 1
 					return pid;
+					// return 1
 				}
 				offset = find_next_offset(map, offset);
 				if (offset >= BITS_PER_PAGE)
@@ -382,16 +459,39 @@ struct pid *alloc_pid(struct pid_namespace *ns)
 	// ns->level: (&init_pid_ns)->level: 0
 	for (i = ns->level; i >= 0; i--) {
 		// tmp: &init_pid_ns
+		// alloc_pidmap(&init_pid_ns): 1
 		nr = alloc_pidmap(tmp);
+		// nr: 1
+
+		// alloc_pidmap 에서 한일:
+		// page 사이즈 만큼의 메모리를 할당 받음: kmem_cache#25-oX
+		//
+		// (&(&init_pid_ns)->pidmap[0])->page: kmem_cache#25-oX
+		// kmem_cache#25-oX 의 1 bit 의 값을 1 으로 set
+		// (&(&init_pid_ns)->pidmap[0])->nr_free: { (0x7FFF) }
+		// &(&init_pid_ns)->last_pid 을 1 로 변경함
+
+		// nr: 1
 		if (nr < 0)
 			goto out_free;
 
+		// i: 0, pid->numbers[0].nr: (kmem_cache#19-oX (struct pid))->numbers[0].nr, nr: 1
 		pid->numbers[i].nr = nr;
+		// pid->numbers[0].nr: (kmem_cache#19-oX (struct pid))->numbers[0].nr: 1
+
+		// i: 0, pid->numbers[0].ns: (kmem_cache#19-oX (struct pid))->numbers[0].ns, tmp: &init_pid_ns
 		pid->numbers[i].ns = tmp;
+		// pid->numbers[0].ns: (kmem_cache#19-oX (struct pid))->numbers[0].ns: &init_pid_ns
+
+		// tmp: &init_pid_ns, tmp->parent: (&init_pid_ns)->parent: NULL
 		tmp = tmp->parent;
+		// tmp: NULL
 	}
 
+	// pid: kmem_cache#19-oX (struct pid)
+	// is_child_reaper(kmem_cache#19-oX (struct pid)): 1
 	if (unlikely(is_child_reaper(pid))) {
+		// ns: &init_pid_ns
 		if (pid_ns_prepare_proc(ns))
 			goto out_free;
 	}

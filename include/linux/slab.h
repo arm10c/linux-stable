@@ -1045,6 +1045,8 @@ extern void *__kmalloc_node_track_caller(size_t, gfp_t, int, unsigned long);
 // idr_layer_cache: kmem_cache#21, 0x2D0
 // ARM10C 20161105
 // signal_cachep: kmem_cache#13, GFP_KERNEL: 0xD0
+// ARM10C 20161112
+// mnt_cache: kmem_cache#2, GFP_KERNEL: 0xD0
 static inline void *kmem_cache_zalloc(struct kmem_cache *k, gfp_t flags)
 {
 	// k: &boot_kmem_cache, flags: GFP_NOWAIT: 0, __GFP_ZERO: 0x8000u
@@ -1150,6 +1152,8 @@ static inline void *kmem_cache_zalloc(struct kmem_cache *k, gfp_t flags)
 // sizeof(struct cgroup_subsys_state): 64 bytes, GFP_KERNEL: 0xD0
 // ARM10C 20160716
 // sizeof(struct freezer): 84 bytes, GFP_KERNEL: 0xD0
+// ARM10C 20161112
+// PAGE_SIZE: 0x1000, GFP_KERNEL: 0xD0
 static inline void *kzalloc(size_t size, gfp_t flags)
 {
 	// size: 512, GFP_KERNEL: 0xD0, __GFP_ZERO: 0x8000u

@@ -1884,6 +1884,7 @@ struct timespec __current_kernel_time(void)
 
 // ARM10C 20151205
 // ARM10C 20160319
+// ARM10C 20161112
 struct timespec current_kernel_time(void)
 {
 	struct timekeeper *tk = &timekeeper;

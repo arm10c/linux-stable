@@ -60,6 +60,7 @@ struct mnt_namespace;
 // ARM10C 20160326
 // ARM10C 20160514
 // ARM10C 20160521
+// ARM10C 20161112
 // sizeof(struct vfsmount): 12 bytes
 struct vfsmount {
 	struct dentry *mnt_root;	/* root of the mounted tree */

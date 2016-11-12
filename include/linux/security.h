@@ -2029,6 +2029,8 @@ static inline int security_sb_alloc(struct super_block *sb)
 static inline void security_sb_free(struct super_block *sb)
 { }
 
+// ARM10C 20161112
+// data: &init_pid_ns, secdata: (char *)1
 static inline int security_sb_copy_data(char *orig, char *copy)
 {
 	return 0;
@@ -3171,6 +3173,7 @@ static inline void free_secdata(void *secdata)
 
 #else
 
+// ARM10C 20161112
 static inline char *alloc_secdata(void)
 {
         return (char *)1;

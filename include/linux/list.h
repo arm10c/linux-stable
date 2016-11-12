@@ -326,6 +326,8 @@ static inline void list_add(struct list_head *new, struct list_head *head)
 // [re] s->s_list: (kmem_cache#25-oX (struct super_block))->s_list,
 // ARM10C 20160611
 // &ops->list: &(&proc_net_ns_ops)->list, list: &pernet_list
+// ARM10C 20161112
+// [re] s->s_list: (kmem_cache#25-oX (struct super_block))->s_list,
 static inline void list_add_tail(struct list_head *new, struct list_head *head)
 {
 	// new: &waiter.list, head->prev: (&(&cpu_add_remove_lock)->wait_list)->prev
@@ -1133,6 +1135,8 @@ static inline void hlist_del_init(struct hlist_node *n)
 // &dentry->d_alias: (kmem_cache#5-oX)->d_alias, &inode->i_dentry: &(kmem_cache#4-oX)->i_dentry
 // ARM10C 20160730
 // &init_css_set.hlist, &css_set_table[계산된 hash index 값]
+// ARM10C 20161112
+// [re] &s->s_instances: &(kmem_cache#25-oX (struct super_block))->s_instances, &type->fs_supers: &(&proc_fs_type)->fs_supers
 static inline void hlist_add_head(struct hlist_node *n, struct hlist_head *h)
 {
 	// h->first: (&clk_root_list)->first: NULL

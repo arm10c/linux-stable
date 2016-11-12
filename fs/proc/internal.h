@@ -79,9 +79,14 @@ struct proc_inode {
 /*
  * General functions
  */
+// ARM10C 20161112
+// inode: kmem_cache#4-oX (struct inode)
 static inline struct proc_inode *PROC_I(const struct inode *inode)
 {
+	// inode: kmem_cache#4-oX (struct inode)
+	// container_of(kmem_cache#4-oX (struct inode), struct proc_inode, vfs_inode): kmem_cache#4-oX (struct inode)
 	return container_of(inode, struct proc_inode, vfs_inode);
+	// return kmem_cache#4-oX (struct inode)
 }
 
 static inline struct proc_dir_entry *PDE(const struct inode *inode)
@@ -193,10 +198,19 @@ extern struct dentry *proc_lookup_de(struct proc_dir_entry *, struct inode *,
 extern int proc_readdir(struct file *, struct dir_context *);
 extern int proc_readdir_de(struct proc_dir_entry *, struct file *, struct dir_context *);
 
+// ARM10C 20161112
+// &proc_root
 static inline struct proc_dir_entry *pde_get(struct proc_dir_entry *pde)
 {
+	// &pde->count: &(&proc_root)->count
 	atomic_inc(&pde->count);
+
+	// atomic_inc 에서 한일:
+	// (&proc_root)->count: { (2) }
+
+	// pde: &proc_root
 	return pde;
+	// return &proc_root
 }
 extern void pde_put(struct proc_dir_entry *);
 

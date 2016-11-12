@@ -490,6 +490,8 @@ do {									\
 
 // ARM10C 20160514
 // &proc_inum_lock
+// ARM10C 20161112
+// &pidmap_lock
 static inline void spin_lock_irq(spinlock_t *lock)
 {
 	// &lock->rlock: &(&proc_inum_lock)->rlock
@@ -577,6 +579,8 @@ static inline void spin_unlock_bh(spinlock_t *lock)
 
 // ARM10C 20160514
 // &proc_inum_lock
+// ARM10C 20161112
+// &pidmap_lock
 static inline void spin_unlock_irq(spinlock_t *lock)
 {
 	// &lock->rlock: &(&proc_inum_lock)->rlock

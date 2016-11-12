@@ -36,6 +36,7 @@ struct bsd_acct_struct;
 // ARM10C 20150912
 // ARM10C 20160903
 // ARM10C 20161105
+// ARM10C 20161112
 struct pid_namespace {
 	struct kref kref;
 	struct pidmap pidmap[PIDMAP_ENTRIES];
@@ -67,12 +68,17 @@ extern struct pid_namespace init_pid_ns;
 // PIDNS_HASH_ADDING: 0x80000000
 #define PIDNS_HASH_ADDING (1U << 31)
 
-#ifdef CONFIG_PID_NS
+#ifdef CONFIG_PID_NS // CONFIG_PID_NS=y
+// ARM10C 20161112
+// ns: &init_pid_ns
 static inline struct pid_namespace *get_pid_ns(struct pid_namespace *ns)
 {
+	// ns: &init_pid_ns
 	if (ns != &init_pid_ns)
 		kref_get(&ns->kref);
+	// ns: &init_pid_ns
 	return ns;
+	// return &init_pid_ns
 }
 
 extern struct pid_namespace *copy_pid_ns(unsigned long flags,

@@ -124,7 +124,7 @@ static inline unsigned long __xchg(unsigned long x, volatile void *ptr, int size
 
 #include <asm-generic/cmpxchg-local.h>
 
-#if __LINUX_ARM_ARCH__ < 6
+#if __LINUX_ARM_ARCH__ < 6 // __LINUX_ARM_ARCH__: 7
 /* min ARCH < ARMv6 */
 
 #ifdef CONFIG_SMP
@@ -152,13 +152,16 @@ extern void __bad_cmpxchg(volatile void *ptr, int size);
  * cmpxchg only support 32-bits operands on ARMv6.
  */
 
+// ARM10C 20161112
+// ptr: &pid_ns->last_pid: &(&init_pid_ns)->last_pid, old: 0, new: 1, size: 4
 static inline unsigned long __cmpxchg(volatile void *ptr, unsigned long old,
 				      unsigned long new, int size)
 {
 	unsigned long oldval, res;
 
+	// size: 4
 	switch (size) {
-#ifndef CONFIG_CPU_V6	/* min ARCH >= ARMv6K */
+#ifndef CONFIG_CPU_V6	/* min ARCH >= ARMv6K */ // undefined
 	case 1:
 		do {
 			asm volatile("@ __cmpxchg1\n"
@@ -186,6 +189,7 @@ static inline unsigned long __cmpxchg(volatile void *ptr, unsigned long old,
 #endif
 	case 4:
 		do {
+			// ptr: &pid_ns->last_pid: &(&init_pid_ns)->last_pid, old: 0, new: 1
 			asm volatile("@ __cmpxchg4\n"
 			"	ldrex	%1, [%2]\n"
 			"	mov	%0, #0\n"
@@ -194,28 +198,60 @@ static inline unsigned long __cmpxchg(volatile void *ptr, unsigned long old,
 				: "=&r" (res), "=&r" (oldval)
 				: "r" (ptr), "Ir" (old), "r" (new)
 				: "memory", "cc");
+			// "@ __cmpxchg4\n"
+			// " ldrex     oldval, [&(&init_pid_ns)->last_pid]\n"
+			// " mov       res, #0\n"
+			// " teq       oldval, 0\n"
+			// " strexeq   res, 1, [&(&init_pid_ns)->last_pid]\n"
 		} while (res);
+
+		// 위 loop가 수행한 일:
+		// &(&init_pid_ns)->last_pid 값을 atomic 하게 oldval 에 저장하고
+		// &(&init_pid_ns)->last_pid 을 1 로 변경함, atomic 하게 무사히 변경시 res 값은 0 임
+		// oldval: 0
 		break;
 	default:
 		__bad_cmpxchg(ptr, size);
 		oldval = 0;
 	}
 
+	// oldval: 0
 	return oldval;
+	// return 0
 }
 
+// ARM10C 20161112
+// &pid_ns->last_pid: &(&init_pid_ns)->last_pid: 0, prev: 0, pid: 1, 4
 static inline unsigned long __cmpxchg_mb(volatile void *ptr, unsigned long old,
 					 unsigned long new, int size)
 {
 	unsigned long ret;
 
 	smp_mb();
+
+	// smp_mb 에서 한일:
+	// 공유자원을 다른 cpu core가 사용할수 있게 해주는 옵션
+
+	// ptr: &pid_ns->last_pid: &(&init_pid_ns)->last_pid, old: 0, new: 1, size: 4
+	// __cmpxchg(&(&init_pid_ns)->last_pid, 0, 1, 4): 0
 	ret = __cmpxchg(ptr, old, new, size);
+	// ret: 0
+
+	// __cmpxchg 이 한일:
+	// &(&init_pid_ns)->last_pid 을 1 로 변경함
+
 	smp_mb();
 
+	// smp_mb 에서 한일:
+	// 공유자원을 다른 cpu core가 사용할수 있게 해주는 옵션
+
+	// ret: 0
 	return ret;
+	// return 0
 }
 
+// ARM10C 20161112
+// &pid_ns->last_pid: &(&init_pid_ns)->last_pid: 0, prev: 0, pid: 1
 #define cmpxchg(ptr,o,n)						\
 	((__typeof__(*(ptr)))__cmpxchg_mb((ptr),			\
 					  (unsigned long)(o),		\

@@ -32,7 +32,9 @@ extern const struct proc_ns_operations mntns_operations;
 /*
  * We always define these enumerators
  */
+// ARM10C 20161112
 enum {
+	// PROC_ROOT_INO: 1
 	PROC_ROOT_INO		= 1,
 	PROC_IPC_INIT_INO	= 0xEFFFFFFFU,
 	PROC_UTS_INIT_INO	= 0xEFFFFFFEU,
@@ -42,6 +44,7 @@ enum {
 
 #ifdef CONFIG_PROC_FS // CONFIG_PROC_FS=y
 
+// ARM10C 20161112
 extern int pid_ns_prepare_proc(struct pid_namespace *ns);
 extern void pid_ns_release_proc(struct pid_namespace *ns);
 extern struct file *proc_ns_fget(int fd);
