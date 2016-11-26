@@ -7,14 +7,25 @@
 #include <linux/list_bl.h>
 #include <linux/rcupdate.h>
 
+// ARM10C 20161126
+// h: hash 0xXXXXXXXX 에 맞는 list table 주소값, n: &(kmem_cache#5-oX (struct dentry))->d_hash
 static inline void hlist_bl_set_first_rcu(struct hlist_bl_head *h,
 					struct hlist_bl_node *n)
 {
-	LIST_BL_BUG_ON((unsigned long)n & LIST_BL_LOCKMASK);
+	// n: &(kmem_cache#5-oX (struct dentry))->d_hash, LIST_BL_LOCKMASK: 1UL
+	LIST_BL_BUG_ON((unsigned long)n & LIST_BL_LOCKMASK); // null function
+
+	// h->first: (hash 0xXXXXXXXX 에 맞는 list table 주소값)->first, LIST_BL_LOCKMASK: 1UL
 	LIST_BL_BUG_ON(((unsigned long)h->first & LIST_BL_LOCKMASK) !=
-							LIST_BL_LOCKMASK);
+							LIST_BL_LOCKMASK); // null function
+
+	// h->first: (hash 0xXXXXXXXX 에 맞는 list table 주소값)->first: NULL,
+	// n: &(kmem_cache#5-oX (struct dentry))->d_hash, LIST_BL_LOCKMASK: 1UL
 	rcu_assign_pointer(h->first,
 		(struct hlist_bl_node *)((unsigned long)n | LIST_BL_LOCKMASK));
+
+	// rcu_assign_pointer 에서 한일:
+	// ((hash 0xXXXXXXXX 에 맞는 list table 주소값)->first): ((&(kmem_cache#5-oX (struct dentry))->d_hash) | 1)
 }
 
 static inline struct hlist_bl_node *hlist_bl_first_rcu(struct hlist_bl_head *h)
@@ -95,21 +106,38 @@ static inline void hlist_bl_del_rcu(struct hlist_bl_node *n)
  * problems on Alpha CPUs.  Regardless of the type of CPU, the
  * list-traversal primitive must be guarded by rcu_read_lock().
  */
+// ARM10C 20161126
+// &entry->d_hash: &(kmem_cache#5-oX (struct dentry))->d_hash, b: hash 0xXXXXXXXX 에 맞는 list table 주소값
 static inline void hlist_bl_add_head_rcu(struct hlist_bl_node *n,
 					struct hlist_bl_head *h)
 {
 	struct hlist_bl_node *first;
 
 	/* don't need hlist_bl_first_rcu because we're under lock */
+	// h: hash 0xXXXXXXXX 에 맞는 list table 주소값
+	// hlist_bl_first(hash 0xXXXXXXXX 에 맞는 list table 주소값): NULL
 	first = hlist_bl_first(h);
+	// first: NULL
 
+	// n->next: (&(kmem_cache#5-oX (struct dentry))->d_hash)->next, first: NULL
 	n->next = first;
+	// n->next: (&(kmem_cache#5-oX (struct dentry))->d_hash)->next: NULL
+
+	// first: NULL
 	if (first)
 		first->pprev = &n->next;
+
+	// n->pprev: (&(kmem_cache#5-oX (struct dentry))->d_hash)->pprev,
+	// &h->first: &(hash 0xXXXXXXXX 에 맞는 list table 주소값)->first
 	n->pprev = &h->first;
+	// n->pprev: (&(kmem_cache#5-oX (struct dentry))->d_hash)->pprev: &(hash 0xXXXXXXXX 에 맞는 list table 주소값)->first
 
 	/* need _rcu because we can have concurrent lock free readers */
+	// h: hash 0xXXXXXXXX 에 맞는 list table 주소값, n: &(kmem_cache#5-oX (struct dentry))->d_hash
 	hlist_bl_set_first_rcu(h, n);
+
+	// hlist_bl_set_first_rcu 에서 한일:
+	// ((hash 0xXXXXXXXX 에 맞는 list table 주소값)->first): ((&(kmem_cache#5-oX (struct dentry))->d_hash) | 1)
 }
 /**
  * hlist_bl_for_each_entry_rcu - iterate over rcu list of given type

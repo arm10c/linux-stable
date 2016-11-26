@@ -60,6 +60,8 @@ static inline unsigned long find_zero(unsigned long mask)
  * return zeroes in the non-existing part.
  */
 // ARM10C 20140329
+// ARM10C 20161126
+// name: "self"
 static inline unsigned long load_unaligned_zeropad(const void *addr)
 {
 	unsigned long ret, offset;
@@ -84,7 +86,25 @@ static inline unsigned long load_unaligned_zeropad(const void *addr)
 	: "=&r" (ret), "=&r" (offset)
 	: "r" (addr), "Qo" (*(unsigned long *)addr));
 
+	// 1:   ldr    ret, [addr]
+	// 2:
+	//      .pushsection .fixup,\"ax\"
+	//      .align 2
+	// 3:   and    offset, addr, #0x3
+	//      bic    addr, addr, #0x3
+	//      ldr    ret, [addr]
+	//      lsl    offset, offset, #0x3
+	//      lsr    ret, ret, offset
+	//      b    2b
+	//      .popsection
+	//      .pushsection __ex_table,\"a\"
+	//      .align    3
+	//      .long    1b, 3b
+	//      .popsection"
+
+	// ret: 0xXXXXXXXX
 	return ret;
+	// return 0xXXXXXXXX
 }
 
 

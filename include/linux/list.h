@@ -288,6 +288,9 @@ extern void __list_add(struct list_head *new,
 // &mnt->mnt_list: &(kmem_cache#2-oX (struct mount))->mnt_list, &new_ns->list: &(kmem_cache#30-oX (struct mnt_namespace))->list
 // ARM10C 20160716
 // &ss->sibling: &(&debug_subsys)->sibling
+// ARM10C 20161126
+// &dentry->d_u.d_child: &(kmem_cache#5-oX (struct dentry))->d_u.d_child,
+// &parent->d_subdirs: &(kmem_cache#5-oX (struct dentry))->d_subdirs
 static inline void list_add(struct list_head *new, struct list_head *head)
 {
 	__list_add(new, head, head->next);

@@ -1617,11 +1617,11 @@ static inline int nested_symlink(struct path *path, struct nameidata *nd)
  *   the final mask". Again, that could be replaced with a
  *   efficient population count instruction or similar.
  */
-#ifdef CONFIG_DCACHE_WORD_ACCESS
+#ifdef CONFIG_DCACHE_WORD_ACCESS // CONFIG_DCACHE_WORD_ACCESS=y
 
 #include <asm/word-at-a-time.h>
 
-#ifdef CONFIG_64BIT
+#ifdef CONFIG_64BIT // CONFIG_64BIT=n
 
 static inline unsigned int fold_hash(unsigned long hash)
 {
@@ -1631,30 +1631,56 @@ static inline unsigned int fold_hash(unsigned long hash)
 
 #else	/* 32-bit case */
 
+// ARM10C 20161126
+// hash: 0xXXXXXXXX
 #define fold_hash(x) (x)
 
 #endif
 
+// ARM10C 20161126
+// q.name: "self", q.len: 4
 unsigned int full_name_hash(const unsigned char *name, unsigned int len)
 {
 	unsigned long a, mask;
 	unsigned long hash = 0;
+	// hash: 0
 
 	for (;;) {
+		// name: "self", load_unaligned_zeropad("self"): 0xXXXXXXXX
 		a = load_unaligned_zeropad(name);
+		// a: 0xXXXXXXXX
+
+		// len: 4, sizeof(unsigned long): 4
 		if (len < sizeof(unsigned long))
 			break;
+
+		// hash: 0, a: 0xXXXXXXXX
 		hash += a;
+		// hash: 0xXXXXXXXX
+
+		// hash: 0xXXXXXXXX
 		hash *= 9;
+		// hash: 0xXXXXXXXX
+
+		// name: "self", sizeof(unsigned long): 4
 		name += sizeof(unsigned long);
+		// name: &"self" + 4
+
+		// len: 4, sizeof(unsigned long): 4
 		len -= sizeof(unsigned long);
+		// len: 0
+
+		// len: 0
 		if (!len)
 			goto done;
+			// goto done
 	}
 	mask = bytemask_from_count(len);
 	hash += mask & a;
 done:
+	// hash: 0xXXXXXXXX, fold_hash(0xXXXXXXXX): 0xXXXXXXXX
 	return fold_hash(hash);
+	// return 0xXXXXXXXX
 }
 EXPORT_SYMBOL(full_name_hash);
 

@@ -100,18 +100,32 @@ static struct kmem_cache *dentry_cache __read_mostly;
  */
 
 // ARM10C 20140322
+// ARM10C 20161126
 static unsigned int d_hash_mask __read_mostly;
 // ARM10C 20140322
+// ARM10C 20161126
 static unsigned int d_hash_shift __read_mostly;
 // ARM10C 20140322
+// ARM10C 20161126
 static struct hlist_bl_head *dentry_hashtable __read_mostly;
 
+// ARM10C 20161126
+// entry->d_parent: (kmem_cache#5-oX (struct dentry))->d_parent: kmem_cache#5-oX (struct dentry),
+// entry->d_name.hash: (kmem_cache#5-oX (struct dentry))->d_name.hash: 0xXXXXXXXX
 static inline struct hlist_bl_head *d_hash(const struct dentry *parent,
 					unsigned int hash)
 {
+	// hash: 0xXXXXXXXX, parent: kmem_cache#5-oX (struct dentry), L1_CACHE_BYTES: 64
 	hash += (unsigned long) parent / L1_CACHE_BYTES;
+	// hash: 0xXXXXXXXX
+
+	// hash: 0xXXXXXXXX, d_hash_shift: 17
 	hash = hash + (hash >> d_hash_shift);
+	// hash: 0xXXXXXXXX
+
+	// dentry_hashtable: dentry hash를 위한 메모리 공간 512kB, hash: 0xXXXXXXXX, d_hash_mask: 0x1FFFF
 	return dentry_hashtable + (hash & d_hash_mask);
+	// return hash 0xXXXXXXXX 에 맞는 list table 주소값
 }
 
 /* Statistics gathering. */
@@ -683,9 +697,13 @@ int d_invalidate(struct dentry * dentry)
 EXPORT_SYMBOL(d_invalidate);
 
 /* This must be called with d_lock held */
+// ARM10C 20161126
+// parent: kmem_cache#5-oX (struct dentry)
 static inline void __dget_dlock(struct dentry *dentry)
 {
+	// dentry->d_lockref.count: (kmem_cache#5-oX (struct dentry))->d_lockref.count: 0
 	dentry->d_lockref.count++;
+	// dentry->d_lockref.count: (kmem_cache#5-oX (struct dentry))->d_lockref.count: 1
 }
 
 static inline void __dget(struct dentry *dentry)
@@ -1498,6 +1516,8 @@ EXPORT_SYMBOL(check_submounts_and_drop);
 // root_inode->i_sb: (kmem_cache#4-oX)->i_sb: kmem_cache#25-oX (struct super_block), &name
 // ARM10C 20160521
 // s: kmem_cache#25-oX (struct super_block), &d_name
+// ARM10C 20161126
+// parent->d_sb: (kmem_cache#5-oX (struct dentry))->d_sb: kmem_cache#25-oX (struct super_block), name: &q
 struct dentry *__d_alloc(struct super_block *sb, const struct qstr *name)
 {
 	struct dentry *dentry;
@@ -1673,23 +1693,99 @@ struct dentry *__d_alloc(struct super_block *sb, const struct qstr *name)
  * available. On a success the dentry is returned. The name passed in is
  * copied and the copy passed in may be reused after this call.
  */
+// ARM10C 20161126
+// parent: kmem_cache#5-oX (struct dentry), &q
 struct dentry *d_alloc(struct dentry * parent, const struct qstr *name)
 {
+	// parent->d_sb: (kmem_cache#5-oX (struct dentry))->d_sb: kmem_cache#25-oX (struct super_block), name: &q
+	// __d_alloc(kmem_cache#25-oX (struct super_block), &q): kmem_cache#5-oX (struct dentry)
 	struct dentry *dentry = __d_alloc(parent->d_sb, name);
+	// dentry: kmem_cache#5-oX (struct dentry)
+
+	// __d_alloc에서 한일:
+	// dentry_cache인 kmem_cache#5을 사용하여 dentry로 사용할 메모리 kmem_cache#5-oX (struct dentry)을 할당받음
+	//
+	// (kmem_cache#5-oX (struct dentry))->d_iname[35]: 0
+	// (kmem_cache#5-oX (struct dentry))->d_name.len: 4
+	// (kmem_cache#5-oX (struct dentry))->d_name.hash: (&q)->hash: 0xXXXXXXXX
+	// (kmem_cache#5-oX (struct dentry))->d_iname: "self"
+	//
+	// 공유자원을 다른 cpu core가 사용할수 있게 함
+	//
+	// (kmem_cache#5-oX (struct dentry))->d_name.name: "self"
+	// (kmem_cache#5-oX (struct dentry))->d_lockref.count: 1
+	// (kmem_cache#5-oX (struct dentry))->d_flags: 0
+	//
+	// (&(kmem_cache#5-oX (struct dentry))->d_lock)->raw_lock: { { 0 } }
+	// (&(kmem_cache#5-oX (struct dentry))->d_lock)->magic: 0xdead4ead
+	// (&(kmem_cache#5-oX (struct dentry))->d_lock)->owner: 0xffffffff
+	// (&(kmem_cache#5-oX (struct dentry))->d_lock)->owner_cpu: 0xffffffff
+	//
+	// (&(kmem_cache#5-oX (struct dentry))->d_seq)->sequence: 0
+	//
+	// (kmem_cache#5-oX (struct dentry))->d_inode: NULL
+	//
+	// (kmem_cache#5-oX (struct dentry))->d_parent: kmem_cache#5-oX (struct dentry)
+	// (kmem_cache#5-oX (struct dentry))->d_sb: kmem_cache#25-oX (struct super_block)
+	// (kmem_cache#5-oX (struct dentry))->d_op: NULL
+	// (kmem_cache#5-oX (struct dentry))->d_fsdata: NULL
+	//
+	// (&(kmem_cache#5-oX (struct dentry))->d_hash)->next: NULL
+	// (&(kmem_cache#5-oX (struct dentry))->d_hash)->pprev: NULL
+	// (&(kmem_cache#5-oX (struct dentry))->d_lru)->next: &(kmem_cache#5-oX (struct dentry))->d_lru
+	// (&(kmem_cache#5-oX (struct dentry))->d_lru)->prev: &(kmem_cache#5-oX (struct dentry))->d_lru
+	// (&(kmem_cache#5-oX (struct dentry))->d_subdirs)->next: &(kmem_cache#5-oX (struct dentry))->d_subdirs
+	// (&(kmem_cache#5-oX (struct dentry))->d_subdirs)->prev: &(kmem_cache#5-oX (struct dentry))->d_subdirs
+	// (&(kmem_cache#5-oX (struct dentry))->d_alias)->next: NULL
+	// (&(kmem_cache#5-oX (struct dentry))->d_alias)->pprev: NULL
+	// (&(kmem_cache#5-oX (struct dentry))->d_u.d_child)->next: &(kmem_cache#5-oX (struct dentry))->d_u.d_child
+	// (&(kmem_cache#5-oX (struct dentry))->d_u.d_child)->prev: &(kmem_cache#5-oX (struct dentry))->d_u.d_child
+	//
+	// (kmem_cache#5-oX (struct dentry))->d_op: NULL
+	//
+	// [pcp0] nr_dentry: 4
+
+	// dentry: kmem_cache#5-oX (struct dentry)
 	if (!dentry)
 		return NULL;
 
+	// &parent->d_lock: &(kmem_cache#5-oX (struct dentry))->d_lock
 	spin_lock(&parent->d_lock);
+
+	// spin_lock 에서 한일:
+	// &(kmem_cache#5-oX (struct dentry))->d_lock 을 사용하여 spin lock 수행
+
 	/*
 	 * don't need child lock because it is not subject
 	 * to concurrency here
 	 */
+	// parent: kmem_cache#5-oX (struct dentry)
 	__dget_dlock(parent);
+
+	// __dget_dlock 에서 한일:
+	// (kmem_cache#5-oX (struct dentry))->d_lockref.count: 1
+
+	// dentry->d_parent: (kmem_cache#5-oX (struct dentry))->d_parent, parent: kmem_cache#5-oX (struct dentry)
 	dentry->d_parent = parent;
+	// dentry->d_parent: (kmem_cache#5-oX (struct dentry))->d_parent: kmem_cache#5-oX (struct dentry)
+
+	// &dentry->d_u.d_child: &(kmem_cache#5-oX (struct dentry))->d_u.d_child,
+	// &parent->d_subdirs: &(kmem_cache#5-oX (struct dentry))->d_subdirs
 	list_add(&dentry->d_u.d_child, &parent->d_subdirs);
+
+	// list_add 에서 한일:
+	// head list 인 &(kmem_cache#5-oX (struct dentry))->d_subdirs 에
+	// list &(kmem_cache#5-oX (struct dentry))->d_u.d_child 를 추가함
+
+	// &parent->d_lock: &(kmem_cache#5-oX (struct dentry))->d_lock
 	spin_unlock(&parent->d_lock);
 
+	// spin_lock 에서 한일:
+	// &(kmem_cache#5-oX (struct dentry))->d_lock 을 사용하여 spin unlock 수행
+
+	// dentry: kmem_cache#5-oX (struct dentry)
 	return dentry;
+	// return kmem_cache#5-oX (struct dentry)
 }
 EXPORT_SYMBOL(d_alloc);
 
@@ -1707,14 +1803,77 @@ struct dentry *d_alloc_pseudo(struct super_block *sb, const struct qstr *name)
 }
 EXPORT_SYMBOL(d_alloc_pseudo);
 
+// ARM10C 20161126
+// s->s_root: (kmem_cache#25-oX (struct super_block))->s_root: kmem_cache#5-oX (struct dentry), "self"
 struct dentry *d_alloc_name(struct dentry *parent, const char *name)
 {
 	struct qstr q;
 
+	// name: "self"
 	q.name = name;
+	// q.name: "self"
+
+	// name: "self", strlen("self"): 4
 	q.len = strlen(name);
+	// q.len: 4
+
+	// q.name: "self", q.len: 4, full_name_hash("self", 4): 0xXXXXXXXX
 	q.hash = full_name_hash(q.name, q.len);
+	// q.hash: 0xXXXXXXXX
+
+	// parent: kmem_cache#5-oX (struct dentry)
+	// d_alloc(kmem_cache#5-oX (struct dentry)): kmem_cache#5-oX (struct dentry)
 	return d_alloc(parent, &q);
+	// return kmem_cache#5-oX (struct dentry)
+
+	// d_alloc 에서 한일:
+	// dentry_cache인 kmem_cache#5을 사용하여 dentry로 사용할 메모리 kmem_cache#5-oX (struct dentry)을 할당받음
+	//
+	// (kmem_cache#5-oX (struct dentry))->d_iname[35]: 0
+	// (kmem_cache#5-oX (struct dentry))->d_name.len: 4
+	// (kmem_cache#5-oX (struct dentry))->d_name.hash: (&q)->hash: 0xXXXXXXXX
+	// (kmem_cache#5-oX (struct dentry))->d_iname: "self"
+	//
+	// 공유자원을 다른 cpu core가 사용할수 있게 함
+	//
+	// (kmem_cache#5-oX (struct dentry))->d_name.name: "self"
+	// (kmem_cache#5-oX (struct dentry))->d_lockref.count: 1
+	// (kmem_cache#5-oX (struct dentry))->d_flags: 0
+	//
+	// (&(kmem_cache#5-oX (struct dentry))->d_lock)->raw_lock: { { 0 } }
+	// (&(kmem_cache#5-oX (struct dentry))->d_lock)->magic: 0xdead4ead
+	// (&(kmem_cache#5-oX (struct dentry))->d_lock)->owner: 0xffffffff
+	// (&(kmem_cache#5-oX (struct dentry))->d_lock)->owner_cpu: 0xffffffff
+	//
+	// (&(kmem_cache#5-oX (struct dentry))->d_seq)->sequence: 0
+	//
+	// (kmem_cache#5-oX (struct dentry))->d_inode: NULL
+	//
+	// (kmem_cache#5-oX (struct dentry))->d_parent: kmem_cache#5-oX (struct dentry)
+	// (kmem_cache#5-oX (struct dentry))->d_sb: kmem_cache#25-oX (struct super_block)
+	// (kmem_cache#5-oX (struct dentry))->d_op: NULL
+	// (kmem_cache#5-oX (struct dentry))->d_fsdata: NULL
+	//
+	// (&(kmem_cache#5-oX (struct dentry))->d_hash)->next: NULL
+	// (&(kmem_cache#5-oX (struct dentry))->d_hash)->pprev: NULL
+	// (&(kmem_cache#5-oX (struct dentry))->d_lru)->next: &(kmem_cache#5-oX (struct dentry))->d_lru
+	// (&(kmem_cache#5-oX (struct dentry))->d_lru)->prev: &(kmem_cache#5-oX (struct dentry))->d_lru
+	// (&(kmem_cache#5-oX (struct dentry))->d_subdirs)->next: &(kmem_cache#5-oX (struct dentry))->d_subdirs
+	// (&(kmem_cache#5-oX (struct dentry))->d_subdirs)->prev: &(kmem_cache#5-oX (struct dentry))->d_subdirs
+	// (&(kmem_cache#5-oX (struct dentry))->d_alias)->next: NULL
+	// (&(kmem_cache#5-oX (struct dentry))->d_alias)->pprev: NULL
+	// (&(kmem_cache#5-oX (struct dentry))->d_u.d_child)->next: &(kmem_cache#5-oX (struct dentry))->d_u.d_child
+	// (&(kmem_cache#5-oX (struct dentry))->d_u.d_child)->prev: &(kmem_cache#5-oX (struct dentry))->d_u.d_child
+	//
+	// (kmem_cache#5-oX (struct dentry))->d_op: NULL
+	//
+	// [pcp0] nr_dentry: 4
+	//
+	// (kmem_cache#5-oX (struct dentry))->d_lockref.count: 1
+	// (kmem_cache#5-oX (struct dentry))->d_parent: kmem_cache#5-oX (struct dentry)
+	//
+	// head list 인 &(kmem_cache#5-oX (struct dentry))->d_subdirs 에
+	// list &(kmem_cache#5-oX (struct dentry))->d_u.d_child 를 추가함
 }
 EXPORT_SYMBOL(d_alloc_name);
 
@@ -1805,10 +1964,10 @@ static unsigned d_flags_for_inode(struct inode *inode)
 }
 
 // ARM10C 20151219
-// entry: kmem_cache#5-oX (struct dentry), inode: kmem_cache#4-oX
+// entry: kmem_cache#5-oX (struct dentry), inode: kmem_cache#4-oX (struct inode)
 static void __d_instantiate(struct dentry *dentry, struct inode *inode)
 {
-	// inode: kmem_cache#4-oX, i d_flags_for_inode(kmem_cache#4-oX): 0x00100000
+	// inode: kmem_cache#4-oX (struct inode), i d_flags_for_inode(kmem_cache#4-oX (struct inode)): 0x00100000
 	unsigned add_flags = d_flags_for_inode(inode);
 	// add_flags: 0x00100000
 
@@ -1826,19 +1985,19 @@ static void __d_instantiate(struct dentry *dentry, struct inode *inode)
 	dentry->d_flags |= add_flags;
 	// dentry->d_flags: (kmem_cache#5-oX (struct dentry))->d_flags: 0x00100000
 
-	// inode: kmem_cache#4-oX
+	// inode: kmem_cache#4-oX (struct inode)
 	if (inode)
-		// &dentry->d_alias: &(kmem_cache#5-oX (struct dentry))->d_alias, &inode->i_dentry: &(kmem_cache#4-oX)->i_dentry
+		// &dentry->d_alias: &(kmem_cache#5-oX (struct dentry))->d_alias, &inode->i_dentry: &(kmem_cache#4-oX (struct inode))->i_dentry
 		hlist_add_head(&dentry->d_alias, &inode->i_dentry);
 
 		// hlist_add_head에서 한일:
 		// (&(kmem_cache#5-oX (struct dentry))->d_alias)->next: NULL
-		// (&(kmem_cache#4-oX)->i_dentry)->first: &(kmem_cache#5-oX (struct dentry))->d_alias
+		// (&(kmem_cache#4-oX (struct inode))->i_dentry)->first: &(kmem_cache#5-oX (struct dentry))->d_alias
 		// (&(kmem_cache#5-oX (struct dentry))->d_alias)->pprev: &(&(kmem_cache#5-oX (struct dentry))->d_alias)
 
-	// dentry->d_inode: (kmem_cache#5-oX (struct dentry))->d_inode, inode: kmem_cache#4-oX
+	// dentry->d_inode: (kmem_cache#5-oX (struct dentry))->d_inode, inode: kmem_cache#4-oX (struct inode)
 	dentry->d_inode = inode;
-	// dentry->d_inode: (kmem_cache#5-oX (struct dentry))->d_inode: kmem_cache#4-oX
+	// dentry->d_inode: (kmem_cache#5-oX (struct dentry))->d_inode: kmem_cache#4-oX (struct inode)
 
 	// dentry: kmem_cache#5-oX (struct dentry)
 	dentry_rcuwalk_barrier(dentry);
@@ -1853,7 +2012,7 @@ static void __d_instantiate(struct dentry *dentry, struct inode *inode)
 	// spin_unlock에서 한일:
 	// &(kmem_cache#5-oX (struct dentry))->d_lock을 이용하여 spin unlock 수행
 
-	// dentry: kmem_cache#5-oX (struct dentry), inode: kmem_cache#4-oX
+	// dentry: kmem_cache#5-oX (struct dentry), inode: kmem_cache#4-oX (struct inode)
 	fsnotify_d_instantiate(dentry, inode);
 
 	// fsnotify_d_instantiate에서 한일
@@ -1879,6 +2038,8 @@ static void __d_instantiate(struct dentry *dentry, struct inode *inode)
 // res: kmem_cache#5-oX (struct dentry), root_inode: kmem_cache#4-oX
 // ARM10C 20160521
 // dentry: kmem_cache#5-oX (struct dentry), root: kmem_cache#4-oX (struct inode)
+// ARM10C 20161126
+// entry: kmem_cache#5-oX (struct dentry), inode: kmem_cache#4-oX (struct inode)
 void d_instantiate(struct dentry *entry, struct inode * inode)
 {
 	// &entry->d_alias: &(kmem_cache#5-oX (struct dentry))->d_alias, hlist_unhashed(&(kmem_cache#5-oX (struct dentry))->d_alias): 1
@@ -2027,6 +2188,8 @@ EXPORT_SYMBOL(d_instantiate_no_diralias);
 // inode: kmem_cache#4-oX
 // ARM10C 20160319
 // inode: kmem_cache#4-oX (struct inode)
+// ARM10C 20161126
+// root_inode: kmem_cache#4-oX (struct inode)
 struct dentry *d_make_root(struct inode *root_inode)
 {
 	struct dentry *res = NULL;
@@ -2710,18 +2873,57 @@ again:
 }
 EXPORT_SYMBOL(d_delete);
 
+// ARM10C 20161126
+// entry: kmem_cache#5-oX (struct dentry), hash 0xXXXXXXXX 에 맞는 list table 주소값
 static void __d_rehash(struct dentry * entry, struct hlist_bl_head *b)
 {
+	// entry: kmem_cache#5-oX (struct dentry), d_unhashed(kmem_cache#5-oX (struct dentry)): 1
 	BUG_ON(!d_unhashed(entry));
+
+	// b: hash 0xXXXXXXXX 에 맞는 list table 주소값
 	hlist_bl_lock(b);
+
+	// hlist_bl_lock 에서 한일:
+	// hash 0xXXXXXXXX 에 맞는 list table 주소값의 0 bit 를 1로 set
+
+	// entry->d_flags: (kmem_cache#5-oX (struct dentry))->d_flags: 0x00100000, DCACHE_RCUACCESS: 0x00000080
 	entry->d_flags |= DCACHE_RCUACCESS;
+	// entry->d_flags: (kmem_cache#5-oX (struct dentry))->d_flags: 0x00100080
+
+	// &entry->d_hash: &(kmem_cache#5-oX (struct dentry))->d_hash, b: hash 0xXXXXXXXX 에 맞는 list table 주소값
 	hlist_bl_add_head_rcu(&entry->d_hash, b);
+
+	// hlist_bl_add_head_rcu 에서 한일:
+	// (&(kmem_cache#5-oX (struct dentry))->d_hash)->next: NULL
+	// (&(kmem_cache#5-oX (struct dentry))->d_hash)->pprev: &(hash 0xXXXXXXXX 에 맞는 list table 주소값)->first
+	//
+	// ((hash 0xXXXXXXXX 에 맞는 list table 주소값)->first): ((&(kmem_cache#5-oX (struct dentry))->d_hash) | 1)
+
+	// b: hash 0xXXXXXXXX 에 맞는 list table 주소값
 	hlist_bl_unlock(b);
+
+	// hlist_bl_unlock 에서 한일:
+	// hash 0xXXXXXXXX 에 맞는 list table 주소값 의 bit 0을 클리어함
+	// dmb(ish)를 사용하여 공유 자원 hash 0xXXXXXXXX 에 맞는 list table 주소값 값을 갱신
 }
 
+// ARM10C 20161126
+// entry: kmem_cache#5-oX (struct dentry)
 static void _d_rehash(struct dentry * entry)
 {
+	// entry: kmem_cache#5-oX (struct dentry),
+	// entry->d_parent: (kmem_cache#5-oX (struct dentry))->d_parent: kmem_cache#5-oX (struct dentry),
+	// entry->d_name.hash: (kmem_cache#5-oX (struct dentry))->d_name.hash: 0xXXXXXXXX
+	// d_hash(kmem_cache#5-oX (struct dentry), 0xXXXXXXXX): hash 0xXXXXXXXX 에 맞는 list table 주소값
 	__d_rehash(entry, d_hash(entry->d_parent, entry->d_name.hash));
+
+	// __d_rehash 에서 한일:
+	// (kmem_cache#5-oX (struct dentry))->d_flags: 0x00100080
+	//
+	// (&(kmem_cache#5-oX (struct dentry))->d_hash)->next: NULL
+	// (&(kmem_cache#5-oX (struct dentry))->d_hash)->pprev: &(hash 0xXXXXXXXX 에 맞는 list table 주소값)->first
+	//
+	// ((hash 0xXXXXXXXX 에 맞는 list table 주소값)->first): ((&(kmem_cache#5-oX (struct dentry))->d_hash) | 1)
 }
 
 /**
@@ -2731,11 +2933,32 @@ static void _d_rehash(struct dentry * entry)
  * Adds a dentry to the hash according to its name.
  */
  
+// ARM10C 20161126
+// entry: kmem_cache#5-oX (struct dentry)
 void d_rehash(struct dentry * entry)
 {
+	// &entry->d_lock: &(kmem_cache#5-oX (struct dentry))->d_lock
 	spin_lock(&entry->d_lock);
+
+	// spin_lock 에서 한일:
+	// &(kmem_cache#5-oX (struct dentry))->d_lock 을 사용하여 spin lock 을 수행
+
+	// entry: kmem_cache#5-oX (struct dentry)
 	_d_rehash(entry);
+
+	// _d_rehash 에서 한일:
+	// (kmem_cache#5-oX (struct dentry))->d_flags: 0x00100080
+	//
+	// (&(kmem_cache#5-oX (struct dentry))->d_hash)->next: NULL
+	// (&(kmem_cache#5-oX (struct dentry))->d_hash)->pprev: &(hash 0xXXXXXXXX 에 맞는 list table 주소값)->first
+	//
+	// ((hash 0xXXXXXXXX 에 맞는 list table 주소값)->first): ((&(kmem_cache#5-oX (struct dentry))->d_hash) | 1)
+
+	// &entry->d_lock: &(kmem_cache#5-oX (struct dentry))->d_lock
 	spin_unlock(&entry->d_lock);
+
+	// spin_unlock 에서 한일:
+	// &(kmem_cache#5-oX (struct dentry))->d_lock 을 사용하여 spin unlock 을 수행
 }
 EXPORT_SYMBOL(d_rehash);
 

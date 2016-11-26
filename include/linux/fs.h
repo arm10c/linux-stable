@@ -542,6 +542,7 @@ struct posix_acl;
 // ARM10C 20160319
 // ARM10C 20160521
 // ARM10C 20161112
+// ARM10C 20161126
 // sizeof(struct inode): 394 bytes
 struct inode {
 	umode_t			i_mode;
@@ -1622,6 +1623,7 @@ struct file_operations {
 // ARM10C 20151212
 // ARM10C 20160319
 // ARM10C 20160611
+// ARM10C 20161126
 struct inode_operations {
 	struct dentry * (*lookup) (struct inode *,struct dentry *, unsigned int);
 	void * (*follow_link) (struct dentry *, struct nameidata *);

@@ -215,6 +215,8 @@ extern int _find_next_bit_be(const unsigned long *p, int size, int offset);
 // 0, &once
 // ARM10C 20161112
 // offset: 1, map->page: (&(&init_pid_ns)->pidmap[0])->page: kmem_cache#25-oX
+// ARM10C 20161126
+// bitnum: 0, addr: hash 0xXXXXXXXX 에 맞는 list table 주소값
 #define test_and_set_bit(nr,p)		ATOMIC_BITOP(test_and_set_bit,nr,p) // _test_and_set_bit(nr,p)
 // ARM10C 20131207
 #define test_and_clear_bit(nr,p)	ATOMIC_BITOP(test_and_clear_bit,nr,p)

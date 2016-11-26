@@ -11,6 +11,8 @@
  */
 // ARM10C 20140621
 // bitnum: 0, addr: &(MIGRATE_UNMOVABLE인 page)->flags
+// ARM10C 20161126
+// bitnum: 0, addr: hash 0xXXXXXXXX 에 맞는 list table 주소값
 #define test_and_set_bit_lock(nr, addr)	test_and_set_bit(nr, addr)
 
 /**
@@ -39,6 +41,8 @@ do {					\
  */
 // ARM10C 20140621
 // bitnum: 0, addr: &(MIGRATE_UNMOVABLE인 page)->flags
+// ARM10C 20161126
+// bitnum: 0, addr: hash 0xXXXXXXXX 에 맞는 list table 주소값
 #define __clear_bit_unlock(nr, addr)	\
 do {					\
 	smp_mb();			\

@@ -155,6 +155,8 @@ __mutex_lock_slowpath(atomic_t *lock_count);
 // &net_mutex
 // ARM10C 20160716
 // &cgroup_mutex
+// ARM10C 20161126
+// &root_inode->i_mutex: &(kmem_cache#4-oX (struct inode))->i_mutex
 void __sched mutex_lock(struct mutex *lock)
 {
 	might_sleep(); // null function
@@ -316,6 +318,8 @@ static __used noinline void __sched __mutex_unlock_slowpath(atomic_t *lock_count
 // &sysfs_mutex
 // ARM10C 20160123
 // &sysfs_mutex
+// ARM10C 20161126
+// &root_inode->i_mutex: &(kmem_cache#4-oX (struct inode))->i_mutex
 void __sched mutex_unlock(struct mutex *lock)
 {
 	/*

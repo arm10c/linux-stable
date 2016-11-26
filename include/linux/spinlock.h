@@ -458,6 +458,10 @@ do {							\
 // &oldf->file_lock: &(&init_files)->file_lock
 // ARM10C 20161105
 // &fs->lock: &(&init_fs)->lock
+// ARM10C 20161126
+// &parent->d_lock: &(kmem_cache#5-oX (struct dentry))->d_lock
+// ARM10C 20161126
+// &entry->d_lock: &(kmem_cache#5-oX (struct dentry))->d_lock
 static inline void spin_lock(spinlock_t *lock)
 {
 	// lock->rlock: (&contig_page_data->node_zones[0].lock)->rlock

@@ -47,6 +47,7 @@ struct vfsmount;
 // ARM10C 20151003
 // ARM10C 20151212
 // ARM10C 20160521
+// ARM10C 20161126
 // sizeof(struct qstr): 12 bytes
 struct qstr {
 	union {
@@ -144,6 +145,7 @@ extern unsigned int full_name_hash(const unsigned char *, unsigned int);
 // ARM10C 20160319
 // ARM10C 20160521
 // ARM10C 20161112
+// ARM10C 20161126
 // sizeof(struct dentry): 140 bytes
 struct dentry {
 	/* RCU lookup touched fields */
@@ -239,6 +241,8 @@ struct dentry_operations {
       * typically using d_splice_alias. */
 
 #define DCACHE_REFERENCED		0x00000040 /* Recently used, don't discard. */
+// ARM10C 20161126
+// DCACHE_RCUACCESS: 0x00000080
 #define DCACHE_RCUACCESS		0x00000080 /* Entry has ever been RCU-visible */
 
 #define DCACHE_CANT_MOUNT		0x00000100
@@ -341,10 +345,36 @@ extern void d_rehash(struct dentry *);
  * The entry was actually filled in earlier during d_alloc().
  */
  
+// ARM10C 20161126
+// self: kmem_cache#5-oX (struct dentry), inode: kmem_cache#4-oX (struct inode)
 static inline void d_add(struct dentry *entry, struct inode *inode)
 {
+	// entry: kmem_cache#5-oX (struct dentry), inode: kmem_cache#4-oX (struct inode)
 	d_instantiate(entry, inode);
+
+	// d_instantiate에서 한일:
+	//
+	// (&(kmem_cache#5-oX (struct dentry))->d_alias)->next: NULL
+	// (&(kmem_cache#4-oX (struct inode))->i_dentry)->first: &(kmem_cache#5-oX (struct dentry))->d_alias
+	// (&(kmem_cache#5-oX (struct dentry))->d_alias)->pprev: &(&(kmem_cache#5-oX (struct dentry))->d_alias)
+	//
+	// (kmem_cache#5-oX (struct dentry))->d_inode: kmem_cache#4-oX (struct inode)
+	//
+	// 공유자원을 다른 cpu core가 사용할수 있게 함
+	// (&(kmem_cache#5-oX (struct dentry))->d_seq)->sequence: 2
+	//
+	// (kmem_cache#5-oX (struct dentry))->d_flags: 0x00100000
+
+	// entry: kmem_cache#5-oX (struct dentry)
 	d_rehash(entry);
+
+	// d_rehash 에서 한일:
+	// (kmem_cache#5-oX (struct dentry))->d_flags: 0x00100080
+	//
+	// (&(kmem_cache#5-oX (struct dentry))->d_hash)->next: NULL
+	// (&(kmem_cache#5-oX (struct dentry))->d_hash)->pprev: &(hash 0xXXXXXXXX 에 맞는 list table 주소값)->first
+	//
+	// ((hash 0xXXXXXXXX 에 맞는 list table 주소값)->first): ((&(kmem_cache#5-oX (struct dentry))->d_hash) | 1)
 }
 
 /**
@@ -424,6 +454,8 @@ static inline struct dentry *dget_dlock(struct dentry *dentry)
 // path->dentry: (&root)->dentry: kmem_cache#5-oX (struct dentry)
 // ARM10C 20160521
 // s->s_root: (kmem_cache#25-oX (struct super_block))->s_root: kmem_cache#5-oX (struct dentry)
+// ARM10C 20161126
+// sb->s_root: (kmem_cache#25-oX (struct super_block))->s_root: kmem_cache#5-oX (struct dentry)
 static inline struct dentry *dget(struct dentry *dentry)
 {
 	// dentry: kmem_cache#5-oX (struct dentry)
@@ -448,9 +480,14 @@ extern struct dentry *dget_parent(struct dentry *dentry);
  *	Returns true if the dentry passed is not currently hashed.
  */
  
+// ARM10C 20161126
+// entry: kmem_cache#5-oX (struct dentry)
 static inline int d_unhashed(const struct dentry *dentry)
 {
+	// &dentry->d_hash: &(kmem_cache#5-oX (struct dentry))->d_hash,
+	// hlist_bl_unhashed(&(kmem_cache#5-oX (struct dentry))->d_hash): 1
 	return hlist_bl_unhashed(&dentry->d_hash);
+	// return 1
 }
 
 static inline int d_unlinked(const struct dentry *dentry)

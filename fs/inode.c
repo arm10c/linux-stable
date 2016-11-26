@@ -1225,6 +1225,8 @@ EXPORT_SYMBOL(get_next_ino);
 // sb: kmem_cache#25-oX (struct super_block)
 // ARM10C 20161112
 // sb: kmem_cache#25-oX (struct super_block)
+// ARM10C 20161126
+// s: kmem_cache#25-oX (struct super_block)
 struct inode *new_inode_pseudo(struct super_block *sb)
 {
 	// sb: kmem_cache#25-oX (struct super_block)

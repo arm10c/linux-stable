@@ -75,9 +75,11 @@ static inline gid_t __kgid_val(kgid_t gid)
 #endif
 
 // ARM10C 20160319
+// ARM10C 20161126
 // GLOBAL_ROOT_UID: 0
 #define GLOBAL_ROOT_UID KUIDT_INIT(0)
 // ARM10C 20160319
+// ARM10C 20161126
 // GLOBAL_ROOT_GID: 0
 #define GLOBAL_ROOT_GID KGIDT_INIT(0)
 

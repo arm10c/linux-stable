@@ -698,6 +698,13 @@ static inline void rcu_preempt_sleep_check(void)
 //     smp_wmb();
 //     ((kmem_cache#12-oX (struct files_struct))->fdt) = (typeof(*&(kmem_cache#12-oX (struct files_struct))->fdtab) __force __rcu *)(&(kmem_cache#12-oX (struct files_struct))->fdtab);
 // } while (0)
+// ARM10C 20161126
+// #define __rcu_assign_pointer((hash 0xXXXXXXXX 에 맞는 list table 주소값)->first, (&(kmem_cache#5-oX (struct dentry))->d_hash) | 1, __rcu):
+// do {
+//     smp_wmb();
+//     ((hash 0xXXXXXXXX 에 맞는 list table 주소값)->first) =
+//     (typeof(*(&(kmem_cache#5-oX (struct dentry))->d_hash) | 1) __force __rcu *)((&(kmem_cache#5-oX (struct dentry))->d_hash) | 1);
+// } while (0)
 #define __rcu_assign_pointer(p, v, space)	\
 	do { \
 		smp_wmb(); \
@@ -1198,6 +1205,8 @@ static inline notrace void rcu_read_unlock_sched_notrace(void)
 // *new_fds: (kmem_cache#12-oX (struct files_struct))->fd_array[0], f: NULL
 // ARM10C 20161029
 // newf->fdt: (kmem_cache#12-oX (struct files_struct))->fdt, new_fdt: &(kmem_cache#12-oX (struct files_struct))->fdtab
+// ARM10C 20161126
+// h->first: (hash 0xXXXXXXXX 에 맞는 list table 주소값)->first: NULL, n: (&(kmem_cache#5-oX (struct dentry))->d_hash) | 1
 #define rcu_assign_pointer(p, v)		\
 	__rcu_assign_pointer((p), (v), __rcu)
 

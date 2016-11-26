@@ -17,15 +17,18 @@
  * some fast and compact auxiliary data.
  */
 
-#if defined(CONFIG_SMP) || defined(CONFIG_DEBUG_SPINLOCK)
+#if defined(CONFIG_SMP) || defined(CONFIG_DEBUG_SPINLOCK) // CONFIG_SMP=y, CONFIG_DEBUG_SPINLOCK=y
+// ARM10C 20161126
+// LIST_BL_LOCKMASK: 1UL
 #define LIST_BL_LOCKMASK	1UL
 #else
 #define LIST_BL_LOCKMASK	0UL
 #endif
 
-#ifdef CONFIG_DEBUG_LIST
+#ifdef CONFIG_DEBUG_LIST // CONFIG_DEBUG_LIST=n
 #define LIST_BL_BUG_ON(x) BUG_ON(x)
 #else
+// ARM10C 20161126
 #define LIST_BL_BUG_ON(x)
 #endif
 
@@ -41,6 +44,7 @@ struct hlist_bl_head {
 
 // ARM10C 20151003
 // ARM10C 20151219
+// ARM10C 20161126
 // sizeof(struct hlist_bl_node): 8 bytes
 struct hlist_bl_node {
 	struct hlist_bl_node *next, **pprev;
@@ -67,15 +71,23 @@ static inline void INIT_HLIST_BL_NODE(struct hlist_bl_node *h)
 
 #define hlist_bl_entry(ptr, type, member) container_of(ptr,type,member)
 
+// ARM10C 20161126
+// &dentry->d_hash: &(kmem_cache#5-oX (struct dentry))->d_hash
 static inline int hlist_bl_unhashed(const struct hlist_bl_node *h)
 {
+	// h->pprev: (&(kmem_cache#5-oX (struct dentry))->d_hash)->pprev: NULL
 	return !h->pprev;
+	// return 1
 }
 
+// ARM10C 20161126
+// h: hash 0xXXXXXXXX 에 맞는 list table 주소값
 static inline struct hlist_bl_node *hlist_bl_first(struct hlist_bl_head *h)
 {
+	// h->first: (hash 0xXXXXXXXX 에 맞는 list table 주소값)->first: NULL, LIST_BL_LOCKMASK: 1UL
 	return (struct hlist_bl_node *)
 		((unsigned long)h->first & ~LIST_BL_LOCKMASK);
+	// return NULL
 }
 
 static inline void hlist_bl_set_first(struct hlist_bl_head *h,
@@ -134,14 +146,27 @@ static inline void hlist_bl_del_init(struct hlist_bl_node *n)
 	}
 }
 
+// ARM10C 20161126
+// b: hash 0xXXXXXXXX 에 맞는 list table 주소값
 static inline void hlist_bl_lock(struct hlist_bl_head *b)
 {
+	// b: hash 0xXXXXXXXX 에 맞는 list table 주소값
 	bit_spin_lock(0, (unsigned long *)b);
+
+	// bit_spin_lock 에서 한일:
+	// hash 0xXXXXXXXX 에 맞는 list table 주소값의 0 bit 를 1로 set
 }
 
+// ARM10C 20161126
+// b: hash 0xXXXXXXXX 에 맞는 list table 주소값
 static inline void hlist_bl_unlock(struct hlist_bl_head *b)
 {
+	// b: hash 0xXXXXXXXX 에 맞는 list table 주소값
 	__bit_spin_unlock(0, (unsigned long *)b);
+
+	// __bit_spin_unlock 에서 한일:
+	// hash 0xXXXXXXXX 에 맞는 list table 주소값 의 bit 0을 클리어함
+	// dmb(ish)를 사용하여 공유 자원 hash 0xXXXXXXXX 에 맞는 list table 주소값 값을 갱신
 }
 
 static inline bool hlist_bl_is_locked(struct hlist_bl_head *b)
