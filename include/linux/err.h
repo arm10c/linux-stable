@@ -95,6 +95,8 @@ static inline long __must_check PTR_ERR(__force const void *ptr)
 // sb: kmem_cache#25-oX (struct super_block),
 // ARM10C 20161126
 // self: kmem_cache#5-oX (struct dentry)
+// ARM10C 20161203
+// mnt: &(kmem_cache#2-oX (struct mount))->mnt
 static inline long __must_check IS_ERR(__force const void *ptr)
 {
 	return IS_ERR_VALUE((unsigned long)ptr);

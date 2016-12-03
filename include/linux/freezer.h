@@ -8,7 +8,7 @@
 #include <linux/wait.h>
 #include <linux/atomic.h>
 
-#ifdef CONFIG_FREEZER
+#ifdef CONFIG_FREEZER // CONFIG_FREEZER=y
 extern atomic_t system_freezing_cnt;	/* nr of freezing conds in effect */
 extern bool pm_freezing;		/* PM freezing in effect */
 extern bool pm_nosig_freezing;		/* PM nosig freezing in effect */
@@ -31,10 +31,15 @@ extern bool freezing_slow_path(struct task_struct *p);
 /*
  * Check if there is a request to freeze a process
  */
+// ARM10C 20161203
+// current: &init_task
 static inline bool freezing(struct task_struct *p)
 {
+	// atomic_read(&system_freezing_cnt): 0
 	if (likely(!atomic_read(&system_freezing_cnt)))
 		return false;
+		// return false
+
 	return freezing_slow_path(p);
 }
 

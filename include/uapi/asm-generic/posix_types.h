@@ -27,6 +27,7 @@ typedef unsigned int	__kernel_mode_t;
 
 #ifndef __kernel_pid_t
 // ARM10C 20150919
+// ARM10C 20161203
 typedef int		__kernel_pid_t;
 #endif
 

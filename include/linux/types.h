@@ -46,6 +46,7 @@ typedef unsigned short		umode_t;
 typedef __u32			nlink_t;
 typedef __kernel_off_t		off_t;
 // ARM10C 20150919
+// ARM10C 20161203
 typedef __kernel_pid_t		pid_t;
 typedef __kernel_daddr_t	daddr_t;
 typedef __kernel_key_t		key_t;
@@ -280,6 +281,7 @@ struct hlist_head {
 // ARM10C 20150912
 // ARM10C 20151024
 // ARM10C 20151114
+// ARM10C 20161203
 // sizeof(struct hlist_node): 8 bytes
 struct hlist_node {
 	struct hlist_node *next, **pprev;

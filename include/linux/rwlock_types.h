@@ -87,6 +87,16 @@ typedef struct {
 //      .owner = 0xffffffff,
 //      .owner_cpu = -1,
 // }
+// ARM10C 20161203
+// #define DEFINE_RWLOCK(tasklist_lock):
+// rwlock_t tasklist_lock =
+// (rwlock_t)
+// {
+//      .raw_lock = { 0 },
+//      .magic = 0xdeaf1eed,
+//      .owner = 0xffffffff,
+//      .owner_cpu = -1,
+// }
 #define DEFINE_RWLOCK(x)	rwlock_t x = __RW_LOCK_UNLOCKED(x)
 
 #endif /* __LINUX_RWLOCK_TYPES_H */

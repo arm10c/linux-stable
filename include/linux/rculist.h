@@ -41,6 +41,9 @@ static inline void INIT_LIST_HEAD_RCU(struct list_head *list)
 // prev: &vmap_area_list
 // list_next_rcu(&vmap_area_list):
 // (*((struct list_head __rcu **)(&(&vmap_area_list)->next)))
+// ARM10C 20161203
+// list_next_rcu((&init_task.tasks)->prev):
+// (*((struct list_head __rcu **)(&((&init_task.tasks)->prev)->next)))
 #define list_next_rcu(list)	(*((struct list_head __rcu **)(&(list)->next)))
 
 /*
@@ -53,28 +56,45 @@ static inline void INIT_LIST_HEAD_RCU(struct list_head *list)
 // ARM10C 20141025
 // new: &(kmem_cache#30-oX (GIC))->list, head: &vmap_area_list,
 // head->next: (SYSC)->list
+// ARM10C 20161203
+// new: &(kmem_cache#15-oX (struct task_struct))->tasks,
+// head->prev: (&init_task.tasks)->prev, head: &init_task.tasks
 static inline void __list_add_rcu(struct list_head *new,
 		struct list_head *prev, struct list_head *next)
 {
 	// new->next: ((GIC)->list)->next, next: (SYSC)->list
+	// new->next: (&(kmem_cache#15-oX (struct task_struct))->tasks)->next, next: &init_task.tasks
 	new->next = next;
 	// new->next: ((GIC)->list)->next: (SYSC)->list
+	// new->next: (&(kmem_cache#15-oX (struct task_struct))->tasks)->next: &init_task.tasks
 
 	// new->prev: ((GIC)->list)->prev, prev: &vmap_area_list
+	// new->prev: (&(kmem_cache#15-oX (struct task_struct))->tasks)->prev, prev: (&init_task.tasks)->prev
 	new->prev = prev;
 	// new->prev: ((GIC)->list)->prev: &vmap_area_list
+	// new->prev: (&(kmem_cache#15-oX (struct task_struct))->tasks)->prev: (&init_task.tasks)->prev
 
 	// prev: &vmap_area_list, new: &((GIC))->list
 	// list_next_rcu(&vmap_area_list): (*((struct list_head __rcu **)(&(&vmap_area_list)->next)))
+	// prev: (&init_task.tasks)->prev, new: &(kmem_cache#15-oX (struct task_struct))->tasks
+	// list_next_rcu((&init_task.tasks)->prev): (*((struct list_head __rcu **) (&((&init_task.tasks)->prev)->next)))
 	rcu_assign_pointer(list_next_rcu(prev), new);
+
 	// rcu_assign_pointer에서 한일:
 	// core간 write memory barrier 수행
 	// ((*((struct list_head __rcu **)(&(&vmap_area_list)->next)))) =
 	// (typeof(*&((GIC))->list) __force space *)(&((GIC))->list)
 
+	// rcu_assign_pointer에서 한일:
+	// core간 write memory barrier 수행
+	// ((*((struct list_head __rcu **) (&((&init_task.tasks)->prev)->next)))):
+	// (typeof(*&(kmem_cache#15-oX (struct task_struct))->tasks) __force __rcu *)(&(kmem_cache#15-oX (struct task_struct))->tasks);
+
 	// next->prev: ((SYSC)->list)->prev, new: &(GIC)->list
+	// next->prev: (&init_task.tasks)->prev, new: &(kmem_cache#15-oX (struct task_struct))->tasks
 	next->prev = new;
 	// next->prev: ((SYSC)->list)->prev: &(GIC)->list
+	// next->prev: (&init_task.tasks)->prev: &(kmem_cache#15-oX (struct task_struct))->tasks
 }
 #else
 extern void __list_add_rcu(struct list_head *new,
@@ -128,10 +148,24 @@ static inline void list_add_rcu(struct list_head *new, struct list_head *head)
  * the _rcu list-traversal primitives, such as
  * list_for_each_entry_rcu().
  */
+// ARM10C 20161203
+// &p->tasks: &(kmem_cache#15-oX (struct task_struct))->tasks, &init_task.tasks
 static inline void list_add_tail_rcu(struct list_head *new,
 					struct list_head *head)
 {
+	// new: &(kmem_cache#15-oX (struct task_struct))->tasks,
+	// head->prev: (&init_task.tasks)->prev, head: &init_task.tasks
 	__list_add_rcu(new, head->prev, head);
+
+	// __list_add_rcu 에서 한일:
+	// (&(kmem_cache#15-oX (struct task_struct))->tasks)->next: &init_task.tasks
+	// (&(kmem_cache#15-oX (struct task_struct))->tasks)->prev: (&init_task.tasks)->prev
+	//
+	// core간 write memory barrier 수행
+	// ((*((struct list_head __rcu **) (&((&init_task.tasks)->prev)->next)))):
+	// (typeof(*&(kmem_cache#15-oX (struct task_struct))->tasks) __force __rcu *)(&(kmem_cache#15-oX (struct task_struct))->tasks);
+	//
+	// (&init_task.tasks)->prev: &(kmem_cache#15-oX (struct task_struct))->tasks
 }
 
 /**
@@ -400,6 +434,8 @@ static inline void hlist_replace_rcu(struct hlist_node *old,
 /*
  * return the first or the next element in an RCU protected hlist
  */
+// ARM10C 20161203
+// h: &(pid hash를 위한 메모리 공간을 16kB)[계산된 hash index 값]
 #define hlist_first_rcu(head)	(*((struct hlist_node __rcu **)(&(head)->first)))
 #define hlist_next_rcu(node)	(*((struct hlist_node __rcu **)(&(node)->next)))
 #define hlist_pprev_rcu(node)	(*((struct hlist_node __rcu **)((node)->pprev)))
@@ -423,14 +459,35 @@ static inline void hlist_replace_rcu(struct hlist_node *old,
  * problems on Alpha CPUs.  Regardless of the type of CPU, the
  * list-traversal primitive must be guarded by rcu_read_lock().
  */
+// ARM10C 20161203
+// &upid->pid_chain: &(&(kmem_cache#19-oX (struct pid))->numbers[0])->pid_chain,
+// &pid_hash: &(pid hash를 위한 메모리 공간을 16kB)[계산된 hash index 값]
 static inline void hlist_add_head_rcu(struct hlist_node *n,
 					struct hlist_head *h)
 {
+	// h->first: (&(pid hash를 위한 메모리 공간을 16kB)[계산된 hash index 값])->first: NULL
 	struct hlist_node *first = h->first;
+	// first: NULL
 
+	// n->next: (&(&(kmem_cache#19-oX (struct pid))->numbers[0])->pid_chain)->next, first: NULL
 	n->next = first;
+	// n->next: (&(&(kmem_cache#19-oX (struct pid))->numbers[0])->pid_chain)->next: NULL
+
+	// n->pprev: (&(&(kmem_cache#19-oX (struct pid))->numbers[0])->pid_chain)->pprev,
+	// &h->first: &(&(pid hash를 위한 메모리 공간을 16kB)[계산된 hash index 값])->first
 	n->pprev = &h->first;
+	// n->pprev: (&(&(kmem_cache#19-oX (struct pid))->numbers[0])->pid_chain)->pprev: &(&(pid hash를 위한 메모리 공간을 16kB)[계산된 hash index 값])->first
+
+	// h: &(pid hash를 위한 메모리 공간을 16kB)[계산된 hash index 값]
+	// hlist_first_rcu(&(pid hash를 위한 메모리 공간을 16kB)[계산된 hash index 값]):
+	// (*((struct hlist_node __rcu **)(&(&(pid hash를 위한 메모리 공간을 16kB)[계산된 hash index 값])->first))),
+	// n: &(&(kmem_cache#19-oX (struct pid))->numbers[0])->pid_chain
 	rcu_assign_pointer(hlist_first_rcu(h), n);
+
+	// rcu_assign_pointer 에서 한일:
+	// ((&(pid hash를 위한 메모리 공간을 16kB)[계산된 hash index 값])->first): &(&(kmem_cache#19-oX (struct pid))->numbers[0])->pid_chain
+
+	// first: NULL
 	if (first)
 		first->pprev = &n->next;
 }

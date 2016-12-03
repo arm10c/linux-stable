@@ -66,11 +66,14 @@ struct pid_namespace {
 extern struct pid_namespace init_pid_ns;
 
 // ARM10C 20150912
+// ARM10C 20161203
 // PIDNS_HASH_ADDING: 0x80000000
 #define PIDNS_HASH_ADDING (1U << 31)
 
 #ifdef CONFIG_PID_NS // CONFIG_PID_NS=y
 // ARM10C 20161112
+// ns: &init_pid_ns
+// ARM10C 20161203
 // ns: &init_pid_ns
 static inline struct pid_namespace *get_pid_ns(struct pid_namespace *ns)
 {

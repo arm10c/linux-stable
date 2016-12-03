@@ -31,6 +31,7 @@
 // ARM10C 20160910
 // ARM10C 20161105
 // ARM10C 20161112
+// ARM10C 20161203
 #define ATOMIC_INIT(i)	{ (i) }
 
 #ifdef __KERNEL__
@@ -51,6 +52,8 @@
 // &p->real_cred->user->processes: &(&root_user)->processes
 // ARM10C 20161029
 // &(&init_files)->count
+// ARM10C 20161203
+// &system_freezing_cnt
 #define atomic_read(v)	(*(volatile int *)&(v)->counter)
 // ARM10C 20140118
 // ARM10C 20140322
@@ -93,6 +96,8 @@
 // &sig->live: &(kmem_cache#13-oX (struct signal_struct))->live, 1
 // ARM10C 20161105
 // &sig->sigcnt: &(kmem_cache#13-oX (struct signal_struct))->sigcnt, 1
+// ARM10C 20161203
+// &pid->count: &(kmem_cache#19-oX (struct pid))->count
 #define atomic_set(v,i)	(((v)->counter) = (i))
 
 #if __LINUX_ARM_ARCH__ >= 6

@@ -211,6 +211,12 @@
 // &sig->cpu_timers[1]): &(kmem_cache#13-oX (struct signal_struct))->cpu_timers[1]
 // ARM10C 20161105
 // &sig->cpu_timers[2]): &(kmem_cache#13-oX (struct signal_struct))->cpu_timers[2]
+// ARM10C 20161203
+// &p->thread_group: &(kmem_cache#15-oX (struct task_struct))->thread_group
+// ARM10C 20161203
+// &child->ptrace_entry: (kmem_cache#15-oX (struct task_struct))->ptrace_entry
+// ARM10C 20161203
+// &child->ptraced: (kmem_cache#15-oX (struct task_struct))->ptraced
 static inline void INIT_LIST_HEAD(struct list_head *list)
 {
 	list->next = list;
@@ -331,6 +337,9 @@ static inline void list_add(struct list_head *new, struct list_head *head)
 // &ops->list: &(&proc_net_ns_ops)->list, list: &pernet_list
 // ARM10C 20161112
 // [re] s->s_list: (kmem_cache#25-oX (struct super_block))->s_list,
+// ARM10C 20161203
+// &p->sibling: &(kmem_cache#15-oX (struct task_struct))->sibling
+// &p->real_parent->children: &(&init_task)->children
 static inline void list_add_tail(struct list_head *new, struct list_head *head)
 {
 	// new: &waiter.list, head->prev: (&(&cpu_add_remove_lock)->wait_list)->prev
@@ -1029,6 +1038,8 @@ static inline void list_splice_tail_init(struct list_head *list,
 // &inode->i_dentry: &(kmem_cache#4-oX)->i_dentry
 // ARM10C 20160319
 // mnt->mnt_fsnotify_marks: (kmem_cache#2-oX (struct mount))->mnt_fsnotify_marks
+// ARM10C 20161203
+// &pid->tasks[0]: &(kmem_cache#19-oX (struct pid))->tasks[0]
 #define INIT_HLIST_HEAD(ptr) ((ptr)->first = NULL)
 
 // ARM10C 20150808

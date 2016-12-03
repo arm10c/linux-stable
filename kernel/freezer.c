@@ -12,6 +12,8 @@
 #include <linux/kthread.h>
 
 /* total number of freezing conditions in effect */
+// ARM10C 20161203
+// ATOMIC_INIT(0): { (0) }
 atomic_t system_freezing_cnt = ATOMIC_INIT(0);
 EXPORT_SYMBOL(system_freezing_cnt);
 

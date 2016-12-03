@@ -462,6 +462,8 @@ do {							\
 // &parent->d_lock: &(kmem_cache#5-oX (struct dentry))->d_lock
 // ARM10C 20161126
 // &entry->d_lock: &(kmem_cache#5-oX (struct dentry))->d_lock
+// ARM10C 20161203
+// &current->sighand->siglock: &(&init_sighand)->siglock
 static inline void spin_lock(spinlock_t *lock)
 {
 	// lock->rlock: (&contig_page_data->node_zones[0].lock)->rlock
@@ -495,6 +497,8 @@ do {									\
 // ARM10C 20160514
 // &proc_inum_lock
 // ARM10C 20161112
+// &pidmap_lock
+// ARM10C 20161203
 // &pidmap_lock
 static inline void spin_lock_irq(spinlock_t *lock)
 {
@@ -584,6 +588,8 @@ static inline void spin_unlock_bh(spinlock_t *lock)
 // ARM10C 20160514
 // &proc_inum_lock
 // ARM10C 20161112
+// &pidmap_lock
+// ARM10C 20161203
 // &pidmap_lock
 static inline void spin_unlock_irq(spinlock_t *lock)
 {

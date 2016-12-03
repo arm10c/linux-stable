@@ -100,11 +100,16 @@ static int sig_ignored(struct task_struct *t, int sig, bool force)
  * Re-calculate pending state from the set of locally pending
  * signals, globally pending signals, and blocked signals.
  */
+// ARM10C 20161203
+// &(&(&init_task)->pending)->signal, &(&init_task)->blocked
+// ARM10C 20161203
+// &(&(&init_signals)->shared_pending)->signal, &(&init_task)->blocked
 static inline int has_pending_signals(sigset_t *signal, sigset_t *blocked)
 {
 	unsigned long ready;
 	long i;
 
+	// _NSIG_WORDS: 2
 	switch (_NSIG_WORDS) {
 	default:
 		for (i = _NSIG_WORDS, ready = 0; --i >= 0 ;)
@@ -117,19 +122,49 @@ static inline int has_pending_signals(sigset_t *signal, sigset_t *blocked)
 		ready |= signal->sig[0] &~ blocked->sig[0];
 		break;
 
+		// signal->sig[1]: (&(&(&init_task)->pending)->signal)->sig[1]: 0
+		// blocked->sig[1]: (&(&init_task)->blocked)->sig[1]: 0
+		// signal->sig[1]: (&(&(&init_signals)->shared_pending)->signal)->sig[1]: 0
+		// blocked->sig[1]: (&(&init_task)->blocked)->sig[1]: 0
 	case 2: ready  = signal->sig[1] &~ blocked->sig[1];
+		// ready: 0
+		// ready: 0
+
+		// signal->sig[1]: (&(&(&init_task)->pending)->signal)->sig[1]: 0
+		// blocked->sig[1]: (&(&init_task)->blocked)->sig[1]: 0
+		// signal->sig[1]: (&(&(&init_signals)->shared_pending)->signal)->sig[1]: 0
+		// blocked->sig[1]: (&(&init_task)->blocked)->sig[1]: 0
 		ready |= signal->sig[0] &~ blocked->sig[0];
+		// ready: 0
+		// ready: 0
 		break;
 
 	case 1: ready  = signal->sig[0] &~ blocked->sig[0];
 	}
+
+	// ready: 0
+	// ready: 0
 	return ready !=	0;
+	// return 0
+	// return 0
 }
 
+// ARM10C 20161203
+// &t->pending: &(&init_task)->pending, &t->blocked: &(&init_task)->blocked
+// ARM10C 20161203
+// &t->signal->shared_pending: &(&init_signals)->shared_pending, &t->blocked: &(&init_task)->blocked
 #define PENDING(p,b) has_pending_signals(&(p)->signal, (b))
 
+// ARM10C 20161203
+// current: &init_task
 static int recalc_sigpending_tsk(struct task_struct *t)
 {
+	// t->jobctl: (&init_task)->jobctl: 0, JOBCTL_TRAP_MASK: 0x180000
+	// &t->pending: &(&init_task)->pending, &t->blocked: &(&init_task)->blocked
+	// PENDING(&(&init_task)->pending, &(&init_task)->blocked): 0,
+	// t->signal: (&init_task)->signal: &init_signals
+	// &t->signal->shared_pending: &(&init_signals)->shared_pending, &t->blocked: &(&init_task)->blocked
+	// PENDING(&(&init_signals)->shared_pending, &(&init_task)->blocked): 0
 	if ((t->jobctl & JOBCTL_PENDING_MASK) ||
 	    PENDING(&t->pending, &t->blocked) ||
 	    PENDING(&t->signal->shared_pending, &t->blocked)) {
@@ -142,6 +177,7 @@ static int recalc_sigpending_tsk(struct task_struct *t)
 	 * So we don't clear it here, and only callers who know they should do.
 	 */
 	return 0;
+	// return 0
 }
 
 /*
@@ -154,10 +190,16 @@ void recalc_sigpending_and_wake(struct task_struct *t)
 		signal_wake_up(t, 0);
 }
 
+// ARM10C 20161203
 void recalc_sigpending(void)
 {
+	// current: &init_task, recalc_sigpending_tsk(&init_task): 0, freezing(&init_task): 0
 	if (!recalc_sigpending_tsk(current) && !freezing(current))
+		// TIF_SIGPENDING: 0
 		clear_thread_flag(TIF_SIGPENDING);
+
+		// clear_thread_flag 에서 한일:
+		// (init_task의 struct thread_info 주소값)->flags 의 0 bit 값을 clear 수행
 
 }
 

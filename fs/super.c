@@ -5392,10 +5392,12 @@ mount_fs(struct file_system_type *type, int flags, const char *name, void *data)
 	// (&(kmem_cache#5-oX (struct dentry))->d_lockref)->count: 1
 
 // 2016/11/26 종료
+// 2016/12/04 시작
 
 // 2016/03/19 종료
 // 2016/03/26 시작
 
+	// root: kmem_cache#5-oX (struct dentry), IS_ERR(kmem_cache#5-oX (struct dentry)): 0
 	// root: kmem_cache#5-oX (struct dentry), IS_ERR(kmem_cache#5-oX (struct dentry)): 0
 	// root: kmem_cache#5-oX (struct dentry), IS_ERR(kmem_cache#5-oX (struct dentry)): 0
 	// root: kmem_cache#5-oX (struct dentry), IS_ERR(kmem_cache#5-oX (struct dentry)): 0
@@ -5409,12 +5411,15 @@ mount_fs(struct file_system_type *type, int flags, const char *name, void *data)
 	// root->d_sb: (kmem_cache#5-oX (struct dentry))->d_sb: kmem_cache#25-oX (struct super_block)
 	// root->d_sb: (kmem_cache#5-oX (struct dentry))->d_sb: kmem_cache#25-oX (struct super_block)
 	// root->d_sb: (kmem_cache#5-oX (struct dentry))->d_sb: kmem_cache#25-oX (struct super_block)
+	// root->d_sb: (kmem_cache#5-oX (struct dentry))->d_sb: kmem_cache#25-oX (struct super_block)
 	sb = root->d_sb;
 	// sb: kmem_cache#25-oX (struct super_block)
 	// sb: kmem_cache#25-oX (struct super_block)
 	// sb: kmem_cache#25-oX (struct super_block)
 	// sb: kmem_cache#25-oX (struct super_block)
+	// sb: kmem_cache#25-oX (struct super_block)
 
+	// sb: kmem_cache#25-oX (struct super_block)
 	// sb: kmem_cache#25-oX (struct super_block)
 	// sb: kmem_cache#25-oX (struct super_block)
 	// sb: kmem_cache#25-oX (struct super_block)
@@ -5425,8 +5430,10 @@ mount_fs(struct file_system_type *type, int flags, const char *name, void *data)
 	// sb->s_bdi: (kmem_cache#25-oX (struct super_block))->s_bdi: &noop_backing_dev_info
 	// sb->s_bdi: (kmem_cache#25-oX (struct super_block))->s_bdi: &noop_backing_dev_info
 	// sb->s_bdi: (kmem_cache#25-oX (struct super_block))->s_bdi: &noop_backing_dev_info
+	// sb->s_bdi: (kmem_cache#25-oX (struct super_block))->s_bdi: &noop_backing_dev_info
 	WARN_ON(!sb->s_bdi);
 
+	// sb->s_bdi: (kmem_cache#25-oX (struct super_block))->s_bdi: &noop_backing_dev_info
 	// sb->s_bdi: (kmem_cache#25-oX (struct super_block))->s_bdi: &noop_backing_dev_info
 	// sb->s_bdi: (kmem_cache#25-oX (struct super_block))->s_bdi: &noop_backing_dev_info
 	// sb->s_bdi: (kmem_cache#25-oX (struct super_block))->s_bdi: &noop_backing_dev_info
@@ -5437,16 +5444,20 @@ mount_fs(struct file_system_type *type, int flags, const char *name, void *data)
 	// sb->s_flags: (kmem_cache#25-oX (struct super_block))->s_flags: 0xd0410000, MS_BORN: 0x20000000
 	// sb->s_flags: (kmem_cache#25-oX (struct super_block))->s_flags: 0xd0410000, MS_BORN: 0x20000000
 	// sb->s_flags: (kmem_cache#25-oX (struct super_block))->s_flags: 0xc0000000, MS_BORN: 0x20000000
+	// sb->s_flags: (kmem_cache#25-oX (struct super_block))->s_flags: 0x400000, MS_BORN: 0x20000000
 	sb->s_flags |= MS_BORN;
 	// sb->s_flags: (kmem_cache#25-oX (struct super_block))->s_flags: 0x60400000
 	// sb->s_flags: (kmem_cache#25-oX (struct super_block))->s_flags: 0xf0410000
 	// sb->s_flags: (kmem_cache#25-oX (struct super_block))->s_flags: 0xf0410000
 	// sb->s_flags: (kmem_cache#25-oX (struct super_block))->s_flags: 0xe0000000
+	// sb->s_flags: (kmem_cache#25-oX (struct super_block))->s_flags: 0x20400000
 
 	// sb: kmem_cache#25-oX (struct super_block), flags: 0x400000, secdata: NULL
 	// security_sb_kern_mount(kmem_cache#25-oX (struct super_block), 0x400000, NULL): 0
 	// sb: kmem_cache#25-oX (struct super_block), flags: 0x400000, secdata: NULL
 	// security_sb_kern_mount(kmem_cache#25-oX (struct super_block), 0x400000, NULL): 0
+	// sb: kmem_cache#25-oX (struct super_block), flags: 0, secdata: NULL
+	// security_sb_kern_mount(kmem_cache#25-oX (struct super_block), 0, NULL): 0
 	// sb: kmem_cache#25-oX (struct super_block), flags: 0, secdata: NULL
 	// security_sb_kern_mount(kmem_cache#25-oX (struct super_block), 0, NULL): 0
 	// sb: kmem_cache#25-oX (struct super_block), flags: 0, secdata: NULL
@@ -5456,7 +5467,9 @@ mount_fs(struct file_system_type *type, int flags, const char *name, void *data)
 	// error: 0
 	// error: 0
 	// error: 0
+	// error: 0
 
+	// error: 0
 	// error: 0
 	// error: 0
 	// error: 0
@@ -5478,9 +5491,12 @@ mount_fs(struct file_system_type *type, int flags, const char *name, void *data)
 	// type->name: (&rootfs_fs_type)->name: "rootfs"
 	// sb->s_maxbytes: (kmem_cache#25-oX (struct super_block))->s_maxbytes: 0x7fffffff,
 	// type->name: (&bd_type)->name: "bdev"
+	// sb->s_maxbytes: (kmem_cache#25-oX (struct super_block))->s_maxbytes: 0x7fffffff,
+	// type->name: (&proc_fs_type)->name: "proc"
 	WARN((sb->s_maxbytes < 0), "%s set sb->s_maxbytes to "
 		"negative value (%lld)\n", type->name, sb->s_maxbytes);
 
+	// &sb->s_umount: &(kmem_cache#25-oX (struct super_block))->s_umount
 	// &sb->s_umount: &(kmem_cache#25-oX (struct super_block))->s_umount
 	// &sb->s_umount: &(kmem_cache#25-oX (struct super_block))->s_umount
 	// &sb->s_umount: &(kmem_cache#25-oX (struct super_block))->s_umount
@@ -5499,6 +5515,10 @@ mount_fs(struct file_system_type *type, int flags, const char *name, void *data)
 	// up_write에서 한일:
 	// (&(kmem_cache#25-oX (struct super_block))->s_umount)->activity: 0
 
+	// up_write에서 한일:
+	// (&(kmem_cache#25-oX (struct super_block))->s_umount)->activity: 0
+
+	// secdata: NULL
 	// secdata: NULL
 	// secdata: NULL
 	// secdata: NULL
@@ -5509,7 +5529,9 @@ mount_fs(struct file_system_type *type, int flags, const char *name, void *data)
 	// root: kmem_cache#5-oX (struct dentry)
 	// root: kmem_cache#5-oX (struct dentry)
 	// root: kmem_cache#5-oX (struct dentry)
+	// root: kmem_cache#5-oX (struct dentry)
 	return root;
+	// return kmem_cache#5-oX (struct dentry)
 	// return kmem_cache#5-oX (struct dentry)
 	// return kmem_cache#5-oX (struct dentry)
 	// return kmem_cache#5-oX (struct dentry)

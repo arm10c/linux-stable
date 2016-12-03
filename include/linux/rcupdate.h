@@ -705,6 +705,19 @@ static inline void rcu_preempt_sleep_check(void)
 //     ((hash 0xXXXXXXXX 에 맞는 list table 주소값)->first) =
 //     (typeof(*(&(kmem_cache#5-oX (struct dentry))->d_hash) | 1) __force __rcu *)((&(kmem_cache#5-oX (struct dentry))->d_hash) | 1);
 // } while (0)
+// ARM10C 20161203
+// #define __rcu_assign_pointer((&(pid hash를 위한 메모리 공간을 16kB)[계산된 hash index 값])->first, &(&(kmem_cache#19-oX (struct pid))->numbers[0])->pid_chain, __rcu):
+// do {
+//     smp_wmb();
+//     ((&(pid hash를 위한 메모리 공간을 16kB)[계산된 hash index 값])->first) =
+//     (typeof(*&(&(kmem_cache#19-oX (struct pid))->numbers[0])->pid_chain) __force __rcu *)(&(&(kmem_cache#19-oX (struct pid))->numbers[0])->pid_chain);
+// } while (0)
+// ARM10C 20161203
+// #define __rcu_assign_pointer((*((struct list_head __rcu **) (&((&init_task.tasks)->prev)->next))), &(kmem_cache#15-oX (struct task_struct))->tasks, __rcu):
+// do {
+//     smp_wmb();
+//     ((*((struct list_head __rcu **) (&((&init_task.tasks)->prev)->next)))) = (typeof(*&(kmem_cache#15-oX (struct task_struct))->tasks) __force __rcu *)(&(kmem_cache#15-oX (struct task_struct))->tasks);
+// } while (0)
 #define __rcu_assign_pointer(p, v, space)	\
 	do { \
 		smp_wmb(); \
@@ -1207,6 +1220,12 @@ static inline notrace void rcu_read_unlock_sched_notrace(void)
 // newf->fdt: (kmem_cache#12-oX (struct files_struct))->fdt, new_fdt: &(kmem_cache#12-oX (struct files_struct))->fdtab
 // ARM10C 20161126
 // h->first: (hash 0xXXXXXXXX 에 맞는 list table 주소값)->first: NULL, n: (&(kmem_cache#5-oX (struct dentry))->d_hash) | 1
+// ARM10C 20161203
+// (*((struct hlist_node __rcu **)(&(&(pid hash를 위한 메모리 공간을 16kB)[계산된 hash index 값])->first))),
+// n: &(&(kmem_cache#19-oX (struct pid))->numbers[0])->pid_chain
+// ARM10C 20161203
+// prev: (&init_task.tasks)->prev, new: &(kmem_cache#15-oX (struct task_struct))->tasks
+// list_next_rcu((&init_task.tasks)->prev): (*((struct list_head __rcu **) (&((&init_task.tasks)->prev)->next)))
 #define rcu_assign_pointer(p, v)		\
 	__rcu_assign_pointer((p), (v), __rcu)
 

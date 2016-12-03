@@ -340,8 +340,11 @@ EXPORT_SYMBOL(_raw_write_lock_irqsave);
 #endif
 
 #ifndef CONFIG_INLINE_WRITE_LOCK_IRQ
+// ARM10C 20161203
+// &tasklist_lock
 void __lockfunc _raw_write_lock_irq(rwlock_t *lock)
 {
+	// lock: &tasklist_lock
 	__raw_write_lock_irq(lock);
 }
 EXPORT_SYMBOL(_raw_write_lock_irq);

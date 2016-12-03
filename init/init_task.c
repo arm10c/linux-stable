@@ -14,6 +14,7 @@
 // ARM10C 20150808
 // ARM10C 20160827
 // ARM10C 20160903
+// ARM10C 20161203
 // INIT_SIGNALS(init_signals):
 // {
 //     .nr_threads = 1,
@@ -147,6 +148,7 @@ static struct sighand_struct init_sighand = INIT_SIGHAND(init_sighand);
 // ARM10C 20150808
 // ARM10C 20160521
 // ARM10C 20160827
+// ARM10C 20161203
 // INIT_TASK(init_task):
 // {
 //    .state            = 0,

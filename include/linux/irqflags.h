@@ -62,6 +62,7 @@
  * Wrap the arch provided IRQ routines to provide appropriate checks.
  */
  // ARM10C 20160514
+ // ARM10C 20161203
 #define raw_local_irq_disable()		arch_local_irq_disable()
 // ARM10C 20150620
 #define raw_local_irq_enable()		arch_local_irq_enable()
@@ -111,6 +112,7 @@
 	do { trace_hardirqs_on(); raw_local_irq_enable(); } while (0)
  // ARM10C 20160514
  // ARM10C 20160820
+ // ARM10C 20161203
 #define local_irq_disable() \
 	do { raw_local_irq_disable(); trace_hardirqs_off(); } while (0)
 // ARM10C 20140315

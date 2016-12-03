@@ -9,6 +9,7 @@
 // ARM10C 20151003
 // ARM10C 20160903
 // ARM10C 20161105
+// ARM10C 20161203
 enum pid_type
 {
 	// PIDTYPE_PID: 0
@@ -59,6 +60,7 @@ enum pid_type
 
 // ARM10C 20150912
 // ARM10C 20161105
+// ARM10C 20161203
 // sizeof(struct upid): 16 bytes
 struct upid {
 	/* Try to keep pid_chain in the same cacheline as nr for find_vpid */
@@ -73,6 +75,7 @@ struct upid {
 // ARM10C 20151003
 // ARM10C 20160903
 // ARM10C 20161105
+// ARM10C 20161203
 // sizeof(struct pid): 44 bytes
 struct pid
 {
@@ -156,20 +159,29 @@ extern void disable_pid_allocation(struct pid_namespace *ns);
  */
 // ARM10C 20160903
 // &init_struct_pid
+// ARM10C 20161203
+// pid: kmem_cache#19-oX (struct pid)
 static inline struct pid_namespace *ns_of_pid(struct pid *pid)
 {
 	struct pid_namespace *ns = NULL;
 	// ns: NULL
+	// ns: NULL
 
 	// pid: &init_struct_pid
+	// pid: kmem_cache#19-oX (struct pid)
 	if (pid)
 		// pid->level: (&init_struct_pid)->level: 0
 		// pid->numbers[0].ns: (&init_struct_pid)->numbers[0].ns: &init_pid_ns
+		// pid->level: (kmem_cache#19-oX (struct pid))->level: 0
+		// pid->numbers[0].ns: (kmem_cache#19-oX (struct pid))->numbers[0].ns: &init_pid_ns
 		ns = pid->numbers[pid->level].ns;
+		// ns: &init_pid_ns
 		// ns: &init_pid_ns
 
 	// ns: &init_pid_ns
+	// ns: &init_pid_ns
 	return ns;
+	// return &init_pid_ns
 	// return &init_pid_ns
 }
 
@@ -180,6 +192,8 @@ static inline struct pid_namespace *ns_of_pid(struct pid *pid)
  * with the pid number.
  */
 // ARM10C 20161112
+// pid: kmem_cache#19-oX (struct pid)
+// ARM10C 20161203
 // pid: kmem_cache#19-oX (struct pid)
 static inline bool is_child_reaper(struct pid *pid)
 {
@@ -200,12 +214,22 @@ static inline bool is_child_reaper(struct pid *pid)
  * see also task_xid_nr() etc in include/linux/sched.h
  */
 
+// ARM10C 20161203
+// pid: kmem_cache#19-oX (struct pid)
 static inline pid_t pid_nr(struct pid *pid)
 {
 	pid_t nr = 0;
+	// nr: 0
+
+	// pid: kmem_cache#19-oX (struct pid)
 	if (pid)
+		// nr: 0, pid->numbers[0].nr: (kmem_cache#19-oX (struct pid))->numbers[0].nr: 1
 		nr = pid->numbers[0].nr;
+		// nr: 1
+
+	// nr: 1
 	return nr;
+	// return 1
 }
 
 pid_t pid_nr_ns(struct pid *pid, struct pid_namespace *ns);

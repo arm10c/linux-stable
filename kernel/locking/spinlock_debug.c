@@ -357,6 +357,8 @@ static void __write_lock_debug(rwlock_t *lock)
 // ARM10C 20140405
 // ARM10C 20151031
 // &file_systems_lock
+// ARM10C 20161203
+// lock: &tasklist_lock
 void do_raw_write_lock(rwlock_t *lock)
 {
 	debug_write_lock_before(lock);

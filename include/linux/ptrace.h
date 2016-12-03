@@ -138,14 +138,38 @@ static inline void ptrace_event(int event, unsigned long message)
  *
  * Called with current's siglock and write_lock_irq(&tasklist_lock) held.
  */
+// ARM10C 20161203
+// p: kmem_cache#15-oX (struct task_struct), 0
 static inline void ptrace_init_task(struct task_struct *child, bool ptrace)
 {
+	// &child->ptrace_entry: &(kmem_cache#15-oX (struct task_struct))->ptrace_entry
 	INIT_LIST_HEAD(&child->ptrace_entry);
-	INIT_LIST_HEAD(&child->ptraced);
-	child->jobctl = 0;
-	child->ptrace = 0;
-	child->parent = child->real_parent;
 
+	// INIT_LIST_HEAD 에서 한일:
+	// (&(kmem_cache#15-oX (struct task_struct))->ptrace_entry)->next: &(kmem_cache#15-oX (struct task_struct))->ptrace_entry
+	// (&(kmem_cache#15-oX (struct task_struct))->ptrace_entry)->prev: &(kmem_cache#15-oX (struct task_struct))->ptrace_entry
+
+	// &child->ptraced: &(kmem_cache#15-oX (struct task_struct))->ptraced
+	INIT_LIST_HEAD(&child->ptraced);
+
+	// INIT_LIST_HEAD 에서 한일:
+	// (&(kmem_cache#15-oX (struct task_struct))->ptraced)->next: &(kmem_cache#15-oX (struct task_struct))->ptraced
+	// (&(kmem_cache#15-oX (struct task_struct))->ptraced)->prev: &(kmem_cache#15-oX (struct task_struct))->ptraced
+
+	// child->jobctl: (kmem_cache#15-oX (struct task_struct))->jobctl
+	child->jobctl = 0;
+	// child->jobctl: (kmem_cache#15-oX (struct task_struct))->jobctl: 0
+
+	// child->ptrace: (kmem_cache#15-oX (struct task_struct))->ptrace
+	child->ptrace = 0;
+	// child->ptrace: (kmem_cache#15-oX (struct task_struct))->ptrace: 0
+
+	// child->parent: (kmem_cache#15-oX (struct task_struct))->parent,
+	// child->real_parent: (kmem_cache#15-oX (struct task_struct))->real_parent: &init_task
+	child->parent = child->real_parent;
+	// child->parent: (kmem_cache#15-oX (struct task_struct))->parent: &init_task
+
+	// ptrace: 0, current->ptrace: (&init_task)->ptrace: 0
 	if (unlikely(ptrace) && current->ptrace) {
 		child->ptrace = current->ptrace;
 		__ptrace_link(child, current->parent);
@@ -239,6 +263,8 @@ static inline void user_enable_single_step(struct task_struct *task)
  * of those was ever called on @task, and even if arch_has_single_step()
  * returned zero.
  */
+// ARM10C 20161203
+// p: kmem_cache#15-oX (struct task_struct)
 static inline void user_disable_single_step(struct task_struct *task)
 {
 }

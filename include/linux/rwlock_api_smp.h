@@ -202,11 +202,24 @@ static inline unsigned long __raw_write_lock_irqsave(rwlock_t *lock)
 	return flags;
 }
 
+// ARM10C 20161203
+// lock: &tasklist_lock
 static inline void __raw_write_lock_irq(rwlock_t *lock)
 {
 	local_irq_disable();
+
+	// local_irq_disable 에서 한일:
+	// 인터럽트를 disable 함
+
 	preempt_disable();
-	rwlock_acquire(&lock->dep_map, 0, 0, _RET_IP_);
+
+	// preempt_disable 에서 한일:
+	// preempt count 값을 증가 시킴
+
+	// &lock->dep_map: &(&tasklist_lock)->dep_map
+	rwlock_acquire(&lock->dep_map, 0, 0, _RET_IP_); // null function
+
+	// lock: &tasklist_lock
 	LOCK_CONTENDED(lock, do_raw_write_trylock, do_raw_write_lock);
 }
 

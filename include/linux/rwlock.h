@@ -103,6 +103,8 @@ do {								\
 
 #define read_lock_irq(lock)		_raw_read_lock_irq(lock)
 #define read_lock_bh(lock)		_raw_read_lock_bh(lock)
+ // ARM10C 20161203
+// &tasklist_lock
 #define write_lock_irq(lock)		_raw_write_lock_irq(lock)
 #define write_lock_bh(lock)		_raw_write_lock_bh(lock)
 // ARM10C 20160402

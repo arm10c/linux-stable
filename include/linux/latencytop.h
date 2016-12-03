@@ -12,7 +12,7 @@
 #include <linux/compiler.h>
 struct task_struct;
 
-#ifdef CONFIG_LATENCYTOP
+#ifdef CONFIG_LATENCYTOP // CONFIG_LATENCYTOP=n
 
 #define LT_SAVECOUNT		32
 #define LT_BACKTRACEDEPTH	12
@@ -44,6 +44,8 @@ account_scheduler_latency(struct task_struct *task, int usecs, int inter)
 {
 }
 
+// ARM10C 20161203
+// p: kmem_cache#15-oX (struct task_struct)
 static inline void clear_all_latency_tracing(struct task_struct *p)
 {
 }

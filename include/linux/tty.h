@@ -236,6 +236,7 @@ struct tty_operations;
 
 // ARM10C 20150718
 // ARM10C 20150919
+// ARM10C 20161203
 struct tty_struct {
 	int	magic;
 	struct kref kref;
@@ -387,11 +388,17 @@ extern struct class *tty_class;
  *	go away
  */
 
+// ARM10C 20161203
+// current->signal->tty: (&init_signals)->tty: NULL
 static inline struct tty_struct *tty_kref_get(struct tty_struct *tty)
 {
+	// tty: NULL
 	if (tty)
 		kref_get(&tty->kref);
+
+	// tty: NULL
 	return tty;
+	// return NULL
 }
 
 extern int tty_paranoia_check(struct tty_struct *tty, struct inode *inode,

@@ -83,13 +83,21 @@ static inline void set_ti_thread_flag(struct thread_info *ti, int flag)
 
 // ARM10C 20160903
 // task_thread_info(kmem_cache#15-oX (struct task_struct)): ((struct thread_info *)(할당 받은 page 2개의 메로리의 가상 주소), flag: 1
+// ARM10C 20161203
+// task_thread_info(kmem_cache#15-oX (struct task_struct)): ((struct thread_info *)(할당 받은 page 2개의 메로리의 가상 주소), flag: 8
+// ARM10C 20161203
+// current_thread_info(): init_task의 struct thread_info 주소값, TIF_SIGPENDING: 0
 static inline void clear_ti_thread_flag(struct thread_info *ti, int flag)
 {
 	// flag: 1, &ti->flags: &(((struct thread_info *)(할당 받은 page 2개의 메로리의 가상 주소))->flags
+	// flag: 8, &ti->flags: &(((struct thread_info *)(할당 받은 page 2개의 메로리의 가상 주소))->flags
 	clear_bit(flag, (unsigned long *)&ti->flags);
 
 	// clear_bit 에서 한일:
 	// (((struct thread_info *)(할당 받은 page 2개의 메로리의 가상 주소))->flags 의 1 bit 값을 clear 수행
+
+	// clear_bit 에서 한일:
+	// (((struct thread_info *)(할당 받은 page 2개의 메로리의 가상 주소))->flags 의 8 bit 값을 clear 수행
 }
 
 static inline int test_and_set_ti_thread_flag(struct thread_info *ti, int flag)
@@ -108,6 +116,8 @@ static inline int test_and_clear_ti_thread_flag(struct thread_info *ti, int flag
 // ARM10C 20160402
 // ARM10C 20161029
 // ti: &init_thread_union, flag: 1
+// ARM10C 20161203
+// task_thread_info(&init_task): ((struct thread_info *)(&init_task)->stack), flag: 0
 static inline int test_ti_thread_flag(struct thread_info *ti, int flag)
 {
 	// flag: 1, &ti->flags: &init_thread_union.thread_info.flags
@@ -116,6 +126,8 @@ static inline int test_ti_thread_flag(struct thread_info *ti, int flag)
 
 #define set_thread_flag(flag) \
 	set_ti_thread_flag(current_thread_info(), flag)
+// ARM10C 20161203
+// current_thread_info(): init_task의 struct thread_info 주소값, TIF_SIGPENDING: 0
 #define clear_thread_flag(flag) \
 	clear_ti_thread_flag(current_thread_info(), flag)
 #define test_and_set_thread_flag(flag) \

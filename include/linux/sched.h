@@ -399,6 +399,7 @@ extern int get_dumpable(struct mm_struct *mm);
 // ARM10C 20150919
 // ARM10C 20160903
 // ARM10C 20161105
+// ARM10C 20161203
 // sizeof(struct sighand_struct): 1324 bytes
 struct sighand_struct {
 	atomic_t		count;
@@ -693,6 +694,7 @@ struct signal_struct {
 #define SIGNAL_CLD_MASK		(SIGNAL_CLD_STOPPED|SIGNAL_CLD_CONTINUED)
 
 // ARM10C 20160827
+// ARM10C 20161203
 // SIGNAL_UNKILLABLE: 0x00000040
 #define SIGNAL_UNKILLABLE	0x00000040 /* for init: ignore fatal signals */
 
@@ -1128,6 +1130,7 @@ enum perf_event_task_context {
 // ARM10C 20160910
 // ARM10C 20161008
 // ARM10C 20161105
+// ARM10C 20161203
 // sizeof(struct task_struct): 815 bytes
 struct task_struct {
 	volatile long state;	/* -1 unrunnable, 0 runnable, >0 stopped */
@@ -1602,14 +1605,26 @@ static inline struct pid *task_tgid(struct task_struct *task)
  * the result of task_pgrp/task_session even if task == current,
  * we can race with another thread doing sys_setsid/sys_setpgid.
  */
+// ARM10C 20161203
+// current: &init_task
 static inline struct pid *task_pgrp(struct task_struct *task)
 {
+	// PIDTYPE_PGID: 1
+	// task->group_leader: (&init_task)->group_leader: &init_task,
+	// task->group_leader->pids[1].pid: (&init_task)->pids[1].pid: &init_struct_pid
 	return task->group_leader->pids[PIDTYPE_PGID].pid;
+	// return &init_struct_pid
 }
 
+// ARM10C 20161203
+// current: &init_task
 static inline struct pid *task_session(struct task_struct *task)
 {
+	// PIDTYPE_SID: 2
+	// task->group_leader: (&init_task)->group_leader: &init_task,
+	// task->group_leader->pids[2].pid: (&init_task)->pids[2].pid: &init_struct_pid
 	return task->group_leader->pids[PIDTYPE_SID].pid;
+	// return &init_struct_pid
 }
 
 struct pid_namespace;
@@ -1867,7 +1882,11 @@ static inline void memalloc_noio_restore(unsigned int flags)
 #define JOBCTL_STOP_DEQUEUED_BIT 16	/* stop signal dequeued */
 #define JOBCTL_STOP_PENDING_BIT	17	/* task should stop for group stop */
 #define JOBCTL_STOP_CONSUME_BIT	18	/* consume group stop count */
+// ARM10C 20161203
+// JOBCTL_TRAP_STOP_BIT: 19
 #define JOBCTL_TRAP_STOP_BIT	19	/* trap for STOP */
+// ARM10C 20161203
+// JOBCTL_TRAP_NOTIFY_BIT: 20
 #define JOBCTL_TRAP_NOTIFY_BIT	20	/* trap for NOTIFY */
 #define JOBCTL_TRAPPING_BIT	21	/* switching to TRACED */
 #define JOBCTL_LISTENING_BIT	22	/* ptracer is listening for events */
@@ -1875,11 +1894,20 @@ static inline void memalloc_noio_restore(unsigned int flags)
 #define JOBCTL_STOP_DEQUEUED	(1 << JOBCTL_STOP_DEQUEUED_BIT)
 #define JOBCTL_STOP_PENDING	(1 << JOBCTL_STOP_PENDING_BIT)
 #define JOBCTL_STOP_CONSUME	(1 << JOBCTL_STOP_CONSUME_BIT)
+// ARM10C 20161203
+// JOBCTL_TRAP_STOP_BIT: 19
+// JOBCTL_TRAP_STOP: 0x80000
 #define JOBCTL_TRAP_STOP	(1 << JOBCTL_TRAP_STOP_BIT)
+// ARM10C 20161203
+// JOBCTL_TRAP_NOTIFY_BIT: 20
+// JOBCTL_TRAP_NOTIFY: 0x100000
 #define JOBCTL_TRAP_NOTIFY	(1 << JOBCTL_TRAP_NOTIFY_BIT)
 #define JOBCTL_TRAPPING		(1 << JOBCTL_TRAPPING_BIT)
 #define JOBCTL_LISTENING	(1 << JOBCTL_LISTENING_BIT)
 
+// ARM10C 20161203
+// JOBCTL_TRAP_STOP: 0x80000, JOBCTL_TRAP_NOTIFY: 0x100000
+// JOBCTL_TRAP_MASK: 0x180000
 #define JOBCTL_TRAP_MASK	(JOBCTL_TRAP_STOP | JOBCTL_TRAP_NOTIFY)
 #define JOBCTL_PENDING_MASK	(JOBCTL_STOP_PENDING | JOBCTL_TRAP_MASK)
 
@@ -2380,9 +2408,13 @@ static inline int get_nr_threads(struct task_struct *tsk)
 	return tsk->signal->nr_threads;
 }
 
+// ARM10C 20161203
+// p: kmem_cache#15-oX (struct task_struct)
 static inline bool thread_group_leader(struct task_struct *p)
 {
+	// p->exit_signal: (kmem_cache#15-oX (struct task_struct))->exit_signal: 0
 	return p->exit_signal >= 0;
+	// return 1
 }
 
 /* Do to the insanities of de_thread it is possible for a process
@@ -2540,6 +2572,8 @@ static inline void threadgroup_unlock(struct task_struct *tsk) {}
 // p: kmem_cache#15-oX (struct task_struct)
 // ARM10C 20161105
 // p: kmem_cache#15-oX (struct task_struct)
+// ARM10C 20161203
+// tsk: &init_task
 #define task_thread_info(task)	((struct thread_info *)(task)->stack)
 // ARM10C 20161105
 // p: kmem_cache#15-oX (struct task_struct)
@@ -2610,15 +2644,23 @@ static inline void set_tsk_thread_flag(struct task_struct *tsk, int flag)
 
 // ARM10C 20160903
 // tsk: kmem_cache#15-oX (struct task_struct), TIF_NEED_RESCHED: 1
+// ARM10C 20161203
+// p: kmem_cache#15-oX (struct task_struct), TIF_SYSCALL_TRACE: 8
 static inline void clear_tsk_thread_flag(struct task_struct *tsk, int flag)
 {
 	// tsk: kmem_cache#15-oX (struct task_struct), flag: 1
 	// ((struct thread_info *)(kmem_cache#15-oX (struct task_struct))->stack): 할당 받은 page 2개의 메로리의 가상 주소
 	// task_thread_info(kmem_cache#15-oX (struct task_struct)): ((struct thread_info *)(할당 받은 page 2개의 메로리의 가상 주소), flag: 1
+	// tsk: kmem_cache#15-oX (struct task_struct), flag: 8
+	// ((struct thread_info *)(kmem_cache#15-oX (struct task_struct))->stack): 할당 받은 page 2개의 메로리의 가상 주소
+	// task_thread_info(kmem_cache#15-oX (struct task_struct)): ((struct thread_info *)(할당 받은 page 2개의 메로리의 가상 주소), flag: 8
 	clear_ti_thread_flag(task_thread_info(tsk), flag);
 
 	// clear_ti_thread_flag 에서 한일:
 	// (((struct thread_info *)(할당 받은 page 2개의 메로리의 가상 주소))->flags 의 1 bit 값을 clear 수행
+
+	// clear_ti_thread_flag 에서 한일:
+	// (((struct thread_info *)(할당 받은 page 2개의 메로리의 가상 주소))->flags 의 8 bit 값을 clear 수행
 }
 
 static inline int test_and_set_tsk_thread_flag(struct task_struct *tsk, int flag)
@@ -2631,9 +2673,15 @@ static inline int test_and_clear_tsk_thread_flag(struct task_struct *tsk, int fl
 	return test_and_clear_ti_thread_flag(task_thread_info(tsk), flag);
 }
 
+// ARM10C 20161203
+// p: &init_task, TIF_SIGPENDING: 0
 static inline int test_tsk_thread_flag(struct task_struct *tsk, int flag)
 {
+	// tsk: &init_task,
+	// task_thread_info(&init_task): ((struct thread_info *)(&init_task)->stack), flag: 0
+	// test_ti_thread_flag(((struct thread_info *)(&init_task)->stack), 0: 0
 	return test_ti_thread_flag(task_thread_info(tsk), flag);
+	// return 0
 }
 
 static inline void set_tsk_need_resched(struct task_struct *tsk)
@@ -2663,9 +2711,14 @@ static inline int restart_syscall(void)
 	return -ERESTARTNOINTR;
 }
 
+// ARM10C 20161203
+// current: &init_task
 static inline int signal_pending(struct task_struct *p)
 {
+	// p: &init_task, TIF_SIGPENDING: 0
+	// test_tsk_thread_flag(&init_task, 0): 0
 	return unlikely(test_tsk_thread_flag(p,TIF_SIGPENDING));
+	// return 0
 }
 
 static inline int __fatal_signal_pending(struct task_struct *p)

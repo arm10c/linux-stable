@@ -4,8 +4,11 @@
 /*
  * cloning flags:
  */
+// ARM10C 20161203
+// CSIGNAL: 0x000000ff
 #define CSIGNAL		0x000000ff	/* signal mask to be sent at exit */
 // ARM10C 20160827
+// ARM10C 20161203
 // CLONE_VM: 0x00000100
 #define CLONE_VM	0x00000100	/* set if VM shared between processes */
 // ARM10C 20160827
@@ -20,15 +23,21 @@
 // ARM10C 20161105
 // CLONE_SIGHAND: 0x00000800
 #define CLONE_SIGHAND	0x00000800	/* set if signal handlers and blocked signals shared */
+// ARM10C 20161203
+// CLONE_PTRACE: 0x00002000
 #define CLONE_PTRACE	0x00002000	/* set if we want to let tracing continue on the child too */
+// ARM10C 20161203
+// CLONE_VFORK: 0x00004000
 #define CLONE_VFORK	0x00004000	/* set if the parent wants the child to wake it up on mm_release */
 // ARM10C 20160827
+// ARM10C 20161203
 // CLONE_PARENT: 0x00008000
 #define CLONE_PARENT	0x00008000	/* set if we want to have the same parent as the cloner */
 // ARM10C 20160827
 // ARM10C 20160910
 // ARM10C 20161008
 // ARM10C 20161105
+// ARM10C 20161203
 // CLONE_THREAD: 0x00010000
 #define CLONE_THREAD	0x00010000	/* Same thread group? */
 // ARM10C 20160827
@@ -42,11 +51,15 @@
 // CLONE_SETTLS: 0x00080000
 #define CLONE_SETTLS	0x00080000	/* create a new TLS for the child */
 #define CLONE_PARENT_SETTID	0x00100000	/* set the TID in the parent */
+// ARM10C 20161203
+// CLONE_CHILD_CLEARTID: 0x00200000
 #define CLONE_CHILD_CLEARTID	0x00200000	/* clear the TID in the child */
 #define CLONE_DETACHED		0x00400000	/* Unused, ignored */
 // ARM10C 20160827
 // CLONE_UNTRACED: 0x00800000
 #define CLONE_UNTRACED		0x00800000	/* set if the tracing process can't force CLONE_PTRACE on this clone */
+// ARM10C 20161203
+// CLONE_CHILD_SETTID: 0x01000000
 #define CLONE_CHILD_SETTID	0x01000000	/* set the TID in the child */
 /* 0x02000000 was previously the unused CLONE_STOPPED (Start in stopped state)
    and is now available for re-use. */
