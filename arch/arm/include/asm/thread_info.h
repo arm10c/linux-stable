@@ -202,8 +202,10 @@ extern int vfp_restore_user_hwstate(struct user_vfp __user *,
  *  TIF_USEDFPU		- FPU was used by this task this quantum (SMP)
  *  TIF_POLLING_NRFLAG	- true if poll_idle() is polling TIF_NEED_RESCHED
  */
+/*
 // ARM10C 20161203
 // TIF_SIGPENDING: 0
+*/
 #define TIF_SIGPENDING		0
 /*
 // ARM10C 20140322
@@ -213,8 +215,10 @@ extern int vfp_restore_user_hwstate(struct user_vfp __user *,
 */
 #define TIF_NEED_RESCHED	1
 #define TIF_NOTIFY_RESUME	2	/* callback before returning to user */
+/*
 // ARM10C 20161203
 // TIF_SYSCALL_TRACE: 8
+*/
 #define TIF_SYSCALL_TRACE	8
 #define TIF_SYSCALL_AUDIT	9
 #define TIF_SYSCALL_TRACEPOINT	10
