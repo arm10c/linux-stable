@@ -575,6 +575,8 @@ do {									\
 // &oldf->file_lock: &(&init_files)->file_lock
 // ARM10C 20161105
 // &fs->lock: &(&init_fs)->lock
+// ARM10C 20161210
+// &current->sighand->siglock: &(&init_sighand)->siglock
 static inline void spin_unlock(spinlock_t *lock)
 {
 	raw_spin_unlock(&lock->rlock);

@@ -93,6 +93,7 @@ do { \
 // ARM10C 20141206
 // ARM10C 20160402
 // ARM10C 20161029
+// ARM10C 20161210
 #define preempt_enable() \
 do { \
 	barrier(); \

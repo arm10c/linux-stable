@@ -260,6 +260,8 @@ static inline int arch_write_trylock(arch_rwlock_t *rw)
 }
 
 // ARM10C 20140125
+// ARM10C 20161210
+// &lock->raw_lock: &(&tasklist_lock)->raw_lock
 static inline void arch_write_unlock(arch_rwlock_t *rw)
 {
 	smp_mb();

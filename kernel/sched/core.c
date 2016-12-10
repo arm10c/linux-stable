@@ -8097,6 +8097,7 @@ static struct cftype cpu_files[] = {
 };
 
 // ARM10C 20150822
+// ARM10C 20161210
 struct cgroup_subsys cpu_cgroup_subsys = {
 	.name		= "cpu",
 	.css_alloc	= cpu_cgroup_css_alloc,

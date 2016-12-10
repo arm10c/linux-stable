@@ -428,6 +428,7 @@ static inline int rcu_read_lock_sched_held(void)
 
 // ARM10C 20141122
 // ARM10C 20150606
+// ARM10C 20161210
 static inline int rcu_read_lock_held(void)
 {
 	return 1;
@@ -608,6 +609,15 @@ static inline void rcu_preempt_sleep_check(void)
 //      smp_read_barrier_depends();
 //      ((typeof(*(thread_notify_head)->head) __force __kernel *)(_________p1));
 // })
+// ARM10C 20161210
+// #define __rcu_dereference_check((kmem_cache#15-oX (struct task_struct))->cgroups, 0, __rcu):
+// ({
+//      typeof(*(kmem_cache#15-oX (struct task_struct))->cgroups) *_________p1 = (typeof(*(kmem_cache#15-oX (struct task_struct))->cgroups)*__force )ACCESS_ONCE((kmem_cache#15-oX (struct task_struct))->cgroups);
+//      rcu_lockdep_assert(0, "suspicious rcu_dereference_check()" " usage");
+//      rcu_dereference_sparse((kmem_cache#15-oX (struct task_struct))->cgroups, __rcu);
+//      smp_read_barrier_depends();
+//      ((typeof(*(kmem_cache#15-oX (struct task_struct))->cgroups) __force __kernel *)(_________p1));
+// })
 #define __rcu_dereference_check(p, c, space) \
 	({ \
 		typeof(*p) *_________p1 = (typeof(*p)*__force )ACCESS_ONCE(p); \
@@ -718,6 +728,12 @@ static inline void rcu_preempt_sleep_check(void)
 //     smp_wmb();
 //     ((*((struct list_head __rcu **) (&((&init_task.tasks)->prev)->next)))) = (typeof(*&(kmem_cache#15-oX (struct task_struct))->tasks) __force __rcu *)(&(kmem_cache#15-oX (struct task_struct))->tasks);
 // } while (0)
+// ARM10C 20161210
+// #define __rcu_assign_pointer((*((struct hlist_node __rcu **)(&(&(&init_struct_pid)->tasks[1])->first))), &(&(kmem_cache#15-oX (struct task_struct))->pids[1])->node, __rcu):
+// do {
+//     smp_wmb();
+//     ((*((struct hlist_node __rcu **)(&(&(&init_struct_pid)->tasks[1])->first)))) = (typeof(*&(&(kmem_cache#15-oX (struct task_struct))->pids[1])->node) __force __rcu *)(&(&(kmem_cache#15-oX (struct task_struct))->pids[1])->node);
+// } while (0)
 #define __rcu_assign_pointer(p, v, space)	\
 	do { \
 		smp_wmb(); \
@@ -811,6 +827,8 @@ static inline void rcu_preempt_sleep_check(void)
 // (kmem_cache#15-oX (struct task_struct))->real_cred, 0
 // ARM10C 20161105
 // *nl: *(&(&thread_notify_head)->head), 1
+// ARM10C 20161210
+// (kmem_cache#15-oX (struct task_struct))->cgroups, 0
 #define rcu_dereference_check(p, c) \
 	__rcu_dereference_check((p), rcu_read_lock_held() || (c), __rcu)
 
@@ -922,6 +940,8 @@ static inline void rcu_preempt_sleep_check(void)
 // (&init_task)->cgroups
 // ARM10C 20161105
 // (kmem_cache#15-oX (struct task_struct))->real_cred
+// ARM10C 20161210
+// (kmem_cache#15-oX (struct task_struct))->cgroups
 #define rcu_dereference(p) rcu_dereference_check(p, 0)
 
 /**
@@ -986,6 +1006,7 @@ static inline void rcu_preempt_sleep_check(void)
 // ARM10C 20150606
 // ARM10C 20161015
 // ARM10C 20161105
+// ARM10C 20161210
 static inline void rcu_read_lock(void)
 {
 	__rcu_read_lock();
@@ -1226,6 +1247,9 @@ static inline notrace void rcu_read_unlock_sched_notrace(void)
 // ARM10C 20161203
 // prev: (&init_task.tasks)->prev, new: &(kmem_cache#15-oX (struct task_struct))->tasks
 // list_next_rcu((&init_task.tasks)->prev): (*((struct list_head __rcu **) (&((&init_task.tasks)->prev)->next)))
+// ARM10C 20161210
+// (*((struct hlist_node __rcu **)(&(&(&init_struct_pid)->tasks[1])->first)))
+// n: &(&(kmem_cache#15-oX (struct task_struct))->pids[1])->node
 #define rcu_assign_pointer(p, v)		\
 	__rcu_assign_pointer((p), (v), __rcu)
 

@@ -308,9 +308,14 @@ static inline void __raw_write_unlock_irqrestore(rwlock_t *lock,
 	preempt_enable();
 }
 
+// ARM10C 20161210
+// &tasklist_lock
 static inline void __raw_write_unlock_irq(rwlock_t *lock)
 {
-	rwlock_release(&lock->dep_map, 1, _RET_IP_);
+	// &lock->dep_map: &(&tasklist_lock)->dep_map
+	rwlock_release(&lock->dep_map, 1, _RET_IP_); // null function
+
+	// lock: &tasklist_lock
 	do_raw_write_unlock(lock);
 	local_irq_enable();
 	preempt_enable();

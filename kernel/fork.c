@@ -87,15 +87,21 @@
 /*
  * Protected counters by write_lock_irq(&tasklist_lock)
  */
+// ARM10C 20161210
 unsigned long total_forks;	/* Handle normal Linux uptimes. */
 
 // ARM10C 20160910
+// ARM10C 20161210
 int nr_threads;			/* The idle threads do not count.. */
 
 // ARM10C 20150919
 // ARM10C 20160402
 int max_threads;		/* tunable limit on nr_threads */
 
+// ARM10C 20161210
+// DEFINE_PER_CPU(unsigned long, process_counts):
+//	__attribute__((section(".data..percpu" "")))
+//	__typeof__(unsigned long) process_counts
 DEFINE_PER_CPU(unsigned long, process_counts) = 0;
 
 // ARM10C 20161203
@@ -3076,10 +3082,30 @@ static struct task_struct *copy_process(unsigned long clone_flags,
 			// (&init_task.tasks)->prev: &(kmem_cache#15-oX (struct task_struct))->tasks
 
 // 2016/12/03 종료
+// 2016/12/10 시작
 
+			// p: kmem_cache#15-oX (struct task_struct), PIDTYPE_PGID: 1
 			attach_pid(p, PIDTYPE_PGID);
+
+			// attach_pid 에서 한일:
+			// (&(&(kmem_cache#15-oX (struct task_struct))->pids[1])->node)->next: NULL
+			// (&(&(kmem_cache#15-oX (struct task_struct))->pids[1])->node)->pprev: &(&(&init_struct_pid)->tasks[1])->first
+			//
+			// ((*((struct hlist_node __rcu **)(&(&(&init_struct_pid)->tasks[1])->first)))): &(&(kmem_cache#15-oX (struct task_struct))->pids[1])->node
+
+			// p: kmem_cache#15-oX (struct task_struct), PIDTYPE_SID: 2
 			attach_pid(p, PIDTYPE_SID);
+
+			// attach_pid 에서 한일:
+			// (&(&(kmem_cache#15-oX (struct task_struct))->pids[2])->node)->next: NULL
+			// (&(&(kmem_cache#15-oX (struct task_struct))->pids[2])->node)->pprev: &(&(&init_struct_pid)->tasks[2])->first
+			//
+			// ((*((struct hlist_node __rcu **)(&(&(&init_struct_pid)->tasks[2])->first)))): &(&(kmem_cache#15-oX (struct task_struct))->pids[2])->node
+
 			__this_cpu_inc(process_counts);
+
+			// __this_cpu_inc 에서 한일:
+			// [pcp0] process_counts: 1 로 증가시킴
 		} else {
 			current->signal->nr_threads++;
 			atomic_inc(&current->signal->live);
@@ -3087,14 +3113,42 @@ static struct task_struct *copy_process(unsigned long clone_flags,
 			list_add_tail_rcu(&p->thread_group,
 					  &p->group_leader->thread_group);
 		}
+
+		// p: kmem_cache#15-oX (struct task_struct), PIDTYPE_PID: 1
 		attach_pid(p, PIDTYPE_PID);
+
+		// attach_pid 에서 한일:
+		// (&(&(kmem_cache#15-oX (struct task_struct))->pids[0])->node)->next: NULL
+		// (&(&(kmem_cache#15-oX (struct task_struct))->pids[0])->node)->pprev: &(&(kmem_cache#19-oX (struct pid))->tasks[0])->first
+		//
+		// ((*((struct hlist_node __rcu **)(&(&(kmem_cache#19-oX (struct pid))->tasks[0])->first)))): &(&(kmem_cache#15-oX (struct task_struct))->pids[0])->node
+
+		// nr_threads: 0
 		nr_threads++;
+		// nr_threads: 1
 	}
 
+	// total_forks: 0
 	total_forks++;
+	// total_forks: 1
+
+	// current: &init_task
+	// current->sighand: (&init_task)->sighand: &init_sighand
+	// &current->sighand->siglock: &(&init_sighand)->siglock
 	spin_unlock(&current->sighand->siglock);
+
+	// spin_unlock 에서 한일:
+	// &(&init_sighand)->siglock 을 사용하여 spin unlock 수행
+
 	write_unlock_irq(&tasklist_lock);
-	proc_fork_connector(p);
+
+	// write_unlock_irq 에서 한일:
+	// &tasklist_lock 을 사용하여 rw unlock 수행
+
+	// p: kmem_cache#15-oX (struct task_struct)
+	proc_fork_connector(p); // null function
+
+	// p: kmem_cache#15-oX (struct task_struct)
 	cgroup_post_fork(p);
 	if (clone_flags & CLONE_THREAD)
 		threadgroup_change_end(current);

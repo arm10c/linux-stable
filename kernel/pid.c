@@ -1098,10 +1098,28 @@ EXPORT_SYMBOL_GPL(find_vpid);
 /*
  * attach_pid() must be called with the tasklist_lock write-held.
  */
+// ARM10C 20161210
+// p: kmem_cache#15-oX (struct task_struct), PIDTYPE_PGID: 1
+// ARM10C 20161210
+// p: kmem_cache#15-oX (struct task_struct), PIDTYPE_SID: 2
+// ARM10C 20161210
+// p: kmem_cache#15-oX (struct task_struct), PIDTYPE_PID: 0
 void attach_pid(struct task_struct *task, enum pid_type type)
 {
+	// type: 1, &task->pids[1]: &(kmem_cache#15-oX (struct task_struct))->pids[1]
 	struct pid_link *link = &task->pids[type];
+	// link: &(kmem_cache#15-oX (struct task_struct))->pids[1]
+
+	// &link->node: &(&(kmem_cache#15-oX (struct task_struct))->pids[1])->node,
+	// type: 1, link->pid: (&(kmem_cache#15-oX (struct task_struct))->pids[1])->pid: &init_struct_pid,
+	// &link->pid->tasks[1]: &(&init_struct_pid)->tasks[1]
 	hlist_add_head_rcu(&link->node, &link->pid->tasks[type]);
+
+	// hlist_add_head_rcu 에서 한일:
+	// (&(&(kmem_cache#15-oX (struct task_struct))->pids[1])->node)->next: NULL
+	// (&(&(kmem_cache#15-oX (struct task_struct))->pids[1])->node)->pprev: &(&(&init_struct_pid)->tasks[1])->first
+	//
+	// ((*((struct hlist_node __rcu **)(&(&(&init_struct_pid)->tasks[1])->first)))): &(&(kmem_cache#15-oX (struct task_struct))->pids[1])->node
 }
 
 static void __change_pid(struct task_struct *task, enum pid_type type,

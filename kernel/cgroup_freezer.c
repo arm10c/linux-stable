@@ -49,6 +49,7 @@ enum freezer_state_flags {
 
 // ARM10C 20160716
 // ARM10C 20160723
+// ARM10C 20161210
 // sizeof(struct freezer): 84 bytes
 struct freezer {
 	struct cgroup_subsys_state	css;
@@ -60,17 +61,28 @@ struct freezer {
 // css: &(kmem_cache#29-oX (struct freezer))->css
 // ARM10C 20160723
 // NULL
+// ARM10C 20161210
+// &(kmem_cache#29-oX (struct freezer))->css
 static inline struct freezer *css_freezer(struct cgroup_subsys_state *css)
 {
 	// css: &(kmem_cache#29-oX (struct freezer))->css
 	// container_of(&(kmem_cache#29-oX (struct freezer))->css, struct freezer, css): kmem_cache#29-oX (struct freezer)
+	// css: &(kmem_cache#29-oX (struct freezer))->css
+	// container_of(&(kmem_cache#29-oX (struct freezer))->css, struct freezer, css): kmem_cache#29-oX (struct freezer)
 	return css ? container_of(css, struct freezer, css) : NULL;
+	// return kmem_cache#29-oX (struct freezer)
 	// return kmem_cache#29-oX (struct freezer)
 }
 
+// ARM10C 20161210
+// task: kmem_cache#15-oX (struct task_struct)
 static inline struct freezer *task_freezer(struct task_struct *task)
 {
+	// task: kmem_cache#15-oX (struct task_struct), freezer_subsys_id: 3
+	// task_css(kmem_cache#15-oX (struct task_struct), 3): &(kmem_cache#29-oX (struct freezer))->css
+	// css_freezer(&(kmem_cache#29-oX (struct freezer))->css): kmem_cache#29-oX (struct freezer)
 	return css_freezer(task_css(task, freezer_subsys_id));
+	// return kmem_cache#29-oX (struct freezer)
 }
 
 // ARM10C 20160723
@@ -281,12 +293,23 @@ static void freezer_attach(struct cgroup_subsys_state *new_css,
 	}
 }
 
+// ARM10C 20161210
+// kmem_cache#15-oX (struct task_struct)
 static void freezer_fork(struct task_struct *task)
 {
 	struct freezer *freezer;
 
 	rcu_read_lock();
+
+	// rcu_read_lock 에서 한일:
+	// (&init_task)->rcu_read_lock_nesting: 1
+
+	// task: kmem_cache#15-oX (struct task_struct)
+	// task_freezer(kmem_cache#15-oX (struct task_struct)): kmem_cache#29-oX (struct freezer)
 	freezer = task_freezer(task);
+	// freezer: kmem_cache#29-oX (struct freezer)
+
+// 2016/12/10 종료
 
 	/*
 	 * The root cgroup is non-freezable, so we can skip the
@@ -541,6 +564,7 @@ static struct cftype files[] = {
 
 // ARM10C 20150822
 // ARM10C 20160716
+// ARM10C 20161210
 struct cgroup_subsys freezer_subsys = {
 	.name		= "freezer",
 	.css_alloc	= freezer_css_alloc,

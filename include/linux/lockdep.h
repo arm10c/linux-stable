@@ -398,6 +398,7 @@ static inline void lockdep_on(void)
 // ARM10C 20150725
 // ARM10C 20151121
 // ARM10C 20160109
+// ARM10C 20161210
 # define lock_release(l, n, i)			do { } while (0)
 # define lock_set_class(l, n, k, s, i)		do { } while (0)
 # define lock_set_subclass(l, s, i)		do { } while (0)
@@ -600,6 +601,7 @@ static inline void print_irqtrace_events(struct task_struct *curr)
 #define rwlock_acquire_read(l, s, t, i)		lock_acquire_shared_recursive(l, s, t, NULL, i)
 // ARM10C 20140125
 // ARM10C 20160402
+// ARM10C 20161210
 #define rwlock_release(l, n, i)			lock_release(l, n, i)
 
 // ARM10C 20150103

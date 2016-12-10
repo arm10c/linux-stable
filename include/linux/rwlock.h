@@ -112,6 +112,8 @@ do {								\
 // ARM10C 20140125
 #define write_unlock(lock)		_raw_write_unlock(lock)
 #define read_unlock_irq(lock)		_raw_read_unlock_irq(lock)
+// ARM10C 20161210
+// &tasklist_lock
 #define write_unlock_irq(lock)		_raw_write_unlock_irq(lock)
 
 #define read_unlock_irqrestore(lock, flags)			\

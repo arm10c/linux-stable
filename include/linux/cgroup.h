@@ -392,6 +392,7 @@ struct cgroupfs_root {
 // ARM10C 20160723
 // ARM10C 20160730
 // ARM10C 20161008
+// ARM10C 20161210
 struct css_set {
 
 	/* Reference count */
@@ -636,6 +637,7 @@ int cgroup_taskset_size(struct cgroup_taskset *tset);
 // ARM10C 20150822
 // ARM10C 20160716
 // ARM10C 20160723
+// ARM10C 20161210
 struct cgroup_subsys {
 	struct cgroup_subsys_state *(*css_alloc)(struct cgroup_subsys_state *parent_css);
 	int (*css_online)(struct cgroup_subsys_state *css);
@@ -745,6 +747,8 @@ extern struct mutex cgroup_mutex;
 #else
 // ARM10C 20161008
 // task: &init_task, false
+// ARM10C 20161210
+// task: kmem_cache#15-oX (struct task_struct), false
 #define task_css_set_check(task, __c)					\
 	rcu_dereference((task)->cgroups)
 #endif
@@ -758,6 +762,12 @@ extern struct mutex cgroup_mutex;
  * Return the cgroup_subsys_state for the (@task, @subsys_id) pair.  The
  * synchronization rules are the same as task_css_set_check().
  */
+// ARM10C 20161210
+// task_css_set_check((kmem_cache#15-oX (struct task_struct)), (false)):
+// (kmem_cache#15-oX (struct task_struct))->cgroups
+//
+// #define task_css_check(kmem_cache#15-oX (struct task_struct), 3, false):
+// ((kmem_cache#15-oX (struct task_struct))->cgroups)->subsys[3]
 #define task_css_check(task, subsys_id, __c)				\
 	task_css_set_check((task), (__c))->subsys[(subsys_id)]
 
@@ -787,10 +797,19 @@ static inline struct css_set *task_css_set(struct task_struct *task)
  *
  * See task_css_check().
  */
+// ARM10C 20161210
+// task: kmem_cache#15-oX (struct task_struct), freezer_subsys_id: 3
 static inline struct cgroup_subsys_state *task_css(struct task_struct *task,
 						   int subsys_id)
 {
+	// task: kmem_cache#15-oX (struct task_struct), subsys_id: 3
+	// task_css_check(kmem_cache#15-oX (struct task_struct), 3, false): ((kmem_cache#15-oX (struct task_struct))->cgroups)->subsys[3]
+	// (kmem_cache#15-oX (struct task_struct))->cgroups: (&init_task)->cgroups,
+	// init_task.cgroups: (struct css_set *)(&init_css_set),
+	// init_css_set.subsys[3]: &(kmem_cache#29-oX (struct freezer))->css,
+	// task_css_check(kmem_cache#15-oX (struct task_struct), 3, false): &(kmem_cache#29-oX (struct freezer))->css
 	return task_css_check(task, subsys_id, false);
+	// return &(kmem_cache#29-oX (struct freezer))->css
 }
 
 static inline struct cgroup *task_cgroup(struct task_struct *task,

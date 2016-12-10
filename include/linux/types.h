@@ -270,6 +270,7 @@ struct list_head {
 // ARM10C 20151024
 // ARM10C 20151121
 // ARM10C 20160730
+// ARM10C 20161210
 // sizeof(struct hlist_head): 4 bytes
 struct hlist_head {
 	struct hlist_node *first;
@@ -282,6 +283,7 @@ struct hlist_head {
 // ARM10C 20151024
 // ARM10C 20151114
 // ARM10C 20161203
+// ARM10C 20161210
 // sizeof(struct hlist_node): 8 bytes
 struct hlist_node {
 	struct hlist_node *next, **pprev;

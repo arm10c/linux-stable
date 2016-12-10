@@ -316,6 +316,8 @@ static inline void debug_write_lock_after(rwlock_t *lock)
 }
 
 // ARM10C 20140125
+// ARM10C 20161210
+// lock: &tasklist_lock
 static inline void debug_write_unlock(rwlock_t *lock)
 {
 	RWLOCK_BUG_ON(lock->magic != RWLOCK_MAGIC, lock, "bad magic");
@@ -383,8 +385,13 @@ int do_raw_write_trylock(rwlock_t *lock)
 }
 
 // ARM10C 20140125
+// ARM10C 20161210
+// lock: &tasklist_lock
 void do_raw_write_unlock(rwlock_t *lock)
 {
+	// lock: &tasklist_lock
 	debug_write_unlock(lock);
+
+	// &lock->raw_lock: &(&tasklist_lock)->raw_lock
 	arch_write_unlock(&lock->raw_lock);
 }

@@ -143,6 +143,7 @@ static struct workqueue_struct *cgroup_destroy_wq;
 #define SUBSYS(_x) [_x ## _subsys_id] = &_x ## _subsys,
 #define IS_SUBSYS_ENABLED(option) IS_BUILTIN(option)
 // ARM10C 20150822
+// ARM10C 20161210
 // CGROUP_SUBSYS_COUNT: 4
 //
 // cgroup_subsys.h 의 config를 IS_BUILTIN(option) 확장한 결과:
@@ -265,6 +266,7 @@ static u64 cgroup_serial_nr_next = 1;
  */
 // ARM10C 20150822
 // ARM10C 20160716
+// ARM10C 20161210
 static int need_forkexit_callback __read_mostly;
 
 static struct cftype cgroup_base_files[];
@@ -384,7 +386,10 @@ static int notify_on_release(const struct cgroup *cgrp)
  */
 // ARM10C 20150822
 // ARM10C 20160716
+// ARM10C 20161210
 // CGROUP_BUILTIN_SUBSYS_COUNT: 4
+// for_each_builtin_subsys(ss, i):
+// for ((i) = 0; (i) < 4 && (((ss) = cgroup_subsys[i]) || true); (i)++)
 #define for_each_builtin_subsys(ss, i)					\
 	for ((i) = 0; (i) < CGROUP_BUILTIN_SUBSYS_COUNT &&		\
 	     (((ss) = cgroup_subsys[i]) || true); (i)++)
@@ -470,6 +475,7 @@ struct cgrp_cset_link {
 // ARM10C 20150822
 // ARM10C 20160723
 // ARM10C 20160730
+// ARM10C 20161210
 static struct css_set init_css_set;
 // ARM10C 20150815
 static struct cgrp_cset_link init_cgrp_cset_link;
@@ -540,6 +546,7 @@ static unsigned long css_set_hash(struct cgroup_subsys_state *css[])
  * fork()/exit() overhead for people who have cgroups compiled into their
  * kernel but not actually in use.
  */
+// ARM10C 20161210
 static int use_task_css_set_links __read_mostly;
 
 static void __put_css_set(struct css_set *cset, int taskexit)
@@ -6538,6 +6545,8 @@ void cgroup_fork(struct task_struct *child)
  * cgroup_task_iter_start() - to guarantee that the new task ends up on its
  * list.
  */
+// ARM10C 20161210
+// p: kmem_cache#15-oX (struct task_struct)
 void cgroup_post_fork(struct task_struct *child)
 {
 	struct cgroup_subsys *ss;
@@ -6554,6 +6563,7 @@ void cgroup_post_fork(struct task_struct *child)
 	 * in cgroup_enable_task_cg_lists() and read here after the tasklist_lock
 	 * lock on fork.
 	 */
+	// use_task_css_set_links: 0
 	if (use_task_css_set_links) {
 		write_lock(&css_set_lock);
 		task_lock(child);
@@ -6568,6 +6578,7 @@ void cgroup_post_fork(struct task_struct *child)
 	 * css_set; otherwise, @child might change state between ->fork()
 	 * and addition to css_set.
 	 */
+	// need_forkexit_callback: 1
 	if (need_forkexit_callback) {
 		/*
 		 * fork/exit callbacks are supported only for builtin
@@ -6578,7 +6589,15 @@ void cgroup_post_fork(struct task_struct *child)
 		 * can't touch that.
 		 */
 		for_each_builtin_subsys(ss, i)
+		// for ((i) = 0; (i) < 4 && (((ss) = cgroup_subsys[i]) || true); (i)++)
+
+			// i: 0, cgroup_subsys[0]: &debug_subsys, ss: &debug_subsys, ss->fork: (&debug_subsys)->fork: NULL
+			// i: 1, cgroup_subsys[1]: &cpu_cgroup_subsys, ss: &cpu_cgroup_subsys, ss->fork: (&cpu_cgroup_subsys)->fork: NULL
+			// i: 2, cgroup_subsys[2]: &cpuacct_subsys, ss: &cpuacct_subsys, ss->fork: (&cpuacct_subsys)->fork: NULL
+			// i: 3, cgroup_subsys[2]: &freezer_subsys, ss: &freezer_subsys, ss->fork: (&freezer_subsys)->fork: freezer_fork
 			if (ss->fork)
+				// ss->fork: (&freezer_subsys)->fork: freezer_fork, child: kmem_cache#15-oX (struct task_struct)
+				// freezer_fork(kmem_cache#15-oX (struct task_struct))
 				ss->fork(child);
 	}
 }
@@ -6973,6 +6992,7 @@ static struct cftype debug_files[] =  {
 
 // ARM10C 20150822
 // ARM10C 20160716
+// ARM10C 20161210
 struct cgroup_subsys debug_subsys = {
 	.name = "debug",
 	.css_alloc = debug_css_alloc,

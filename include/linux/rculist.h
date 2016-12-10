@@ -436,6 +436,8 @@ static inline void hlist_replace_rcu(struct hlist_node *old,
  */
 // ARM10C 20161203
 // h: &(pid hash를 위한 메모리 공간을 16kB)[계산된 hash index 값]
+// ARM10C 20161210
+// h: &(kmem_cache#19-oX (struct pid))->tasks[0]
 #define hlist_first_rcu(head)	(*((struct hlist_node __rcu **)(&(head)->first)))
 #define hlist_next_rcu(node)	(*((struct hlist_node __rcu **)(&(node)->next)))
 #define hlist_pprev_rcu(node)	(*((struct hlist_node __rcu **)((node)->pprev)))
@@ -462,31 +464,49 @@ static inline void hlist_replace_rcu(struct hlist_node *old,
 // ARM10C 20161203
 // &upid->pid_chain: &(&(kmem_cache#19-oX (struct pid))->numbers[0])->pid_chain,
 // &pid_hash: &(pid hash를 위한 메모리 공간을 16kB)[계산된 hash index 값]
+// ARM10C 20161210
+// &link->node: &(&(kmem_cache#15-oX (struct task_struct))->pids[1])->node,
+// &link->pid->tasks[1]: &(&init_struct_pid)->tasks[1]
 static inline void hlist_add_head_rcu(struct hlist_node *n,
 					struct hlist_head *h)
 {
 	// h->first: (&(pid hash를 위한 메모리 공간을 16kB)[계산된 hash index 값])->first: NULL
+	// h->first: (&(&init_struct_pid)->tasks[1])->first: NULL
 	struct hlist_node *first = h->first;
+	// first: NULL
 	// first: NULL
 
 	// n->next: (&(&(kmem_cache#19-oX (struct pid))->numbers[0])->pid_chain)->next, first: NULL
+	// n->next: (&(&(kmem_cache#15-oX (struct task_struct))->pids[1])->node)->next, first: NULL
 	n->next = first;
 	// n->next: (&(&(kmem_cache#19-oX (struct pid))->numbers[0])->pid_chain)->next: NULL
+	// n->next: (&(&(kmem_cache#15-oX (struct task_struct))->pids[1])->node)->next: NULL
 
 	// n->pprev: (&(&(kmem_cache#19-oX (struct pid))->numbers[0])->pid_chain)->pprev,
 	// &h->first: &(&(pid hash를 위한 메모리 공간을 16kB)[계산된 hash index 값])->first
+	// n->pprev: (&(&(kmem_cache#15-oX (struct task_struct))->pids[1])->node)->pprev,
+	// &h->first: &(&(&init_struct_pid)->tasks[1])->first
 	n->pprev = &h->first;
 	// n->pprev: (&(&(kmem_cache#19-oX (struct pid))->numbers[0])->pid_chain)->pprev: &(&(pid hash를 위한 메모리 공간을 16kB)[계산된 hash index 값])->first
+	// n->pprev: (&(&(kmem_cache#15-oX (struct task_struct))->pids[1])->node)->pprev: &(&(&init_struct_pid)->tasks[1])->first
 
 	// h: &(pid hash를 위한 메모리 공간을 16kB)[계산된 hash index 값]
 	// hlist_first_rcu(&(pid hash를 위한 메모리 공간을 16kB)[계산된 hash index 값]):
 	// (*((struct hlist_node __rcu **)(&(&(pid hash를 위한 메모리 공간을 16kB)[계산된 hash index 값])->first))),
 	// n: &(&(kmem_cache#19-oX (struct pid))->numbers[0])->pid_chain
+	// h: &(&init_struct_pid)->tasks[1]
+	// hlist_first_rcu(&(&init_struct_pid)->tasks[1]):
+	// (*((struct hlist_node __rcu **)(&(&(&init_struct_pid)->tasks[1])->first)))
+	// n: &(&(kmem_cache#15-oX (struct task_struct))->pids[1])->node
 	rcu_assign_pointer(hlist_first_rcu(h), n);
 
 	// rcu_assign_pointer 에서 한일:
 	// ((&(pid hash를 위한 메모리 공간을 16kB)[계산된 hash index 값])->first): &(&(kmem_cache#19-oX (struct pid))->numbers[0])->pid_chain
 
+	// rcu_assign_pointer 에서 한일:
+	// ((*((struct hlist_node __rcu **)(&(&(&init_struct_pid)->tasks[1])->first)))): &(&(kmem_cache#15-oX (struct task_struct))->pids[1])->node
+
+	// first: NULL
 	// first: NULL
 	if (first)
 		first->pprev = &n->next;
