@@ -47,6 +47,7 @@ typedef __u32			nlink_t;
 typedef __kernel_off_t		off_t;
 // ARM10C 20150919
 // ARM10C 20161203
+// ARM10C 20161217
 typedef __kernel_pid_t		pid_t;
 typedef __kernel_daddr_t	daddr_t;
 typedef __kernel_key_t		key_t;

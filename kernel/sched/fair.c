@@ -4383,18 +4383,34 @@ done:
  *
  * preempt must be disabled.
  */
+// ARM10C 20161217
+// p: kmem_cache#15-oX (struct task_struct), cpu: 0, sd_flags: 0x0008, wake_flags: 0
 static int
 select_task_rq_fair(struct task_struct *p, int prev_cpu, int sd_flag, int wake_flags)
 {
 	struct sched_domain *tmp, *affine_sd = NULL, *sd = NULL;
-	int cpu = smp_processor_id();
-	int new_cpu = cpu;
-	int want_affine = 0;
-	int sync = wake_flags & WF_SYNC;
+	// affine_sd: NULL, sd: NULL
 
+	// smp_processor_id(): 0
+	int cpu = smp_processor_id();
+	// cpu: 0
+
+	// cpu: 0
+	int new_cpu = cpu;
+	// new_cpu: 0
+
+	int want_affine = 0;
+	// want_affine: 0
+
+	// wake_flags: 0, WF_SYNC: 0x01
+	int sync = wake_flags & WF_SYNC;
+	// sync: 0
+
+	// p->nr_cpus_allowed: (kmem_cache#15-oX (struct task_struct))->nr_cpus_allowed: 0
 	if (p->nr_cpus_allowed == 1)
 		return prev_cpu;
 
+	// sd_flags: 0x0008, SD_BALANCE_WAKE: 0x0010
 	if (sd_flag & SD_BALANCE_WAKE) {
 		if (cpumask_test_cpu(cpu, tsk_cpus_allowed(p)))
 			want_affine = 1;
@@ -4402,7 +4418,15 @@ select_task_rq_fair(struct task_struct *p, int prev_cpu, int sd_flag, int wake_f
 	}
 
 	rcu_read_lock();
+
+	// rcu_read_lock 에서 한일:
+	// (&init_task)->rcu_read_lock_nesting: 1
+
+	// cpu: 0, cpu_rq(0): [pcp0] &runqueues, cpu_rq(0)->sd: [pcp0] (&runqueues)->sd
+	// rcu_dereference_check_sched_domain([pcp0] (&runqueues)->sd): [pcp0] (&runqueues)->sd: NULL, tmp: NULL
 	for_each_domain(cpu, tmp) {
+	// for (tmp = rcu_dereference_check_sched_domain(cpu_rq(0)->sd); tmp; tmp = tmp->parent)
+
 		if (!(tmp->flags & SD_LOAD_BALANCE))
 			continue;
 
@@ -4420,6 +4444,7 @@ select_task_rq_fair(struct task_struct *p, int prev_cpu, int sd_flag, int wake_f
 			sd = tmp;
 	}
 
+	// affine_sd: NULL
 	if (affine_sd) {
 		if (cpu != prev_cpu && wake_affine(affine_sd, p, sync))
 			prev_cpu = cpu;
@@ -4428,6 +4453,7 @@ select_task_rq_fair(struct task_struct *p, int prev_cpu, int sd_flag, int wake_f
 		goto unlock;
 	}
 
+	// sd: NULL
 	while (sd) {
 		int load_idx = sd->forkexec_idx;
 		struct sched_group *group;
@@ -4469,7 +4495,12 @@ select_task_rq_fair(struct task_struct *p, int prev_cpu, int sd_flag, int wake_f
 unlock:
 	rcu_read_unlock();
 
+	// rcu_read_unlock에서 한일:
+	// (&init_task)->rcu_read_lock_nesting: 0
+
+	// new_cpu: 0
 	return new_cpu;
+	// return 0
 }
 
 /*
@@ -7571,6 +7602,7 @@ static unsigned int get_rr_interval_fair(struct rq *rq, struct task_struct *task
  */
 // ARM10C 20140913
 // ARM10C 20161008
+// ARM10C 20161217
 const struct sched_class fair_sched_class = {
 	.next			= &idle_sched_class,
 	.enqueue_task		= enqueue_task_fair,

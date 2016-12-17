@@ -191,6 +191,7 @@ static inline void kick_all_cpus_sync(void) {  }
 // ARM10C 20150711
 // ARM10C 20150912
 // ARM10C 20161008
+// ARM10C 20161217
 // debug_smp_processor_id(): 0
 // smp_processor_id(): 0
 # define smp_processor_id() debug_smp_processor_id()

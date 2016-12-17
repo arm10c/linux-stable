@@ -253,6 +253,8 @@ TRACE_EVENT(sched_process_wait,
 /*
  * Tracepoint for do_fork:
  */
+// ARM10C 20161217
+// current: &init_task, p: kmem_cache#15-oX (struct task_struct)
 TRACE_EVENT(sched_process_fork,
 
 	TP_PROTO(struct task_struct *parent, struct task_struct *child),

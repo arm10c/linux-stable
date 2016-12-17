@@ -802,6 +802,7 @@ static inline int perf_unregister_guest_info_callbacks
 
 static inline void perf_event_mmap(struct vm_area_struct *vma)		{ }
 static inline void perf_event_comm(struct task_struct *tsk)		{ }
+// ARM10C 20161217
 static inline void perf_event_fork(struct task_struct *tsk)		{ }
 // ARM10C 20150620
 static inline void perf_event_init(void)				{ }

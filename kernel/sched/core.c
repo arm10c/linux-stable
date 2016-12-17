@@ -1449,10 +1449,19 @@ out:
 /*
  * The caller (fork, wakeup) owns p->pi_lock, ->cpus_allowed is stable.
  */
+// ARM10C 20161217
+// p: kmem_cache#15-oX (struct task_struct), task_cpu(kmem_cache#15-oX (struct task_struct)): 0, SD_BALANCE_FORK: 0x0008, 0
 static inline
 int select_task_rq(struct task_struct *p, int cpu, int sd_flags, int wake_flags)
 {
+	// cpu: 0, p->sched_class: (kmem_cache#15-oX (struct task_struct))->sched_class: &fair_sched_class,
+	// p->sched_class->select_task_rq: (&fair_sched_class)->select_task_rq: select_task_rq_fair
+	// p: kmem_cache#15-oX (struct task_struct), cpu: 0, sd_flags: 0x0008, wake_flags: 0
+	// select_task_rq_fair(kmem_cache#15-oX (struct task_struct), 0, 0x0008, 0): 0
 	cpu = p->sched_class->select_task_rq(p, cpu, sd_flags, wake_flags);
+	// cpu: 0
+
+// 2016/12/17 종료
 
 	/*
 	 * In order not to call set_task_cpu() on a blocking task we need
@@ -2100,18 +2109,26 @@ void sched_fork(unsigned long clone_flags, struct task_struct *p)
  * that must be done for every newly created context, then puts the task
  * on the runqueue and wakes it.
  */
+// ARM10C 20161217
+// p: kmem_cache#15-oX (struct task_struct)
 void wake_up_new_task(struct task_struct *p)
 {
 	unsigned long flags;
 	struct rq *rq;
 
+	// &p->pi_lock: &(kmem_cache#15-oX (struct task_struct))->pi_lock
 	raw_spin_lock_irqsave(&p->pi_lock, flags);
-#ifdef CONFIG_SMP
+
+	// raw_spin_lock_irqsave 에서 한일:
+	// &(kmem_cache#15-oX (struct task_struct))->pi_lock 을 사용하여 spin lock 을 수행하고 cpsr 값을 flags 저장함
+
+#ifdef CONFIG_SMP // CONFIG_SMP=y
 	/*
 	 * Fork balancing, do it here and not earlier because:
 	 *  - cpus_allowed can change in the fork path
 	 *  - any previously selected cpu might disappear through hotplug
 	 */
+	// p: kmem_cache#15-oX (struct task_struct), task_cpu(kmem_cache#15-oX (struct task_struct)): 0, SD_BALANCE_FORK: 0x0008
 	set_task_cpu(p, select_task_rq(p, task_cpu(p), SD_BALANCE_FORK, 0));
 #endif
 

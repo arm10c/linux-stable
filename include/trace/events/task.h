@@ -5,6 +5,8 @@
 #define _TRACE_TASK_H
 #include <linux/tracepoint.h>
 
+// ARM10C 20161217
+// p: kmem_cache#15-oX (struct task_struct), clone_flags: 0x00800B00
 TRACE_EVENT(task_newtask,
 
 	TP_PROTO(struct task_struct *task, unsigned long clone_flags),

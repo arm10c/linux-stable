@@ -842,7 +842,11 @@ enum cpu_idle_type {
 #define SD_LOAD_BALANCE		0x0001	/* Do load balancing on this domain. */
 #define SD_BALANCE_NEWIDLE	0x0002	/* Balance when about to become idle */
 #define SD_BALANCE_EXEC		0x0004	/* Balance on exec */
+// ARM10C 20161217
+// SD_BALANCE_FORK: 0x0008
 #define SD_BALANCE_FORK		0x0008	/* Balance on fork, clone */
+// ARM10C 20161217
+// SD_BALANCE_WAKE: 0x0010
 #define SD_BALANCE_WAKE		0x0010  /* Balance on wakeup */
 #define SD_WAKE_AFFINE		0x0020	/* Wake task to waking CPU */
 #define SD_SHARE_CPUPOWER	0x0080	/* Domain members share cpu power */
@@ -869,6 +873,7 @@ struct sched_group;
 
 // ARM10C 20140913
 // ARM10C 20150606
+// ARM10C 20161217
 struct sched_domain {
 	/* These fields must be setup */
 	struct sched_domain *parent;	/* top domain must be null terminated */
@@ -1656,9 +1661,14 @@ static inline pid_t task_pid_nr_ns(struct task_struct *tsk,
 	return __task_pid_nr_ns(tsk, PIDTYPE_PID, ns);
 }
 
+// ARM10C 20161217
+// p: kmem_cache#15-oX (struct task_struct)
 static inline pid_t task_pid_vnr(struct task_struct *tsk)
 {
+	// tsk: kmem_cache#15-oX (struct task_struct), PIDTYPE_PID: 0
+	// __task_pid_nr_ns(kmem_cache#15-oX (struct task_struct), 0, NULL): 1
 	return __task_pid_nr_ns(tsk, PIDTYPE_PID, NULL);
+	// return 1
 }
 
 
@@ -1714,9 +1724,13 @@ static inline pid_t task_pgrp_nr(struct task_struct *tsk)
  *
  * Return: 1 if the process is alive. 0 otherwise.
  */
+// ARM10C 20161217
+// task: kmem_cache#15-oX (struct task_struct)
 static inline int pid_alive(struct task_struct *p)
 {
+	// PIDTYPE_PID: 0, p->pids[0].pid: (kmem_cache#15-oX (struct task_struct))->pids[0].pid: kmem_cache#19-oX (struct pid)
 	return p->pids[PIDTYPE_PID].pid != NULL;
+	// return 1
 }
 
 /**
@@ -2951,6 +2965,8 @@ static inline void ptrace_signal_wake_up(struct task_struct *t, bool resume)
 #ifdef CONFIG_SMP // CONFIG_SMP=y
 
 // ARM10C 20161029
+// p: kmem_cache#15-oX (struct task_struct)
+// ARM10C 20161217
 // p: kmem_cache#15-oX (struct task_struct)
 static inline unsigned int task_cpu(const struct task_struct *p)
 {

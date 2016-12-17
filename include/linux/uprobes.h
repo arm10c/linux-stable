@@ -184,6 +184,8 @@ static inline unsigned long uprobe_get_swbp_addr(struct pt_regs *regs)
 static inline void uprobe_free_utask(struct task_struct *t)
 {
 }
+// ARM10C 20161217
+// p: kmem_cache#15-oX (struct task_struct), clone_flags: 0x00800B00
 static inline void uprobe_copy_process(struct task_struct *t, unsigned long flags)
 {
 }

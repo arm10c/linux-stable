@@ -27,6 +27,7 @@
 // CLONE_PTRACE: 0x00002000
 #define CLONE_PTRACE	0x00002000	/* set if we want to let tracing continue on the child too */
 // ARM10C 20161203
+// ARM10C 20161217
 // CLONE_VFORK: 0x00004000
 #define CLONE_VFORK	0x00004000	/* set if the parent wants the child to wake it up on mm_release */
 // ARM10C 20160827
@@ -38,6 +39,7 @@
 // ARM10C 20161008
 // ARM10C 20161105
 // ARM10C 20161203
+// ARM10C 20161217
 // CLONE_THREAD: 0x00010000
 #define CLONE_THREAD	0x00010000	/* Same thread group? */
 // ARM10C 20160827
@@ -50,6 +52,8 @@
 // ARM10C 20161105
 // CLONE_SETTLS: 0x00080000
 #define CLONE_SETTLS	0x00080000	/* create a new TLS for the child */
+// ARM10C 20161217
+// CLONE_PARENT_SETTID: 0x00100000
 #define CLONE_PARENT_SETTID	0x00100000	/* set the TID in the parent */
 // ARM10C 20161203
 // CLONE_CHILD_CLEARTID: 0x00200000

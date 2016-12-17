@@ -1228,17 +1228,29 @@ struct pid *find_get_pid(pid_t nr)
 }
 EXPORT_SYMBOL_GPL(find_get_pid);
 
+// ARM10C 20161217
+// task->pids[0].pid: (kmem_cache#15-oX (struct task_struct))->pids[0].pid: kmem_cache#19-oX (struct pid), ns: &init_pid_ns
 pid_t pid_nr_ns(struct pid *pid, struct pid_namespace *ns)
 {
 	struct upid *upid;
 	pid_t nr = 0;
+	// nr: 0
 
+	// pid: kmem_cache#19-oX (struct pid), ns->level: (&init_pid_ns)->level: 0, pid->level: (kmem_cache#19-oX (struct pid))->level: 0
 	if (pid && ns->level <= pid->level) {
+		// ns->level: (&init_pid_ns)->level: 0, &pid->numbers[0]: &(kmem_cache#19-oX (struct pid))->numbers[0]
 		upid = &pid->numbers[ns->level];
+		// upid: &(kmem_cache#19-oX (struct pid))->numbers[0]
+
+		// upid->ns: (&(kmem_cache#19-oX (struct pid))->numbers[0])->ns: &init_pid_ns, ns: &init_pid_ns
 		if (upid->ns == ns)
+			// nr: 0, upid->nr: (&(kmem_cache#19-oX (struct pid))->numbers[0])->nr: 1
 			nr = upid->nr;
+			// nr: 1
 	}
+	// nr: 1
 	return nr;
+	// return 1
 }
 EXPORT_SYMBOL_GPL(pid_nr_ns);
 
@@ -1248,22 +1260,44 @@ pid_t pid_vnr(struct pid *pid)
 }
 EXPORT_SYMBOL_GPL(pid_vnr);
 
+// ARM10C 20161217
+// tsk: kmem_cache#15-oX (struct task_struct), PIDTYPE_PID: 0, NULL
 pid_t __task_pid_nr_ns(struct task_struct *task, enum pid_type type,
 			struct pid_namespace *ns)
 {
 	pid_t nr = 0;
+	// nr: 0
 
 	rcu_read_lock();
+
+	// rcu_read_lock 에서 한일:
+	// (&init_task)->rcu_read_lock_nesting: 1
+
+	// nr: 0
 	if (!ns)
+		// current: &init_task, task_active_pid_ns(&init_task): &init_pid_ns
 		ns = task_active_pid_ns(current);
+		// ns: &init_pid_ns
+
+	// task: kmem_cache#15-oX (struct task_struct), pid_alive(kmem_cache#15-oX (struct task_struct)): 1
 	if (likely(pid_alive(task))) {
+		// type: 0, PIDTYPE_PID: 0
 		if (type != PIDTYPE_PID)
 			task = task->group_leader;
+
+		// type: 0, task->pids[0].pid: (kmem_cache#15-oX (struct task_struct))->pids[0].pid: kmem_cache#19-oX (struct pid), ns: &init_pid_ns
+		// pid_nr_ns(kmem_cache#19-oX (struct pid), &init_pid_ns): 1
 		nr = pid_nr_ns(task->pids[type].pid, ns);
+		// nr: 1
 	}
 	rcu_read_unlock();
 
+	// rcu_read_unlock 에서 한일:
+	// (&init_task)->rcu_read_lock_nesting: 0
+
+	// nr: 1
 	return nr;
+	// return 1
 }
 EXPORT_SYMBOL(__task_pid_nr_ns);
 
@@ -1274,6 +1308,8 @@ pid_t task_tgid_nr_ns(struct task_struct *tsk, struct pid_namespace *ns)
 EXPORT_SYMBOL(task_tgid_nr_ns);
 
 // ARM10C 20160903
+// current: &init_task
+// ARM10C 20161217
 // current: &init_task
 struct pid_namespace *task_active_pid_ns(struct task_struct *tsk)
 {

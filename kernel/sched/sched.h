@@ -441,6 +441,7 @@ extern struct root_domain def_root_domain;
 // ARM10C 20140913
 // ARM10C 20150606
 // ARM10C 20161008
+// ARM10C 20161217
 struct rq {
 	/* runqueue lock: */
 	raw_spinlock_t lock;
@@ -614,6 +615,7 @@ DECLARE_PER_CPU(struct rq, runqueues);
 // })
 // ARM10C 20140830
 // ARM10C 20150606
+// ARM10C 20161217
 // cpu_rq(0): [pcp0] &runqueues
 #define cpu_rq(cpu)		(&per_cpu(runqueues, (cpu)))
 // ARM10C 20161008
@@ -646,6 +648,7 @@ extern int migrate_swap(struct task_struct *, struct task_struct *);
 #ifdef CONFIG_SMP
 
 // ARM10C 20150606
+// ARM10C 20161217
 // rcu_dereference_check(([pcp0] &runqueues)->sd, 0): ([pcp0] &runqueues)->sd
 //
 // cpu_rq(0)->sd: ([pcp0] &runqueues)->sd: NULL, lockdep_is_held(&sched_domains_mutex): 0
@@ -664,6 +667,9 @@ extern int migrate_swap(struct task_struct *, struct task_struct *);
 // ARM10C 20150606
 // #define for_each_domain(0, sd):
 // for (sd = rcu_dereference_check_sched_domain(cpu_rq(0)->sd); sd; sd = sd->parent)
+// ARM10C 20161217
+// #define for_each_domain(cpu, tmp):
+// for (tmp = rcu_dereference_check_sched_domain(cpu_rq(cpu)->sd); tmp; tmp = tmp->parent)
 #define for_each_domain(cpu, __sd) \
 	for (__sd = rcu_dereference_check_sched_domain(cpu_rq(cpu)->sd); \
 			__sd; __sd = __sd->parent)
@@ -1078,6 +1084,8 @@ static inline void finish_lock_switch(struct rq *rq, struct task_struct *prev)
 /*
  * wake flags
  */
+// ARM10C 20161217
+// WF_SYNC: 0x01
 #define WF_SYNC		0x01		/* waker goes to sleep after wakeup */
 #define WF_FORK		0x02		/* child wakeup after fork */
 #define WF_MIGRATED	0x4		/* internal use, task got migrated */

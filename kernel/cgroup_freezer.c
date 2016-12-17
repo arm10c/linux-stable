@@ -87,6 +87,8 @@ static inline struct freezer *task_freezer(struct task_struct *task)
 
 // ARM10C 20160723
 // freezer: kmem_cache#29-oX (struct freezer)
+// ARM10C 20161217
+// freezer: kmem_cache#29-oX (struct freezer)
 static struct freezer *parent_freezer(struct freezer *freezer)
 {
 	// &freezer->css: &(kmem_cache#29-oX (struct freezer))->css,
@@ -309,14 +311,22 @@ static void freezer_fork(struct task_struct *task)
 	freezer = task_freezer(task);
 	// freezer: kmem_cache#29-oX (struct freezer)
 
+	// task_freezer 에서 한일:
+	// 현재 task kmem_cache#15-oX (struct task_struct) 에 등록된 freezer 값
+	// kmem_cache#29-oX (struct freezer) 을 가져옴
+
 // 2016/12/10 종료
+// 2016/12/17 시작
 
 	/*
 	 * The root cgroup is non-freezable, so we can skip the
 	 * following check.
 	 */
+	// freezer: kmem_cache#29-oX (struct freezer),
+	// parent_freezer(kmem_cache#29-oX (struct freezer)): NULL
 	if (!parent_freezer(freezer))
 		goto out;
+		// goto out 수행
 
 	spin_lock_irq(&freezer->lock);
 	if (freezer->state & CGROUP_FREEZING)
@@ -324,6 +334,9 @@ static void freezer_fork(struct task_struct *task)
 	spin_unlock_irq(&freezer->lock);
 out:
 	rcu_read_unlock();
+
+	// rcu_read_lock 에서 한일:
+	// (&init_task)->rcu_read_lock_nesting: 0
 }
 
 /**
