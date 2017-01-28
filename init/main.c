@@ -950,7 +950,7 @@ asmlinkage void __init start_kernel(void)
 	delayacct_init(); // null function
 
 	check_bugs();
-	// page 2개를 할당 받고 할당 받은 메모리에값을 쓰고 비교하여
+	// page 2개를 할당 받고 할당 받은 메모리에 값을 쓰고 비교하여
 	// 메모리 동작을 테스트 수행한 이후 다시 메모리를 반환함
 
 	acpi_early_init(); /* before LAPIC and SMP init */  // null function
