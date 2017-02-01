@@ -311,20 +311,28 @@ static inline struct task_struct *task_of(struct sched_entity *se)
 
 /* Walk up scheduling entities hierarchy */
 // ARM10C 20161015
+// ARM10C 20170201
+// se: &(kmem_cache#15-oX (struct task_struct))->se
 #define for_each_sched_entity(se) \
 		for (; se; se = se->parent)
 
 // ARM10C 20161008
 // current: &init_task
+// ARM10C 20170201
+// p: kmem_cache#15-oX (struct task_struct)
 static inline struct cfs_rq *task_cfs_rq(struct task_struct *p)
 {
 	// p->se.cfs_rq: (&init_task)->se.cfs_rq: [pcp0] &(&runqueues)->cfs
+	// p->se.cfs_rq: (kmem_cache#15-oX (struct task_struct))->se.cfs_rq: [pcp0] &(&runqueues)->cfs
 	return p->se.cfs_rq;
+	// return [pcp0] &(&runqueues)->cfs
 	// return [pcp0] &(&runqueues)->cfs
 }
 
 /* runqueue on which this entity is (to be) queued */
 // ARM10C 20161015
+// se: &(kmem_cache#15-oX (struct task_struct))->se
+// ARM10C 20170201
 // se: &(kmem_cache#15-oX (struct task_struct))->se
 static inline struct cfs_rq *cfs_rq_of(struct sched_entity *se)
 {
@@ -735,6 +743,8 @@ static u64 __sched_period(unsigned long nr_running)
  */
 // ARM10C 20161015
 // cfs_rq: [pcp0] &(&runqueues)->cfs, se: &(kmem_cache#15-oX (struct task_struct))->se
+// ARM10C 20170201
+// task_cfs_rq(kmem_cache#15-oX (struct task_struct)): [pcp0] &(&runqueues)->cfs, &p->se: &(kmem_cache#15-oX (struct task_struct))->se
 static u64 sched_slice(struct cfs_rq *cfs_rq, struct sched_entity *se)
 {
 	// cfs_rq->nr_running: [pcp0] (&(&runqueues)->cfs)->nr_running: 0,
@@ -810,21 +820,44 @@ static u64 sched_vslice(struct cfs_rq *cfs_rq, struct sched_entity *se)
 	// return 0x5B8D7E
 }
 
-#ifdef CONFIG_SMP
+#ifdef CONFIG_SMP // CONFIG_SMP=y
 static unsigned long task_h_load(struct task_struct *p);
 
 static inline void __update_task_entity_contrib(struct sched_entity *se);
 
 /* Give new task start runnable values to heavy its load in infant time */
+// ARM10C 20170201
+// p: kmem_cache#15-oX (struct task_struct)
 void init_task_runnable_average(struct task_struct *p)
 {
 	u32 slice;
 
+	// p->se.avg.decay_count: (kmem_cache#15-oX (struct task_struct))->se.avg.decay_count
 	p->se.avg.decay_count = 0;
+	// p->se.avg.decay_count: (kmem_cache#15-oX (struct task_struct))->se.avg.decay_count: 0
+
+	// p: kmem_cache#15-oX (struct task_struct), task_cfs_rq(kmem_cache#15-oX (struct task_struct)): [pcp0] &(&runqueues)->cfs,
+	// &p->se: &(kmem_cache#15-oX (struct task_struct))->se
+	// sched_slice([pcp0] &(&runqueues)->cfs, &(kmem_cache#15-oX (struct task_struct))->se): 현재 task의 남아 있는 수행 시간량
 	slice = sched_slice(task_cfs_rq(p), &p->se) >> 10;
+	// slice: 현재 task의 남아 있는 수행 시간량 / 1024
+
+	// slice: 현재 task의 남아 있는 수행 시간량 / 1024
+	// p->se.avg.runnable_avg_sum: (kmem_cache#15-oX (struct task_struct))->se.avg.runnable_avg_sum
 	p->se.avg.runnable_avg_sum = slice;
+	// p->se.avg.runnable_avg_sum: (kmem_cache#15-oX (struct task_struct))->se.avg.runnable_avg_sum: 현재 task의 남아 있는 수행 시간량 / 1024
+
+	// slice: 현재 task의 남아 있는 수행 시간량 / 1024
+	// p->se.avg.runnable_avg_period: (kmem_cache#15-oX (struct task_struct))->se.avg.runnable_avg_period
 	p->se.avg.runnable_avg_period = slice;
+	// p->se.avg.runnable_avg_period: (kmem_cache#15-oX (struct task_struct))->se.avg.runnable_avg_period: 현재 task의 남아 있는 수행 시간량 / 1024
+
+	// &p->se: &(kmem_cache#15-oX (struct task_struct))->se
 	__update_task_entity_contrib(&p->se);
+
+	// __update_task_entity_contrib 에서 한일:
+	// (&(kmem_cache#15-oX (struct task_struct))->se)->avg.load_avg_contrib:
+	// 현재 task의 남아 있는 수행 시간량 / (현재 task의 남아 있는 수행 시간량 / 1024 + 1)
 }
 #else
 void init_task_runnable_average(struct task_struct *p)
@@ -2370,14 +2403,27 @@ static inline void __update_tg_runnable_avg(struct sched_avg *sa,
 static inline void __update_group_entity_contrib(struct sched_entity *se) {}
 #endif
 
+// ARM10C 20170201
+// &p->se: &(kmem_cache#15-oX (struct task_struct))->se
 static inline void __update_task_entity_contrib(struct sched_entity *se)
 {
 	u32 contrib;
 
 	/* avoid overflowing a 32-bit type w/ SCHED_LOAD_SCALE */
+	// se->avg.runnable_avg_sum: (&(kmem_cache#15-oX (struct task_struct))->se)->avg.runnable_avg_sum: 현재 task의 남아 있는 수행 시간량 / 1024
+	// se->load.weight: (&(kmem_cache#15-oX (struct task_struct))->se)->load.weight: 1024
 	contrib = se->avg.runnable_avg_sum * scale_load_down(se->load.weight);
+	// contrib: 현재 task의 남아 있는 수행 시간량
+
+	// se->avg.runnable_avg_period: (&(kmem_cache#15-oX (struct task_struct))->se)->avg.runnable_avg_period: 현재 task의 남아 있는 수행 시간량 / 1024
 	contrib /= (se->avg.runnable_avg_period + 1);
+	// contrib: 현재 task의 남아 있는 수행 시간량 / (현재 task의 남아 있는 수행 시간량 / 1024 + 1)
+
+	// se->avg.load_avg_contrib: (&(kmem_cache#15-oX (struct task_struct))->se)->avg.load_avg_contrib,
+	// contrib: 현재 task의 남아 있는 수행 시간량 / (현재 task의 남아 있는 수행 시간량 / 1024 + 1)
 	se->avg.load_avg_contrib = scale_load(contrib);
+	// se->avg.load_avg_contrib: (&(kmem_cache#15-oX (struct task_struct))->se)->avg.load_avg_contrib:
+	// 현재 task의 남아 있는 수행 시간량 / (현재 task의 남아 있는 수행 시간량 / 1024 + 1)
 }
 
 /* Compute the current contribution to load_avg by se, return any delta */
@@ -2701,6 +2747,8 @@ place_entity(struct cfs_rq *cfs_rq, struct sched_entity *se, int initial)
 
 static void check_enqueue_throttle(struct cfs_rq *cfs_rq);
 
+// ARM10C 20170201
+// cfs_rq: [pcp0] &(&runqueues)->cfs, se: &(kmem_cache#15-oX (struct task_struct))->se, flags: 0
 static void
 enqueue_entity(struct cfs_rq *cfs_rq, struct sched_entity *se, int flags)
 {
@@ -3822,16 +3870,34 @@ static inline void hrtick_update(struct rq *rq)
  * increased. Here we update the fair scheduling stats and
  * then put the task into the rbtree:
  */
+// ARM10C 20170201
+// rq: [pcp0] &runqueues, p: kmem_cache#15-oX (struct task_struct), flags: 0
 static void
 enqueue_task_fair(struct rq *rq, struct task_struct *p, int flags)
 {
 	struct cfs_rq *cfs_rq;
-	struct sched_entity *se = &p->se;
 
+	// &p->se: &(kmem_cache#15-oX (struct task_struct))->se
+	struct sched_entity *se = &p->se;
+	// se: &(kmem_cache#15-oX (struct task_struct))->se
+
+	// se: &(kmem_cache#15-oX (struct task_struct))->se
 	for_each_sched_entity(se) {
+	// for (; &(kmem_cache#15-oX (struct task_struct))->se;
+	//        &(kmem_cache#15-oX (struct task_struct))->se = (&(kmem_cache#15-oX (struct task_struct))->se)->parent)
+
+		// se->on_rq: (&(kmem_cache#15-oX (struct task_struct))->se)->on_rq: 0
 		if (se->on_rq)
 			break;
+
+		// se: &(kmem_cache#15-oX (struct task_struct))->se
+		// cfs_rq_of(&(kmem_cache#15-oX (struct task_struct))->se): [pcp0] &(&runqueues)->cfs
 		cfs_rq = cfs_rq_of(se);
+		// cfs_rq: [pcp0] &(&runqueues)->cfs
+
+// 2017/02/01 종료
+
+		// cfs_rq: [pcp0] &(&runqueues)->cfs, se: &(kmem_cache#15-oX (struct task_struct))->se, flags: 0
 		enqueue_entity(cfs_rq, se, flags);
 
 		/*
@@ -7603,6 +7669,7 @@ static unsigned int get_rr_interval_fair(struct rq *rq, struct task_struct *task
 // ARM10C 20140913
 // ARM10C 20161008
 // ARM10C 20161217
+// ARM10C 20170201
 const struct sched_class fair_sched_class = {
 	.next			= &idle_sched_class,
 	.enqueue_task		= enqueue_task_fair,

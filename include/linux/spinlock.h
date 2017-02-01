@@ -215,6 +215,8 @@ static inline void do_raw_spin_unlock(raw_spinlock_t *lock) __releases(lock)
 // &lock->rlock: &(&contig_page_data->node_zones[0].lock)->rlock
 // ARM10C 20150725
 // &logbuf_lock
+// ARM10C 20170201
+// &rq->lock: [pcp0] &(&runqueues)->lock
 #define raw_spin_lock(lock)	_raw_spin_lock(lock)
 
 #ifdef CONFIG_DEBUG_LOCK_ALLOC // CONFIG_DEBUG_LOCK_ALLOC=n

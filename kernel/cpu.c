@@ -900,12 +900,14 @@ EXPORT_SYMBOL(cpu_possible_mask);
 // ARM10C 20150328
 // ARM10C 20150523
 // ARM10C 20160604
+// ARM10C 20170201
 // CONFIG_NR_CPUS: 4
 static DECLARE_BITMAP(cpu_online_bits, CONFIG_NR_CPUS) __read_mostly;
 // ARM10C 20140927
 // ARM10C 20150328
 // ARM10C 20150523
 // ARM10C 20160604
+// ARM10C 20170201
 const struct cpumask *const cpu_online_mask = to_cpumask(cpu_online_bits);
 EXPORT_SYMBOL(cpu_online_mask);
 

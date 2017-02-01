@@ -122,6 +122,8 @@ static void update_rq_clock_task(struct rq *rq, s64 delta);
 
 // ARM10C 20161008
 // rq: [pcp0] &runqueues
+// ARM10C 20170201
+// rq: [pcp0] &runqueues
 void update_rq_clock(struct rq *rq)
 {
 	s64 delta;
@@ -339,18 +341,34 @@ int sysctl_sched_rt_runtime = 950000;
 /*
  * __task_rq_lock - lock the rq @p resides on.
  */
+// ARM10C 20170201
+// p: kmem_cache#15-oX (struct task_struct)
 static inline struct rq *__task_rq_lock(struct task_struct *p)
 	__acquires(rq->lock)
 {
 	struct rq *rq;
 
-	lockdep_assert_held(&p->pi_lock);
+	// &p->pi_lock: &(kmem_cache#15-oX (struct task_struct))->pi_lock
+	lockdep_assert_held(&p->pi_lock); // null function
 
 	for (;;) {
+		// p: kmem_cache#15-oX (struct task_struct), task_rq(kmem_cache#15-oX (struct task_struct)): [pcp0] &runqueues
 		rq = task_rq(p);
+		// rq: [pcp0] &runqueues
+
+		// &rq->lock: [pcp0] &(&runqueues)->lock
 		raw_spin_lock(&rq->lock);
+
+		// raw_spin_lock 에서 한일:
+		// [pcp0] &(&runqueues)->lock 을 사용하여 spin lock 수행
+
+		// rq: [pcp0] &runqueues, p: kmem_cache#15-oX (struct task_struct),
+		// task_rq(kmem_cache#15-oX (struct task_struct)): [pcp0] &runqueues
 		if (likely(rq == task_rq(p)))
+			// rq: [pcp0] &runqueues
 			return rq;
+			// return [pcp0] &runqueues
+
 		raw_spin_unlock(&rq->lock);
 	}
 }
@@ -857,10 +875,25 @@ static void set_load_weight(struct task_struct *p)
 	// load->inv_weight: (&(&init_task)->se.load)->inv_weight: 4194304
 }
 
+// ARM10C 20170201
+// rq: [pcp0] &runqueues, p: kmem_cache#15-oX (struct task_struct), flags: 0
 static void enqueue_task(struct rq *rq, struct task_struct *p, int flags)
 {
+	// rq: [pcp0] &runqueues
 	update_rq_clock(rq);
-	sched_info_queued(rq, p);
+
+	// update_rq_clock 에섷 한일:
+	// [pcp0] (&runqueues)->clock: 현재의 schedule 시간값
+	// [pcp0] (&runqueues)->clock_task: 현재의 schedule 시간값
+
+	// rq: [pcp0] &runqueues, p: kmem_cache#15-oX (struct task_struct)
+	sched_info_queued(rq, p); // null function
+
+	// p->sched_class: (kmem_cache#15-oX (struct task_struct))->sched_class: &fair_sched_class
+	// p->sched_class->enqueue_task: (&fair_sched_class)->enqueue_task: enqueue_task_fair
+
+	// rq: [pcp0] &runqueues, p: kmem_cache#15-oX (struct task_struct), flags: 0
+	// enqueue_task_fair([pcp0] &runqueues, kmem_cache#15-oX (struct task_struct), 0)
 	p->sched_class->enqueue_task(rq, p, flags);
 }
 
@@ -871,11 +904,16 @@ static void dequeue_task(struct rq *rq, struct task_struct *p, int flags)
 	p->sched_class->dequeue_task(rq, p, flags);
 }
 
+// ARM10C 20170201
+// rq: [pcp0] &runqueues, p: kmem_cache#15-oX (struct task_struct), 0
 void activate_task(struct rq *rq, struct task_struct *p, int flags)
 {
+	// p: kmem_cache#15-oX (struct task_struct)
+	// task_contributes_to_load(kmem_cache#15-oX (struct task_struct)): 0
 	if (task_contributes_to_load(p))
 		rq->nr_uninterruptible--;
 
+	// rq: [pcp0] &runqueues, p: kmem_cache#15-oX (struct task_struct), flags: 0
 	enqueue_task(rq, p, flags);
 }
 
@@ -1078,6 +1116,8 @@ void check_preempt_curr(struct rq *rq, struct task_struct *p, int flags)
 #ifdef CONFIG_SMP // CONFIG_SMP=y
 // ARM10C 20161029
 // p: kmem_cache#15-oX (struct task_struct), cpu: 0
+// ARM10C 20170201
+// p: kmem_cache#15-oX (struct task_struct), 0
 void set_task_cpu(struct task_struct *p, unsigned int new_cpu)
 {
 #ifdef CONFIG_SCHED_DEBUG // CONFIG_SCHED_DEBUG=y
@@ -1462,6 +1502,7 @@ int select_task_rq(struct task_struct *p, int cpu, int sd_flags, int wake_flags)
 	// cpu: 0
 
 // 2016/12/17 종료
+// 2017/02/01 시작
 
 	/*
 	 * In order not to call set_task_cpu() on a blocking task we need
@@ -1473,11 +1514,16 @@ int select_task_rq(struct task_struct *p, int cpu, int sd_flags, int wake_flags)
 	 * [ this allows ->select_task() to simply return task_cpu(p) and
 	 *   not worry about this generic constraint ]
 	 */
+	// cpu: 0, p: kmem_cache#15-oX (struct task_struct),
+	// tsk_cpus_allowed(kmem_cache#15-oX (struct task_struct)): (&(kmem_cache#15-oX (struct task_struct))->cpus_allowed)
+	// cpumask_test_cpu(0, &(kmem_cache#15-oX (struct task_struct))->cpus_allowed): 1, cpu_online(0): 1
 	if (unlikely(!cpumask_test_cpu(cpu, tsk_cpus_allowed(p)) ||
 		     !cpu_online(cpu)))
 		cpu = select_fallback_rq(task_cpu(p), p);
 
+	// cpu: 0
 	return cpu;
+	// return 0
 }
 
 static void update_avg(u64 *avg, u64 sample)
@@ -2129,12 +2175,38 @@ void wake_up_new_task(struct task_struct *p)
 	 *  - any previously selected cpu might disappear through hotplug
 	 */
 	// p: kmem_cache#15-oX (struct task_struct), task_cpu(kmem_cache#15-oX (struct task_struct)): 0, SD_BALANCE_FORK: 0x0008
+	// select_task_rq(kmem_cache#15-oX (struct task_struct), 0, 0x0008, 0): 0
 	set_task_cpu(p, select_task_rq(p, task_cpu(p), SD_BALANCE_FORK, 0));
+
+	// set_task_cpu 에서 한일:
+	// (kmem_cache#15-oX (struct task_struct))->se.cfs_rq: [pcp0] &(&runqueues)->cfs
+	// (kmem_cache#15-oX (struct task_struct))->se.parent: NULL
+	// (kmem_cache#15-oX (struct task_struct))->rt.rt_rq: [pcp0] &(&runqueues)->rt
+	// (kmem_cache#15-oX (struct task_struct))->rt.parent: NULL
+	// ((struct thread_info *)(kmem_cache#15-oX (struct task_struct))->stack)->cpu: 0
+	// (kmem_cache#15-oX (struct task_struct))->wake_cpu: 0
 #endif
 
 	/* Initialize new task's runnable average */
+	// p: kmem_cache#15-oX (struct task_struct)
 	init_task_runnable_average(p);
+
+	// init_task_runnable_average 에서 한일:
+	// (kmem_cache#15-oX (struct task_struct))->se.avg.decay_count: 0
+	// (kmem_cache#15-oX (struct task_struct))->se.avg.runnable_avg_sum: 현재 task의 남아 있는 수행 시간량 / 1024
+	// (kmem_cache#15-oX (struct task_struct))->se.avg.runnable_avg_period: 현재 task의 남아 있는 수행 시간량 / 1024
+	// (&(kmem_cache#15-oX (struct task_struct))->se)->avg.load_avg_contrib:
+	// 현재 task의 남아 있는 수행 시간량 / (현재 task의 남아 있는 수행 시간량 / 1024 + 1)
+
+	// p: kmem_cache#15-oX (struct task_struct)
+	// __task_rq_lock(kmem_cache#15-oX (struct task_struct)): [pcp0] &runqueues
 	rq = __task_rq_lock(p);
+	// rq: [pcp0] &runqueues
+
+	// __task_rq_lock 에서 한일:
+	// 현재 task의 rq를 찾은 이후에 [pcp0] &(&runqueues)->lock 을 사용하여 spin lock 수행
+
+	// rq: [pcp0] &runqueues, p: kmem_cache#15-oX (struct task_struct)
 	activate_task(rq, p, 0);
 	p->on_rq = 1;
 	trace_sched_wakeup_new(p, true);

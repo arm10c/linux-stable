@@ -47,7 +47,7 @@ rq_sched_info_depart(struct rq *rq, unsigned long long delta)
 # define schedstat_set(var, val)	do { } while (0)
 #endif
 
-#if defined(CONFIG_SCHEDSTATS) || defined(CONFIG_TASK_DELAY_ACCT)
+#if defined(CONFIG_SCHEDSTATS) || defined(CONFIG_TASK_DELAY_ACCT) // CONFIG_SCHEDSTATS=n, CONFIG_TASK_DELAY_ACCT=n
 static inline void sched_info_reset_dequeued(struct task_struct *t)
 {
 	t->sched_info.last_queued = 0;
@@ -150,6 +150,7 @@ sched_info_switch(struct rq *rq,
 		__sched_info_switch(rq, prev, next);
 }
 #else
+// ARM10C 20170201
 #define sched_info_queued(rq, t)		do { } while (0)
 #define sched_info_reset_dequeued(t)	do { } while (0)
 #define sched_info_dequeued(rq, t)		do { } while (0)

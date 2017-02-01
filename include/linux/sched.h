@@ -145,6 +145,7 @@ print_cfs_rq(struct seq_file *m, int cpu, struct cfs_rq *cfs_rq);
 #define TASK_INTERRUPTIBLE	1
 // ARM10C 20140315
 // ARM10C 20160409
+// ARM10C 20170201
 // TASK_UNINTERRUPTIBLE: 2
 #define TASK_UNINTERRUPTIBLE	2
 #define __TASK_STOPPED		4
@@ -189,6 +190,10 @@ extern char ___assert_task_state[1 - 2*!!(
 #define task_is_dead(task)	((task)->exit_state != 0)
 #define task_is_stopped_or_traced(task)	\
 			((task->state & (__TASK_STOPPED | __TASK_TRACED)) != 0)
+// ARM10C 20170201
+// TASK_UNINTERRUPTIBLE: 2, PF_FROZEN: 0x00010000
+// p: kmem_cache#15-oX (struct task_struct)
+// (kmem_cache#15-oX (struct task_struct))->state: 0, (kmem_cache#15-oX (struct task_struct))->flags: 0x00200040
 #define task_contributes_to_load(task)	\
 				((task->state & TASK_UNINTERRUPTIBLE) != 0 && \
 				 (task->flags & PF_FROZEN) == 0)
@@ -1009,6 +1014,7 @@ struct load_weight {
 };
 
 // ARM10C 20151003
+// ARM10C 20170201
 // sizeof(struct sched_avg): 28 bytes
 struct sched_avg {
 	/*
@@ -1062,6 +1068,7 @@ struct sched_statistics {
 // ARM10C 20150919
 // ARM10C 20161008
 // ARM10C 20161015
+// ARM10C 20170201
 // sizeof(struct sched_entity): 100 bytes
 struct sched_entity {
 	struct load_weight	load;		/* for load-balancing */
@@ -1559,6 +1566,8 @@ struct task_struct {
 };
 
 /* Future-safe accessor for struct task_struct's cpus_allowed. */
+// ARM10C 20170201
+// p: kmem_cache#15-oX (struct task_struct)
 #define tsk_cpus_allowed(tsk) (&(tsk)->cpus_allowed)
 
 #define TNF_MIGRATED	0x01
@@ -1819,6 +1828,8 @@ extern void thread_group_cputime_adjusted(struct task_struct *p, cputime_t *ut, 
 #define PF_USED_MATH	0x00002000	/* if unset the fpu must be initialized before use */
 #define PF_USED_ASYNC	0x00004000	/* used async_schedule*(), used by module init */
 #define PF_NOFREEZE	0x00008000	/* this thread should not be frozen */
+// ARM10C 20170201
+// PF_FROZEN: 0x00010000
 #define PF_FROZEN	0x00010000	/* frozen for system suspend */
 #define PF_FSTRANS	0x00020000	/* inside a filesystem transaction */
 #define PF_KSWAPD	0x00040000	/* I am kswapd */
@@ -2967,6 +2978,8 @@ static inline void ptrace_signal_wake_up(struct task_struct *t, bool resume)
 // ARM10C 20161029
 // p: kmem_cache#15-oX (struct task_struct)
 // ARM10C 20161217
+// p: kmem_cache#15-oX (struct task_struct)
+// ARM10C 20170201
 // p: kmem_cache#15-oX (struct task_struct)
 static inline unsigned int task_cpu(const struct task_struct *p)
 {

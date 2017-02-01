@@ -68,8 +68,11 @@ extern void update_cpu_load_active(struct rq *this_rq);
 // 1024
 // ARM10C 20161015
 // lw->weight: (&lw)->weight: 1024
+// ARM10C 20170201
+// contrib: 현재 task의 남아 있는 수행 시간량 / (현재 task의 남아 있는 수행 시간량 / 1024 + 1)
 # define scale_load(w)		(w)
 // ARM10C 20161015
+// ARM10C 20170201
 // weight: 1024
 # define scale_load_down(w)	(w)
 #endif
@@ -278,6 +281,7 @@ struct cfs_bandwidth { };
 // ARM10C 20140830
 // ARM10C 20161008
 // ARM10C 20161015
+// ARM10C 20170201
 struct cfs_rq {
 	struct load_weight load;
 	unsigned int nr_running, h_nr_running;
@@ -442,6 +446,7 @@ extern struct root_domain def_root_domain;
 // ARM10C 20150606
 // ARM10C 20161008
 // ARM10C 20161217
+// ARM10C 20170201
 struct rq {
 	/* runqueue lock: */
 	raw_spinlock_t lock;
@@ -616,11 +621,14 @@ DECLARE_PER_CPU(struct rq, runqueues);
 // ARM10C 20140830
 // ARM10C 20150606
 // ARM10C 20161217
+// ARM10C 20170201
 // cpu_rq(0): [pcp0] &runqueues
 #define cpu_rq(cpu)		(&per_cpu(runqueues, (cpu)))
 // ARM10C 20161008
 // __get_cpu_var(runqueues): [pcp0] runqueues
 #define this_rq()		(&__get_cpu_var(runqueues))
+// ARM10C 20170201
+// p: kmem_cache#15-oX (struct task_struct)
 #define task_rq(p)		cpu_rq(task_cpu(p))
 #define cpu_curr(cpu)		(cpu_rq(cpu)->curr)
 #define raw_rq()		(&__raw_get_cpu_var(runqueues))

@@ -20,6 +20,7 @@
 // ARM10C 20151114
 // DECLARE_BITMAP(bits, 1): bits[1]
 // ARM10C 20160604
+// ARM10C 20170201
 #define DECLARE_BITMAP(name,bits) \
 	unsigned long name[BITS_TO_LONGS(bits)]
 

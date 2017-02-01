@@ -151,6 +151,8 @@ EXPORT_SYMBOL(_raw_spin_trylock_bh);
 // &lock->rlock: &(&contig_page_data->node_zones[0].lock)->rlock
 // ARM10C 20160723
 // &(&(kmem_cache#29-oX (struct freezer))->lock)->rlock
+// ARM10C 20170201
+// &rq->lock: [pcp0] &(&runqueues)->lock
 void __lockfunc _raw_spin_lock(raw_spinlock_t *lock)
 {
 	__raw_spin_lock(lock);

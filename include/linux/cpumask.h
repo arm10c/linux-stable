@@ -31,6 +31,8 @@ typedef struct cpumask { DECLARE_BITMAP(bits, NR_CPUS); } cpumask_t;
 // ARM10C 20140215
 // ARM10C 20140222
 // ARM10C 20140913
+// ARM10C 20170201
+// (&(kmem_cache#15-oX (struct task_struct))->cpus_allowed)
 #define cpumask_bits(maskp) ((maskp)->bits)
 
 #if NR_CPUS == 1
@@ -125,6 +127,8 @@ extern const struct cpumask *const cpu_active_mask;
 #define num_possible_cpus()	cpumask_weight(cpu_possible_mask)
 #define num_present_cpus()	cpumask_weight(cpu_present_mask)
 #define num_active_cpus()	cpumask_weight(cpu_active_mask)
+// ARM10C 20170201
+// cpu: 0
 #define cpu_online(cpu)		cpumask_test_cpu((cpu), cpu_online_mask)
 // ARM10C 20140301
 // cpu_possible(0): cpumask_test_cpu((0), cpu_possible_mask): 1
@@ -145,6 +149,7 @@ extern const struct cpumask *const cpu_active_mask;
 /* verify cpu argument to cpumask_* operators */
 // ARM10C 20130907
 // ARM10C 20140301
+// ARM10C 20170201
 // nr_cpumask_bits: 4
 static inline unsigned int cpumask_check(unsigned int cpu)
 {
@@ -358,6 +363,8 @@ static inline void cpumask_clear_cpu(int cpu, struct cpumask *dstp)
 // ARM10C 20150418
 // ARM10C 20150523
 // cpu: 0, newdev->cpumask: (&mct_comp_device)->cpumask: &cpu_bit_bitmap[1][0]
+// ARM10C 20170201
+// cpu: 0, tsk_cpus_allowed(kmem_cache#15-oX (struct task_struct)): (&(kmem_cache#15-oX (struct task_struct))->cpus_allowed)
 #define cpumask_test_cpu(cpu, cpumask) \
 	test_bit(cpumask_check(cpu), cpumask_bits((cpumask)))
 
@@ -1002,6 +1009,7 @@ void init_cpu_online(const struct cpumask *src);
 // ARM10C 20140215
 // ARM10C 20140913
 // ARM10C 20140927
+// ARM10C 20170201
 #define to_cpumask(bitmap)						\
 	((struct cpumask *)(1 ? (bitmap)				\
 			    : (void *)sizeof(__check_is_bitmap(bitmap))))
