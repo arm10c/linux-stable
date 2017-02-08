@@ -1015,6 +1015,7 @@ struct load_weight {
 
 // ARM10C 20151003
 // ARM10C 20170201
+// ARM10C 20170208
 // sizeof(struct sched_avg): 28 bytes
 struct sched_avg {
 	/*

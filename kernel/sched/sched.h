@@ -282,6 +282,7 @@ struct cfs_bandwidth { };
 // ARM10C 20161008
 // ARM10C 20161015
 // ARM10C 20170201
+// ARM10C 20170208
 struct cfs_rq {
 	struct load_weight load;
 	unsigned int nr_running, h_nr_running;
@@ -639,6 +640,10 @@ static inline u64 rq_clock(struct rq *rq)
 }
 
 // ARM10C 20161015
+// rq_of([pcp0] &(&runqueues)->cfs): [pcp0] &runqueues
+// ARM10C 20170208
+// rq_of([pcp0] &(&runqueues)->cfs): [pcp0] &runqueues
+// ARM10C 20170208
 // rq_of([pcp0] &(&runqueues)->cfs): [pcp0] &runqueues
 static inline u64 rq_clock_task(struct rq *rq)
 {
@@ -1153,9 +1158,13 @@ static const u32 prio_to_wmult[40] = {
  /*  15 */ 119304647, 148102320, 186737708, 238609294, 286331153,
 };
 
+// ARM10C 20170208
+// ENQUEUE_WAKEUP: 1
 #define ENQUEUE_WAKEUP		1
 #define ENQUEUE_HEAD		2
-#ifdef CONFIG_SMP
+#ifdef CONFIG_SMP // CONFIG_SMP=y
+// ARM10C 20170208
+// ENQUEUE_WAKING: 4
 #define ENQUEUE_WAKING		4	/* sched_class::task_waking was called */
 #else
 #define ENQUEUE_WAKING		0

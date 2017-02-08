@@ -152,6 +152,7 @@ typedef atomic_t atomic_long_t;
 
 // ARM10C 20140419
 // ARM10C 20140510
+// ARM10C 20170208
 static inline long atomic_long_read(atomic_long_t *l)
 {
 	atomic_t *v = (atomic_t *)l;
