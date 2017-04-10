@@ -367,6 +367,7 @@ static inline int __atomic_add_unless(atomic_t *v, int a, int u)
 #ifndef CONFIG_GENERIC_ATOMIC64 // CONFIG_GENERIC_ATOMIC64=n
 // ARM10C 20150919
 // ARM10C 20160514
+// ARM10C 20170410
 typedef struct {
 	long long counter;
 } atomic64_t;
@@ -426,6 +427,8 @@ static inline void atomic64_set(atomic64_t *v, long long i)
 }
 #endif
 
+// ARM10C 20170410
+// decays: 현재의 schedule 시간값>> 20, &cfs_rq->decay_counter: [pcp0] &(&(&runqueues)->cfs)->decay_counter
 static inline void atomic64_add(long long i, atomic64_t *v)
 {
 	long long result;

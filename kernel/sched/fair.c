@@ -2133,6 +2133,7 @@ static inline void update_cfs_shares(struct cfs_rq *cfs_rq)
 
 /* Precomputed fixed inverse multiplies for multiplication by y^n */
 // ARM10C 20170208
+// ARM10C 20170410
 static const u32 runnable_avg_yN_inv[] = {
 	0xffffffff, 0xfa83b2da, 0xf5257d14, 0xefe4b99a, 0xeac0c6e6, 0xe5b906e6,
 	0xe0ccdeeb, 0xdbfbb796, 0xd744fcc9, 0xd2a81d91, 0xce248c14, 0xc9b9bd85,
@@ -2177,6 +2178,7 @@ static __always_inline u64 decay_load(u64 val, u64 n)
 	// local_n: schedule 시간값>> 20
 
 // 2017/02/08 종료
+// 2017/04/10 시작
 
 	/*
 	 * As y^PERIOD = 1/2, we can combine
@@ -2185,15 +2187,23 @@ static __always_inline u64 decay_load(u64 val, u64 n)
 	 *
 	 * To achieve constant time decay_load.
 	 */
+	// NOTE:
+	// schedule 시간값>> 20 은 0이 아닌 상수 값, 32보다 작은 값이라 가정하고 코드 분석 진행
+
 	// local_n: schedule 시간값>> 20, LOAD_AVG_PERIOD: 32
 	if (unlikely(local_n >= LOAD_AVG_PERIOD)) {
 		val >>= local_n / LOAD_AVG_PERIOD;
 		local_n %= LOAD_AVG_PERIOD;
 	}
 
+	// val: 0, local_n: schedule 시간값>> 20
 	val *= runnable_avg_yN_inv[local_n];
+	// val: 0
+
 	/* We don't use SRR here since we always want to round down. */
+	// val: 0
 	return val >> 32;
+	// val: 0
 }
 
 /*
@@ -2337,19 +2347,44 @@ static inline u64 __synchronize_entity_decay(struct sched_entity *se)
 	return decays;
 }
 
-#ifdef CONFIG_FAIR_GROUP_SCHED
+#ifdef CONFIG_FAIR_GROUP_SCHED // CONFIG_FAIR_GROUP_SCHED=y
+// ARM10C 20170410
+// cfs_rq: [pcp0] &(&runqueues)->cfs, force_update: 1
 static inline void __update_cfs_rq_tg_load_contrib(struct cfs_rq *cfs_rq,
 						 int force_update)
 {
+	// cfs_rq->tg: [pcp0] (&(&runqueues)->cfs)->tg: &root_task_group
 	struct task_group *tg = cfs_rq->tg;
+	// tg: &root_task_group
+
 	long tg_contrib;
 
+	// cfs_rq->runnable_load_avg: [pcp0] (&(&runqueues)->cfs)->runnable_load_avg:
+	// 현재 task의 남아 있는 수행 시간량 / (현재 task의 남아 있는 수행 시간량 / 1024 + 1),
+	// cfs_rq->blocked_load_avg: [pcp0] (&(&runqueues)->cfs)->blocked_load_avg: 0
 	tg_contrib = cfs_rq->runnable_load_avg + cfs_rq->blocked_load_avg;
-	tg_contrib -= cfs_rq->tg_load_contrib;
+	// tg_contrib: 현재 task의 남아 있는 수행 시간량 / (현재 task의 남아 있는 수행 시간량 / 1024 + 1)
 
+	// tg_contrib: 현재 task의 남아 있는 수행 시간량 / (현재 task의 남아 있는 수행 시간량 / 1024 + 1),
+	// cfs_rq->tg_load_contrib: [pcp0] (&(&runqueues)->cfs)->tg_load_contrib: 0
+	tg_contrib -= cfs_rq->tg_load_contrib;
+	// tg_contrib: 현재 task의 남아 있는 수행 시간량 / (현재 task의 남아 있는 수행 시간량 / 1024 + 1)
+
+	// force_update: 1, tg_contrib: 현재 task의 남아 있는 수행 시간량 / (현재 task의 남아 있는 수행 시간량 / 1024 + 1)
+	// cfs_rq->tg_load_contrib: [pcp0] (&(&runqueues)->cfs)->tg_load_contrib: 0
 	if (force_update || abs(tg_contrib) > cfs_rq->tg_load_contrib / 8) {
+		// tg_contrib: 현재 task의 남아 있는 수행 시간량 / (현재 task의 남아 있는 수행 시간량 / 1024 + 1),
+		// &tg->load_avg: &(&root_task_group)->load_avg
 		atomic_long_add(tg_contrib, &tg->load_avg);
+
+		// atomic_long_add 에서 한일:
+		// (&(&root_task_group)->load_avg)->counter: 현재 task의 남아 있는 수행 시간량 / (현재 task의 남아 있는 수행 시간량 / 1024 + 1)
+
+		// cfs_rq->tg_load_contrib: [pcp0] (&(&runqueues)->cfs)->tg_load_contrib: 0,
+		// tg_contrib: 현재 task의 남아 있는 수행 시간량 / (현재 task의 남아 있는 수행 시간량 / 1024 + 1)
 		cfs_rq->tg_load_contrib += tg_contrib;
+		// cfs_rq->tg_load_contrib: [pcp0] (&(&runqueues)->cfs)->tg_load_contrib:
+		// 현재 task의 남아 있는 수행 시간량 / (현재 task의 남아 있는 수행 시간량 / 1024 + 1)
 	}
 }
 
@@ -2539,13 +2574,28 @@ static void update_cfs_rq_blocked_load(struct cfs_rq *cfs_rq, int force_update)
 	// decays: 현재의 schedule 시간값>> 20
 	if (decays) {
 		// cfs_rq->blocked_load_avg: [pcp0] (&(&runqueues)->cfs)->blocked_load_avg: 0, decays: 현재의 schedule 시간값>> 20
+		// decay_load(0, 현재의 schedule 시간값>> 20): 0
 		cfs_rq->blocked_load_avg = decay_load(cfs_rq->blocked_load_avg,
 						      decays);
+		// cfs_rq->blocked_load_avg: [pcp0] (&(&runqueues)->cfs)->blocked_load_avg: 0
+
+		// decays: 현재의 schedule 시간값>> 20, &cfs_rq->decay_counter: [pcp0] &(&(&runqueues)->cfs)->decay_counter
 		atomic64_add(decays, &cfs_rq->decay_counter);
+
+		// atomic64_add 에서 한일:
+		// (&(&(&runqueues)->cfs)->decay_counter)->counter: 2
+
+		// cfs_rq->last_decay: [pcp0] (&(&runqueues)->cfs)->last_decay: 0, // now: 현재의 schedule 시간값>> 20
 		cfs_rq->last_decay = now;
+		// cfs_rq->last_decay: [pcp0] (&(&runqueues)->cfs)->last_decay: 현재의 schedule 시간값>> 20
 	}
 
+	// cfs_rq: [pcp0] &(&runqueues)->cfs, force_update: 1
 	__update_cfs_rq_tg_load_contrib(cfs_rq, force_update);
+
+	// __update_cfs_rq_tg_load_contrib 에서 한일:
+	// (&(&root_task_group)->load_avg)->counter: 현재 task의 남아 있는 수행 시간량 / (현재 task의 남아 있는 수행 시간량 / 1024 + 1)
+	// [pcp0] (&(&runqueues)->cfs)->tg_load_contrib: 현재 task의 남아 있는 수행 시간량 / (현재 task의 남아 있는 수행 시간량 / 1024 + 1)
 }
 
 static inline void update_rq_runnable_avg(struct rq *rq, int runnable)
@@ -2624,6 +2674,16 @@ static inline void enqueue_entity_load_avg(struct cfs_rq *cfs_rq,
 	/* we force update consideration on load-balancer moves */
 	// cfs_rq: [pcp0] &(&runqueues)->cfs, wakeup: 0
 	update_cfs_rq_blocked_load(cfs_rq, !wakeup);
+
+	// update_cfs_rq_blocked_load 에서 한일:
+	// decays: 현재의 schedule 시간값>> 20 값이 0이 아닌 상수 값이라 가정하고 분석 진행
+	//
+	// [pcp0] (&(&runqueues)->cfs)->blocked_load_avg: 0
+	// [pcp0] (&(&(&runqueues)->cfs)->decay_counter)->counter: 2
+	// [pcp0] (&(&runqueues)->cfs)->last_decay: 현재의 schedule 시간값>> 20
+	//
+	// (&(&root_task_group)->load_avg)->counter: 현재 task의 남아 있는 수행 시간량 / (현재 task의 남아 있는 수행 시간량 / 1024 + 1)
+	// [pcp0] (&(&runqueues)->cfs)->tg_load_contrib: 현재 task의 남아 있는 수행 시간량 / (현재 task의 남아 있는 수행 시간량 / 1024 + 1)
 }
 
 /*
@@ -2826,6 +2886,22 @@ enqueue_entity(struct cfs_rq *cfs_rq, struct sched_entity *se, int flags)
 
 	// cfs_rq: [pcp0] &(&runqueues)->cfs, se: &(kmem_cache#15-oX (struct task_struct))->se, flags: 0, ENQUEUE_WAKEUP: 1
 	enqueue_entity_load_avg(cfs_rq, se, flags & ENQUEUE_WAKEUP);
+
+	// enqueue_entity_load_avg 에서 한일:
+	// (&(kmem_cache#15-oX (struct task_struct))->se)->avg.last_runnable_update: 현재의 schedule 시간값
+	// [pcp0] (&(&runqueues)->cfs)->runnable_load_avg: 현재 task의 남아 있는 수행 시간량 / (현재 task의 남아 있는 수행 시간량 / 1024 + 1)
+	//
+	// decays: 현재의 schedule 시간값>> 20 값이 0이 아닌 상수 값이라 가정하고 분석 진행
+	//
+	// [pcp0] (&(&runqueues)->cfs)->blocked_load_avg: 0
+	// [pcp0] (&(&(&runqueues)->cfs)->decay_counter)->counter: 2
+	// [pcp0] (&(&runqueues)->cfs)->last_decay: 현재의 schedule 시간값>> 20
+	//
+	// (&(&root_task_group)->load_avg)->counter: 현재 task의 남아 있는 수행 시간량 / (현재 task의 남아 있는 수행 시간량 / 1024 + 1)
+	// [pcp0] (&(&runqueues)->cfs)->tg_load_contrib: 현재 task의 남아 있는 수행 시간량 / (현재 task의 남아 있는 수행 시간량 / 1024 + 1)
+
+// 2017/04/10 종료
+
 	account_entity_enqueue(cfs_rq, se);
 	update_cfs_shares(cfs_rq);
 

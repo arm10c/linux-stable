@@ -891,7 +891,6 @@ static void enqueue_task(struct rq *rq, struct task_struct *p, int flags)
 
 	// p->sched_class: (kmem_cache#15-oX (struct task_struct))->sched_class: &fair_sched_class
 	// p->sched_class->enqueue_task: (&fair_sched_class)->enqueue_task: enqueue_task_fair
-
 	// rq: [pcp0] &runqueues, p: kmem_cache#15-oX (struct task_struct), flags: 0
 	// enqueue_task_fair([pcp0] &runqueues, kmem_cache#15-oX (struct task_struct), 0)
 	p->sched_class->enqueue_task(rq, p, flags);
@@ -6689,6 +6688,7 @@ int in_sched_functions(unsigned long addr)
  */
 // ARM10C 20140830
 // ARM10C 20150822
+// ARM10C 20170410
 struct task_group root_task_group;
 // ARM10C 20140830
 // #define LIST_HEAD(task_groups):

@@ -193,6 +193,7 @@ static inline void atomic_long_dec(atomic_long_t *l)
 // ARM10C 20140412
 // x: 32, item: 0, &zone->vm_stat[0]: &contig_page_data->node_zones[ZONE_NORMAL].vm_stat[0]
 // ARM10C 20140531
+// ARM10C 20170410
 static inline void atomic_long_add(long i, atomic_long_t *l)
 {
 	// l: &contig_page_data->node_zones[ZONE_NORMAL].vm_stat[0]
