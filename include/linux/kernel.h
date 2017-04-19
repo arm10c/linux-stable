@@ -885,6 +885,7 @@ static inline void ftrace_dump(enum ftrace_dump_mode oops_dump_mode) { }
 // ARM10C 20160319
 // ARM10C 20160611
 // ARM10C 20160723
+// ARM10C 20170419
 #define container_of(ptr, type, member) ({			\
 	const typeof( ((type *)0)->member ) *__mptr = (ptr);	\
 	(type *)( (char *)__mptr - offsetof(type,member) );})

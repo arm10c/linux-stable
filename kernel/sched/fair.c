@@ -121,15 +121,28 @@ unsigned int sysctl_sched_cfs_bandwidth_slice = 5000UL;
 
 // ARM10C 20161015
 // &lw, 1024
+// ARM10C 20170419
+// &cfs_rq->load: [pcp0] &(&(&runqueues)->cfs)->load, 1024
+// ARM10C 20170419
+// &rq_of([pcp0] &(&runqueues)->cfs)->load: [pcp0] &(&runqueues)->load,
+// se->load.weight: (&(kmem_cache#15-oX (struct task_struct))->se)->load.weight: 1024
 static inline void update_load_add(struct load_weight *lw, unsigned long inc)
 {
 	// lw->weight: (&lw)->weight: 0, inc: 1024
+	// lw->weight: ([pcp0] &(&(&runqueues)->cfs)->load)->weight: 1024, inc: 1024
+	// lw->weight: ([pcp0] &(&runqueues)->load)->weight: 0, inc: 1024
 	lw->weight += inc;
 	// lw->weight: (&lw)->weight: 1024
+	// lw->weight: ([pcp0] &(&(&runqueues)->cfs)->load)->weight: 2048
+	// lw->weight: ([pcp0] &(&runqueues)->load)->weight: 1024
 
 	// lw->inv_weight: (&lw)->inv_weight
+	// lw->inv_weight: ([pcp0] &(&(&runqueues)->cfs)->load)->inv_weight
+	// lw->inv_weight: ([pcp0] &(&runqueues)->load)->inv_weight
 	lw->inv_weight = 0;
 	// lw->inv_weight: (&lw)->inv_weight: 0
+	// lw->inv_weight: ([pcp0] &(&(&runqueues)->cfs)->load)->inv_weight: 0
+	// lw->inv_weight: ([pcp0] &(&runqueues)->load)->inv_weight: 0
 }
 
 static inline void update_load_sub(struct load_weight *lw, unsigned long dec)
@@ -295,6 +308,10 @@ const struct sched_class fair_sched_class;
 // cfs_rq: [pcp0] &(&runqueues)->cfs
 // ARM10C 20170208
 // cfs_rq: [pcp0] &(&runqueues)->cfs
+// ARM10C 20170419
+// cfs_rq: [pcp0] &(&runqueues)->cfs
+// ARM10C 20170419
+// cfs_rq: [pcp0] &(&runqueues)->cfs
 static inline struct rq *rq_of(struct cfs_rq *cfs_rq)
 {
 	// cfs_rq->rq: [pcp0] (&(&runqueues)->cfs)->rq: [pcp0] &runqueues
@@ -303,14 +320,26 @@ static inline struct rq *rq_of(struct cfs_rq *cfs_rq)
 }
 
 /* An entity is a task if it doesn't "own" a runqueue */
+// ARM10C 20170419
+// se: &(kmem_cache#15-oX (struct task_struct))->se
+// se->my_q: (&(kmem_cache#15-oX (struct task_struct))->se)->my_q: NULL
+//
+// entity_is_task(&(kmem_cache#15-oX (struct task_struct))->se): 1
 #define entity_is_task(se)	(!se->my_q)
 
+// ARM10C 20170419
+// se: &(kmem_cache#15-oX (struct task_struct))->se
 static inline struct task_struct *task_of(struct sched_entity *se)
 {
-#ifdef CONFIG_SCHED_DEBUG
+#ifdef CONFIG_SCHED_DEBUG // CONFIG_SCHED_DEBUG=y
+	// se: &(kmem_cache#15-oX (struct task_struct))->se
+	// entity_is_task(&(kmem_cache#15-oX (struct task_struct))->se): 1
 	WARN_ON_ONCE(!entity_is_task(se));
 #endif
+	// se: &(kmem_cache#15-oX (struct task_struct))->se
+	// container_of(&(kmem_cache#15-oX (struct task_struct))->se, struct task_struct, se): kmem_cache#15-oX (struct task_struct)
 	return container_of(se, struct task_struct, se);
+	// kmem_cache#15-oX (struct task_struct)
 }
 
 /* Walk up scheduling entities hierarchy */
@@ -400,9 +429,13 @@ is_same_group(struct sched_entity *se, struct sched_entity *pse)
 	return 0;
 }
 
+// ARM10C 20170419
+// se: &(kmem_cache#15-oX (struct task_struct))->se
 static inline struct sched_entity *parent_entity(struct sched_entity *se)
 {
+	// se->parent: (&(kmem_cache#15-oX (struct task_struct))->se)->parent: NULL
 	return se->parent;
+	// return NULL
 }
 
 /* return depth at which a sched entity is present in the hierarchy */
@@ -983,7 +1016,7 @@ update_stats_curr_start(struct cfs_rq *cfs_rq, struct sched_entity *se)
  * Scheduling class queueing methods:
  */
 
-#ifdef CONFIG_NUMA_BALANCING
+#ifdef CONFIG_NUMA_BALANCING // CONFIG_NUMA_BALANCING=n
 /*
  * Approximate time to scan a full NUMA task in ms. The task scan period is
  * calculated based on the tasks virtual memory size and
@@ -1997,6 +2030,8 @@ static void task_tick_numa(struct rq *rq, struct task_struct *curr)
 {
 }
 
+// ARM10C 20170419
+// rq: [pcp0] &runqueues, task_of(&(kmem_cache#15-oX (struct task_struct))->se): kmem_cache#15-oX (struct task_struct)
 static inline void account_numa_enqueue(struct rq *rq, struct task_struct *p)
 {
 }
@@ -2006,21 +2041,53 @@ static inline void account_numa_dequeue(struct rq *rq, struct task_struct *p)
 }
 #endif /* CONFIG_NUMA_BALANCING */
 
+// ARM10C 20170419
+// cfs_rq: [pcp0] &(&runqueues)->cfs, se: &(kmem_cache#15-oX (struct task_struct))->se
 static void
 account_entity_enqueue(struct cfs_rq *cfs_rq, struct sched_entity *se)
 {
+	// &cfs_rq->load: [pcp0] &(&(&runqueues)->cfs)->load, se->load.weight: (&(kmem_cache#15-oX (struct task_struct))->se)->load.weight: 1024
 	update_load_add(&cfs_rq->load, se->load.weight);
-	if (!parent_entity(se))
-		update_load_add(&rq_of(cfs_rq)->load, se->load.weight);
-#ifdef CONFIG_SMP
-	if (entity_is_task(se)) {
-		struct rq *rq = rq_of(cfs_rq);
 
-		account_numa_enqueue(rq, task_of(se));
+	// update_load_add 에서 한일:
+	// [pcp0] (&(&(&runqueues)->cfs)->load)->weight: 2048
+	// [pcp0] (&(&(&runqueues)->cfs)->load)->inv_weight: 0
+
+	// se: &(kmem_cache#15-oX (struct task_struct))->se, parent_entity(&(kmem_cache#15-oX (struct task_struct))->se): NULL
+	if (!parent_entity(se))
+		// cfs_rq: [pcp0] &(&runqueues)->cfs, rq_of([pcp0] &(&runqueues)->cfs): [pcp0] &runqueues,
+		// &rq_of([pcp0] &(&runqueues)->cfs)->load: [pcp0] &(&runqueues)->load,
+		// se->load.weight: (&(kmem_cache#15-oX (struct task_struct))->se)->load.weight: 1024
+		update_load_add(&rq_of(cfs_rq)->load, se->load.weight);
+
+		// update_load_add 에서 한일:
+		// [pcp0] (&(&runqueues)->load)->weight: 1024
+		// [pcp0] (&(&runqueues)->load)->inv_weight: 0
+
+#ifdef CONFIG_SMP // CONFIG_SMP=y
+	// se: &(kmem_cache#15-oX (struct task_struct))->se,
+	// entity_is_task(&(kmem_cache#15-oX (struct task_struct))->se): 1
+	if (entity_is_task(se)) {
+		// cfs_rq: [pcp0] &(&runqueues)->cfs
+		// rq_of([pcp0] &(&runqueues)->cfs): [pcp0] &runqueues
+		struct rq *rq = rq_of(cfs_rq);
+		// rq: [pcp0] &runqueues
+
+		// rq: [pcp0] &runqueues, se: &(kmem_cache#15-oX (struct task_struct))->se
+		// task_of(&(kmem_cache#15-oX (struct task_struct))->se): kmem_cache#15-oX (struct task_struct)
+		account_numa_enqueue(rq, task_of(se)); // null function
+
+		// &se->group_node: &(&(kmem_cache#15-oX (struct task_struct))->se)->group_node,
+		// &rq->cfs_tasks: [pcp0] &(&runqueues)->cfs_tasks
 		list_add(&se->group_node, &rq->cfs_tasks);
+
+		// list_add 에서 한일:
+		// [pcp0] &(&runqueues)->cfs_tasks 란 list head에 &(&(kmem_cache#15-oX (struct task_struct))->se)->group_node 를 추가함
 	}
 #endif
+	// cfs_rq->nr_running: [pcp0] (&(&runqueues)->cfs)->nr_running: 0
 	cfs_rq->nr_running++;
+	// cfs_rq->nr_running: [pcp0] (&(&runqueues)->cfs)->nr_running: 1
 }
 
 static void
@@ -2901,8 +2968,21 @@ enqueue_entity(struct cfs_rq *cfs_rq, struct sched_entity *se, int flags)
 	// [pcp0] (&(&runqueues)->cfs)->tg_load_contrib: 현재 task의 남아 있는 수행 시간량 / (현재 task의 남아 있는 수행 시간량 / 1024 + 1)
 
 // 2017/04/10 종료
+// 2017/04/19 시작
 
+	// cfs_rq: [pcp0] &(&runqueues)->cfs, se: &(kmem_cache#15-oX (struct task_struct))->se
 	account_entity_enqueue(cfs_rq, se);
+
+	// account_entity_enqueue 에서 한일:
+	// [pcp0] (&(&(&runqueues)->cfs)->load)->weight: 2048
+	// [pcp0] (&(&(&runqueues)->cfs)->load)->inv_weight: 0
+	// [pcp0] (&(&runqueues)->load)->weight: 1024
+	// [pcp0] (&(&runqueues)->load)->inv_weight: 0
+	// [pcp0] &(&runqueues)->cfs_tasks 란 list head에 &(&(kmem_cache#15-oX (struct task_struct))->se)->group_node 를 추가함
+	// [pcp0] (&(&runqueues)->cfs)->nr_running: 1
+
+// 2017/04/19 종료
+
 	update_cfs_shares(cfs_rq);
 
 	if (flags & ENQUEUE_WAKEUP) {

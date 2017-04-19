@@ -297,6 +297,9 @@ extern void __list_add(struct list_head *new,
 // ARM10C 20161126
 // &dentry->d_u.d_child: &(kmem_cache#5-oX (struct dentry))->d_u.d_child,
 // &parent->d_subdirs: &(kmem_cache#5-oX (struct dentry))->d_subdirs
+// ARM10C 20170419
+// &se->group_node: &(&(kmem_cache#15-oX (struct task_struct))->se)->group_node,
+// &rq->cfs_tasks: [pcp0] &(&runqueues)->cfs_tasks
 static inline void list_add(struct list_head *new, struct list_head *head)
 {
 	__list_add(new, head, head->next);
