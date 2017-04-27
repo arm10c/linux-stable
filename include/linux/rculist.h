@@ -150,6 +150,9 @@ static inline void list_add_rcu(struct list_head *new, struct list_head *head)
  */
 // ARM10C 20161203
 // &p->tasks: &(kmem_cache#15-oX (struct task_struct))->tasks, &init_task.tasks
+// ARM10C 20170427
+// &cfs_rq->leaf_cfs_rq_list: [pcp0] &(&(&runqueues)->cfs)->leaf_cfs_rq_list,
+// &rq_of([pcp0] &(&runqueues)->cfs)->leaf_cfs_rq_list: [pcp0] &(&runqueues)->leaf_cfs_rq_list
 static inline void list_add_tail_rcu(struct list_head *new,
 					struct list_head *head)
 {

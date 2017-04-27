@@ -6689,6 +6689,7 @@ int in_sched_functions(unsigned long addr)
 // ARM10C 20140830
 // ARM10C 20150822
 // ARM10C 20170410
+// ARM10C 20170427
 struct task_group root_task_group;
 // ARM10C 20140830
 // #define LIST_HEAD(task_groups):

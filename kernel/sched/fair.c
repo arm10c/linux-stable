@@ -47,6 +47,7 @@
  *  run vmstat and monitor the context-switches (cs) field)
  */
 // ARM10C 20161015
+// ARM10C 20170427
 // sysctl_sched_latency: 6000000ULL
 unsigned int sysctl_sched_latency = 6000000ULL;
 unsigned int normalized_sysctl_sched_latency = 6000000ULL;
@@ -312,6 +313,12 @@ const struct sched_class fair_sched_class;
 // cfs_rq: [pcp0] &(&runqueues)->cfs
 // ARM10C 20170419
 // cfs_rq: [pcp0] &(&runqueues)->cfs
+// ARM10C 20170427
+// cfs_rq: [pcp0] &(&runqueues)->cfs
+// ARM10C 20170427
+// cfs_rq: [pcp0] &(&runqueues)->cfs
+// ARM10C 20170427
+// cfs_rq: [pcp0] &(&runqueues)->cfs
 static inline struct rq *rq_of(struct cfs_rq *cfs_rq)
 {
 	// cfs_rq->rq: [pcp0] (&(&runqueues)->cfs)->rq: [pcp0] &runqueues
@@ -383,8 +390,11 @@ static inline struct cfs_rq *group_cfs_rq(struct sched_entity *grp)
 static void update_cfs_rq_blocked_load(struct cfs_rq *cfs_rq,
 				       int force_update);
 
+// ARM10C 20170427
+// cfs_rq: [pcp0] &(&runqueues)->cfs
 static inline void list_add_leaf_cfs_rq(struct cfs_rq *cfs_rq)
 {
+	// cfs_rq->on_list: [pcp0] (&(&runqueues)->cfs)->on_list: 0
 	if (!cfs_rq->on_list) {
 		/*
 		 * Ensure we either appear before our parent (if already
@@ -392,14 +402,33 @@ static inline void list_add_leaf_cfs_rq(struct cfs_rq *cfs_rq)
 		 * enqueued.  The fact that we always enqueue bottom-up
 		 * reduces this to two cases.
 		 */
+		// cfs_rq->tg: [pcp0] (&(&runqueues)->cfs)->tg: &root_task_group
+		// cfs_rq->tg->parent: (&root_task_group)->parent: NULL
 		if (cfs_rq->tg->parent &&
 		    cfs_rq->tg->parent->cfs_rq[cpu_of(rq_of(cfs_rq))]->on_list) {
 			list_add_rcu(&cfs_rq->leaf_cfs_rq_list,
 				&rq_of(cfs_rq)->leaf_cfs_rq_list);
 		} else {
+			// &cfs_rq->leaf_cfs_rq_list: [pcp0] &(&(&runqueues)->cfs)->leaf_cfs_rq_list,
+			// cfs_rq: [pcp0] &(&runqueues)->cfs, rq_of([pcp0] &(&runqueues)->cfs): [pcp0] &runqueues,
+			// &rq_of([pcp0] &(&runqueues)->cfs)->leaf_cfs_rq_list: [pcp0] &(&runqueues)->leaf_cfs_rq_list
 			list_add_tail_rcu(&cfs_rq->leaf_cfs_rq_list,
 				&rq_of(cfs_rq)->leaf_cfs_rq_list);
+
+			// list_add_tail_rcu 에서 한일:
+			// list head인 [pcp0] &(&runqueues)->leaf_cfs_rq_list에 [pcp0] &(&(&runqueues)->cfs)->leaf_cfs_rq_list 을 tail에 추가함
+			//
+			// [pcp0] (&(&(&runqueues)->cfs)->leaf_cfs_rq_list)->next: [pcp0] &(&runqueues)->leaf_cfs_rq_list
+			// [pcp0] (&(&(&runqueues)->cfs)->leaf_cfs_rq_list)->prev: [pcp0] (&(&runqueues)->leaf_cfs_rq_list)->prev
+			//
+			// core간 write memory barrier 수행
+			// ((*((struct list_head __rcu **) (&(([pcp0] &(&runqueues)->leaf_cfs_rq_list)->prev)->next)))):
+			// (typeof(*[pcp0] &(&(&runqueues)->cfs)->leaf_cfs_rq_list) __force __rcu *)([pcp0] &(&(&runqueues)->cfs)->leaf_cfs_rq_list);
+			//
+			// [pcp0] (&(&runqueues)->leaf_cfs_rq_list)->prev: [pcp0] &(&(&runqueues)->cfs)->leaf_cfs_rq_list
 		}
+
+// 2017/04/27 종료
 
 		cfs_rq->on_list = 1;
 		/* We should have no load, but we need to update last_decay. */
@@ -618,16 +647,25 @@ static void update_min_vruntime(struct cfs_rq *cfs_rq)
 /*
  * Enqueue an entity into the rb-tree:
  */
+// ARM10C 20170427
+// cfs_rq: [pcp0] &(&runqueues)->cfs, se: &(kmem_cache#15-oX (struct task_struct))->se
 static void __enqueue_entity(struct cfs_rq *cfs_rq, struct sched_entity *se)
 {
+	// &cfs_rq->tasks_timeline.rb_node: [pcp0] &(&(&runqueues)->cfs)->tasks_timeline.rb_node
 	struct rb_node **link = &cfs_rq->tasks_timeline.rb_node;
+	// link: [pcp0] &(&(&runqueues)->cfs)->tasks_timeline.rb_node
+
 	struct rb_node *parent = NULL;
+	// parent: NULL
+
 	struct sched_entity *entry;
 	int leftmost = 1;
+	// leftmost: 1
 
 	/*
 	 * Find the right place in the rbtree:
 	 */
+	// *link: [pcp0] (&(&runqueues)->cfs)->tasks_timeline.rb_node: NULL
 	while (*link) {
 		parent = *link;
 		entry = rb_entry(parent, struct sched_entity, run_node);
@@ -647,11 +685,35 @@ static void __enqueue_entity(struct cfs_rq *cfs_rq, struct sched_entity *se)
 	 * Maintain a cache of leftmost tree entries (it is frequently
 	 * used):
 	 */
+	// leftmost: 1
 	if (leftmost)
+		// cfs_rq->rb_leftmost: [pcp0] (&(&runqueues)->cfs)->rb_leftmost: NULL,
+		// &se->run_node: &(&(kmem_cache#15-oX (struct task_struct))->se)->run_node
 		cfs_rq->rb_leftmost = &se->run_node;
+		// cfs_rq->rb_leftmost: [pcp0] (&(&runqueues)->cfs)->rb_leftmost: &(&(kmem_cache#15-oX (struct task_struct))->se)->run_node
 
+	// &se->run_node: &(&(kmem_cache#15-oX (struct task_struct))->se)->run_node, parent: NULL
+	// link: [pcp0] &(&(&runqueues)->cfs)->tasks_timeline.rb_node
 	rb_link_node(&se->run_node, parent, link);
+
+	// rb_link_node 에서 한일:
+	// (&(&(kmem_cache#15-oX (struct task_struct))->se)->run_node)->__rb_parent_color: NULL
+	// (&(&(kmem_cache#15-oX (struct task_struct))->se)->run_node)->rb_left: NULL
+	// (&(&(kmem_cache#15-oX (struct task_struct))->se)->run_node)->rb_right: NULL
+	// [pcp0] (&(&runqueues)->cfs)->tasks_timeline.rb_node: &(&(kmem_cache#15-oX (struct task_struct))->se
+
+	// &se->run_node: &(&(kmem_cache#15-oX (struct task_struct))->se)->run_node,
+	// &cfs_rq->tasks_timeline: [pcp0] &(&(&runqueues)->cfs)->tasks_timeline
 	rb_insert_color(&se->run_node, &cfs_rq->tasks_timeline);
+
+	/*
+	// rb_insert_color 에서 한일:
+	// rb tree 의 root인 [pcp0] &(&(&runqueues)->cfs)->tasks_timeline 에
+	// rb node인 &(&(kmem_cache#15-oX (struct task_struct))->se)->run_node 가 추가되어 rb tree 구성
+	//
+	//                            task ID: 1-b
+	//                            /           \
+	*/
 }
 
 static void __dequeue_entity(struct cfs_rq *cfs_rq, struct sched_entity *se)
@@ -953,22 +1015,31 @@ static void update_curr(struct cfs_rq *cfs_rq)
 	account_cfs_rq_runtime(cfs_rq, delta_exec);
 }
 
+// ARM10C 20170427
+// cfs_rq: [pcp0] &(&runqueues)->cfs, se: &(kmem_cache#15-oX (struct task_struct))->se
 static inline void
 update_stats_wait_start(struct cfs_rq *cfs_rq, struct sched_entity *se)
 {
-	schedstat_set(se->statistics.wait_start, rq_clock(rq_of(cfs_rq)));
+	// se->statistics.wait_start: (&(kmem_cache#15-oX (struct task_struct))->se)->statistics.wait_start
+	// cfs_rq: [pcp0] &(&runqueues)->cfs, rq_of([pcp0] &(&runqueues)->cfs): [pcp0] &runqueues, rq_clock([pcp0] &runqueues): 현재의 schedule 시간값
+	schedstat_set(se->statistics.wait_start, rq_clock(rq_of(cfs_rq))); // null function
 }
 
 /*
  * Task is being enqueued - update stats:
  */
+// ARM10C 20170427
+// cfs_rq: [pcp0] &(&runqueues)->cfs, se: &(kmem_cache#15-oX (struct task_struct))->se
 static void update_stats_enqueue(struct cfs_rq *cfs_rq, struct sched_entity *se)
 {
 	/*
 	 * Are we enqueueing a waiting task? (for current tasks
 	 * a dequeue/enqueue event is a NOP)
 	 */
+	// se: &(kmem_cache#15-oX (struct task_struct))->se,
+	// cfs_rq->curr: [pcp0] (&(&runqueues)->cfs)->curr: NULL
 	if (se != cfs_rq->curr)
+		// cfs_rq: [pcp0] &(&runqueues)->cfs, se: &(kmem_cache#15-oX (struct task_struct))->se
 		update_stats_wait_start(cfs_rq, se);
 }
 
@@ -2103,7 +2174,7 @@ account_entity_dequeue(struct cfs_rq *cfs_rq, struct sched_entity *se)
 	cfs_rq->nr_running--;
 }
 
-#ifdef CONFIG_FAIR_GROUP_SCHED
+#ifdef CONFIG_FAIR_GROUP_SCHED // CONFIG_FAIR_GROUP_SCHED=y
 # ifdef CONFIG_SMP
 static inline long calc_tg_weight(struct task_group *tg, struct cfs_rq *cfs_rq)
 {
@@ -2163,16 +2234,27 @@ static void reweight_entity(struct cfs_rq *cfs_rq, struct sched_entity *se,
 
 static inline int throttled_hierarchy(struct cfs_rq *cfs_rq);
 
+// ARM10C 20170427
+// cfs_rq: [pcp0] &(&runqueues)->cfs
 static void update_cfs_shares(struct cfs_rq *cfs_rq)
 {
 	struct task_group *tg;
 	struct sched_entity *se;
 	long shares;
 
+	// cfs_rq->tg: [pcp0] (&(&runqueues)->cfs)->tg: &root_task_group
 	tg = cfs_rq->tg;
+	// tg: &root_task_group
+
+	// cfs_rq: [pcp0] &(&runqueues)->cfs, rq_of([pcp0] &(&runqueues)->cfs): [pcp0] &runqueues, cpu_of([pcp0] &runqueues): 0
+	// tg->se[0]: (&root_task_group)->se[0]: NULL
 	se = tg->se[cpu_of(rq_of(cfs_rq))];
+	// se: NULL
+
+	// se: NULL, cfs_rq: [pcp0] &(&runqueues)->cfs, throttled_hierarchy([pcp0] &(&runqueues)->cfs): 0
 	if (!se || throttled_hierarchy(cfs_rq))
 		return;
+		// return 수행
 #ifndef CONFIG_SMP
 	if (likely(se->load.weight == tg->shares))
 		return;
@@ -2869,14 +2951,21 @@ static void enqueue_sleeper(struct cfs_rq *cfs_rq, struct sched_entity *se)
 #endif
 }
 
+// ARM10C 20170427
+// cfs_rq: [pcp0] &(&runqueues)->cfs, se: &(kmem_cache#15-oX (struct task_struct))->se
 static void check_spread(struct cfs_rq *cfs_rq, struct sched_entity *se)
 {
-#ifdef CONFIG_SCHED_DEBUG
+#ifdef CONFIG_SCHED_DEBUG // CONFIG_SCHED_DEBUG=y
+	// se->vruntime: (&(kmem_cache#15-oX (struct task_struct))->se)->vruntime: 0x4B8D7E,
+	// cfs_rq->min_vruntime:[pcp0] (&(&runqueues)->cfs)->min_vruntime: 0xFFFFFFFFFFF00000
 	s64 d = se->vruntime - cfs_rq->min_vruntime;
+	// d: 0x5B8D7E
 
+	// d: 0x5B8D7E
 	if (d < 0)
 		d = -d;
 
+	// d: 0x5B8D7E, sysctl_sched_latency: 6000000ULL
 	if (d > 3*sysctl_sched_latency)
 		schedstat_inc(cfs_rq, nr_spread_over);
 #endif
@@ -2982,21 +3071,51 @@ enqueue_entity(struct cfs_rq *cfs_rq, struct sched_entity *se, int flags)
 	// [pcp0] (&(&runqueues)->cfs)->nr_running: 1
 
 // 2017/04/19 종료
+// 2017/04/27 시작
 
+	// cfs_rq: [pcp0] &(&runqueues)->cfs
 	update_cfs_shares(cfs_rq);
 
+	// flags: 0, ENQUEUE_WAKEUP: 1
 	if (flags & ENQUEUE_WAKEUP) {
 		place_entity(cfs_rq, se, 0);
 		enqueue_sleeper(cfs_rq, se);
 	}
 
+	// cfs_rq: [pcp0] &(&runqueues)->cfs, se: &(kmem_cache#15-oX (struct task_struct))->se
 	update_stats_enqueue(cfs_rq, se);
-	check_spread(cfs_rq, se);
-	if (se != cfs_rq->curr)
-		__enqueue_entity(cfs_rq, se);
-	se->on_rq = 1;
 
+	// cfs_rq: [pcp0] &(&runqueues)->cfs, se: &(kmem_cache#15-oX (struct task_struct))->se
+	check_spread(cfs_rq, se);
+
+	// se: &(kmem_cache#15-oX (struct task_struct))->se, cfs_rq->curr: [pcp0] (&(&runqueues)->cfs)->curr: NULL
+	if (se != cfs_rq->curr)
+		// cfs_rq: [pcp0] &(&runqueues)->cfs, se: &(kmem_cache#15-oX (struct task_struct))->se
+		__enqueue_entity(cfs_rq, se);
+
+		// __enqueue_entity 에서 한일:
+		// [pcp0] (&(&runqueues)->cfs)->rb_leftmost: &(&(kmem_cache#15-oX (struct task_struct))->se)->run_node
+		//
+		// (&(&(kmem_cache#15-oX (struct task_struct))->se)->run_node)->__rb_parent_color: NULL
+		// (&(&(kmem_cache#15-oX (struct task_struct))->se)->run_node)->rb_left: NULL
+		// (&(&(kmem_cache#15-oX (struct task_struct))->se)->run_node)->rb_right: NULL
+		// [pcp0] (&(&runqueues)->cfs)->tasks_timeline.rb_node: &(&(kmem_cache#15-oX (struct task_struct))->se
+		//
+		/*
+		// rb tree 의 root인 [pcp0] &(&(&runqueues)->cfs)->tasks_timeline 에
+		// rb node인 &(&(kmem_cache#15-oX (struct task_struct))->se)->run_node 가 추가되어 rb tree 구성
+		//
+		//                            task ID: 1-b
+		//                            /           \
+		*/
+
+	// se->on_rq: (&(kmem_cache#15-oX (struct task_struct))->se)->on_rq: 0
+	se->on_rq = 1;
+	// se->on_rq: (&(kmem_cache#15-oX (struct task_struct))->se)->on_rq: 1
+
+	// cfs_rq->nr_running: [pcp0] (&(&runqueues)->cfs)->nr_running: 1
 	if (cfs_rq->nr_running == 1) {
+		// cfs_rq: [pcp0] &(&runqueues)->cfs
 		list_add_leaf_cfs_rq(cfs_rq);
 		check_enqueue_throttle(cfs_rq);
 	}
@@ -4000,6 +4119,8 @@ static inline int cfs_rq_throttled(struct cfs_rq *cfs_rq)
 	return 0;
 }
 
+// ARM10C 20170427
+// cfs_rq: [pcp0] &(&runqueues)->cfs
 static inline int throttled_hierarchy(struct cfs_rq *cfs_rq)
 {
 	return 0;

@@ -1029,7 +1029,7 @@ struct sched_avg {
 	unsigned long load_avg_contrib;
 };
 
-#ifdef CONFIG_SCHEDSTATS
+#ifdef CONFIG_SCHEDSTATS // CONFIG_SCHEDSTATS=n
 struct sched_statistics {
 	u64			wait_start;
 	u64			wait_max;
@@ -1071,6 +1071,7 @@ struct sched_statistics {
 // ARM10C 20161015
 // ARM10C 20170201
 // ARM10C 20170419
+// ARM10C 20170427
 // sizeof(struct sched_entity): 100 bytes
 struct sched_entity {
 	struct load_weight	load;		/* for load-balancing */

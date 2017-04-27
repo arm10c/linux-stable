@@ -168,6 +168,7 @@ struct cfs_bandwidth {
 // ARM10C 20150822
 // ARM10C 20150919
 // ARM10C 20170410
+// ARM10C 20170427
 struct task_group {
 	struct cgroup_subsys_state css;
 
@@ -284,6 +285,7 @@ struct cfs_bandwidth { };
 // ARM10C 20161015
 // ARM10C 20170201
 // ARM10C 20170208
+// ARM10C 20170427
 struct cfs_rq {
 	struct load_weight load;
 	unsigned int nr_running, h_nr_running;
@@ -449,6 +451,7 @@ extern struct root_domain def_root_domain;
 // ARM10C 20161008
 // ARM10C 20161217
 // ARM10C 20170201
+// ARM10C 20170427
 struct rq {
 	/* runqueue lock: */
 	raw_spinlock_t lock;
@@ -584,6 +587,8 @@ struct rq {
 
 // ARM10C 20161008
 // rq: [pcp0] &runqueues
+// ARM10C 20170427
+// rq_of([pcp0] &(&runqueues)->cfs): [pcp0] &runqueues
 static inline int cpu_of(struct rq *rq)
 {
 #ifdef CONFIG_SMP // CONFIG_SMP=y
@@ -597,6 +602,7 @@ static inline int cpu_of(struct rq *rq)
 
 // ARM10C 20140830
 // ARM10C 20161008
+// ARM10C 20170427
 // DECLARE_PER_CPU(struct rq, runqueues):
 // extern __attribute__((section(".data..percpu" ""))) __typeof__(struct rq) runqueues
 DECLARE_PER_CPU(struct rq, runqueues);
@@ -635,9 +641,13 @@ DECLARE_PER_CPU(struct rq, runqueues);
 #define cpu_curr(cpu)		(cpu_rq(cpu)->curr)
 #define raw_rq()		(&__raw_get_cpu_var(runqueues))
 
+// ARM10C 20170427
+// [pcp0] &runqueues
 static inline u64 rq_clock(struct rq *rq)
 {
+	// rq->clock: [pcp0] (&runqueues)->clock: 현재의 schedule 시간값
 	return rq->clock;
+	// return 현재의 schedule 시간값
 }
 
 // ARM10C 20161015
@@ -1160,6 +1170,7 @@ static const u32 prio_to_wmult[40] = {
 };
 
 // ARM10C 20170208
+// ARM10C 20170427
 // ENQUEUE_WAKEUP: 1
 #define ENQUEUE_WAKEUP		1
 #define ENQUEUE_HEAD		2
