@@ -87,6 +87,8 @@ DEFINE_EVENT(sched_wakeup_template, sched_wakeup,
 /*
  * Tracepoint for waking up a new task:
  */
+// ARM10C 20170513
+// p: kmem_cache#15-oX (struct task_struct)
 DEFINE_EVENT(sched_wakeup_template, sched_wakeup_new,
 	     TP_PROTO(struct task_struct *p, int success),
 	     TP_ARGS(p, success));

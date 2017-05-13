@@ -429,6 +429,8 @@ static inline void atomic64_set(atomic64_t *v, long long i)
 
 // ARM10C 20170410
 // decays: 현재의 schedule 시간값>> 20, &cfs_rq->decay_counter: [pcp0] &(&(&runqueues)->cfs)->decay_counter
+// ARM10C 20170513
+// decays: 시간값x, &cfs_rq->decay_counter: [pcp0] &(&(&runqueues)->cfs)->decay_counter
 static inline void atomic64_add(long long i, atomic64_t *v)
 {
 	long long result;

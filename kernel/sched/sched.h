@@ -169,6 +169,7 @@ struct cfs_bandwidth {
 // ARM10C 20150919
 // ARM10C 20170410
 // ARM10C 20170427
+// ARM10C 20170513
 struct task_group {
 	struct cgroup_subsys_state css;
 
@@ -286,6 +287,7 @@ struct cfs_bandwidth { };
 // ARM10C 20170201
 // ARM10C 20170208
 // ARM10C 20170427
+// ARM10C 20170513
 struct cfs_rq {
 	struct load_weight load;
 	unsigned int nr_running, h_nr_running;
@@ -924,10 +926,12 @@ static inline void __set_task_cpu(struct task_struct *p, unsigned int cpu)
 extern const_debug unsigned int sysctl_sched_features;
 
 // ARM10C 20161015
+// ARM10C 20170513
 #define SCHED_FEAT(name, enabled)	\
 	__SCHED_FEAT_##name ,
 
 // ARM10C 20161015
+// ARM10C 20170513
 enum {
 #include "features.h"
 	// __SCHED_FEAT_GENTLE_FAIR_SLEEPERS,
@@ -976,6 +980,8 @@ extern struct static_key sched_feat_keys[__SCHED_FEAT_NR];
 #else /* !(SCHED_DEBUG && HAVE_JUMP_LABEL) */
 // ARM10C 20161015
 // sysctl_sched_features: 0x2e7b, __SCHED_FEAT_START_DEBIT: 1
+// ARM10C 20170513
+// sysctl_sched_features: 0x2e7b, __SCHED_FEAT_HRTICK: 7
 #define sched_feat(x) (sysctl_sched_features & (1UL << __SCHED_FEAT_##x))
 #endif /* SCHED_DEBUG && HAVE_JUMP_LABEL */
 
@@ -1111,6 +1117,8 @@ static inline void finish_lock_switch(struct rq *rq, struct task_struct *prev)
 // ARM10C 20161217
 // WF_SYNC: 0x01
 #define WF_SYNC		0x01		/* waker goes to sleep after wakeup */
+// ARM10C 20170513
+// WF_FORK: 0x02
 #define WF_FORK		0x02		/* child wakeup after fork */
 #define WF_MIGRATED	0x4		/* internal use, task got migrated */
 
@@ -1171,6 +1179,7 @@ static const u32 prio_to_wmult[40] = {
 
 // ARM10C 20170208
 // ARM10C 20170427
+// ARM10C 20170513
 // ENQUEUE_WAKEUP: 1
 #define ENQUEUE_WAKEUP		1
 #define ENQUEUE_HEAD		2
@@ -1187,6 +1196,7 @@ static const u32 prio_to_wmult[40] = {
 // ARM10C 20140913
 // ARM10C 20150919
 // ARM10C 20161008
+// ARM10C 20170513
 struct sched_class {
 	const struct sched_class *next;
 
@@ -1330,17 +1340,22 @@ static inline u64 sched_avg_period(void)
 	return (u64)sysctl_sched_time_avg * NSEC_PER_MSEC / 2;
 }
 
-#ifdef CONFIG_SCHED_HRTICK
+#ifdef CONFIG_SCHED_HRTICK // CONFIG_SCHED_HRTICK=y
 
 /*
  * Use hrtick when:
  *  - enabled by features
  *  - hrtimer is actually high res
  */
+// ARM10C 20170513
+// rq: [pcp0] &runqueues
 static inline int hrtick_enabled(struct rq *rq)
 {
+	// sched_feat(HRTICK): 0
 	if (!sched_feat(HRTICK))
 		return 0;
+		// return 0
+
 	if (!cpu_active(cpu_of(rq)))
 		return 0;
 	return hrtimer_is_hres_active(&rq->hrtick_timer);
