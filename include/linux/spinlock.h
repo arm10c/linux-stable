@@ -301,6 +301,8 @@ static inline void do_raw_spin_unlock(raw_spinlock_t *lock) __releases(lock)
 // ARM10C 20140412
 // ARM10C 20150725
 // &logbuf_lock
+// ARM10C 20170520
+// &rq->lock: [pcp0] &(&runqueues)->lock
 #define raw_spin_unlock(lock)		_raw_spin_unlock(lock)
 // ARM10C 20160514
 // &lock->rlock: &(&proc_inum_lock)->rlock
@@ -311,6 +313,8 @@ static inline void do_raw_spin_unlock(raw_spinlock_t *lock) __releases(lock)
 // ARM10C 20150620
 // ARM10C 20160611
 // &devtree_lock, flags
+// ARM10C 20170520
+// &p->pi_lock: &(kmem_cache#15-oX (struct task_struct))->pi_lock, *flags
 #define raw_spin_unlock_irqrestore(lock, flags)		\
 	do {							\
 		typecheck(unsigned long, flags);		\

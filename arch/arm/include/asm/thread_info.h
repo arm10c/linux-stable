@@ -211,6 +211,7 @@ extern int vfp_restore_user_hwstate(struct user_vfp __user *,
 // ARM10C 20140322
 // ARM10C 20160402
 // ARM10C 20160903
+// ARM10C 20170520
 // TIF_NEED_RESCHED: 1
 */
 #define TIF_NEED_RESCHED	1

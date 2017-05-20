@@ -189,6 +189,7 @@ EXPORT_SYMBOL(_raw_spin_lock_bh);
 
 #ifdef CONFIG_UNINLINE_SPIN_UNLOCK // CONFIG_UNINLINE_SPIN_UNLOCK=y
 // ARM10C 20140412
+// ARM10C 20170520
 void __lockfunc _raw_spin_unlock(raw_spinlock_t *lock)
 {
 	__raw_spin_unlock(lock);

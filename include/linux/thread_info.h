@@ -110,7 +110,7 @@ static inline int test_and_clear_ti_thread_flag(struct thread_info *ti, int flag
 	return test_and_clear_bit(flag, (unsigned long *)&ti->flags);
 }
 
-// ARM10C 20130907 
+// ARM10C 20130907
 // ARM10C 20130322
 // ti: &init_thread_union, flag: 1
 // ARM10C 20160402
@@ -118,6 +118,8 @@ static inline int test_and_clear_ti_thread_flag(struct thread_info *ti, int flag
 // ti: &init_thread_union, flag: 1
 // ARM10C 20161203
 // task_thread_info(&init_task): ((struct thread_info *)(&init_task)->stack), flag: 0
+// ARM10C 20170520
+// struct thread_info *)(&init_task)->stack, 1
 static inline int test_ti_thread_flag(struct thread_info *ti, int flag)
 {
 	// flag: 1, &ti->flags: &init_thread_union.thread_info.flags

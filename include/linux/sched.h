@@ -1072,6 +1072,7 @@ struct sched_statistics {
 // ARM10C 20170201
 // ARM10C 20170419
 // ARM10C 20170427
+// ARM10C 20170520
 // sizeof(struct sched_entity): 100 bytes
 struct sched_entity {
 	struct load_weight	load;		/* for load-balancing */
@@ -1148,6 +1149,7 @@ enum perf_event_task_context {
 // ARM10C 20161203
 // ARM10C 20170419
 // ARM10C 20170513
+// ARM10C 20170520
 // sizeof(struct task_struct): 815 bytes
 struct task_struct {
 	volatile long state;	/* -1 unrunnable, 0 runnable, >0 stopped */
@@ -2604,6 +2606,8 @@ static inline void threadgroup_unlock(struct task_struct *tsk) {}
 // p: kmem_cache#15-oX (struct task_struct)
 // ARM10C 20161203
 // tsk: &init_task
+// ARM10C 20170520
+// tsk: &init_task
 #define task_thread_info(task)	((struct thread_info *)(task)->stack)
 // ARM10C 20161105
 // p: kmem_cache#15-oX (struct task_struct)
@@ -2705,12 +2709,18 @@ static inline int test_and_clear_tsk_thread_flag(struct task_struct *tsk, int fl
 
 // ARM10C 20161203
 // p: &init_task, TIF_SIGPENDING: 0
+// ARM10C 20170520
+// tsk: &init_task, TIF_NEED_RESCHED: 1
 static inline int test_tsk_thread_flag(struct task_struct *tsk, int flag)
 {
 	// tsk: &init_task,
 	// task_thread_info(&init_task): ((struct thread_info *)(&init_task)->stack), flag: 0
-	// test_ti_thread_flag(((struct thread_info *)(&init_task)->stack), 0: 0
+	// test_ti_thread_flag(((struct thread_info *)(&init_task)->stack), 0): 0
+	// tsk: &init_task,
+	// task_thread_info(&init_task): ((struct thread_info *)(&init_task)->stack), flag: 1
+	// test_ti_thread_flag(((struct thread_info *)(&init_task)->stack), 1): 0
 	return test_ti_thread_flag(task_thread_info(tsk), flag);
+	// return 0
 	// return 0
 }
 
@@ -2730,9 +2740,16 @@ static inline void clear_tsk_need_resched(struct task_struct *tsk)
 	// (((struct thread_info *)(할당 받은 page 2개의 메로리의 가상 주소))->flags 의 1 bit 값을 clear 수행
 }
 
+// ARM10C 20170520
+// curr: &init_task
+// ARM10C 20170520
+// &init_task
 static inline int test_tsk_need_resched(struct task_struct *tsk)
 {
+	// tsk: &init_task, TIF_NEED_RESCHED: 1
+	// test_tsk_thread_flag(&init_task, 1): 0
 	return unlikely(test_tsk_thread_flag(tsk,TIF_NEED_RESCHED));
+	// return 0
 }
 
 static inline int restart_syscall(void)

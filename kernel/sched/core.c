@@ -399,13 +399,24 @@ static void __task_rq_unlock(struct rq *rq)
 	raw_spin_unlock(&rq->lock);
 }
 
+// ARM10C 20170520
+// rq: [pcp0] &runqueues, p: kmem_cache#15-oX (struct task_struct)
 static inline void
 task_rq_unlock(struct rq *rq, struct task_struct *p, unsigned long *flags)
 	__releases(rq->lock)
 	__releases(p->pi_lock)
 {
+	// &rq->lock: [pcp0] &(&runqueues)->lock
 	raw_spin_unlock(&rq->lock);
+
+	// raw_spin_unlock 에서 한일:
+	// [pcp0] &(&runqueues)->lock 을 사용하여 spin unlock 수행
+
+	// &p->pi_lock: &(kmem_cache#15-oX (struct task_struct))->pi_lock
 	raw_spin_unlock_irqrestore(&p->pi_lock, *flags);
+
+	// raw_spin_unlock_irqrestore 에서 한일:
+	// &(kmem_cache#15-oX (struct task_struct))->pi_lock 을 사용하여 spin unlock를 하고 flags에 cpsr 복원
 }
 
 /*
@@ -1257,6 +1268,8 @@ void check_preempt_curr(struct rq *rq, struct task_struct *p, int flags)
 	 * A queue event has occurred, and we're going to schedule.  In
 	 * this case, we can save a useless back to back clock update.
 	 */
+	// rq->curr: [pcpu0] (&runqueues)->curr: &init_task,
+	// rq->curr->on_rq: (&init_task)->on_rq: 0, test_tsk_need_resched(&init_task): 0
 	if (rq->curr->on_rq && test_tsk_need_resched(rq->curr))
 		rq->skip_clock_update = 1;
 }
@@ -2437,11 +2450,19 @@ void wake_up_new_task(struct task_struct *p)
 
 	// rq: [pcp0] &runqueues, p: kmem_cache#15-oX (struct task_struct), WF_FORK: 0x02
 	check_preempt_curr(rq, p, WF_FORK);
-#ifdef CONFIG_SMP
+
+#ifdef CONFIG_SMP // CONFIG_SMP=y
+	// p->sched_class: (kmem_cache#15-oX (struct task_struct))->sched_class: &fair_sched_class
+	// p->sched_class->task_woken: (&fair_sched_class)->task_woken: NULL
 	if (p->sched_class->task_woken)
 		p->sched_class->task_woken(rq, p);
 #endif
+	// rq: [pcp0] &runqueues, p: kmem_cache#15-oX (struct task_struct)
 	task_rq_unlock(rq, p, &flags);
+
+	// task_rq_unlock 에서 한일:
+	// [pcp0] &(&runqueues)->lock 을 사용하여 spin unlock 수행
+	// &(kmem_cache#15-oX (struct task_struct))->pi_lock 을 사용하여 spin unlock를 하고 flags에 cpsr 복원
 }
 
 #ifdef CONFIG_PREEMPT_NOTIFIERS

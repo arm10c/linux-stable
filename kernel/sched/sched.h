@@ -288,6 +288,7 @@ struct cfs_bandwidth { };
 // ARM10C 20170208
 // ARM10C 20170427
 // ARM10C 20170513
+// ARM10C 20170520
 struct cfs_rq {
 	struct load_weight load;
 	unsigned int nr_running, h_nr_running;
@@ -982,6 +983,10 @@ extern struct static_key sched_feat_keys[__SCHED_FEAT_NR];
 // sysctl_sched_features: 0x2e7b, __SCHED_FEAT_START_DEBIT: 1
 // ARM10C 20170513
 // sysctl_sched_features: 0x2e7b, __SCHED_FEAT_HRTICK: 7
+// ARM10C 20170520
+// sysctl_sched_features: 0x2e7b, __SCHED_FEAT_NEXT_BUDDY: 2
+// ARM10C 20170520
+// sysctl_sched_features: 0x2e7b, __SCHED_FEAT_WAKEUP_PREEMPTION: 5
 #define sched_feat(x) (sysctl_sched_features & (1UL << __SCHED_FEAT_##x))
 #endif /* SCHED_DEBUG && HAVE_JUMP_LABEL */
 
@@ -1118,6 +1123,7 @@ static inline void finish_lock_switch(struct rq *rq, struct task_struct *prev)
 // WF_SYNC: 0x01
 #define WF_SYNC		0x01		/* waker goes to sleep after wakeup */
 // ARM10C 20170513
+// ARM10C 20170520
 // WF_FORK: 0x02
 #define WF_FORK		0x02		/* child wakeup after fork */
 #define WF_MIGRATED	0x4		/* internal use, task got migrated */
@@ -1197,6 +1203,7 @@ static const u32 prio_to_wmult[40] = {
 // ARM10C 20150919
 // ARM10C 20161008
 // ARM10C 20170513
+// ARM10C 20170520
 struct sched_class {
 	const struct sched_class *next;
 

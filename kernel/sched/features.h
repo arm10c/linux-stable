@@ -17,6 +17,7 @@ SCHED_FEAT(START_DEBIT, true)
  * wakeup-preemption), since its likely going to consume data we
  * touched, increases cache locality.
  */
+// ARM10C 20170520
 SCHED_FEAT(NEXT_BUDDY, false)
 
 /*
@@ -35,6 +36,7 @@ SCHED_FEAT(CACHE_HOT_BUDDY, true)
 /*
  * Allow wakeup-time preemption of the current task:
  */
+// ARM10C 20170520
 SCHED_FEAT(WAKEUP_PREEMPTION, true)
 
 /*

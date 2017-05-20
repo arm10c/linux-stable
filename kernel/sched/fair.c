@@ -75,6 +75,7 @@ unsigned int normalized_sysctl_sched_min_granularity = 750000ULL;
  * is kept at sysctl_sched_latency / sysctl_sched_min_granularity
  */
 // ARM10C 20161015
+// ARM10C 20170520
 // sched_nr_latency: 8
 static unsigned int sched_nr_latency = 8;
 
@@ -357,6 +358,8 @@ static inline struct task_struct *task_of(struct sched_entity *se)
 // se: &(kmem_cache#15-oX (struct task_struct))->se
 // ARM10C 20170513
 // se: &(kmem_cache#15-oX (struct task_struct))->se
+// ARM10C 20170520
+// se: &(&init_task)->se
 #define for_each_sched_entity(se) \
 		for (; se; se = se->parent)
 
@@ -364,11 +367,15 @@ static inline struct task_struct *task_of(struct sched_entity *se)
 // current: &init_task
 // ARM10C 20170201
 // p: kmem_cache#15-oX (struct task_struct)
+// ARM10C 20170520
+// curr: &init_task
 static inline struct cfs_rq *task_cfs_rq(struct task_struct *p)
 {
 	// p->se.cfs_rq: (&init_task)->se.cfs_rq: [pcp0] &(&runqueues)->cfs
 	// p->se.cfs_rq: (kmem_cache#15-oX (struct task_struct))->se.cfs_rq: [pcp0] &(&runqueues)->cfs
+	// p->se.cfs_rq: (&init_task)->se.cfs_rq: [pcp0] &(&runqueues)->cfs
 	return p->se.cfs_rq;
+	// return [pcp0] &(&runqueues)->cfs
 	// return [pcp0] &(&runqueues)->cfs
 	// return [pcp0] &(&runqueues)->cfs
 }
@@ -382,10 +389,16 @@ static inline struct cfs_rq *task_cfs_rq(struct task_struct *p)
 // se: &(kmem_cache#15-oX (struct task_struct))->se
 // ARM10C 20170513
 // se: &(kmem_cache#15-oX (struct task_struct))->se
+// ARM10C 20170520
+// pse: &(kmem_cache#15-oX (struct task_struct))->se
+// ARM10C 20170520
+// se: &(&init_task)->se
 static inline struct cfs_rq *cfs_rq_of(struct sched_entity *se)
 {
 	// se->cfs_rq: (kmem_cache#15-oX (struct task_struct))->se.cfs_rq: [pcp0] &(&runqueues)->cfs
+	// se->cfs_rq: (&(&init_task)->se)->cfs_rq: [pcp0] &(&runqueues)->cfs
 	return se->cfs_rq;
+	// return [pcp0] &(&runqueues)->cfs
 	// return [pcp0] &(&runqueues)->cfs
 }
 
@@ -467,11 +480,16 @@ static inline void list_del_leaf_cfs_rq(struct cfs_rq *cfs_rq)
 	list_for_each_entry_rcu(cfs_rq, &rq->leaf_cfs_rq_list, leaf_cfs_rq_list)
 
 /* Do the two (enqueued) entities belong to the same group ? */
+// ARM10C 20170520
+// *se: &(&init_task)->se, *pse: &(kmem_cache#15-oX (struct task_struct))->se
 static inline int
 is_same_group(struct sched_entity *se, struct sched_entity *pse)
 {
+	// se->cfs_rq: (&(&init_task)->se)->cfs_rq: [pcp0] &(&runqueues)->cfs,
+	// pse->cfs_rq: (&(kmem_cache#15-oX (struct task_struct))->se)->cfs_rq: [pcp0] &(&runqueues)->cfs
 	if (se->cfs_rq == pse->cfs_rq)
 		return 1;
+		// return 1
 
 	return 0;
 }
@@ -486,16 +504,42 @@ static inline struct sched_entity *parent_entity(struct sched_entity *se)
 }
 
 /* return depth at which a sched entity is present in the hierarchy */
+// ARM10C 20170520
+// *se: &(&init_task)->se
+// ARM10C 20170520
+// *pse: &(kmem_cache#15-oX (struct task_struct))->se
 static inline int depth_se(struct sched_entity *se)
 {
 	int depth = 0;
+	// depth: 0
+	// depth: 0
 
+	// se: &(&init_task)->se
+	// se: &( &(kmem_cache#15-oX (struct task_struct))->se)->se
 	for_each_sched_entity(se)
-		depth++;
+	// for (; &(&init_task)->se; &(&init_task)->se = (&(&init_task)->se)->parent)
+	// for (; &(kmem_cache#15-oX (struct task_struct))->se;
+	//        &(kmem_cache#15-oX (struct task_struct))->se = (&(kmem_cache#15-oX (struct task_struct))->se)->parent)
 
+		// [loop 1] &(&init_task)->se: NULL 이 아닌 값
+		// [loop 2] &(&init_task)->se: NULL
+		// [loop 1] depth: 0
+		// [loop 1] &(kmem_cache#15-oX (struct task_struct))->se: NULL 이 아닌 값
+		// [loop 2] &(kmem_cache#15-oX (struct task_struct))->se: NULL
+		// [loop 1] depth: 0
+		depth++;
+		// [loop 1] depth: 1
+		// [loop 1] depth: 1
+
+	// depth: 1
+	// depth: 1
 	return depth;
+	// return 1
+	// return 1
 }
 
+// ARM10C 20170520
+// se: &&(&init_task)->se, pse: &&(kmem_cache#15-oX (struct task_struct))->se
 static void
 find_matching_se(struct sched_entity **se, struct sched_entity **pse)
 {
@@ -509,19 +553,29 @@ find_matching_se(struct sched_entity **se, struct sched_entity **pse)
 	 */
 
 	/* First walk up until both entities are at same depth */
+	// *se: &(&init_task)->se, depth_se(&(&init_task)->se): 1
 	se_depth = depth_se(*se);
-	pse_depth = depth_se(*pse);
+	// se_depth: 1
 
+	// *pse: &(kmem_cache#15-oX (struct task_struct))->se
+	// depth_se(&(kmem_cache#15-oX (struct task_struct))->se): 1
+	pse_depth = depth_se(*pse);
+	// pse_depth: 1
+
+	// se_depth: 1, pse_depth: 1
 	while (se_depth > pse_depth) {
 		se_depth--;
 		*se = parent_entity(*se);
 	}
 
+	// se_depth: 1, pse_depth: 1
 	while (pse_depth > se_depth) {
 		pse_depth--;
 		*pse = parent_entity(*pse);
 	}
 
+	// *se: &(&init_task)->se, *pse: &(kmem_cache#15-oX (struct task_struct))->se
+	// is_same_group(&(&init_task)->se, &(kmem_cache#15-oX (struct task_struct))->se): 1
 	while (!is_same_group(*se, *pse)) {
 		*se = parent_entity(*se);
 		*pse = parent_entity(*pse);
@@ -989,6 +1043,8 @@ void init_task_runnable_average(struct task_struct *p)
 // cfs_rq: [pcp0] &(&runqueues)->cfs
 // ARM10C 20170208
 // cfs_rq: [pcp0] &(&runqueues)->cfs
+// ARM10C 20170520
+// [pcp0] &(&runqueues)->cfs
 static void update_curr(struct cfs_rq *cfs_rq)
 {
 	// cfs_rq->curr: [pcp0] (&(&runqueues)->cfs)->curr: NULL
@@ -4299,6 +4355,8 @@ static inline int cfs_rq_throttled(struct cfs_rq *cfs_rq)
 
 // ARM10C 20170427
 // cfs_rq: [pcp0] &(&runqueues)->cfs
+// ARM10C 20170520
+// [pcp0] &(&runqueues)->cfs
 static inline int throttled_hierarchy(struct cfs_rq *cfs_rq)
 {
 	return 0;
@@ -5249,13 +5307,20 @@ wakeup_gran(struct sched_entity *curr, struct sched_entity *se)
  *  w(c, s3) =  1
  *
  */
+// ARM10C 20170520
+// se: &(&init_task)->se, pse: &(kmem_cache#15-oX (struct task_struct))->se
 static int
 wakeup_preempt_entity(struct sched_entity *curr, struct sched_entity *se)
 {
+	// curr->vruntime: (&(&init_task)->se)->vruntime: 0
+	// se->vruntime: (&(kmem_cache#15-oX (struct task_struct))->se)->vruntime: 0x4B8D7E
 	s64 gran, vdiff = curr->vruntime - se->vruntime;
+	// vdiff: -0x4B8D7E
 
+	// vdiff: -0x4B8D7E
 	if (vdiff <= 0)
 		return -1;
+		// return -1
 
 	gran = wakeup_gran(curr, se);
 	if (vdiff > gran)
@@ -5295,14 +5360,29 @@ static void set_skip_buddy(struct sched_entity *se)
 // rq: [pcp0] &runqueues, p: kmem_cache#15-oX (struct task_struct), flags: 0x02
 static void check_preempt_wakeup(struct rq *rq, struct task_struct *p, int wake_flags)
 {
+	// rq->curr: [pcp0] (&runqueues)->curr: &init_task
 	struct task_struct *curr = rq->curr;
+	// curr: &init_task
+
+	// &curr->se: &(&init_task)->se, &p->se: &(kmem_cache#15-oX (struct task_struct))->se
 	struct sched_entity *se = &curr->se, *pse = &p->se;
+	// se: &(&init_task)->se, pse: &(kmem_cache#15-oX (struct task_struct))->se
+
+	// curr: &init_task, task_cfs_rq(&init_task): [pcp0] &(&runqueues)->cfs
 	struct cfs_rq *cfs_rq = task_cfs_rq(curr);
+	// cfs_rq: [pcp0] &(&runqueues)->cfs
+
+	// cfs_rq->nr_running: [pcp0] (&(&runqueues)->cfs)->nr_running: 1, sched_nr_latency: 8
 	int scale = cfs_rq->nr_running >= sched_nr_latency;
+	// scale: 0
+
 	int next_buddy_marked = 0;
+	// next_buddy_marked: 0
 
 // 2017/05/13 종료
+// 2017/05/20 시작
 
+	// se: &(&init_task)->se, pse: &(kmem_cache#15-oX (struct task_struct))->se
 	if (unlikely(se == pse))
 		return;
 
@@ -5312,9 +5392,13 @@ static void check_preempt_wakeup(struct rq *rq, struct task_struct *p, int wake_
 	 * lead to a throttle).  This both saves work and prevents false
 	 * next-buddy nomination below.
 	 */
+	// pse: &(kmem_cache#15-oX (struct task_struct))->se
+	// cfs_rq_of(&(kmem_cache#15-oX (struct task_struct))->se): [pcp0] &(&runqueues)->cfs
+	// throttled_hierarchy([pcp0] &(&runqueues)->cfs): 0
 	if (unlikely(throttled_hierarchy(cfs_rq_of(pse))))
 		return;
 
+	// sched_feat(NEXT_BUDDY): 0, scale: 0, wake_flags: 0x02, WF_FORK: 0x02
 	if (sched_feat(NEXT_BUDDY) && scale && !(wake_flags & WF_FORK)) {
 		set_next_buddy(pse);
 		next_buddy_marked = 1;
@@ -5330,10 +5414,13 @@ static void check_preempt_wakeup(struct rq *rq, struct task_struct *p, int wake_
 	 * prevents us from potentially nominating it as a false LAST_BUDDY
 	 * below.
 	 */
+	// curr: &init_task, test_tsk_need_resched(&init_task): 0
 	if (test_tsk_need_resched(curr))
 		return;
 
 	/* Idle tasks are by definition preempted by non-idle tasks. */
+	// curr->policy: (&init_task)->policy: 0, SCHED_IDLE: 5
+	// p->policy: (kmem_cache#15-oX (struct task_struct))->policy: 0
 	if (unlikely(curr->policy == SCHED_IDLE) &&
 	    likely(p->policy != SCHED_IDLE))
 		goto preempt;
@@ -5342,12 +5429,22 @@ static void check_preempt_wakeup(struct rq *rq, struct task_struct *p, int wake_
 	 * Batch and idle tasks do not preempt non-idle tasks (their preemption
 	 * is driven by the tick):
 	 */
+	// p->policy: (kmem_cache#15-oX (struct task_struct))->policy: 0, SCHED_NORMAL: 0
+	// sched_feat(WAKEUP_PREEMPTION): 32
 	if (unlikely(p->policy != SCHED_NORMAL) || !sched_feat(WAKEUP_PREEMPTION))
 		return;
 
+	// se: &(&init_task)->se, pse: &(kmem_cache#15-oX (struct task_struct))->se
 	find_matching_se(&se, &pse);
+
+	// se: &(&init_task)->se, cfs_rq_of(&(&init_task)->se): [pcp0] &(&runqueues)->cfs
 	update_curr(cfs_rq_of(se));
+
+	// pse: &(kmem_cache#15-oX (struct task_struct))->se
 	BUG_ON(!pse);
+
+	// se: &(&init_task)->se, pse: &(kmem_cache#15-oX (struct task_struct))->se
+	// wakeup_preempt_entitya(&(&init_task)->se, &(kmem_cache#15-oX (struct task_struct))->se): -1
 	if (wakeup_preempt_entity(se, pse) == 1) {
 		/*
 		 * Bias pick_next to pick the sched entity that is
@@ -5359,6 +5456,7 @@ static void check_preempt_wakeup(struct rq *rq, struct task_struct *p, int wake_
 	}
 
 	return;
+	// return 수행
 
 preempt:
 	resched_task(curr);
@@ -8294,6 +8392,7 @@ static unsigned int get_rr_interval_fair(struct rq *rq, struct task_struct *task
 // ARM10C 20161217
 // ARM10C 20170201
 // ARM10C 20170513
+// ARM10C 20170520
 const struct sched_class fair_sched_class = {
 	.next			= &idle_sched_class,
 	.enqueue_task		= enqueue_task_fair,
