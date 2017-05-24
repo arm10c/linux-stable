@@ -49,16 +49,24 @@ struct group_info {
  */
 // ARM10C 20160910
 // new->group_info: (kmem_cache#16-oX (struct cred))->group_info: &init_groups
+// ARM10C 20170524
+// new->group_info: (kmem_cache#16-oX (struct cred))->group_info: &init_groups
 static inline struct group_info *get_group_info(struct group_info *gi)
 {
+	// &gi->usage: &(&init_groups)->usage
 	// &gi->usage: &(&init_groups)->usage
 	atomic_inc(&gi->usage);
 
 	// atomic_inc 에서 한일:
 	// (&(&init_groups)->usage)->counter: 3
 
+	// atomic_inc 에서 한일:
+	// (&(&init_groups)->usage)->counter: 4
+
+	// gi: &init_groups
 	// gi: &init_groups
 	return gi;
+	// return &init_groups
 	// return &init_groups
 }
 
@@ -206,6 +214,8 @@ extern void validate_creds_for_do_exit(struct task_struct *);
 // cred: kmem_cache#16-oX (struct cred)
 // ARM10C 20160910
 // new: kmem_cache#16-oX (struct cred)
+// ARM10C 20170524
+// new: kmem_cache#16-oX (struct cred)
 static inline void validate_creds(const struct cred *cred)
 {
 }
@@ -254,6 +264,8 @@ static inline struct cred *get_new_cred(struct cred *cred)
  * immutable.
  */
 // ARM10C 20160910
+// new: kmem_cache#16-oX (struct cred)
+// ARM10C 20170524
 // new: kmem_cache#16-oX (struct cred)
 static inline const struct cred *get_cred(const struct cred *cred)
 {

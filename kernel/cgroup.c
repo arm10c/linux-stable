@@ -6501,6 +6501,8 @@ static const struct file_operations proc_cgroupstats_operations = {
  */
 // ARM10C 20161008
 // p: kmem_cache#15-oX (struct task_struct)
+// ARM10C 20170524
+// p: kmem_cache#15-oX (struct task_struct)
 void cgroup_fork(struct task_struct *child)
 {
 	// current: &init_task

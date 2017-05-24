@@ -2003,6 +2003,8 @@ SYSCALL_DEFINE3(semop, int, semid, struct sembuf __user *, tsops,
 
 // ARM10C 20161029
 // clone_flags: 0x00800B00, p: kmem_cache#15-oX (struct task_struct)
+// ARM10C 20170524
+// clone_flags: 0x00800700, p: kmem_cache#15-oX (struct task_struct)
 int copy_semundo(unsigned long clone_flags, struct task_struct *tsk)
 {
 	struct sem_undo_list *undo_list;

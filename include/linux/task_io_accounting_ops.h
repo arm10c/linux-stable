@@ -79,6 +79,8 @@ static inline void task_io_account_cancelled_write(size_t bytes)
 
 // ARM10C 20160910
 // p->ioac: (kmem_cache#15-oX (struct task_struct))->ioac
+// ARM10C 20170524
+// p->ioac: (kmem_cache#15-oX (struct task_struct))->ioac
 static inline void task_io_accounting_init(struct task_io_accounting *ioac)
 {
 }

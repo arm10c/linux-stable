@@ -213,6 +213,8 @@ extern int do_sys_settimeofday(const struct timespec *tv,
 			       const struct timezone *tz);
 // ARM10C 20160910
 // &p->start_time: &(kmem_cache#15-oX (struct task_struct))->start_time
+// ARM10C 20170524
+// &p->start_time: &(kmem_cache#15-oX (struct task_struct))->start_time
 #define do_posix_clock_monotonic_gettime(ts) ktime_get_ts(ts)
 extern long do_utimes(int dfd, const char __user *filename, struct timespec *times, int flags);
 struct itimerval;

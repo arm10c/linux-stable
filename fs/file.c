@@ -583,6 +583,7 @@ void __init files_defer_init(void)
 
 // ARM10C 20150808
 // ARM10C 20161029
+// ARM10C 20170524
 // NR_OPEN_DEFAULT: 32
 struct files_struct init_files = {
 	.count		= ATOMIC_INIT(1),

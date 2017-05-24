@@ -13,9 +13,11 @@
 #define CLONE_VM	0x00000100	/* set if VM shared between processes */
 // ARM10C 20160827
 // ARM10C 20161105
+// ARM10C 20170524
 // CLONE_FS: 0x00000200
 #define CLONE_FS	0x00000200	/* set if fs info shared between processes */
 // ARM10C 20161029
+// ARM10C 20170524
 // CLONE_FILES: 0x00000400
 #define CLONE_FILES	0x00000400	/* set if open files shared between processes */
 // ARM10C 20160827
@@ -28,6 +30,7 @@
 #define CLONE_PTRACE	0x00002000	/* set if we want to let tracing continue on the child too */
 // ARM10C 20161203
 // ARM10C 20161217
+// ARM10C 20170524
 // CLONE_VFORK: 0x00004000
 #define CLONE_VFORK	0x00004000	/* set if the parent wants the child to wake it up on mm_release */
 // ARM10C 20160827

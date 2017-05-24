@@ -237,6 +237,8 @@ static inline void siginitsetinv(sigset_t *set, unsigned long mask)
 // &p->pending: &(kmem_cache#15-oX (struct task_struct))->pending
 // ARM10C 20161105
 // &sig->shared_pending: &(kmem_cache#13-oX (struct signal_struct))->shared_pending
+// ARM10C 20170524
+// &p->pending: &(kmem_cache#15-oX (struct task_struct))->pending
 static inline void init_sigpending(struct sigpending *sig)
 {
 	// &sig->signal: &(&(kmem_cache#15-oX (struct task_struct))->pending)->signal
@@ -293,6 +295,7 @@ struct sigaction {
 };
 
 // ARM10C 20150919
+// ARM10C 20170524
 // sizeof(struct k_sigaction): 20 bytes
 struct k_sigaction {
 	struct sigaction sa;

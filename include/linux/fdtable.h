@@ -51,6 +51,7 @@ static inline bool fd_is_open(int fd, const struct fdtable *fdt)
  */
 // ARM10C 20150919
 // ARM10C 20161029
+// ARM10C 20170524
 // NR_OPEN_DEFAULT: 32
 // sizeof(struct files_struct): 188 bytes
 struct files_struct {

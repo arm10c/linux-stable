@@ -85,6 +85,8 @@ static inline void put_seccomp_filter(struct task_struct *tsk)
 }
 // ARM10C 20160903
 // p: kmem_cache#15-oX (struct task_struct)
+// ARM10C 20170524
+// p: kmem_cache#15-oX (struct task_struct)
 static inline void get_seccomp_filter(struct task_struct *tsk)
 {
 	return;

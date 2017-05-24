@@ -98,6 +98,8 @@
 // &sig->sigcnt: &(kmem_cache#13-oX (struct signal_struct))->sigcnt, 1
 // ARM10C 20161203
 // &pid->count: &(kmem_cache#19-oX (struct pid))->count
+// ARM10C 20170524
+// &sig->count: &(kmem_cache#14-oX (struct sighand_struct))->count
 #define atomic_set(v,i)	(((v)->counter) = (i))
 
 #if __LINUX_ARM_ARCH__ >= 6

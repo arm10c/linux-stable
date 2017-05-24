@@ -254,6 +254,7 @@ static inline void numa_policy_init(void)
 {
 }
 
+// ARM10C 20170524
 static inline void numa_default_policy(void)
 {
 }

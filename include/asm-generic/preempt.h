@@ -43,6 +43,8 @@ static __always_inline void preempt_count_set(int pc)
 // PREEMPT_DISABLED: 1
 //
 // p: kmem_cache#15-oX (struct task_struct)
+// ARM10C 20170524
+// p: kmem_cache#15-oX (struct task_struct)
 #define init_task_preempt_count(p) do { \
 	task_thread_info(p)->preempt_count = PREEMPT_DISABLED; \
 } while (0)

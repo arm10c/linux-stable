@@ -109,9 +109,11 @@
 //     }
 // }
 static struct signal_struct init_signals = INIT_SIGNALS(init_signals);
+
 // ARM10C 20150808
 // ARM10C 20160903
 // ARM10C 20161105
+// ARM10C 20170524
 // #define INIT_SIGHAND(init_sighand):
 // {
 //     .count        = { (1) },

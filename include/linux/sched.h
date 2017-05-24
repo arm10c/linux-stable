@@ -405,6 +405,7 @@ extern int get_dumpable(struct mm_struct *mm);
 // ARM10C 20160903
 // ARM10C 20161105
 // ARM10C 20161203
+// ARM10C 20170524
 // sizeof(struct sighand_struct): 1324 bytes
 struct sighand_struct {
 	atomic_t		count;
@@ -1956,6 +1957,8 @@ extern void task_clear_jobctl_pending(struct task_struct *task,
 
 // ARM10C 20160910
 // p: kmem_cache#15-oX (struct task_struct)
+// ARM10C 20170524
+// p: kmem_cache#15-oX (struct task_struct)
 static inline void rcu_copy_process(struct task_struct *p)
 {
 	// p->rcu_read_lock_nesting: (kmem_cache#15-oX (struct task_struct))->rcu_read_lock_nesting
@@ -2224,16 +2227,24 @@ extern struct user_struct * alloc_uid(kuid_t);
 
 // ARM10C 20160910
 // new->user: (kmem_cache#16-oX (struct cred))->user: &root_user
+// ARM10C 20170524
+// new->user: (kmem_cache#16-oX (struct cred))->user: &root_user
 static inline struct user_struct *get_uid(struct user_struct *u)
 {
+	// &u->__count: &(&root_user)->__count
 	// &u->__count: &(&root_user)->__count
 	atomic_inc(&u->__count);
 
 	// atomic_inc 에서 한일:
 	// (&(&root_user)->__count)->counter: 2
 
+	// atomic_inc 에서 한일:
+	// (&(&root_user)->__count)->counter: 3
+
+	// u: &root_user
 	// u: &root_user
 	return u;
+	// return &root_user
 	// return &root_user
 }
 extern void free_uid(struct user_struct *);

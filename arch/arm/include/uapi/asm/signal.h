@@ -107,6 +107,7 @@ struct sigaction {
 	void (*sa_restorer)(void);
 };
 
+// ARM10C 20170524
 #define sa_handler	_u._sa_handler
 #define sa_sigaction	_u._sa_sigaction
 

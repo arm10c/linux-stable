@@ -734,6 +734,12 @@ static inline void rcu_preempt_sleep_check(void)
 //     smp_wmb();
 //     ((*((struct hlist_node __rcu **)(&(&(&init_struct_pid)->tasks[1])->first)))) = (typeof(*&(&(kmem_cache#15-oX (struct task_struct))->pids[1])->node) __force __rcu *)(&(&(kmem_cache#15-oX (struct task_struct))->pids[1])->node);
 // } while (0)
+// ARM10C 20170524
+// #define __rcu_assign_pointer((kmem_cache#15-oX (struct task_struct))->sighand, kmem_cache#14-oX (struct sighand_struct), __rcu):
+// do {
+//     smp_wmb();
+//     ((kmem_cache#15-oX (struct task_struct))->sighand) = (typeof(*kmem_cache#14-oX (struct sighand_struct)) __force __rcu *)(kmem_cache#14-oX (struct sighand_struct));
+// } while (0)
 #define __rcu_assign_pointer(p, v, space)	\
 	do { \
 		smp_wmb(); \
@@ -1252,6 +1258,9 @@ static inline notrace void rcu_read_unlock_sched_notrace(void)
 // ARM10C 20161210
 // (*((struct hlist_node __rcu **)(&(&(&init_struct_pid)->tasks[1])->first)))
 // n: &(&(kmem_cache#15-oX (struct task_struct))->pids[1])->node
+// ARM10C 20170524
+// tsk->sighand: (kmem_cache#15-oX (struct task_struct))->sighand,
+// sig: kmem_cache#14-oX (struct sighand_struct)
 #define rcu_assign_pointer(p, v)		\
 	__rcu_assign_pointer((p), (v), __rcu)
 

@@ -2352,6 +2352,8 @@ static inline int security_file_open(struct file *file,
 
 // ARM10C 20160903
 // clone_flags: 0x00800B00
+// ARM10C 20170524
+// clone_flags: 0x00800700
 static inline int security_task_create(unsigned long clone_flags)
 {
 	return 0;
@@ -2370,6 +2372,8 @@ static inline void security_cred_free(struct cred *cred)
 { }
 
 // ARM10C 20160910
+// new: kmem_cache#16-oX (struct cred), old: &init_cred, GFP_KERNEL: 0xD0
+// ARM10C 20170524
 // new: kmem_cache#16-oX (struct cred), old: &init_cred, GFP_KERNEL: 0xD0
 static inline int security_prepare_creds(struct cred *new,
 					 const struct cred *old,

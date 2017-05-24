@@ -2038,6 +2038,8 @@ int wake_up_state(struct task_struct *p, unsigned int state)
 // 0, idle: &init_task
 // ARM10C 20161008
 // clone_flags: 0x00800B00, p: kmem_cache#15-oX (struct task_struct)
+// ARM10C 20170524
+// clone_flags: 0x00800700, p: kmem_cache#15-oX (struct task_struct)
 static void __sched_fork(unsigned long clone_flags, struct task_struct *p)
 {
 	// p->on_rq: (&init_task)->on_rq
@@ -2153,16 +2155,32 @@ int sysctl_numa_balancing(struct ctl_table *table, int write,
  */
 // ARM10C 20161008
 // clone_flags: 0x00800B00, p: kmem_cache#15-oX (struct task_struct)
+// ARM10C 20170524
+// clone_flags: 0x00800700, p: kmem_cache#15-oX (struct task_struct)
 void sched_fork(unsigned long clone_flags, struct task_struct *p)
 {
 	unsigned long flags;
 
 	// get_cpu(): 0
+	// get_cpu(): 0
 	int cpu = get_cpu();
+	// cpu: 0
 	// cpu: 0
 
 	// clone_flags: 0x00800B00, p: kmem_cache#15-oX (struct task_struct)
+	// clone_flags: 0x00800700, p: kmem_cache#15-oX (struct task_struct)
 	__sched_fork(clone_flags, p);
+
+	// __sched_fork에서 한일:
+	// (&kmem_cache#15-oX (struct task_struct))->on_rq: 0
+	// (&kmem_cache#15-oX (struct task_struct))->se.on_rq: 0
+	// (&kmem_cache#15-oX (struct task_struct))->se.exec_start: 0
+	// (&kmem_cache#15-oX (struct task_struct))->se.sum_exec_runtime: 0
+	// (&kmem_cache#15-oX (struct task_struct))->se.prev_sum_exec_runtime: 0
+	// (&kmem_cache#15-oX (struct task_struct))->se.nr_migrations: 0
+	// (&kmem_cache#15-oX (struct task_struct))->se.vruntime: 0
+	// &(&kmem_cache#15-oX (struct task_struct))->se.group_node의 리스트 초기화
+	// &(&kmem_cache#15-oX (struct task_struct))->rt.run_list의 리스트 초기화
 
 	// __sched_fork에서 한일:
 	// (&kmem_cache#15-oX (struct task_struct))->on_rq: 0
@@ -2182,7 +2200,9 @@ void sched_fork(unsigned long clone_flags, struct task_struct *p)
 	 */
 
 	// p->state: (kmem_cache#15-oX (struct task_struct))->state, TASK_RUNNING: 0
+	// p->state: (kmem_cache#15-oX (struct task_struct))->state, TASK_RUNNING: 0
 	p->state = TASK_RUNNING;
+	// p->state: (kmem_cache#15-oX (struct task_struct))->state: 0
 	// p->state: (kmem_cache#15-oX (struct task_struct))->state: 0
 
 	/*
@@ -2190,12 +2210,16 @@ void sched_fork(unsigned long clone_flags, struct task_struct *p)
 	 */
 	// p->prio: (kmem_cache#15-oX (struct task_struct))->prio,
 	// current: &init_task, current->normal_prio: (&init_task)->normal_prio: 120
+	// p->prio: (kmem_cache#15-oX (struct task_struct))->prio,
+	// current: &init_task, current->normal_prio: (&init_task)->normal_prio: 120
 	p->prio = current->normal_prio;
+	// p->prio: (kmem_cache#15-oX (struct task_struct))->prio: 120
 	// p->prio: (kmem_cache#15-oX (struct task_struct))->prio: 120
 
 	/*
 	 * Revert to default priority/policy on fork if requested.
 	 */
+	// p->>sched_reset_on_fork: (kmem_cache#15-oX (struct task_struct))->sched_reset_on_fork: 0
 	// p->>sched_reset_on_fork: (kmem_cache#15-oX (struct task_struct))->sched_reset_on_fork: 0
 	if (unlikely(p->sched_reset_on_fork)) {
 		if (task_has_rt_policy(p)) {
@@ -2216,9 +2240,12 @@ void sched_fork(unsigned long clone_flags, struct task_struct *p)
 	}
 
 	// p->prio: (kmem_cache#15-oX (struct task_struct))->prio: 120, rt_prio(120): 0
+	// p->prio: (kmem_cache#15-oX (struct task_struct))->prio: 120, rt_prio(120): 0
 	if (!rt_prio(p->prio))
 		// p->sched_class: (kmem_cache#15-oX (struct task_struct))->sched_class
+		// p->sched_class: (kmem_cache#15-oX (struct task_struct))->sched_class
 		p->sched_class = &fair_sched_class;
+		// p->sched_class: (kmem_cache#15-oX (struct task_struct))->sched_class: &fair_sched_class
 		// p->sched_class: (kmem_cache#15-oX (struct task_struct))->sched_class: &fair_sched_class
 
 // 2016/10/15 종료
@@ -2226,7 +2253,12 @@ void sched_fork(unsigned long clone_flags, struct task_struct *p)
 
 	// p->sched_class: (kmem_cache#15-oX (struct task_struct))->sched_class: &fair_sched_class,
 	// p->sched_class->task_fork: (&fair_sched_class)->task_fork: task_fork_fair
+	// p->sched_class: (kmem_cache#15-oX (struct task_struct))->sched_class: &fair_sched_class,
+	// p->sched_class->task_fork: (&fair_sched_class)->task_fork: task_fork_fair
 	if (p->sched_class->task_fork)
+		// p->sched_class->task_fork: (&fair_sched_class)->task_fork: task_fork_fair,
+		// p: kmem_cache#15-oX (struct task_struct),
+		// task_fork_fair(kmem_cache#15-oX (struct task_struct))
 		// p->sched_class->task_fork: (&fair_sched_class)->task_fork: task_fork_fair,
 		// p: kmem_cache#15-oX (struct task_struct),
 		// task_fork_fair(kmem_cache#15-oX (struct task_struct))
@@ -2248,6 +2280,21 @@ void sched_fork(unsigned long clone_flags, struct task_struct *p)
 		//
 		// (&(kmem_cache#15-oX (struct task_struct))->se)->vruntime: 0x5B8D7E
 
+		// task_fork_fair 에서 한일:
+		// 현재의 schedule 시간값과 기존의 (&runqueues)->clock 의 값의 차이값을
+		// [pcp0] (&runqueues)->clock, [pcp0] (&runqueues)->clock_task 의 값에 더해 갱신함
+		//
+		// [pcp0] (&runqueues)->clock: schedule 시간 차이값
+		// [pcp0] (&runqueues)->clock_task: schedule 시간 차이값
+		//
+		// (kmem_cache#15-oX (struct task_struct))->se.cfs_rq: [pcp0] &(&runqueues)->cfs
+		// (kmem_cache#15-oX (struct task_struct))->se.parent: NULL
+		// (kmem_cache#15-oX (struct task_struct))->rt.rt_rq: [pcp0] &(&runqueues)->rt
+		// (kmem_cache#15-oX (struct task_struct))->rt.parent: NULL
+		// ((struct thread_info *)(kmem_cache#15-oX (struct task_struct))->stack)->cpu: 0
+		// (kmem_cache#15-oX (struct task_struct))->wake_cpu: 0
+		//
+		// (&(kmem_cache#15-oX (struct task_struct))->se)->vruntime: 0x5B8D7E
 	/*
 	 * The child is not yet in the pid-hash so no cgroup attach races,
 	 * and the cgroup is pinned to this child due to cgroup_fork()
@@ -2256,11 +2303,16 @@ void sched_fork(unsigned long clone_flags, struct task_struct *p)
 	 * Silence PROVE_RCU.
 	 */
 	// &p->pi_lock: &(kmem_cache#15-oX (struct task_struct))->pi_lock
+	// &p->pi_lock: &(kmem_cache#15-oX (struct task_struct))->pi_lock
 	raw_spin_lock_irqsave(&p->pi_lock, flags);
 
 	// raw_spin_lock_irqsave 에서 한일:
 	// &(kmem_cache#15-oX (struct task_struct))->pi_lock 을 사용하여 spin lock 을 수행하고 cpsr 값을 flags 저장함
 
+	// raw_spin_lock_irqsave 에서 한일:
+	// &(kmem_cache#15-oX (struct task_struct))->pi_lock 을 사용하여 spin lock 을 수행하고 cpsr 값을 flags 저장함
+
+	// p: kmem_cache#15-oX (struct task_struct), cpu: 0
 	// p: kmem_cache#15-oX (struct task_struct), cpu: 0
 	set_task_cpu(p, cpu);
 
@@ -2272,8 +2324,20 @@ void sched_fork(unsigned long clone_flags, struct task_struct *p)
 	// ((struct thread_info *)(kmem_cache#15-oX (struct task_struct))->stack)->cpu: 0
 	// (kmem_cache#15-oX (struct task_struct))->wake_cpu: 0
 
+	// set_task_cpu 에서 한일:
+	// (kmem_cache#15-oX (struct task_struct))->se.cfs_rq: [pcp0] &(&runqueues)->cfs
+	// (kmem_cache#15-oX (struct task_struct))->se.parent: NULL
+	// (kmem_cache#15-oX (struct task_struct))->rt.rt_rq: [pcp0] &(&runqueues)->rt
+	// (kmem_cache#15-oX (struct task_struct))->rt.parent: NULL
+	// ((struct thread_info *)(kmem_cache#15-oX (struct task_struct))->stack)->cpu: 0
+	// (kmem_cache#15-oX (struct task_struct))->wake_cpu: 0
+
+	// &p->pi_lock: &(kmem_cache#15-oX (struct task_struct))->pi_lock
 	// &p->pi_lock: &(kmem_cache#15-oX (struct task_struct))->pi_lock
 	raw_spin_unlock_irqrestore(&p->pi_lock, flags);
+
+	// raw_spin_unlock_irqrestore 에서 한일:
+	// &(kmem_cache#15-oX (struct task_struct))->pi_lock 을 사용하여 spin unlock 을 수행하고 flags 저장된 cpsr 값을 복원함
 
 	// raw_spin_unlock_irqrestore 에서 한일:
 	// &(kmem_cache#15-oX (struct task_struct))->pi_lock 을 사용하여 spin unlock 을 수행하고 flags 저장된 cpsr 값을 복원함
@@ -2284,18 +2348,33 @@ void sched_fork(unsigned long clone_flags, struct task_struct *p)
 #endif
 #if defined(CONFIG_SMP) // CONFIG_SMP=y
 	// p->on_cpu: (kmem_cache#15-oX (struct task_struct))->on_cpu
+	// p->on_cpu: (kmem_cache#15-oX (struct task_struct))->on_cpu
 	p->on_cpu = 0;
 	// p->on_cpu: (kmem_cache#15-oX (struct task_struct))->on_cpu: 0
+	// p->on_cpu: (kmem_cache#15-oX (struct task_struct))->on_cpu: 0
 #endif
+	// p: kmem_cache#15-oX (struct task_struct)
 	// p: kmem_cache#15-oX (struct task_struct)
 	init_task_preempt_count(p);
 
 	// init_task_preempt_count 에서 한일:
 	// ((struct thread_info *)(kmem_cache#15-oX (struct task_struct))->stack)->preempt_count: 1
 
+	// init_task_preempt_count 에서 한일:
+	// ((struct thread_info *)(kmem_cache#15-oX (struct task_struct))->stack)->preempt_count: 1
+
 #ifdef CONFIG_SMP // CONFIG_SMP=y
 	// &p->pushable_tasks: &(kmem_cache#15-oX (struct task_struct))->pushable_tasks, MAX_PRIO: 140
+	// &p->pushable_tasks: &(kmem_cache#15-oX (struct task_struct))->pushable_tasks, MAX_PRIO: 140
 	plist_node_init(&p->pushable_tasks, MAX_PRIO);
+
+	// plist_node_init 에서 한일:
+	// (&(kmem_cache#15-oX (struct task_struct))->pushable_tasks)->prio: 140
+	//
+	// (&(&(kmem_cache#15-oX (struct task_struct))->pushable_tasks)->prio_list)->next: &(&(kmem_cache#15-oX (struct task_struct))->pushable_tasks)->prio_list
+	// (&(&(kmem_cache#15-oX (struct task_struct))->pushable_tasks)->prio_list)->prev: &(&(kmem_cache#15-oX (struct task_struct))->pushable_tasks)->prio_list
+	// (&(&(kmem_cache#15-oX (struct task_struct))->pushable_tasks)->node_list)->next: &(&(kmem_cache#15-oX (struct task_struct))->pushable_tasks)->node_list
+	// (&(&(kmem_cache#15-oX (struct task_struct))->pushable_tasks)->node_list)->prev: &(&(kmem_cache#15-oX (struct task_struct))->pushable_tasks)->node_list
 
 	// plist_node_init 에서 한일:
 	// (&(kmem_cache#15-oX (struct task_struct))->pushable_tasks)->prio: 140

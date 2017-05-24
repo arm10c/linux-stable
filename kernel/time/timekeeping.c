@@ -1852,6 +1852,8 @@ EXPORT_SYMBOL_GPL(ktime_get_boottime);
  */
 // ARM10C 20160910
 // &p->real_start_time: &(kmem_cache#15-oX (struct task_struct))->real_start_time
+// ARM10C 20170524
+// &p->real_start_time: &(kmem_cache#15-oX (struct task_struct))->real_start_time
 void monotonic_to_bootbased(struct timespec *ts)
 {
 	struct timekeeper *tk = &timekeeper;
