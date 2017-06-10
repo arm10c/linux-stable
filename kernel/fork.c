@@ -88,10 +88,12 @@
  * Protected counters by write_lock_irq(&tasklist_lock)
  */
 // ARM10C 20161210
+// ARM10C 20170610
 unsigned long total_forks;	/* Handle normal Linux uptimes. */
 
 // ARM10C 20160910
 // ARM10C 20161210
+// ARM10C 20170610
 int nr_threads;			/* The idle threads do not count.. */
 
 // ARM10C 20150919
@@ -1006,6 +1008,8 @@ fail_nocontext:
 
 // ARM10C 20161105
 // clone_flags: 0x00800B00, p: kmem_cache#15-oX (struct task_struct)
+// ARM10C 20170610
+// clone_flags: 0x00800700, p: kmem_cache#15-oX (struct task_struct)
 static int copy_mm(unsigned long clone_flags, struct task_struct *tsk)
 {
 	struct mm_struct *mm, *oldmm;
@@ -1225,6 +1229,8 @@ out:
 
 // ARM10C 20161105
 // clone_flags: 0x00800B00, p: kmem_cache#15-oX (struct task_struct)
+// ARM10C 20170610
+// clone_flags: 0x00800700, p: kmem_cache#15-oX (struct task_struct)
 static int copy_io(unsigned long clone_flags, struct task_struct *tsk)
 {
 #ifdef CONFIG_BLOCK // CONFIG_BLOCK=y
@@ -1375,6 +1381,8 @@ static void posix_cpu_timers_init_group(struct signal_struct *sig)
 
 // ARM10C 20161105
 // clone_flags: 0x00800B00, p: kmem_cache#15-oX (struct task_struct)
+// ARM10C 20170610
+// clone_flags: 0x00800700, p: kmem_cache#15-oX (struct task_struct)
 static int copy_signal(unsigned long clone_flags, struct task_struct *tsk)
 {
 	struct signal_struct *sig;
@@ -1651,6 +1659,8 @@ static void posix_cpu_timers_init(struct task_struct *tsk)
 // p: kmem_cache#15-oX (struct task_struct), PIDTYPE_PGID: 1, task_pgrp(&init_task): &init_struct_pid
 // ARM10C 20161203
 // p: kmem_cache#15-oX (struct task_struct), PIDTYPE_SID: 2, task_session(&init_task): &init_struct_pid
+// ARM10C 20170610
+// p: kmem_cache#15-oX (struct task_struct), PIDTYPE_PGID: 1, task_pgrp(&init_task): &init_struct_pid
 static inline void
 init_task_pid(struct task_struct *task, enum pid_type type, struct pid *pid)
 {
@@ -2527,10 +2537,14 @@ static struct task_struct *copy_process(unsigned long clone_flags,
 		goto bad_fork_cleanup_fs;
 
 // 2017/05/24 종료
+// 2017/06/10 시작
 
 	// clone_flags: 0x00800B00, p: kmem_cache#15-oX (struct task_struct)
 	// copy_signal(0x00800B00, kmem_cache#15-oX (struct task_struct)): 0
+	// clone_flags: 0x00800700, p: kmem_cache#15-oX (struct task_struct)
+	// copy_signal(0x00800700, kmem_cache#15-oX (struct task_struct)): 0
 	retval = copy_signal(clone_flags, p);
+	// retval: 0
 	// retval: 0
 
 	// copy_signal 에서 한일:
@@ -2584,13 +2598,68 @@ static struct task_struct *copy_process(unsigned long clone_flags,
 	// (&(kmem_cache#13-oX (struct signal_struct))->cred_guard_mutex)->onwer: NULL
 	// (&(kmem_cache#13-oX (struct signal_struct))->cred_guard_mutex)->magic: &(kmem_cache#13-oX (struct signal_struct))->cred_guard_mutex
 
+	// copy_signal 에서 한일:
+	// struct signal_struct 크기 만큼의 메모리를 할당함
+	// kmem_cache#13-oX (struct signal_struct)
+	//
+	// (kmem_cache#15-oX (struct task_struct))->signal: kmem_cache#13-oX (struct signal_struct)
+	//
+	// (kmem_cache#13-oX (struct signal_struct))->nr_threads: 1
+	// (kmem_cache#13-oX (struct signal_struct))->live: { (1) }
+	// (kmem_cache#13-oX (struct signal_struct))->sigcnt: { (1) }
+	// &(&(kmem_cache#13-oX (struct signal_struct))->wait_chldexit)->lock을 사용한 spinlock 초기화
+	// &(&(kmem_cache#13-oX (struct signal_struct))->wait_chldexit)->task_list를 사용한 list 초기화
+	//
+	// (kmem_cache#13-oX (struct signal_struct))->curr_target: kmem_cache#15-oX (struct task_struct)
+	//
+	// (&(&(kmem_cache#13-oX (struct signal_struct))->shared_pending)->signal)->sig[0]: 0
+	// (&(&(kmem_cache#13-oX (struct signal_struct))->shared_pending)->signal)->sig[1]: 0
+	// (&(&(kmem_cache#13-oX (struct signal_struct))->shared_pending)->list)->next: &(&(kmem_cache#13-oX (struct signal_struct))->shared_pending)->list
+	// (&(&(kmem_cache#13-oX (struct signal_struct))->shared_pending)->list)->prev: &(&(kmem_cache#13-oX (struct signal_struct))->shared_pending)->list
+	// (&(kmem_cache#13-oX (struct signal_struct))->posix_timers)->next: &(kmem_cache#13-oX (struct signal_struct))->posix_timers
+	// (&(kmem_cache#13-oX (struct signal_struct))->posix_timers)->prev: &(kmem_cache#13-oX (struct signal_struct))->posix_timers
+	//
+	// (kmem_cache#13-oX (struct signal_struct))->real_timer의 값을 0으로 초기화
+	// (&(kmem_cache#13-oX (struct signal_struct))->real_timer)->base: [pcp0] &(&hrtimer_bases)->clock_base[0]
+	// RB Tree의 &(&(kmem_cache#13-oX (struct signal_struct))->real_timer)->node 를 초기화
+	//
+	// (kmem_cache#13-oX (struct signal_struct))->real_timer.function: it_real_fn
+	// (kmem_cache#13-oX (struct signal_struct))->rlim 에 (&init_signals)->rlim 값을 전부 복사함
+	// &(kmem_cache#13-oX (struct signal_struct))->cputimer.lock 을 사용한 spinlock 초기화 수행
+	// (&(kmem_cache#13-oX (struct signal_struct))->cpu_timers[0])->next: &(kmem_cache#13-oX (struct signal_struct))->cpu_timers[0]
+	// (&(kmem_cache#13-oX (struct signal_struct))->cpu_timers[0])->prev: &(kmem_cache#13-oX (struct signal_struct))->cpu_timers[0]
+	// (&(kmem_cache#13-oX (struct signal_struct))->cpu_timers[1])->next: &(kmem_cache#13-oX (struct signal_struct))->cpu_timers[1]
+	// (&(kmem_cache#13-oX (struct signal_struct))->cpu_timers[1])->prev: &(kmem_cache#13-oX (struct signal_struct))->cpu_timers[1]
+	// (&(kmem_cache#13-oX (struct signal_struct))->cpu_timers[2])->next: &(kmem_cache#13-oX (struct signal_struct))->cpu_timers[2]
+	// (&(kmem_cache#13-oX (struct signal_struct))->cpu_timers[2])->prev: &(kmem_cache#13-oX (struct signal_struct))->cpu_timers[2]
+	// (&(kmem_cache#13-oX (struct signal_struct))->group_rwsem)->activity: 0
+	// &(&(kmem_cache#13-oX (struct signal_struct))->group_rwsem)->wait_lock을 사용한 spinlock 초기화
+	// (&(&(kmem_cache#13-oX (struct signal_struct))->group_rwsem)->wait_list)->next: &(&(kmem_cache#13-oX (struct signal_struct))->group_rwsem)->wait_list
+	// (&(&(kmem_cache#13-oX (struct signal_struct))->group_rwsem)->wait_list)->prev: &(&(kmem_cache#13-oX (struct signal_struct))->group_rwsem)->wait_list
+	// (kmem_cache#13-oX (struct signal_struct))->oom_score_adj: 0
+	// (kmem_cache#13-oX (struct signal_struct))->oom_score_adj_min: 0
+	// (kmem_cache#13-oX (struct signal_struct))->has_child_subreaper: 0
+	// (&(kmem_cache#13-oX (struct signal_struct))->cred_guard_mutex)->count: 1
+	// (&(kmem_cache#13-oX (struct signal_struct))->cred_guard_mutex)->wait_lock)->rlock)->raw_lock: { { 0 } }
+	// (&(kmem_cache#13-oX (struct signal_struct))->cred_guard_mutex)->wait_lock)->rlock)->magic: 0xdead4ead
+	// (&(kmem_cache#13-oX (struct signal_struct))->cred_guard_mutex)->wait_lock)->rlock)->owner: 0xffffffff
+	// (&(kmem_cache#13-oX (struct signal_struct))->cred_guard_mutex)->wait_lock)->rlock)->owner_cpu: 0xffffffff
+	// (&(&(kmem_cache#13-oX (struct signal_struct))->cred_guard_mutex)->wait_list)->next: &(&(kmem_cache#13-oX (struct signal_struct))->cred_guard_mutex)->wait_list
+	// (&(&(kmem_cache#13-oX (struct signal_struct))->cred_guard_mutex)->wait_list)->prev: &(&(kmem_cache#13-oX (struct signal_struct))->cred_guard_mutex)->wait_list
+	// (&(kmem_cache#13-oX (struct signal_struct))->cred_guard_mutex)->onwer: NULL
+	// (&(kmem_cache#13-oX (struct signal_struct))->cred_guard_mutex)->magic: &(kmem_cache#13-oX (struct signal_struct))->cred_guard_mutex
+
+	// retval: 0
 	// retval: 0
 	if (retval)
 		goto bad_fork_cleanup_sighand;
 
 	// clone_flags: 0x00800B00, p: kmem_cache#15-oX (struct task_struct)
 	// copy_mm(0x00800B00, kmem_cache#15-oX (struct task_struct)): 0
+	// clone_flags: 0x00800700, p: kmem_cache#15-oX (struct task_struct)
+	// copy_mm(0x00800700, kmem_cache#15-oX (struct task_struct)): 0
 	retval = copy_mm(clone_flags, p);
+	// retval: 0
 	// retval: 0
 
 	// copy_mm 에서 한일:
@@ -2602,34 +2671,57 @@ static struct task_struct *copy_process(unsigned long clone_flags,
 	// (kmem_cache#15-oX (struct task_struct))->mm: NULL
 	// (kmem_cache#15-oX (struct task_struct))->active_mm: NULL
 
+	// copy_mm 에서 한일:
+	// (kmem_cache#15-oX (struct task_struct))->min_flt: 0
+	// (kmem_cache#15-oX (struct task_struct))->maj_flt: 0
+	// (kmem_cache#15-oX (struct task_struct))->nvcsw: 0
+	// (kmem_cache#15-oX (struct task_struct))->nivcsw: 0
+	// (kmem_cache#15-oX (struct task_struct))->last_switch_count: 0
+	// (kmem_cache#15-oX (struct task_struct))->mm: NULL
+	// (kmem_cache#15-oX (struct task_struct))->active_mm: NULL
+
+	// retval: 0
 	// retval: 0
 	if (retval)
 		goto bad_fork_cleanup_signal;
 
 	// clone_flags: 0x00800B00, p: kmem_cache#15-oX (struct task_struct)
 	// copy_namespaces(0x00800B00, kmem_cache#15-oX (struct task_struct)): 0
+	// clone_flags: 0x00800700, p: kmem_cache#15-oX (struct task_struct)
+	// copy_namespaces(0x00800700, kmem_cache#15-oX (struct task_struct)): 0
 	retval = copy_namespaces(clone_flags, p);
 	// retval: 0
 
 	// copy_namespaces 에서 한일:
 	// (&init_nsproxy)->count: { (2) }
 
+	// copy_namespaces 에서 한일:
+	// (&init_nsproxy)->count: { (3) }
+
+	// retval: 0
 	// retval: 0
 	if (retval)
 		goto bad_fork_cleanup_mm;
 
 	// clone_flags: 0x00800B00, p: kmem_cache#15-oX (struct task_struct)
 	// copy_io(0x00800B00, kmem_cache#15-oX (struct task_struct)): 0
+	// clone_flags: 0x00800700, p: kmem_cache#15-oX (struct task_struct)
+	// copy_io(0x00800700, kmem_cache#15-oX (struct task_struct)): 0
 	retval = copy_io(clone_flags, p);
 	// retval: 0
+	// retval: 0
 
+	// retval: 0
 	// retval: 0
 	if (retval)
 		goto bad_fork_cleanup_namespaces;
 
 	// clone_flags: 0x00800B00, stack_start: kernel_init, stack_size: 0, p: kmem_cache#15-oX (struct task_struct)
 	// copy_thread(0x00800B00, kernel_init, 0, kmem_cache#15-oX (struct task_struct)): 0
+	// clone_flags: 0x00800700, stack_start: kernel_init, stack_size: 0, p: kmem_cache#15-oX (struct task_struct)
+	// copy_thread(0x00800700, kernel_init, 0, kmem_cache#15-oX (struct task_struct)): 0
 	retval = copy_thread(clone_flags, stack_start, stack_size, p);
+	// retval: 0
 	// retval: 0
 
 	// copy_thread 에서 한일:
@@ -2643,20 +2735,39 @@ static struct task_struct *copy_process(unsigned long clone_flags,
 	// ((struct thread_info *)(kmem_cache#15-oX (struct task_struct))->stack)->cpu_context.sp: ((struct pt_regs *)(kmem_cache#15-oX (struct task_struct))->stack + 8183)
 	// ((struct thread_info *)(kmem_cache#15-oX (struct task_struct))->stack)->tp_value[1]: TPIDRURW의 읽은 값
 
+	// copy_thread 에서 한일:
+	// ((struct thread_info *)(kmem_cache#15-oX (struct task_struct))->stack)->cpu_context 의 값을 0으로 초기화 함
+	// ((struct pt_regs *)(kmem_cache#15-oX (struct task_struct))->stack + 8183) 의 값을 0으로 초기화 함
+	//
+	// ((struct thread_info *)(kmem_cache#15-oX (struct task_struct))->stack)->cpu_context.r4: 0
+	// ((struct thread_info *)(kmem_cache#15-oX (struct task_struct))->stack)->cpu_context.r5: kernel_init
+	// ((struct pt_regs *)(kmem_cache#15-oX (struct task_struct))->stack + 8183)->uregs[16]: 0x00000013
+	// ((struct thread_info *)(kmem_cache#15-oX (struct task_struct))->stack)->cpu_context.pc: ret_from_fork
+	// ((struct thread_info *)(kmem_cache#15-oX (struct task_struct))->stack)->cpu_context.sp: ((struct pt_regs *)(kmem_cache#15-oX (struct task_struct))->stack + 8183)
+	// ((struct thread_info *)(kmem_cache#15-oX (struct task_struct))->stack)->tp_value[1]: TPIDRURW의 읽은 값
+
+	// retval: 0
 	// retval: 0
 	if (retval)
 		goto bad_fork_cleanup_io;
 
 	// pid: NULL
+	// pid: NULL
 	if (pid != &init_struct_pid) {
 		// ENOMEM: 12
+		// ENOMEM: 12
 		retval = -ENOMEM;
+		// retval: -12
 		// retval: -12
 
 		// p->nsproxy: (kmem_cache#15-oX (struct task_struct))->nsproxy: &init_nsproxy
 		// p->nsproxy->pid_ns_for_children: (&init_nsproxy)->pid_ns_for_children: &init_pid_ns
 		// alloc_pid(&init_pid_ns): kmem_cache#19-oX (struct pid)
+		// p->nsproxy: (kmem_cache#15-oX (struct task_struct))->nsproxy: &init_nsproxy
+		// p->nsproxy->pid_ns_for_children: (&init_nsproxy)->pid_ns_for_children: &init_pid_ns
+		// alloc_pid(&init_pid_ns): kmem_cache#19-oX (struct pid)
 		pid = alloc_pid(p->nsproxy->pid_ns_for_children);
+		// pid: kmem_cache#19-oX (struct pid)
 		// pid: kmem_cache#19-oX (struct pid)
 
 		// alloc_pid 에서 한일:
@@ -3171,6 +3282,32 @@ static struct task_struct *copy_process(unsigned long clone_flags,
 		//
 		// (&init_pid_ns)->nr_hashed: 0x80000001
 
+		// alloc_pid 에서 한일:
+		// struct pid 만큼의 메모리를 할당 받음
+		// kmem_cache#19-oX (struct pid)
+		//
+		// (kmem_cache#19-oX (struct pid))->level: 0
+		//
+		// 기존에 할당받은 pidmap의 메모리 값
+		// (&(&init_pid_ns)->pidmap[0])->page: kmem_cache#25-oX
+		// kmem_cache#25-oX 의 2 bit 의 값을 1 으로 set
+		// (&(&init_pid_ns)->pidmap[0])->nr_free: { (0x7FFE) }
+		// &(&init_pid_ns)->last_pid 을 2 로 변경함
+		//
+		// (kmem_cache#19-oX (struct pid))->numbers[0].nr: 2
+		// (kmem_cache#19-oX (struct pid))->numbers[0].ns: &init_pid_ns
+		//
+		// (&(kmem_cache#19-oX (struct pid))->count)->counter: 1
+		//
+		// (&(kmem_cache#19-oX (struct pid))->tasks[0...2])->first: NULL
+		//
+		// (&(&(kmem_cache#19-oX (struct pid))->numbers[0])->pid_chain)->next: NULL
+		// (&(&(kmem_cache#19-oX (struct pid))->numbers[0])->pid_chain)->pprev: &(&(pid hash를 위한 메모리 공간을 16kB)[계산된 hash index 값])->first
+		// ((&(pid hash를 위한 메모리 공간을 16kB)[계산된 hash index 값])->first): &(&(kmem_cache#19-oX (struct pid))->numbers[0])->pid_chain
+		//
+		// (&init_pid_ns)->nr_hashed: 0x80000002
+
+		// pid: kmem_cache#19-oX (struct pid)
 		// pid: kmem_cache#19-oX (struct pid)
 		if (!pid)
 			goto bad_fork_cleanup_io;
@@ -3178,7 +3315,10 @@ static struct task_struct *copy_process(unsigned long clone_flags,
 
 	// p->set_child_tid: (kmem_cache#15-oX (struct task_struct))->set_child_tid,
 	// clone_flags: 0x00800B00, CLONE_CHILD_SETTID: 0x01000000
+	// p->set_child_tid: (kmem_cache#15-oX (struct task_struct))->set_child_tid,
+	// clone_flags: 0x00800700, CLONE_CHILD_SETTID: 0x01000000
 	p->set_child_tid = (clone_flags & CLONE_CHILD_SETTID) ? child_tidptr : NULL;
+	// p->set_child_tid: (kmem_cache#15-oX (struct task_struct))->set_child_tid: NULL
 	// p->set_child_tid: (kmem_cache#15-oX (struct task_struct))->set_child_tid: NULL
 
 	/*
@@ -3186,21 +3326,29 @@ static struct task_struct *copy_process(unsigned long clone_flags,
 	 */
 	// p->clear_child_tid: (kmem_cache#15-oX (struct task_struct))->clear_child_tid,
 	// clone_flags: 0x00800B00, CLONE_CHILD_CLEARTID: 0x00200000
+	// p->clear_child_tid: (kmem_cache#15-oX (struct task_struct))->clear_child_tid,
+	// clone_flags: 0x00800700, CLONE_CHILD_CLEARTID: 0x00200000
 	p->clear_child_tid = (clone_flags & CLONE_CHILD_CLEARTID) ? child_tidptr : NULL;
+	// p->clear_child_tid: (kmem_cache#15-oX (struct task_struct))->clear_child_tid: NULL
 	// p->clear_child_tid: (kmem_cache#15-oX (struct task_struct))->clear_child_tid: NULL
 
 #ifdef CONFIG_BLOCK // CONFIG_BLOCK=y
 	// p->plug: (kmem_cache#15-oX (struct task_struct))->plug
+	// p->plug: (kmem_cache#15-oX (struct task_struct))->plug
 	p->plug = NULL;
+	// p->plug: (kmem_cache#15-oX (struct task_struct))->plug: NULL
 	// p->plug: (kmem_cache#15-oX (struct task_struct))->plug: NULL
 #endif
 #ifdef CONFIG_FUTEX // CONFIG_FUTEX=y
 	// p->robust_list: (kmem_cache#15-oX (struct task_struct))->robust_list
+	// p->robust_list: (kmem_cache#15-oX (struct task_struct))->robust_list
 	p->robust_list = NULL;
+	// p->robust_list: (kmem_cache#15-oX (struct task_struct))->robust_list: NULL
 	// p->robust_list: (kmem_cache#15-oX (struct task_struct))->robust_list: NULL
 #ifdef CONFIG_COMPAT // CONFIG_COMPAT=n
 	p->compat_robust_list = NULL;
 #endif
+	// &p->pi_state_list: &(kmem_cache#15-oX (struct task_struct))->pi_state_list
 	// &p->pi_state_list: &(kmem_cache#15-oX (struct task_struct))->pi_state_list
 	INIT_LIST_HEAD(&p->pi_state_list);
 
@@ -3208,18 +3356,29 @@ static struct task_struct *copy_process(unsigned long clone_flags,
 	// (&(kmem_cache#15-oX (struct task_struct))->pi_state_list)->next: &(kmem_cache#15-oX (struct task_struct))->pi_state_list
 	// (&(kmem_cache#15-oX (struct task_struct))->pi_state_list)->prev: &(kmem_cache#15-oX (struct task_struct))->pi_state_list
 
+	// INIT_LIST_HEAD 에서 한일:
+	// (&(kmem_cache#15-oX (struct task_struct))->pi_state_list)->next: &(kmem_cache#15-oX (struct task_struct))->pi_state_list
+	// (&(kmem_cache#15-oX (struct task_struct))->pi_state_list)->prev: &(kmem_cache#15-oX (struct task_struct))->pi_state_list
+
+	// p->pi_state_cache: (kmem_cache#15-oX (struct task_struct))->pi_state_cache
 	// p->pi_state_cache: (kmem_cache#15-oX (struct task_struct))->pi_state_cache
 	p->pi_state_cache = NULL;
+	// p->pi_state_cache: (kmem_cache#15-oX (struct task_struct))->pi_state_cache: NULL
 	// p->pi_state_cache: (kmem_cache#15-oX (struct task_struct))->pi_state_cache: NULL
 #endif
 	/*
 	 * sigaltstack should be cleared when sharing the same VM
 	 */
 	// clone_flags: 0x00800B00, CLONE_VM: 0x00000100, CLONE_VFORK: 0x00004000
+	// clone_flags: 0x00800700, CLONE_VM: 0x00000100, CLONE_VFORK: 0x00004000
 	if ((clone_flags & (CLONE_VM|CLONE_VFORK)) == CLONE_VM)
 		// p->sas_ss_sp: (kmem_cache#15-oX (struct task_struct))->sas_ss_sp,
 		// p->sas_ss_size: (kmem_cache#15-oX (struct task_struct))->sas_ss_size
+		// p->sas_ss_sp: (kmem_cache#15-oX (struct task_struct))->sas_ss_sp,
+		// p->sas_ss_size: (kmem_cache#15-oX (struct task_struct))->sas_ss_size
 		p->sas_ss_sp = p->sas_ss_size = 0;
+		// p->sas_ss_sp: (kmem_cache#15-oX (struct task_struct))->sas_ss_sp: 0
+		// p->sas_ss_size: (kmem_cache#15-oX (struct task_struct))->sas_ss_size: 0
 		// p->sas_ss_sp: (kmem_cache#15-oX (struct task_struct))->sas_ss_sp: 0
 		// p->sas_ss_size: (kmem_cache#15-oX (struct task_struct))->sas_ss_size: 0
 
@@ -3228,10 +3387,15 @@ static struct task_struct *copy_process(unsigned long clone_flags,
 	 * child regardless of CLONE_PTRACE.
 	 */
 	// p: kmem_cache#15-oX (struct task_struct)
+	// p: kmem_cache#15-oX (struct task_struct)
 	user_disable_single_step(p); // null function
 
 	// p: kmem_cache#15-oX (struct task_struct), TIF_SYSCALL_TRACE: 8
+	// p: kmem_cache#15-oX (struct task_struct), TIF_SYSCALL_TRACE: 8
 	clear_tsk_thread_flag(p, TIF_SYSCALL_TRACE);
+
+	// clear_tsk_thread_flag 에서 한일:
+	// (((struct thread_info *)(할당 받은 page 2개의 메로리의 가상 주소))->flags 의 8 bit 값을 clear 수행
 
 	// clear_tsk_thread_flag 에서 한일:
 	// (((struct thread_info *)(할당 받은 page 2개의 메로리의 가상 주소))->flags 의 8 bit 값을 clear 수행
@@ -3240,58 +3404,82 @@ static struct task_struct *copy_process(unsigned long clone_flags,
 	clear_tsk_thread_flag(p, TIF_SYSCALL_EMU);
 #endif
 	// p: kmem_cache#15-oX (struct task_struct)
+	// p: kmem_cache#15-oX (struct task_struct)
 	clear_all_latency_tracing(p); // null function
 
 	/* ok, now we should be set up.. */
 	// p->pid: (kmem_cache#15-oX (struct task_struct))->pid,
 	// pid: kmem_cache#19-oX (struct pid), pid_nr(kmem_cache#19-oX (struct pid)): 1
+	// p->pid: (kmem_cache#15-oX (struct task_struct))->pid,
+	// pid: kmem_cache#19-oX (struct pid), pid_nr(kmem_cache#19-oX (struct pid)): 2
 	p->pid = pid_nr(pid);
 	// p->pid: (kmem_cache#15-oX (struct task_struct))->pid: 1
+	// p->pid: (kmem_cache#15-oX (struct task_struct))->pid: 2
 
 	// clone_flags: 0x00800B00, CLONE_THREAD: 0x00010000
+	// clone_flags: 0x00800700, CLONE_THREAD: 0x00010000
 	if (clone_flags & CLONE_THREAD) {
 		p->exit_signal = -1;
 		p->group_leader = current->group_leader;
 		p->tgid = current->tgid;
 	} else {
 		// clone_flags: 0x00800B00, CLONE_PARENT: 0x00008000
+		// clone_flags: 0x00800700, CLONE_PARENT: 0x00008000
 		if (clone_flags & CLONE_PARENT)
 			p->exit_signal = current->group_leader->exit_signal;
 		else
 			// p->exit_signal: (kmem_cache#15-oX (struct task_struct))->exit_signal,
 			// clone_flags: 0x00800B00, CSIGNAL: 0x000000ff
+			// p->exit_signal: (kmem_cache#15-oX (struct task_struct))->exit_signal,
+			// clone_flags: 0x00800700, CSIGNAL: 0x000000ff
 			p->exit_signal = (clone_flags & CSIGNAL);
+			// p->exit_signal: (kmem_cache#15-oX (struct task_struct))->exit_signal: 0
 			// p->exit_signal: (kmem_cache#15-oX (struct task_struct))->exit_signal: 0
 
 		// p->group_leader: (kmem_cache#15-oX (struct task_struct))->group_leader, p: kmem_cache#15-oX (struct task_struct)
+		// p->group_leader: (kmem_cache#15-oX (struct task_struct))->group_leader, p: kmem_cache#15-oX (struct task_struct)
 		p->group_leader = p;
+		// p->group_leader: (kmem_cache#15-oX (struct task_struct))->group_leader: kmem_cache#15-oX (struct task_struct)
 		// p->group_leader: (kmem_cache#15-oX (struct task_struct))->group_leader: kmem_cache#15-oX (struct task_struct)
 
 		// p->tgid: (kmem_cache#15-oX (struct task_struct))->tgid, p->pid: (kmem_cache#15-oX (struct task_struct))->pid: 1
+		// p->tgid: (kmem_cache#15-oX (struct task_struct))->tgid, p->pid: (kmem_cache#15-oX (struct task_struct))->pid: 2
 		p->tgid = p->pid;
 		// p->tgid: (kmem_cache#15-oX (struct task_struct))->tgid: 1
+		// p->tgid: (kmem_cache#15-oX (struct task_struct))->tgid: 2
 	}
 
 	// p->pdeath_signal: (kmem_cache#15-oX (struct task_struct))->pdeath_signal
+	// p->pdeath_signal: (kmem_cache#15-oX (struct task_struct))->pdeath_signal
 	p->pdeath_signal = 0;
+	// p->pdeath_signal: (kmem_cache#15-oX (struct task_struct))->pdeath_signal: 0
 	// p->pdeath_signal: (kmem_cache#15-oX (struct task_struct))->pdeath_signal: 0
 
 	// p->exit_state: (kmem_cache#15-oX (struct task_struct))->exit_state
+	// p->exit_state: (kmem_cache#15-oX (struct task_struct))->exit_state
 	p->exit_state = 0;
+	// p->exit_state: (kmem_cache#15-oX (struct task_struct))->exit_state: 0
 	// p->exit_state: (kmem_cache#15-oX (struct task_struct))->exit_state: 0
 
 	// p->nr_dirtied: (kmem_cache#15-oX (struct task_struct))->nr_dirtied
+	// p->nr_dirtied: (kmem_cache#15-oX (struct task_struct))->nr_dirtied
 	p->nr_dirtied = 0;
+	// p->nr_dirtied: (kmem_cache#15-oX (struct task_struct))->nr_dirtied: 0
 	// p->nr_dirtied: (kmem_cache#15-oX (struct task_struct))->nr_dirtied: 0
 
 	// p->nr_dirtied_pause: (kmem_cache#15-oX (struct task_struct))->nr_dirtied_pause, PAGE_SHIFT: 12
+	// p->nr_dirtied_pause: (kmem_cache#15-oX (struct task_struct))->nr_dirtied_pause, PAGE_SHIFT: 12
 	p->nr_dirtied_pause = 128 >> (PAGE_SHIFT - 10);
+	// p->nr_dirtied_pause: (kmem_cache#15-oX (struct task_struct))->nr_dirtied_pause: 32
 	// p->nr_dirtied_pause: (kmem_cache#15-oX (struct task_struct))->nr_dirtied_pause: 32
 
 	// p->dirty_paused_when: (kmem_cache#15-oX (struct task_struct))->dirty_paused_when
+	// p->dirty_paused_when: (kmem_cache#15-oX (struct task_struct))->dirty_paused_when
 	p->dirty_paused_when = 0;
 	// p->dirty_paused_when: (kmem_cache#15-oX (struct task_struct))->dirty_paused_when: 0
+	// p->dirty_paused_when: (kmem_cache#15-oX (struct task_struct))->dirty_paused_when: 0
 
+	// &p->thread_group: &(kmem_cache#15-oX (struct task_struct))->thread_group
 	// &p->thread_group: &(kmem_cache#15-oX (struct task_struct))->thread_group
 	INIT_LIST_HEAD(&p->thread_group);
 
@@ -3299,8 +3487,14 @@ static struct task_struct *copy_process(unsigned long clone_flags,
 	// (&(kmem_cache#15-oX (struct task_struct))->thread_group)->next: &(kmem_cache#15-oX (struct task_struct))->thread_group
 	// (&(kmem_cache#15-oX (struct task_struct))->thread_group)->prev: &(kmem_cache#15-oX (struct task_struct))->thread_group
 
+	// INIT_LIST_HEAD 에서 한일:
+	// (&(kmem_cache#15-oX (struct task_struct))->thread_group)->next: &(kmem_cache#15-oX (struct task_struct))->thread_group
+	// (&(kmem_cache#15-oX (struct task_struct))->thread_group)->prev: &(kmem_cache#15-oX (struct task_struct))->thread_group
+
+	// p->task_works: (kmem_cache#15-oX (struct task_struct))->task_works
 	// p->task_works: (kmem_cache#15-oX (struct task_struct))->task_works
 	p->task_works = NULL;
+	// p->task_works: (kmem_cache#15-oX (struct task_struct))->task_works: NULL
 	// p->task_works: (kmem_cache#15-oX (struct task_struct))->task_works: NULL
 
 	/*
@@ -3312,26 +3506,41 @@ static struct task_struct *copy_process(unsigned long clone_flags,
 	// write_lock_irq 에서 한일:
 	// &tasklist_lock 을 사용하여 rw lock 수행
 
+	// write_lock_irq 에서 한일:
+	// &tasklist_lock 을 사용하여 rw lock 수행
+
 	/* CLONE_PARENT re-uses the old parent */
 	// clone_flags: 0x00800B00, CLONE_PARENT: 0x00008000, CLONE_THREAD: 0x00010000
+	// clone_flags: 0x00800700, CLONE_PARENT: 0x00008000, CLONE_THREAD: 0x00010000
 	if (clone_flags & (CLONE_PARENT|CLONE_THREAD)) {
 		p->real_parent = current->real_parent;
 		p->parent_exec_id = current->parent_exec_id;
 	} else {
 		// p->real_parent: (kmem_cache#15-oX (struct task_struct))->real_parent, current: &init_task
+		// p->real_parent: (kmem_cache#15-oX (struct task_struct))->real_parent, current: &init_task
 		p->real_parent = current;
+		// p->real_parent: (kmem_cache#15-oX (struct task_struct))->real_parent: &init_task
 		// p->real_parent: (kmem_cache#15-oX (struct task_struct))->real_parent: &init_task
 
 		// p->parent_exec_id: (kmem_cache#15-oX (struct task_struct))->parent_exec_id,
 		// current->self_exec_id: (&init_task)->self_exec_id: 0
+		// p->parent_exec_id: (kmem_cache#15-oX (struct task_struct))->parent_exec_id,
+		// current->self_exec_id: (&init_task)->self_exec_id: 0
 		p->parent_exec_id = current->self_exec_id;
+		// p->parent_exec_id: (kmem_cache#15-oX (struct task_struct))->parent_exec_id: 0
 		// p->parent_exec_id: (kmem_cache#15-oX (struct task_struct))->parent_exec_id: 0
 	}
 
 	// current: &init_task
 	// current->sighand: (&init_task)->sighand: &init_sighand
 	// &current->sighand->siglock: &(&init_sighand)->siglock
+	// current: &init_task
+	// current->sighand: (&init_task)->sighand: &init_sighand
+	// &current->sighand->siglock: &(&init_sighand)->siglock
 	spin_lock(&current->sighand->siglock);
+
+	// spin_lock 에서 한일:
+	// &(&init_sighand)->siglock 을 사용하여 spin lock 수행
 
 	// spin_lock 에서 한일:
 	// &(&init_sighand)->siglock 을 사용하여 spin lock 수행
@@ -3349,6 +3558,10 @@ static struct task_struct *copy_process(unsigned long clone_flags,
 	// recalc_sigpending 에서 한일:
 	// (init_task의 struct thread_info 주소값)->flags 의 0 bit 값을 clear 수행
 
+	// recalc_sigpending 에서 한일:
+	// (init_task의 struct thread_info 주소값)->flags 의 0 bit 값을 clear 수행
+
+	// current: &init_task, signal_pending(&init_task): 0
 	// current: &init_task, signal_pending(&init_task): 0
 	if (signal_pending(current)) {
 		spin_unlock(&current->sighand->siglock);
@@ -3358,9 +3571,12 @@ static struct task_struct *copy_process(unsigned long clone_flags,
 	}
 
 	// p->pid: (kmem_cache#15-oX (struct task_struct))->pid: 1
+	// p->pid: (kmem_cache#15-oX (struct task_struct))->pid: 2
 	if (likely(p->pid)) {
 		// p: kmem_cache#15-oX (struct task_struct)
 		// clone_flags: 0x00800B00, CLONE_PTRACE: 0x00002000, trace: 0
+		// p: kmem_cache#15-oX (struct task_struct)
+		// clone_flags: 0x00800700, CLONE_PTRACE: 0x00002000, trace: 0
 		ptrace_init_task(p, (clone_flags & CLONE_PTRACE) || trace);
 
 		// ptrace_init_task 에서 한일:
@@ -3372,14 +3588,30 @@ static struct task_struct *copy_process(unsigned long clone_flags,
 		// (kmem_cache#15-oX (struct task_struct))->ptrace: 0
 		// (kmem_cache#15-oX (struct task_struct))->parent: &init_task
 
+		// ptrace_init_task 에서 한일:
+		// (&(kmem_cache#15-oX (struct task_struct))->ptrace_entry)->next: &(kmem_cache#15-oX (struct task_struct))->ptrace_entry
+		// (&(kmem_cache#15-oX (struct task_struct))->ptrace_entry)->prev: &(kmem_cache#15-oX (struct task_struct))->ptrace_entry
+		// (&(kmem_cache#15-oX (struct task_struct))->ptraced)->next: &(kmem_cache#15-oX (struct task_struct))->ptraced
+		// (&(kmem_cache#15-oX (struct task_struct))->ptraced)->prev: &(kmem_cache#15-oX (struct task_struct))->ptraced
+		// (kmem_cache#15-oX (struct task_struct))->jobctl: 0
+		// (kmem_cache#15-oX (struct task_struct))->ptrace: 0
+		// (kmem_cache#15-oX (struct task_struct))->parent: &init_task
+
+		// p: kmem_cache#15-oX (struct task_struct), PIDTYPE_PID: 0, pid: kmem_cache#19-oX (struct pid)
 		// p: kmem_cache#15-oX (struct task_struct), PIDTYPE_PID: 0, pid: kmem_cache#19-oX (struct pid)
 		init_task_pid(p, PIDTYPE_PID, pid);
 
 		// init_task_pid 에서 한일:
 		// (kmem_cache#15-oX (struct task_struct))->pids[0].pid: kmem_cache#19-oX (struct pid)
 
+		// init_task_pid 에서 한일:
+		// (kmem_cache#15-oX (struct task_struct))->pids[0].pid: kmem_cache#19-oX (struct pid)
+
+		// p: kmem_cache#15-oX (struct task_struct), thread_group_leader(kmem_cache#15-oX (struct task_struct)): 1
 		// p: kmem_cache#15-oX (struct task_struct), thread_group_leader(kmem_cache#15-oX (struct task_struct)): 1
 		if (thread_group_leader(p)) {
+			// p: kmem_cache#15-oX (struct task_struct), PIDTYPE_PGID: 1,
+			// current: &init_task, task_pgrp(&init_task): &init_struct_pid
 			// p: kmem_cache#15-oX (struct task_struct), PIDTYPE_PGID: 1,
 			// current: &init_task, task_pgrp(&init_task): &init_struct_pid
 			init_task_pid(p, PIDTYPE_PGID, task_pgrp(current));
@@ -3387,6 +3619,11 @@ static struct task_struct *copy_process(unsigned long clone_flags,
 			// init_task_pid 에서 한일:
 			// (kmem_cache#15-oX (struct task_struct))->pids[1].pid: &init_struct_pid
 
+			// init_task_pid 에서 한일:
+			// (kmem_cache#15-oX (struct task_struct))->pids[1].pid: &init_struct_pid
+
+			// p: kmem_cache#15-oX (struct task_struct), PIDTYPE_SID: 2,
+			// current: &init_task, task_session(&init_task): &init_struct_pid
 			// p: kmem_cache#15-oX (struct task_struct), PIDTYPE_SID: 2,
 			// current: &init_task, task_session(&init_task): &init_struct_pid
 			init_task_pid(p, PIDTYPE_SID, task_session(current));
@@ -3394,7 +3631,11 @@ static struct task_struct *copy_process(unsigned long clone_flags,
 			// init_task_pid 에서 한일:
 			// (kmem_cache#15-oX (struct task_struct))->pids[2].pid: &init_struct_pid
 
+			// init_task_pid 에서 한일:
+			// (kmem_cache#15-oX (struct task_struct))->pids[2].pid: &init_struct_pid
+
 			// pid: kmem_cache#19-oX (struct pid), is_child_reaper(kmem_cache#19-oX (struct pid)): 1
+			// pid: kmem_cache#19-oX (struct pid), is_child_reaper(kmem_cache#19-oX (struct pid)): 0
 			if (is_child_reaper(pid)) {
 				// pid: kmem_cache#19-oX (struct pid), ns_of_pid(kmem_cache#19-oX (struct pid)): &init_pid_ns
 				// ns_of_pid(kmem_cache#19-oX (struct pid))->child_reaper: (&init_pid_ns)->child_reaper,
@@ -3409,15 +3650,24 @@ static struct task_struct *copy_process(unsigned long clone_flags,
 			}
 
 			// p->signal->leader_pid: (kmem_cache#13-oX (struct signal_struct))->leader_pid, pid: kmem_cache#19-oX (struct pid)
+			// p->signal->leader_pid: (kmem_cache#13-oX (struct signal_struct))->leader_pid, pid: kmem_cache#19-oX (struct pid)
 			p->signal->leader_pid = pid;
+			// p->signal->leader_pid: (kmem_cache#13-oX (struct signal_struct))->leader_pid: kmem_cache#19-oX (struct pid)
 			// p->signal->leader_pid: (kmem_cache#13-oX (struct signal_struct))->leader_pid: kmem_cache#19-oX (struct pid)
 
 			// p->signal->tty: (kmem_cache#13-oX (struct signal_struct))->tty,
 			// current->signal: (&init_task)->signal: &init_signals,
 			// current->signal->tty: (&init_signals)->tty: NULL, tty_kref_get(NULL): NULL
+			// p->signal->tty: (kmem_cache#13-oX (struct signal_struct))->tty,
+			// current->signal: (&init_task)->signal: &init_signals,
+			// current->signal->tty: (&init_signals)->tty: NULL, tty_kref_get(NULL): NULL
 			p->signal->tty = tty_kref_get(current->signal->tty);
 			// p->signal->tty: (kmem_cache#13-oX (struct signal_struct))->tty: NULL
+			// p->signal->tty: (kmem_cache#13-oX (struct signal_struct))->tty: NULL
 
+			// &p->sibling: &(kmem_cache#15-oX (struct task_struct))->sibling
+			// p->real_parent: (kmem_cache#15-oX (struct task_struct))->real_parent: &init_task
+			// &p->real_parent->children: &(&init_task)->children
 			// &p->sibling: &(kmem_cache#15-oX (struct task_struct))->sibling
 			// p->real_parent: (kmem_cache#15-oX (struct task_struct))->real_parent: &init_task
 			// &p->real_parent->children: &(&init_task)->children
@@ -3426,8 +3676,22 @@ static struct task_struct *copy_process(unsigned long clone_flags,
 			// list_add_tail 에서 한일:
 			// list head 인 &(&init_task)->children 에 &(kmem_cache#15-oX (struct task_struct))->sibling 을 tail에 연결
 
+			// list_add_tail 에서 한일:
+			// list head 인 &(&init_task)->children 에 &(kmem_cache#15-oX (struct task_struct))->sibling 을 tail에 연결
+
+			// &p->tasks: &(kmem_cache#15-oX (struct task_struct))->tasks
 			// &p->tasks: &(kmem_cache#15-oX (struct task_struct))->tasks
 			list_add_tail_rcu(&p->tasks, &init_task.tasks);
+
+			// list_add_tail_rcu 에서 한일:
+			// (&(kmem_cache#15-oX (struct task_struct))->tasks)->next: &init_task.tasks
+			// (&(kmem_cache#15-oX (struct task_struct))->tasks)->prev: (&init_task.tasks)->prev
+			//
+			// core간 write memory barrier 수행
+			// ((*((struct list_head __rcu **) (&((&init_task.tasks)->prev)->next)))):
+			// (typeof(*&(kmem_cache#15-oX (struct task_struct))->tasks) __force __rcu *)(&(kmem_cache#15-oX (struct task_struct))->tasks);
+			//
+			// (&init_task.tasks)->prev: &(kmem_cache#15-oX (struct task_struct))->tasks
 
 			// list_add_tail_rcu 에서 한일:
 			// (&(kmem_cache#15-oX (struct task_struct))->tasks)->next: &init_task.tasks
@@ -3443,7 +3707,14 @@ static struct task_struct *copy_process(unsigned long clone_flags,
 // 2016/12/10 시작
 
 			// p: kmem_cache#15-oX (struct task_struct), PIDTYPE_PGID: 1
+			// p: kmem_cache#15-oX (struct task_struct), PIDTYPE_PGID: 1
 			attach_pid(p, PIDTYPE_PGID);
+
+			// attach_pid 에서 한일:
+			// (&(&(kmem_cache#15-oX (struct task_struct))->pids[1])->node)->next: NULL
+			// (&(&(kmem_cache#15-oX (struct task_struct))->pids[1])->node)->pprev: &(&(&init_struct_pid)->tasks[1])->first
+			//
+			// ((*((struct hlist_node __rcu **)(&(&(&init_struct_pid)->tasks[1])->first)))): &(&(kmem_cache#15-oX (struct task_struct))->pids[1])->node
 
 			// attach_pid 에서 한일:
 			// (&(&(kmem_cache#15-oX (struct task_struct))->pids[1])->node)->next: NULL
@@ -3460,7 +3731,16 @@ static struct task_struct *copy_process(unsigned long clone_flags,
 			//
 			// ((*((struct hlist_node __rcu **)(&(&(&init_struct_pid)->tasks[2])->first)))): &(&(kmem_cache#15-oX (struct task_struct))->pids[2])->node
 
+			// attach_pid 에서 한일:
+			// (&(&(kmem_cache#15-oX (struct task_struct))->pids[2])->node)->next: NULL
+			// (&(&(kmem_cache#15-oX (struct task_struct))->pids[2])->node)->pprev: &(&(&init_struct_pid)->tasks[2])->first
+			//
+			// ((*((struct hlist_node __rcu **)(&(&(&init_struct_pid)->tasks[2])->first)))): &(&(kmem_cache#15-oX (struct task_struct))->pids[2])->node
+
 			__this_cpu_inc(process_counts);
+
+			// __this_cpu_inc 에서 한일:
+			// [pcp0] process_counts: 1 로 증가시킴
 
 			// __this_cpu_inc 에서 한일:
 			// [pcp0] process_counts: 1 로 증가시킴
@@ -3472,7 +3752,8 @@ static struct task_struct *copy_process(unsigned long clone_flags,
 					  &p->group_leader->thread_group);
 		}
 
-		// p: kmem_cache#15-oX (struct task_struct), PIDTYPE_PID: 1
+		// p: kmem_cache#15-oX (struct task_struct), PIDTYPE_PID: 0
+		// p: kmem_cache#15-oX (struct task_struct), PIDTYPE_PID: 0
 		attach_pid(p, PIDTYPE_PID);
 
 		// attach_pid 에서 한일:
@@ -3481,19 +3762,35 @@ static struct task_struct *copy_process(unsigned long clone_flags,
 		//
 		// ((*((struct hlist_node __rcu **)(&(&(kmem_cache#19-oX (struct pid))->tasks[0])->first)))): &(&(kmem_cache#15-oX (struct task_struct))->pids[0])->node
 
+		// attach_pid 에서 한일:
+		// (&(&(kmem_cache#15-oX (struct task_struct))->pids[0])->node)->next: NULL
+		// (&(&(kmem_cache#15-oX (struct task_struct))->pids[0])->node)->pprev: &(&(kmem_cache#19-oX (struct pid))->tasks[0])->first
+		//
+		// ((*((struct hlist_node __rcu **)(&(&(kmem_cache#19-oX (struct pid))->tasks[0])->first)))): &(&(kmem_cache#15-oX (struct task_struct))->pids[0])->node
+
 		// nr_threads: 0
+		// nr_threads: 1
 		nr_threads++;
 		// nr_threads: 1
+		// nr_threads: 2
 	}
 
 	// total_forks: 0
+	// total_forks: 1
 	total_forks++;
 	// total_forks: 1
+	// total_forks: 2
 
 	// current: &init_task
 	// current->sighand: (&init_task)->sighand: &init_sighand
 	// &current->sighand->siglock: &(&init_sighand)->siglock
+	// current: &init_task
+	// current->sighand: (&init_task)->sighand: &init_sighand
+	// &current->sighand->siglock: &(&init_sighand)->siglock
 	spin_unlock(&current->sighand->siglock);
+
+	// spin_unlock 에서 한일:
+	// &(&init_sighand)->siglock 을 사용하여 spin unlock 수행
 
 	// spin_unlock 에서 한일:
 	// &(&init_sighand)->siglock 을 사용하여 spin unlock 수행
@@ -3503,27 +3800,38 @@ static struct task_struct *copy_process(unsigned long clone_flags,
 	// write_unlock_irq 에서 한일:
 	// &tasklist_lock 을 사용하여 rw unlock 수행
 
+	// write_unlock_irq 에서 한일:
+	// &tasklist_lock 을 사용하여 rw unlock 수행
+
+	// p: kmem_cache#15-oX (struct task_struct)
 	// p: kmem_cache#15-oX (struct task_struct)
 	proc_fork_connector(p); // null function
 
 	// p: kmem_cache#15-oX (struct task_struct)
+	// p: kmem_cache#15-oX (struct task_struct)
 	cgroup_post_fork(p);
 
 	// clone_flags: 0x00800B00, CLONE_THREAD: 0x00010000
+	// clone_flags: 0x00800700, CLONE_THREAD: 0x00010000
 	if (clone_flags & CLONE_THREAD)
 		threadgroup_change_end(current);
 
 	// p: kmem_cache#15-oX (struct task_struct)
+	// p: kmem_cache#15-oX (struct task_struct)
 	perf_event_fork(p); // null function
 
 	// p: kmem_cache#15-oX (struct task_struct), clone_flags: 0x00800B00
+	// p: kmem_cache#15-oX (struct task_struct), clone_flags: 0x00800700
 	trace_task_newtask(p, clone_flags);
 
 	// p: kmem_cache#15-oX (struct task_struct), clone_flags: 0x00800B00
+	// p: kmem_cache#15-oX (struct task_struct), clone_flags: 0x00800700
 	uprobe_copy_process(p, clone_flags); // null function
 
 	// p: kmem_cache#15-oX (struct task_struct)
+	// p: kmem_cache#15-oX (struct task_struct)
 	return p;
+	// return kmem_cache#15-oX (struct task_struct)
 	// return kmem_cache#15-oX (struct task_struct)
 
 bad_fork_free_pid:
@@ -3636,11 +3944,12 @@ long do_fork(unsigned long clone_flags,
 	}
 
 	// clone_flags: 0x00800B00, stack_start: kernel_init, stack_size: 0, child_tidptr: 0, trace: 0
-	// copy_process(0x00800B00, kernel_init, 0, a0, NULL, 0): kmem_cache#15-oX (struct task_struct)
-	//
+	// copy_process(0x00800B00, kernel_init, 0, 0, NULL, 0): kmem_cache#15-oX (struct task_struct)
 	// clone_flags: 0x00800700, stack_start: kthreadd, stack_size: 0, child_tidptr: 0, trace: 0
+	// copy_process(0x00800700, kthreadd, 0, 0, NULL, 0): kmem_cache#15-oX (struct task_struct)
 	p = copy_process(clone_flags, stack_start, stack_size,
 			 child_tidptr, NULL, trace);
+	// p: kmem_cache#15-oX (struct task_struct)
 	// p: kmem_cache#15-oX (struct task_struct)
 
 	// copy_process 에서 한일:
@@ -4500,6 +4809,376 @@ long do_fork(unsigned long clone_flags,
 	//
 	// total_forks: 1
 
+	// copy_process 에서 한일:
+	// struct task_struct 만큼의 메모리를 할당 받음
+	// kmem_cache#15-oX (struct task_struct)
+	//
+	// struct thread_info 를 구성 하기 위한 메모리를 할당 받음 (8K)
+	// 할당 받은 page 2개의 메로리의 가상 주소
+	//
+	// 할당 받은 kmem_cache#15-oX (struct task_struct) 메모리에 init_task 값을 전부 할당함
+	//
+	// (kmem_cache#15-oX (struct task_struct))->stack: 할당 받은 page 2개의 메로리의 가상 주소
+	//
+	// 할당 받은 kmem_cache#15-oX (struct task_struct) 의 stack의 값을 init_task 의 stack 값에서 전부 복사함
+	// 복사된 struct thread_info 의 task 주소값을 할당 받은 kmem_cache#15-oX (struct task_struct)로 변경함
+	// *(할당 받은 page 2개의 메로리의 가상 주소): init_thread_info
+	// ((struct thread_info *) 할당 받은 page 2개의 메로리의 가상 주소)->task: kmem_cache#15-oX (struct task_struct)
+	//
+	// (((struct thread_info *)(할당 받은 page 2개의 메로리의 가상 주소))->flags 의 1 bit 값을 clear 수행
+	//
+	// *((unsigned long *)(할당 받은 page 2개의 메로리의 가상 주소 + 1)): 0x57AC6E9D
+	//
+	// (&(kmem_cache#15-oX (struct task_struct))->usage)->counter: 2
+	// (kmem_cache#15-oX (struct task_struct))->splice_pipe: NULL
+	// (kmem_cache#15-oX (struct task_struct))->task_frag.page: NULL
+	//
+	// (&contig_page_data)->node_zones[0].vm_stat[16]: 1 을 더함
+	// vmstat.c의 vm_stat[16] 전역 변수에도 1을 더함
+	//
+	// &(kmem_cache#15-oX (struct task_struct))->pi_lock을 사용한 spinlock 초기화
+	// &(kmem_cache#15-oX (struct task_struct))->pi_waiters 리스트 초기화
+	// (kmem_cache#15-oX (struct task_struct))->pi_blocked_on: NULL
+	//
+	// (&init_task)->flags: 0x00200100
+	//
+	// struct cred 만큼의 메모리를 할당 받음
+	// kmem_cache#16-oX (struct cred)
+	//
+	// kmem_cache#16-oX (struct cred) 에 init_cred 에 있는 맴버값 전부를 복사함
+	// (&(kmem_cache#16-oX (struct cred))->usage)->counter: 1
+	// (&(&init_groups)->usage)->counter: 4
+	// (&(&root_user)->__count)->counter: 3
+	//
+	// (&(kmem_cache#16-oX (struct cred))->usage)->counter: 2
+	//
+	// (kmem_cache#15-oX (struct task_struct))->cred: kmem_cache#16-oX (struct cred)
+	// (kmem_cache#15-oX (struct task_struct))->real_cred: kmem_cache#16-oX (struct cred)
+	// (kmem_cache#15-oX (struct task_struct))->did_exec: 0
+	// (kmem_cache#15-oX (struct task_struct))->flags: 0x00200040
+	//
+	// (&(kmem_cache#15-oX (struct task_struct))->children)->next: &(kmem_cache#15-oX (struct task_struct))->children
+	// (&(kmem_cache#15-oX (struct task_struct))->children)->prev: &(kmem_cache#15-oX (struct task_struct))->children
+	// (&(kmem_cache#15-oX (struct task_struct))->sibling)->next: &(kmem_cache#15-oX (struct task_struct))->sibling
+	// (&(kmem_cache#15-oX (struct task_struct))->sibling)->prev: &(kmem_cache#15-oX (struct task_struct))->sibling
+	//
+	// (kmem_cache#15-oX (struct task_struct))->rcu_read_lock_nesting: 0
+	// (kmem_cache#15-oX (struct task_struct))->rcu_read_unlock_special: 0
+	// (kmem_cache#15-oX (struct task_struct))->rcu_blocked_node: NULL
+	// (&(kmem_cache#15-oX (struct task_struct))->rcu_node_entry)->next: &(kmem_cache#15-oX (struct task_struct))->rcu_node_entry
+	// (&(kmem_cache#15-oX (struct task_struct))->rcu_node_entry)->prev: &(kmem_cache#15-oX (struct task_struct))->rcu_node_entry
+	//
+	// (kmem_cache#15-oX (struct task_struct))->vfork_done: NULL
+	//
+	// (&(kmem_cache#15-oX (struct task_struct))->alloc_lock)->raw_lock: { { 0 } }
+	// (&(kmem_cache#15-oX (struct task_struct))->alloc_lock)->magic: 0xdead4ead
+	// (&(kmem_cache#15-oX (struct task_struct))->alloc_lock)->owner: 0xffffffff
+	// (&(kmem_cache#15-oX (struct task_struct))->alloc_lock)->owner_cpu: 0xffffffff
+	//
+	// (&(&(kmem_cache#15-oX (struct task_struct))->pending)->signal)->sig[0]: 0
+	// (&(&(kmem_cache#15-oX (struct task_struct))->pending)->signal)->sig[1]: 0
+	// (&(&(kmem_cache#15-oX (struct task_struct))->pending)->list)->next: &(&(kmem_cache#15-oX (struct task_struct))->pending)->list
+	// (&(&(kmem_cache#15-oX (struct task_struct))->pending)->list)->prev: &(&(kmem_cache#15-oX (struct task_struct))->pending)->list
+	//
+	// (kmem_cache#15-oX (struct task_struct))->utime: 0
+	// (kmem_cache#15-oX (struct task_struct))->stime: 0
+	// (kmem_cache#15-oX (struct task_struct))->gtime: 0
+	// (kmem_cache#15-oX (struct task_struct))->utimescaled: 0
+	// (kmem_cache#15-oX (struct task_struct))->stimescaled: 0
+	//
+	// &(kmem_cache#15-oX (struct task_struct))->rss_stat 값을 0 으로 초기화 수행
+	//
+	// (kmem_cache#15-oX (struct task_struct))->default_timer_slack_ns: 50000
+	//
+	// (kmem_cache#15-oX (struct task_struct))->cputime_expires.prof_exp: 0
+	// (kmem_cache#15-oX (struct task_struct))->cputime_expires.virt_exp: 0
+	// (kmem_cache#15-oX (struct task_struct))->cputime_expires.sched_exp: 0
+	// (&(kmem_cache#15-oX (struct task_struct))->cpu_timers[0])->next: &(kmem_cache#15-oX (struct task_struct))->cpu_timers[0]
+	// (&(kmem_cache#15-oX (struct task_struct))->cpu_timers[0])->prev: &(kmem_cache#15-oX (struct task_struct))->cpu_timers[0]
+	// (&(kmem_cache#15-oX (struct task_struct))->cpu_timers[1])->next: &(kmem_cache#15-oX (struct task_struct))->cpu_timers[1]
+	// (&(kmem_cache#15-oX (struct task_struct))->cpu_timers[1])->prev: &(kmem_cache#15-oX (struct task_struct))->cpu_timers[1]
+	// (&(kmem_cache#15-oX (struct task_struct))->cpu_timers[2])->next: &(kmem_cache#15-oX (struct task_struct))->cpu_timers[2]
+	// (&(kmem_cache#15-oX (struct task_struct))->cpu_timers[2])->prev: &(kmem_cache#15-oX (struct task_struct))->cpu_timers[2]
+	//
+	// (kmem_cache#15-oX (struct task_struct))->start_time 에 현재 시간 값을 가져옴
+	// (&(kmem_cache#15-oX (struct task_struct))->start_time)->tv_sec: 현재의 sec 값 + 현재의 nsec 값 / 1000000000L
+	// (&(kmem_cache#15-oX (struct task_struct))->start_time)->tv_nsec: 현재의 nsec 값 % 1000000000L
+	// (&(kmem_cache#15-oX (struct task_struct))->real_start_time)->tv_sec: 현재의 sec 값 + 현재의 nsec 값 / 1000000000L
+	// (&(kmem_cache#15-oX (struct task_struct))->real_start_time)->tv_nsec: 현재의 nsec 값 % 1000000000L
+	// (kmem_cache#15-oX (struct task_struct))->real_start_time.tv_sec: normalized 된 sec 값
+	// (kmem_cache#15-oX (struct task_struct))->real_start_time.tv_nsec: normalized 된 nsec 값
+	//
+	// (kmem_cache#15-oX (struct task_struct))->io_context: NULL
+	// (kmem_cache#15-oX (struct task_struct))->audit_context: NULL
+	//
+	// rcu reference의 값 (&init_task)->cgroups 이 유요한지 체크하고 그 값을 리턴함
+	// ((&init_task)->cgroups)->refcount: 1
+	// (kmem_cache#15-oX (struct task_struct))->cgroups: (&init_task)->cgroups
+	//
+	// (&(kmem_cache#15-oX (struct task_struct))->cg_list)->next: &(kmem_cache#15-oX (struct task_struct))->cg_list
+	// (&(kmem_cache#15-oX (struct task_struct))->cg_list)->prev: &(kmem_cache#15-oX (struct task_struct))->cg_list
+	//
+	// (kmem_cache#15-oX (struct task_struct))->blocked_on: NULL
+	//
+	// (&kmem_cache#15-oX (struct task_struct))->on_rq: 0
+	// (&kmem_cache#15-oX (struct task_struct))->se.on_rq: 0
+	// (&kmem_cache#15-oX (struct task_struct))->se.exec_start: 0
+	// (&kmem_cache#15-oX (struct task_struct))->se.sum_exec_runtime: 0
+	// (&kmem_cache#15-oX (struct task_struct))->se.prev_sum_exec_runtime: 0
+	// (&kmem_cache#15-oX (struct task_struct))->se.nr_migrations: 0
+	// (&kmem_cache#15-oX (struct task_struct))->se.vruntime: 0
+	// &(&kmem_cache#15-oX (struct task_struct))->se.group_node의 리스트 초기화
+	// &(&kmem_cache#15-oX (struct task_struct))->rt.run_list의 리스트 초기화
+	//
+	// (kmem_cache#15-oX (struct task_struct))->state: 0
+	// (kmem_cache#15-oX (struct task_struct))->prio: 120
+	// (kmem_cache#15-oX (struct task_struct))->sched_class: &fair_sched_class
+	//
+	// 현재의 schedule 시간값과 기존의 (&runqueues)->clock 의 값의 차이값을
+	// [pcp0] (&runqueues)->clock, [pcp0] (&runqueues)->clock_task 의 값에 더해 갱신함
+	//
+	// [pcp0] (&runqueues)->clock: schedule 시간 차이값
+	// [pcp0] (&runqueues)->clock_task: schedule 시간 차이값
+	//
+	// (kmem_cache#15-oX (struct task_struct))->se.cfs_rq: [pcp0] &(&runqueues)->cfs
+	// (kmem_cache#15-oX (struct task_struct))->se.parent: NULL
+	// (kmem_cache#15-oX (struct task_struct))->rt.rt_rq: [pcp0] &(&runqueues)->rt
+	// (kmem_cache#15-oX (struct task_struct))->rt.parent: NULL
+	// ((struct thread_info *)(kmem_cache#15-oX (struct task_struct))->stack)->cpu: 0
+	// (kmem_cache#15-oX (struct task_struct))->wake_cpu: 0
+	// (&(kmem_cache#15-oX (struct task_struct))->se)->vruntime: 0x5B8D7E
+	// (kmem_cache#15-oX (struct task_struct))->se.cfs_rq: [pcp0] &(&runqueues)->cfs
+	// (kmem_cache#15-oX (struct task_struct))->se.parent: NULL
+	// (kmem_cache#15-oX (struct task_struct))->rt.rt_rq: [pcp0] &(&runqueues)->rt
+	// (kmem_cache#15-oX (struct task_struct))->rt.parent: NULL
+	// ((struct thread_info *)(kmem_cache#15-oX (struct task_struct))->stack)->cpu: 0
+	// (kmem_cache#15-oX (struct task_struct))->wake_cpu: 0
+	// (kmem_cache#15-oX (struct task_struct))->on_cpu: 0
+	// ((struct thread_info *)(kmem_cache#15-oX (struct task_struct))->stack)->preempt_count: 1
+	// (&(kmem_cache#15-oX (struct task_struct))->pushable_tasks)->prio: 140
+	// (&(&(kmem_cache#15-oX (struct task_struct))->pushable_tasks)->prio_list)->next: &(&(kmem_cache#15-oX (struct task_struct))->pushable_tasks)->prio_list
+	// (&(&(kmem_cache#15-oX (struct task_struct))->pushable_tasks)->prio_list)->prev: &(&(kmem_cache#15-oX (struct task_struct))->pushable_tasks)->prio_list
+	// (&(&(kmem_cache#15-oX (struct task_struct))->pushable_tasks)->node_list)->next: &(&(kmem_cache#15-oX (struct task_struct))->pushable_tasks)->node_list
+	// (&(&(kmem_cache#15-oX (struct task_struct))->pushable_tasks)->node_list)->prev: &(&(kmem_cache#15-oX (struct task_struct))->pushable_tasks)->node_list
+	//
+	// (kmem_cache#15-oX (struct task_struct))->sysvsem.undo_list: NULL
+	//
+	// files_cachep: kmem_cache#12 을 사용하여 struct files_struct 을 위한 메모리를 할당함
+	// kmem_cache#12-oX (struct files_struct)
+	//
+	// (kmem_cache#12-oX (struct files_struct))->count: 1
+	//
+	// &(kmem_cache#12-oX (struct files_struct))->file_lock을 이용한 spin lock 초기화 수행
+	// ((&(kmem_cache#12-oX (struct files_struct))->file_lock)->rlock)->raw_lock: { { 0 } }
+	// ((&(kmem_cache#12-oX (struct files_struct))->file_lock)->rlock)->magic: 0xdead4ead
+	// ((&(kmem_cache#12-oX (struct files_struct))->file_lock)->rlock)->owner: 0xffffffff
+	// ((&(kmem_cache#12-oX (struct files_struct))->file_lock)->rlock)->owner_cpu: 0xffffffff
+	//
+	// (kmem_cache#12-oX (struct files_struct))->next_fd: 0
+	// (&(kmem_cache#12-oX (struct files_struct))->fdtab)->max_fds: 32
+	// (&(kmem_cache#12-oX (struct files_struct))->fdtab)->close_on_exec: (kmem_cache#12-oX (struct files_struct))->close_on_exec_init
+	// (&(kmem_cache#12-oX (struct files_struct))->fdtab)->open_fds: (kmem_cache#12-oX (struct files_struct))->open_fds_init
+	// (&(kmem_cache#12-oX (struct files_struct))->fdtab)->fd: &(kmem_cache#12-oX (struct files_struct))->fd_array[0]
+	//
+	// &(&init_files)->file_lock 을 사용하여 spin lock 수행
+	//
+	// (kmem_cache#12-oX (struct files_struct))->open_fds_init 에 init_files.open_fds_init 값을 복사
+	// (kmem_cache#12-oX (struct files_struct))->open_fds_init: NULL
+	// (kmem_cache#12-oX (struct files_struct))->close_on_exec_init 에 init_files.close_on_exec_init 값을 복사
+	// (kmem_cache#12-oX (struct files_struct))->close_on_exec_init: NULL
+	//
+	// (&(kmem_cache#12-oX (struct files_struct))->fdtab)->open_fds 의 0~31 bit 를 clear 함
+	// (kmem_cache#12-oX (struct files_struct))->fd_array[0...31]: NULL
+	// &(kmem_cache#12-oX (struct files_struct))->fd_array[0] 에 값을 size 0 만큼 0 으로 set 함
+	//
+	// (kmem_cache#12-oX (struct files_struct))->fdt: &(kmem_cache#12-oX (struct files_struct))->fdtab
+	//
+	// (kmem_cache#15-oX (struct task_struct))->files: kmem_cache#12-oX (struct files_struct)
+	//
+	// (&init_fs)->users: 2
+	//
+	// (&init_sighand)->count: { (2) }
+	//
+	// struct signal_struct 크기 만큼의 메모리를 할당함
+	// kmem_cache#13-oX (struct signal_struct)
+	//
+	// (kmem_cache#15-oX (struct task_struct))->signal: kmem_cache#13-oX (struct signal_struct)
+	//
+	// (kmem_cache#13-oX (struct signal_struct))->nr_threads: 1
+	// (kmem_cache#13-oX (struct signal_struct))->live: { (1) }
+	// (kmem_cache#13-oX (struct signal_struct))->sigcnt: { (1) }
+	// &(&(kmem_cache#13-oX (struct signal_struct))->wait_chldexit)->lock을 사용한 spinlock 초기화
+	// &(&(kmem_cache#13-oX (struct signal_struct))->wait_chldexit)->task_list를 사용한 list 초기화
+	//
+	// (kmem_cache#13-oX (struct signal_struct))->curr_target: kmem_cache#15-oX (struct task_struct)
+	//
+	// (&(&(kmem_cache#13-oX (struct signal_struct))->shared_pending)->signal)->sig[0]: 0
+	// (&(&(kmem_cache#13-oX (struct signal_struct))->shared_pending)->signal)->sig[1]: 0
+	// (&(&(kmem_cache#13-oX (struct signal_struct))->shared_pending)->list)->next: &(&(kmem_cache#13-oX (struct signal_struct))->shared_pending)->list
+	// (&(&(kmem_cache#13-oX (struct signal_struct))->shared_pending)->list)->prev: &(&(kmem_cache#13-oX (struct signal_struct))->shared_pending)->list
+	// (&(kmem_cache#13-oX (struct signal_struct))->posix_timers)->next: &(kmem_cache#13-oX (struct signal_struct))->posix_timers
+	// (&(kmem_cache#13-oX (struct signal_struct))->posix_timers)->prev: &(kmem_cache#13-oX (struct signal_struct))->posix_timers
+	//
+	// (kmem_cache#13-oX (struct signal_struct))->real_timer의 값을 0으로 초기화
+	// (&(kmem_cache#13-oX (struct signal_struct))->real_timer)->base: [pcp0] &(&hrtimer_bases)->clock_base[0]
+	// RB Tree의 &(&(kmem_cache#13-oX (struct signal_struct))->real_timer)->node 를 초기화
+	//
+	// (kmem_cache#13-oX (struct signal_struct))->real_timer.function: it_real_fn
+	// (kmem_cache#13-oX (struct signal_struct))->rlim 에 (&init_signals)->rlim 값을 전부 복사함
+	// &(kmem_cache#13-oX (struct signal_struct))->cputimer.lock 을 사용한 spinlock 초기화 수행
+	// (&(kmem_cache#13-oX (struct signal_struct))->cpu_timers[0])->next: &(kmem_cache#13-oX (struct signal_struct))->cpu_timers[0]
+	// (&(kmem_cache#13-oX (struct signal_struct))->cpu_timers[0])->prev: &(kmem_cache#13-oX (struct signal_struct))->cpu_timers[0]
+	// (&(kmem_cache#13-oX (struct signal_struct))->cpu_timers[1])->next: &(kmem_cache#13-oX (struct signal_struct))->cpu_timers[1]
+	// (&(kmem_cache#13-oX (struct signal_struct))->cpu_timers[1])->prev: &(kmem_cache#13-oX (struct signal_struct))->cpu_timers[1]
+	// (&(kmem_cache#13-oX (struct signal_struct))->cpu_timers[2])->next: &(kmem_cache#13-oX (struct signal_struct))->cpu_timers[2]
+	// (&(kmem_cache#13-oX (struct signal_struct))->cpu_timers[2])->prev: &(kmem_cache#13-oX (struct signal_struct))->cpu_timers[2]
+	// (&(kmem_cache#13-oX (struct signal_struct))->group_rwsem)->activity: 0
+	// &(&(kmem_cache#13-oX (struct signal_struct))->group_rwsem)->wait_lock을 사용한 spinlock 초기화
+	// (&(&(kmem_cache#13-oX (struct signal_struct))->group_rwsem)->wait_list)->next: &(&(kmem_cache#13-oX (struct signal_struct))->group_rwsem)->wait_list
+	// (&(&(kmem_cache#13-oX (struct signal_struct))->group_rwsem)->wait_list)->prev: &(&(kmem_cache#13-oX (struct signal_struct))->group_rwsem)->wait_list
+	// (kmem_cache#13-oX (struct signal_struct))->oom_score_adj: 0
+	// (kmem_cache#13-oX (struct signal_struct))->oom_score_adj_min: 0
+	// (kmem_cache#13-oX (struct signal_struct))->has_child_subreaper: 0
+	// (&(kmem_cache#13-oX (struct signal_struct))->cred_guard_mutex)->count: 1
+	// (&(kmem_cache#13-oX (struct signal_struct))->cred_guard_mutex)->wait_lock)->rlock)->raw_lock: { { 0 } }
+	// (&(kmem_cache#13-oX (struct signal_struct))->cred_guard_mutex)->wait_lock)->rlock)->magic: 0xdead4ead
+	// (&(kmem_cache#13-oX (struct signal_struct))->cred_guard_mutex)->wait_lock)->rlock)->owner: 0xffffffff
+	// (&(kmem_cache#13-oX (struct signal_struct))->cred_guard_mutex)->wait_lock)->rlock)->owner_cpu: 0xffffffff
+	// (&(&(kmem_cache#13-oX (struct signal_struct))->cred_guard_mutex)->wait_list)->next: &(&(kmem_cache#13-oX (struct signal_struct))->cred_guard_mutex)->wait_list
+	// (&(&(kmem_cache#13-oX (struct signal_struct))->cred_guard_mutex)->wait_list)->prev: &(&(kmem_cache#13-oX (struct signal_struct))->cred_guard_mutex)->wait_list
+	// (&(kmem_cache#13-oX (struct signal_struct))->cred_guard_mutex)->onwer: NULL
+	// (&(kmem_cache#13-oX (struct signal_struct))->cred_guard_mutex)->magic: &(kmem_cache#13-oX (struct signal_struct))->cred_guard_mutex
+	//
+	// (kmem_cache#15-oX (struct task_struct))->min_flt: 0
+	// (kmem_cache#15-oX (struct task_struct))->maj_flt: 0
+	// (kmem_cache#15-oX (struct task_struct))->nvcsw: 0
+	// (kmem_cache#15-oX (struct task_struct))->nivcsw: 0
+	// (kmem_cache#15-oX (struct task_struct))->last_switch_count: 0
+	// (kmem_cache#15-oX (struct task_struct))->mm: NULL
+	//
+	// (&init_nsproxy)->count: { (2) }
+	//
+	// ((struct thread_info *)(kmem_cache#15-oX (struct task_struct))->stack)->cpu_context 의 값을 0으로 초기화 함
+	// ((struct pt_regs *)(kmem_cache#15-oX (struct task_struct))->stack + 8183) 의 값을 0으로 초기화 함
+	//
+	// ((struct thread_info *)(kmem_cache#15-oX (struct task_struct))->stack)->cpu_context.r4: 0
+	// ((struct thread_info *)(kmem_cache#15-oX (struct task_struct))->stack)->cpu_context.r5: kernel_init
+	// ((struct pt_regs *)(kmem_cache#15-oX (struct task_struct))->stack + 8183)->uregs[16]: 0x00000013
+	// ((struct thread_info *)(kmem_cache#15-oX (struct task_struct))->stack)->cpu_context.pc: ret_from_fork
+	// ((struct thread_info *)(kmem_cache#15-oX (struct task_struct))->stack)->cpu_context.sp: ((struct pt_regs *)(kmem_cache#15-oX (struct task_struct))->stack + 8183)
+	// ((struct thread_info *)(kmem_cache#15-oX (struct task_struct))->stack)->tp_value[1]: TPIDRURW의 읽은 값
+	//
+	// struct pid 만큼의 메모리를 할당 받음
+	// kmem_cache#19-oX (struct pid)
+	//
+	// (kmem_cache#19-oX (struct pid))->level: 0
+	//
+	// 기존에 할당받은 pidmap의 메모리 값
+	// (&(&init_pid_ns)->pidmap[0])->page: kmem_cache#25-oX
+	// kmem_cache#25-oX 의 2 bit 의 값을 1 으로 set
+	// (&(&init_pid_ns)->pidmap[0])->nr_free: { (0x7FFE) }
+	// &(&init_pid_ns)->last_pid 을 2 로 변경함
+	//
+	// (kmem_cache#19-oX (struct pid))->numbers[0].nr: 2
+	// (kmem_cache#19-oX (struct pid))->numbers[0].ns: &init_pid_ns
+	//
+	// (&(kmem_cache#19-oX (struct pid))->count)->counter: 1
+	//
+	// (&(kmem_cache#19-oX (struct pid))->tasks[0...2])->first: NULL
+	//
+	// (&(&(kmem_cache#19-oX (struct pid))->numbers[0])->pid_chain)->next: NULL
+	// (&(&(kmem_cache#19-oX (struct pid))->numbers[0])->pid_chain)->pprev: &(&(pid hash를 위한 메모리 공간을 16kB)[계산된 hash index 값])->first
+	// ((&(pid hash를 위한 메모리 공간을 16kB)[계산된 hash index 값])->first): &(&(kmem_cache#19-oX (struct pid))->numbers[0])->pid_chain
+	//
+	// (&init_pid_ns)->nr_hashed: 0x80000002
+	//
+	// (kmem_cache#15-oX (struct task_struct))->set_child_tid: NULL
+	// (kmem_cache#15-oX (struct task_struct))->clear_child_tid: NULL
+	// (kmem_cache#15-oX (struct task_struct))->plug: NULL
+	// (kmem_cache#15-oX (struct task_struct))->robust_list: NULL
+	//
+	// (&(kmem_cache#15-oX (struct task_struct))->pi_state_list)->next: &(kmem_cache#15-oX (struct task_struct))->pi_state_list
+	// (&(kmem_cache#15-oX (struct task_struct))->pi_state_list)->prev: &(kmem_cache#15-oX (struct task_struct))->pi_state_list
+	//
+	// (kmem_cache#15-oX (struct task_struct))->pi_state_cache: NULL
+	//
+	// (kmem_cache#15-oX (struct task_struct))->sas_ss_sp: 0
+	// (kmem_cache#15-oX (struct task_struct))->sas_ss_size: 0
+	//
+	// (((struct thread_info *)(할당 받은 page 2개의 메로리의 가상 주소))->flags 의 8 bit 값을 clear 수행
+	//
+	// (kmem_cache#15-oX (struct task_struct))->pid: 2
+	// (kmem_cache#15-oX (struct task_struct))->exit_signal: 0
+	// (kmem_cache#15-oX (struct task_struct))->group_leader: kmem_cache#15-oX (struct task_struct)
+	// (kmem_cache#15-oX (struct task_struct))->tgid: 2
+	//
+	// (kmem_cache#15-oX (struct task_struct))->pdeath_signal: 0
+	// (kmem_cache#15-oX (struct task_struct))->exit_state: 0
+	// (kmem_cache#15-oX (struct task_struct))->nr_dirtied: 0
+	// (kmem_cache#15-oX (struct task_struct))->nr_dirtied_pause: 32
+	// (kmem_cache#15-oX (struct task_struct))->dirty_paused_when: 0
+	//
+	// (&(kmem_cache#15-oX (struct task_struct))->thread_group)->next: &(kmem_cache#15-oX (struct task_struct))->thread_group
+	// (&(kmem_cache#15-oX (struct task_struct))->thread_group)->prev: &(kmem_cache#15-oX (struct task_struct))->thread_group
+	//
+	// (kmem_cache#15-oX (struct task_struct))->task_works: NULL
+	//
+	// (kmem_cache#15-oX (struct task_struct))->real_parent: &init_task
+	// (kmem_cache#15-oX (struct task_struct))->parent_exec_id: 0
+	//
+	// (init_task의 struct thread_info 주소값)->flags 의 0 bit 값을 clear 수행
+	//
+	// (&(kmem_cache#15-oX (struct task_struct))->ptrace_entry)->next: &(kmem_cache#15-oX (struct task_struct))->ptrace_entry
+	// (&(kmem_cache#15-oX (struct task_struct))->ptrace_entry)->prev: &(kmem_cache#15-oX (struct task_struct))->ptrace_entry
+	// (&(kmem_cache#15-oX (struct task_struct))->ptraced)->next: &(kmem_cache#15-oX (struct task_struct))->ptraced
+	// (&(kmem_cache#15-oX (struct task_struct))->ptraced)->prev: &(kmem_cache#15-oX (struct task_struct))->ptraced
+	// (kmem_cache#15-oX (struct task_struct))->jobctl: 0
+	// (kmem_cache#15-oX (struct task_struct))->ptrace: 0
+	// (kmem_cache#15-oX (struct task_struct))->parent: &init_task
+	//
+	// (kmem_cache#15-oX (struct task_struct))->pids[0].pid: kmem_cache#19-oX (struct pid)
+	//
+	// (kmem_cache#15-oX (struct task_struct))->pids[1].pid: &init_struct_pid
+	// (kmem_cache#15-oX (struct task_struct))->pids[2].pid: &init_struct_pid
+	//
+	// (kmem_cache#13-oX (struct signal_struct))->flags: 0x00000040
+	// (kmem_cache#13-oX (struct signal_struct))->leader_pid: kmem_cache#19-oX (struct pid)
+	// (kmem_cache#13-oX (struct signal_struct))->tty: NULL
+	//
+	// list head 인 &(&init_task)->children 에 &(kmem_cache#15-oX (struct task_struct))->sibling 을 tail에 연결
+	//
+	// (&(kmem_cache#15-oX (struct task_struct))->tasks)->next: &init_task.tasks
+	// (&(kmem_cache#15-oX (struct task_struct))->tasks)->prev: (&init_task.tasks)->prev
+	//
+	// core간 write memory barrier 수행
+	// ((*((struct list_head __rcu **) (&((&init_task.tasks)->prev)->next)))):
+	// (typeof(*&(kmem_cache#15-oX (struct task_struct))->tasks) __force __rcu *)(&(kmem_cache#15-oX (struct task_struct))->tasks);
+	//
+	// (&init_task.tasks)->prev: &(kmem_cache#15-oX (struct task_struct))->tasks
+	//
+	// (&(&(kmem_cache#15-oX (struct task_struct))->pids[1])->node)->next: NULL
+	// (&(&(kmem_cache#15-oX (struct task_struct))->pids[1])->node)->pprev: &(&(&init_struct_pid)->tasks[1])->first
+	//
+	// ((*((struct hlist_node __rcu **)(&(&(&init_struct_pid)->tasks[1])->first)))): &(&(kmem_cache#15-oX (struct task_struct))->pids[1])->node
+	//
+	// (&(&(kmem_cache#15-oX (struct task_struct))->pids[2])->node)->next: NULL
+	// (&(&(kmem_cache#15-oX (struct task_struct))->pids[2])->node)->pprev: &(&(&init_struct_pid)->tasks[2])->first
+	//
+	// ((*((struct hlist_node __rcu **)(&(&(&init_struct_pid)->tasks[2])->first)))): &(&(kmem_cache#15-oX (struct task_struct))->pids[2])->node
+	//
+	// [pcp0] process_counts: 1 로 증가시킴
+	//
+	// (&(&(kmem_cache#15-oX (struct task_struct))->pids[0])->node)->next: NULL
+	// (&(&(kmem_cache#15-oX (struct task_struct))->pids[0])->node)->pprev: &(&(kmem_cache#19-oX (struct pid))->tasks[0])->first
+	//
+	// ((*((struct hlist_node __rcu **)(&(&(kmem_cache#19-oX (struct pid))->tasks[0])->first)))): &(&(kmem_cache#15-oX (struct task_struct))->pids[0])->node
+	//
+	// nr_threads: 2
+	//
+	// total_forks: 2
+
+// 2017/06/10 종료
+
 	/*
 	 * Do this prior waking up the new thread - the thread pointer
 	 * might get invalid after that point, if the thread exits quickly.
@@ -4812,41 +5491,16 @@ pid_t kernel_thread(int (*fn)(void *), void *arg, unsigned long flags)
 	//
 	// (kmem_cache#15-oX (struct task_struct))->sysvsem.undo_list: NULL
 	//
-	// files_cachep: kmem_cache#12 을 사용하여 struct files_struct 을 위한 메모리를 할당함
-	// kmem_cache#12-oX (struct files_struct)
+	// (&(&init_files)->count)->counter: 2
 	//
-	// (kmem_cache#12-oX (struct files_struct))->count: 1
+	// (&init_fs)->users: 3
 	//
-	// &(kmem_cache#12-oX (struct files_struct))->file_lock을 이용한 spin lock 초기화 수행
-	// ((&(kmem_cache#12-oX (struct files_struct))->file_lock)->rlock)->raw_lock: { { 0 } }
-	// ((&(kmem_cache#12-oX (struct files_struct))->file_lock)->rlock)->magic: 0xdead4ead
-	// ((&(kmem_cache#12-oX (struct files_struct))->file_lock)->rlock)->owner: 0xffffffff
-	// ((&(kmem_cache#12-oX (struct files_struct))->file_lock)->rlock)->owner_cpu: 0xffffffff
+	// struct sighand_struct 만큼의 메모리를 할당 받음
+	// kmem_cache#14-oX (struct sighand_struct)
 	//
-	// (kmem_cache#12-oX (struct files_struct))->next_fd: 0
-	// (&(kmem_cache#12-oX (struct files_struct))->fdtab)->max_fds: 32
-	// (&(kmem_cache#12-oX (struct files_struct))->fdtab)->close_on_exec: (kmem_cache#12-oX (struct files_struct))->close_on_exec_init
-	// (&(kmem_cache#12-oX (struct files_struct))->fdtab)->open_fds: (kmem_cache#12-oX (struct files_struct))->open_fds_init
-	// (&(kmem_cache#12-oX (struct files_struct))->fdtab)->fd: &(kmem_cache#12-oX (struct files_struct))->fd_array[0]
-	//
-	// &(&init_files)->file_lock 을 사용하여 spin lock 수행
-	//
-	// (kmem_cache#12-oX (struct files_struct))->open_fds_init 에 init_files.open_fds_init 값을 복사
-	// (kmem_cache#12-oX (struct files_struct))->open_fds_init: NULL
-	// (kmem_cache#12-oX (struct files_struct))->close_on_exec_init 에 init_files.close_on_exec_init 값을 복사
-	// (kmem_cache#12-oX (struct files_struct))->close_on_exec_init: NULL
-	//
-	// (&(kmem_cache#12-oX (struct files_struct))->fdtab)->open_fds 의 0~31 bit 를 clear 함
-	// (kmem_cache#12-oX (struct files_struct))->fd_array[0...31]: NULL
-	// &(kmem_cache#12-oX (struct files_struct))->fd_array[0] 에 값을 size 0 만큼 0 으로 set 함
-	//
-	// (kmem_cache#12-oX (struct files_struct))->fdt: &(kmem_cache#12-oX (struct files_struct))->fdtab
-	//
-	// (kmem_cache#15-oX (struct task_struct))->files: kmem_cache#12-oX (struct files_struct)
-	//
-	// (&init_fs)->users: 2
-	//
-	// (&init_sighand)->count: { (2) }
+	// (kmem_cache#15-oX (struct task_struct))->sighand: kmem_cache#14-oX (struct sighand_struct)
+	// (&(kmem_cache#14-oX (struct sighand_struct))->count)->counter: 1
+	// (&init_sighand)->action 의 값을 (kmem_cache#14-oX (struct sighand_struct))->action 에 복사함
 	//
 	// struct signal_struct 크기 만큼의 메모리를 할당함
 	// kmem_cache#13-oX (struct signal_struct)
@@ -4905,7 +5559,7 @@ pid_t kernel_thread(int (*fn)(void *), void *arg, unsigned long flags)
 	// (kmem_cache#15-oX (struct task_struct))->last_switch_count: 0
 	// (kmem_cache#15-oX (struct task_struct))->mm: NULL
 	//
-	// (&init_nsproxy)->count: { (2) }
+	// (&init_nsproxy)->count: { (3) }
 	//
 	// ((struct thread_info *)(kmem_cache#15-oX (struct task_struct))->stack)->cpu_context 의 값을 0으로 초기화 함
 	// ((struct pt_regs *)(kmem_cache#15-oX (struct task_struct))->stack + 8183) 의 값을 0으로 초기화 함

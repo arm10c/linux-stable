@@ -19,6 +19,7 @@ struct uid_gid_map {	/* 64 bytes -- 1 cache line */
 
 // ARM10C 20160514
 // ARM10C 20161105
+// ARM10C 20170610
 struct user_namespace {
 	struct uid_gid_map	uid_map;
 	struct uid_gid_map	gid_map;

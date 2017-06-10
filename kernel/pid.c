@@ -56,6 +56,7 @@ static unsigned int pidhash_shift = 4;
 // ARM10C 20160903
 // ARM10C 20161105
 // ARM10C 20161203
+// ARM10C 20170610
 // INIT_STRUCT_PID:
 // {
 //     .count        = { (1) },
@@ -109,6 +110,7 @@ static inline int mk_pid(struct pid_namespace *pid_ns,
 // ARM10C 20161105
 // ARM10C 20161112
 // ARM10C 20161203
+// ARM10C 20170610
 struct pid_namespace init_pid_ns = {
 	.kref = {
 		.refcount       = ATOMIC_INIT(2),
@@ -202,6 +204,8 @@ static int pid_before(int base, int a, int b)
  */
 // ARM10C 20161112
 // pid_ns: &init_pid_ns, last: 0, pid: 1
+// ARM10C 20170610
+// pid_ns: &init_pid_ns, last: 1, pid: 2
 static void set_last_pid(struct pid_namespace *pid_ns, int base, int pid)
 {
 	int prev;
@@ -229,29 +233,41 @@ static void set_last_pid(struct pid_namespace *pid_ns, int base, int pid)
 
 // ARM10C 20161105
 // tmp: &init_pid_ns
+// ARM10C 20170610
+// tmp: &init_pid_ns
 static int alloc_pidmap(struct pid_namespace *pid_ns)
 {
 	// pid_ns->last_pid: (&init_pid_ns)->last_pid: 0
+	// pid_ns->last_pid: (&init_pid_ns)->last_pid: 1
 	int i, offset, max_scan, pid, last = pid_ns->last_pid;
 	// last: 0
+	// last: 1
 
 	struct pidmap *map;
 
 	// last: 0
+	// last: 1
 	pid = last + 1;
 	// pid: 1
+	// pid: 2
 
 	// pid: 1, pid_max: 0x8000
+	// pid: 2, pid_max: 0x8000
 	if (pid >= pid_max)
 		pid = RESERVED_PIDS;
 
 	// pid: 1, PID_MAX_DEFAULT: 0x8000, BITS_PER_PAGE_MASK: 0x7FFF
+	// pid: 2, PID_MAX_DEFAULT: 0x8000, BITS_PER_PAGE_MASK: 0x7FFF
 	offset = pid & BITS_PER_PAGE_MASK;
 	// offset: 1
+	// offset: 2
 
 	// pid: 1, BITS_PER_PAGE: 0x8000
 	// &pid_ns->pidmap[0]: &(&init_pid_ns)->pidmap[0]
+	// pid: 2, BITS_PER_PAGE: 0x8000
+	// &pid_ns->pidmap[0]: &(&init_pid_ns)->pidmap[0]
 	map = &pid_ns->pidmap[pid/BITS_PER_PAGE];
+	// map: &(&init_pid_ns)->pidmap[0]
 	// map: &(&init_pid_ns)->pidmap[0]
 
 	/*
@@ -260,15 +276,19 @@ static int alloc_pidmap(struct pid_namespace *pid_ns)
 	 * we start with offset == 0 (or RESERVED_PIDS).
 	 */
 	// pid_max: 0x8000, BITS_PER_PAGE: 0x8000, DIV_ROUND_UP(0x8000, 0x8000): 1, offset: 1
+	// pid_max: 0x8000, BITS_PER_PAGE: 0x8000, DIV_ROUND_UP(0x8000, 0x8000): 1, offset: 2
 	max_scan = DIV_ROUND_UP(pid_max, BITS_PER_PAGE) - !offset;
+	// max_scan: 1
 	// max_scan: 1
 
 // 2016/11/05 종료
 // 2016/11/12 시작
 
 	// max_scan: 1
+	// max_scan: 1
 	for (i = 0; i <= max_scan; ++i) {
 		// map->page: (&(&init_pid_ns)->pidmap[0])->page: NULL
+		// map->page: (&(&init_pid_ns)->pidmap[0])->page: kmem_cache#25-oX
 		if (unlikely(!map->page)) {
 			// PAGE_SIZE: 0x1000, GFP_KERNEL: 0xD0
 			// kzalloc(0x1000, 0xD0): kmem_cache#25-oX
@@ -309,29 +329,46 @@ static int alloc_pidmap(struct pid_namespace *pid_ns)
 
 		// &map->nr_free: &(&(&init_pid_ns)->pidmap[0])->nr_free,
 		// atomic_read(&(&(&init_pid_ns)->pidmap[0])->nr_free): 0x8000
+		// &map->nr_free: &(&(&init_pid_ns)->pidmap[0])->nr_free,
+		// atomic_read(&(&(&init_pid_ns)->pidmap[0])->nr_free): 0x7FFF
 		if (likely(atomic_read(&map->nr_free))) {
 			for ( ; ; ) {
 				// offset: 1, map->page: (&(&init_pid_ns)->pidmap[0])->page: kmem_cache#25-oX
 				// test_and_set_bit(1, kmem_cache#25-oX): 0
+				// offset: 2, map->page: (&(&init_pid_ns)->pidmap[0])->page: kmem_cache#25-oX
+				// test_and_set_bit(2, kmem_cache#25-oX): 0
 				if (!test_and_set_bit(offset, map->page)) {
 					// test_and_set_bit 에서 한일:
 					// kmem_cache#25-oX 의 1 bit 의 값을 1 으로 set 하고 이전 값 0 을 읽어서 리턴함
 
+					// test_and_set_bit 에서 한일:
+					// kmem_cache#25-oX 의 2 bit 의 값을 1 으로 set 하고 이전 값 0 을 읽어서 리턴함
+
+					// &map->nr_free: &(&(&init_pid_ns)->pidmap[0])->nr_free
 					// &map->nr_free: &(&(&init_pid_ns)->pidmap[0])->nr_free
 					atomic_dec(&map->nr_free);
 
 					// atomic_dec 에서 한일:
 					// (&(&init_pid_ns)->pidmap[0])->nr_free: { (0x7FFF) }
 
+					// atomic_dec 에서 한일:
+					// (&(&init_pid_ns)->pidmap[0])->nr_free: { (0x7FFE) }
+
 					// pid_ns: &init_pid_ns, last: 0, pid: 1
+					// pid_ns: &init_pid_ns, last: 1, pid: 2
 					set_last_pid(pid_ns, last, pid);
 
 					// set_last_pid 에서 한일:
 					// &(&init_pid_ns)->last_pid 을 1 로 변경함
 
+					// set_last_pid 에서 한일:
+					// &(&init_pid_ns)->last_pid 을 2 로 변경함
+
 					// pid: 1
+					// pid: 2
 					return pid;
 					// return 1
+					// return 2
 				}
 				offset = find_next_offset(map, offset);
 				if (offset >= BITS_PER_PAGE)
@@ -442,6 +479,8 @@ void free_pid(struct pid *pid)
 
 // ARM10C 20161105
 // p->nsproxy->pid_ns_for_children: (&init_nsproxy)->pid_ns_for_children: &init_pid_ns
+// ARM10C 20170610
+// p->nsproxy->pid_ns_for_children: (&init_nsproxy)->pid_ns_for_children: &init_pid_ns
 struct pid *alloc_pid(struct pid_namespace *ns)
 {
 	struct pid *pid;
@@ -452,27 +491,39 @@ struct pid *alloc_pid(struct pid_namespace *ns)
 
 	// ns->pid_cachep: (&init_pid_ns)->pid_cachep: kmem_cache#19, GFP_KERNEL: 0xD0
 	// kmem_cache_alloc(kmem_cache#19, 0xD0): kmem_cache#19-oX (struct pid)
+	// ns->pid_cachep: (&init_pid_ns)->pid_cachep: kmem_cache#19, GFP_KERNEL: 0xD0
+	// kmem_cache_alloc(kmem_cache#19, 0xD0): kmem_cache#19-oX (struct pid)
 	pid = kmem_cache_alloc(ns->pid_cachep, GFP_KERNEL);
 	// pid: kmem_cache#19-oX (struct pid)
+	// pid: kmem_cache#19-oX (struct pid)
 
+	// pid: kmem_cache#19-oX (struct pid)
 	// pid: kmem_cache#19-oX (struct pid)
 	if (!pid)
 		goto out;
 
 	// ns: &init_pid_ns
+	// ns: &init_pid_ns
 	tmp = ns;
+	// tmp: &init_pid_ns
 	// tmp: &init_pid_ns
 
 	// pid->level: (kmem_cache#19-oX (struct pid))->level, ns->level: (&init_pid_ns)->level: 0
+	// pid->level: (kmem_cache#19-oX (struct pid))->level, ns->level: (&init_pid_ns)->level: 0
 	pid->level = ns->level;
 	// pid->level: (kmem_cache#19-oX (struct pid))->level: 0
+	// pid->level: (kmem_cache#19-oX (struct pid))->level: 0
 
+	// ns->level: (&init_pid_ns)->level: 0
 	// ns->level: (&init_pid_ns)->level: 0
 	for (i = ns->level; i >= 0; i--) {
 		// tmp: &init_pid_ns
 		// alloc_pidmap(&init_pid_ns): 1
+		// tmp: &init_pid_ns
+		// alloc_pidmap(&init_pid_ns): 2
 		nr = alloc_pidmap(tmp);
 		// nr: 1
+		// nr: 2
 
 		// alloc_pidmap 에서 한일:
 		// page 사이즈 만큼의 메모리를 할당 받음: kmem_cache#25-oX
@@ -482,25 +533,41 @@ struct pid *alloc_pid(struct pid_namespace *ns)
 		// (&(&init_pid_ns)->pidmap[0])->nr_free: { (0x7FFF) }
 		// &(&init_pid_ns)->last_pid 을 1 로 변경함
 
+		// alloc_pidmap 에서 한일:
+		// 기존에 할당받은 pidmap의 메모리 값
+		// (&(&init_pid_ns)->pidmap[0])->page: kmem_cache#25-oX
+		// kmem_cache#25-oX 의 2 bit 의 값을 1 으로 set
+		// (&(&init_pid_ns)->pidmap[0])->nr_free: { (0x7FFE) }
+		// &(&init_pid_ns)->last_pid 을 2 로 변경함
+
 		// nr: 1
+		// nr: 2
 		if (nr < 0)
 			goto out_free;
 
 		// i: 0, pid->numbers[0].nr: (kmem_cache#19-oX (struct pid))->numbers[0].nr, nr: 1
+		// i: 0, pid->numbers[0].nr: (kmem_cache#19-oX (struct pid))->numbers[0].nr, nr: 2
 		pid->numbers[i].nr = nr;
 		// pid->numbers[0].nr: (kmem_cache#19-oX (struct pid))->numbers[0].nr: 1
+		// pid->numbers[0].nr: (kmem_cache#19-oX (struct pid))->numbers[0].nr: 2
 
+		// i: 0, pid->numbers[0].ns: (kmem_cache#19-oX (struct pid))->numbers[0].ns, tmp: &init_pid_ns
 		// i: 0, pid->numbers[0].ns: (kmem_cache#19-oX (struct pid))->numbers[0].ns, tmp: &init_pid_ns
 		pid->numbers[i].ns = tmp;
 		// pid->numbers[0].ns: (kmem_cache#19-oX (struct pid))->numbers[0].ns: &init_pid_ns
+		// pid->numbers[0].ns: (kmem_cache#19-oX (struct pid))->numbers[0].ns: &init_pid_ns
 
 		// tmp: &init_pid_ns, tmp->parent: (&init_pid_ns)->parent: NULL
+		// tmp: &init_pid_ns, tmp->parent: (&init_pid_ns)->parent: NULL
 		tmp = tmp->parent;
+		// tmp: NULL
 		// tmp: NULL
 	}
 
 	// pid: kmem_cache#19-oX (struct pid)
 	// is_child_reaper(kmem_cache#19-oX (struct pid)): 1
+	// pid: kmem_cache#19-oX (struct pid)
+	// is_child_reaper(kmem_cache#19-oX (struct pid)): 0
 	if (unlikely(is_child_reaper(pid))) {
 		// ns: &init_pid_ns, pid_ns_prepare_proc(&init_pid_ns): 0
 		if (pid_ns_prepare_proc(ns))
@@ -996,16 +1063,23 @@ struct pid *alloc_pid(struct pid_namespace *ns)
 	}
 
 	// ns: &init_pid_ns
+	// ns: &init_pid_ns
 	get_pid_ns(ns);
 
+	// &pid->count: &(kmem_cache#19-oX (struct pid))->count
 	// &pid->count: &(kmem_cache#19-oX (struct pid))->count
 	atomic_set(&pid->count, 1);
 
 	// atomic_set 에서 한일:
 	// (&(kmem_cache#19-oX (struct pid))->count)->counter: 1
 
+	// atomic_set 에서 한일:
+	// (&(kmem_cache#19-oX (struct pid))->count)->counter: 1
+
+	// PIDTYPE_MAX: 3
 	// PIDTYPE_MAX: 3
 	for (type = 0; type < PIDTYPE_MAX; ++type)
+		// type: 0, &pid->tasks[0]: &(kmem_cache#19-oX (struct pid))->tasks[0]
 		// type: 0, &pid->tasks[0]: &(kmem_cache#19-oX (struct pid))->tasks[0]
 		INIT_HLIST_HEAD(&pid->tasks[type]);
 
@@ -1014,8 +1088,15 @@ struct pid *alloc_pid(struct pid_namespace *ns)
 		
 		// type: 1...2 loop 수행
 
+		// INIT_HLIST_HEAD 에서 한일:
+		// (&(kmem_cache#19-oX (struct pid))->tasks[0])->first: NULL
+		
+		// type: 1...2 loop 수행
+
+	// pid->numbers: (kmem_cache#19-oX (struct pid))->numbers, ns->level: (&init_pid_ns)->level: 0
 	// pid->numbers: (kmem_cache#19-oX (struct pid))->numbers, ns->level: (&init_pid_ns)->level: 0
 	upid = pid->numbers + ns->level;
+	// upid: &(kmem_cache#19-oX (struct pid))->numbers[0]
 	// upid: &(kmem_cache#19-oX (struct pid))->numbers[0]
 
 	spin_lock_irq(&pidmap_lock);
@@ -1023,16 +1104,26 @@ struct pid *alloc_pid(struct pid_namespace *ns)
 	// spin_lock_irq 에서 한일:
 	// pidmap_lock 을 사용한 spin lock 수행
 
+	// spin_lock_irq 에서 한일:
+	// pidmap_lock 을 사용한 spin lock 수행
+
+	// ns->nr_hashed: (&init_pid_ns)->nr_hashed: 0x80000000, PIDNS_HASH_ADDING: 0x80000000
 	// ns->nr_hashed: (&init_pid_ns)->nr_hashed: 0x80000000, PIDNS_HASH_ADDING: 0x80000000
 	if (!(ns->nr_hashed & PIDNS_HASH_ADDING))
 		goto out_unlock;
 
+	// upid: &(kmem_cache#19-oX (struct pid))->numbers[0], pid->numbers: (kmem_cache#19-oX (struct pid))->numbers
 	// upid: &(kmem_cache#19-oX (struct pid))->numbers[0], pid->numbers: (kmem_cache#19-oX (struct pid))->numbers
 	for ( ; upid >= pid->numbers; --upid) {
 		// &upid->pid_chain: &(&(kmem_cache#19-oX (struct pid))->numbers[0])->pid_chain
 		// upid->nr: (&(kmem_cache#19-oX (struct pid))->numbers[0])->nr: 1,
 		// upid->ns: (&(kmem_cache#19-oX (struct pid))->numbers[0])->ns: &init_pid_ns,
 		// pid_hashfn(1, &init_pid_ns): 계산된 hash index 값
+		// pid_hash: pid hash를 위한 메모리 공간을 16kB, &pid_hash: &(pid hash를 위한 메모리 공간을 16kB)[계산된 hash index 값]
+		// &upid->pid_chain: &(&(kmem_cache#19-oX (struct pid))->numbers[0])->pid_chain
+		// upid->nr: (&(kmem_cache#19-oX (struct pid))->numbers[0])->nr: 2,
+		// upid->ns: (&(kmem_cache#19-oX (struct pid))->numbers[0])->ns: &init_pid_ns,
+		// pid_hashfn(2, &init_pid_ns): 계산된 hash index 값
 		// pid_hash: pid hash를 위한 메모리 공간을 16kB, &pid_hash: &(pid hash를 위한 메모리 공간을 16kB)[계산된 hash index 값]
 		hlist_add_head_rcu(&upid->pid_chain,
 				&pid_hash[pid_hashfn(upid->nr, upid->ns)]);
@@ -1042,19 +1133,32 @@ struct pid *alloc_pid(struct pid_namespace *ns)
 		// (&(&(kmem_cache#19-oX (struct pid))->numbers[0])->pid_chain)->pprev: &(&(pid hash를 위한 메모리 공간을 16kB)[계산된 hash index 값])->first
 		// ((&(pid hash를 위한 메모리 공간을 16kB)[계산된 hash index 값])->first): &(&(kmem_cache#19-oX (struct pid))->numbers[0])->pid_chain
 
+		// hlist_add_head_rcu 에서 한일:
+		// (&(&(kmem_cache#19-oX (struct pid))->numbers[0])->pid_chain)->next: NULL
+		// (&(&(kmem_cache#19-oX (struct pid))->numbers[0])->pid_chain)->pprev: &(&(pid hash를 위한 메모리 공간을 16kB)[계산된 hash index 값])->first
+		// ((&(pid hash를 위한 메모리 공간을 16kB)[계산된 hash index 값])->first): &(&(kmem_cache#19-oX (struct pid))->numbers[0])->pid_chain
+
+		// upid->ns: (&(kmem_cache#19-oX (struct pid))->numbers[0])->ns: &init_pid_ns
+		// upid->ns->nr_hashed: (&init_pid_ns)->nr_hashed: 0x80000000
 		// upid->ns: (&(kmem_cache#19-oX (struct pid))->numbers[0])->ns: &init_pid_ns
 		// upid->ns->nr_hashed: (&init_pid_ns)->nr_hashed: 0x80000000
 		upid->ns->nr_hashed++;
 		// upid->ns->nr_hashed: (&init_pid_ns)->nr_hashed: 0x80000001
+		// upid->ns->nr_hashed: (&init_pid_ns)->nr_hashed: 0x80000002
 	}
 	spin_unlock_irq(&pidmap_lock);
 
 	// spin_unlock_irq 에서 한일:
 	// pidmap_lock 을 사용한 spin unlock 수행
 
+	// spin_unlock_irq 에서 한일:
+	// pidmap_lock 을 사용한 spin unlock 수행
+
 out:
 	// pid: kmem_cache#19-oX (struct pid)
+	// pid: kmem_cache#19-oX (struct pid)
 	return pid;
+	// return kmem_cache#19-oX (struct pid)
 	// return kmem_cache#19-oX (struct pid)
 
 out_unlock:
@@ -1104,6 +1208,12 @@ EXPORT_SYMBOL_GPL(find_vpid);
 // p: kmem_cache#15-oX (struct task_struct), PIDTYPE_SID: 2
 // ARM10C 20161210
 // p: kmem_cache#15-oX (struct task_struct), PIDTYPE_PID: 0
+// ARM10C 20170610
+// p: kmem_cache#15-oX (struct task_struct), PIDTYPE_PGID: 1
+// ARM10C 20170610
+// p: kmem_cache#15-oX (struct task_struct), PIDTYPE_SID: 2
+// ARM10C 20170610
+// p: kmem_cache#15-oX (struct task_struct), PIDTYPE_PID: 1
 void attach_pid(struct task_struct *task, enum pid_type type)
 {
 	// type: 1, &task->pids[1]: &(kmem_cache#15-oX (struct task_struct))->pids[1]

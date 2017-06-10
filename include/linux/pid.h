@@ -12,6 +12,7 @@
 // ARM10C 20161203
 // ARM10C 20161210
 // ARM10C 20161217
+// ARM10C 20170610
 enum pid_type
 {
 	// PIDTYPE_PID: 0
@@ -80,6 +81,7 @@ struct upid {
 // ARM10C 20161105
 // ARM10C 20161203
 // ARM10C 20161210
+// ARM10C 20170610
 // sizeof(struct pid): 44 bytes
 struct pid
 {
@@ -200,12 +202,23 @@ static inline struct pid_namespace *ns_of_pid(struct pid *pid)
 // pid: kmem_cache#19-oX (struct pid)
 // ARM10C 20161203
 // pid: kmem_cache#19-oX (struct pid)
+// ARM10C 20170610
+// pid: kmem_cache#19-oX (struct pid)
+// ARM10C 20170610
+// pid: kmem_cache#19-oX (struct pid)
 static inline bool is_child_reaper(struct pid *pid)
 {
 	// pid->level: (kmem_cache#19-oX (struct pid))->level: 0,
 	// pid->numbers[0].nr: (kmem_cache#19-oX (struct pid))->numbers[0].nr: 1
+	// pid->level: (kmem_cache#19-oX (struct pid))->level: 0,
+	// pid->numbers[0].nr: (kmem_cache#19-oX (struct pid))->numbers[0].nr: 1
+	// pid->level: (kmem_cache#19-oX (struct pid))->level: 0,
+	// pid->numbers[0].nr: (kmem_cache#19-oX (struct pid))->numbers[0].nr: 2
 	return pid->numbers[pid->level].nr == 1;
 	// return 1
+	// return 1
+	// return 0
+	// return 0
 }
 
 /*
@@ -221,20 +234,28 @@ static inline bool is_child_reaper(struct pid *pid)
 
 // ARM10C 20161203
 // pid: kmem_cache#19-oX (struct pid)
+// ARM10C 20170610
+// pid: kmem_cache#19-oX (struct pid)
 static inline pid_t pid_nr(struct pid *pid)
 {
 	pid_t nr = 0;
 	// nr: 0
+	// nr: 0
 
+	// pid: kmem_cache#19-oX (struct pid)
 	// pid: kmem_cache#19-oX (struct pid)
 	if (pid)
 		// nr: 0, pid->numbers[0].nr: (kmem_cache#19-oX (struct pid))->numbers[0].nr: 1
+		// nr: 0, pid->numbers[0].nr: (kmem_cache#19-oX (struct pid))->numbers[0].nr: 2
 		nr = pid->numbers[0].nr;
 		// nr: 1
+		// nr: 2
 
 	// nr: 1
+	// nr: 2
 	return nr;
 	// return 1
+	// return 2
 }
 
 pid_t pid_nr_ns(struct pid *pid, struct pid_namespace *ns);

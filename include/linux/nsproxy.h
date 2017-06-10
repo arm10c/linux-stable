@@ -28,6 +28,7 @@ struct fs_struct;
  */
 // ARM10C 20151003
 // ARM10C 20161105
+// ARM10C 20170610
 // sizeof(struct nsproxy): 24 bytes
 struct nsproxy {
 	atomic_t count;
@@ -85,6 +86,8 @@ static inline void put_nsproxy(struct nsproxy *ns)
 }
 
 // ARM10C 20161105
+// old_ns: &init_nsproxy
+// ARM10C 20170610
 // old_ns: &init_nsproxy
 static inline void get_nsproxy(struct nsproxy *ns)
 {

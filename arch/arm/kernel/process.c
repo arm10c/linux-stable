@@ -364,6 +364,8 @@ asmlinkage void ret_from_fork(void) __asm__("ret_from_fork");
 
 // ARM10C 20161105
 // clone_flags: 0x00800B00, stack_start: kernel_init, stack_size: 0, p: kmem_cache#15-oX (struct task_struct)
+// ARM10C 20170610
+// clone_flags: 0x00800700, stack_start: kernel_init, stack_size: 0, p: kmem_cache#15-oX (struct task_struct)
 int
 copy_thread(unsigned long clone_flags, unsigned long stack_start,
 	    unsigned long stk_sz, struct task_struct *p)

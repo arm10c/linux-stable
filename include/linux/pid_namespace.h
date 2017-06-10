@@ -10,6 +10,7 @@
 #include <linux/kref.h>
 
 // ARM10C 20161105
+// ARM10C 20170610
 struct pidmap {
        atomic_t nr_free;
        void *page;
@@ -38,6 +39,7 @@ struct bsd_acct_struct;
 // ARM10C 20161105
 // ARM10C 20161112
 // ARM10C 20161126
+// ARM10C 20170610
 struct pid_namespace {
 	struct kref kref;
 	struct pidmap pidmap[PIDMAP_ENTRIES];
