@@ -194,6 +194,8 @@ extern char ___assert_task_state[1 - 2*!!(
 // TASK_UNINTERRUPTIBLE: 2, PF_FROZEN: 0x00010000
 // p: kmem_cache#15-oX (struct task_struct)
 // (kmem_cache#15-oX (struct task_struct))->state: 0, (kmem_cache#15-oX (struct task_struct))->flags: 0x00200040
+// ARM10C 20170617
+// p: kmem_cache#15-oX (struct task_struct)
 #define task_contributes_to_load(task)	\
 				((task->state & TASK_UNINTERRUPTIBLE) != 0 && \
 				 (task->flags & PF_FROZEN) == 0)
@@ -880,6 +882,7 @@ struct sched_group;
 // ARM10C 20140913
 // ARM10C 20150606
 // ARM10C 20161217
+// ARM10C 20170617
 struct sched_domain {
 	/* These fields must be setup */
 	struct sched_domain *parent;	/* top domain must be null terminated */
@@ -1074,6 +1077,7 @@ struct sched_statistics {
 // ARM10C 20170419
 // ARM10C 20170427
 // ARM10C 20170520
+// ARM10C 20170617
 // sizeof(struct sched_entity): 100 bytes
 struct sched_entity {
 	struct load_weight	load;		/* for load-balancing */
@@ -1152,6 +1156,7 @@ enum perf_event_task_context {
 // ARM10C 20170513
 // ARM10C 20170520
 // ARM10C 20170610
+// ARM10C 20170617
 // sizeof(struct task_struct): 815 bytes
 struct task_struct {
 	volatile long state;	/* -1 unrunnable, 0 runnable, >0 stopped */
@@ -1681,12 +1686,17 @@ static inline pid_t task_pid_nr_ns(struct task_struct *tsk,
 
 // ARM10C 20161217
 // p: kmem_cache#15-oX (struct task_struct)
+// ARM10C 20170617
+// p: kmem_cache#15-oX (struct task_struct)
 static inline pid_t task_pid_vnr(struct task_struct *tsk)
 {
 	// tsk: kmem_cache#15-oX (struct task_struct), PIDTYPE_PID: 0
 	// __task_pid_nr_ns(kmem_cache#15-oX (struct task_struct), 0, NULL): 1
+	// tsk: kmem_cache#15-oX (struct task_struct), PIDTYPE_PID: 0
+	// __task_pid_nr_ns(kmem_cache#15-oX (struct task_struct), 0, NULL): 2
 	return __task_pid_nr_ns(tsk, PIDTYPE_PID, NULL);
 	// return 1
+	// return 2
 }
 
 
@@ -1744,10 +1754,14 @@ static inline pid_t task_pgrp_nr(struct task_struct *tsk)
  */
 // ARM10C 20161217
 // task: kmem_cache#15-oX (struct task_struct)
+// ARM10C 20170617
+// task: kmem_cache#15-oX (struct task_struct)
 static inline int pid_alive(struct task_struct *p)
 {
 	// PIDTYPE_PID: 0, p->pids[0].pid: (kmem_cache#15-oX (struct task_struct))->pids[0].pid: kmem_cache#19-oX (struct pid)
+	// PIDTYPE_PID: 0, p->pids[0].pid: (kmem_cache#15-oX (struct task_struct))->pids[0].pid: kmem_cache#19-oX (struct pid)
 	return p->pids[PIDTYPE_PID].pid != NULL;
+	// return 1
 	// return 1
 }
 
@@ -3015,6 +3029,8 @@ static inline void ptrace_signal_wake_up(struct task_struct *t, bool resume)
 // p: kmem_cache#15-oX (struct task_struct)
 // ARM10C 20170201
 // p: kmem_cache#15-oX (struct task_struct)
+// ARM10C 20170617
+// kmem_cache#15-oX (struct task_struct)
 static inline unsigned int task_cpu(const struct task_struct *p)
 {
 	// p: kmem_cache#15-oX (struct task_struct)

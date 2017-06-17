@@ -5178,27 +5178,34 @@ long do_fork(unsigned long clone_flags,
 	// total_forks: 2
 
 // 2017/06/10 종료
+// 2017/06/17 시작
 
 	/*
 	 * Do this prior waking up the new thread - the thread pointer
 	 * might get invalid after that point, if the thread exits quickly.
 	 */
 	// p: kmem_cache#15-oX (struct task_struct), IS_ERR(kmem_cache#15-oX (struct task_struct)): 0
+	// p: kmem_cache#15-oX (struct task_struct), IS_ERR(kmem_cache#15-oX (struct task_struct)): 0
 	if (!IS_ERR(p)) {
 		struct completion vfork;
 
 		// current: &init_task, p: kmem_cache#15-oX (struct task_struct)
+		// current: &init_task, p: kmem_cache#15-oX (struct task_struct)
 		trace_sched_process_fork(current, p);
 
 		// p: kmem_cache#15-oX (struct task_struct), task_pid_vnr(kmem_cache#15-oX (struct task_struct)): 1
+		// p: kmem_cache#15-oX (struct task_struct), task_pid_vnr(kmem_cache#15-oX (struct task_struct)): 2
 		nr = task_pid_vnr(p);
 		// nr: 1
+		// nr: 2
 
 		// clone_flags: 0x00800B00, CLONE_PARENT_SETTID: 0x00100000
+		// clone_flags: 0x00800700, CLONE_PARENT_SETTID: 0x00100000
 		if (clone_flags & CLONE_PARENT_SETTID)
 			put_user(nr, parent_tidptr);
 
 		// clone_flags: 0x00800B00, CLONE_VFORK: 0x00004000
+		// clone_flags: 0x00800700, CLONE_VFORK: 0x00004000
 		if (clone_flags & CLONE_VFORK) {
 			p->vfork_done = &vfork;
 			init_completion(&vfork);
@@ -5206,6 +5213,7 @@ long do_fork(unsigned long clone_flags,
 		}
 
 		// p: kmem_cache#15-oX (struct task_struct)
+		// p: kmem_cache#15-oX (struct task_struct) -pid: 2
 		wake_up_new_task(p);
 
 		// wake_up_new_task 에서 한일:

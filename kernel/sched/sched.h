@@ -289,6 +289,7 @@ struct cfs_bandwidth { };
 // ARM10C 20170427
 // ARM10C 20170513
 // ARM10C 20170520
+// ARM10C 20170617
 struct cfs_rq {
 	struct load_weight load;
 	unsigned int nr_running, h_nr_running;
@@ -455,6 +456,7 @@ extern struct root_domain def_root_domain;
 // ARM10C 20161217
 // ARM10C 20170201
 // ARM10C 20170427
+// ARM10C 20170617
 struct rq {
 	/* runqueue lock: */
 	raw_spinlock_t lock;
