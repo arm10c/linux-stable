@@ -441,6 +441,8 @@ static inline void hlist_replace_rcu(struct hlist_node *old,
 // h: &(pid hash를 위한 메모리 공간을 16kB)[계산된 hash index 값]
 // ARM10C 20161210
 // h: &(kmem_cache#19-oX (struct pid))->tasks[0]
+// ARM10C 20170624
+// &pid_hash[계산된 hash index 값]
 #define hlist_first_rcu(head)	(*((struct hlist_node __rcu **)(&(head)->first)))
 #define hlist_next_rcu(node)	(*((struct hlist_node __rcu **)(&(node)->next)))
 #define hlist_pprev_rcu(node)	(*((struct hlist_node __rcu **)((node)->pprev)))
@@ -585,6 +587,10 @@ static inline void hlist_add_after_rcu(struct hlist_node *prev,
  * the _rcu list-mutation primitives such as hlist_add_head_rcu()
  * as long as the traversal is guarded by rcu_read_lock().
  */
+// ARM10C 20170624
+// hlist_for_each_entry_rcu(pnr, &pid_hash[계산된 hash index 값], pid_chain):
+// for (pnr = hlist_entry_safe (rcu_dereference_raw(hlist_first_rcu(&pid_hash[계산된 hash index 값])), typeof(*(pnr)), pid_chain);
+//      pnr; pnr = hlist_entry_safe(rcu_dereference_raw(hlist_next_rcu(&(pnr)->pid_chain)), typeof(*(pnr)), pid_chain))
 #define hlist_for_each_entry_rcu(pos, head, member)			\
 	for (pos = hlist_entry_safe (rcu_dereference_raw(hlist_first_rcu(head)),\
 			typeof(*(pos)), member);			\

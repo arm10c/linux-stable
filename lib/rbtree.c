@@ -495,6 +495,9 @@ static const struct rb_augment_callbacks dummy_callbacks = {
 // ARM10C 20170427
 // &se->run_node: &(&(kmem_cache#15-oX (struct task_struct))->se)->run_node,
 // &cfs_rq->tasks_timeline: [pcp0] &(&(&runqueues)->cfs)->tasks_timeline
+// ARM10C 20170624
+// &se->run_node: &(&(kmem_cache#15-oX (struct task_struct))->se)->run_node (pid 2),
+// &cfs_rq->tasks_timeline: [pcp0] &(&(&runqueues)->cfs)->tasks_timeline
 void rb_insert_color(struct rb_node *node, struct rb_root *root)
 {
 	// node: &(kmem_cache#30-o9)->rb_node, root: &vmap_area_root

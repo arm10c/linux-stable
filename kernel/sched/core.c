@@ -405,6 +405,8 @@ static void __task_rq_unlock(struct rq *rq)
 
 // ARM10C 20170520
 // rq: [pcp0] &runqueues, p: kmem_cache#15-oX (struct task_struct)
+// ARM10C 20170624
+// rq: [pcp0] &runqueues, p: kmem_cache#15-oX (struct task_struct)
 static inline void
 task_rq_unlock(struct rq *rq, struct task_struct *p, unsigned long *flags)
 	__releases(rq->lock)
@@ -915,7 +917,6 @@ static void enqueue_task(struct rq *rq, struct task_struct *p, int flags)
 	// p->sched_class->enqueue_task: (&fair_sched_class)->enqueue_task: enqueue_task_fair
 	// rq: [pcp0] &runqueues, p: kmem_cache#15-oX (struct task_struct), flags: 0
 	// enqueue_task_fair([pcp0] &runqueues, kmem_cache#15-oX (struct task_struct), 0)
-	//
 	// p->sched_class: (kmem_cache#15-oX (struct task_struct))->sched_class: &fair_sched_class
 	// p->sched_class->enqueue_task: (&fair_sched_class)->enqueue_task: enqueue_task_fair
 	// rq: [pcp0] &runqueues, p: kmem_cache#15-oX (struct task_struct), flags: 0
@@ -949,7 +950,7 @@ static void enqueue_task(struct rq *rq, struct task_struct *p, int flags)
 	// (&(&(kmem_cache#15-oX (struct task_struct))->se)->run_node)->__rb_parent_color: NULL
 	// (&(&(kmem_cache#15-oX (struct task_struct))->se)->run_node)->rb_left: NULL
 	// (&(&(kmem_cache#15-oX (struct task_struct))->se)->run_node)->rb_right: NULL
-	// [pcp0] (&(&runqueues)->cfs)->tasks_timeline.rb_node: &(&(kmem_cache#15-oX (struct task_struct))->se
+	// [pcp0] (&(&runqueues)->cfs)->tasks_timeline.rb_node: &(&(kmem_cache#15-oX (struct task_struct))->se)->run_node
 	//
 	/*
 	// rb tree 의 root인 [pcp0] &(&(&runqueues)->cfs)->tasks_timeline 에
@@ -978,6 +979,55 @@ static void enqueue_task(struct rq *rq, struct task_struct *p, int flags)
 	// [pcp0] (&(&runqueues)->cfs)->last_decay: 현재의 schedule 시간값 + 시간값x >> 20
 	//
 	// [pcp0] (&(&runqueues)->cfs)->h_nr_running: 2
+	//
+	// delta: 현재의 schedule 시간 변화값은 signed 로 변경시 0 보다 큰 값으로 가정하고 코드 분석 진행
+	//
+	// (&(&(kmem_cache#15-oX (struct task_struct))->se)->avg)->last_runnable_update: 현재의 schedule 시간값
+	//
+	// delta + delta_w 값이 1024 보다 작은 값이라고 가정하고 코드 분석 진행
+	//
+	// (&(&(kmem_cache#15-oX (struct task_struct))->se)->avg)->runnable_avg_sum:
+	// 현재 task의 남아 있는 수행 시간량 / 1024 + 현재의 schedule 시간 변화값
+	// (&(&(kmem_cache#15-oX (struct task_struct))->se)->avg)->runnable_avg_period:
+	// 현재 task의 남아 있는 수행 시간량 / 1024 + 현재의 schedule 시간 변화값
+
+	// enqueue_task_fair 에서 한일:
+	// (&(kmem_cache#15-oX (struct task_struct))->se)->vruntime: 0x4B8D7E
+	//
+	// (&(kmem_cache#15-oX (struct task_struct))->se)->avg.last_runnable_update: 현재의 schedule 시간값
+	// [pcp0] (&(&runqueues)->cfs)->runnable_load_avg: 현재 task의 남아 있는 수행 시간량 / (현재 task의 남아 있는 수행 시간량 / 1024 + 1)
+	//
+	// decays: 현재의 schedule 시간값>> 20 값이 0이 아닌 상수 값이라 가정하고 분석 진행
+	//
+	// [pcp0] (&(&runqueues)->cfs)->blocked_load_avg: 0
+	// [pcp0] (&(&(&runqueues)->cfs)->decay_counter)->counter: 2
+	// [pcp0] (&(&runqueues)->cfs)->last_decay: 현재의 schedule 시간값>> 20
+	//
+	// (&(&root_task_group)->load_avg)->counter: 현재 task의 남아 있는 수행 시간량 / (현재 task의 남아 있는 수행 시간량 / 1024 + 1)
+	// [pcp0] (&(&runqueues)->cfs)->tg_load_contrib: 현재 task의 남아 있는 수행 시간량 / (현재 task의 남아 있는 수행 시간량 / 1024 + 1)
+	//
+	// [pcp0] (&(&(&runqueues)->cfs)->load)->weight: 2048
+	// [pcp0] (&(&(&runqueues)->cfs)->load)->inv_weight: 0
+	// [pcp0] (&(&runqueues)->load)->weight: 1024
+	// [pcp0] (&(&runqueues)->load)->inv_weight: 0
+	// [pcp0] &(&runqueues)->cfs_tasks 란 list head에 &(&(kmem_cache#15-oX (struct task_struct))->se)->group_node 를 추가함 (pid 2)
+	// [pcp0] (&(&runqueues)->cfs)->nr_running: 2
+	//
+	// (&(&(kmem_cache#15-oX (struct task_struct))->se)->run_node (pid 2))->__rb_parent_color: &(&(kmem_cache#15-oX (struct task_struct))->se)->run_node (pid 1)
+	// (&(&(kmem_cache#15-oX (struct task_struct))->se)->run_node (pid 2))->rb_left: NULL
+	// (&(&(kmem_cache#15-oX (struct task_struct))->se)->run_node (pid 2))->rb_right: NULL
+	// (&(&(kmem_cache#15-oX (struct task_struct))->se)->run_node (pid 1))->rb_right: &(&(kmem_cache#15-oX (struct task_struct))->se)->run_node (pid 2)
+	/*
+	// rb tree 의 root인 [pcp0] &(&(&runqueues)->cfs)->tasks_timeline 에
+	// rb node인 &se->run_node: &(&(kmem_cache#15-oX (struct task_struct))->se)->run_node (pid 2) 가 추가되어 rb tree 구성
+	//
+	//                            task ID: 1-b
+	//                            /           \
+	//                                   task ID: 2-r
+	*/
+	// (&(kmem_cache#15-oX (struct task_struct))->se)->on_rq: 1
+	//
+	// [pcp0] (&(&runqueues)->cfs)->h_nr_running: 4
 	//
 	// delta: 현재의 schedule 시간 변화값은 signed 로 변경시 0 보다 큰 값으로 가정하고 코드 분석 진행
 	//
@@ -1045,7 +1095,7 @@ void activate_task(struct rq *rq, struct task_struct *p, int flags)
 	// (&(&(kmem_cache#15-oX (struct task_struct))->se)->run_node)->__rb_parent_color: NULL
 	// (&(&(kmem_cache#15-oX (struct task_struct))->se)->run_node)->rb_left: NULL
 	// (&(&(kmem_cache#15-oX (struct task_struct))->se)->run_node)->rb_right: NULL
-	// [pcp0] (&(&runqueues)->cfs)->tasks_timeline.rb_node: &(&(kmem_cache#15-oX (struct task_struct))->se
+	// [pcp0] (&(&runqueues)->cfs)->tasks_timeline.rb_node: &(&(kmem_cache#15-oX (struct task_struct))->se)->run_node
 	//
 	/*
 	// rb tree 의 root인 [pcp0] &(&(&runqueues)->cfs)->tasks_timeline 에
@@ -1074,6 +1124,58 @@ void activate_task(struct rq *rq, struct task_struct *p, int flags)
 	// [pcp0] (&(&runqueues)->cfs)->last_decay: 현재의 schedule 시간값 + 시간값x >> 20
 	//
 	// [pcp0] (&(&runqueues)->cfs)->h_nr_running: 2
+	//
+	// delta: 현재의 schedule 시간 변화값은 signed 로 변경시 0 보다 큰 값으로 가정하고 코드 분석 진행
+	//
+	// (&(&(kmem_cache#15-oX (struct task_struct))->se)->avg)->last_runnable_update: 현재의 schedule 시간값
+	//
+	// delta + delta_w 값이 1024 보다 작은 값이라고 가정하고 코드 분석 진행
+	//
+	// (&(&(kmem_cache#15-oX (struct task_struct))->se)->avg)->runnable_avg_sum:
+	// 현재 task의 남아 있는 수행 시간량 / 1024 + 현재의 schedule 시간 변화값
+	// (&(&(kmem_cache#15-oX (struct task_struct))->se)->avg)->runnable_avg_period:
+	// 현재 task의 남아 있는 수행 시간량 / 1024 + 현재의 schedule 시간 변화값
+
+	// enqueue_task 에서 한일:
+	// [pcp0] (&runqueues)->clock: 현재의 schedule 시간값
+	// [pcp0] (&runqueues)->clock_task: 현재의 schedule 시간값
+	//
+	// (&(kmem_cache#15-oX (struct task_struct))->se)->vruntime: 0x4B8D7E
+	//
+	// (&(kmem_cache#15-oX (struct task_struct))->se)->avg.last_runnable_update: 현재의 schedule 시간값
+	// [pcp0] (&(&runqueues)->cfs)->runnable_load_avg: 현재 task의 남아 있는 수행 시간량 / (현재 task의 남아 있는 수행 시간량 / 1024 + 1)
+	//
+	// decays: 현재의 schedule 시간값>> 20 값이 0이 아닌 상수 값이라 가정하고 분석 진행
+	//
+	// [pcp0] (&(&runqueues)->cfs)->blocked_load_avg: 0
+	// [pcp0] (&(&(&runqueues)->cfs)->decay_counter)->counter: 2
+	// [pcp0] (&(&runqueues)->cfs)->last_decay: 현재의 schedule 시간값>> 20
+	//
+	// (&(&root_task_group)->load_avg)->counter: 현재 task의 남아 있는 수행 시간량 / (현재 task의 남아 있는 수행 시간량 / 1024 + 1)
+	// [pcp0] (&(&runqueues)->cfs)->tg_load_contrib: 현재 task의 남아 있는 수행 시간량 / (현재 task의 남아 있는 수행 시간량 / 1024 + 1)
+	//
+	// [pcp0] (&(&(&runqueues)->cfs)->load)->weight: 2048
+	// [pcp0] (&(&(&runqueues)->cfs)->load)->inv_weight: 0
+	// [pcp0] (&(&runqueues)->load)->weight: 1024
+	// [pcp0] (&(&runqueues)->load)->inv_weight: 0
+	// [pcp0] &(&runqueues)->cfs_tasks 란 list head에 &(&(kmem_cache#15-oX (struct task_struct))->se)->group_node 를 추가함 (pid 2)
+	// [pcp0] (&(&runqueues)->cfs)->nr_running: 2
+	//
+	// (&(&(kmem_cache#15-oX (struct task_struct))->se)->run_node (pid 2))->__rb_parent_color: &(&(kmem_cache#15-oX (struct task_struct))->se)->run_node (pid 1)
+	// (&(&(kmem_cache#15-oX (struct task_struct))->se)->run_node (pid 2))->rb_left: NULL
+	// (&(&(kmem_cache#15-oX (struct task_struct))->se)->run_node (pid 2))->rb_right: NULL
+	// (&(&(kmem_cache#15-oX (struct task_struct))->se)->run_node (pid 1))->rb_right: &(&(kmem_cache#15-oX (struct task_struct))->se)->run_node (pid 2)
+	/*
+	// rb tree 의 root인 [pcp0] &(&(&runqueues)->cfs)->tasks_timeline 에
+	// rb node인 &se->run_node: &(&(kmem_cache#15-oX (struct task_struct))->se)->run_node (pid 2) 가 추가되어 rb tree 구성
+	//
+	//                            task ID: 1-b
+	//                            /           \
+	//                                   task ID: 2-r
+	*/
+	// (&(kmem_cache#15-oX (struct task_struct))->se)->on_rq: 1
+	//
+	// [pcp0] (&(&runqueues)->cfs)->h_nr_running: 4
 	//
 	// delta: 현재의 schedule 시간 변화값은 signed 로 변경시 0 보다 큰 값으로 가정하고 코드 분석 진행
 	//
@@ -1259,6 +1361,8 @@ static inline void check_class_changed(struct rq *rq, struct task_struct *p,
 }
 
 // ARM10C 20170513
+// rq: [pcp0] &runqueues, p: kmem_cache#15-oX (struct task_struct), WF_FORK: 0x02
+// ARM10C 20170624
 // rq: [pcp0] &runqueues, p: kmem_cache#15-oX (struct task_struct), WF_FORK: 0x02
 void check_preempt_curr(struct rq *rq, struct task_struct *p, int flags)
 {
@@ -2545,7 +2649,7 @@ void wake_up_new_task(struct task_struct *p)
 	// (&(&(kmem_cache#15-oX (struct task_struct))->se)->run_node)->__rb_parent_color: NULL
 	// (&(&(kmem_cache#15-oX (struct task_struct))->se)->run_node)->rb_left: NULL
 	// (&(&(kmem_cache#15-oX (struct task_struct))->se)->run_node)->rb_right: NULL
-	// [pcp0] (&(&runqueues)->cfs)->tasks_timeline.rb_node: &(&(kmem_cache#15-oX (struct task_struct))->se
+	// [pcp0] (&(&runqueues)->cfs)->tasks_timeline.rb_node: &(&(kmem_cache#15-oX (struct task_struct))->se)->run_node
 	//
 	/*
 	// rb tree 의 root인 [pcp0] &(&(&runqueues)->cfs)->tasks_timeline 에
@@ -2586,24 +2690,87 @@ void wake_up_new_task(struct task_struct *p)
 	// (&(&(kmem_cache#15-oX (struct task_struct))->se)->avg)->runnable_avg_period:
 	// 현재 task의 남아 있는 수행 시간량 / 1024 + 현재의 schedule 시간 변화값
 
+	// activate_task 에서 한일:
+	// [pcp0] (&runqueues)->clock: 현재의 schedule 시간값
+	// [pcp0] (&runqueues)->clock_task: 현재의 schedule 시간값
+	//
+	// (&(kmem_cache#15-oX (struct task_struct))->se)->vruntime: 0x4B8D7E
+	//
+	// (&(kmem_cache#15-oX (struct task_struct))->se)->avg.last_runnable_update: 현재의 schedule 시간값
+	// [pcp0] (&(&runqueues)->cfs)->runnable_load_avg: 현재 task의 남아 있는 수행 시간량 / (현재 task의 남아 있는 수행 시간량 / 1024 + 1)
+	//
+	// decays: 현재의 schedule 시간값>> 20 값이 0이 아닌 상수 값이라 가정하고 분석 진행
+	//
+	// [pcp0] (&(&runqueues)->cfs)->blocked_load_avg: 0
+	// [pcp0] (&(&(&runqueues)->cfs)->decay_counter)->counter: 2
+	// [pcp0] (&(&runqueues)->cfs)->last_decay: 현재의 schedule 시간값>> 20
+	//
+	// (&(&root_task_group)->load_avg)->counter: 현재 task의 남아 있는 수행 시간량 / (현재 task의 남아 있는 수행 시간량 / 1024 + 1)
+	// [pcp0] (&(&runqueues)->cfs)->tg_load_contrib: 현재 task의 남아 있는 수행 시간량 / (현재 task의 남아 있는 수행 시간량 / 1024 + 1)
+	//
+	// [pcp0] (&(&(&runqueues)->cfs)->load)->weight: 2048
+	// [pcp0] (&(&(&runqueues)->cfs)->load)->inv_weight: 0
+	// [pcp0] (&(&runqueues)->load)->weight: 1024
+	// [pcp0] (&(&runqueues)->load)->inv_weight: 0
+	// [pcp0] &(&runqueues)->cfs_tasks 란 list head에 &(&(kmem_cache#15-oX (struct task_struct))->se)->group_node 를 추가함 (pid 2)
+	// [pcp0] (&(&runqueues)->cfs)->nr_running: 2
+	//
+	// (&(&(kmem_cache#15-oX (struct task_struct))->se)->run_node (pid 2))->__rb_parent_color: &(&(kmem_cache#15-oX (struct task_struct))->se)->run_node (pid 1)
+	// (&(&(kmem_cache#15-oX (struct task_struct))->se)->run_node (pid 2))->rb_left: NULL
+	// (&(&(kmem_cache#15-oX (struct task_struct))->se)->run_node (pid 2))->rb_right: NULL
+	// (&(&(kmem_cache#15-oX (struct task_struct))->se)->run_node (pid 1))->rb_right: &(&(kmem_cache#15-oX (struct task_struct))->se)->run_node (pid 2)
+	/*
+	// rb tree 의 root인 [pcp0] &(&(&runqueues)->cfs)->tasks_timeline 에
+	// rb node인 &se->run_node: &(&(kmem_cache#15-oX (struct task_struct))->se)->run_node (pid 2) 가 추가되어 rb tree 구성
+	//
+	//                            task ID: 1-b
+	//                            /           \
+	//                                   task ID: 2-r
+	*/
+	// (&(kmem_cache#15-oX (struct task_struct))->se)->on_rq: 1
+	//
+	// [pcp0] (&(&runqueues)->cfs)->h_nr_running: 4
+	//
+	// delta: 현재의 schedule 시간 변화값은 signed 로 변경시 0 보다 큰 값으로 가정하고 코드 분석 진행
+	//
+	// (&(&(kmem_cache#15-oX (struct task_struct))->se)->avg)->last_runnable_update: 현재의 schedule 시간값
+	//
+	// delta + delta_w 값이 1024 보다 작은 값이라고 가정하고 코드 분석 진행
+	//
+	// (&(&(kmem_cache#15-oX (struct task_struct))->se)->avg)->runnable_avg_sum:
+	// 현재 task의 남아 있는 수행 시간량 / 1024 + 현재의 schedule 시간 변화값
+	// (&(&(kmem_cache#15-oX (struct task_struct))->se)->avg)->runnable_avg_period:
+	// 현재 task의 남아 있는 수행 시간량 / 1024 + 현재의 schedule 시간 변화값
+
+	// p->on_rq: (kmem_cache#15-oX (struct task_struct))->on_rq: 0
 	// p->on_rq: (kmem_cache#15-oX (struct task_struct))->on_rq: 0
 	p->on_rq = 1;
 	// p->on_rq: (kmem_cache#15-oX (struct task_struct))->on_rq: 1
+	// p->on_rq: (kmem_cache#15-oX (struct task_struct))->on_rq: 1
 
+	// p: kmem_cache#15-oX (struct task_struct)
 	// p: kmem_cache#15-oX (struct task_struct)
 	trace_sched_wakeup_new(p, true);
 
+	// rq: [pcp0] &runqueues, p: kmem_cache#15-oX (struct task_struct), WF_FORK: 0x02
 	// rq: [pcp0] &runqueues, p: kmem_cache#15-oX (struct task_struct), WF_FORK: 0x02
 	check_preempt_curr(rq, p, WF_FORK);
 
 #ifdef CONFIG_SMP // CONFIG_SMP=y
 	// p->sched_class: (kmem_cache#15-oX (struct task_struct))->sched_class: &fair_sched_class
 	// p->sched_class->task_woken: (&fair_sched_class)->task_woken: NULL
+	// p->sched_class: (kmem_cache#15-oX (struct task_struct))->sched_class: &fair_sched_class
+	// p->sched_class->task_woken: (&fair_sched_class)->task_woken: NULL
 	if (p->sched_class->task_woken)
 		p->sched_class->task_woken(rq, p);
 #endif
 	// rq: [pcp0] &runqueues, p: kmem_cache#15-oX (struct task_struct)
+	// rq: [pcp0] &runqueues, p: kmem_cache#15-oX (struct task_struct)
 	task_rq_unlock(rq, p, &flags);
+
+	// task_rq_unlock 에서 한일:
+	// [pcp0] &(&runqueues)->lock 을 사용하여 spin unlock 수행
+	// &(kmem_cache#15-oX (struct task_struct))->pi_lock 을 사용하여 spin unlock를 하고 flags에 cpsr 복원
 
 	// task_rq_unlock 에서 한일:
 	// [pcp0] &(&runqueues)->lock 을 사용하여 spin unlock 수행

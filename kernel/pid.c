@@ -43,11 +43,15 @@
 // pidhash_shift: 4
 // upid->nr: (&(kmem_cache#19-oX (struct pid))->numbers[0])->nr: 1,
 // upid->ns: (&(kmem_cache#19-oX (struct pid))->numbers[0])->ns: &init_pid_ns
+// ARM10C 20170624
+// pidhash_shift: 4
+// nr: 2, ns: &init_pid_ns
 #define pid_hashfn(nr, ns)	\
 	hash_long((unsigned long)nr + (unsigned long)ns, pidhash_shift)
 
 // ARM10C 20140322
 // ARM10C 20161203
+// ARM10C 20170624
 // sizeof(struct hlist_head): 4 bytes
 static struct hlist_head *pid_hash;
 // ARM10C 20140322
@@ -111,6 +115,7 @@ static inline int mk_pid(struct pid_namespace *pid_ns,
 // ARM10C 20161112
 // ARM10C 20161203
 // ARM10C 20170610
+// ARM10C 20170624
 struct pid_namespace init_pid_ns = {
 	.kref = {
 		.refcount       = ATOMIC_INIT(2),
@@ -1179,15 +1184,30 @@ void disable_pid_allocation(struct pid_namespace *ns)
 	spin_unlock_irq(&pidmap_lock);
 }
 
+// ARM10C 20170624
+// nr: 2, ns: &init_pid_ns
 struct pid *find_pid_ns(int nr, struct pid_namespace *ns)
 {
 	struct upid *pnr;
 
+	// nr: 2, ns: &init_pid_ns, pid_hashfn(2, &init_pid_ns): 계산된 hash index 값
+	// hlist_first_rcu(&pid_hash[계산된 hash index 값]): &(&pid_hash[계산된 hash index 값])->first
+	// hlist_entry_safe(&(&pid_hash[계산된 hash index 값])->first, struct upid, pid_chain): &(kmem_cache#19-oX (struct pid))->numbers[0] (pid 2)
 	hlist_for_each_entry_rcu(pnr,
 			&pid_hash[pid_hashfn(nr, ns)], pid_chain)
+	// for (pnr = hlist_entry_safe (rcu_dereference_raw(hlist_first_rcu(&pid_hash[계산된 hash index 값])), typeof(*(pnr)), pid_chain);
+	//      pnr; pnr = hlist_entry_safe(rcu_dereference_raw(hlist_next_rcu(&(pnr)->pid_chain)), typeof(*(pnr)), pid_chain))
+
+		// pnr: &(kmem_cache#19-oX (struct pid))->numbers[0] (pid 2)
+
+		// pnr->nr: (&(kmem_cache#19-oX (struct pid))->numbers[0])->nr: 2, nr: 2,
+		// pnr->ns: (&(kmem_cache#19-oX (struct pid))->numbers[0])->ns: &init_pid_ns, ns: &init_pid_ns
 		if (pnr->nr == nr && pnr->ns == ns)
+			// pnr: &(kmem_cache#19-oX (struct pid))->numbers[0] (pid 2), ns->level: (&init_pid_ns)->level: 0
+			// container_of(&(kmem_cache#19-oX (struct pid))->numbers[0] (pid 2), struct pid, numbers[0]): kmem_cache#19-oX (struct pid)
 			return container_of(pnr, struct pid,
 					numbers[ns->level]);
+			// return kmem_cache#19-oX (struct pid)
 
 	return NULL;
 }
@@ -1272,9 +1292,15 @@ void transfer_pid(struct task_struct *old, struct task_struct *new,
 	hlist_replace_rcu(&old->pids[type].node, &new->pids[type].node);
 }
 
+// ARM10C 20170624
+// kmem_cache#19-oX (struct pid) (pid 2), PIDTYPE_PID: 0
 struct task_struct *pid_task(struct pid *pid, enum pid_type type)
 {
 	struct task_struct *result = NULL;
+	// result: NULL
+
+// 2017/06/24 종료
+
 	if (pid) {
 		struct hlist_node *first;
 		first = rcu_dereference_check(hlist_first_rcu(&pid->tasks[type]),
@@ -1289,11 +1315,16 @@ EXPORT_SYMBOL(pid_task);
 /*
  * Must be called under rcu_read_lock().
  */
+// ARM10C 20170624
+// pid: 2, &init_pid_ns
 struct task_struct *find_task_by_pid_ns(pid_t nr, struct pid_namespace *ns)
 {
+	// rcu_read_lock_held(): 1
 	rcu_lockdep_assert(rcu_read_lock_held(),
 			   "find_task_by_pid_ns() needs rcu_read_lock()"
-			   " protection");
+			   " protection"); // null function
+
+	// nr: 2, ns: &init_pid_ns, find_pid_ns(2, &init_pid_ns): kmem_cache#19-oX (struct pid) (pid 2), PIDTYPE_PID: 0
 	return pid_task(find_pid_ns(nr, ns), PIDTYPE_PID);
 }
 
