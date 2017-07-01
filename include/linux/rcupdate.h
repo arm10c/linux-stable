@@ -1061,6 +1061,7 @@ static inline void rcu_read_lock(void)
 // ARM10C 20161015
 // ARM10C 20161105
 // ARM10C 20161217
+// ARM10C 20170701
 static inline void rcu_read_unlock(void)
 {
 	// rcu_is_watching(): true

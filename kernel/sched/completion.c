@@ -26,14 +26,28 @@
  * It may be assumed that this function implies a write memory barrier before
  * changing the task state if and only if any tasks are woken up.
  */
+// ARM10C 20170701
+// &kthreadd_done
 void complete(struct completion *x)
 {
 	unsigned long flags;
 
+	// &x->wait.lock: &(&kthreadd_done)->wait.lock
 	spin_lock_irqsave(&x->wait.lock, flags);
+
+	// spin_lock_irqsave 에서 한일:
+	// &(&kthreadd_done)->wait.lock 을 이용하여 spin lock 을 수행하고 cpsr을 flags에 저장
+
+	// x->done: (&kthreadd_done)->done: 0
 	x->done++;
+	// x->done: (&kthreadd_done)->done: 1
+
+	// &x->wait: &(&kthreadd_done)->wait, TASK_NORMAL: 3
 	__wake_up_locked(&x->wait, TASK_NORMAL, 1);
 	spin_unlock_irqrestore(&x->wait.lock, flags);
+
+	// spin_unlock_irqrestore 에서 한일
+	// &(&kthreadd_done)->wait.lock 을 이용하여 spin unlock 을 수행하고 flags에 저장된 cpsr을 복원
 }
 EXPORT_SYMBOL(complete);
 

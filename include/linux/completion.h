@@ -26,6 +26,7 @@
 // ARM10C 20160409
 // ARM10C 20160910
 // ARM10C 20161217
+// ARM10C 20170701
 // sizeof(struct completion): 28 bytes
 struct completion {
 	unsigned int done;
@@ -107,6 +108,23 @@ struct completion {
 //                            }
 //                        } }
 //     .task_list       = { &(done).task_list, &(done).task_list }
+//   }.wait
+// }
+// ARM10C 20170701
+// #define DECLARE_COMPLETION(kthreadd_done):
+// struct completion kthreadd_done =
+// { 0,
+//   {
+//     .lock            = (spinlock_t )
+//                        { { .rlock =
+//                            {
+//                              .raw_lock = { { 0 } },
+//                              .magic = 0xdead4ead,
+//                              .owner_cpu = -1,
+//                              .owner = 0xffffffff,
+//                            }
+//                        } }
+//     .task_list       = { &(kthreadd_done).task_list, &(kthreadd_done).task_list }
 //   }.wait
 // }
 #define DECLARE_COMPLETION(work) \

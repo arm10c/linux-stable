@@ -287,6 +287,7 @@ struct hlist_head {
 // ARM10C 20151114
 // ARM10C 20161203
 // ARM10C 20161210
+// ARM10C 20170701
 // sizeof(struct hlist_node): 8 bytes
 struct hlist_node {
 	struct hlist_node *next, **pprev;

@@ -703,6 +703,8 @@ static inline void list_splice_tail_init(struct list_head *list,
 // list_entry((&running_helpers_waitq)->task_list.next, typeof(*(&running_helpers_waitq)), task_list)
 // ARM10C 20160611
 // list_entry((&net_namespace_list)->next, typeof(*net), list)
+// ARM10C 20170701
+// list_entry((&(&(&kthreadd_done)->wait)->task_list)->next, typeof(*curr), task_list)
 #define list_entry(ptr, type, member)		\
 	container_of(ptr, type, member)
 
@@ -726,6 +728,8 @@ static inline void list_splice_tail_init(struct list_head *list,
 // list_first_entry(&(&running_helpers_waitq)->task_list, typeof(*curr), task_list)
 // ARM10C 20160611
 // list_first_entry(&net_namespace_list, typeof(*net), list)
+// ARM10C 20170701
+// list_first_entry(&(&(&kthreadd_done)->wait)->task_list, typeof(*curr), task_list): 
 #define list_first_entry(ptr, type, member) \
 	list_entry((ptr)->next, type, member)
 
@@ -762,6 +766,8 @@ static inline void list_splice_tail_init(struct list_head *list,
 // ARM10C 20140614
 // ARM10C 20160409
 // list_next_entry(&running_helpers_waitq, task_list)
+// ARM10C 20170701
+// list_next_entry(&(&kthreadd_done)->wait, task_list)
 #define list_next_entry(pos, member) \
 	list_entry((pos)->member.next, typeof(*(pos)), member)
 
@@ -950,6 +956,11 @@ static inline void list_splice_tail_init(struct list_head *list,
 // #define list_for_each_entry_safe(curr, next, &(&running_helpers_waitq)->task_list, task_list):
 // for (curr = list_first_entry(&(&running_helpers_waitq)->task_list, typeof(*curr), task_list),
 //      next = list_next_entry(curr, task_list); &curr->task_list != (&(&running_helpers_waitq)->task_list);
+//      curr = next, next = list_next_entry(next, task_list))
+// ARM10C 20170701
+// #define list_for_each_entry_safe(curr, next, &(&(&kthreadd_done)->wait)->task_list, task_list):
+// for (curr = list_first_entry(&(&(&kthreadd_done)->wait)->task_list, typeof(*curr), task_list),
+//      next = list_next_entry(curr, task_list); &curr->task_list != (&(&(&kthreadd_done)->wait)->task_list);
 //      curr = next, next = list_next_entry(next, task_list))
 #define list_for_each_entry_safe(pos, n, head, member)			\
 	for (pos = list_first_entry(head, typeof(*pos), member),	\
@@ -1240,6 +1251,7 @@ static inline void hlist_move_list(struct hlist_head *old,
 
 // ARM10C 20150117
 // ARM10C 20170624
+// ARM10C 20170701
 #define hlist_entry(ptr, type, member) container_of(ptr,type,member)
 
 #define hlist_for_each(pos, head) \

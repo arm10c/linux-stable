@@ -443,6 +443,8 @@ static inline void hlist_replace_rcu(struct hlist_node *old,
 // h: &(kmem_cache#19-oX (struct pid))->tasks[0]
 // ARM10C 20170624
 // &pid_hash[계산된 hash index 값]
+// ARM10C 20170701
+// &pid->tasks[0]: &(kmem_cache#19-oX (struct pid) (pid 2))->tasks[0]
 #define hlist_first_rcu(head)	(*((struct hlist_node __rcu **)(&(head)->first)))
 #define hlist_next_rcu(node)	(*((struct hlist_node __rcu **)(&(node)->next)))
 #define hlist_pprev_rcu(node)	(*((struct hlist_node __rcu **)((node)->pprev)))

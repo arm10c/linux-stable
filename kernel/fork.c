@@ -118,7 +118,7 @@ DEFINE_PER_CPU(unsigned long, process_counts) = 0;
 // }
 __cacheline_aligned DEFINE_RWLOCK(tasklist_lock);  /* outer */
 
-#ifdef CONFIG_PROVE_RCU
+#ifdef CONFIG_PROVE_RCU // CONFIG_PROVE_RCU=n
 int lockdep_tasklist_lock_is_held(void)
 {
 	return lockdep_is_held(&tasklist_lock);

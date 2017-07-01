@@ -436,6 +436,23 @@ static void __init setup_command_line(char *command_line)
  * gcc-3.4 accidentally inlines this function, so use noinline.
  */
 
+// ARM10C 20170701
+// DECLARE_COMPLETION(kthreadd_done):
+// struct completion kthreadd_done =
+// { 0,
+//   {
+//     .lock            = (spinlock_t )
+//                        { { .rlock =
+//                            {
+//                              .raw_lock = { { 0 } },
+//                              .magic = 0xdead4ead,
+//                              .owner_cpu = -1,
+//                              .owner = 0xffffffff,
+//                            }
+//                        } }
+//     .task_list       = { &(kthreadd_done).task_list, &(kthreadd_done).task_list }
+//   }.wait
+// }
 static __initdata DECLARE_COMPLETION(kthreadd_done);
 
 // ARM10C 20160827
@@ -1841,16 +1858,35 @@ static noinline void __init_refok rest_init(void)
 	// rcu_read_lock 에서 한일:
 	// (&init_task)->rcu_read_lock_nesting: 1
 
-	// pid: 2
+	// pid: 2, find_task_by_pid_ns(2, &init_pid_ns): kmem_cache#15-oX (struct task_struct) (pid 2)
 	kthreadd_task = find_task_by_pid_ns(pid, &init_pid_ns);
+	// kthreadd_task: kmem_cache#15-oX (struct task_struct) (pid 2)
+
+	// find_task_by_pid_ns 에서 한일:
+	// pid 값을 이용하여 pid 를 사용하는 task의 메모리 주소를 가져옴
+
 	rcu_read_unlock();
+
+	// rcu_read_unlock에서 한일:
+	// (&init_task)->rcu_read_lock_nesting: 0
+
 	complete(&kthreadd_done);
+
+	// complete 에서 한일:
+	// (&kthreadd_done)->done: 1
 
 	/*
 	 * The boot idle thread must execute schedule()
 	 * at least once to get things moving:
 	 */
+	// current: &init_task
 	init_idle_bootup_task(current);
+
+	// init_idle_bootup_task 에 한일:
+	// (&init_task)->sched_class: &idle_sched_class
+
+// 2017/07/01 종료
+
 	schedule_preempt_disabled();
 	/* Call into cpu_idle with preempt disabled */
 	cpu_startup_entry(CPUHP_ONLINE);

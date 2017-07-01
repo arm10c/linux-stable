@@ -1300,15 +1300,31 @@ struct task_struct *pid_task(struct pid *pid, enum pid_type type)
 	// result: NULL
 
 // 2017/06/24 종료
+// 2017/07/01 시작
 
+	// pid: kmem_cache#19-oX (struct pid) (pid 2)
 	if (pid) {
 		struct hlist_node *first;
+
+		// type: 0, &pid->tasks[0]: &(kmem_cache#19-oX (struct pid) (pid 2))->tasks[0]
+		// hlist_first_rcu(&(kmem_cache#19-oX (struct pid) (pid 2))->tasks[0]): &(&(kmem_cache#19-oX (struct pid) (pid 2))->tasks[0])->first
+		// rcu_dereference_check(&(&(kmem_cache#19-oX (struct pid) (pid 2))->tasks[0])->first, ?): &(&(kmem_cache#19-oX (struct pid) (pid 2))->tasks[0])->first
 		first = rcu_dereference_check(hlist_first_rcu(&pid->tasks[type]),
 					      lockdep_tasklist_lock_is_held());
+		// first: &(&(kmem_cache#19-oX (struct pid) (pid 2))->tasks[0])->first
+
+		// first: &(&(kmem_cache#19-oX (struct pid) (pid 2))->tasks[0])->first: &(&(kmem_cache#15-oX (struct task_struct))->pids[0])->node
 		if (first)
+			// first: &(&(kmem_cache#15-oX (struct task_struct))->pids[0])->node, type: 0, pids[(0)].node
+			// hlist_entry(&(&(kmem_cache#15-oX (struct task_struct))->pids[0])->node, struct task_struct, pids[(0)].node):
+			// kmem_cache#15-oX (struct task_struct) (pid 2)
 			result = hlist_entry(first, struct task_struct, pids[(type)].node);
+			// result: kmem_cache#15-oX (struct task_struct) (pid 2)
 	}
+
+	// result: kmem_cache#15-oX (struct task_struct) (pid 2)
 	return result;
+	// return kmem_cache#15-oX (struct task_struct) (pid 2)
 }
 EXPORT_SYMBOL(pid_task);
 
@@ -1325,7 +1341,9 @@ struct task_struct *find_task_by_pid_ns(pid_t nr, struct pid_namespace *ns)
 			   " protection"); // null function
 
 	// nr: 2, ns: &init_pid_ns, find_pid_ns(2, &init_pid_ns): kmem_cache#19-oX (struct pid) (pid 2), PIDTYPE_PID: 0
+	// pid_task(kmem_cache#19-oX (struct pid) (pid 2), 0): kmem_cache#15-oX (struct task_struct) (pid 2)
 	return pid_task(find_pid_ns(nr, ns), PIDTYPE_PID);
+	// return kmem_cache#15-oX (struct task_struct) (pid 2)
 }
 
 struct task_struct *find_task_by_vpid(pid_t vnr)

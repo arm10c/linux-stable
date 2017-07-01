@@ -98,6 +98,8 @@ EXPORT_SYMBOL(remove_wait_queue);
  */
 // ARM10C 20160409
 // q: &running_helpers_waitq, mode: 3, nr_exclusive: 1, 0, key: NULL
+// ARM10C 20170701
+// q: &(&kthreadd_done)->wait, mode: 3, nr: 1, 0, NULL
 static void __wake_up_common(wait_queue_head_t *q, unsigned int mode,
 			int nr_exclusive, int wake_flags, void *key)
 {
@@ -106,9 +108,15 @@ static void __wake_up_common(wait_queue_head_t *q, unsigned int mode,
 	// &q->task_list: &(&running_helpers_waitq)->task_list
 	// list_first_entry(&(&running_helpers_waitq)->task_list, typeof(*curr), task_list): &running_helpers_waitq
 	// curr: &running_helpers_waitq, list_next_entry(&running_helpers_waitq, task_list): &running_helpers_waitq
+	// &q->task_list: &(&(&kthreadd_done)->wait)->task_list
+	// list_first_entry(&(&(&kthreadd_done)->wait)->task_list, typeof(*curr), task_list): &(&kthreadd_done)->wait
+	// curr: &(&kthreadd_done)->wait, list_next_entry(&(&kthreadd_done)->wait, task_list): &(&kthreadd_done)->wait
 	list_for_each_entry_safe(curr, next, &q->task_list, task_list) {
 	// for (curr = list_first_entry(&(&running_helpers_waitq)->task_list, typeof(*curr), task_list),
 	//      next = list_next_entry(curr, task_list); &curr->task_list != (&(&running_helpers_waitq)->task_list);
+	//      curr = next, next = list_next_entry(next, task_list))
+	// for (curr = list_first_entry(&(&(&kthreadd_done)->wait)->task_list, typeof(*curr), task_list),
+	//      next = list_next_entry(curr, task_list); &curr->task_list != (&(&(&kthreadd_done)->wait)->task_list);
 	//      curr = next, next = list_next_entry(next, task_list))
 
 		unsigned flags = curr->flags;
@@ -159,8 +167,11 @@ EXPORT_SYMBOL(__wake_up);
 /*
  * Same as __wake_up but called with the spinlock in wait_queue_head_t held.
  */
+// ARM10C 20170701
+// &x->wait: &(&kthreadd_done)->wait, TASK_NORMAL: 3, 1
 void __wake_up_locked(wait_queue_head_t *q, unsigned int mode, int nr)
 {
+	// q: &(&kthreadd_done)->wait, mode: 3, nr: 1
 	__wake_up_common(q, mode, nr, 0, NULL);
 }
 EXPORT_SYMBOL_GPL(__wake_up_locked);

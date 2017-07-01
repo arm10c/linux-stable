@@ -531,6 +531,8 @@ static inline void spin_lock_irq(spinlock_t *lock)
 // &ida->idr.lock: &(&mnt_id_ida)->idr.lock, flags
 // ARM10C 20160409
 // &q->lock: &(&running_helpers_waitq)->lock, flags
+// ARM10C 20170701
+// &x->wait.lock: &(&kthreadd_done)->wait.lock, flags
 #define spin_lock_irqsave(lock, flags)				\
 do {								\
 	raw_spin_lock_irqsave(spinlock_check(lock), flags);	\

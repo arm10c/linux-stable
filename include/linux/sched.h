@@ -174,6 +174,7 @@ extern char ___assert_task_state[1 - 2*!!(
 
 /* Convenience macros for the sake of wake_up */
 // ARM10C 20160409
+// ARM10C 20170701
 // TASK_INTERRUPTIBLE: 1
 // TASK_UNINTERRUPTIBLE: 2
 // TASK_NORMAL: 3
@@ -239,7 +240,7 @@ extern spinlock_t mmlist_lock;
 
 struct task_struct;
 
-#ifdef CONFIG_PROVE_RCU
+#ifdef CONFIG_PROVE_RCU // CONFIG_PROVE_RCU=n
 extern int lockdep_tasklist_lock_is_held(void);
 #endif /* #ifdef CONFIG_PROVE_RCU */
 
