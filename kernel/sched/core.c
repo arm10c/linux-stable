@@ -4848,7 +4848,7 @@ void show_state_filter(unsigned long state_filter)
 void init_idle_bootup_task(struct task_struct *idle)
 {
 	// idle->sched_class: (&init_task)->sched_class: &fair_sched_class
-	idle->sche:d_class = &idle_sched_class;
+	idle->sched_class = &idle_sched_class;
 	// idle->sched_class: (&init_task)->sched_class: &idle_sched_class
 }
 
