@@ -143,6 +143,7 @@ struct rcu_dynticks {
  * Definition for node within the RCU grace-period-detection hierarchy.
  */
 // ARM10C 20140927
+// ARM10C 20170715
 struct rcu_node {
 	raw_spinlock_t lock;	/* Root rcu_node's lock protects some */
 				/*  rcu_state fields as well as following. */
@@ -268,6 +269,7 @@ struct rcu_node {
 
 /* Per-CPU data for read-copy update. */
 // ARM10C 20140927
+// ARM10C 20170715
 struct rcu_data {
 	/* 1) quiescent-state and grace-period handling : */
 	unsigned long	completed;	/* Track rsp->completed gp number */

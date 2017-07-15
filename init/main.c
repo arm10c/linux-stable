@@ -1886,6 +1886,7 @@ static noinline void __init_refok rest_init(void)
 	// (&init_task)->sched_class: &idle_sched_class
 
 // 2017/07/01 종료
+// 2017/07/15 시작
 
 	schedule_preempt_disabled();
 	/* Call into cpu_idle with preempt disabled */

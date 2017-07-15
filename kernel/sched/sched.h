@@ -457,6 +457,7 @@ extern struct root_domain def_root_domain;
 // ARM10C 20170201
 // ARM10C 20170427
 // ARM10C 20170617
+// ARM10C 20170715
 struct rq {
 	/* runqueue lock: */
 	raw_spinlock_t lock;
@@ -635,6 +636,7 @@ DECLARE_PER_CPU(struct rq, runqueues);
 // ARM10C 20150606
 // ARM10C 20161217
 // ARM10C 20170201
+// ARM10C 20170715
 // cpu_rq(0): [pcp0] &runqueues
 #define cpu_rq(cpu)		(&per_cpu(runqueues, (cpu)))
 // ARM10C 20161008

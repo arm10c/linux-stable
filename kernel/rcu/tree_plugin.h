@@ -224,13 +224,22 @@ static void rcu_preempt_qs(int cpu)
  *
  * Caller must disable preemption.
  */
+// ARM10C 20170715
+// cpu: 0
 static void rcu_preempt_note_context_switch(int cpu)
 {
+	// current: &init_task
 	struct task_struct *t = current;
+	// t: &init_task
+
 	unsigned long flags;
 	struct rcu_data *rdp;
 	struct rcu_node *rnp;
 
+// 2017/07/15 종료
+
+	// t->rcu_read_lock_nesting: (&init_task)->rcu_read_lock_nesting: 0
+	// t->rcu_read_unlock_special: (&init_task)->rcu_read_unlock_special
 	if (t->rcu_read_lock_nesting > 0 &&
 	    (t->rcu_read_unlock_special & RCU_READ_UNLOCK_BLOCKED) == 0) {
 

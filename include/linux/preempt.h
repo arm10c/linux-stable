@@ -48,6 +48,7 @@ extern void preempt_count_sub(int val);
 // ARM10C 20161203
 #define preempt_count_inc() preempt_count_add(1)
 // ARM10C 20140125
+// ARM10C 20170715
 #define preempt_count_dec() preempt_count_sub(1)
 
 #ifdef CONFIG_PREEMPT_COUNT // ARM10C Y 
@@ -67,6 +68,7 @@ extern void preempt_count_sub(int val);
 // ARM10C 20161008
 // ARM10C 20161126
 // ARM10C 20161203
+// ARM10C 20170715
 #define preempt_disable()/*ARM10C this*/	\
 do { \
 	preempt_count_inc(); \
@@ -74,6 +76,7 @@ do { \
 } while (0)
 
 // ARM10C 20140125
+// ARM10C 20170715
 #define sched_preempt_enable_no_resched() \
 do { \
 	barrier(); \

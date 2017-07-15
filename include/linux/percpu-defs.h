@@ -189,6 +189,10 @@
 // DEFINE_PER_CPU(unsigned long, process_counts):
 //	__attribute__((section(".data..percpu" "")))
 //	__typeof__(unsigned long) process_counts
+// ARM10C 20170715
+// DEFINE_PER_CPU(struct rcu_data, rcu_sched_data):
+//	__attribute__((section(".data..percpu" "")))
+//	__typeof__(struct rcu_data) rcu_sched_data
 #define DEFINE_PER_CPU(type, name)					\
 	DEFINE_PER_CPU_SECTION(type, name, "")
 

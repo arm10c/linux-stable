@@ -141,6 +141,7 @@ int rcu_jiffies_till_stall_check(void);
  * translate the string address pointers to actual text.
  */
 // ARM10C 20140927
+// ARM10C 20170715
 #define TPS(x)  tracepoint_string(x)
 
 #endif /* __LINUX_RCU_H */

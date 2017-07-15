@@ -18,6 +18,7 @@
  * reduction scripts will ignore the "@" and the remainder of the line.
  */
 // ARM10C 20140927
+// ARM10C 20170715
 TRACE_EVENT(rcu_utilization,
 
 	TP_PROTO(const char *s),

@@ -3434,6 +3434,7 @@ pick_next_task(struct rq *rq)
  *          - return from syscall or exception to user-space
  *          - return from interrupt-handler to user-space
  */
+// ARM10C 20170715
 static void __sched __schedule(void)
 {
 	struct task_struct *prev, *next;
@@ -3443,8 +3444,16 @@ static void __sched __schedule(void)
 
 need_resched:
 	preempt_disable();
+
+	// smp_processor_id(): 0
 	cpu = smp_processor_id();
+	// cpu: 0
+
+	// cpu: 0, cpu_rq(0): [pcp0] &runqueues
 	rq = cpu_rq(cpu);
+	// rq: [pcp0] &runqueues
+
+	// cpu: 0
 	rcu_note_context_switch(cpu);
 	prev = rq->curr;
 
@@ -3520,10 +3529,14 @@ need_resched:
 		goto need_resched;
 }
 
+// ARM10C 20170715
+// tsk: &init_task
 static inline void sched_submit_work(struct task_struct *tsk)
 {
+	// tsk->state: (&init_task)->state: 0, tsk: &init_task, tsk_is_pi_blocked(&init_task): 0
 	if (!tsk->state || tsk_is_pi_blocked(tsk))
 		return;
+		// return
 	/*
 	 * If we are going to sleep and we have plugged IO queued,
 	 * make sure to submit it to avoid deadlocks.
@@ -3532,10 +3545,14 @@ static inline void sched_submit_work(struct task_struct *tsk)
 		blk_schedule_flush_plug(tsk);
 }
 
+// ARM10C 20170715
 asmlinkage void __sched schedule(void)
 {
+	// current: &init_task
 	struct task_struct *tsk = current;
+	// tsk: &init_task
 
+	// tsk: &init_task
 	sched_submit_work(tsk);
 	__schedule();
 }
@@ -3561,6 +3578,7 @@ asmlinkage void __sched schedule_user(void)
  *
  * Returns with preemption disabled. Note: preempt_count must be 1
  */
+// ARM10C 20170715
 void __sched schedule_preempt_disabled(void)
 {
 	sched_preempt_enable_no_resched();

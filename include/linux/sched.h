@@ -1160,6 +1160,7 @@ enum perf_event_task_context {
 // ARM10C 20170610
 // ARM10C 20170617
 // ARM10C 20170624
+// ARM10C 20170715
 // sizeof(struct task_struct): 815 bytes
 struct task_struct {
 	volatile long state;	/* -1 unrunnable, 0 runnable, >0 stopped */

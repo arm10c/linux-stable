@@ -105,6 +105,7 @@ struct rcu_state sname##_state = { \
 DEFINE_PER_CPU(struct rcu_data, sname##_data)
 
 // ARM10C 20140927
+// ARM10C 20170715
 // #define RCU_STATE_INITIALIZER(rcu_sched, 's', call_rcu_sched)
 // static char rcu_sched_varname[] = "rcu_sched";
 // static const char *tp_rcu_sched_varname __used __tracepoint_string = rcu_sched_varname;
@@ -122,7 +123,9 @@ DEFINE_PER_CPU(struct rcu_data, sname##_data)
 // 	.name = rcu_sched_varname,
 // 	.abbr = 's',
 // };
-// DEFINE_PER_CPU(struct rcu_data, rcu_sched_data)
+// DEFINE_PER_CPU(struct rcu_data, rcu_sched_data):
+//	__attribute__((section(".data..percpu" "")))
+//	__typeof__(struct rcu_data) rcu_sched_data
 RCU_STATE_INITIALIZER(rcu_sched, 's', call_rcu_sched);
 
 // ARM10C 20140927
@@ -246,13 +249,22 @@ static int rcu_gp_in_progress(struct rcu_state *rsp)
  * one since the start of the grace period, this just sets a flag.
  * The caller must have disabled preemption.
  */
+// ARM10C 20170715
+// cpu: 0
 void rcu_sched_qs(int cpu)
 {
+	// cpu: 0, per_cpu(rcu_sched_data, 0): [pcp0] rcu_sched_data
 	struct rcu_data *rdp = &per_cpu(rcu_sched_data, cpu);
+	// rdp: [pcp0] &rcu_sched_data
 
+	// rdp->passed_quiesce: [pcp0] (&rcu_sched_data)->passed_quiesce: 0
 	if (rdp->passed_quiesce == 0)
+		// rdp->gpnum: [pcp0] (&rcu_sched_data)->gpnum: 0
 		trace_rcu_grace_period(TPS("rcu_sched"), rdp->gpnum, TPS("cpuqs"));
+
+	// rdp->passed_quiesce: [pcp0] (&rcu_sched_data)->passed_quiesce: 0
 	rdp->passed_quiesce = 1;
+	// rdp->passed_quiesce: [pcp0] (&rcu_sched_data)->passed_quiesce: 1
 }
 
 void rcu_bh_qs(int cpu)
@@ -269,10 +281,19 @@ void rcu_bh_qs(int cpu)
  * and requires special handling for preemptible RCU.
  * The caller must have disabled preemption.
  */
+// ARM10C 20170715
+// cpu: 0
 void rcu_note_context_switch(int cpu)
 {
 	trace_rcu_utilization(TPS("Start context switch"));
+
+	// cpu: 0
 	rcu_sched_qs(cpu);
+
+	// rcu_sched_qs 에서 한일:
+	// [pcp0] (&rcu_sched_data)->passed_quiesce: 1
+
+	// cpu: 0
 	rcu_preempt_note_context_switch(cpu);
 	trace_rcu_utilization(TPS("End context switch"));
 }
