@@ -130,6 +130,7 @@ static void __init rcu_bootup_announce_oddness(void)
 #ifdef CONFIG_TREE_PREEMPT_RCU // CONFIG_TREE_PREEMPT_RCU=y
 
 // ARM10C 20140927
+// ARM10C 20170720
 // #define RCU_STATE_INITIALIZER(rcu_preempt, 's', call_rcu)
 // static char rcu_preempt_varname[] = "rcu_preempt";
 // static const char *tp_rcu_preempt_varname __used __tracepoint_string = rcu_preempt_varname;
@@ -147,7 +148,9 @@ static void __init rcu_bootup_announce_oddness(void)
 // 	.name = rcu_preempt_varname,
 // 	.abbr = 'p',
 // };
-// DEFINE_PER_CPU(struct rcu_data, rcu_preempt_data)
+// DEFINE_PER_CPU(struct rcu_data, rcu_preempt_data):
+//	__attribute__((section(".data..percpu" "")))
+//	__typeof__(struct rcu_data) rcu_preempt_data
 RCU_STATE_INITIALIZER(rcu_preempt, 'p', call_rcu);
 static struct rcu_state *rcu_state = &rcu_preempt_state;
 
@@ -201,14 +204,27 @@ EXPORT_SYMBOL_GPL(rcu_force_quiescent_state);
  * must disable irqs in order to protect the assignment to
  * ->rcu_read_unlock_special.
  */
+// ARM10C 20170720
+// cpu: 0
 static void rcu_preempt_qs(int cpu)
 {
+	// cpu: 0, &per_cpu(rcu_preempt_data, cpu): [pcp0] &rcu_preempt_data
 	struct rcu_data *rdp = &per_cpu(rcu_preempt_data, cpu);
+	// rdp: [pcp0] &rcu_preempt_data
 
+	// rdp->passed_quiesce: [pcp0] (&rcu_preempt_data)->passed_quiesce: 0
 	if (rdp->passed_quiesce == 0)
+		// rdp->gpnum: [pcp0] (&rcu_preempt_data)->gpnum: 0
 		trace_rcu_grace_period(TPS("rcu_preempt"), rdp->gpnum, TPS("cpuqs"));
+
+	// rdp->passed_quiesce: [pcp0] (&rcu_preempt_data)->passed_quiesce: 0
 	rdp->passed_quiesce = 1;
+	// rdp->passed_quiesce: [pcp0] (&rcu_preempt_data)->passed_quiesce: 1
+
+	// current->rcu_read_unlock_special: (&init_task)->rcu_read_unlock_special: 0,
+	// RCU_READ_UNLOCK_NEED_QS: 0x2
 	current->rcu_read_unlock_special &= ~RCU_READ_UNLOCK_NEED_QS;
+	// current->rcu_read_unlock_special: (&init_task)->rcu_read_unlock_special: 0
 }
 
 /*
@@ -237,9 +253,10 @@ static void rcu_preempt_note_context_switch(int cpu)
 	struct rcu_node *rnp;
 
 // 2017/07/15 종료
+// 2017/07/20 시작
 
-	// t->rcu_read_lock_nesting: (&init_task)->rcu_read_lock_nesting: 0
-	// t->rcu_read_unlock_special: (&init_task)->rcu_read_unlock_special
+	// t->rcu_read_lock_nesting: (&init_task)->rcu_read_lock_nesting: 0,
+	// t->rcu_read_unlock_special: (&init_task)->rcu_read_unlock_special: 0
 	if (t->rcu_read_lock_nesting > 0 &&
 	    (t->rcu_read_unlock_special & RCU_READ_UNLOCK_BLOCKED) == 0) {
 
@@ -308,8 +325,21 @@ static void rcu_preempt_note_context_switch(int cpu)
 	 * means that we continue to block the current grace period.
 	 */
 	local_irq_save(flags);
+
+	// local_irq_save 에서 한일:
+	// flags에 cpsr을 저장함
+
+	// cpu: 0
 	rcu_preempt_qs(cpu);
+
+	// rcu_preempt_qs 에서 한일:
+	// [pcp0] (&rcu_preempt_data)->passed_quiesce: 1
+	// (&init_task)->rcu_read_unlock_special: 0
+
 	local_irq_restore(flags);
+
+	// local_irq_restore 에서 한일:
+	// flags에 저장된 cpsr을 복원함
 }
 
 /*

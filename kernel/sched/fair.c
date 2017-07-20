@@ -98,6 +98,7 @@ unsigned int sysctl_sched_wakeup_granularity = 1000000UL;
 unsigned int normalized_sysctl_sched_wakeup_granularity = 1000000UL;
 
 // ARM10C 20140913
+// ARM10C 20170720
 const_debug unsigned int sysctl_sched_migration_cost = 500000UL;
 
 /*
@@ -484,6 +485,18 @@ static inline void list_del_leaf_cfs_rq(struct cfs_rq *cfs_rq)
 }
 
 /* Iterate thr' all leaf cfs_rq's on a runqueue */
+// ARM10C 20170720
+// rq: [pcp0] &runqueues, cfs_rq
+//
+// list_for_each_entry_rcu(cfs_rq, &([pcp0] &runqueues)->leaf_cfs_rq_list, leaf_cfs_rq_list):
+// for (cfs_rq = list_entry_rcu((&([pcp0] &runqueues)->leaf_cfs_rq_list)->next, typeof(*cfs_rq), leaf_cfs_rq_list);
+//      &cfs_rq->leaf_cfs_rq_list != (&([pcp0] &runqueues)->leaf_cfs_rq_list);
+//      cfs_rq = list_entry_rcu(cfs_rq->leaf_cfs_rq_list.next, typeof(*cfs_rq), leaf_cfs_rq_list))
+//
+// #define for_each_leaf_cfs_rq(([pcp0] &runqueues), cfs_rq):
+// for (cfs_rq = list_entry_rcu((&([pcp0] &runqueues)->leaf_cfs_rq_list)->next, typeof(*cfs_rq), leaf_cfs_rq_list);
+//      &cfs_rq->leaf_cfs_rq_list != (&([pcp0] &runqueues)->leaf_cfs_rq_list);
+//      cfs_rq = list_entry_rcu(cfs_rq->leaf_cfs_rq_list.next, typeof(*cfs_rq), leaf_cfs_rq_list))
 #define for_each_leaf_cfs_rq(rq, cfs_rq) \
 	list_for_each_entry_rcu(cfs_rq, &rq->leaf_cfs_rq_list, leaf_cfs_rq_list)
 
@@ -6281,7 +6294,7 @@ next:
 	return pulled;
 }
 
-#ifdef CONFIG_FAIR_GROUP_SCHED
+#ifdef CONFIG_FAIR_GROUP_SCHED // CONFIG_FAIR_GROUP_SCHED=y
 /*
  * update tg->load_weight by folding this cpu's load_avg
  */
@@ -6315,19 +6328,43 @@ static void __update_blocked_averages_cpu(struct task_group *tg, int cpu)
 	}
 }
 
+// ARM10C 20170720
+// this_cpu: 0
 static void update_blocked_averages(int cpu)
 {
+	// cpu: 0, cpu_rq(0): [pcp0] &runqueues
 	struct rq *rq = cpu_rq(cpu);
+	// rq: [pcp0] &runqueues
+
 	struct cfs_rq *cfs_rq;
 	unsigned long flags;
 
+	// &rq->lock: [pcp0] &(&runqueues)->lock
 	raw_spin_lock_irqsave(&rq->lock, flags);
+
+	// raw_spin_lock_irqsave 에서 한일:
+	// [pcp0] &(&runqueues)->lock 을 사용하여 spin lock을 수행하고 cpsr을 flags에 저장함
+
+	// rq: [pcp0] &runqueues
 	update_rq_clock(rq);
+
+	// update_rq_clock 에서 한일:
+	// [pcp0] (&runqueues)->clock: 현재의 schedule 시간값
+	// [pcp0] (&runqueues)->clock_task: 현재의 schedule 시간값
+
 	/*
 	 * Iterates the task_group tree in a bottom up fashion, see
 	 * list_add_leaf_cfs_rq() for details.
 	 */
+	// rq: [pcp0] &runqueues
+	// list_entry_rcu((&([pcp0] &runqueues)->leaf_cfs_rq_list)->next, struct cfs_rq, leaf_cfs_rq_list): [pcp0] &(&runqueues)->cfs
+	// cfs_rq: [pcp0] &(&runqueues)->cfs, &cfs_rq->leaf_cfs_rq_list: [pcp0] &(&(&runqueues)->cfs)->leaf_cfs_rq_list
 	for_each_leaf_cfs_rq(rq, cfs_rq) {
+	// for (cfs_rq = list_entry_rcu((&([pcp0] &runqueues)->leaf_cfs_rq_list)->next, typeof(*cfs_rq), leaf_cfs_rq_list);
+	//      &cfs_rq->leaf_cfs_rq_list != (&([pcp0] &runqueues)->leaf_cfs_rq_list);
+	//      cfs_rq = list_entry_rcu(cfs_rq->leaf_cfs_rq_list.next, typeof(*cfs_rq), leaf_cfs_rq_list))
+
+// 2017/07/20 종료
 		/*
 		 * Note: We may want to consider periodically releasing
 		 * rq->lock about these updates so that creating many task
@@ -7594,23 +7631,40 @@ out:
  * idle_balance is called by schedule() if this_cpu is about to become
  * idle. Attempts to pull tasks from other CPUs.
  */
+// ARM10C 20170720
+// cpu: 0, rq: [pcp0] &runqueues
 void idle_balance(int this_cpu, struct rq *this_rq)
 {
 	struct sched_domain *sd;
 	int pulled_task = 0;
+	// pulled_task: 0
+
+	// jiffies: 현재 jiff 값, HZ: 100
 	unsigned long next_balance = jiffies + HZ;
+	// next_balance: 현재 jiff 값 + 100
+
 	u64 curr_cost = 0;
+	// curr_cost: 0
 
+	// this_rq->idle_stamp: [pcp0] (&runqueues)->idle_stamp,
+	// this_rq: [pcp0] &runqueues, rq_clock([pcp0] &runqueues): 현재의 schedule 시간값
 	this_rq->idle_stamp = rq_clock(this_rq);
+	// this_rq->idle_stamp: [pcp0] (&runqueues)->idle_stamp: 현재의 schedule 시간값
 
+	// this_rq->avg_idle: [pcp0] (&runqueues)->avg_idle: 1000000UL, sysctl_sched_migration_cost: 500000UL
 	if (this_rq->avg_idle < sysctl_sched_migration_cost)
 		return;
 
 	/*
 	 * Drop the rq->lock, but keep IRQ/preempt disabled.
 	 */
+	// &rq->lock: [pcp0] &(&runqueues)->lock
 	raw_spin_unlock(&this_rq->lock);
 
+	// raw_spin_unlock 에서 한일:
+	// [pcp0] &(&runqueues)->lock 을 사용하여 spin unlock을 수행
+
+	// this_cpu: 0
 	update_blocked_averages(this_cpu);
 	rcu_read_lock();
 	for_each_domain(this_cpu, sd) {
@@ -8643,6 +8697,7 @@ static unsigned int get_rr_interval_fair(struct rq *rq, struct task_struct *task
 // ARM10C 20170201
 // ARM10C 20170513
 // ARM10C 20170520
+// ARM10C 20170720
 const struct sched_class fair_sched_class = {
 	.next			= &idle_sched_class,
 	.enqueue_task		= enqueue_task_fair,

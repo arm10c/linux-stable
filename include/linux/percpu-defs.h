@@ -193,6 +193,10 @@
 // DEFINE_PER_CPU(struct rcu_data, rcu_sched_data):
 //	__attribute__((section(".data..percpu" "")))
 //	__typeof__(struct rcu_data) rcu_sched_data
+// ARM10C 20170720
+// DEFINE_PER_CPU(struct rcu_data, rcu_preempt_data):
+//	__attribute__((section(".data..percpu" "")))
+//	__typeof__(struct rcu_data) rcu_preempt_data
 #define DEFINE_PER_CPU(type, name)					\
 	DEFINE_PER_CPU_SECTION(type, name, "")
 

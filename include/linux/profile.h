@@ -9,6 +9,8 @@
 #include <asm/errno.h>
 
 #define CPU_PROFILING	1
+// ARM10C 20170720
+// SCHED_PROFILING: 2
 #define SCHED_PROFILING	2
 #define SLEEP_PROFILING	3
 #define KVM_PROFILING	4
@@ -104,6 +106,8 @@ static inline void profile_hits(int type, void *ip, unsigned int nr_hits)
 	return;
 }
 
+// ARM10C 20170720
+// SCHED_PROFILING: 2, __builtin_return_address(0)
 static inline void profile_hit(int type, void *ip)
 {
 	return;

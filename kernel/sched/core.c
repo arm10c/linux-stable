@@ -126,6 +126,8 @@ static void update_rq_clock_task(struct rq *rq, s64 delta);
 // rq: [pcp0] &runqueues
 // ARM10C 20170617
 // rq: [pcp0] &runqueues
+// ARM10C 20170720
+// rq: [pcp0] &runqueues
 void update_rq_clock(struct rq *rq)
 {
 	s64 delta;
@@ -445,8 +447,12 @@ static struct rq *this_rq_lock(void)
  * Use HR-timers to deliver accurate preemption points.
  */
 
+// ARM10C 20170720
+// rq: [pcp0] &runqueues
 static void hrtick_clear(struct rq *rq)
 {
+	// &rq->hrtick_timer: [pcp0] &(&runqueues)->hrtick_timer
+	// hrtimer_active([pcp0] &(&runqueues)->hrtick_timer): 0
 	if (hrtimer_active(&rq->hrtick_timer))
 		hrtimer_cancel(&rq->hrtick_timer);
 }
@@ -585,9 +591,9 @@ static void init_rq_hrtick(struct rq *rq)
 	// (&(&runqueues)->hrtick_timer)->base: [pcp0] &(&hrtimer_bases)->clock_base[0]
 	// RB Tree의 (&(&(&runqueues)->hrtick_timer)->node)->node 를 초기화
 
-	// &rq->hrtick_timer.function: &(&runqueues)->hrtick_timerhrtick_timer.function
+	// &rq->hrtick_timer.function: &(&runqueues)->hrtick_timer.function
 	rq->hrtick_timer.function = hrtick;
-	// &rq->hrtick_timer.function: &(&runqueues)->hrtick_timerhrtick_timer.function: hrtick
+	// &rq->hrtick_timer.function: &(&runqueues)->hrtick_timer.function: hrtick
 }
 #else	/* CONFIG_SCHED_HRTICK */
 static inline void hrtick_clear(struct rq *rq)
@@ -2916,11 +2922,15 @@ static void finish_task_switch(struct rq *rq, struct task_struct *prev)
 	tick_nohz_task_switch(current);
 }
 
-#ifdef CONFIG_SMP
+#ifdef CONFIG_SMP // CONFIG_SMP=y
 
 /* assumes rq->lock is held */
+// ARM10C 20170720
+// rq: [pcp0] &runqueues, prev: &init_task
 static inline void pre_schedule(struct rq *rq, struct task_struct *prev)
 {
+	// prev->sched_class: (&init_task)->sched_class: &fair_sched_class
+	// prev->sched_class->pre_schedule: (&fair_sched_class)->pre_schedule: NULL
 	if (prev->sched_class->pre_schedule)
 		prev->sched_class->pre_schedule(rq, prev);
 }
@@ -3346,6 +3356,8 @@ static noinline void __schedule_bug(struct task_struct *prev)
 /*
  * Various schedule()-time debugging checks and statistics:
  */
+// ARM10C 20170720
+// prev: &init_task
 static inline void schedule_debug(struct task_struct *prev)
 {
 	/*
@@ -3353,13 +3365,16 @@ static inline void schedule_debug(struct task_struct *prev)
 	 * schedule() atomically, we ignore that path for now.
 	 * Otherwise, whine if we are scheduling when we should not be.
 	 */
+	// in_atomic_preempt_off(): 0, prev->exit_state: (&init_task)->exit_state: 0
 	if (unlikely(in_atomic_preempt_off() && !prev->exit_state))
 		__schedule_bug(prev);
-	rcu_sleep_check();
+	rcu_sleep_check(); // null function
 
-	profile_hit(SCHED_PROFILING, __builtin_return_address(0));
+	// SCHED_PROFILING: 2
+	profile_hit(SCHED_PROFILING, __builtin_return_address(0)); // null function
 
-	schedstat_inc(this_rq(), sched_count);
+	// this_rq(): [pcp0] runqueues
+	schedstat_inc(this_rq(), sched_count); // null function
 }
 
 static void put_prev_task(struct rq *rq, struct task_struct *prev)
@@ -3455,11 +3470,21 @@ need_resched:
 
 	// cpu: 0
 	rcu_note_context_switch(cpu);
-	prev = rq->curr;
 
+	// rcu_note_context_switch 에서 한일:
+	// [pcp0] (&rcu_preempt_data)->passed_quiesce: 1
+	// (&init_task)->rcu_read_unlock_special: 0
+
+	// rq->curr: [pcp0] (&runqueues)->curr: &init_task
+	prev = rq->curr;
+	// prev: &init_task
+
+	// prev: &init_task
 	schedule_debug(prev);
 
+	// sched_feat(HRTICK): 0x3
 	if (sched_feat(HRTICK))
+		// rq: [pcp0] &runqueues
 		hrtick_clear(rq);
 
 	/*
@@ -3468,9 +3493,21 @@ need_resched:
 	 * done by the caller to avoid the race with signal_wake_up().
 	 */
 	smp_mb__before_spinlock();
+
+	// smp_mb__before_spinlock 에서 한일:
+	// 공유자원을 다른 cpu core가 사용할수 있게 해주는 옵션
+
+	// &rq->lock: [pcp0] &(&runqueues)->lock
 	raw_spin_lock_irq(&rq->lock);
 
+	// raw_spin_lock_irq 에서 한일:
+	// [pcp0] &(&runqueues)->lock 을 사용하여 spin lock을 수행
+
+	// &prev->nivcsw: &(&init_task)->nivcsw
 	switch_count = &prev->nivcsw;
+	// switch_count: &(&init_task)->nivcsw
+
+	// prev->state: (&init_task)->state: 0, PREEMPT_ACTIVE: 0x8000000
 	if (prev->state && !(preempt_count() & PREEMPT_ACTIVE)) {
 		if (unlikely(signal_pending_state(prev->state, prev))) {
 			prev->state = TASK_RUNNING;
@@ -3494,9 +3531,12 @@ need_resched:
 		switch_count = &prev->nvcsw;
 	}
 
+	// rq: [pcp0] &runqueues, prev: &init_task
 	pre_schedule(rq, prev);
 
+	// rq->nr_running: [pcp0] (&runqueues)->nr_running: 0
 	if (unlikely(!rq->nr_running))
+		// cpu: 0, rq: [pcp0] &runqueues
 		idle_balance(cpu, rq);
 
 	put_prev_task(rq, prev);

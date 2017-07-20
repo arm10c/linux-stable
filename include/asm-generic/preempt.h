@@ -12,6 +12,7 @@
 // ARM10C 20140315
 // ARM10C 20141227
 // ARM10C 20160402
+// ARM10C 20170720
 static __always_inline int preempt_count(void)
 {
 	return current_thread_info()->preempt_count;

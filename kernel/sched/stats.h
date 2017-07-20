@@ -42,6 +42,8 @@ rq_sched_info_dequeued(struct rq *rq, unsigned long long delta)
 static inline void
 rq_sched_info_depart(struct rq *rq, unsigned long long delta)
 {}
+// ARM10C 20170720
+// this_rq(): [pcp0] runqueues, sched_count
 # define schedstat_inc(rq, field)	do { } while (0)
 # define schedstat_add(rq, field, amt)	do { } while (0)
 // ARM10C 20170427

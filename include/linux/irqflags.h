@@ -123,6 +123,7 @@
 // ARM10C 20141227
 // ARM10C 20150411
 // ARM10C 20150523
+// ARM10C 20170720
 #define local_irq_save(flags)	/*ARM10C this*/		\
 	do {						\
 		raw_local_irq_save(flags);		\

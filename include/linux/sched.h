@@ -884,6 +884,7 @@ struct sched_group;
 // ARM10C 20150606
 // ARM10C 20161217
 // ARM10C 20170617
+// ARM10C 20170720
 struct sched_domain {
 	/* These fields must be setup */
 	struct sched_domain *parent;	/* top domain must be null terminated */
@@ -1972,6 +1973,8 @@ extern void task_clear_jobctl_pending(struct task_struct *task,
 #ifdef CONFIG_PREEMPT_RCU // CONFIG_PREEMPT_RCU=y
 
 #define RCU_READ_UNLOCK_BLOCKED (1 << 0) /* blocked while in RCU read-side. */
+// ARM10C 20170720
+// RCU_READ_UNLOCK_NEED_QS: 0x2
 #define RCU_READ_UNLOCK_NEED_QS (1 << 1) /* RCU core needs CPU response. */
 
 // ARM10C 20160910

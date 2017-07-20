@@ -158,6 +158,7 @@ do {								\
  * serialize it with another STORE done by spin_lock().
  */
 #ifndef smp_mb__before_spinlock
+// ARM10C 20170720
 #define smp_mb__before_spinlock()	smp_wmb()
 #endif
 
@@ -296,12 +297,16 @@ static inline void do_raw_spin_unlock(raw_spinlock_t *lock) __releases(lock)
 
 // ARM10C 20160514
 // &lock->rlock: &(&proc_inum_lock)->rlock
+// ARM10C 20170720
+// &rq->lock: [pcp0] &(&runqueues)->lock
 #define raw_spin_lock_irq(lock)		_raw_spin_lock_irq(lock)
 #define raw_spin_lock_bh(lock)		_raw_spin_lock_bh(lock)
 // ARM10C 20140412
 // ARM10C 20150725
 // &logbuf_lock
 // ARM10C 20170520
+// &rq->lock: [pcp0] &(&runqueues)->lock
+// ARM10C 20170720
 // &rq->lock: [pcp0] &(&runqueues)->lock
 #define raw_spin_unlock(lock)		_raw_spin_unlock(lock)
 // ARM10C 20160514

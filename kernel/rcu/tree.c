@@ -85,6 +85,7 @@ static struct lock_class_key rcu_fqs_class[RCU_NUM_LVLS];
  * the tracing userspace tools to be able to decipher the string
  * address to the matching string.
  */
+// ARM10C 20170720
 #define RCU_STATE_INITIALIZER(sname, sabbr, cr) \
 static char sname##_varname[] = #sname; \
 static const char *tp_##sname##_varname __used __tracepoint_string = sname##_varname; \
@@ -285,7 +286,7 @@ void rcu_bh_qs(int cpu)
 // cpu: 0
 void rcu_note_context_switch(int cpu)
 {
-	trace_rcu_utilization(TPS("Start context switch"));
+	trace_rcu_utilization(TPS("Start context switch")); // null function
 
 	// cpu: 0
 	rcu_sched_qs(cpu);
@@ -295,7 +296,12 @@ void rcu_note_context_switch(int cpu)
 
 	// cpu: 0
 	rcu_preempt_note_context_switch(cpu);
-	trace_rcu_utilization(TPS("End context switch"));
+
+	// rcu_preempt_note_context_switch 에서 한일:
+	// [pcp0] (&rcu_preempt_data)->passed_quiesce: 1
+	// (&init_task)->rcu_read_unlock_special: 0
+
+	trace_rcu_utilization(TPS("End context switch")); // null function
 }
 EXPORT_SYMBOL_GPL(rcu_note_context_switch);
 

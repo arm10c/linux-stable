@@ -85,6 +85,7 @@
 // ARM10C 20141101
 // ARM10C 20150103
 // ARM10C 20151219
+// ARM10C 20170720
 // A.R.M: A8.8.43 DMB
 // ISHST option:
 // Inner Shareable is the required shareability domain, writes are the required access type.

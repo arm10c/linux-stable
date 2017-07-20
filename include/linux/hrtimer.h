@@ -85,6 +85,8 @@ enum hrtimer_restart {
  *
  * All state transitions are protected by cpu_base->lock.
  */
+// ARM10C 20170720
+// HRTIMER_STATE_INACTIVE: 0x00
 #define HRTIMER_STATE_INACTIVE	0x00
 // ARM10C 20150606
 // ARM10C 20150613
@@ -442,9 +444,14 @@ extern ktime_t hrtimer_get_next_event(void);
  * callback function is running or it's in the state of being migrated
  * to another cpu.
  */
+// ARM10C 20170720
+// &rq->hrtick_timer: [pcp0] &(&runqueues)->hrtick_timer
 static inline int hrtimer_active(const struct hrtimer *timer)
 {
+	// timer->state: [pcp0] (&(&runqueues)->hrtick_timer)->state: 0
+	// HRTIMER_STATE_INACTIVE: 0x00
 	return timer->state != HRTIMER_STATE_INACTIVE;
+	// return 0
 }
 
 /*

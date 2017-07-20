@@ -270,6 +270,7 @@ struct rcu_node {
 /* Per-CPU data for read-copy update. */
 // ARM10C 20140927
 // ARM10C 20170715
+// ARM10C 20170720
 struct rcu_data {
 	/* 1) quiescent-state and grace-period handling : */
 	unsigned long	completed;	/* Track rsp->completed gp number */

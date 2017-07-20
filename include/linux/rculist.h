@@ -315,6 +315,13 @@ static inline void list_splice_init_rcu(struct list_head *list,
  * This primitive may safely run concurrently with the _rcu list-mutation
  * primitives such as list_add_rcu() as long as it's guarded by rcu_read_lock().
  */
+// ARM10C 20170720
+// list_entry_rcu((&([pcp0] &runqueues)->leaf_cfs_rq_list)->next, typeof(*cfs_rq), leaf_cfs_rq_list)
+//
+// #define list_entry_rcu((&([pcp0] &runqueues)->leaf_cfs_rq_list)->next, struct cfs_rq, leaf_cfs_rq_list):
+// ({typeof (*(&([pcp0] &runqueues)->leaf_cfs_rq_list)->next) __rcu *__ptr =
+// (typeof (*(&([pcp0] &runqueues)->leaf_cfs_rq_list)->next) __rcu __force *)(&([pcp0] &runqueues)->leaf_cfs_rq_list)->next;
+// container_of((typeof((&([pcp0] &runqueues)->leaf_cfs_rq_list)->next))rcu_dereference_raw(__ptr), struct cfs_rq, leaf_cfs_rq_list);})
 #define list_entry_rcu(ptr, type, member) \
 	({typeof (*ptr) __rcu *__ptr = (typeof (*ptr) __rcu __force *)ptr; \
 	 container_of((typeof(ptr))rcu_dereference_raw(__ptr), type, member); \
@@ -370,6 +377,13 @@ static inline void list_splice_init_rcu(struct list_head *list,
  * the _rcu list-mutation primitives such as list_add_rcu()
  * as long as the traversal is guarded by rcu_read_lock().
  */
+// ARM10C 20170720
+// list_for_each_entry_rcu(cfs_rq, &([pcp0] &runqueues)->leaf_cfs_rq_list, leaf_cfs_rq_list)
+//
+// #define list_for_each_entry_rcu(cfs_rq, &([pcp0] &runqueues)->leaf_cfs_rq_list, leaf_cfs_rq_list):
+// for (cfs_rq = list_entry_rcu((&([pcp0] &runqueues)->leaf_cfs_rq_list)->next, typeof(*cfs_rq), leaf_cfs_rq_list);
+// &cfs_rq->leaf_cfs_rq_list != (&([pcp0] &runqueues)->leaf_cfs_rq_list);
+// cfs_rq = list_entry_rcu(cfs_rq->leaf_cfs_rq_list.next, typeof(*cfs_rq), leaf_cfs_rq_list))
 #define list_for_each_entry_rcu(pos, head, member) \
 	for (pos = list_entry_rcu((head)->next, typeof(*pos), member); \
 		&pos->member != (head); \

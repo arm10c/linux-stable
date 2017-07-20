@@ -290,6 +290,7 @@ struct cfs_bandwidth { };
 // ARM10C 20170513
 // ARM10C 20170520
 // ARM10C 20170617
+// ARM10C 20170720
 struct cfs_rq {
 	struct load_weight load;
 	unsigned int nr_running, h_nr_running;
@@ -458,6 +459,7 @@ extern struct root_domain def_root_domain;
 // ARM10C 20170427
 // ARM10C 20170617
 // ARM10C 20170715
+// ARM10C 20170720
 struct rq {
 	/* runqueue lock: */
 	raw_spinlock_t lock;
@@ -640,6 +642,7 @@ DECLARE_PER_CPU(struct rq, runqueues);
 // cpu_rq(0): [pcp0] &runqueues
 #define cpu_rq(cpu)		(&per_cpu(runqueues, (cpu)))
 // ARM10C 20161008
+// ARM10C 20170720
 // __get_cpu_var(runqueues): [pcp0] runqueues
 #define this_rq()		(&__get_cpu_var(runqueues))
 // ARM10C 20170201
@@ -650,6 +653,8 @@ DECLARE_PER_CPU(struct rq, runqueues);
 
 // ARM10C 20170427
 // [pcp0] &runqueues
+// ARM10C 20170720
+// this_rq: [pcp0] &runqueues
 static inline u64 rq_clock(struct rq *rq)
 {
 	// rq->clock: [pcp0] (&runqueues)->clock: 현재의 schedule 시간값
@@ -991,6 +996,8 @@ extern struct static_key sched_feat_keys[__SCHED_FEAT_NR];
 // sysctl_sched_features: 0x2e7b, __SCHED_FEAT_NEXT_BUDDY: 2
 // ARM10C 20170520
 // sysctl_sched_features: 0x2e7b, __SCHED_FEAT_WAKEUP_PREEMPTION: 5
+// ARM10C 20170720
+// sysctl_sched_features: 0x2e7b, __SCHED_FEAT_HRTICK: 7
 #define sched_feat(x) (sysctl_sched_features & (1UL << __SCHED_FEAT_##x))
 #endif /* SCHED_DEBUG && HAVE_JUMP_LABEL */
 
