@@ -3377,16 +3377,30 @@ static inline void schedule_debug(struct task_struct *prev)
 	schedstat_inc(this_rq(), sched_count); // null function
 }
 
+// ARM10C 20170729
+// rq: [pcp0] &runqueues, prev: &init_task
 static void put_prev_task(struct rq *rq, struct task_struct *prev)
 {
+	// prev->on_rq: (&init_task)->on_rq: 0
+	// rq->skip_clock_update: [pcp0] (&runqueues)->skip_clock_update: 0
 	if (prev->on_rq || rq->skip_clock_update < 0)
 		update_rq_clock(rq);
+
+	// prev->sched_class: (&init_task)->sched_class: &fair_sched_class
+	// prev->sched_class->put_prev_task: (&fair_sched_class)->put_prev_task: put_prev_task_fair
+	// rq: [pcp0] &runqueues, prev: &init_task
+	// put_prev_task_fair([pcp0] &runqueues, &init_task)
 	prev->sched_class->put_prev_task(rq, prev);
+
+	// put_prev_task_fair 에서 한일:
+	// [pcp0] (&(&runqueues)->cfs)->curr: NULL
 }
 
 /*
  * Pick up the highest-prio task:
  */
+// ARM10C 20170729
+// rq: [pcp0] &runqueues
 static inline struct task_struct *
 pick_next_task(struct rq *rq)
 {
@@ -3397,6 +3411,8 @@ pick_next_task(struct rq *rq)
 	 * Optimization: we know that if all tasks are in
 	 * the fair class we can call that function directly:
 	 */
+	// rq->nr_running: [pcp0] (&runqueues)->nr_running: 0,
+	// rq->cfs.h_nr_running: [pcp0] (&(&runqueues)->cfs)->h_nr_running: 4
 	if (likely(rq->nr_running == rq->cfs.h_nr_running)) {
 		p = fair_sched_class.pick_next_task(rq);
 		if (likely(p))
@@ -3404,9 +3420,26 @@ pick_next_task(struct rq *rq)
 	}
 
 	for_each_class(class) {
+	// for (class = sched_class_highest; class; class = class->next)
+
+		// [f1] sched_class_highest: &stop_sched_class
+		// [f1] class->pick_next_task: (&stop_sched_class)->pick_next_task: pick_next_task_stop, rq: [pcp0] &runqueues
+		// [f1] pick_next_task_stop([pcp0] &runqueues): NULL
+		// [f2] sched_class_highest: &rt_sched_class
+		// [f2] class->pick_next_task: (&rt_sched_class)->pick_next_task: pick_next_task_rt, rq: [pcp0] &runqueues
+		// [f2] pick_next_task_rt([pcp0] &runqueues): NULL
 		p = class->pick_next_task(rq);
+		// [f1] p: NULL
+		// [f2] p: NULL
+
+		// [f1] p: NULL
+		// [f2] p: NULL
 		if (p)
 			return p;
+// 2017/07/29 종료
+
+		// [f1] class->next: (&stop_sched_class)->next: &rt_sched_class
+		// [f2] class->next: (&rt_sched_class)->next: &fair_sched_class
 	}
 
 	BUG(); /* the idle class will always have a runnable task */
@@ -3539,7 +3572,47 @@ need_resched:
 		// cpu: 0, rq: [pcp0] &runqueues
 		idle_balance(cpu, rq);
 
+		// idle_balance 에서 한일:
+		// [pcp0] (&runqueues)->idle_stamp: 현재의 schedule 시간값
+		//
+		// [pcp0] (&runqueues)->clock: 현재의 schedule 시간값
+		// [pcp0] (&runqueues)->clock_task: 현재의 schedule 시간값
+		//
+		// decays: 현재의 schedule 시간값>> 20 값이 0이 아닌 상수 값이라 가정하고 분석 진행
+		//
+		// [pcp0] (&(&runqueues)->cfs)->blocked_load_avg: 0
+		// [pcp0] (&(&(&runqueues)->cfs)->decay_counter)->counter: 2
+		// [pcp0] (&(&runqueues)->cfs)->last_decay: 현재의 schedule 시간값>> 20
+		//
+		// (&(&root_task_group)->load_avg)->counter: 현재 task의 남아 있는 수행 시간량 / (현재 task의 남아 있는 수행 시간량 / 1024 + 1)
+		// [pcp0] (&(&runqueues)->cfs)->tg_load_contrib: 현재 task의 남아 있는 수행 시간량 / (현재 task의 남아 있는 수행 시간량 / 1024 + 1)
+		//
+		// delta: 현재의 schedule 시간 변화값은 signed 로 변경시 0 보다 큰 값으로 가정하고 코드 분석 진행
+		//
+		// (&(&runqueues)->avg)->last_runnable_update: 현재의 schedule 시간값
+		//
+		// delta + delta_w 값이 1024 보다 작은 값이라고 가정하고 코드 분석 진행
+		//
+		// (&(&runqueues)->avg)->runnable_avg_sum:
+		// 현재 task의 남아 있는 수행 시간량 / 1024 + 현재의 schedule 시간 변화값
+		// (&(&runqueues)->avg)->runnable_avg_period:
+		// 현재 task의 남아 있는 수행 시간량 / 1024 + 현재의 schedule 시간 변화값
+		//
+		// (&(&runqueues)->avg)->runnable_avg_sum 값과 (&(&runqueues)->avg)->runnable_avg_period 값을 이용하여
+		// contrib 값을 계산함
+		//
+		// &(&root_task_group)->runnable_avg 에 계산된 현재 contrib 값을 더해줌
+		// [pcp0] (&(&runqueues)->cfs))->tg_runnable_contrib: 계산된 현재 contrib 값
+		//
+		// [pcp0] (&runqueues)->next_balance: 현재 jiff 값 + 100
+
+	// rq: [pcp0] &runqueues, prev: &init_task
 	put_prev_task(rq, prev);
+
+	// put_prev_task 에서 한일:
+	// [pcp0] (&(&runqueues)->cfs)->curr: NULL
+
+	// rq: [pcp0] &runqueues
 	next = pick_next_task(rq);
 	clear_tsk_need_resched(prev);
 	clear_preempt_need_resched();

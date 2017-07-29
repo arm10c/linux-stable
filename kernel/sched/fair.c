@@ -323,6 +323,8 @@ const struct sched_class fair_sched_class;
 // cfs_rq: [pcp0] &(&runqueues)->cfs
 // ARM10C 20170427
 // cfs_rq: [pcp0] &(&runqueues)->cfs
+// ARM10C 20170729
+// cfs_rq: (&root_task_group)->cfs_rq[0]: [pcp0] &(&runqueues)->cfs
 static inline struct rq *rq_of(struct cfs_rq *cfs_rq)
 {
 	// cfs_rq->rq: [pcp0] (&(&runqueues)->cfs)->rq: [pcp0] &runqueues
@@ -365,6 +367,8 @@ static inline struct task_struct *task_of(struct sched_entity *se)
 // ARM10C 20170520
 // ARM10C 20170617
 // se: &(&init_task)->se
+// ARM10C 20170729
+// se: &(&init_task)->se
 #define for_each_sched_entity(se) \
 		for (; se; se = se->parent)
 
@@ -402,6 +406,8 @@ static inline struct cfs_rq *task_cfs_rq(struct task_struct *p)
 // se: &(kmem_cache#15-oX (struct task_struct))->se
 // ARM10C 20170624
 // se: &(kmem_cache#15-oX (struct task_struct))->se
+// ARM10C 20170729
+// se: &(&init_task)->se
 static inline struct cfs_rq *cfs_rq_of(struct sched_entity *se)
 {
 	// se->cfs_rq: (kmem_cache#15-oX (struct task_struct))->se.cfs_rq: [pcp0] &(&runqueues)->cfs
@@ -2625,6 +2631,9 @@ static u32 __compute_runnable_contrib(u64 n)
 // ARM10C 20170513
 // now: 현재의 schedule 시간값, &se->avg: &(&(kmem_cache#15-oX (struct task_struct))->se)->avg,
 // se->on_rq: (&(kmem_cache#15-oX (struct task_struct))->se)->on_rq: 1
+// ARM10C 20170729
+// rq: [pcp0] &runqueues, rq_clock_task([pcp0] &runqueues): 현재의 schedule 시간값
+// &rq->avg: [pcp0] &(&runqueues)->avg, runnable: 0
 static __always_inline int __update_entity_runnable_avg(u64 now,
 							struct sched_avg *sa,
 							int runnable)
@@ -2808,20 +2817,44 @@ static inline void __update_cfs_rq_tg_load_contrib(struct cfs_rq *cfs_rq,
  * Aggregate cfs_rq runnable averages into an equivalent task_group
  * representation for computing load contributions.
  */
+// ARM10C 20170729
+// &rq->avg: [pcp0] &(&runqueues)->avg, &rq->cfs: [pcp0] &(&runqueues)->cfs
 static inline void __update_tg_runnable_avg(struct sched_avg *sa,
 						  struct cfs_rq *cfs_rq)
 {
+	// cfs_rq->tg: [pcp0] (&(&runqueues)->cfs))->tg: &root_task_group
 	struct task_group *tg = cfs_rq->tg;
+	// tg: &root_task_group
+
 	long contrib;
 
 	/* The fraction of a cpu used by this cfs_rq */
+	// sa->runnable_avg_sum: (&(&runqueues)->avg)->runnable_avg_sum:
+	// 현재 task의 남아 있는 수행 시간량 / 1024 + 현재의 schedule 시간 변화값
+	// NICE_0_SHIFT: 10
+	// sa->runnable_avg_period: (&(&runqueues)->avg)->runnable_avg_period:
+	// 현재 task의 남아 있는 수행 시간량 / 1024 + 현재의 schedule 시간 변화값
+	// div_u64(현재 task의 남아 있는 수행 시간량 / 1024 + 현재의 schedule 시간 변화값 << 10,
+	// 현재 task의 남아 있는 수행 시간량 / 1024 + 현재의 schedule 시간 변화값): 계산된 현재 contrib 값
 	contrib = div_u64((u64)sa->runnable_avg_sum << NICE_0_SHIFT,
 			  sa->runnable_avg_period + 1);
-	contrib -= cfs_rq->tg_runnable_contrib;
+	// contrib: 계산된 현재 contrib 값
 
+	// cfs_rq->tg_runnable_contrib: [pcp0] (&(&runqueues)->cfs))->tg_runnable_contrib: 0
+	contrib -= cfs_rq->tg_runnable_contrib;
+	// contrib: 계산된 현재 contrib 값
+
+	// contrib: 계산된 현재 contrib 값, cfs_rq->tg_runnable_contrib: [pcp0] (&(&runqueues)->cfs))->tg_runnable_contrib: 0
 	if (abs(contrib) > cfs_rq->tg_runnable_contrib / 64) {
+		// contrib: 계산된 현재 contrib 값, &tg->runnable_avg: &(&root_task_group)->runnable_avg
 		atomic_add(contrib, &tg->runnable_avg);
+
+		// atomic_add 에서 한일:
+		// &(&root_task_group)->runnable_avg 에 계산된 현재 contrib 값을 더해줌
+
+		// cfs_rq->tg_runnable_contrib: [pcp0] (&(&runqueues)->cfs))->tg_runnable_contrib: 0, contrib: 계산된 현재 contrib 값
 		cfs_rq->tg_runnable_contrib += contrib;
+		// cfs_rq->tg_runnable_contrib: [pcp0] (&(&runqueues)->cfs))->tg_runnable_contrib: 계산된 현재 contrib 값
 	}
 }
 
@@ -2990,6 +3023,8 @@ static inline void update_entity_load_avg(struct sched_entity *se,
 // cfs_rq: [pcp0] &(&runqueues)->cfs, 1
 // ARM10C 20170513
 // cfs_rq: [pcp0] &(&runqueues)->cfs, 0
+// ARM10C 20170729
+// cfs_rq: (&root_task_group)->cfs_rq[0], 1
 static void update_cfs_rq_blocked_load(struct cfs_rq *cfs_rq, int force_update)
 {
 	// NOTE:
@@ -3071,10 +3106,35 @@ static void update_cfs_rq_blocked_load(struct cfs_rq *cfs_rq, int force_update)
 	// 갱신 없음
 }
 
+// ARM10C 20170729
+// rq: [pcp0] &runqueues, rq->nr_running: [pcp0] (&runqueues)->nr_running: 0
 static inline void update_rq_runnable_avg(struct rq *rq, int runnable)
 {
+	// rq: [pcp0] &runqueues, rq_clock_task([pcp0] &runqueues): 현재의 schedule 시간값
+	// &rq->avg: [pcp0] &(&runqueues)->avg, runnable: 0
 	__update_entity_runnable_avg(rq_clock_task(rq), &rq->avg, runnable);
+
+	// __update_entity_runnable_avg 에서 한일:
+	// delta: 현재의 schedule 시간 변화값은 signed 로 변경시 0 보다 큰 값으로 가정하고 코드 분석 진행
+	//
+	// (&(&runqueues)->avg)->last_runnable_update: 현재의 schedule 시간값
+	//
+	// delta + delta_w 값이 1024 보다 작은 값이라고 가정하고 코드 분석 진행
+	//
+	// (&(&runqueues)->avg)->runnable_avg_sum:
+	// 현재 task의 남아 있는 수행 시간량 / 1024 + 현재의 schedule 시간 변화값
+	// (&(&runqueues)->avg)->runnable_avg_period:
+	// 현재 task의 남아 있는 수행 시간량 / 1024 + 현재의 schedule 시간 변화값
+
+	// &rq->avg: [pcp0] &(&runqueues)->avg, &rq->cfs: [pcp0] &(&runqueues)->cfs
 	__update_tg_runnable_avg(&rq->avg, &rq->cfs);
+
+	// __update_tg_runnable_avg 에서 한일:
+	// (&(&runqueues)->avg)->runnable_avg_sum 값과 (&(&runqueues)->avg)->runnable_avg_period 값을 이용하여
+	// contrib 값을 계산함
+	//
+	// &(&root_task_group)->runnable_avg 에 계산된 현재 contrib 값을 더해줌
+	// [pcp0] (&(&runqueues)->cfs))->tg_runnable_contrib: 계산된 현재 contrib 값
 }
 
 /* Add the load generated by se into cfs_rq's child load-average */
@@ -3281,6 +3341,8 @@ static void enqueue_sleeper(struct cfs_rq *cfs_rq, struct sched_entity *se)
 // cfs_rq: [pcp0] &(&runqueues)->cfs, se: &(kmem_cache#15-oX (struct task_struct))->se
 // ARM10C 20170624
 // cfs_rq: [pcp0] &(&runqueues)->cfs, se: &(kmem_cache#15-oX (struct task_struct))->se
+// ARM10C 20170729
+// cfs_rq: [pcp0] &(&runqueues)->cfs, prev: &(&init_task)->se
 static void check_spread(struct cfs_rq *cfs_rq, struct sched_entity *se)
 {
 #ifdef CONFIG_SCHED_DEBUG // CONFIG_SCHED_DEBUG=y
@@ -3731,19 +3793,26 @@ static struct sched_entity *pick_next_entity(struct cfs_rq *cfs_rq)
 
 static void check_cfs_rq_runtime(struct cfs_rq *cfs_rq);
 
+// ARM10C 20170729
+// cfs_rq: [pcp0] &(&runqueues)->cfs, se: &(&init_task)->se
 static void put_prev_entity(struct cfs_rq *cfs_rq, struct sched_entity *prev)
 {
 	/*
 	 * If still on the runqueue then deactivate_task()
 	 * was not called and update_curr() has to be done:
 	 */
+	// prev->on_rq: (&(&init_task)->se)->on_rq: 0
 	if (prev->on_rq)
 		update_curr(cfs_rq);
 
 	/* throttle cfs_rqs exceeding runtime */
-	check_cfs_rq_runtime(cfs_rq);
+	// cfs_rq: [pcp0] &(&runqueues)->cfs
+	check_cfs_rq_runtime(cfs_rq); // null function
 
+	// cfs_rq: [pcp0] &(&runqueues)->cfs, prev: &(&init_task)->se
 	check_spread(cfs_rq, prev);
+
+	// prev->on_rq: (&(&init_task)->se)->on_rq: 0
 	if (prev->on_rq) {
 		update_stats_wait_start(cfs_rq, prev);
 		/* Put 'current' back into the tree. */
@@ -3751,7 +3820,9 @@ static void put_prev_entity(struct cfs_rq *cfs_rq, struct sched_entity *prev)
 		/* in !on_rq case, update occurred at dequeue */
 		update_entity_load_avg(prev, 1);
 	}
+	// cfs_rq->curr: [pcp0] (&(&runqueues)->cfs)->curr: NULL
 	cfs_rq->curr = NULL;
+	// cfs_rq->curr: [pcp0] (&(&runqueues)->cfs)->curr: NULL
 }
 
 static void
@@ -4518,6 +4589,8 @@ static inline u64 cfs_rq_clock_task(struct cfs_rq *cfs_rq)
 }
 
 static void account_cfs_rq_runtime(struct cfs_rq *cfs_rq, u64 delta_exec) {}
+// ARM10C 20170729
+// cfs_rq: [pcp0] &(&runqueues)->cfs
 static void check_cfs_rq_runtime(struct cfs_rq *cfs_rq) {}
 // ARM10C 20170513
 // cfs_rq: [pcp0] &(&runqueues)->cfs
@@ -4541,6 +4614,8 @@ static inline int cfs_rq_throttled(struct cfs_rq *cfs_rq)
 // cfs_rq: [pcp0] &(&runqueues)->cfs
 // ARM10C 20170520
 // [pcp0] &(&runqueues)->cfs
+// ARM10C 20170729
+// cfs_rq: (&root_task_group)->cfs_rq[0]
 static inline int throttled_hierarchy(struct cfs_rq *cfs_rq)
 {
 	return 0;
@@ -5764,14 +5839,29 @@ static struct task_struct *pick_next_task_fair(struct rq *rq)
 /*
  * Account for a descheduled task:
  */
+// ARM10C 20170729
+// rq: [pcp0] &runqueues, prev: &init_task
 static void put_prev_task_fair(struct rq *rq, struct task_struct *prev)
 {
+	// &prev->se: &(&init_task)->se
 	struct sched_entity *se = &prev->se;
+	// se: &(&init_task)->se
+
 	struct cfs_rq *cfs_rq;
 
+	// se: &(&init_task)->se
 	for_each_sched_entity(se) {
+	// for (; &(&init_task)->se; se = (&(&init_task)->se)->parent)
+
+		// se: &(&init_task)->se, cfs_rq_of(&(&init_task)->se): [pcp0] &(&runqueues)->cfs
 		cfs_rq = cfs_rq_of(se);
+		// cfs_rq: [pcp0] &(&runqueues)->cfs
+
+		// cfs_rq: [pcp0] &(&runqueues)->cfs, se: &(&init_task)->se
 		put_prev_entity(cfs_rq, se);
+
+		// put_prev_entity 에서 한일:
+		// [pcp0] (&(&runqueues)->cfs)->curr: NULL
 	}
 }
 
@@ -6298,17 +6388,38 @@ next:
 /*
  * update tg->load_weight by folding this cpu's load_avg
  */
+// ARM10C 20170729
+// cfs_rq->tg: [pcp0] (&(&runqueues)->cfs)->tg: &root_task_group, rq->cpu: [pcp0] (&runqueues)->cpu: 0
 static void __update_blocked_averages_cpu(struct task_group *tg, int cpu)
 {
+	// cpu: 0, tg->se[0]: (&root_task_group)->se[0]
 	struct sched_entity *se = tg->se[cpu];
+	// se: (&root_task_group)->se[0]
+
+	// cpu: 0, tg->cfs_rq[0]: (&root_task_group)->cfs_rq[0]
 	struct cfs_rq *cfs_rq = tg->cfs_rq[cpu];
+	// cfs_rq: (&root_task_group)->cfs_rq[0]
 
 	/* throttled entities do not contribute to load */
+	// cfs_rq: (&root_task_group)->cfs_rq[0]
+	// throttled_hierarchy((&root_task_group)->cfs_rq[0]): 0
 	if (throttled_hierarchy(cfs_rq))
 		return;
 
+	// cfs_rq: (&root_task_group)->cfs_rq[0]
 	update_cfs_rq_blocked_load(cfs_rq, 1);
 
+	// update_cfs_rq_blocked_load 에서 한일:
+	// decays: 현재의 schedule 시간값>> 20 값이 0이 아닌 상수 값이라 가정하고 분석 진행
+	//
+	// [pcp0] (&(&runqueues)->cfs)->blocked_load_avg: 0
+	// [pcp0] (&(&(&runqueues)->cfs)->decay_counter)->counter: 2
+	// [pcp0] (&(&runqueues)->cfs)->last_decay: 현재의 schedule 시간값>> 20
+	//
+	// (&(&root_task_group)->load_avg)->counter: 현재 task의 남아 있는 수행 시간량 / (현재 task의 남아 있는 수행 시간량 / 1024 + 1)
+	// [pcp0] (&(&runqueues)->cfs)->tg_load_contrib: 현재 task의 남아 있는 수행 시간량 / (현재 task의 남아 있는 수행 시간량 / 1024 + 1)
+
+	// se: (&root_task_group)->se[0]: NULL
 	if (se) {
 		update_entity_load_avg(se, 1);
 		/*
@@ -6323,8 +6434,31 @@ static void __update_blocked_averages_cpu(struct task_group *tg, int cpu)
 		if (!se->avg.runnable_avg_sum && !cfs_rq->nr_running)
 			list_del_leaf_cfs_rq(cfs_rq);
 	} else {
+		// cfs_rq: (&root_task_group)->cfs_rq[0]: [pcp0] &(&runqueues)->cfs
+		// rq_of([pcp0] &(&runqueues)->cfs): [pcp0] &runqueues
 		struct rq *rq = rq_of(cfs_rq);
+		// rq: [pcp0] &runqueues
+
+		// rq: [pcp0] &runqueues, rq->nr_running: [pcp0] (&runqueues)->nr_running: 0
 		update_rq_runnable_avg(rq, rq->nr_running);
+
+		// update_rq_runnable_avg 에서 한일:
+		// delta: 현재의 schedule 시간 변화값은 signed 로 변경시 0 보다 큰 값으로 가정하고 코드 분석 진행
+		//
+		// (&(&runqueues)->avg)->last_runnable_update: 현재의 schedule 시간값
+		//
+		// delta + delta_w 값이 1024 보다 작은 값이라고 가정하고 코드 분석 진행
+		//
+		// (&(&runqueues)->avg)->runnable_avg_sum:
+		// 현재 task의 남아 있는 수행 시간량 / 1024 + 현재의 schedule 시간 변화값
+		// (&(&runqueues)->avg)->runnable_avg_period:
+		// 현재 task의 남아 있는 수행 시간량 / 1024 + 현재의 schedule 시간 변화값
+		//
+		// (&(&runqueues)->avg)->runnable_avg_sum 값과 (&(&runqueues)->avg)->runnable_avg_period 값을 이용하여
+		// contrib 값을 계산함
+		//
+		// &(&root_task_group)->runnable_avg 에 계산된 현재 contrib 값을 더해줌
+		// [pcp0] (&(&runqueues)->cfs))->tg_runnable_contrib: 계산된 현재 contrib 값
 	}
 }
 
@@ -6357,23 +6491,66 @@ static void update_blocked_averages(int cpu)
 	 * list_add_leaf_cfs_rq() for details.
 	 */
 	// rq: [pcp0] &runqueues
-	// list_entry_rcu((&([pcp0] &runqueues)->leaf_cfs_rq_list)->next, struct cfs_rq, leaf_cfs_rq_list): [pcp0] &(&runqueues)->cfs
-	// cfs_rq: [pcp0] &(&runqueues)->cfs, &cfs_rq->leaf_cfs_rq_list: [pcp0] &(&(&runqueues)->cfs)->leaf_cfs_rq_list
+	// [f1] list_entry_rcu((&([pcp0] &runqueues)->leaf_cfs_rq_list)->next, struct cfs_rq, leaf_cfs_rq_list): [pcp0] &(&runqueues)->cfs
+	// [f1] cfs_rq: [pcp0] &(&runqueues)->cfs, &cfs_rq->leaf_cfs_rq_list: [pcp0] &(&(&runqueues)->cfs)->leaf_cfs_rq_list
 	for_each_leaf_cfs_rq(rq, cfs_rq) {
 	// for (cfs_rq = list_entry_rcu((&([pcp0] &runqueues)->leaf_cfs_rq_list)->next, typeof(*cfs_rq), leaf_cfs_rq_list);
-	//      &cfs_rq->leaf_cfs_rq_list != (&([pcp0] &runqueues)->leaf_cfs_rq_list);
+	//      &cfs_rq->eaf_cfs_rq_list != (&([pcp0] &runqueues)->leaf_cfs_rq_list);
 	//      cfs_rq = list_entry_rcu(cfs_rq->leaf_cfs_rq_list.next, typeof(*cfs_rq), leaf_cfs_rq_list))
 
 // 2017/07/20 종료
+// 2017/07/29 시작
+
+		// [f1] cfs_rq->leaf_cfs_rq_list.next: [pcp0] (&(&runqueues)->cfs)->leaf_cfs_rq_list.next: [pcp0] &(&runqueues)->leaf_cfs_rq_list
+		// [f1] list_entry_rcu(cfs_rq->leaf_cfs_rq_list.next, typeof(*cfs_rq), leaf_cfs_rq_list): [pcp0] &runqueues
+		// [f1] cfs_rq: [pcp0] &runqueues
+
+		// [f2] cfs_rq: [pcp0] &runqueues 이고 for 문 아래의 조건식에 의해
+		// [f2] &([pcp0] &runqueues)->leaf_cfs_rq_list != (&([pcp0] &runqueues)->leaf_cfs_rq_list
+		// [f2] loop를 빠져나옴
+
 		/*
 		 * Note: We may want to consider periodically releasing
 		 * rq->lock about these updates so that creating many task
 		 * groups does not result in continually extending hold time.
 		 */
+		// [f1] cfs_rq->tg: [pcp0] (&(&runqueues)->cfs)->tg: &root_task_group,
+		// [f1] rq->cpu: [pcp0] (&runqueues)->cpu: 0
 		__update_blocked_averages_cpu(cfs_rq->tg, rq->cpu);
+
+		// [f1] __update_blocked_averages_cpu 에서 한일:
+		// decays: 현재의 schedule 시간값>> 20 값이 0이 아닌 상수 값이라 가정하고 분석 진행
+		//
+		// [pcp0] (&(&runqueues)->cfs)->blocked_load_avg: 0
+		// [pcp0] (&(&(&runqueues)->cfs)->decay_counter)->counter: 2
+		// [pcp0] (&(&runqueues)->cfs)->last_decay: 현재의 schedule 시간값>> 20
+		//
+		// (&(&root_task_group)->load_avg)->counter: 현재 task의 남아 있는 수행 시간량 / (현재 task의 남아 있는 수행 시간량 / 1024 + 1)
+		// [pcp0] (&(&runqueues)->cfs)->tg_load_contrib: 현재 task의 남아 있는 수행 시간량 / (현재 task의 남아 있는 수행 시간량 / 1024 + 1)
+		//
+		// delta: 현재의 schedule 시간 변화값은 signed 로 변경시 0 보다 큰 값으로 가정하고 코드 분석 진행
+		//
+		// (&(&runqueues)->avg)->last_runnable_update: 현재의 schedule 시간값
+		//
+		// delta + delta_w 값이 1024 보다 작은 값이라고 가정하고 코드 분석 진행
+		//
+		// (&(&runqueues)->avg)->runnable_avg_sum:
+		// 현재 task의 남아 있는 수행 시간량 / 1024 + 현재의 schedule 시간 변화값
+		// (&(&runqueues)->avg)->runnable_avg_period:
+		// 현재 task의 남아 있는 수행 시간량 / 1024 + 현재의 schedule 시간 변화값
+		//
+		// (&(&runqueues)->avg)->runnable_avg_sum 값과 (&(&runqueues)->avg)->runnable_avg_period 값을 이용하여
+		// contrib 값을 계산함
+		//
+		// &(&root_task_group)->runnable_avg 에 계산된 현재 contrib 값을 더해줌
+		// [pcp0] (&(&runqueues)->cfs))->tg_runnable_contrib: 계산된 현재 contrib 값
 	}
 
+	// &rq->lock: [pcp0] &(&runqueues)->lock
 	raw_spin_unlock_irqrestore(&rq->lock, flags);
+
+	// raw_spin_unlock_irqrestore 에서 한일:
+	// [pcp0] &(&runqueues)->lock 을 사용하여 spin unlock을 수행하고 flags에 저장된 cpsr을 복원함
 }
 
 /*
@@ -7666,8 +7843,46 @@ void idle_balance(int this_cpu, struct rq *this_rq)
 
 	// this_cpu: 0
 	update_blocked_averages(this_cpu);
+
+	// update_blocked_averages 에서 한일:
+	// [pcp0] (&runqueues)->clock: 현재의 schedule 시간값
+	// [pcp0] (&runqueues)->clock_task: 현재의 schedule 시간값
+	//
+	// decays: 현재의 schedule 시간값>> 20 값이 0이 아닌 상수 값이라 가정하고 분석 진행
+	//
+	// [pcp0] (&(&runqueues)->cfs)->blocked_load_avg: 0
+	// [pcp0] (&(&(&runqueues)->cfs)->decay_counter)->counter: 2
+	// [pcp0] (&(&runqueues)->cfs)->last_decay: 현재의 schedule 시간값>> 20
+	//
+	// (&(&root_task_group)->load_avg)->counter: 현재 task의 남아 있는 수행 시간량 / (현재 task의 남아 있는 수행 시간량 / 1024 + 1)
+	// [pcp0] (&(&runqueues)->cfs)->tg_load_contrib: 현재 task의 남아 있는 수행 시간량 / (현재 task의 남아 있는 수행 시간량 / 1024 + 1)
+	//
+	// delta: 현재의 schedule 시간 변화값은 signed 로 변경시 0 보다 큰 값으로 가정하고 코드 분석 진행
+	//
+	// (&(&runqueues)->avg)->last_runnable_update: 현재의 schedule 시간값
+	//
+	// delta + delta_w 값이 1024 보다 작은 값이라고 가정하고 코드 분석 진행
+	//
+	// (&(&runqueues)->avg)->runnable_avg_sum:
+	// 현재 task의 남아 있는 수행 시간량 / 1024 + 현재의 schedule 시간 변화값
+	// (&(&runqueues)->avg)->runnable_avg_period:
+	// 현재 task의 남아 있는 수행 시간량 / 1024 + 현재의 schedule 시간 변화값
+	//
+	// (&(&runqueues)->avg)->runnable_avg_sum 값과 (&(&runqueues)->avg)->runnable_avg_period 값을 이용하여
+	// contrib 값을 계산함
+	//
+	// &(&root_task_group)->runnable_avg 에 계산된 현재 contrib 값을 더해줌
+	// [pcp0] (&(&runqueues)->cfs))->tg_runnable_contrib: 계산된 현재 contrib 값
+
 	rcu_read_lock();
+
+	// rcu_read_lock 에서 한일:
+	// (&init_task)->rcu_read_lock_nesting: 1
+
+	// this_cpu: 0, cpu_rq(0): [pcp0] &runqueues, cpu_rq(0)->sd: [pcp0] (&runqueues)->sd; NULL
 	for_each_domain(this_cpu, sd) {
+	// for (sd = rcu_dereference_check_sched_domain(cpu_rq(0)->sd); sd; sd = sd->parent)
+
 		unsigned long interval;
 		int continue_balancing = 1;
 		u64 t0, domain_cost;
@@ -7703,16 +7918,27 @@ void idle_balance(int this_cpu, struct rq *this_rq)
 	}
 	rcu_read_unlock();
 
+	// rcu_read_unlock에서 한일:
+	// (&init_task)->rcu_read_lock_nesting: 0
+
+	// &this_rq->lock: [pcp0] &(&runqueues)->lock
 	raw_spin_lock(&this_rq->lock);
 
+	// raw_spin_lock 에서 한일:
+	// [pcp0] &(&runqueues)->lock 을 사용하여 spin lock을 수행
+
+	// pulled_task: 0, jiffies: 현재의 jiffies값, this_rq->next_balance: [pcp0] (&runqueues)->next_balance: 0
 	if (pulled_task || time_after(jiffies, this_rq->next_balance)) {
 		/*
 		 * We are going idle. next_balance may be set based on
 		 * a busy processor. So reset next_balance.
 		 */
+		// this_rq->next_balance: [pcp0] (&runqueues)->next_balance: 0, next_balance: 현재 jiff 값 + 100
 		this_rq->next_balance = next_balance;
+		// this_rq->next_balance: [pcp0] (&runqueues)->next_balance: 현재 jiff 값 + 100
 	}
 
+	// curr_cost: 0, this_rq->max_idle_balance_cost: [pcp0] (&runqueues)->max_idle_balance_cost: 500000UL
 	if (curr_cost > this_rq->max_idle_balance_cost)
 		this_rq->max_idle_balance_cost = curr_cost;
 }
@@ -8698,6 +8924,7 @@ static unsigned int get_rr_interval_fair(struct rq *rq, struct task_struct *task
 // ARM10C 20170513
 // ARM10C 20170520
 // ARM10C 20170720
+// ARM10C 20170729
 const struct sched_class fair_sched_class = {
 	.next			= &idle_sched_class,
 	.enqueue_task		= enqueue_task_fair,

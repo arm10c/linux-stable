@@ -400,9 +400,14 @@ static void dec_rt_migration(struct sched_rt_entity *rt_se, struct rt_rq *rt_rq)
 	update_rt_migration(rt_rq);
 }
 
+// ARM10C 20170729
+// rq: [pcp0] &runqueues
 static inline int has_pushable_tasks(struct rq *rq)
 {
+	// &rq->rt.pushable_tasks: [pcp0] &(&runqueues)->rt.pushable_tasks
+	// plist_head_empty([pcp0] &(&runqueues)->rt.pushable_tasks): 1
 	return !plist_head_empty(&rq->rt.pushable_tasks);
+	// return 0
 }
 
 static void enqueue_pushable_task(struct rq *rq, struct task_struct *p)
@@ -1396,16 +1401,22 @@ static struct sched_rt_entity *pick_next_rt_entity(struct rq *rq,
 	return next;
 }
 
+// ARM10C 20170729
+// rq: [pcp0] &runqueues
 static struct task_struct *_pick_next_task_rt(struct rq *rq)
 {
 	struct sched_rt_entity *rt_se;
 	struct task_struct *p;
 	struct rt_rq *rt_rq;
 
+	// &rq->rt: [pcp0] &(&runqueues)->rt
 	rt_rq = &rq->rt;
+	// rt_rq: [pcp0] &(&runqueues)->rt
 
+	// rt_rq->rt_nr_running: [pcp0] (&(&runqueues)->rt)->rt_nr_running: 0
 	if (!rt_rq->rt_nr_running)
 		return NULL;
+		// return NULL
 
 	if (rt_rq_throttled(rt_rq))
 		return NULL;
@@ -1422,23 +1433,33 @@ static struct task_struct *_pick_next_task_rt(struct rq *rq)
 	return p;
 }
 
+// ARM10C 20170729
+// rq: [pcp0] &runqueues
 static struct task_struct *pick_next_task_rt(struct rq *rq)
 {
+	// rq: [pcp0] &runqueues, _pick_next_task_rt([pcp0] &runqueues): NULL
 	struct task_struct *p = _pick_next_task_rt(rq);
+	// p: NULL
 
 	/* The running task is never eligible for pushing */
+	// p: NULL
 	if (p)
 		dequeue_pushable_task(rq, p);
 
-#ifdef CONFIG_SMP
+#ifdef CONFIG_SMP // CONFIG_SMP=y
 	/*
 	 * We detect this state here so that we can avoid taking the RQ
 	 * lock again later if there is no need to push
 	 */
+	// rq->post_schedule: [pcp0] (&runqueues)->post_schedule
+	// rq: [pcp0] &runqueues, has_pushable_tasks([pcp0] &runqueues): 0
 	rq->post_schedule = has_pushable_tasks(rq);
+	// rq->post_schedule: [pcp0] (&runqueues)->post_schedule: 0
 #endif
 
+	// p: NULL
 	return p;
+	// return NULL
 }
 
 static void put_prev_task_rt(struct rq *rq, struct task_struct *p)
@@ -2072,6 +2093,7 @@ static unsigned int get_rr_interval_rt(struct rq *rq, struct task_struct *task)
 		return 0;
 }
 
+// ARM10C 20170729
 const struct sched_class rt_sched_class = {
 	.next			= &fair_sched_class,
 	.enqueue_task		= enqueue_task_rt,

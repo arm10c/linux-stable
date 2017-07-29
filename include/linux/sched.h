@@ -1081,6 +1081,7 @@ struct sched_statistics {
 // ARM10C 20170520
 // ARM10C 20170617
 // ARM10C 20170624
+// ARM10C 20170729
 // sizeof(struct sched_entity): 100 bytes
 struct sched_entity {
 	struct load_weight	load;		/* for load-balancing */
@@ -1115,6 +1116,7 @@ struct sched_entity {
 
 // ARM10C 20140830
 // ARM10C 20151003
+// ARM10C 20170729
 // sizeof(struct sched_rt_entity): 36 bytes
 struct sched_rt_entity {
 	struct list_head run_list;
@@ -1162,6 +1164,7 @@ enum perf_event_task_context {
 // ARM10C 20170617
 // ARM10C 20170624
 // ARM10C 20170715
+// ARM10C 20170729
 // sizeof(struct task_struct): 815 bytes
 struct task_struct {
 	volatile long state;	/* -1 unrunnable, 0 runnable, >0 stopped */

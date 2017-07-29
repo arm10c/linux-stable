@@ -103,6 +103,9 @@ extern s64 div64_s64(s64 dividend, s64 divisor);
 #ifndef div_u64
 // ARM10C 20150103
 // second_length: 4294967296000000000, HZ: 100
+// ARM10C 20170729
+// 현재 task의 남아 있는 수행 시간량 / 1024 + 현재의 schedule 시간 변화값 << 10,
+// 현재 task의 남아 있는 수행 시간량 / 1024 + 현재의 schedule 시간 변화값 + 1
 static inline u64 div_u64(u64 dividend, u32 divisor)
 {
 	u32 remainder;

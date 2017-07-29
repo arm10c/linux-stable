@@ -1023,6 +1023,7 @@ static inline void rcu_preempt_sleep_check(void)
 // ARM10C 20161210
 // ARM10C 20161217
 // ARM10C 20170624
+// ARM10C 20170729
 static inline void rcu_read_lock(void)
 {
 	__rcu_read_lock();
@@ -1063,6 +1064,7 @@ static inline void rcu_read_lock(void)
 // ARM10C 20161105
 // ARM10C 20161217
 // ARM10C 20170701
+// ARM10C 20170729
 static inline void rcu_read_unlock(void)
 {
 	// rcu_is_watching(): true

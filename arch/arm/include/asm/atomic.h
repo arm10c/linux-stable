@@ -120,6 +120,8 @@
 // ARM10C 20160827
 // ARM10C 20161008
 // &cset->refcount: &((&init_task)->cgroups)->refcount
+// ARM10C 20170729
+// contrib: 계산된 현재 contrib 값, &tg->runnable_avg: &(&root_task_group)->runnable_avg
 static inline void atomic_add(int i, atomic_t *v)
 {
 	unsigned long tmp;

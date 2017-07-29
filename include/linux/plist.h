@@ -221,9 +221,14 @@ extern void plist_del(struct plist_node *node, struct plist_head *head);
  * plist_head_empty - return !0 if a plist_head is empty
  * @head:	&struct plist_head pointer
  */
+// ARM10C 20170729
+// [pcp0] &(&runqueues)->rt.pushable_tasks
 static inline int plist_head_empty(const struct plist_head *head)
 {
+	// &head->node_list: [pcp0] &(&(&runqueues)->rt.pushable_tasks)->node_list
+	// list_empty([pcp0] &(&(&runqueues)->rt.pushable_tasks)->node_list): 1
 	return list_empty(&head->node_list);
+	// return 1
 }
 
 /**

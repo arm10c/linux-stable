@@ -23,16 +23,22 @@ check_preempt_curr_stop(struct rq *rq, struct task_struct *p, int flags)
 	/* we're never preempted */
 }
 
+// ARM10C 20170729
+// rq: [pcp0] &runqueues
 static struct task_struct *pick_next_task_stop(struct rq *rq)
 {
+	// rq->stop: [pcp0] (&runqueues)->stop: NULL
 	struct task_struct *stop = rq->stop;
+	// stop: NULL
 
+	// stop: NULL
 	if (stop && stop->on_rq) {
 		stop->se.exec_start = rq_clock_task(rq);
 		return stop;
 	}
 
 	return NULL;
+	// return NULL
 }
 
 static void
@@ -102,6 +108,7 @@ get_rr_interval_stop(struct rq *rq, struct task_struct *task)
 /*
  * Simple, special scheduling class for the per-CPU stop tasks:
  */
+// ARM10C 20170729
 const struct sched_class stop_sched_class = {
 	.next			= &rt_sched_class,
 
@@ -114,7 +121,7 @@ const struct sched_class stop_sched_class = {
 	.pick_next_task		= pick_next_task_stop,
 	.put_prev_task		= put_prev_task_stop,
 
-#ifdef CONFIG_SMP
+#ifdef CONFIG_SMP // CONFIG_SMP=y
 	.select_task_rq		= select_task_rq_stop,
 #endif
 

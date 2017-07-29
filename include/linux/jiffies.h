@@ -104,6 +104,8 @@ static inline u64 get_jiffies_64(void)
 // ARM10C 20150711
 // base->next_timer: (&boot_tvec_bases)->next_timer: -30000 (0xFFFFFFFFFFFF8AD0)
 // timer->expires: (&console_timer)->expires: xx_64 + 60000,
+// ARM10C 20170729
+// jiffies: 현재의 jiffies값, this_rq->next_balance: [pcp0] (&runqueues)->next_balance
 #define time_after(a,b)		\
 	(typecheck(unsigned long, a) && \
 	 typecheck(unsigned long, b) && \

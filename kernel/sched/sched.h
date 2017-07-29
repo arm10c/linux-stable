@@ -78,6 +78,7 @@ extern void update_cpu_load_active(struct rq *this_rq);
 #endif
 
 // ARM10C 20140830
+// ARM10C 20170729
 // SCHED_LOAD_RESOLUTION: 0
 // SCHED_LOAD_SHIFT: 10
 #define SCHED_LOAD_SHIFT	(10 + SCHED_LOAD_RESOLUTION)
@@ -91,6 +92,9 @@ extern void update_cpu_load_active(struct rq *this_rq);
 // SCHED_LOAD_SCALE: 0x400
 // NICE_0_LOAD: 0x400
 #define NICE_0_LOAD		SCHED_LOAD_SCALE
+// ARM10C 20170729
+// SCHED_LOAD_SHIFT: 10
+// NICE_0_SHIFT: 10
 #define NICE_0_SHIFT		SCHED_LOAD_SHIFT
 
 /*
@@ -170,6 +174,7 @@ struct cfs_bandwidth {
 // ARM10C 20170410
 // ARM10C 20170427
 // ARM10C 20170513
+// ARM10C 20170729
 struct task_group {
 	struct cgroup_subsys_state css;
 
@@ -291,6 +296,7 @@ struct cfs_bandwidth { };
 // ARM10C 20170520
 // ARM10C 20170617
 // ARM10C 20170720
+// ARM10C 20170729
 struct cfs_rq {
 	struct load_weight load;
 	unsigned int nr_running, h_nr_running;
@@ -380,6 +386,7 @@ static inline int rt_bandwidth_enabled(void)
 // ARM10C 20140830
 // ARM10C 20140913
 // ARM10C 20151003
+// ARM10C 20170729
 struct rt_rq {
 	struct rt_prio_array active;
 	unsigned int rt_nr_running;
@@ -460,6 +467,7 @@ extern struct root_domain def_root_domain;
 // ARM10C 20170617
 // ARM10C 20170715
 // ARM10C 20170720
+// ARM10C 20170729
 struct rq {
 	/* runqueue lock: */
 	raw_spinlock_t lock;
@@ -493,12 +501,12 @@ struct rq {
 	struct cfs_rq cfs;
 	struct rt_rq rt;
 
-#ifdef CONFIG_FAIR_GROUP_SCHED // CONFIG_FAIR_GROUP_SCHED=n
+#ifdef CONFIG_FAIR_GROUP_SCHED // CONFIG_FAIR_GROUP_SCHED=y
 	/* list of leaf cfs_rq on this cpu: */
 	struct list_head leaf_cfs_rq_list;
 #endif /* CONFIG_FAIR_GROUP_SCHED */
 
-#ifdef CONFIG_RT_GROUP_SCHED // CONFIG_RT_GROUP_SCHED=n
+#ifdef CONFIG_RT_GROUP_SCHED // CONFIG_RT_GROUP_SCHED=y
 	struct list_head leaf_rt_rq_list;
 #endif
 
@@ -639,6 +647,7 @@ DECLARE_PER_CPU(struct rq, runqueues);
 // ARM10C 20161217
 // ARM10C 20170201
 // ARM10C 20170715
+// ARM10C 20170729
 // cpu_rq(0): [pcp0] &runqueues
 #define cpu_rq(cpu)		(&per_cpu(runqueues, (cpu)))
 // ARM10C 20161008
@@ -668,6 +677,8 @@ static inline u64 rq_clock(struct rq *rq)
 // rq_of([pcp0] &(&runqueues)->cfs): [pcp0] &runqueues
 // ARM10C 20170208
 // rq_of([pcp0] &(&runqueues)->cfs): [pcp0] &runqueues
+// ARM10C 20170729
+// rq: [pcp0] &runqueues
 static inline u64 rq_clock_task(struct rq *rq)
 {
 	// rq->clock_task: [pcp0] (&runqueues)->clock_task: 현재의 schedule 시간값
@@ -706,6 +717,9 @@ extern int migrate_swap(struct task_struct *, struct task_struct *);
 // ARM10C 20161217
 // #define for_each_domain(cpu, tmp):
 // for (tmp = rcu_dereference_check_sched_domain(cpu_rq(cpu)->sd); tmp; tmp = tmp->parent)
+// ARM10C 20170729
+// #define for_each_domain(0, sd):
+// for (sd = rcu_dereference_check_sched_domain(cpu_rq(0)->sd); sd; sd = sd->parent)
 #define for_each_domain(cpu, __sd) \
 	for (__sd = rcu_dereference_check_sched_domain(cpu_rq(cpu)->sd); \
 			__sd; __sd = __sd->parent)
@@ -1261,7 +1275,9 @@ struct sched_class {
 #endif
 };
 
+// ARM10C 20170729
 #define sched_class_highest (&stop_sched_class)
+// ARM10C 20170729
 #define for_each_class(class) \
    for (class = sched_class_highest; class; class = class->next)
 

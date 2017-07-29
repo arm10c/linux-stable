@@ -520,6 +520,8 @@ static inline int list_is_last(const struct list_head *list,
 // ARM10C 20151121
 // ARM10C 20151212
 // &q->task_list: &(&(&(kmem_cache#4-oX)->i_state의 zone의 주소)->wait_table[계산된 hash index 값])->task_list
+// ARM10C 20170729
+// &head->node_list: [pcp0] &(&(&runqueues)->rt.pushable_tasks)->node_list
 static inline int list_empty(const struct list_head *head)
 {
 	// head->next: waiter->list->next, head: waiter->list
