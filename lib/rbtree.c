@@ -233,6 +233,9 @@ __rb_insert(struct rb_node *node, struct rb_root *root,
  * Inline version for rb_erase() use - we want to be able to inline
  * and eliminate the dummy_rotate callback there
  */
+// ARM10C 20170812
+// rebalance: &(&(kmem_cache#15-oX (struct task_struct))->se)->run_node (pid: 1),
+// root: [pcp0] &(&(&runqueues)->cfs)->tasks_timeline, dummy_rotate
 static __always_inline void
 ____rb_erase_color(struct rb_node *parent, struct rb_root *root,
 	void (*augment_rotate)(struct rb_node *old, struct rb_node *new))
@@ -459,6 +462,7 @@ static inline void dummy_copy(struct rb_node *old, struct rb_node *new) {}
 // ARM10C 20140809
 static inline void dummy_rotate(struct rb_node *old, struct rb_node *new) {}
 
+// ARM10C 20170812
 static const struct rb_augment_callbacks dummy_callbacks = {
 	dummy_propagate, dummy_copy, dummy_rotate
 };
@@ -506,12 +510,35 @@ void rb_insert_color(struct rb_node *node, struct rb_root *root)
 }
 EXPORT_SYMBOL(rb_insert_color);
 
+// ARM10C 20170812
+// &se->run_node: &(&(kmem_cache#15-oX (struct task_struct))->se)->run_node (pid: 1),
+// &cfs_rq->tasks_timeline: [pcp0] &(&(&runqueues)->cfs)->tasks_timeline
 void rb_erase(struct rb_node *node, struct rb_root *root)
 {
 	struct rb_node *rebalance;
+
+	// node: &(&(kmem_cache#15-oX (struct task_struct))->se)->run_node (pid: 1),
+	// root: [pcp0] &(&(&runqueues)->cfs)->tasks_timeline
+	// __rb_erase_augmented(&(&(kmem_cache#15-oX (struct task_struct))->se)->run_node (pid: 1),
+	//                     [pcp0] &(&(&runqueues)->cfs)->tasks_timeline, &dummy_callbacks):
+	// &(&(kmem_cache#15-oX (struct task_struct))->se)->run_node (pid: 1)
 	rebalance = __rb_erase_augmented(node, root, &dummy_callbacks);
+	// rebalance: &(&(kmem_cache#15-oX (struct task_struct))->se)->run_node (pid: 1)
+
+	// rebalance: &(&(kmem_cache#15-oX (struct task_struct))->se)->run_node (pid: 1)
 	if (rebalance)
+		// rebalance: &(&(kmem_cache#15-oX (struct task_struct))->se)->run_node (pid: 1),
+		// root: [pcp0] &(&(&runqueues)->cfs)->tasks_timeline
 		____rb_erase_color(rebalance, root, dummy_rotate);
+
+		/*
+		// ____rb_erase_color 에서 한일:
+		// rb tree 의 root인 [pcp0] &(&(&runqueues)->cfs)->tasks_timeline 에
+		// rb node인 &(&(kmem_cache#15-oX (struct task_struct))->se)->run_node 가 삭제되어 rb tree 구성
+		//
+		//                            task ID: 2-b
+		//                            /           \
+		*/
 }
 EXPORT_SYMBOL(rb_erase);
 
@@ -558,10 +585,14 @@ struct rb_node *rb_last(const struct rb_root *root)
 }
 EXPORT_SYMBOL(rb_last);
 
+// ARM10C 20170812
+// &se->run_node: &(&(kmem_cache#15-oX (struct task_struct))->se (pid: 1))->run_node
 struct rb_node *rb_next(const struct rb_node *node)
 {
 	struct rb_node *parent;
 
+	// node: &(&(kmem_cache#15-oX (struct task_struct))->se (pid: 1))->run_node
+	// RB_EMPTY_NODE(&(&(kmem_cache#15-oX (struct task_struct))->se (pid: 1))->run_node): 0
 	if (RB_EMPTY_NODE(node))
 		return NULL;
 
@@ -569,11 +600,22 @@ struct rb_node *rb_next(const struct rb_node *node)
 	 * If we have a right-hand child, go down and then left as far
 	 * as we can.
 	 */
+	// node->rb_right: (&(&(kmem_cache#15-oX (struct task_struct))->se (pid: 1))->run_node)->rb_right:
+	// &(&(kmem_cache#15-oX (struct task_struct))->se)->run_node (pid 2)
 	if (node->rb_right) {
+		// node: &(&(kmem_cache#15-oX (struct task_struct))->se (pid: 1))->run_node,
+		// node->rb_right: (&(&(kmem_cache#15-oX (struct task_struct))->se (pid: 1))->run_node)->rb_right:
+		// &(&(kmem_cache#15-oX (struct task_struct))->se)->run_node (pid 2)
 		node = node->rb_right; 
+		// node: &(&(kmem_cache#15-oX (struct task_struct))->se)->run_node (pid 2)
+
+		// node->rb_left: (&(&(kmem_cache#15-oX (struct task_struct))->se)->run_node (pid 2))->rb_left: NULL
 		while (node->rb_left)
 			node=node->rb_left;
+
+		// node: &(&(kmem_cache#15-oX (struct task_struct))->se)->run_node (pid 2)
 		return (struct rb_node *)node;
+		// return &(&(kmem_cache#15-oX (struct task_struct))->se)->run_node (pid 2)
 	}
 
 	/*

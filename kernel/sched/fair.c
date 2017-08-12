@@ -325,6 +325,8 @@ const struct sched_class fair_sched_class;
 // cfs_rq: [pcp0] &(&runqueues)->cfs
 // ARM10C 20170729
 // cfs_rq: (&root_task_group)->cfs_rq[0]: [pcp0] &(&runqueues)->cfs
+// ARM10C 20170812
+// cfs_rq: [pcp0] &(&runqueues)->cfs
 static inline struct rq *rq_of(struct cfs_rq *cfs_rq)
 {
 	// cfs_rq->rq: [pcp0] (&(&runqueues)->cfs)->rq: [pcp0] &runqueues
@@ -345,6 +347,8 @@ static inline struct rq *rq_of(struct cfs_rq *cfs_rq)
 
 // ARM10C 20170419
 // se: &(kmem_cache#15-oX (struct task_struct))->se
+// ARM10C 20170812
+// se: &(kmem_cache#15-oX (struct task_struct))->se (pid: 1)
 static inline struct task_struct *task_of(struct sched_entity *se)
 {
 #ifdef CONFIG_SCHED_DEBUG // CONFIG_SCHED_DEBUG=y
@@ -418,9 +422,13 @@ static inline struct cfs_rq *cfs_rq_of(struct sched_entity *se)
 }
 
 /* runqueue "owned" by this group */
+// ARM10C 20170812
+// se: &(kmem_cache#15-oX (struct task_struct))->se (pid: 1)
 static inline struct cfs_rq *group_cfs_rq(struct sched_entity *grp)
 {
+	// grp->my_q: (&(kmem_cache#15-oX (struct task_struct))->se (pid: 1))->my_q: NULL
 	return grp->my_q;
+	// return NULL
 }
 
 static void update_cfs_rq_blocked_load(struct cfs_rq *cfs_rq,
@@ -873,26 +881,58 @@ static void __enqueue_entity(struct cfs_rq *cfs_rq, struct sched_entity *se)
 	*/
 }
 
+// ARM10C 20170812
+// cfs_rq: [pcp0] &(&runqueues)->cfs, se: &(kmem_cache#15-oX (struct task_struct))->se (pid: 1)
 static void __dequeue_entity(struct cfs_rq *cfs_rq, struct sched_entity *se)
 {
+	// cfs_rq->rb_leftmost: [pcp0] (&(&runqueues)->cfs)->rb_leftmost: &(&(kmem_cache#15-oX (struct task_struct))->se)->run_node,
+	// &se->run_node: &(&(kmem_cache#15-oX (struct task_struct))->se (pid: 1))->run_node
 	if (cfs_rq->rb_leftmost == &se->run_node) {
 		struct rb_node *next_node;
 
+		// &se->run_node: &(&(kmem_cache#15-oX (struct task_struct))->se (pid: 1))->run_node,
+		// rb_next(&(&(kmem_cache#15-oX (struct task_struct))->se (pid: 1))->run_node):
+		// &(&(kmem_cache#15-oX (struct task_struct))->se)->run_node (pid 2)
 		next_node = rb_next(&se->run_node);
+		// next_node: &(&(kmem_cache#15-oX (struct task_struct))->se)->run_node (pid 2)
+
+		// cfs_rq->rb_leftmost: [pcp0] (&(&runqueues)->cfs)->rb_leftmost: &(&(kmem_cache#15-oX (struct task_struct))->se)->run_node (pid 1)
+		// next_node: &(&(kmem_cache#15-oX (struct task_struct))->se)->run_node (pid 2)
 		cfs_rq->rb_leftmost = next_node;
+		// cfs_rq->rb_leftmost: [pcp0] (&(&runqueues)->cfs)->rb_leftmost: &(&(kmem_cache#15-oX (struct task_struct))->se)->run_node (pid 2)
 	}
 
+	// &se->run_node: &(&(kmem_cache#15-oX (struct task_struct))->se)->run_node (pid: 1),
+	// &cfs_rq->tasks_timeline: [pcp0] &(&(&runqueues)->cfs)->tasks_timeline
 	rb_erase(&se->run_node, &cfs_rq->tasks_timeline);
+
+	/*
+	// rb_erase 에서 한일:
+	// rb tree 의 root인 [pcp0] &(&(&runqueues)->cfs)->tasks_timeline 에
+	// rb node인 &(&(kmem_cache#15-oX (struct task_struct))->se)->run_node 가 삭제되어 rb tree 구성
+	//
+	//                            task ID: 2-b
+	//                            /           \
+	*/
 }
 
+// ARM10C 20170812
+// cfs_rq: [pcp0] &(&runqueues)->cfs
 struct sched_entity *__pick_first_entity(struct cfs_rq *cfs_rq)
 {
+	// cfs_rq->rb_leftmost: [pcp0] (&(&runqueues)->cfs)->rb_leftmost: &(&(kmem_cache#15-oX (struct task_struct))->se)->run_node
 	struct rb_node *left = cfs_rq->rb_leftmost;
+	// left: &(&(kmem_cache#15-oX (struct task_struct))->se)->run_node (pid: 1)
 
+	// left: &(&(kmem_cache#15-oX (struct task_struct))->se)->run_node (pid: 1)
 	if (!left)
 		return NULL;
 
+	// left: &(&(kmem_cache#15-oX (struct task_struct))->se)->run_node (pid: 1)
+	// rb_entry(&(&(kmem_cache#15-oX (struct task_struct))->se)->run_node, struct sched_entity, run_node):
+	// &(kmem_cache#15-oX (struct task_struct))->se
 	return rb_entry(left, struct sched_entity, run_node);
+	// return &(kmem_cache#15-oX (struct task_struct))->se
 }
 
 static struct sched_entity *__pick_next_entity(struct sched_entity *se)
@@ -1208,21 +1248,29 @@ static void update_stats_enqueue(struct cfs_rq *cfs_rq, struct sched_entity *se)
 		update_stats_wait_start(cfs_rq, se);
 }
 
+// ARM10C 20170812
+// cfs_rq: [pcp0] &(&runqueues)->cfs, se: &(kmem_cache#15-oX (struct task_struct))->se (pid: 1)
 static void
 update_stats_wait_end(struct cfs_rq *cfs_rq, struct sched_entity *se)
 {
+	// se->statistics.wait_max: (&(kmem_cache#15-oX (struct task_struct))->se (pid: 1))->wait_max
 	schedstat_set(se->statistics.wait_max, max(se->statistics.wait_max,
-			rq_clock(rq_of(cfs_rq)) - se->statistics.wait_start));
-	schedstat_set(se->statistics.wait_count, se->statistics.wait_count + 1);
+			rq_clock(rq_of(cfs_rq)) - se->statistics.wait_start)); // null function
+
+	// se->statistics.wait_count: (&(kmem_cache#15-oX (struct task_struct))->se (pid: 1))->wait_count
+	schedstat_set(se->statistics.wait_count, se->statistics.wait_count + 1); // null function
+
+	// se->statistics.wait_sum: (&(kmem_cache#15-oX (struct task_struct))->se (pid: 1))->wait_sum
 	schedstat_set(se->statistics.wait_sum, se->statistics.wait_sum +
-			rq_clock(rq_of(cfs_rq)) - se->statistics.wait_start);
-#ifdef CONFIG_SCHEDSTATS
+			rq_clock(rq_of(cfs_rq)) - se->statistics.wait_start); // null function
+#ifdef CONFIG_SCHEDSTATS // CONFIG_SCHEDSTATS=n
 	if (entity_is_task(se)) {
 		trace_sched_stat_wait(task_of(se),
 			rq_clock(rq_of(cfs_rq)) - se->statistics.wait_start);
 	}
 #endif
-	schedstat_set(se->statistics.wait_start, 0);
+	// se->statistics.wait_start: (&(kmem_cache#15-oX (struct task_struct))->se (pid: 1))->wait_start
+	schedstat_set(se->statistics.wait_start, 0); // null function
 }
 
 static inline void
@@ -1239,13 +1287,20 @@ update_stats_dequeue(struct cfs_rq *cfs_rq, struct sched_entity *se)
 /*
  * We are picking a new current task - update its stats:
  */
+// ARM10C 20170812
+// cfs_rq: [pcp0] &(&runqueues)->cfs, se: &(kmem_cache#15-oX (struct task_struct))->se (pid: 1)
 static inline void
 update_stats_curr_start(struct cfs_rq *cfs_rq, struct sched_entity *se)
 {
 	/*
 	 * We are starting a new run period:
 	 */
+	// se->exec_start: (&(kmem_cache#15-oX (struct task_struct))->se (pid: 1))->exec_start
+	// cfs_rq: [pcp0] &(&runqueues)->cfs, rq_of(&(&runqueues)->cfs): [pcp0] &runqueues
+	// rq_clock_task([pcp0] &runqueues): 현재의 schedule 시간값
 	se->exec_start = rq_clock_task(rq_of(cfs_rq));
+	// se->exec_start: (&(kmem_cache#15-oX (struct task_struct))->se (pid: 1))->exec_start:
+	// 현재의 schedule 시간값
 }
 
 /**************************************************
@@ -3620,14 +3675,22 @@ static void __clear_buddies_skip(struct sched_entity *se)
 	}
 }
 
+// ARM10C 20170812
+// cfs_rq: [pcp0] &(&runqueues)->cfs, se: &(kmem_cache#15-oX (struct task_struct))->se (pid: 1)
 static void clear_buddies(struct cfs_rq *cfs_rq, struct sched_entity *se)
 {
+	// cfs_rq->last: [pcp0] (&(&runqueues)->cfs)->last: NULL,
+	// se: &(kmem_cache#15-oX (struct task_struct))->se (pid: 1)
 	if (cfs_rq->last == se)
 		__clear_buddies_last(se);
 
+	// cfs_rq->next: [pcp0] (&(&runqueues)->cfs)->next: NULL,
+	// se: &(kmem_cache#15-oX (struct task_struct))->se (pid: 1)
 	if (cfs_rq->next == se)
 		__clear_buddies_next(se);
 
+	// cfs_rq->skip: [pcp0] (&(&runqueues)->cfs)->skip: NULL,
+	// se: &(kmem_cache#15-oX (struct task_struct))->se (pid: 1)
 	if (cfs_rq->skip == se)
 		__clear_buddies_skip(se);
 }
@@ -3719,23 +3782,47 @@ check_preempt_tick(struct cfs_rq *cfs_rq, struct sched_entity *curr)
 		resched_task(rq_of(cfs_rq)->curr);
 }
 
+// ARM10C 20170812
+// cfs_rq: [pcp0] &(&runqueues)->cfs, se: &(kmem_cache#15-oX (struct task_struct))->se (pid: 1)
 static void
 set_next_entity(struct cfs_rq *cfs_rq, struct sched_entity *se)
 {
 	/* 'current' is not kept within the tree. */
+	// se->on_rq: (&(kmem_cache#15-oX (struct task_struct))->se (pid: 1))->on_rq: 1
 	if (se->on_rq) {
 		/*
 		 * Any task has to be enqueued before it get to execute on
 		 * a CPU. So account for the time it spent waiting on the
 		 * runqueue.
 		 */
-		update_stats_wait_end(cfs_rq, se);
+		// cfs_rq: [pcp0] &(&runqueues)->cfs, se: &(kmem_cache#15-oX (struct task_struct))->se (pid: 1)
+		update_stats_wait_end(cfs_rq, se); // null function
+
+		// cfs_rq: [pcp0] &(&runqueues)->cfs, se: &(kmem_cache#15-oX (struct task_struct))->se (pid: 1)
 		__dequeue_entity(cfs_rq, se);
+
+		// __dequeue_entity 에서 한일:
+		// [pcp0] (&(&runqueues)->cfs)->rb_leftmost: &(&(kmem_cache#15-oX (struct task_struct))->se)->run_node (pid 2)
+		/*
+		// rb tree 의 root인 [pcp0] &(&(&runqueues)->cfs)->tasks_timeline 에
+		// rb node인 &(&(kmem_cache#15-oX (struct task_struct))->se)->run_node 가 삭제되어 rb tree 구성
+		//
+		//                            task ID: 2-b
+		//                            /           \
+		*/
 	}
 
+	// cfs_rq: [pcp0] &(&runqueues)->cfs, se: &(kmem_cache#15-oX (struct task_struct))->se (pid: 1)
 	update_stats_curr_start(cfs_rq, se);
+
+	// update_stats_curr_start 에서 한일:
+	// (&(kmem_cache#15-oX (struct task_struct))->se (pid: 1))->exec_start: 현재의 schedule 시간값
+
+	// cfs_rq->curr: [pcp0] (&(&runqueues)->cfs)->curr: NULL, se: &(kmem_cache#15-oX (struct task_struct))->se (pid: 1)
 	cfs_rq->curr = se;
-#ifdef CONFIG_SCHEDSTATS
+	// cfs_rq->curr: [pcp0] (&(&runqueues)->cfs)->curr: NULL: &(kmem_cache#15-oX (struct task_struct))->se (pid: 1)
+
+#ifdef CONFIG_SCHEDSTATS // CONFIG_SCHEDSTATS=n
 	/*
 	 * Track our maximum slice length, if the CPU's load is at
 	 * least twice that of our own weight (i.e. dont track it
@@ -3746,7 +3833,10 @@ set_next_entity(struct cfs_rq *cfs_rq, struct sched_entity *se)
 			se->sum_exec_runtime - se->prev_sum_exec_runtime);
 	}
 #endif
+	// se->prev_sum_exec_runtime: (&(kmem_cache#15-oX (struct task_struct))->se (pid: 1))->prev_sum_exec_runtime: 0
+	// se->sum_exec_runtime: (&(kmem_cache#15-oX (struct task_struct))->se (pid: 1))->sum_exec_runtime: 0
 	se->prev_sum_exec_runtime = se->sum_exec_runtime;
+	// se->prev_sum_exec_runtime: (&(kmem_cache#15-oX (struct task_struct))->se (pid: 1))->prev_sum_exec_runtime: 0
 }
 
 static int
@@ -3759,15 +3849,24 @@ wakeup_preempt_entity(struct sched_entity *curr, struct sched_entity *se);
  * 3) pick the "last" process, for cache locality
  * 4) do not run the "skip" process, if something else is available
  */
+// ARM10C 20170812
+// cfs_rq: [pcp0] &(&runqueues)->cfs
 static struct sched_entity *pick_next_entity(struct cfs_rq *cfs_rq)
 {
+	// cfs_rq: [pcp0] &(&runqueues)->cfs
+	// __pick_first_entity([pcp0] &(&runqueues)->cfs): &(kmem_cache#15-oX (struct task_struct))->se (pid: 1)
 	struct sched_entity *se = __pick_first_entity(cfs_rq);
+	// se: &(kmem_cache#15-oX (struct task_struct))->se (pid: 1)
+
+	// se: &(kmem_cache#15-oX (struct task_struct))->se (pid: 1)
 	struct sched_entity *left = se;
+	// left: &(kmem_cache#15-oX (struct task_struct))->se (pid: 1)
 
 	/*
 	 * Avoid running the skip buddy, if running something else can
 	 * be done without getting too unfair.
 	 */
+	// cfs_rq->skip: [pcp0] (&(&runqueues)->cfs)->skip: NULL, se: &(kmem_cache#15-oX (struct task_struct))->se (pid: 1)
 	if (cfs_rq->skip == se) {
 		struct sched_entity *second = __pick_next_entity(se);
 		if (second && wakeup_preempt_entity(second, left) < 1)
@@ -3777,18 +3876,25 @@ static struct sched_entity *pick_next_entity(struct cfs_rq *cfs_rq)
 	/*
 	 * Prefer last buddy, try to return the CPU to a preempted task.
 	 */
+	// cfs_rq->last: [pcp0] (&(&runqueues)->cfs)->last: NULL,
+	// left: &(kmem_cache#15-oX (struct task_struct))->se (pid: 1)
 	if (cfs_rq->last && wakeup_preempt_entity(cfs_rq->last, left) < 1)
 		se = cfs_rq->last;
 
 	/*
 	 * Someone really wants this to run. If it's not unfair, run it.
 	 */
+	// cfs_rq->next: [pcp0] (&(&runqueues)->cfs)->next: NULL,
+	// left: &(kmem_cache#15-oX (struct task_struct))->se (pid: 1)
 	if (cfs_rq->next && wakeup_preempt_entity(cfs_rq->next, left) < 1)
 		se = cfs_rq->next;
 
+	// cfs_rq: [pcp0] &(&runqueues)->cfs, se: &(kmem_cache#15-oX (struct task_struct))->se (pid: 1)
 	clear_buddies(cfs_rq, se);
 
+	// se: &(kmem_cache#15-oX (struct task_struct))->se (pid: 1)
 	return se;
+	// return &(kmem_cache#15-oX (struct task_struct))->se (pid: 1)
 }
 
 static void check_cfs_rq_runtime(struct cfs_rq *cfs_rq);
@@ -5647,6 +5753,9 @@ wakeup_gran(struct sched_entity *curr, struct sched_entity *se)
  */
 // ARM10C 20170520
 // se: &(&init_task)->se, pse: &(kmem_cache#15-oX (struct task_struct))->se
+// ARM10C 20170812
+// cfs_rq->last: [pcp0] (&(&runqueues)->cfs)->last: NULL,
+// left: &(kmem_cache#15-oX (struct task_struct))->se (pid: 1)
 static int
 wakeup_preempt_entity(struct sched_entity *curr, struct sched_entity *se)
 {
@@ -5814,26 +5923,63 @@ preempt:
 		set_last_buddy(se);
 }
 
+// ARM10C 20170812
+// rq: [pcp0] &runqueues
 static struct task_struct *pick_next_task_fair(struct rq *rq)
 {
 	struct task_struct *p;
+
+	// &rq->cfs: [pcp0] &(&runqueues)->cfs
 	struct cfs_rq *cfs_rq = &rq->cfs;
+	// cfs_rq: [pcp0] &(&runqueues)->cfs
+
 	struct sched_entity *se;
 
+	// cfs_rq->nr_running: [pcp0] (&(&runqueues)->cfs)->nr_running: 2
 	if (!cfs_rq->nr_running)
 		return NULL;
 
 	do {
+		// cfs_rq: [pcp0] &(&runqueues)->cfs
+		// pick_next_entity([pcp0] &(&runqueues)->cfs): &(kmem_cache#15-oX (struct task_struct))->se (pid: 1)
 		se = pick_next_entity(cfs_rq);
+		// se: &(kmem_cache#15-oX (struct task_struct))->se (pid: 1)
+
+		// cfs_rq: [pcp0] &(&runqueues)->cfs, se: &(kmem_cache#15-oX (struct task_struct))->se (pid: 1)
 		set_next_entity(cfs_rq, se);
+
+		// set_next_entity 에서 한일:
+		// [pcp0] (&(&runqueues)->cfs)->rb_leftmost: &(&(kmem_cache#15-oX (struct task_struct))->se)->run_node (pid 2)
+		/*
+		// rb tree 의 root인 [pcp0] &(&(&runqueues)->cfs)->tasks_timeline 에
+		// rb node인 &(&(kmem_cache#15-oX (struct task_struct))->se)->run_node 가 삭제되어 rb tree 구성
+		//
+		//                            task ID: 2-b
+		//                            /           \
+		*/
+		// (&(kmem_cache#15-oX (struct task_struct))->se (pid: 1))->exec_start: 현재의 schedule 시간값
+		// [pcp0] (&(&runqueues)->cfs)->curr: NULL: &(kmem_cache#15-oX (struct task_struct))->se (pid: 1)
+		// (&(kmem_cache#15-oX (struct task_struct))->se (pid: 1))->prev_sum_exec_runtime: 0
+
+		// cfs_rq: [pcp0] &(&runqueues)->cfs, se: &(kmem_cache#15-oX (struct task_struct))->se (pid: 1)
+		// group_cfs_rq(&(kmem_cache#15-oX (struct task_struct))->se (pid: 1)): NULL
 		cfs_rq = group_cfs_rq(se);
+		// cfs_rq: NULL
+
 	} while (cfs_rq);
 
+	// se: &(kmem_cache#15-oX (struct task_struct))->se (pid: 1)
+	// task_of(&(kmem_cache#15-oX (struct task_struct))->se (pid: 1)): kmem_cache#15-oX (struct task_struct) (pid: 1)
 	p = task_of(se);
+	// p: kmem_cache#15-oX (struct task_struct) (pid: 1)
+
+	// rq: [pcp0] &runqueues, hrtick_enabled([pcp0] &runqueues): 0
 	if (hrtick_enabled(rq))
 		hrtick_start_fair(rq, p);
 
+	// p: kmem_cache#15-oX (struct task_struct) (pid: 1)
 	return p;
+	// return kmem_cache#15-oX (struct task_struct) (pid: 1)
 }
 
 /*
@@ -8925,6 +9071,7 @@ static unsigned int get_rr_interval_fair(struct rq *rq, struct task_struct *task
 // ARM10C 20170520
 // ARM10C 20170720
 // ARM10C 20170729
+// ARM10C 20170812
 const struct sched_class fair_sched_class = {
 	.next			= &idle_sched_class,
 	.enqueue_task		= enqueue_task_fair,

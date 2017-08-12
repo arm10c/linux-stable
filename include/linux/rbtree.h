@@ -44,6 +44,8 @@
 // ARM10C 20160813
 // ARM10C 20170427
 // ARM10C 20170624
+// ARM10C 20170812
+// ARM10C 20170812
 // sizeof(struct rb_node): 12 bytes
 struct rb_node {
 	unsigned long  __rb_parent_color;
@@ -78,6 +80,7 @@ struct rb_root {
 // ARM10C 20160709
 // ARM10C 20160820
 // ARM10C 20170624
+// ARM10C 20170812
 #define	rb_entry(ptr, type, member) container_of(ptr, type, member)
 
 #define RB_EMPTY_ROOT(root)  ((root)->rb_node == NULL)
@@ -89,6 +92,8 @@ struct rb_root {
 // node: (kmem_cache#30-oX (GIC#1))->rb_node
 // ARM10C 20150606
 // node->node: (&(&sched_clock_timer)->node)->node
+// ARM10C 20170812
+// node: &(&(kmem_cache#15-oX (struct task_struct))->se (tid: 1))->run_node
 #define RB_EMPTY_NODE(node)  \
 	((node)->__rb_parent_color == (unsigned long)(node))
 // ARM10C 20140830

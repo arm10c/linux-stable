@@ -297,6 +297,7 @@ struct cfs_bandwidth { };
 // ARM10C 20170617
 // ARM10C 20170720
 // ARM10C 20170729
+// ARM10C 20170812
 struct cfs_rq {
 	struct load_weight load;
 	unsigned int nr_running, h_nr_running;
@@ -679,6 +680,8 @@ static inline u64 rq_clock(struct rq *rq)
 // rq_of([pcp0] &(&runqueues)->cfs): [pcp0] &runqueues
 // ARM10C 20170729
 // rq: [pcp0] &runqueues
+// ARM10C 20170812
+// rq_of(&(&runqueues)->cfs): [pcp0] &runqueues
 static inline u64 rq_clock_task(struct rq *rq)
 {
 	// rq->clock_task: [pcp0] (&runqueues)->clock_task: 현재의 schedule 시간값
@@ -1382,6 +1385,8 @@ static inline u64 sched_avg_period(void)
  *  - hrtimer is actually high res
  */
 // ARM10C 20170513
+// rq: [pcp0] &runqueues
+// ARM10C 20170812
 // rq: [pcp0] &runqueues
 static inline int hrtick_enabled(struct rq *rq)
 {

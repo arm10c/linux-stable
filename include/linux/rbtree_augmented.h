@@ -35,6 +35,7 @@
  * See Documentation/rbtree.txt for documentation and samples.
  */
 
+// ARM10C 20170812
 struct rb_augment_callbacks {
 	void (*propagate)(struct rb_node *node, struct rb_node *stop);
 	void (*copy)(struct rb_node *old, struct rb_node *new);
@@ -123,6 +124,9 @@ __rb_change_child(struct rb_node *old, struct rb_node *new,
 extern void __rb_erase_color(struct rb_node *parent, struct rb_root *root,
 	void (*augment_rotate)(struct rb_node *old, struct rb_node *new));
 
+// ARM10C 20170812
+// node: &(&(kmem_cache#15-oX (struct task_struct))->se)->run_node (pid: 1),
+// root: [pcp0] &(&(&runqueues)->cfs)->tasks_timeline, &dummy_callbacks
 static __always_inline struct rb_node *
 __rb_erase_augmented(struct rb_node *node, struct rb_root *root,
 		     const struct rb_augment_callbacks *augment)

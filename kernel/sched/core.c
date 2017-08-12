@@ -3422,21 +3422,46 @@ pick_next_task(struct rq *rq)
 	for_each_class(class) {
 	// for (class = sched_class_highest; class; class = class->next)
 
-		// [f1] sched_class_highest: &stop_sched_class
+		// [f1] class: &stop_sched_class
 		// [f1] class->pick_next_task: (&stop_sched_class)->pick_next_task: pick_next_task_stop, rq: [pcp0] &runqueues
 		// [f1] pick_next_task_stop([pcp0] &runqueues): NULL
-		// [f2] sched_class_highest: &rt_sched_class
+		// [f2] class: &rt_sched_class
 		// [f2] class->pick_next_task: (&rt_sched_class)->pick_next_task: pick_next_task_rt, rq: [pcp0] &runqueues
 		// [f2] pick_next_task_rt([pcp0] &runqueues): NULL
+		//
+		// [f3] class: &fair_sched_class
+		// [f3] class->pick_next_task: (&fair_sched_class)->pick_next_task: pick_next_task_fair, rq: [pcp0] &runqueues
+		// [f3] pick_next_task_fair([pcp0] &runqueues): kmem_cache#15-oX (struct task_struct) (pid: 1)
 		p = class->pick_next_task(rq);
 		// [f1] p: NULL
 		// [f2] p: NULL
+		// [f3] p: kmem_cache#15-oX (struct task_struct) (pid: 1)
+
+		// [f3] pick_next_task_fair 에서 한일:
+		// [pcp0] &(&runqueues)->cfs 의 rb tree에 등록된 task rbnode를 찾아 먼저 등록된 left most 인 task 주소를 찾아 리텀함
+		//
+		// [pcp0] (&(&runqueues)->cfs)->rb_leftmost: &(&(kmem_cache#15-oX (struct task_struct))->se)->run_node (pid 2)
+		/*
+		// rb tree 의 root인 [pcp0] &(&(&runqueues)->cfs)->tasks_timeline 에
+		// rb node인 &(&(kmem_cache#15-oX (struct task_struct))->se)->run_node 가 삭제되어 rb tree 구성
+		//
+		//                            task ID: 2-b
+		//                            /           \
+		*/
+		// (&(kmem_cache#15-oX (struct task_struct))->se (pid: 1))->exec_start: 현재의 schedule 시간값
+		// [pcp0] (&(&runqueues)->cfs)->curr: NULL: &(kmem_cache#15-oX (struct task_struct))->se (pid: 1)
+		// (&(kmem_cache#15-oX (struct task_struct))->se (pid: 1))->prev_sum_exec_runtime: 0
+
 
 		// [f1] p: NULL
 		// [f2] p: NULL
+		// [f3] p: kmem_cache#15-oX (struct task_struct) (pid: 1)
 		if (p)
+			// [f3] p: kmem_cache#15-oX (struct task_struct) (pid: 1)
 			return p;
+			// [f3] return kmem_cache#15-oX (struct task_struct) (pid: 1)
 // 2017/07/29 종료
+// 2017/08/12 시작
 
 		// [f1] class->next: (&stop_sched_class)->next: &rt_sched_class
 		// [f2] class->next: (&rt_sched_class)->next: &fair_sched_class
@@ -3613,7 +3638,27 @@ need_resched:
 	// [pcp0] (&(&runqueues)->cfs)->curr: NULL
 
 	// rq: [pcp0] &runqueues
+	// pick_next_task([pcp0] &runqueues): kmem_cache#15-oX (struct task_struct) (pid: 1)
 	next = pick_next_task(rq);
+	// next: kmem_cache#15-oX (struct task_struct) (pid: 1)
+
+	// pick_next_task 에서 한일:
+	// [pcp0] &(&runqueues)->cfs 의 rb tree에 등록된 task rbnode를 찾아 먼저 등록된 left most 인 task 주소를 찾아 리텀함
+	//
+	// [pcp0] (&(&runqueues)->cfs)->rb_leftmost: &(&(kmem_cache#15-oX (struct task_struct))->se)->run_node (pid 2)
+	/*
+	// rb tree 의 root인 [pcp0] &(&(&runqueues)->cfs)->tasks_timeline 에
+	// rb node인 &(&(kmem_cache#15-oX (struct task_struct))->se)->run_node 가 삭제되어 rb tree 구성
+	//
+	//                            task ID: 2-b
+	//                            /           \
+	*/
+	// (&(kmem_cache#15-oX (struct task_struct))->se (pid: 1))->exec_start: 현재의 schedule 시간값
+	// [pcp0] (&(&runqueues)->cfs)->curr: NULL: &(kmem_cache#15-oX (struct task_struct))->se (pid: 1)
+	// (&(kmem_cache#15-oX (struct task_struct))->se (pid: 1))->prev_sum_exec_runtime: 0
+
+// 2017/08/12 종료
+
 	clear_tsk_need_resched(prev);
 	clear_preempt_need_resched();
 	rq->skip_clock_update = 0;
