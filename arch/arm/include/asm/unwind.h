@@ -54,6 +54,7 @@ extern void unwind_backtrace(struct pt_regs *regs, struct task_struct *tsk);
 
 #ifdef CONFIG_ARM_UNWIND // CONFIG_ARM_UNWIND=y
 // ARM10C 20131116
+// ARM10C 20170819
 #define UNWIND(code...)		code
 #else
 #define UNWIND(code...)

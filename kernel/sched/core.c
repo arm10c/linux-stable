@@ -2783,7 +2783,7 @@ void wake_up_new_task(struct task_struct *p)
 	// &(kmem_cache#15-oX (struct task_struct))->pi_lock 을 사용하여 spin unlock를 하고 flags에 cpsr 복원
 }
 
-#ifdef CONFIG_PREEMPT_NOTIFIERS
+#ifdef CONFIG_PREEMPT_NOTIFIERS // CONFIG_PREEMPT_NOTIFIERS=n
 
 /**
  * preempt_notifier_register - tell me when current is being preempted & rescheduled
@@ -2831,6 +2831,7 @@ static void fire_sched_in_preempt_notifiers(struct task_struct *curr)
 {
 }
 
+// prev: &init_task, next: kmem_cache#15-oX (struct task_struct) (pid: 1)
 static void
 fire_sched_out_preempt_notifiers(struct task_struct *curr,
 				 struct task_struct *next)
@@ -2852,16 +2853,32 @@ fire_sched_out_preempt_notifiers(struct task_struct *curr,
  * prepare_task_switch sets up locking and calls architecture specific
  * hooks.
  */
+// ARM10C 20170819
+// rq: [pcp0] &runqueues, prev: &init_task, next: kmem_cache#15-oX (struct task_struct) (pid: 1)
 static inline void
 prepare_task_switch(struct rq *rq, struct task_struct *prev,
 		    struct task_struct *next)
 {
-	trace_sched_switch(prev, next);
-	sched_info_switch(rq, prev, next);
-	perf_event_task_sched_out(prev, next);
-	fire_sched_out_preempt_notifiers(prev, next);
+	// prev: &init_task, next: kmem_cache#15-oX (struct task_struct) (pid: 1)
+	trace_sched_switch(prev, next); // null function
+
+	// rq: [pcp0] &runqueues, prev: &init_task, next: kmem_cache#15-oX (struct task_struct) (pid: 1)
+	sched_info_switch(rq, prev, next); // null function
+
+	// prev: &init_task, next: kmem_cache#15-oX (struct task_struct) (pid: 1)
+	perf_event_task_sched_out(prev, next); // null function
+
+	// prev: &init_task, next: kmem_cache#15-oX (struct task_struct) (pid: 1)
+	fire_sched_out_preempt_notifiers(prev, next); // null function
+
+	// rq: [pcp0] &runqueues, next: kmem_cache#15-oX (struct task_struct) (pid: 1)
 	prepare_lock_switch(rq, next);
-	prepare_arch_switch(next);
+
+	// prepare_lock_switch 에서 한일:
+	// (kmem_cache#15-oX (struct task_struct) (pid: 1))->on_cpu: 1
+
+	// next: kmem_cache#15-oX (struct task_struct) (pid: 1)
+	prepare_arch_switch(next); // null function
 }
 
 /**
@@ -2991,33 +3008,61 @@ asmlinkage void schedule_tail(struct task_struct *prev)
  * context_switch - switch to the new MM and the new
  * thread's register state.
  */
+// ARM10C 20170819
+// rq: [pcp0] &runqueues, prev: &init_task, next: kmem_cache#15-oX (struct task_struct) (pid: 1)
 static inline void
 context_switch(struct rq *rq, struct task_struct *prev,
 	       struct task_struct *next)
 {
 	struct mm_struct *mm, *oldmm;
 
+	// rq: [pcp0] &runqueues, prev: &init_task, next: kmem_cache#15-oX (struct task_struct) (pid: 1)
 	prepare_task_switch(rq, prev, next);
 
+	// prepare_task_switch 에서 한일:
+	// (kmem_cache#15-oX (struct task_struct) (pid: 1))->on_cpu: 1
+
+	// next->mm: (kmem_cache#15-oX (struct task_struct) (pid: 1))->mm: NULL
 	mm = next->mm;
+	// mm: NULL
+
+	// prev->active_mm: (&init_task)->active_mm: &init_mm
 	oldmm = prev->active_mm;
+	// oldmm: &init_mm
 	/*
 	 * For paravirt, this is coupled with an exit in switch_to to
 	 * combine the page table reload and the switch backend into
 	 * one hypercall.
 	 */
-	arch_start_context_switch(prev);
+	// prev: &init_task
+	arch_start_context_switch(prev); // null function
 
+	// mm: NULL
 	if (!mm) {
+		// next->->active_mm: (kmem_cache#15-oX (struct task_struct) (pid: 1))->active_mm: NULL, oldmm: &init_mm
 		next->active_mm = oldmm;
+		// next->->active_mm: (kmem_cache#15-oX (struct task_struct) (pid: 1))->active_mm: &init_mm
+
+		// &oldmm->mm_count: &(&init_mm)->mm_count
 		atomic_inc(&oldmm->mm_count);
-		enter_lazy_tlb(oldmm, next);
+
+		// atomic_inc 에서 한일:
+		// init_mm.mm_count: 3
+
+		// oldmm: &init_mm, next: kmem_cache#15-oX (struct task_struct) (pid: 1)
+		enter_lazy_tlb(oldmm, next); // null function
 	} else
 		switch_mm(oldmm, mm, next);
 
+	// prev->mm: (&init_task)->mm: NULL
 	if (!prev->mm) {
+		// prev->active_mm: (&init_task)->active_mm: &init_mm
 		prev->active_mm = NULL;
+		// prev->active_mm: (&init_task)->active_mm: NULL
+
+		// rq->prev_mm: [pcp0] (&runqueues)->prev_mm: NULL, oldmm: &init_mm
 		rq->prev_mm = oldmm;
+		// rq->prev_mm: [pcp0] (&runqueues)->prev_mm: &init_mm
 	}
 	/*
 	 * Since the runqueue lock will be released by the next
@@ -3025,12 +3070,18 @@ context_switch(struct rq *rq, struct task_struct *prev,
 	 * of the scheduler it's an obvious special-case), so we
 	 * do an early lockdep release here:
 	 */
-#ifndef __ARCH_WANT_UNLOCKED_CTXSW
-	spin_release(&rq->lock.dep_map, 1, _THIS_IP_);
+#ifndef __ARCH_WANT_UNLOCKED_CTXSW // undefined
+	// &rq->lock.dep_map: [pcp0] &(&runqueues)->lock.dep_map
+	spin_release(&rq->lock.dep_map, 1, _THIS_IP_); // null function
 #endif
 
-	context_tracking_task_switch(prev, next);
+	// prev: &init_task, next: kmem_cache#15-oX (struct task_struct) (pid: 1)
+	context_tracking_task_switch(prev, next); // null function
+
+// 2017/08/19 종료
+
 	/* Here we just switch the register state and the stack. */
+	// prev: &init_task, next: kmem_cache#15-oX (struct task_struct) (pid: 1)
 	switch_to(prev, next, prev);
 
 	barrier();
@@ -3658,16 +3709,35 @@ need_resched:
 	// (&(kmem_cache#15-oX (struct task_struct))->se (pid: 1))->prev_sum_exec_runtime: 0
 
 // 2017/08/12 종료
+// 2017/08/19 시작
 
+	// prev: &init_task
 	clear_tsk_need_resched(prev);
-	clear_preempt_need_resched();
+
+	// clear_tsk_need_resched 에서 한일:
+	// (((struct thread_info *)(&init_task))->flags 의 1 bit 값을 clear 수행
+
+	clear_preempt_need_resched(); // null function
+
+	// rq->skip_clock_update: [pcp0] (&runqueues)->skip_clock_update
 	rq->skip_clock_update = 0;
+	// rq->skip_clock_update: [pcp0] (&runqueues)->skip_clock_update: 0
 
+	// prev: &init_task, next: kmem_cache#15-oX (struct task_struct) (pid: 1)
 	if (likely(prev != next)) {
+		// rq->nr_switches: [pcp0] (&runqueues)->nr_switches: 0
 		rq->nr_switches++;
-		rq->curr = next;
-		++*switch_count;
+		// rq->nr_switches: [pcp0] (&runqueues)->nr_switches: 1
 
+		// rq->curr: [pcp0] (&runqueues)->curr: &init_task, next: kmem_cache#15-oX (struct task_struct) (pid: 1)
+		rq->curr = next;
+		// rq->curr: [pcp0] (&runqueues)->curr: kmem_cache#15-oX (struct task_struct) (pid: 1)
+
+		// *switch_count: (&init_task)->nivcsw: 0
+		++*switch_count;
+		// *switch_count: (&init_task)->nivcsw: 1
+
+		// rq: [pcp0] &runqueues, prev: &init_task, next: kmem_cache#15-oX (struct task_struct) (pid: 1)
 		context_switch(rq, prev, next); /* unlocks the rq */
 		/*
 		 * The context switch have flipped the stack from under us

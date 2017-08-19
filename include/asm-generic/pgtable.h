@@ -441,6 +441,8 @@ static inline void ptep_modify_prot_commit(struct mm_struct *mm,
  * definition.
  */
 #ifndef __HAVE_ARCH_START_CONTEXT_SWITCH
+// ARM10C 20170819
+// prev: &init_task
 #define arch_start_context_switch(prev)	do {} while (0)
 #endif
 

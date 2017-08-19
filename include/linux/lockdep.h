@@ -594,6 +594,8 @@ static inline void print_irqtrace_events(struct task_struct *curr)
 #define spin_acquire(l, s, t, i)		lock_acquire_exclusive(l, s, t, NULL, i)
 #define spin_acquire_nest(l, s, t, n, i)	lock_acquire_exclusive(l, s, t, n, i)
 // ARM10C 20140412
+// ARM10C 20170819
+// &rq->lock.dep_map: [pcp0] &(&runqueues)->lock.dep_map, 1, _THIS_IP_
 #define spin_release(l, n, i)			lock_release(l, n, i)
 
 // ARM10C 20140125

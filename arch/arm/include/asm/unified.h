@@ -50,6 +50,7 @@
 #define PSR_ISETSTATE	0
 
 #define ARM(x...)	x
+// ARM10C 20170819
 #define THUMB(x...)
 #ifdef __ASSEMBLY__
 // instr.w의 의미는? Thumb2모드의 32bit (wide) instruction임을 가르켜 줌

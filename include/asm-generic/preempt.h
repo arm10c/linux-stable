@@ -66,6 +66,7 @@ static __always_inline void set_preempt_need_resched(void)
 {
 }
 
+// ARM10C 20170819
 static __always_inline void clear_preempt_need_resched(void)
 {
 }

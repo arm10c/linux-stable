@@ -539,6 +539,7 @@ struct autogroup;
 // ARM10C 20150919
 // ARM10C 20160903
 // ARM10C 20161105
+// ARM10C 20170819
 // sizeof(struct signal_struct): 536 bytes
 struct signal_struct {
 	atomic_t		sigcnt;
@@ -2646,6 +2647,8 @@ static inline void threadgroup_unlock(struct task_struct *tsk) {}
 // tsk: &init_task
 // ARM10C 20170520
 // tsk: &init_task
+// ARM10C 20170819
+// tsk: &init_task
 #define task_thread_info(task)	((struct thread_info *)(task)->stack)
 // ARM10C 20161105
 // p: kmem_cache#15-oX (struct task_struct)
@@ -2718,6 +2721,8 @@ static inline void set_tsk_thread_flag(struct task_struct *tsk, int flag)
 // tsk: kmem_cache#15-oX (struct task_struct), TIF_NEED_RESCHED: 1
 // ARM10C 20161203
 // p: kmem_cache#15-oX (struct task_struct), TIF_SYSCALL_TRACE: 8
+// ARM10C 20170819
+// tsk: &init_task, TIF_NEED_RESCHED: 1
 static inline void clear_tsk_thread_flag(struct task_struct *tsk, int flag)
 {
 	// tsk: kmem_cache#15-oX (struct task_struct), flag: 1
@@ -2726,6 +2731,7 @@ static inline void clear_tsk_thread_flag(struct task_struct *tsk, int flag)
 	// tsk: kmem_cache#15-oX (struct task_struct), flag: 8
 	// ((struct thread_info *)(kmem_cache#15-oX (struct task_struct))->stack): 할당 받은 page 2개의 메로리의 가상 주소
 	// task_thread_info(kmem_cache#15-oX (struct task_struct)): ((struct thread_info *)(할당 받은 page 2개의 메로리의 가상 주소), flag: 8
+	// tsk: &init_task, flag: 1, task_thread_info(&init_task): ((struct thread_info *)(&init_task)->stack)
 	clear_ti_thread_flag(task_thread_info(tsk), flag);
 
 	// clear_ti_thread_flag 에서 한일:
@@ -2733,6 +2739,9 @@ static inline void clear_tsk_thread_flag(struct task_struct *tsk, int flag)
 
 	// clear_ti_thread_flag 에서 한일:
 	// (((struct thread_info *)(할당 받은 page 2개의 메로리의 가상 주소))->flags 의 8 bit 값을 clear 수행
+
+	// clear_ti_thread_flag 에서 한일:
+	// (((struct thread_info *)(&init_task))->flags 의 1 bit 값을 clear 수행
 }
 
 static inline int test_and_set_tsk_thread_flag(struct task_struct *tsk, int flag)
@@ -2769,13 +2778,19 @@ static inline void set_tsk_need_resched(struct task_struct *tsk)
 
 // ARM10C 20160903
 // tsk: kmem_cache#15-oX (struct task_struct)
+// ARM10C 20170819
+// prev: &init_task
 static inline void clear_tsk_need_resched(struct task_struct *tsk)
 {
 	// tsk: kmem_cache#15-oX (struct task_struct), TIF_NEED_RESCHED: 1
+	// tsk: &init_task, TIF_NEED_RESCHED: 1
 	clear_tsk_thread_flag(tsk,TIF_NEED_RESCHED);
 
 	// clear_tsk_thread_flag 에서 한일:
 	// (((struct thread_info *)(할당 받은 page 2개의 메로리의 가상 주소))->flags 의 1 bit 값을 clear 수행
+
+	// clear_tsk_thread_flag 에서 한일:
+	// (((struct thread_info *)(&init_task))->flags 의 1 bit 값을 clear 수행
 }
 
 // ARM10C 20170520

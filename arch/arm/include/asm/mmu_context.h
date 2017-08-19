@@ -102,6 +102,8 @@ static inline void finish_arch_post_lock_switch(void)
  * tsk->mm will be NULL
  */
 // ARM10C 20140913
+// ARM10C 20170819
+// oldmm: &init_mm, next: kmem_cache#15-oX (struct task_struct) (pid: 1)
 static inline void
 enter_lazy_tlb(struct mm_struct *mm, struct task_struct *tsk)
 {

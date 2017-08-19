@@ -469,6 +469,7 @@ extern struct root_domain def_root_domain;
 // ARM10C 20170715
 // ARM10C 20170720
 // ARM10C 20170729
+// ARM10C 20170819
 struct rq {
 	/* runqueue lock: */
 	raw_spinlock_t lock;
@@ -1068,6 +1069,8 @@ static inline int task_running(struct rq *rq, struct task_struct *p)
 
 
 #ifndef prepare_arch_switch
+// ARM10C 20170819
+// next: kmem_cache#15-oX (struct task_struct) (pid: 1)
 # define prepare_arch_switch(next)	do { } while (0)
 #endif
 #ifndef finish_arch_switch
@@ -1077,16 +1080,20 @@ static inline int task_running(struct rq *rq, struct task_struct *p)
 # define finish_arch_post_lock_switch()	do { } while (0)
 #endif
 
-#ifndef __ARCH_WANT_UNLOCKED_CTXSW
+#ifndef __ARCH_WANT_UNLOCKED_CTXSW // undefined
+// ARM10C 20170819
+// rq: [pcp0] &runqueues, next: kmem_cache#15-oX (struct task_struct) (pid: 1)
 static inline void prepare_lock_switch(struct rq *rq, struct task_struct *next)
 {
-#ifdef CONFIG_SMP
+#ifdef CONFIG_SMP // CONFIG_SMP=y
 	/*
 	 * We can optimise this out completely for !SMP, because the
 	 * SMP rebalancing from interrupt is the only thing that cares
 	 * here.
 	 */
+	// next->on_cpu: (kmem_cache#15-oX (struct task_struct) (pid: 1))->on_cpu
 	next->on_cpu = 1;
+	// next->on_cpu: (kmem_cache#15-oX (struct task_struct) (pid: 1))->on_cpu: 1
 #endif
 }
 

@@ -20,6 +20,7 @@
 // ARM10C 20150808
 // ARM10C 20160820
 // ARM10C 20160827
+// ARM10C 20170819
 struct mm_struct init_mm = {
 	.mm_rb		= RB_ROOT,
 	// 연산결과 swapper_pg_dir : 0xc0004000

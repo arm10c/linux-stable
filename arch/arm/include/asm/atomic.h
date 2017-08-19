@@ -337,6 +337,8 @@ static inline int __atomic_add_unless(atomic_t *v, int a, int u)
 // &ns->count: &(&init_nsproxy)->count
 // ARM10C 20161112
 // &pde->count: &(&proc_root)->count
+// ARM10C 20170819
+// &oldmm->mm_count: &(&init_mm)->mm_count
 #define atomic_inc(v)		atomic_add(1, v)
 // ARM10C 20150912
 // ARM10C 20160319

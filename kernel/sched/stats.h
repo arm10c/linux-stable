@@ -160,6 +160,8 @@ sched_info_switch(struct rq *rq,
 #define sched_info_dequeued(rq, t)		do { } while (0)
 #define sched_info_depart(rq, t)		do { } while (0)
 #define sched_info_arrive(rq, next)		do { } while (0)
+// ARM10C 20170819
+// rq: [pcp0] &runqueues, prev: &init_task, next: kmem_cache#15-oX (struct task_struct) (pid: 1)
 #define sched_info_switch(rq, t, next)		do { } while (0)
 #endif /* CONFIG_SCHEDSTATS || CONFIG_TASK_DELAY_ACCT */
 

@@ -113,6 +113,8 @@ static inline long __trace_sched_switch_state(struct task_struct *p)
 /*
  * Tracepoint for task switches, performed by the scheduler:
  */
+// ARM10C 20170819
+// prev: &init_task, next: kmem_cache#15-oX (struct task_struct) (pid: 1)
 TRACE_EVENT(sched_switch,
 
 	TP_PROTO(struct task_struct *prev,

@@ -773,6 +773,8 @@ extern void perf_event_task_tick(void);
 static inline void
 perf_event_task_sched_in(struct task_struct *prev,
 			 struct task_struct *task)			{ }
+// ARM10C 20170819
+// prev: &init_task, next: kmem_cache#15-oX (struct task_struct) (pid: 1)
 static inline void
 perf_event_task_sched_out(struct task_struct *prev,
 			  struct task_struct *next)			{ }

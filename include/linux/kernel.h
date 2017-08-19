@@ -154,6 +154,7 @@
 // ARM10C 20140614
 // ARM10C 20141129
 #define _RET_IP_		(unsigned long)__builtin_return_address(0)
+// ARM10C 20170819
 #define _THIS_IP_  ({ __label__ __here; __here: (unsigned long)&&__here; })
 
 #ifdef CONFIG_LBDAF

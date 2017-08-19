@@ -45,6 +45,7 @@ struct exec_domain;
 typedef unsigned long mm_segment_t;
 
 // ARM10C 20161105
+// ARM10C 20170819
 // sizeof(struct cpu_context_save): 48 bytes
 struct cpu_context_save {
 	__u32	r4;
@@ -81,6 +82,7 @@ struct arm_restart_block {
 // ARM10C 20160910
 // ARM10C 20161029
 // ARM10C 20161105
+// ARM10C 20170819
 struct thread_info {
 	unsigned long		flags;		/* low level flags */
 	int			preempt_count;	/* 0 => preemptable, <0 => bug */

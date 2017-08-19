@@ -786,26 +786,94 @@ ENDPROC(ret_from_exception)
  * r0 = previous task_struct, r1 = previous thread_info, r2 = next thread_info
  * previous and next are guaranteed not to be the same.
  */
+/*
+ * r0-r15 및 R0-R15
+ * a1-a4 (인수, 결과 또는 스크래치 레지스터, r0 ~ r3의 동의어)
+ * v1-v8 (변수 레지스터, r4 ~ r11)
+ * sb 및 SB (정적 기준, r9)
+ * ip 및 IP (내부 프로시저 호출 스크래치 레지스터, r12)
+ * sp 및 SP (스택 포인터, r13)
+ * lr 및 LR (링크 레지스터, r14)
+ * pc 및 PC (프로그램 카운터, r15))
+
+ * ARM Registers
+ * General-purpose registers 
+ * 32 bits in size 
+ * Data 나 주소를 저장 
+ * 18 active registers in user mode 
+ * 16 data registers : r0 to r15 
+ * 2 processor status registers : cpsr, spsr 
+ * 프로세서의 모드에 따라 프로그래머가 사용할 수 있는 register가 다르다.
+ * r0-r3 
+ * Argument, result, scratch 
+ * r0-r3의 내용이 다시 필요하면 calling routine이 r0-r3의 내용을 보존하여야 함.
+ * r4-r7 
+ * Variable register (ARM 과 Thumb 양쪽) 
+ * Called routine이 이 register를 사용하였다면, 돌아가기 전에 그 내용을 복원하여야 한다.
+ * r8 
+ * ARM variable register 
+ * Called routine이 이 register를 사용하였다면, 돌아가기 전에 그 내용을 복원하여야 한다.
+ * r9 
+ * ARM variable register 
+ * Read-Write Position Independence에서 static base (sb) register 
+ * Called routine이 이 register를 사용하였다면, 돌아가기 전에 그 내용을 복원하여야 한다. 
+ * r10 
+ * ARM variable register 
+ * Stack check이 일어날 때  stack limit (sl) potinter 
+ * Called routine이 이 register를 사용하였다면, 돌아가기 전에 그 내용을 복원하여야 한다.
+ * r11 
+ * ARM variable register 
+ * Called routine이 이 register를 사용하였다면, 돌아가기 전에 그 내용을 복원하여야 한다.
+ * r12 
+ * ARM variable register (ip, intra-procedure-call scratch register) 
+ * Procedure linkage veneer (ARM-Thumb)에 사용 
+ * Called routine이 이 register를 사용하였더라도, 돌아가기 전에 그 내용을 복원할 필요가 없다.
+ * r13 
+ * Stack pointer (sp) 
+ * 현재 프로세서 모드의 stack top을 가리킨다. 
+ * Called routine의 exit에서 이 register의 값은 entry에서 값과 같아야 한다.
+ * r14 
+ * Link register (lr) 
+ * Subroutine을 부를 때 return address를 저장한다. 
+ * Return 주소를 메모리에 저장하면 이 register를 자유로이 사용할 수 있다.
+ * r15 
+ * Program counter (pc) 
+ * 프로세서에 의해 fetch될 다음 instruction 주소를 가진다. 
+ * 다른 용도로 사용할 수 없다.
+ * 주의 
+ * r13 과 r14 는 general-purpose register로도 쓰일 수 있다. 
+ * 하지만,  r13 을 general-purpose register로 쓰는 것은 위험하다. 
+ * OS는 r13 가 항상 유효한 stack frame을 가리키는 것으로 가정한다.
+ */
+// ARM10C 20170819
+// &init_task, &init_task (struct thread_info), kmem_cache#15-oX (struct thread_info) (pid: 1)
 ENTRY(__switch_to)
  UNWIND(.fnstart	)
  UNWIND(.cantunwind	)
+	 // r1: &init_task (struct thread_info), TI_CPU_SAVE: 28
 	add	ip, r1, #TI_CPU_SAVE
+	// ip: (&init_task (struct thread_info))->cpu_context
+
+	// ip: (&init_task (struct thread_info))->cpu_context
  ARM(	stmia	ip!, {r4 - sl, fp, sp, lr} )	@ Store most regs on stack
+	// (&init_task (struct thread_info))->cpu_context 의 맴버값 r4-pc 가 순차적으로 저장툄
+
  THUMB(	stmia	ip!, {r4 - sl, fp}	   )	@ Store most regs on stack
  THUMB(	str	sp, [ip], #4		   )
  THUMB(	str	lr, [ip], #4		   )
+	 // TI_TP_VALUE: 96
 	ldr	r4, [r2, #TI_TP_VALUE]
 	ldr	r5, [r2, #TI_TP_VALUE + 4]
-#ifdef CONFIG_CPU_USE_DOMAINS
+#ifdef CONFIG_CPU_USE_DOMAINS // CONFIG_CPU_USE_DOMAINS=n
 	ldr	r6, [r2, #TI_CPU_DOMAIN]
 #endif
 	switch_tls r1, r4, r5, r3, r7
-#if defined(CONFIG_CC_STACKPROTECTOR) && !defined(CONFIG_SMP)
+#if defined(CONFIG_CC_STACKPROTECTOR) && !defined(CONFIG_SMP) // CONFIG_CC_STACKPROTECTOR=n, CONFIG_SMP=y
 	ldr	r7, [r2, #TI_TASK]
 	ldr	r8, =__stack_chk_guard
 	ldr	r7, [r7, #TSK_STACK_CANARY]
-#endif
-#ifdef CONFIG_CPU_USE_DOMAINS
+#endi
+#ifdef CONFIG_CPU_USE_DOMAINS // CONFIG_CPU_USE_DOMAINS=n
 	mcr	p15, 0, r6, c3, c0, 0		@ Set domain register
 #endif
 	mov	r5, r0
@@ -813,7 +881,7 @@ ENTRY(__switch_to)
 	ldr	r0, =thread_notify_head
 	mov	r1, #THREAD_NOTIFY_SWITCH
 	bl	atomic_notifier_call_chain
-#if defined(CONFIG_CC_STACKPROTECTOR) && !defined(CONFIG_SMP)
+#if defined(CONFIG_CC_STACKPROTECTOR) && !defined(CONFIG_SMP) // CONFIG_CC_STACKPROTECTOR=n, CONFIG_SMP=y
 	str	r7, [r8]
 #endif
  THUMB(	mov	ip, r4			   )
