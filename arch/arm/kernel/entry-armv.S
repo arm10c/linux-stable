@@ -872,7 +872,7 @@ ENTRY(__switch_to)
 	ldr	r7, [r2, #TI_TASK]
 	ldr	r8, =__stack_chk_guard
 	ldr	r7, [r7, #TSK_STACK_CANARY]
-#endi
+#endif
 #ifdef CONFIG_CPU_USE_DOMAINS // CONFIG_CPU_USE_DOMAINS=n
 	mcr	p15, 0, r6, c3, c0, 0		@ Set domain register
 #endif
