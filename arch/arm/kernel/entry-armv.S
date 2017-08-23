@@ -846,11 +846,12 @@ ENDPROC(ret_from_exception)
  * OS는 r13 가 항상 유효한 stack frame을 가리키는 것으로 가정한다.
  */
 // ARM10C 20170819
+// ARM10C 20170823
 // &init_task, &init_task (struct thread_info), kmem_cache#15-oX (struct thread_info) (pid: 1)
 ENTRY(__switch_to)
  UNWIND(.fnstart	)
  UNWIND(.cantunwind	)
-	 // r1: &init_task (struct thread_info), TI_CPU_SAVE: 28
+	// r1: &init_task (struct thread_info), TI_CPU_SAVE: 28
 	add	ip, r1, #TI_CPU_SAVE
 	// ip: (&init_task (struct thread_info))->cpu_context
 
@@ -861,13 +862,33 @@ ENTRY(__switch_to)
  THUMB(	stmia	ip!, {r4 - sl, fp}	   )	@ Store most regs on stack
  THUMB(	str	sp, [ip], #4		   )
  THUMB(	str	lr, [ip], #4		   )
-	 // TI_TP_VALUE: 96
+	// TI_TP_VALUE: 96, r2: kmem_cache#15-oX (struct thread_info) (pid: 1)
 	ldr	r4, [r2, #TI_TP_VALUE]
+	// r4: (kmem_cache#15-oX (struct thread_info) (pid: 1))->tp_value[0]
+
+	// TI_TP_VALUE: 96, r2: kmem_cache#15-oX (struct thread_info) (pid: 1)
 	ldr	r5, [r2, #TI_TP_VALUE + 4]
+	// r5: (kmem_cache#15-oX (struct thread_info) (pid: 1))->tp_value[1]
 #ifdef CONFIG_CPU_USE_DOMAINS // CONFIG_CPU_USE_DOMAINS=n
 	ldr	r6, [r2, #TI_CPU_DOMAIN]
 #endif
+
 	switch_tls r1, r4, r5, r3, r7
+	// mrc p15, 0, \r7, c13, c0, 2	      @ get the user r/w register
+	// r7: TPIDRURW 값
+
+	// r4: (kmem_cache#15-oX (struct thread_info) (pid: 1))->tp_value[0]: 0
+	// mcr p15, 0, \r4, c13, c0, 3	      @ set TLS register
+	// TPIDRURO: 0
+
+	// r5: (kmem_cache#15-oX (struct thread_info) (pid: 1))->tp_value[1]: TPIDRURW의 읽은 값 (pid 1)
+	// mcr p15, 0, \r5, c13, c0, 2	      @ and the user r/w register
+	// TPIDRURW: TPIDRURW의 읽은 값 (pid 1)
+
+	// r7: TPIDRURW 값, r1: &init_task (struct thread_info), TI_TP_VALUE: 96
+	// str \r7, [\r1, #TI_TP_VALUE + 4]   @ save it
+	// r7: (&init_task (struct thread_info)))->tp_value[1]: TPIDRURW 값
+
 #if defined(CONFIG_CC_STACKPROTECTOR) && !defined(CONFIG_SMP) // CONFIG_CC_STACKPROTECTOR=n, CONFIG_SMP=y
 	ldr	r7, [r2, #TI_TASK]
 	ldr	r8, =__stack_chk_guard
@@ -876,17 +897,40 @@ ENTRY(__switch_to)
 #ifdef CONFIG_CPU_USE_DOMAINS // CONFIG_CPU_USE_DOMAINS=n
 	mcr	p15, 0, r6, c3, c0, 0		@ Set domain register
 #endif
+	// r0: &init_task
 	mov	r5, r0
+	// r5: &init_task
+
+	// r2: kmem_cache#15-oX (struct thread_info) (pid: 1), TI_CPU_SAVE: 28
 	add	r4, r2, #TI_CPU_SAVE
+	// r4: (kmem_cache#15-oX (struct thread_info) (pid: 1))->cpu_context
+
 	ldr	r0, =thread_notify_head
+	// r0: &thread_notify_head
+
+	// THREAD_NOTIFY_SWITCH: 2
 	mov	r1, #THREAD_NOTIFY_SWITCH
+	// r1: 2
+
 	bl	atomic_notifier_call_chain
+
+	// atomic_notifier_call_chain 에서 한일:
+	// &thread_notify_head 에 등록된 notifier 함수들을 순차적으로 호출 실행함
+
 #if defined(CONFIG_CC_STACKPROTECTOR) && !defined(CONFIG_SMP) // CONFIG_CC_STACKPROTECTOR=n, CONFIG_SMP=y
 	str	r7, [r8]
 #endif
  THUMB(	mov	ip, r4			   )
+
+	// r5: &init_task
 	mov	r0, r5
+	// r0: &init_task
+
+	// r4: (kmem_cache#15-oX (struct thread_info) (pid: 1))->cpu_context
  ARM(	ldmia	r4, {r4 - sl, fp, sp, pc}  )	@ Load all regs saved previously
+	// (kmem_cache#15-oX (struct thread_info) (pid: 1))->cpu_context 의 맴버값이
+	// register 값 r4-sl, fp, sp, pc 가 순차적으로 로드됨
+
  THUMB(	ldmia	ip!, {r4 - sl, fp}	   )	@ Load all regs saved previously
  THUMB(	ldr	sp, [ip], #4		   )
  THUMB(	ldr	pc, [ip]		   )

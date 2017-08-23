@@ -771,6 +771,7 @@ extern int __perf_event_disable(void *info);
 extern void perf_event_task_tick(void);
 #else
 static inline void
+// ARM10C 20170823
 perf_event_task_sched_in(struct task_struct *prev,
 			 struct task_struct *task)			{ }
 // ARM10C 20170819

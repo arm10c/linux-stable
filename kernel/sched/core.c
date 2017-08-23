@@ -2827,6 +2827,8 @@ fire_sched_out_preempt_notifiers(struct task_struct *curr,
 
 #else /* !CONFIG_PREEMPT_NOTIFIERS */
 
+// ARM10C 20170823
+// current: kmem_cache#15-oX (struct task_struct) (pid: 1)
 static void fire_sched_in_preempt_notifiers(struct task_struct *curr)
 {
 }
@@ -2896,13 +2898,20 @@ prepare_task_switch(struct rq *rq, struct task_struct *prev,
  * with the lock held can cause deadlocks; see schedule() for
  * details.)
  */
+// ARM10C 20170823
+// this_rq(),: [pcp0] &runqueues, prev: &init_task
 static void finish_task_switch(struct rq *rq, struct task_struct *prev)
 	__releases(rq->lock)
 {
+	// rq->prev_mm: [pcp0] (&runqueues)->prev_mm: &init_mm
 	struct mm_struct *mm = rq->prev_mm;
+	// mm: &init_mm
+
 	long prev_state;
 
+	// rq->prev_mm: [pcp0] (&runqueues)->prev_mm: &init_mm
 	rq->prev_mm = NULL;
+	// rq->prev_mm: [pcp0] (&runqueues)->prev_mm: NULL
 
 	/*
 	 * A task struct has one reference for the use as "current".
@@ -2915,16 +2924,46 @@ static void finish_task_switch(struct rq *rq, struct task_struct *prev)
 	 * be dropped twice.
 	 *		Manfred Spraul <manfred@colorfullife.com>
 	 */
+	// prev->state: (&init_task)->state: 0
 	prev_state = prev->state;
-	vtime_task_switch(prev);
+	// prev_state: 0
+
+	// prev: &init_task
+	vtime_task_switch(prev); // null function
+
+	// prev: &init_task
 	finish_arch_switch(prev);
-	perf_event_task_sched_in(prev, current);
+
+	// finish_arch_switch 에서 한일:
+	// 각 코어 간의 데이터를 공유, 싱크함
+
+	// prev: &init_task, current: kmem_cache#15-oX (struct task_struct) (pid: 1)
+	perf_event_task_sched_in(prev, current); // null function
+
+	// rq: [pcp0] &runqueues, prev: &init_task
 	finish_lock_switch(rq, prev);
+
+	// finish_lock_switch 에서 한일:
+	// 공유자원을 다른 cpu core가 사용할수 있게 해주는 옵션
+	// (&init_task)->on_cpu: 0
+	// [pcp0] (&runqueues)->lock.owner: kmem_cache#15-oX (struct task_struct) (pid: 1)
+	// [pcp0] &(&runqueues)->lock 을 사용한 raw spin unlock 수행
+
 	finish_arch_post_lock_switch();
 
-	fire_sched_in_preempt_notifiers(current);
+	// current: kmem_cache#15-oX (struct task_struct) (pid: 1)
+	fire_sched_in_preempt_notifiers(current); // null function
+
+	// mm: &init_mm
 	if (mm)
+		// mm: &init_mm
 		mmdrop(mm);
+
+		// mmdrop 에서 한일:
+		// (&init_mm)->mm_count: 2
+
+// 2017/08/23 종료
+
 	if (unlikely(prev_state == TASK_DEAD)) {
 		task_numa_free(prev);
 
@@ -3039,9 +3078,9 @@ context_switch(struct rq *rq, struct task_struct *prev,
 
 	// mm: NULL
 	if (!mm) {
-		// next->->active_mm: (kmem_cache#15-oX (struct task_struct) (pid: 1))->active_mm: NULL, oldmm: &init_mm
+		// next->active_mm: (kmem_cache#15-oX (struct task_struct) (pid: 1))->active_mm: NULL, oldmm: &init_mm
 		next->active_mm = oldmm;
-		// next->->active_mm: (kmem_cache#15-oX (struct task_struct) (pid: 1))->active_mm: &init_mm
+		// next->active_mm: (kmem_cache#15-oX (struct task_struct) (pid: 1))->active_mm: &init_mm
 
 		// &oldmm->mm_count: &(&init_mm)->mm_count
 		atomic_inc(&oldmm->mm_count);
@@ -3079,17 +3118,34 @@ context_switch(struct rq *rq, struct task_struct *prev,
 	context_tracking_task_switch(prev, next); // null function
 
 // 2017/08/19 종료
+// 2017/08/23 시작
 
 	/* Here we just switch the register state and the stack. */
 	// prev: &init_task, next: kmem_cache#15-oX (struct task_struct) (pid: 1)
 	switch_to(prev, next, prev);
 
+	// switch_to 에서 한일:
+	// (&init_task (struct thread_info))->cpu_context에 register r4-pc 가 순차적으로 저장툄
+	// (kmem_cache#15-oX (struct thread_info) (pid: 1))->tp_value[0]: 0 값을 TPIDRURO 에 저장함
+	// (kmem_cache#15-oX (struct thread_info) (pid: 1))->tp_value[1]: TPIDRURW의 읽은 값 (pid 1) 을 TPIDRURW에 저장함
+	// TPIDRURW: TPIDRURW의 읽은 값 (pid 1)
+	// 읽어온 TPIDRURW 값을 (&init_task (struct thread_info)))->tp_value[1] 에 저장함
+	// (&init_task (struct thread_info)))->tp_value[1]: TPIDRURW 값
+	// &thread_notify_head 에 등록된 notifier 함수들을 순차적으로 호출 실행함
+	// (kmem_cache#15-oX (struct thread_info) (pid: 1))->cpu_context 의 맴버값이
+	// register 값 r4-sl, fp, sp, pc 가 순차적으로 로드됨
+
 	barrier();
+
+	// barrier 에서 한일:
+	// 컴파일러적으로 memory barrier 를 만들어 줌
+
 	/*
 	 * this_rq must be evaluated again because prev may have moved
 	 * CPUs since it called schedule(), thus the 'rq' on its stack
 	 * frame will be invalid.
 	 */
+	// this_rq(),: [pcp0] runqueues, prev: &init_task
 	finish_task_switch(this_rq(), prev);
 }
 

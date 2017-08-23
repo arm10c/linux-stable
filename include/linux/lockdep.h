@@ -393,6 +393,7 @@ static inline void lockdep_on(void)
 // &sem->dep_map: &(&(kmem_cache#25-oX (struct super_block))->s_umount)->dep_map, 0, 0, 0, 1, NULL, _RET_IP_
 // ARM10C 20160326
 // ARM10C 20161203
+// ARM10C 20170823
 # define lock_acquire(l, s, t, r, c, n, i)	do { } while (0)
 // ARM10C 20150103
 // ARM10C 20150725
@@ -582,6 +583,8 @@ static inline void print_irqtrace_events(struct task_struct *curr)
 // &console_lock_dep_map, 0, 0, NULL, _RET_IP_
 // ARM10C 20151114
 // &sem->dep_map: &(&(kmem_cache#25-oX (struct super_block))->s_umount)->dep_map, 0, 0, NULL,  _RET_IP_
+// ARM10C 20170823
+// &rq->lock.dep_map: [pcp0] &(&runqueues)->lock.dep_map, 0, 0, NULL,  _RET_IP_
  #define lock_acquire_exclusive(l, s, t, n, i)		lock_acquire(l, s, t, 0, 1, n, i)
  #define lock_acquire_shared(l, s, t, n, i)		lock_acquire(l, s, t, 1, 1, n, i)
 // ARM10C 20160326
@@ -591,6 +594,7 @@ static inline void print_irqtrace_events(struct task_struct *curr)
 // ARM10C 20140405
 // ARM10C 20140517
 // ARM10C 20160514
+// ARM10C 20170823
 #define spin_acquire(l, s, t, i)		lock_acquire_exclusive(l, s, t, NULL, i)
 #define spin_acquire_nest(l, s, t, n, i)	lock_acquire_exclusive(l, s, t, n, i)
 // ARM10C 20140412

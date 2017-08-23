@@ -404,6 +404,7 @@ struct kioctx_table;
 // ARM10C 20150919
 // ARM10C 20161105
 // ARM10C 20170819
+// ARM10C 20170823
 // sizeof(struct mm_struct): 428 bytes
 struct mm_struct {
 	struct vm_area_struct * mmap;		/* list of VMAs */

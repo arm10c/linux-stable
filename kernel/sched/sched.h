@@ -654,7 +654,8 @@ DECLARE_PER_CPU(struct rq, runqueues);
 #define cpu_rq(cpu)		(&per_cpu(runqueues, (cpu)))
 // ARM10C 20161008
 // ARM10C 20170720
-// __get_cpu_var(runqueues): [pcp0] runqueues
+// ARM10C 20170823
+// __get_cpu_var(runqueues): [pcp0] &runqueues
 #define this_rq()		(&__get_cpu_var(runqueues))
 // ARM10C 20170201
 // p: kmem_cache#15-oX (struct task_struct)
@@ -1097,29 +1098,44 @@ static inline void prepare_lock_switch(struct rq *rq, struct task_struct *next)
 #endif
 }
 
+// ARM10C 20170823
+// rq: [pcp0] &runqueues, prev: &init_task
 static inline void finish_lock_switch(struct rq *rq, struct task_struct *prev)
 {
-#ifdef CONFIG_SMP
+#ifdef CONFIG_SMP // CONFIG_SMP=y
 	/*
 	 * After ->on_cpu is cleared, the task can be moved to a different CPU.
 	 * We must ensure this doesn't happen until the switch is completely
 	 * finished.
 	 */
 	smp_wmb();
+
+	// smp_wmb 에서 한일:
+	// 공유자원을 다른 cpu core가 사용할수 있게 해주는 옵션
+
+	// prev->on_cpu: (&init_task)->on_cpu: 1
 	prev->on_cpu = 0;
+	// prev->on_cpu: (&init_task)->on_cpu: 0
 #endif
-#ifdef CONFIG_DEBUG_SPINLOCK
+#ifdef CONFIG_DEBUG_SPINLOCK // CONFIG_DEBUG_SPINLOCK=y
 	/* this is a valid case when another task releases the spinlock */
+	// rq->lock.owner: [pcp0] (&runqueues)->lock.owner, current: kmem_cache#15-oX (struct task_struct) (pid: 1)
 	rq->lock.owner = current;
+	// rq->lock.owner: [pcp0] (&runqueues)->lock.owner: kmem_cache#15-oX (struct task_struct) (pid: 1)
 #endif
 	/*
 	 * If we are tracking spinlock dependencies then we have to
 	 * fix up the runqueue lock - which gets 'carried over' from
 	 * prev into current:
 	 */
-	spin_acquire(&rq->lock.dep_map, 0, 0, _THIS_IP_);
+	// &rq->lock.dep_map: [pcp0] &(&runqueues)->lock.dep_map
+	spin_acquire(&rq->lock.dep_map, 0, 0, _THIS_IP_); // null function
 
+	// &rq->lock: [pcp0] &(&runqueues)->lock
 	raw_spin_unlock_irq(&rq->lock);
+
+	// raw_spin_unlock_irq 에서 한일:
+	// [pcp0] &(&runqueues)->lock 을 사용한 raw spin unlock 수행
 }
 
 #else /* __ARCH_WANT_UNLOCKED_CTXSW */

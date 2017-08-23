@@ -6,6 +6,13 @@
 	.macro switch_tls_none, base, tp, tpuser, tmp1, tmp2
 	.endm
 
+// ARM10C 20170823
+// .macro switch_tls_v6k, r1, r4, r5, r3, r7
+//   mrc p15, 0, \r7, c13, c0, 2	@ get the user r/w register
+//   mcr p15, 0, \r4, c13, c0, 3	@ set TLS register
+//   mcr p15, 0, \r5, c13, c0, 2	@ and the user r/w register
+//   str \r7, [\r1, #TI_TP_VALUE + 4]   @ save it
+// .endm
 	.macro switch_tls_v6k, base, tp, tpuser, tmp1, tmp2
 	mrc	p15, 0, \tmp2, c13, c0, 2	@ get the user r/w register
 	mcr	p15, 0, \tp, c13, c0, 3		@ set TLS register
@@ -45,6 +52,13 @@
 #define tls_emu		0
 // ARM10C 20161105
 #define has_tls_reg		1
+// ARM10C 20170823
+// .macro switch_tls_v6k, r1, r4, r5, r3, r7
+//   mrc p15, 0, \r7, c13, c0, 2	@ get the user r/w register
+//   mcr p15, 0, \r4, c13, c0, 3	@ set TLS register
+//   mcr p15, 0, \r5, c13, c0, 2	@ and the user r/w register
+//   str \r7, [\r1, #TI_TP_VALUE + 4]   @ save it
+// .endm
 #define switch_tls	switch_tls_v6k
 #else
 #define tls_emu		0

@@ -2397,10 +2397,17 @@ extern struct mm_struct * mm_alloc(void);
 
 /* mmdrop drops the mm and the page tables */
 extern void __mmdrop(struct mm_struct *);
+// ARM10C 20170823
+// mm: &init_mm
 static inline void mmdrop(struct mm_struct * mm)
 {
+	// &mm->mm_count: &(&init_mm)->mm_count
+	// atomic_dec_and_test(&(&init_mm)->mm_count): 0
 	if (unlikely(atomic_dec_and_test(&mm->mm_count)))
 		__mmdrop(mm);
+
+	// atomic_dec_and_test 에서 한일:
+	// (&init_mm)->mm_count: 2
 }
 
 /* mmput gets rid of the mappings and all user-space */

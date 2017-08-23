@@ -63,10 +63,14 @@ static inline void check_and_switch_context(struct mm_struct *mm,
 
 #define finish_arch_post_lock_switch \
 	finish_arch_post_lock_switch
+// ARM10C 20170823
 static inline void finish_arch_post_lock_switch(void)
 {
+	// current->mm: (kmem_cache#15-oX (struct task_struct) (pid: 1))->mm: NULL
 	struct mm_struct *mm = current->mm;
+	// mm: NULL
 
+	// mm: NULL
 	if (mm && mm->context.switch_pending) {
 		/*
 		 * Preemption must be disabled during cpu_switch_mm() as we

@@ -60,6 +60,7 @@ int main(void)
   DEFINE(TI_CPU,		offsetof(struct thread_info, cpu));
   DEFINE(TI_CPU_DOMAIN,		offsetof(struct thread_info, cpu_domain));
 // ARM10C 20170819
+// ARM10C 20170823
 // TI_CPU_SAVE: 28
   DEFINE(TI_CPU_SAVE,		offsetof(struct thread_info, cpu_context));
   DEFINE(TI_USED_CP,		offsetof(struct thread_info, used_cp));
