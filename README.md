@@ -10,6 +10,8 @@
   - current : 3.13.x
   
 # HISTORY
+* 173th (2017/05/23) week [173차](https://github.com/hephaex/kernel_review/blob/master/a10c_173.md)
+ - rest_init()
 * 172th (2017/04/27) week [172차](https://github.com/hephaex/kernel_review/blob/master/a10c_172.md)
  - rest_init()
 * 171th (2017/04/19) week [171차](https://github.com/hephaex/kernel_review/blob/master/a10c_171.md)
