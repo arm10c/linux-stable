@@ -314,6 +314,7 @@ void show_regs(struct pt_regs * regs)
 }
 
 // ARM10C 20161105
+// ARM10C 20170823
 // ATOMIC_NOTIFIER_HEAD(thread_notify_head):
 // struct atomic_notifier_head thread_notify_head =
 // {

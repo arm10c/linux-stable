@@ -36,7 +36,7 @@ static inline bool vtime_accounting_enabled(void) { return false; }
 /*
  * Common vtime APIs
  */
-#ifdef CONFIG_VIRT_CPU_ACCOUNTING
+#ifdef CONFIG_VIRT_CPU_ACCOUNTING // CONFIG_VIRT_CPU_ACCOUNTING=n
 
 #ifdef __ARCH_HAS_VTIME_TASK_SWITCH
 extern void vtime_task_switch(struct task_struct *prev);
@@ -66,6 +66,8 @@ static inline void vtime_account_irq_enter(struct task_struct *tsk)
 
 #else /* !CONFIG_VIRT_CPU_ACCOUNTING */
 
+// ARM10C 20170823
+// prev: &init_task
 static inline void vtime_task_switch(struct task_struct *prev) { }
 static inline void vtime_account_system(struct task_struct *tsk) { }
 static inline void vtime_account_user(struct task_struct *tsk) { }

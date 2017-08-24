@@ -209,6 +209,8 @@ EXPORT_SYMBOL(_raw_spin_unlock_irqrestore);
 #ifndef CONFIG_INLINE_SPIN_UNLOCK_IRQ // CONFIG_INLINE_SPIN_UNLOCK_IRQ=n
 // ARM10C 20160514
 // &lock->rlock: &(&proc_inum_lock)->rlock
+// ARM10C 20170823
+// &rq->lock: [pcp0] &(&runqueues)->lock
 void __lockfunc _raw_spin_unlock_irq(raw_spinlock_t *lock)
 {
 	// lock: &(&proc_inum_lock)->rlock

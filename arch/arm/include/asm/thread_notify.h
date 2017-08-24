@@ -47,6 +47,8 @@ static inline void thread_notify(unsigned long rc, struct thread_info *thread)
  */
 #define THREAD_NOTIFY_FLUSH	0
 #define THREAD_NOTIFY_EXIT	1
+// ARM10C 20170823
+// THREAD_NOTIFY_SWITCH: 2
 #define THREAD_NOTIFY_SWITCH	2
 // ARM10C 20161105
 // THREAD_NOTIFY_COPY: 3

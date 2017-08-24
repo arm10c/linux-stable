@@ -5,6 +5,7 @@
 
 // ARM10C 20140125
 // ARM10C 20140308
+// ARM10C 20170823
 #define get_current() (current_thread_info()->task)
 // ARM10C 20140125
 // ARM10C 20140308
@@ -30,6 +31,9 @@
 // ARM10C 20170715
 // get_current(): current_thread_info()->task: &init_task
 // current: &init_task
+// ARM10C 20170823
+// get_current(): current_thread_info()->task: kmem_cache#15-oX (struct task_struct) (pid: 1)
+// current: kmem_cache#15-oX (struct task_struct) (pid: 1)
 #define current get_current()
 
 #endif /* __ASM_GENERIC_CURRENT_H */

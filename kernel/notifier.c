@@ -110,21 +110,32 @@ static int notifier_chain_unregister(struct notifier_block **nl,
 // ARM10C 20161105
 // &nh->head: &(&thread_notify_head)->head, val:3, v: ((struct thread_info *)(kmem_cache#15-oX (struct task_struct))->stack),
 // nr_to_call:-1, nr_calls: NULL
+// ARM10C 20170610
+// &nh->head: &(&thread_notify_head)->head, val:3, v: ((struct thread_info *)(kmem_cache#15-oX (struct task_struct))->stack (pid 2)),
+// nr_to_call:-1, nr_calls: NULL
+// ARM10C 20170823
+// &nh->head: &(&thread_notify_head)->head, val:2, v: (kmem_cache#15-oX (struct thread_info) (pid: 1)), nr_to_call:-1, nr_calls: NULL
 static int __kprobes notifier_call_chain(struct notifier_block **nl,
 					unsigned long val, void *v,
 					int nr_to_call,	int *nr_calls)
 {
 	// NOTIFY_DONE: 0x0000
+	// NOTIFY_DONE: 0x0000
 	int ret = NOTIFY_DONE;
+	// ret: 0
 	// ret: 0
 
 	struct notifier_block *nb, *next_nb;
 
 	// *nl: *(&(&thread_notify_head)->head)
 	// rcu_dereference_raw((&thread_notify_head)->head): (thread_notify_head)->head: NULL
+	// *nl: (&thread_notify_head)->head
+	// rcu_dereference_raw((&thread_notify_head)->head): (thread_notify_head)->head: NULL
 	nb = rcu_dereference_raw(*nl);
 	// nb: NULL
+	// nb: NULL
 
+	// nb: NULL, nr_to_call: -1
 	// nb: NULL, nr_to_call: -1
 	while (nb && nr_to_call) {
 		next_nb = rcu_dereference_raw(nb->next);
@@ -148,7 +159,9 @@ static int __kprobes notifier_call_chain(struct notifier_block **nl,
 	}
 
 	// ret: 0
+	// ret: 0
 	return ret;
+	// return 0
 	// return 0
 }
 
@@ -223,6 +236,10 @@ EXPORT_SYMBOL_GPL(atomic_notifier_chain_unregister);
  */
 // ARM10C 20161105
 // nh: &thread_notify_head, val: 3, v: ((struct thread_info *)(kmem_cache#15-oX (struct task_struct))->stack), -1, NULL
+// ARM10C 20170610
+// nh: &thread_notify_head, val: 3, v: ((struct thread_info *)(kmem_cache#15-oX (struct task_struct))->stack (pid 2)), -1, NULL
+// ARM10C 20170823
+// nh: &thread_notify_head, val: 2, v: (kmem_cache#15-oX (struct thread_info) (pid: 1)), -1, NULL
 int __kprobes __atomic_notifier_call_chain(struct atomic_notifier_head *nh,
 					unsigned long val, void *v,
 					int nr_to_call, int *nr_calls)
@@ -234,10 +251,16 @@ int __kprobes __atomic_notifier_call_chain(struct atomic_notifier_head *nh,
 	// rcu_read_lock에서 한일:
 	// (&init_task)->rcu_read_lock_nesting: 1
 
+	// rcu_read_lock에서 한일:
+	// (&init_task)->rcu_read_lock_nesting: 1
+
 	// &nh->head: &(&thread_notify_head)->head, val:3, v: ((struct thread_info *)(kmem_cache#15-oX (struct task_struct))->stack),
 	// nr_to_call:-1, nr_calls: NULL
 	// notifier_call_chain(&(&thread_notify_head)->head, 3, ((struct thread_info *)(kmem_cache#15-oX (struct task_struct))->stack), -1, NULL): 0
+	// &nh->head: &(&thread_notify_head)->head, val:2, v: (kmem_cache#15-oX (struct thread_info) (pid: 1)), nr_to_call:-1, nr_calls: NULL
+	// notifier_call_chain(&(&thread_notify_head)->head, 2, (kmem_cache#15-oX (struct thread_info) (pid: 1)), -1, NULL): 0
 	ret = notifier_call_chain(&nh->head, val, v, nr_to_call, nr_calls);
+	// ret: 0
 	// ret: 0
 
 	rcu_read_unlock();
@@ -245,20 +268,30 @@ int __kprobes __atomic_notifier_call_chain(struct atomic_notifier_head *nh,
 	// rcu_read_unlock에서 한일:
 	// (&init_task)->rcu_read_lock_nesting: 0
 
+	// rcu_read_unlock에서 한일:
+	// (&init_task)->rcu_read_lock_nesting: 0
+
+	// ret: 0
 	// ret: 0
 	return ret;
+	// return 0
 	// return 0
 }
 EXPORT_SYMBOL_GPL(__atomic_notifier_call_chain);
 
 // ARM10C 20161105
 // &thread_notify_head, rc: 3, thread: ((struct thread_info *)(kmem_cache#15-oX (struct task_struct))->stack)
+// ARM10C 20170823
+// r0: &thread_notify_head, r1: 2, r2: kmem_cache#15-oX (struct thread_info) (pid: 1)
 int __kprobes atomic_notifier_call_chain(struct atomic_notifier_head *nh,
 		unsigned long val, void *v)
 {
 	// nh: &thread_notify_head, val: 3, v: ((struct thread_info *)(kmem_cache#15-oX (struct task_struct))->stack)
 	// __atomic_notifier_call_chain(&thread_notify_head, 3, ((struct thread_info *)(kmem_cache#15-oX (struct task_struct))->stack), -1, NULL): 0
+	// nh: &thread_notify_head, val: 2, v: (kmem_cache#15-oX (struct thread_info) (pid: 1))
+	// __atomic_notifier_call_chain(&thread_notify_head, 2, (kmem_cache#15-oX (struct thread_info) (pid: 1)), -1, NULL): 0
 	return __atomic_notifier_call_chain(nh, val, v, -1, NULL);
+	// return 0
 	// return 0
 }
 EXPORT_SYMBOL_GPL(atomic_notifier_call_chain);
