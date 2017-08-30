@@ -124,6 +124,7 @@
 #define __printf(a, b)			__attribute__((format(printf, a, b)))
 #define __scanf(a, b)			__attribute__((format(scanf, a, b)))
 // ARM10C 20140315
+// ARM10C 20170830
 // 절대로 inline으로 사용하지 말라는 의미
 #define  noinline			__attribute__((noinline))
 #define __attribute_const__		__attribute__((__const__))

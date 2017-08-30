@@ -313,7 +313,7 @@ static inline void do_raw_spin_unlock(raw_spinlock_t *lock) __releases(lock)
 #define raw_spin_unlock(lock)		_raw_spin_unlock(lock)
 // ARM10C 20160514
 // &lock->rlock: &(&proc_inum_lock)->rlock
-// ARM10C 20170823
+// ARM10C 20170830
 // &rq->lock: [pcp0] &(&runqueues)->lock
 #define raw_spin_unlock_irq(lock)	_raw_spin_unlock_irq(lock)
 
@@ -517,6 +517,8 @@ do {									\
 // &pidmap_lock
 // ARM10C 20161203
 // &pidmap_lock
+// ARM10C 20170830
+// &x->wait.lock: &(&kthreadd_done)->wait.lock
 static inline void spin_lock_irq(spinlock_t *lock)
 {
 	// &lock->rlock: &(&proc_inum_lock)->rlock

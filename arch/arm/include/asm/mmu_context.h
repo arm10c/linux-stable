@@ -63,7 +63,7 @@ static inline void check_and_switch_context(struct mm_struct *mm,
 
 #define finish_arch_post_lock_switch \
 	finish_arch_post_lock_switch
-// ARM10C 20170823
+// ARM10C 20170830
 static inline void finish_arch_post_lock_switch(void)
 {
 	// current->mm: (kmem_cache#15-oX (struct task_struct) (pid: 1))->mm: NULL

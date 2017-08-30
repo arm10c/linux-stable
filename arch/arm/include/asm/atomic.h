@@ -355,7 +355,7 @@ static inline int __atomic_add_unless(atomic_t *v, int a, int u)
 // atomic_sub_return(1, &page->_count): 0
 // ARM10C 20160409
 // &running_helpers
-// ARM10C 20170823
+// ARM10C 20170830
 // &mm->mm_count: &(&init_mm)->mm_count
 #define atomic_dec_and_test(v)	(atomic_sub_return(1, v) == 0)
 // ARM10C 20160730

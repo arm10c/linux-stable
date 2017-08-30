@@ -56,6 +56,7 @@
 // instr.w의 의미는? Thumb2모드의 32bit (wide) instruction임을 가르켜 줌
 #define W(instr)	instr
 // ARM10C 20141227
+// ARM10C 20170830
 #define BSYM(sym)	sym
 #else
 // ARM10C 20160402

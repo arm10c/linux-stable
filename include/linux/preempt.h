@@ -49,6 +49,7 @@ extern void preempt_count_sub(int val);
 #define preempt_count_inc() preempt_count_add(1)
 // ARM10C 20140125
 // ARM10C 20170715
+// ARM10C 20170830
 #define preempt_count_dec() preempt_count_sub(1)
 
 #ifdef CONFIG_PREEMPT_COUNT // ARM10C Y 

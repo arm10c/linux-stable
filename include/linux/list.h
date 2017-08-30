@@ -300,6 +300,8 @@ extern void __list_add(struct list_head *new,
 // ARM10C 20170419
 // &se->group_node: &(&(kmem_cache#15-oX (struct task_struct))->se)->group_node,
 // &rq->cfs_tasks: [pcp0] &(&runqueues)->cfs_tasks
+// ARM10C 20170830
+// &new->task_list: &(&wait)->task_list, &head->task_list: &(&(&kthreadd_done)->wait)->task_list
 static inline void list_add(struct list_head *new, struct list_head *head)
 {
 	__list_add(new, head, head->next);

@@ -361,6 +361,7 @@ void release_thread(struct task_struct *dead_task)
 }
 
 // ARM10C 20161105
+// ARM10C 20170830
 asmlinkage void ret_from_fork(void) __asm__("ret_from_fork");
 
 // ARM10C 20161105

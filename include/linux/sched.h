@@ -146,6 +146,7 @@ print_cfs_rq(struct seq_file *m, int cpu, struct cfs_rq *cfs_rq);
 // ARM10C 20140315
 // ARM10C 20160409
 // ARM10C 20170201
+// ARM10C 20170830
 // TASK_UNINTERRUPTIBLE: 2
 #define TASK_UNINTERRUPTIBLE	2
 #define __TASK_STOPPED		4
@@ -154,6 +155,8 @@ print_cfs_rq(struct seq_file *m, int cpu, struct cfs_rq *cfs_rq);
 #define EXIT_ZOMBIE		16
 #define EXIT_DEAD		32
 /* in tsk->state again */
+// ARM10C 20170830
+// TASK_DEAD: 64
 #define TASK_DEAD		64
 #define TASK_WAKEKILL		128
 // ARM10C 20161029
@@ -324,6 +327,7 @@ static inline void reset_hung_task_detector(void)
 
 /* Attach to any functions which should be ignored in wchan output. */
 // ARM10C 20140315
+// ARM10C 20170830
 #define __sched		__attribute__((__section__(".sched.text")))
 
 /* Linker adds these: start and end of __sched functions */
@@ -332,6 +336,9 @@ extern char __sched_text_start[], __sched_text_end[];
 /* Is this address in the __sched functions? */
 extern int in_sched_functions(unsigned long addr);
 
+// ARM10C 20170830
+// LONG_MAX: 0x7FFFFFFF
+// MAX_SCHEDULE_TIMEOUT: 0x7FFFFFFF
 #define	MAX_SCHEDULE_TIMEOUT	LONG_MAX
 extern signed long schedule_timeout(signed long timeout);
 extern signed long schedule_timeout_interruptible(signed long timeout);
@@ -2397,7 +2404,7 @@ extern struct mm_struct * mm_alloc(void);
 
 /* mmdrop drops the mm and the page tables */
 extern void __mmdrop(struct mm_struct *);
-// ARM10C 20170823
+// ARM10C 20170830
 // mm: &init_mm
 static inline void mmdrop(struct mm_struct * mm)
 {

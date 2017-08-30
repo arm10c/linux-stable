@@ -71,14 +71,39 @@ void complete_all(struct completion *x)
 }
 EXPORT_SYMBOL(complete_all);
 
+// ARM10C 20170830
+// x: &kthreadd_done, action: schedule_timeout, timeout: 0x7FFFFFFF, state: 2
 static inline long __sched
 do_wait_for_common(struct completion *x,
 		   long (*action)(long), long timeout, int state)
 {
+	// x->done: (&kthreadd_done)->done: 0
 	if (!x->done) {
+		// current: kmem_cache#15-oX (struct task_struct) (pid: 1)
 		DECLARE_WAITQUEUE(wait, current);
+		// DECLARE_WAITQUEUE(wait, kmem_cache#15-oX (struct task_struct) (pid: 1)):
+		// wait_queue_t wait =
+		// {
+		//     .private	= kmem_cache#15-oX (struct task_struct) (pid: 1),
+		//     .func = default_wake_function,
+		//     .task_list = { NULL, NULL }
+		// }
 
+		// &x->wait: &(&kthreadd_done)->wait
 		__add_wait_queue_tail_exclusive(&x->wait, &wait);
+
+		// __add_wait_queue_tail_exclusive 에서 한일:
+		// (&wait)->flags: ? | 0x01
+		// &(&(&kthreadd_done)->wait)->task_list 과 (&(&(&kthreadd_done)->wait)->task_list)->next 사이에 &(&wait)->task_list 를 추가함
+		// 간단히 말하면 head 인 &(&(&kthreadd_done)->wait)->task_list 의 next에 &(&wait)->task_list 가 추가됨
+		//
+		// ((&(&(&kthreadd_done)->wait)->task_list)->next)->prev = &(&wait)->task_list;
+		// (&(&wait)->task_list)->next = next;
+		// (&(&wait)->task_list)->prev = prev;
+		// (&(&(&kthreadd_done)->wait)->task_list)->next = &(&wait)->task_list;
+
+// 2017/08/30 종료
+
 		do {
 			if (signal_pending_state(state, current)) {
 				timeout = -ERESTARTSYS;
@@ -97,21 +122,32 @@ do_wait_for_common(struct completion *x,
 	return timeout ?: 1;
 }
 
+// ARM10C 20170830
+// x: &kthreadd_done, schedule_timeout, timeout: 0x7FFFFFFF, state: 2
 static inline long __sched
 __wait_for_common(struct completion *x,
 		  long (*action)(long), long timeout, int state)
 {
-	might_sleep();
+	might_sleep(); // null function
 
+	// &x->wait.lock: &(&kthreadd_done)->wait.lock
 	spin_lock_irq(&x->wait.lock);
+
+	// spin_lock_irq 에서 한일:
+	// &(&kthreadd_done)->wait.lock 을 사용하여 spin lock 수행
+
+	// x: &kthreadd_done, action: schedule_timeout, timeout: 0x7FFFFFFF, state: 2
 	timeout = do_wait_for_common(x, action, timeout, state);
 	spin_unlock_irq(&x->wait.lock);
 	return timeout;
 }
 
+// ARM10C 20170830
+// x: &kthreadd_done, MAX_SCHEDULE_TIMEOUT: 0x7FFFFFFF, TASK_UNINTERRUPTIBLE: 2
 static long __sched
 wait_for_common(struct completion *x, long timeout, int state)
 {
+	// x: &kthreadd_done, timeout: 0x7FFFFFFF, state: 2
 	return __wait_for_common(x, schedule_timeout, timeout, state);
 }
 
@@ -131,8 +167,11 @@ wait_for_common_io(struct completion *x, long timeout, int state)
  * See also similar routines (i.e. wait_for_completion_timeout()) with timeout
  * and interrupt capability. Also see complete().
  */
+// ARM10C 20170830
+// &kthreadd_done
 void __sched wait_for_completion(struct completion *x)
 {
+	// x: &kthreadd_done, MAX_SCHEDULE_TIMEOUT: 0x7FFFFFFF, TASK_UNINTERRUPTIBLE: 2
 	wait_for_common(x, MAX_SCHEDULE_TIMEOUT, TASK_UNINTERRUPTIBLE);
 }
 EXPORT_SYMBOL(wait_for_completion);

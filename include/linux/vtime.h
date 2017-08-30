@@ -66,7 +66,7 @@ static inline void vtime_account_irq_enter(struct task_struct *tsk)
 
 #else /* !CONFIG_VIRT_CPU_ACCOUNTING */
 
-// ARM10C 20170823
+// ARM10C 20170830
 // prev: &init_task
 static inline void vtime_task_switch(struct task_struct *prev) { }
 static inline void vtime_account_system(struct task_struct *tsk) { }

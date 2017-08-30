@@ -31,6 +31,7 @@
 // UINT_MAX: 0xFFFFFFFF
 #define UINT_MAX	(~0U)
 // ARM10C 20150103
+// ARM10C 20170830
 // LONG_MAX: 0x7FFFFFFF
 #define LONG_MAX	((long)(~0UL>>1))
 #define LONG_MIN	(-LONG_MAX - 1)
@@ -223,6 +224,7 @@ extern int _cond_resched(void);
 // ARM10C 20160730
 // ARM10C 20160813
 // ARM10C 20160820
+// ARM10C 20170830
 // might_resched(): NULL function
 # define might_sleep() do { might_resched(); } while (0)
 #endif

@@ -27,6 +27,7 @@
 // ARM10C 20160910
 // ARM10C 20161217
 // ARM10C 20170701
+// ARM10C 20170830
 // sizeof(struct completion): 28 bytes
 struct completion {
 	unsigned int done;

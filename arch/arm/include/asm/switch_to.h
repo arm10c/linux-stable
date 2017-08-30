@@ -10,7 +10,7 @@
  * CPU.
  */
 #if defined(CONFIG_PREEMPT) && defined(CONFIG_SMP) && defined(CONFIG_CPU_V7) // CONFIG_PREEMPT=y, CONFIG_SMP=y, CONFIG_CPU_V7=y
-// ARM10C 20170823
+// ARM10C 20170830
 // prev: &init_task
 #define finish_arch_switch(prev)	dsb(ish)
 #endif

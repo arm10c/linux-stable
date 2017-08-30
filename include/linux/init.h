@@ -41,6 +41,7 @@
    discard it in modules) */
 
 // ARM10C 20130824
+// ARM10C 20170830
 // __cold: size 를 최적화 하기 위한 옵션
 // http://gcc.gnu.org/onlinedocs/gcc/Function-Attributes.html
 #define __init		__section(.init.text) __cold notrace

@@ -18,7 +18,7 @@
 // ARM10C 20131109
 // ARM10C 20160402
 // ARM10C 20160820
-// ARM10C 20170823
+// ARM10C 20170830
 #define dsb(option) __asm__ __volatile__ ("dsb " #option : : : "memory")
 // ARM10C 20131109
 // ARM10C 20140621
@@ -88,6 +88,7 @@
 // ARM10C 20151219
 // ARM10C 20170720
 // ARM10C 20170823
+// ARM10C 20170830
 // A.R.M: A8.8.43 DMB
 // ISHST option:
 // Inner Shareable is the required shareability domain, writes are the required access type.

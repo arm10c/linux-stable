@@ -437,6 +437,7 @@ static void __init setup_command_line(char *command_line)
  */
 
 // ARM10C 20170701
+// ARM10C 20170830
 // DECLARE_COMPLETION(kthreadd_done):
 // struct completion kthreadd_done =
 // { 0,
@@ -2579,6 +2580,8 @@ static int try_to_run_init_process(const char *init_filename)
 static noinline void __init kernel_init_freeable(void);
 
 // ARM10C 20160827
+// ARM10C 20170830
+// r0: 0
 static int __ref kernel_init(void *unused)
 {
 	int ret;
@@ -2624,6 +2627,7 @@ static int __ref kernel_init(void *unused)
 	      "See Linux Documentation/init.txt for guidance.");
 }
 
+// ARM10C 20170830
 static noinline void __init kernel_init_freeable(void)
 {
 	/*

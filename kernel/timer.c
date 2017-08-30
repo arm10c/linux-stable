@@ -1658,6 +1658,7 @@ static void process_timeout(unsigned long __data)
  *
  * In all cases the return value is guaranteed to be non-negative.
  */
+// ARM10C 20170830
 signed long __sched schedule_timeout(signed long timeout)
 {
 	struct timer_list timer;

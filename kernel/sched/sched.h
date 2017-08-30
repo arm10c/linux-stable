@@ -655,6 +655,7 @@ DECLARE_PER_CPU(struct rq, runqueues);
 // ARM10C 20161008
 // ARM10C 20170720
 // ARM10C 20170823
+// ARM10C 20170830
 // __get_cpu_var(runqueues): [pcp0] &runqueues
 #define this_rq()		(&__get_cpu_var(runqueues))
 // ARM10C 20170201
@@ -1098,7 +1099,7 @@ static inline void prepare_lock_switch(struct rq *rq, struct task_struct *next)
 #endif
 }
 
-// ARM10C 20170823
+// ARM10C 20170830
 // rq: [pcp0] &runqueues, prev: &init_task
 static inline void finish_lock_switch(struct rq *rq, struct task_struct *prev)
 {

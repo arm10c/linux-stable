@@ -2827,7 +2827,7 @@ fire_sched_out_preempt_notifiers(struct task_struct *curr,
 
 #else /* !CONFIG_PREEMPT_NOTIFIERS */
 
-// ARM10C 20170823
+// ARM10C 20170830
 // current: kmem_cache#15-oX (struct task_struct) (pid: 1)
 static void fire_sched_in_preempt_notifiers(struct task_struct *curr)
 {
@@ -2898,8 +2898,8 @@ prepare_task_switch(struct rq *rq, struct task_struct *prev,
  * with the lock held can cause deadlocks; see schedule() for
  * details.)
  */
-// ARM10C 20170823
-// this_rq(),: [pcp0] &runqueues, prev: &init_task
+// ARM10C 20170830
+// rq: [pcp0] &runqueues, prev: &init_task
 static void finish_task_switch(struct rq *rq, struct task_struct *prev)
 	__releases(rq->lock)
 {
@@ -2963,7 +2963,9 @@ static void finish_task_switch(struct rq *rq, struct task_struct *prev)
 		// (&init_mm)->mm_count: 2
 
 // 2017/08/23 종료
+// 2017/08/30 시작
 
+	// prev_state: 0, TASK_DEAD: 64
 	if (unlikely(prev_state == TASK_DEAD)) {
 		task_numa_free(prev);
 
@@ -2975,6 +2977,7 @@ static void finish_task_switch(struct rq *rq, struct task_struct *prev)
 		put_task_struct(prev);
 	}
 
+	// current: kmem_cache#15-oX (struct task_struct) (pid: 1)
 	tick_nohz_task_switch(current);
 }
 
@@ -2992,8 +2995,11 @@ static inline void pre_schedule(struct rq *rq, struct task_struct *prev)
 }
 
 /* rq->lock is NOT held, but preemption is disabled */
+// ARM10C 20170830
+// rq: [pcp0] &runqueues
 static inline void post_schedule(struct rq *rq)
 {
+	// rq->post_schedule: [pcp0] (&runqueues)->post_schedule: 0
 	if (rq->post_schedule) {
 		unsigned long flags;
 
@@ -3022,23 +3028,41 @@ static inline void post_schedule(struct rq *rq)
  * schedule_tail - first thing a freshly forked thread must call.
  * @prev: the thread we just switched away from.
  */
+// ARM10C 20170830
+// r0: &init_task
 asmlinkage void schedule_tail(struct task_struct *prev)
 	__releases(rq->lock)
 {
+	// this_rq(): [pcp0] &runqueues
 	struct rq *rq = this_rq();
+	// rq: [pcp0] &runqueues
 
+	// rq: [pcp0] &runqueues, prev: &init_task
 	finish_task_switch(rq, prev);
+
+	// finish_task_switch 에서 한일:
+	// [pcp0] (&runqueues)->prev_mm: NULL
+	// 각 코어 간의 데이터를 공유, 싱크함
+	//
+	// 공유자원을 다른 cpu core가 사용할수 있게 해주는 옵션
+	// (&init_task)->on_cpu: 0
+	// [pcp0] (&runqueues)->lock.owner: kmem_cache#15-oX (struct task_struct) (pid: 1)
+	// [pcp0] &(&runqueues)->lock 을 사용한 raw spin unlock 수행
+	//
+	// (&init_mm)->mm_count: 2
 
 	/*
 	 * FIXME: do we need to worry about rq being invalidated by the
 	 * task_switch?
 	 */
+	// rq: [pcp0] &runqueues
 	post_schedule(rq);
 
-#ifdef __ARCH_WANT_UNLOCKED_CTXSW
+#ifdef __ARCH_WANT_UNLOCKED_CTXSW // undefined
 	/* In this case, finish_task_switch does not reenable preemption */
 	preempt_enable();
 #endif
+	// current->set_child_tid: (kmem_cache#15-oX (struct task_struct) (pid: 1))->set_child_tid: NULL
 	if (current->set_child_tid)
 		put_user(task_pid_vnr(current), current->set_child_tid);
 }
@@ -3135,17 +3159,18 @@ context_switch(struct rq *rq, struct task_struct *prev,
 	// (kmem_cache#15-oX (struct thread_info) (pid: 1))->cpu_context 의 맴버값이
 	// register 값 r4-sl, fp, sp, pc 가 순차적으로 로드됨
 
-	barrier();
+	// NOTE:
+	// idle 테스크인 init_task 에서 pid: 1 인 테스크 kmem_cache#15-oX (struct task_struct) (pid 1) 로 schedule 됨
+	// (kmem_cache#15-oX (struct thread_info) (pid: 1))->cpu_context.pc: ret_from_fork 에 저장된 ret_from_fork 위치로
+	// pc 가 이동함, 이후 분석 위치는 ret_from_fork 로 이동됨
 
-	// barrier 에서 한일:
-	// 컴파일러적으로 memory barrier 를 만들어 줌
+	barrier();
 
 	/*
 	 * this_rq must be evaluated again because prev may have moved
 	 * CPUs since it called schedule(), thus the 'rq' on its stack
 	 * frame will be invalid.
 	 */
-	// this_rq(),: [pcp0] runqueues, prev: &init_task
 	finish_task_switch(this_rq(), prev);
 }
 
@@ -3370,6 +3395,7 @@ notrace unsigned long get_parent_ip(unsigned long addr)
 // cnt: 0x200
 // ARM10C 20160514
 // ARM10C 20161203
+// ARM10C 20170830
 void __kprobes preempt_count_add(int val)
 {
 #ifdef CONFIG_DEBUG_PREEMPT // ARM10C Y 
@@ -3866,6 +3892,11 @@ asmlinkage void __sched schedule_user(void)
 void __sched schedule_preempt_disabled(void)
 {
 	sched_preempt_enable_no_resched();
+
+	// sched_preempt_enable_no_resched 에서 한일:
+	// 컴파일러적으로 memory barrier 를 만들어 줌
+	// ((struct thread_info) &init_task)->preempt_count 값을 1 감소 시킴
+
 	schedule();
 	preempt_disable();
 }

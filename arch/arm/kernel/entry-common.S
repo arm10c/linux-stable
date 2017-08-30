@@ -84,12 +84,40 @@ ENDPROC(ret_to_user)
  * This is how we return from a fork.
  */
  // ARM10C 20161105
+ // ARM10C 20170830
 ENTRY(ret_from_fork)
 	bl	schedule_tail
+
+	// schedule_tail 에서 한일:
+	// [pcp0] (&runqueues)->prev_mm: NULL
+	// 각 코어 간의 데이터를 공유, 싱크함
+	//
+	// 공유자원을 다른 cpu core가 사용할수 있게 해주는 옵션
+	// (&init_task)->on_cpu: 0
+	// [pcp0] (&runqueues)->lock.owner: kmem_cache#15-oX (struct task_struct) (pid: 1)
+	// [pcp0] &(&runqueues)->lock 을 사용한 raw spin unlock 수행
+	//
+	// (&init_mm)->mm_count: 2
+
+	// r5: kernel_init
 	cmp	r5, #0
+	// ne: set
+
+	// r4: 0
 	movne	r0, r4
+	// r0: 0
+
 	adrne	lr, BSYM(1f)
+	// lr: symbol 1: 의 상대주소 값이 저장됨
+
+	// r5: kernel_init
 	movne	pc, r5
+	// pc: kernel_init
+
+	// NOTE:
+	// pid 1인 테스크의 함수 kernel_init로 pc가 이동됨
+	// kernel_init 에서 분석
+
 1:	get_thread_info tsk
 	b	ret_slow_syscall
 ENDPROC(ret_from_fork)
