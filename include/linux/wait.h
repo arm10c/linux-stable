@@ -285,59 +285,54 @@ extern void add_wait_queue(wait_queue_head_t *q, wait_queue_t *wait);
 extern void add_wait_queue_exclusive(wait_queue_head_t *q, wait_queue_t *wait);
 extern void remove_wait_queue(wait_queue_head_t *q, wait_queue_t *wait);
 
-// ARM10C 20170830
-// q: &(&kthreadd_done)->wait, wait: &wait
 static inline void __add_wait_queue(wait_queue_head_t *head, wait_queue_t *new)
 {
-	// &new->task_list: &(&wait)->task_list, &head->task_list: &(&(&kthreadd_done)->wait)->task_list
 	list_add(&new->task_list, &head->task_list);
-
-	// list_add 에서 한일:
-	// &(&(&kthreadd_done)->wait)->task_list 과 (&(&(&kthreadd_done)->wait)->task_list)->next 사이에 &(&wait)->task_list 를 추가함
-	// 간단히 말하면 head 인 &(&(&kthreadd_done)->wait)->task_list 의 next에 &(&wait)->task_list 가 추가됨
-	//
-	// ((&(&(&kthreadd_done)->wait)->task_list)->next)->prev = &(&wait)->task_list;
-	// (&(&wait)->task_list)->next = next;
-	// (&(&wait)->task_list)->prev = prev;
-	// (&(&(&kthreadd_done)->wait)->task_list)->next = &(&wait)->task_list;
 }
 
 /*
  * Used for wake-one threads:
  */
+static inline void
+__add_wait_queue_exclusive(wait_queue_head_t *q, wait_queue_t *wait)
+{
+	wait->flags |= WQ_FLAG_EXCLUSIVE;
+	__add_wait_queue(q, wait);
+}
+
+// ARM10C 20170830
+// q: &(&kthreadd_done)->wait, wait: &wait
+static inline void __add_wait_queue_tail(wait_queue_head_t *head,
+					 wait_queue_t *new)
+{
+	// &new->task_list: &(&wait)->task_list, &head->task_list: &(&(&kthreadd_done)->wait)->task_list
+	list_add_tail(&new->task_list, &head->task_list);
+
+	// list_add_tail 에서 한일:
+	// (&(&(&kthreadd_done)->wait)->task_list)->prev = &(&wait)->task_list;
+	// (&(&wait)->task_list)->next = &(&(&kthreadd_done)->wait)->task_list;
+	// (&(&wait)->task_list)->prev = &(&(&kthreadd_done)->wait)->task_list;
+	// (&(&(&kthreadd_done)->wait)->task_list)->next = &(&wait)->task_list;
+
+}
+
 // ARM10C 20170830
 // &x->wait: &(&kthreadd_done)->wait, &wait
 static inline void
-__add_wait_queue_exclusive(wait_queue_head_t *q, wait_queue_t *wait)
+__add_wait_queue_tail_exclusive(wait_queue_head_t *q, wait_queue_t *wait)
 {
 	// wait->flags: (&wait)->flags: ?, WQ_FLAG_EXCLUSIVE: 0x01
 	wait->flags |= WQ_FLAG_EXCLUSIVE;
 	// wait->flags: (&wait)->flags: ? | 0x01
 
 	// q: &(&kthreadd_done)->wait, wait: &wait
-	__add_wait_queue(q, wait);
-
-	// __add_wait_queue 에서 한일:
-	// &(&(&kthreadd_done)->wait)->task_list 과 (&(&(&kthreadd_done)->wait)->task_list)->next 사이에 &(&wait)->task_list 를 추가함
-	// 간단히 말하면 head 인 &(&(&kthreadd_done)->wait)->task_list 의 next에 &(&wait)->task_list 가 추가됨
-	//
-	// ((&(&(&kthreadd_done)->wait)->task_list)->next)->prev = &(&wait)->task_list;
-	// (&(&wait)->task_list)->next = next;
-	// (&(&wait)->task_list)->prev = prev;
-	// (&(&(&kthreadd_done)->wait)->task_list)->next = &(&wait)->task_list;
-}
-
-static inline void __add_wait_queue_tail(wait_queue_head_t *head,
-					 wait_queue_t *new)
-{
-	list_add_tail(&new->task_list, &head->task_list);
-}
-
-static inline void
-__add_wait_queue_tail_exclusive(wait_queue_head_t *q, wait_queue_t *wait)
-{
-	wait->flags |= WQ_FLAG_EXCLUSIVE;
 	__add_wait_queue_tail(q, wait);
+
+	// __add_wait_queue_tail 에서 한일:
+	// (&(&(&kthreadd_done)->wait)->task_list)->prev = &(&wait)->task_list;
+	// (&(&wait)->task_list)->next = &(&(&kthreadd_done)->wait)->task_list;
+	// (&(&wait)->task_list)->prev = &(&(&kthreadd_done)->wait)->task_list;
+	// (&(&(&kthreadd_done)->wait)->task_list)->next = &(&wait)->task_list;
 }
 
 static inline void

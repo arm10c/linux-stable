@@ -345,6 +345,8 @@ static inline void list_add(struct list_head *new, struct list_head *head)
 // ARM10C 20161203
 // &p->sibling: &(kmem_cache#15-oX (struct task_struct))->sibling
 // &p->real_parent->children: &(&init_task)->children
+// ARM10C 20170830
+// &new->task_list: &(&wait)->task_list, &head->task_list: &(&(&kthreadd_done)->wait)->task_list
 static inline void list_add_tail(struct list_head *new, struct list_head *head)
 {
 	// new: &waiter.list, head->prev: (&(&cpu_add_remove_lock)->wait_list)->prev

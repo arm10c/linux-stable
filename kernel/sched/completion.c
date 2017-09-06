@@ -94,12 +94,12 @@ do_wait_for_common(struct completion *x,
 
 		// __add_wait_queue_tail_exclusive 에서 한일:
 		// (&wait)->flags: ? | 0x01
-		// &(&(&kthreadd_done)->wait)->task_list 과 (&(&(&kthreadd_done)->wait)->task_list)->next 사이에 &(&wait)->task_list 를 추가함
-		// 간단히 말하면 head 인 &(&(&kthreadd_done)->wait)->task_list 의 next에 &(&wait)->task_list 가 추가됨
+		// &(&(&kthreadd_done)->wait)->task_list 과 (&(&(&kthreadd_done)->wait)->task_list)->prev 사이에 &(&wait)->task_list 를 추가함
+		// 간단히 말하면 head 인 &(&(&kthreadd_done)->wait)->task_list 의 tail에 &(&wait)->task_list 가 추가됨
 		//
-		// ((&(&(&kthreadd_done)->wait)->task_list)->next)->prev = &(&wait)->task_list;
-		// (&(&wait)->task_list)->next = next;
-		// (&(&wait)->task_list)->prev = prev;
+		// (&(&(&kthreadd_done)->wait)->task_list)->prev = &(&wait)->task_list;
+		// (&(&wait)->task_list)->next = &(&(&kthreadd_done)->wait)->task_list;
+		// (&(&wait)->task_list)->prev = &(&(&kthreadd_done)->wait)->task_list;
 		// (&(&(&kthreadd_done)->wait)->task_list)->next = &(&wait)->task_list;
 
 // 2017/08/30 종료
