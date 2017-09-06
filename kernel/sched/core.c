@@ -128,6 +128,8 @@ static void update_rq_clock_task(struct rq *rq, s64 delta);
 // rq: [pcp0] &runqueues
 // ARM10C 20170720
 // rq: [pcp0] &runqueues
+// ARM10C 20170906
+// rq: [pcp0] &runqueues
 void update_rq_clock(struct rq *rq)
 {
 	s64 delta;
@@ -448,6 +450,8 @@ static struct rq *this_rq_lock(void)
  */
 
 // ARM10C 20170720
+// rq: [pcp0] &runqueues
+// ARM10C 20170906
 // rq: [pcp0] &runqueues
 static void hrtick_clear(struct rq *rq)
 {
@@ -1047,10 +1051,24 @@ static void enqueue_task(struct rq *rq, struct task_struct *p, int flags)
 	// 현재 task의 남아 있는 수행 시간량 / 1024 + 현재의 schedule 시간 변화값
 }
 
+// ARM10C 20170906
+// rq: [pcp0] &runqueues, p: kmem_cache#15-oX (struct task_struct) (pid: 1), flags: 1
 static void dequeue_task(struct rq *rq, struct task_struct *p, int flags)
 {
+	// rq: [pcp0] &runqueues
 	update_rq_clock(rq);
-	sched_info_dequeued(rq, p);
+
+	// update_rq_clock 에섷 한일:
+	// [pcp0] (&runqueues)->clock: 현재의 schedule 시간값
+	// [pcp0] (&runqueues)->clock_task: 현재의 schedule 시간값
+
+	// rq: [pcp0] &runqueues, p: kmem_cache#15-oX (struct task_struct) (pid: 1)
+	sched_info_dequeued(rq, p); // null function
+
+	// p->sched_class: (kmem_cache#15-oX (struct task_struct) (pid: 1))->sched_class: &fair_sched_class
+	// p->sched_class->dequeue_task: (&fair_sched_class)->dequeue_task: dequeue_task_fair
+	// rq: [pcp0] &runqueues, p: kmem_cache#15-oX (struct task_struct) (pid: 1), flags: 1
+	// dequeue_task_fair([pcp0] &runqueues, kmem_cache#15-oX (struct task_struct) (pid: 1), 1):
 	p->sched_class->dequeue_task(rq, p, flags);
 }
 
@@ -1195,11 +1213,18 @@ void activate_task(struct rq *rq, struct task_struct *p, int flags)
 	// 현재 task의 남아 있는 수행 시간량 / 1024 + 현재의 schedule 시간 변화값
 }
 
+// ARM10C 20170906
+// rq: [pcp0] &runqueues, prev: kmem_cache#15-oX (struct task_struct) (pid: 1), DEQUEUE_SLEEP: 1
 void deactivate_task(struct rq *rq, struct task_struct *p, int flags)
 {
+	// p: kmem_cache#15-oX (struct task_struct) (pid: 1)
+	// task_contributes_to_load(kmem_cache#15-oX (struct task_struct) (pid: 1)): 1
 	if (task_contributes_to_load(p))
+		// rq->nr_uninterruptible: [pcp0] (&runqueues)->nr_uninterruptible: 0
 		rq->nr_uninterruptible++;
+		// rq->nr_uninterruptible: [pcp0] (&runqueues)->nr_uninterruptible: 1
 
+	// rq: [pcp0] &runqueues, p: kmem_cache#15-oX (struct task_struct) (pid: 1), flags: 1
 	dequeue_task(rq, p, flags);
 }
 
@@ -3491,6 +3516,8 @@ static noinline void __schedule_bug(struct task_struct *prev)
  */
 // ARM10C 20170720
 // prev: &init_task
+// ARM10C 20170906
+// prev: kmem_cache#15-oX (struct task_struct) (pid: 1)
 static inline void schedule_debug(struct task_struct *prev)
 {
 	/*
@@ -3499,13 +3526,16 @@ static inline void schedule_debug(struct task_struct *prev)
 	 * Otherwise, whine if we are scheduling when we should not be.
 	 */
 	// in_atomic_preempt_off(): 0, prev->exit_state: (&init_task)->exit_state: 0
+	// in_atomic_preempt_off(): 0, prev->exit_state: (kmem_cache#15-oX (struct task_struct) (pid: 1))->exit_state: 0
 	if (unlikely(in_atomic_preempt_off() && !prev->exit_state))
 		__schedule_bug(prev);
 	rcu_sleep_check(); // null function
 
 	// SCHED_PROFILING: 2
+	// SCHED_PROFILING: 2
 	profile_hit(SCHED_PROFILING, __builtin_return_address(0)); // null function
 
+	// this_rq(): [pcp0] runqueues
 	// this_rq(): [pcp0] runqueues
 	schedstat_inc(this_rq(), sched_count); // null function
 }
@@ -3641,6 +3671,7 @@ pick_next_task(struct rq *rq)
  *          - return from interrupt-handler to user-space
  */
 // ARM10C 20170715
+// ARM10C 20170906
 static void __sched __schedule(void)
 {
 	struct task_struct *prev, *next;
@@ -3652,11 +3683,15 @@ need_resched:
 	preempt_disable();
 
 	// smp_processor_id(): 0
+	// smp_processor_id(): 0
 	cpu = smp_processor_id();
+	// cpu: 0
 	// cpu: 0
 
 	// cpu: 0, cpu_rq(0): [pcp0] &runqueues
+	// cpu: 0, cpu_rq(0): [pcp0] &runqueues
 	rq = cpu_rq(cpu);
+	// rq: [pcp0] &runqueues
 	// rq: [pcp0] &runqueues
 
 	// cpu: 0
@@ -3666,15 +3701,24 @@ need_resched:
 	// [pcp0] (&rcu_preempt_data)->passed_quiesce: 1
 	// (&init_task)->rcu_read_unlock_special: 0
 
+	// rcu_note_context_switch 에서 한일:
+	// [pcp0] (&rcu_preempt_data)->passed_quiesce: 1
+	// (kmem_cache#15-oX (struct task_struct) (pid: 1))->rcu_read_unlock_special: 0
+
 	// rq->curr: [pcp0] (&runqueues)->curr: &init_task
+	// rq->curr: [pcp0] (&runqueues)->curr: kmem_cache#15-oX (struct task_struct) (pid: 1)
 	prev = rq->curr;
 	// prev: &init_task
+	// prev: kmem_cache#15-oX (struct task_struct) (pid: 1)
 
 	// prev: &init_task
+	// prev: kmem_cache#15-oX (struct task_struct) (pid: 1)
 	schedule_debug(prev);
 
 	// sched_feat(HRTICK): 0x3
+	// sched_feat(HRTICK): 0x3
 	if (sched_feat(HRTICK))
+		// rq: [pcp0] &runqueues
 		// rq: [pcp0] &runqueues
 		hrtick_clear(rq);
 
@@ -3688,21 +3732,35 @@ need_resched:
 	// smp_mb__before_spinlock 에서 한일:
 	// 공유자원을 다른 cpu core가 사용할수 있게 해주는 옵션
 
+	// smp_mb__before_spinlock 에서 한일:
+	// 공유자원을 다른 cpu core가 사용할수 있게 해주는 옵션
+
+	// &rq->lock: [pcp0] &(&runqueues)->lock
 	// &rq->lock: [pcp0] &(&runqueues)->lock
 	raw_spin_lock_irq(&rq->lock);
 
 	// raw_spin_lock_irq 에서 한일:
 	// [pcp0] &(&runqueues)->lock 을 사용하여 spin lock을 수행
 
+	// raw_spin_lock_irq 에서 한일:
+	// [pcp0] &(&runqueues)->lock 을 사용하여 spin lock을 수행
+
 	// &prev->nivcsw: &(&init_task)->nivcsw
+	// &prev->nivcsw: &(kmem_cache#15-oX (struct task_struct) (pid: 1))->nivcsw
 	switch_count = &prev->nivcsw;
 	// switch_count: &(&init_task)->nivcsw
+	// switch_count: &(kmem_cache#15-oX (struct task_struct) (pid: 1))->nivcsw
 
 	// prev->state: (&init_task)->state: 0, PREEMPT_ACTIVE: 0x8000000
+	// prev->state: (kmem_cache#15-oX (struct task_struct) (pid: 1))->state: 2, PREEMPT_ACTIVE: 0x8000000
 	if (prev->state && !(preempt_count() & PREEMPT_ACTIVE)) {
+		// prev->state: (kmem_cache#15-oX (struct task_struct) (pid: 1))->state: 2,
+		// prev: kmem_cache#15-oX (struct task_struct) (pid: 1)
+		// signal_pending_state(2, kmem_cache#15-oX (struct task_struct) (pid: 1)): 0
 		if (unlikely(signal_pending_state(prev->state, prev))) {
 			prev->state = TASK_RUNNING;
 		} else {
+			// rq: [pcp0] &runqueues, prev: kmem_cache#15-oX (struct task_struct) (pid: 1), DEQUEUE_SLEEP: 1
 			deactivate_task(rq, prev, DEQUEUE_SLEEP);
 			prev->on_rq = 0;
 
@@ -3841,9 +3899,13 @@ need_resched:
 
 // ARM10C 20170715
 // tsk: &init_task
+// ARM10C 20170906
+// tsk: kmem_cache#15-oX (struct task_struct) (pid: 1)
 static inline void sched_submit_work(struct task_struct *tsk)
 {
 	// tsk->state: (&init_task)->state: 0, tsk: &init_task, tsk_is_pi_blocked(&init_task): 0
+	// tsk->state: (kmem_cache#15-oX (struct task_struct) (pid: 1))->state: 2, tsk: kmem_cache#15-oX (struct task_struct) (pid: 1),
+	// tsk_is_pi_blocked(kmem_cache#15-oX (struct task_struct) (pid: 1)): 0
 	if (!tsk->state || tsk_is_pi_blocked(tsk))
 		return;
 		// return
@@ -3851,18 +3913,24 @@ static inline void sched_submit_work(struct task_struct *tsk)
 	 * If we are going to sleep and we have plugged IO queued,
 	 * make sure to submit it to avoid deadlocks.
 	 */
+	// tsk: kmem_cache#15-oX (struct task_struct) (pid: 1),
+	// blk_needs_flush_plug(kmem_cache#15-oX (struct task_struct) (pid: 1)): 0
 	if (blk_needs_flush_plug(tsk))
 		blk_schedule_flush_plug(tsk);
 }
 
 // ARM10C 20170715
+// ARM10C 20170906
 asmlinkage void __sched schedule(void)
 {
 	// current: &init_task
+	// current: kmem_cache#15-oX (struct task_struct) (pid: 1)
 	struct task_struct *tsk = current;
 	// tsk: &init_task
+	// tsk: kmem_cache#15-oX (struct task_struct) (pid: 1)
 
 	// tsk: &init_task
+	// tsk: kmem_cache#15-oX (struct task_struct) (pid: 1)
 	sched_submit_work(tsk);
 	__schedule();
 }

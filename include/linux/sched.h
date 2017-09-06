@@ -141,6 +141,7 @@ print_cfs_rq(struct seq_file *m, int cpu, struct cfs_rq *cfs_rq);
 // TASK_RUNNING: 0
 #define TASK_RUNNING		0
 // ARM10C 20160409
+// ARM10C 20170906
 // TASK_INTERRUPTIBLE: 1
 #define TASK_INTERRUPTIBLE	1
 // ARM10C 20140315
@@ -158,6 +159,8 @@ print_cfs_rq(struct seq_file *m, int cpu, struct cfs_rq *cfs_rq);
 // ARM10C 20170830
 // TASK_DEAD: 64
 #define TASK_DEAD		64
+// ARM10C 20170906
+// TASK_WAKEKILL: 128
 #define TASK_WAKEKILL		128
 // ARM10C 20161029
 // TASK_WAKING: 256
@@ -200,6 +203,8 @@ extern char ___assert_task_state[1 - 2*!!(
 // (kmem_cache#15-oX (struct task_struct))->state: 0, (kmem_cache#15-oX (struct task_struct))->flags: 0x00200040
 // ARM10C 20170617
 // p: kmem_cache#15-oX (struct task_struct)
+// ARM10C 20170906
+// p: kmem_cache#15-oX (struct task_struct) (pid: 1)
 #define task_contributes_to_load(task)	\
 				((task->state & TASK_UNINTERRUPTIBLE) != 0 && \
 				 (task->flags & PF_FROZEN) == 0)
@@ -220,6 +225,8 @@ extern char ___assert_task_state[1 - 2*!!(
  *
  * If the caller does not need such serialisation then use __set_current_state()
  */
+// ARM10C 20170906
+// state: 2
 #define __set_current_state(state_value)			\
 	do { current->state = (state_value); } while (0)
 #define set_current_state(state_value)		\
@@ -337,6 +344,7 @@ extern char __sched_text_start[], __sched_text_end[];
 extern int in_sched_functions(unsigned long addr);
 
 // ARM10C 20170830
+// ARM10C 20170906
 // LONG_MAX: 0x7FFFFFFF
 // MAX_SCHEDULE_TIMEOUT: 0x7FFFFFFF
 #define	MAX_SCHEDULE_TIMEOUT	LONG_MAX
@@ -1091,6 +1099,7 @@ struct sched_statistics {
 // ARM10C 20170624
 // ARM10C 20170729
 // ARM10C 20170812
+// ARM10C 20170906
 // sizeof(struct sched_entity): 100 bytes
 struct sched_entity {
 	struct load_weight	load;		/* for load-balancing */
@@ -1175,6 +1184,7 @@ enum perf_event_task_context {
 // ARM10C 20170715
 // ARM10C 20170729
 // ARM10C 20170812
+// ARM10C 20170906
 // sizeof(struct task_struct): 815 bytes
 struct task_struct {
 	volatile long state;	/* -1 unrunnable, 0 runnable, >0 stopped */
@@ -1985,6 +1995,8 @@ extern void task_clear_jobctl_pending(struct task_struct *task,
 
 #ifdef CONFIG_PREEMPT_RCU // CONFIG_PREEMPT_RCU=y
 
+// ARM10C 20170906
+// RCU_READ_UNLOCK_BLOCKED: 0x1
 #define RCU_READ_UNLOCK_BLOCKED (1 << 0) /* blocked while in RCU read-side. */
 // ARM10C 20170720
 // RCU_READ_UNLOCK_NEED_QS: 0x2
@@ -2845,10 +2857,17 @@ static inline int fatal_signal_pending(struct task_struct *p)
 	return signal_pending(p) && __fatal_signal_pending(p);
 }
 
+// ARM10C 20170906
+// state: 2, current: kmem_cache#15-oX (struct task_struct) (pid: 1)
+// ARM10C 20170906
+// prev->state: (kmem_cache#15-oX (struct task_struct) (pid: 1))->state: 2, prev: kmem_cache#15-oX (struct task_struct) (pid: 1)
 static inline int signal_pending_state(long state, struct task_struct *p)
 {
+	// state: 2, TASK_INTERRUPTIBLE: 1, TASK_WAKEKILL: 128
 	if (!(state & (TASK_INTERRUPTIBLE | TASK_WAKEKILL)))
 		return 0;
+		// return 0
+
 	if (!signal_pending(p))
 		return 0;
 

@@ -44,10 +44,14 @@ rq_sched_info_depart(struct rq *rq, unsigned long long delta)
 {}
 // ARM10C 20170720
 // this_rq(): [pcp0] runqueues, sched_count
+// ARM10C 20170906
+// this_rq(): [pcp0] runqueues, sched_count
 # define schedstat_inc(rq, field)	do { } while (0)
+// ARM10C 20170906
 # define schedstat_add(rq, field, amt)	do { } while (0)
 // ARM10C 20170427
 // ARM10C 20170812
+// ARM10C 20170906
 # define schedstat_set(var, val)	do { } while (0)
 #endif
 
@@ -157,6 +161,7 @@ sched_info_switch(struct rq *rq,
 // ARM10C 20170201
 #define sched_info_queued(rq, t)		do { } while (0)
 #define sched_info_reset_dequeued(t)	do { } while (0)
+// ARM10C 20170906
 #define sched_info_dequeued(rq, t)		do { } while (0)
 #define sched_info_depart(rq, t)		do { } while (0)
 #define sched_info_arrive(rq, next)		do { } while (0)

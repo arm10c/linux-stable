@@ -66,10 +66,14 @@ extern void rt_mutex_setprio(struct task_struct *p, int prio);
 extern void rt_mutex_adjust_pi(struct task_struct *p);
 // ARM10C 20170715
 // tsk: &init_task
+// ARM10C 20170906
+// kmem_cache#15-oX (struct task_struct) (pid: 1)
 static inline bool tsk_is_pi_blocked(struct task_struct *tsk)
 {
 	// tsk->pi_blocked_on: (&init_task)->pi_blocked_on: NULL
+	// tsk->pi_blocked_on: (kmem_cache#15-oX (struct task_struct) (pid: 1))->pi_blocked_on: NULL
 	return tsk->pi_blocked_on != NULL;
+	// return 0
 	// return 0
 }
 #else

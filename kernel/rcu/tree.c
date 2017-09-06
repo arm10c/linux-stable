@@ -252,6 +252,8 @@ static int rcu_gp_in_progress(struct rcu_state *rsp)
  */
 // ARM10C 20170715
 // cpu: 0
+// ARM10C 20170906
+// cpu: 0
 void rcu_sched_qs(int cpu)
 {
 	// cpu: 0, per_cpu(rcu_sched_data, 0): [pcp0] rcu_sched_data
@@ -284,22 +286,33 @@ void rcu_bh_qs(int cpu)
  */
 // ARM10C 20170715
 // cpu: 0
+// ARM10C 20170906
+// cpu: 0
 void rcu_note_context_switch(int cpu)
 {
 	trace_rcu_utilization(TPS("Start context switch")); // null function
 
+	// cpu: 0
 	// cpu: 0
 	rcu_sched_qs(cpu);
 
 	// rcu_sched_qs 에서 한일:
 	// [pcp0] (&rcu_sched_data)->passed_quiesce: 1
 
+	// rcu_sched_qs 에서 한일:
+	// [pcp0] (&rcu_sched_data)->passed_quiesce: 1
+
+	// cpu: 0
 	// cpu: 0
 	rcu_preempt_note_context_switch(cpu);
 
 	// rcu_preempt_note_context_switch 에서 한일:
 	// [pcp0] (&rcu_preempt_data)->passed_quiesce: 1
 	// (&init_task)->rcu_read_unlock_special: 0
+
+	// rcu_preempt_note_context_switch 에서 한일:
+	// [pcp0] (&rcu_preempt_data)->passed_quiesce: 1
+	// (kmem_cache#15-oX (struct task_struct) (pid: 1))->rcu_read_unlock_special: 0
 
 	trace_rcu_utilization(TPS("End context switch")); // null function
 }

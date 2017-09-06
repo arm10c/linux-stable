@@ -10,6 +10,7 @@
 struct tvec_base;
 
 // ARM10C 20150704
+// ARM10C 20170906
 // sizeof(struct timer_list): 28 bytes
 struct timer_list {
 	/*

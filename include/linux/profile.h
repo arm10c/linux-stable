@@ -108,6 +108,8 @@ static inline void profile_hits(int type, void *ip, unsigned int nr_hits)
 
 // ARM10C 20170720
 // SCHED_PROFILING: 2, __builtin_return_address(0)
+// ARM10C 20170906
+// SCHED_PROFILING: 2, __builtin_return_address(0)
 static inline void profile_hit(int type, void *ip)
 {
 	return;

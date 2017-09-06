@@ -373,6 +373,8 @@ static inline struct task_struct *task_of(struct sched_entity *se)
 // se: &(&init_task)->se
 // ARM10C 20170729
 // se: &(&init_task)->se
+// ARM10C 20170906
+// se: &(kmem_cache#15-oX (struct task_struct) (pid: 1))->se
 #define for_each_sched_entity(se) \
 		for (; se; se = se->parent)
 
@@ -412,6 +414,8 @@ static inline struct cfs_rq *task_cfs_rq(struct task_struct *p)
 // se: &(kmem_cache#15-oX (struct task_struct))->se
 // ARM10C 20170729
 // se: &(&init_task)->se
+// ARM10C 20170906
+// se: &(kmem_cache#15-oX (struct task_struct) (pid: 1))->se
 static inline struct cfs_rq *cfs_rq_of(struct sched_entity *se)
 {
 	// se->cfs_rq: (kmem_cache#15-oX (struct task_struct))->se.cfs_rq: [pcp0] &(&runqueues)->cfs
@@ -738,13 +742,25 @@ static inline int entity_before(struct sched_entity *a,
 	// return 0
 }
 
+// ARM10C 20170906
+// [20170906] cfs_rq: [pcp0] &(&runqueues)->cfs
 static void update_min_vruntime(struct cfs_rq *cfs_rq)
 {
+	// cfs_rq->min_vruntime: [pcp0] (&(&runqueues)->cfs)->min_vruntime: 0xFFFFFFFFFFF00000
 	u64 vruntime = cfs_rq->min_vruntime;
+	// vruntime: 0xFFFFFFFFFFF00000
 
+	// cfs_rq->curr: [pcp0] (&(&runqueues)->cfs)->curr: &(kmem_cache#15-oX (struct task_struct))->se (pid: 1)
 	if (cfs_rq->curr)
+		// cfs_rq->curr: [pcp0] (&(&runqueues)->cfs)->curr: &(kmem_cache#15-oX (struct task_struct))->se (pid: 1)
+		// cfs_rq->curr->vruntime: (&(kmem_cache#15-oX (struct task_struct))->se (pid: 1))->vruntime: 계산된 시간차이값+ XXXXXXXX
 		vruntime = cfs_rq->curr->vruntime;
+		// vruntime: 계산된 시간차이값+ XXXXXXXX
 
+
+// 2017/09/06 종료
+
+	// cfs_rq->rb_leftmost: [pcp0] (&(&runqueues)->cfs)->rb_leftmost: &(&(kmem_cache#15-oX (struct task_struct))->se)->run_node (pid 2)
 	if (cfs_rq->rb_leftmost) {
 		struct sched_entity *se = rb_entry(cfs_rq->rb_leftmost,
 						   struct sched_entity,
@@ -989,6 +1005,8 @@ int sched_proc_update_handler(struct ctl_table *table, int write,
  */
 // ARM10C 20161015
 // 0x5B8D7E, se: &(kmem_cache#15-oX (struct task_struct))->se
+// ARM10C 20170906
+// [20170906] delta_exec: 실행된 시간차이값, curr: &(kmem_cache#15-oX (struct task_struct))->se (pid: 1)
 static inline u64 calc_delta_fair(u64 delta, struct sched_entity *se)
 {
 	// se->load.weight: (&(kmem_cache#15-oX (struct task_struct))->se)->load.weight: 1024, NICE_0_LOAD: 0x400
@@ -1174,37 +1192,66 @@ void init_task_runnable_average(struct task_struct *p)
 // [pcp0] &(&runqueues)->cfs
 // ARM10C 20170617
 // cfs_rq: [pcp0] &(&runqueues)->cfs
+// ARM10C 20170906
+// cfs_rq: [pcp0] &(&runqueues)->cfs
 static void update_curr(struct cfs_rq *cfs_rq)
 {
 	// cfs_rq->curr: [pcp0] (&(&runqueues)->cfs)->curr: NULL
+	// [20170906] cfs_rq->curr: [pcp0] (&(&runqueues)->cfs)->curr: &(kmem_cache#15-oX (struct task_struct))->se (pid: 1)
 	struct sched_entity *curr = cfs_rq->curr;
 	// curr: NULL
+	// [20170906] curr: &(kmem_cache#15-oX (struct task_struct))->se (pid: 1)
 
 	// cfs_rq: [pcp0] &(&runqueues)->cfs, rq_of([pcp0] &(&runqueues)->cfs): [pcp0] &runqueues
 	// rq_clock_task([pcp0] &runqueues): 현재의 [pcp0] &runqueues 의 schedule 시간값
+	// [20170906] cfs_rq: [pcp0] &(&runqueues)->cfs, rq_of([pcp0] &(&runqueues)->cfs): [pcp0] &runqueues
+	// [20170906] rq_clock_task([pcp0] &runqueues): 현재의 [pcp0] &runqueues 의 schedule 시간값
 	u64 now = rq_clock_task(rq_of(cfs_rq));
 	// now: 현재의 [pcp0] &runqueues 의 schedule 시간값
+	// [20170906] now: 현재의 [pcp0] &runqueues 의 schedule 시간값
 
 	u64 delta_exec;
 
 	// curr: NULL
+	// [20170906] curr: &(kmem_cache#15-oX (struct task_struct))->se (pid: 1)
 	if (unlikely(!curr))
 		return;
 		// return 수행
 
+	// [20170906] now: 현재의 [pcp0] &runqueues 의 schedule 시간값,
+	// [20170906] curr->exec_start: (&(kmem_cache#15-oX (struct task_struct))->se (pid: 1))->exec_start: 현재의 schedule 시간값
 	delta_exec = now - curr->exec_start;
+	// [20170906] delta_exec: 실행된 시간차이값
+
+	// [20170906] delta_exec: 실행된 시간차이값
 	if (unlikely((s64)delta_exec <= 0))
 		return;
 
+	// [20170906] curr->exec_start: (&(kmem_cache#15-oX (struct task_struct))->se (pid: 1))->exec_start: 현재의 schedule 시간값,
+	// [20170906] now: 현재의 [pcp0] &runqueues 의 schedule 시간값
 	curr->exec_start = now;
+	// [20170906] curr->exec_start: (&(kmem_cache#15-oX (struct task_struct))->se (pid: 1))->exec_start: 현재의 [pcp0] &runqueues 의 schedule 시간값
 
+	// [20170906] curr->statistics.exec_max: (&(kmem_cache#15-oX (struct task_struct))->se (pid: 1))->statistics.exec_max,
+	// [20170906] delta_exec: 실행된 시간차이값
 	schedstat_set(curr->statistics.exec_max,
-		      max(delta_exec, curr->statistics.exec_max));
+		      max(delta_exec, curr->statistics.exec_max)); // null function
 
+	// [20170906] curr->sum_exec_runtime: (&(kmem_cache#15-oX (struct task_struct))->se (pid: 1))->sum_exec_runtime: 0,
+	// [20170906] delta_exec: 실행된 시간차이값
 	curr->sum_exec_runtime += delta_exec;
-	schedstat_add(cfs_rq, exec_clock, delta_exec);
+	// [20170906] curr->sum_exec_runtime: (&(kmem_cache#15-oX (struct task_struct))->se (pid: 1))->sum_exec_runtime: 실행된 시간차이값
 
+	// [20170906] cfs_rq: [pcp0] &(&runqueues)->cfs, delta_exec: 실행된 시간차이값
+	schedstat_add(cfs_rq, exec_clock, delta_exec); // null function
+
+	// [20170906] delta_exec: 실행된 시간차이값, curr: &(kmem_cache#15-oX (struct task_struct))->se (pid: 1)
+	// [20170906] calc_delta_fair(실행된 시간차이값, &(kmem_cache#15-oX (struct task_struct))->se (pid: 1)): 계산된 시간차이값
+	// [20170906] curr->vruntime: (&(kmem_cache#15-oX (struct task_struct))->se (pid: 1))->vruntime
 	curr->vruntime += calc_delta_fair(delta_exec, curr);
+	// [20170906] curr->vruntime: (&(kmem_cache#15-oX (struct task_struct))->se (pid: 1))->vruntime: 계산된 시간차이값+ XXXXXXXX
+
+	// [20170906] cfs_rq: [pcp0] &(&runqueues)->cfs
 	update_min_vruntime(cfs_rq);
 
 	if (entity_is_task(curr)) {
@@ -3697,12 +3744,15 @@ static void clear_buddies(struct cfs_rq *cfs_rq, struct sched_entity *se)
 
 static __always_inline void return_cfs_rq_runtime(struct cfs_rq *cfs_rq);
 
+// ARM10C 20170906
+// cfs_rq: [pcp0] &(&runqueues)->cfs, se: &(kmem_cache#15-oX (struct task_struct) (pid: 1))->se, flags: 1
 static void
 dequeue_entity(struct cfs_rq *cfs_rq, struct sched_entity *se, int flags)
 {
 	/*
 	 * Update run-time statistics of the 'current'.
 	 */
+	// cfs_rq: [pcp0] &(&runqueues)->cfs
 	update_curr(cfs_rq);
 	dequeue_entity_load_avg(cfs_rq, se, flags & DEQUEUE_SLEEP);
 
@@ -3820,7 +3870,7 @@ set_next_entity(struct cfs_rq *cfs_rq, struct sched_entity *se)
 
 	// cfs_rq->curr: [pcp0] (&(&runqueues)->cfs)->curr: NULL, se: &(kmem_cache#15-oX (struct task_struct))->se (pid: 1)
 	cfs_rq->curr = se;
-	// cfs_rq->curr: [pcp0] (&(&runqueues)->cfs)->curr: NULL: &(kmem_cache#15-oX (struct task_struct))->se (pid: 1)
+	// cfs_rq->curr: [pcp0] (&(&runqueues)->cfs)->curr: &(kmem_cache#15-oX (struct task_struct))->se (pid: 1)
 
 #ifdef CONFIG_SCHEDSTATS // CONFIG_SCHEDSTATS=n
 	/*
@@ -5057,14 +5107,30 @@ static void set_next_buddy(struct sched_entity *se);
  * decreased. We remove the task from the rbtree and
  * update the fair scheduling stats:
  */
+// ARM10C 20170906
+// rq: [pcp0] &runqueues, p: kmem_cache#15-oX (struct task_struct) (pid: 1), flags: 1
 static void dequeue_task_fair(struct rq *rq, struct task_struct *p, int flags)
 {
 	struct cfs_rq *cfs_rq;
+
+	// &p->se: &(kmem_cache#15-oX (struct task_struct) (pid: 1))->se
 	struct sched_entity *se = &p->se;
+	// se: &(kmem_cache#15-oX (struct task_struct) (pid: 1))->se
+
+	// flags: 1, DEQUEUE_SLEEP: 1
 	int task_sleep = flags & DEQUEUE_SLEEP;
+	// task_sleep: 1
 
 	for_each_sched_entity(se) {
+	// for (; &(kmem_cache#15-oX (struct task_struct) (pid: 1))->se;
+	//        &(kmem_cache#15-oX (struct task_struct) (pid: 1))->se = (&(kmem_cache#15-oX (struct task_struct) (pid: 1))->se)->parent)
+
+		// se: &(kmem_cache#15-oX (struct task_struct) (pid: 1))->se,
+		// cfs_rq_of(&(kmem_cache#15-oX (struct task_struct) (pid: 1))->se): [pcp0] &(&runqueues)->cfs
 		cfs_rq = cfs_rq_of(se);
+		// cfs_rq: [pcp0] &(&runqueues)->cfs
+
+		// cfs_rq: [pcp0] &(&runqueues)->cfs, se: &(kmem_cache#15-oX (struct task_struct) (pid: 1))->se, flags: 1
 		dequeue_entity(cfs_rq, se, flags);
 
 		/*
@@ -9072,6 +9138,7 @@ static unsigned int get_rr_interval_fair(struct rq *rq, struct task_struct *task
 // ARM10C 20170720
 // ARM10C 20170729
 // ARM10C 20170812
+// ARM10C 20170906
 const struct sched_class fair_sched_class = {
 	.next			= &idle_sched_class,
 	.enqueue_task		= enqueue_task_fair,

@@ -504,6 +504,7 @@ static inline void rcu_preempt_sleep_check(void)
 // ARM10C 20170624
 #define rcu_lockdep_assert(c, s) do { } while (0)
 // ARM10C 20170720
+// ARM10C 20170906
 #define rcu_sleep_check() do { } while (0)
 
 #endif /* #else #ifdef CONFIG_PROVE_RCU */

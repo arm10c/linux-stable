@@ -206,6 +206,8 @@ EXPORT_SYMBOL_GPL(rcu_force_quiescent_state);
  */
 // ARM10C 20170720
 // cpu: 0
+// ARM10C 20170906
+// cpu: 0
 static void rcu_preempt_qs(int cpu)
 {
 	// cpu: 0, &per_cpu(rcu_preempt_data, cpu): [pcp0] &rcu_preempt_data
@@ -242,11 +244,15 @@ static void rcu_preempt_qs(int cpu)
  */
 // ARM10C 20170715
 // cpu: 0
+// ARM10C 20170906
+// cpu: 0
 static void rcu_preempt_note_context_switch(int cpu)
 {
 	// current: &init_task
+	// current: kmem_cache#15-oX (struct task_struct) (pid: 1)
 	struct task_struct *t = current;
 	// t: &init_task
+	// t: kmem_cache#15-oX (struct task_struct) (pid: 1)
 
 	unsigned long flags;
 	struct rcu_data *rdp;
@@ -256,7 +262,9 @@ static void rcu_preempt_note_context_switch(int cpu)
 // 2017/07/20 시작
 
 	// t->rcu_read_lock_nesting: (&init_task)->rcu_read_lock_nesting: 0,
-	// t->rcu_read_unlock_special: (&init_task)->rcu_read_unlock_special: 0
+	// t->rcu_read_unlock_special: (&init_task)->rcu_read_unlock_special: 0, RCU_READ_UNLOCK_BLOCKED: 0x1
+	// t->rcu_read_lock_nesting: (kmem_cache#15-oX (struct task_struct) (pid: 1))->rcu_read_lock_nesting: 0,
+	// t->rcu_read_unlock_special: (kmem_cache#15-oX (struct task_struct) (pid: 1))->rcu_read_unlock_special: 0, RCU_READ_UNLOCK_BLOCKED: 0x1
 	if (t->rcu_read_lock_nesting > 0 &&
 	    (t->rcu_read_unlock_special & RCU_READ_UNLOCK_BLOCKED) == 0) {
 
@@ -329,6 +337,10 @@ static void rcu_preempt_note_context_switch(int cpu)
 	// local_irq_save 에서 한일:
 	// flags에 cpsr을 저장함
 
+	// local_irq_save 에서 한일:
+	// flags에 cpsr을 저장함
+
+	// cpu: 0
 	// cpu: 0
 	rcu_preempt_qs(cpu);
 
@@ -336,7 +348,14 @@ static void rcu_preempt_note_context_switch(int cpu)
 	// [pcp0] (&rcu_preempt_data)->passed_quiesce: 1
 	// (&init_task)->rcu_read_unlock_special: 0
 
+	// rcu_preempt_qs 에서 한일:
+	// [pcp0] (&rcu_preempt_data)->passed_quiesce: 1
+	// (kmem_cache#15-oX (struct task_struct) (pid: 1))->rcu_read_unlock_special: 0
+
 	local_irq_restore(flags);
+
+	// local_irq_restore 에서 한일:
+	// flags에 저장된 cpsr을 복원함
 
 	// local_irq_restore 에서 한일:
 	// flags에 저장된 cpsr을 복원함

@@ -298,6 +298,7 @@ struct cfs_bandwidth { };
 // ARM10C 20170720
 // ARM10C 20170729
 // ARM10C 20170812
+// ARM10C 20170906
 struct cfs_rq {
 	struct load_weight load;
 	unsigned int nr_running, h_nr_running;
@@ -470,6 +471,7 @@ extern struct root_domain def_root_domain;
 // ARM10C 20170720
 // ARM10C 20170729
 // ARM10C 20170819
+// ARM10C 20170906
 struct rq {
 	/* runqueue lock: */
 	raw_spinlock_t lock;
@@ -650,12 +652,14 @@ DECLARE_PER_CPU(struct rq, runqueues);
 // ARM10C 20170201
 // ARM10C 20170715
 // ARM10C 20170729
+// ARM10C 20170906
 // cpu_rq(0): [pcp0] &runqueues
 #define cpu_rq(cpu)		(&per_cpu(runqueues, (cpu)))
 // ARM10C 20161008
 // ARM10C 20170720
 // ARM10C 20170823
 // ARM10C 20170830
+// ARM10C 20170906
 // __get_cpu_var(runqueues): [pcp0] &runqueues
 #define this_rq()		(&__get_cpu_var(runqueues))
 // ARM10C 20170201
@@ -1249,6 +1253,8 @@ static const u32 prio_to_wmult[40] = {
 #define ENQUEUE_WAKING		0
 #endif
 
+// ARM10C 20170906
+// DEQUEUE_SLEEP: 1
 #define DEQUEUE_SLEEP		1
 
 // ARM10C 20140913

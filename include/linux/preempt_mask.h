@@ -89,6 +89,7 @@
 #define PREEMPT_ACTIVE_SHIFT	(NMI_SHIFT + NMI_BITS)
 // ARM10C 20161029
 // ARM10C 20170720
+// ARM10C 20170906
 // PREEMPT_ACTIVE_BITS: 1
 // PREEMPT_ACTIVE_SHIFT: 27
 // __IRQ_MASK(1): 1
@@ -155,6 +156,7 @@
  * (used by the scheduler, *after* releasing the kernel lock)
  */
 // ARM10C 20170720
+// ARM10C 20170906
 // PREEMPT_ACTIVE: 0x8000000
 // PREEMPT_CHECK_OFFSET: 1
 #define in_atomic_preempt_off() \

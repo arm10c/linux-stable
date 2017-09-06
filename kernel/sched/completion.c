@@ -103,14 +103,29 @@ do_wait_for_common(struct completion *x,
 		// (&(&(&kthreadd_done)->wait)->task_list)->next = &(&wait)->task_list;
 
 // 2017/08/30 종료
+// 2017/09/06 시작
 
 		do {
+			// state: 2, current: kmem_cache#15-oX (struct task_struct) (pid: 1)
+			// signal_pending_state(2, kmem_cache#15-oX (struct task_struct) (pid: 1)): 0
 			if (signal_pending_state(state, current)) {
 				timeout = -ERESTARTSYS;
 				break;
 			}
+
+			// state: 2
 			__set_current_state(state);
+
+			// __set_current_state 에서 한일:
+			// (kmem_cache#15-oX (struct task_struct) (pid: 1))->state: 2
+
+			// &x->wait.lock: &(&kthreadd_done)->wait.lock
 			spin_unlock_irq(&x->wait.lock);
+
+			// spin_unlock_irq 에서 한일:
+			// &(&kthreadd_done)->wait.lock 을 사용하여 spin unlock 을 수행
+
+			// action: schedule_timeout, timeout: 0x7FFFFFFF
 			timeout = action(timeout);
 			spin_lock_irq(&x->wait.lock);
 		} while (!x->done && timeout);

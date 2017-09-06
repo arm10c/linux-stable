@@ -159,6 +159,7 @@ do {								\
  */
 #ifndef smp_mb__before_spinlock
 // ARM10C 20170720
+// ARM10C 20170906
 #define smp_mb__before_spinlock()	smp_wmb()
 #endif
 
@@ -300,6 +301,8 @@ static inline void do_raw_spin_unlock(raw_spinlock_t *lock) __releases(lock)
 // ARM10C 20160514
 // &lock->rlock: &(&proc_inum_lock)->rlock
 // ARM10C 20170720
+// &rq->lock: [pcp0] &(&runqueues)->lock
+// ARM10C 20170906
 // &rq->lock: [pcp0] &(&runqueues)->lock
 #define raw_spin_lock_irq(lock)		_raw_spin_lock_irq(lock)
 #define raw_spin_lock_bh(lock)		_raw_spin_lock_bh(lock)
@@ -614,6 +617,8 @@ static inline void spin_unlock_bh(spinlock_t *lock)
 // &pidmap_lock
 // ARM10C 20161203
 // &pidmap_lock
+// ARM10C 20170906
+// &x->wait.lock: &(&kthreadd_done)->wait.lock
 static inline void spin_unlock_irq(spinlock_t *lock)
 {
 	// &lock->rlock: &(&proc_inum_lock)->rlock

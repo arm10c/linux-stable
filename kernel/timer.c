@@ -1659,14 +1659,17 @@ static void process_timeout(unsigned long __data)
  * In all cases the return value is guaranteed to be non-negative.
  */
 // ARM10C 20170830
+// ARM10C 20170906
+// timeout: 0x7FFFFFFF
 signed long __sched schedule_timeout(signed long timeout)
 {
 	struct timer_list timer;
 	unsigned long expire;
 
+	// timeout: 0x7FFFFFFF
 	switch (timeout)
 	{
-	case MAX_SCHEDULE_TIMEOUT:
+	case MAX_SCHEDULE_TIMEOUT: // MAX_SCHEDULE_TIMEOUT: 0x7FFFFFFF
 		/*
 		 * These two special cases are useful to be comfortable
 		 * in the caller. Nothing more. We could take

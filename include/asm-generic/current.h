@@ -33,6 +33,7 @@
 // current: &init_task
 // ARM10C 20170823
 // ARM10C 20170830
+// ARM10C 20170906
 // get_current(): current_thread_info()->task: kmem_cache#15-oX (struct task_struct) (pid: 1)
 // current: kmem_cache#15-oX (struct task_struct) (pid: 1)
 #define current get_current()
