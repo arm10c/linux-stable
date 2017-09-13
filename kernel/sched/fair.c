@@ -343,12 +343,16 @@ static inline struct rq *rq_of(struct cfs_rq *cfs_rq)
 // se->my_q: (&(kmem_cache#15-oX (struct task_struct))->se)->my_q: NULL
 // entity_is_task(&(kmem_cache#15-oX (struct task_struct))->se): 1
 // ARM10C 20170617
+// ARM10C 20170913
+// [20170906] curr: &(kmem_cache#15-oX (struct task_struct))->se (pid: 1)
 #define entity_is_task(se)	(!se->my_q)
 
 // ARM10C 20170419
 // se: &(kmem_cache#15-oX (struct task_struct))->se
 // ARM10C 20170812
 // se: &(kmem_cache#15-oX (struct task_struct))->se (pid: 1)
+// ARM10C 20170913
+// [20170906] curr: &(kmem_cache#15-oX (struct task_struct))->se (pid: 1)
 static inline struct task_struct *task_of(struct sched_entity *se)
 {
 #ifdef CONFIG_SCHED_DEBUG // CONFIG_SCHED_DEBUG=y
@@ -697,6 +701,8 @@ void account_cfs_rq_runtime(struct cfs_rq *cfs_rq, u64 delta_exec);
 
 // ARM10C 20161015
 // se->vruntime: (&(kmem_cache#15-oX (struct task_struct))->se)->vruntime: 0, vruntime: 0x4B8D7E
+// ARM10C 20170913
+// cfs_rq->min_vruntime: [pcp0] (&(&runqueues)->cfs)->min_vruntime: 0xFFFFFFFFFFF00000, vruntime: 0
 static inline u64 max_vruntime(u64 max_vruntime, u64 vruntime)
 {
 	// vruntime: 0x4B8D7E, max_vruntime: 0
@@ -714,13 +720,23 @@ static inline u64 max_vruntime(u64 max_vruntime, u64 vruntime)
 	// return 0x4B8D7E
 }
 
+// ARM10C 20170913
+// vruntime: 계산된 시간차이값+ XXXXXXXX, se->vruntime: (&(kmem_cache#15-oX (struct task_struct))->se) (pid 2))->vruntime: 0
 static inline u64 min_vruntime(u64 min_vruntime, u64 vruntime)
 {
+	// vruntime: 0, min_vruntime: 계산된 시간차이값+ XXXXXXXX
 	s64 delta = (s64)(vruntime - min_vruntime);
-	if (delta < 0)
-		min_vruntime = vruntime;
+	// delta: -계산된 시간차이값- XXXXXXXX
 
+	// delta: -계산된 시간차이값- XXXXXXXX
+	if (delta < 0)
+		// vruntime: 0, min_vruntime: 계산된 시간차이값+ XXXXXXXX
+		min_vruntime = vruntime;
+		// min_vruntime: 0
+
+	// min_vruntime: 0
 	return min_vruntime;
+	// return 0
 }
 
 // ARM10C 20161015
@@ -757,24 +773,36 @@ static void update_min_vruntime(struct cfs_rq *cfs_rq)
 		vruntime = cfs_rq->curr->vruntime;
 		// vruntime: 계산된 시간차이값+ XXXXXXXX
 
-
 // 2017/09/06 종료
+// 2017/09/13 시작
 
 	// cfs_rq->rb_leftmost: [pcp0] (&(&runqueues)->cfs)->rb_leftmost: &(&(kmem_cache#15-oX (struct task_struct))->se)->run_node (pid 2)
 	if (cfs_rq->rb_leftmost) {
+		// cfs_rq->rb_leftmost: [pcp0] (&(&runqueues)->cfs)->rb_leftmost: &(&(kmem_cache#15-oX (struct task_struct))->se)->run_node (pid 2)
+		// rb_entry(&(&(kmem_cache#15-oX (struct task_struct))->se)->run_node (pid 2), struct sched_entity, run_node):
+		// &(kmem_cache#15-oX (struct task_struct))->se) (pid 2)
 		struct sched_entity *se = rb_entry(cfs_rq->rb_leftmost,
 						   struct sched_entity,
 						   run_node);
+		// se: &(kmem_cache#15-oX (struct task_struct))->se) (pid 2)
 
+		// cfs_rq->curr: [pcp0] (&(&runqueues)->cfs)->curr: &(kmem_cache#15-oX (struct task_struct))->se (pid: 1)
 		if (!cfs_rq->curr)
 			vruntime = se->vruntime;
 		else
+			// vruntime: 계산된 시간차이값+ XXXXXXXX, se->vruntime: (&(kmem_cache#15-oX (struct task_struct))->se) (pid 2))->vruntime: 0
+			// min_vruntime(계산된 시간차이값+ XXXXXXXX, 0): 0
 			vruntime = min_vruntime(vruntime, se->vruntime);
+			// vruntime: 0
 	}
 
 	/* ensure we never gain time by being placed backwards. */
+	// cfs_rq->min_vruntime: [pcp0] (&(&runqueues)->cfs)->min_vruntime: 0xFFFFFFFFFFF00000, vruntime: 0
+	// max_vruntime(0xFFFFFFFFFFF00000, 0): 0xFFFFFFFFFFF00000
 	cfs_rq->min_vruntime = max_vruntime(cfs_rq->min_vruntime, vruntime);
-#ifndef CONFIG_64BIT
+	// cfs_rq->min_vruntime: [pcp0] (&(&runqueues)->cfs)->min_vruntime: 0xFFFFFFFFFFF00000
+
+#ifndef CONFIG_64BIT // CONFIG_64BIT=n
 	smp_wmb();
 	cfs_rq->min_vruntime_copy = cfs_rq->min_vruntime;
 #endif
@@ -1254,11 +1282,29 @@ static void update_curr(struct cfs_rq *cfs_rq)
 	// [20170906] cfs_rq: [pcp0] &(&runqueues)->cfs
 	update_min_vruntime(cfs_rq);
 
-	if (entity_is_task(curr)) {
-		struct task_struct *curtask = task_of(curr);
+	// [20170906] update_min_vruntime  에서 한일:
+	// [pcp0] (&(&runqueues)->cfs)->min_vruntime: 0xFFFFFFFFFFF00000
 
-		trace_sched_stat_runtime(curtask, delta_exec, curr->vruntime);
+	// [20170906] curr: &(kmem_cache#15-oX (struct task_struct))->se (pid: 1)
+	// [20170906] entity_is_task(&(kmem_cache#15-oX (struct task_struct))->se (pid: 1)): 1
+	if (entity_is_task(curr)) {
+		// [20170906] curr: &(kmem_cache#15-oX (struct task_struct))->se (pid: 1)
+		// task_of(&(kmem_cache#15-oX (struct task_struct))->se (pid: 1)): kmem_cache#15-oX (struct task_struct) (pid: 1)
+		struct task_struct *curtask = task_of(curr);
+		// [20170906] curtask: kmem_cache#15-oX (struct task_struct) (pid: 1)
+
+		// [20170906] curtask: kmem_cache#15-oX (struct task_struct) (pid: 1)
+		// [20170906] curr->vruntime: (&(kmem_cache#15-oX (struct task_struct))->se (pid: 1))->vruntime: 계산된 시간차이값+ XXXXXXXX
+		trace_sched_stat_runtime(curtask, delta_exec, curr->vruntime); // null function
+
+		// [20170906] curtask: kmem_cache#15-oX (struct task_struct) (pid: 1), delta_exec: 실행된 시간차이값
 		cpuacct_charge(curtask, delta_exec);
+
+		// [20170906] cpuacct_charge 에서 한일:
+		// root_cpuacct_cpuusage: 실행된 시간차이값
+
+// 2017/09/13 종료
+
 		account_group_exec_runtime(curtask, delta_exec);
 	}
 

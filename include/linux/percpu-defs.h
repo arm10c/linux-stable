@@ -197,6 +197,10 @@
 // DEFINE_PER_CPU(struct rcu_data, rcu_preempt_data):
 //	__attribute__((section(".data..percpu" "")))
 //	__typeof__(struct rcu_data) rcu_preempt_data
+// ARM10C 20170913
+// DEFINE_PER_CPU(u64, root_cpuacct_cpuusage):
+//	__attribute__((section(".data..percpu" "")))
+//	__typeof__(u64) root_cpuacct_cpuusage
 #define DEFINE_PER_CPU(type, name)					\
 	DEFINE_PER_CPU_SECTION(type, name, "")
 

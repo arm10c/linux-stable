@@ -1,4 +1,4 @@
-#ifdef CONFIG_CGROUP_CPUACCT
+#ifdef CONFIG_CGROUP_CPUACCT // CONFIG_CGROUP_CPUACCT=y
 
 extern void cpuacct_charge(struct task_struct *tsk, u64 cputime);
 extern void cpuacct_account_field(struct task_struct *p, int index, u64 val);

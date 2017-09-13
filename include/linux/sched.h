@@ -1100,6 +1100,7 @@ struct sched_statistics {
 // ARM10C 20170729
 // ARM10C 20170812
 // ARM10C 20170906
+// ARM10C 20170913
 // sizeof(struct sched_entity): 100 bytes
 struct sched_entity {
 	struct load_weight	load;		/* for load-balancing */
@@ -1185,6 +1186,7 @@ enum perf_event_task_context {
 // ARM10C 20170729
 // ARM10C 20170812
 // ARM10C 20170906
+// ARM10C 20170913
 // sizeof(struct task_struct): 815 bytes
 struct task_struct {
 	volatile long state;	/* -1 unrunnable, 0 runnable, >0 stopped */
@@ -3091,6 +3093,8 @@ static inline void ptrace_signal_wake_up(struct task_struct *t, bool resume)
 // p: kmem_cache#15-oX (struct task_struct)
 // ARM10C 20170617
 // kmem_cache#15-oX (struct task_struct)
+// ARM10C 20170913
+// tsk: kmem_cache#15-oX (struct task_struct) (pid: 1)
 static inline unsigned int task_cpu(const struct task_struct *p)
 {
 	// p: kmem_cache#15-oX (struct task_struct)

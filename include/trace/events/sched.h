@@ -401,6 +401,9 @@ DECLARE_EVENT_CLASS(sched_stat_runtime,
 			(unsigned long long)__entry->vruntime)
 );
 
+// ARM10C 20170913
+// [20170906] curtask: kmem_cache#15-oX (struct task_struct) (pid: 1), delta_exec: 실행된 시간차이값
+// [20170906] curr->vruntime: (&(kmem_cache#15-oX (struct task_struct))->se (pid: 1))->vruntime: 계산된 시간차이값+ XXXXXXXX
 DEFINE_EVENT(sched_stat_runtime, sched_stat_runtime,
 	     TP_PROTO(struct task_struct *tsk, u64 runtime, u64 vruntime),
 	     TP_ARGS(tsk, runtime, vruntime));

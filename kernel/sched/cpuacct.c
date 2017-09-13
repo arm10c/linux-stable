@@ -27,6 +27,8 @@ enum cpuacct_stat_index {
 
 /* track cpu usage of a group of tasks and its child groups */
 // ARM10C 20150822
+// ARM10C 20170913
+// ARM10C 20170913
 struct cpuacct {
 	struct cgroup_subsys_state css;
 	/* cpuusage holds pointer to a u64-type object on every cpu */
@@ -34,23 +36,47 @@ struct cpuacct {
 	struct kernel_cpustat __percpu *cpustat;
 };
 
+// ARM10C 20170913
+// &root_cpuacct.css
+// ARM10C 20170913
+// css_parent(&(&root_cpuacct)->css): NULL
 static inline struct cpuacct *css_ca(struct cgroup_subsys_state *css)
 {
+	// css: &root_cpuacct.css, container_of(&root_cpuacct.css, struct cpuacct, css): &root_cpuacct
+	// css: NULL
 	return css ? container_of(css, struct cpuacct, css) : NULL;
+	// return &root_cpuacct
+	// return NULL
 }
 
 /* return cpu accounting group to which this task belongs */
+// ARM10C 20170913
+// tsk: kmem_cache#15-oX (struct task_struct) (pid: 1)
 static inline struct cpuacct *task_ca(struct task_struct *tsk)
 {
+	// tsk: kmem_cache#15-oX (struct task_struct) (pid: 1), cpuacct_subsys_id: 2
+	// task_css(kmem_cache#15-oX (struct task_struct) (pid: 1), 2): &root_cpuacct.css
+	// css_ca(&root_cpuacct.css): &root_cpuacct
 	return css_ca(task_css(tsk, cpuacct_subsys_id));
+	// return &root_cpuacct
 }
 
+// ARM10C 20170913
+// ca: &root_cpuacct
 static inline struct cpuacct *parent_ca(struct cpuacct *ca)
 {
+	// &ca->css: &(&root_cpuacct)->css, css_parent(&(&root_cpuacct)->css): NULL
+	// css_ca(NULL): NULL
 	return css_ca(css_parent(&ca->css));
+	// return NULL
 }
 
+// ARM10C 20170913
+// DEFINE_PER_CPU(u64, root_cpuacct_cpuusage):
+// __attribute__((section(".data..percpu" "")))
+// __typeof__(u64) root_cpuacct_cpuusage
 static DEFINE_PER_CPU(u64, root_cpuacct_cpuusage);
+// ARM10C 20170913
 static struct cpuacct root_cpuacct = {
 	.cpustat	= &kernel_cpustat,
 	.cpuusage	= &root_cpuacct_cpuusage,
@@ -241,27 +267,50 @@ static struct cftype files[] = {
  *
  * called with rq->lock held.
  */
+// ARM10C 20170913
+// [20170906] curtask: kmem_cache#15-oX (struct task_struct) (pid: 1), delta_exec: 실행된 시간차이값
 void cpuacct_charge(struct task_struct *tsk, u64 cputime)
 {
 	struct cpuacct *ca;
 	int cpu;
 
+	// tsk: kmem_cache#15-oX (struct task_struct) (pid: 1), task_cpu(kmem_cache#15-oX (struct task_struct) (pid: 1)): 0
 	cpu = task_cpu(tsk);
+	// cpu: 0
 
 	rcu_read_lock();
 
+	// rcu_read_lock 에서 한일:
+	// (kmem_cache#15-oX (struct task_struct) (pid: 1))->rcu_read_lock_nesting: 1
+
+	// tsk: kmem_cache#15-oX (struct task_struct) (pid: 1), task_ca(kmem_cache#15-oX (struct task_struct) (pid: 1)): &root_cpuacct
 	ca = task_ca(tsk);
+	// ca: &root_cpuacct
 
 	while (true) {
+		// ca->cpuusage: (&root_cpuacct)->cpuusage: &root_cpuacct_cpuusage, cpu: 0
+		// per_cpu_ptr(&root_cpuacct_cpuusage, 0): [pcp0] &root_cpuacct_cpuusage
 		u64 *cpuusage = per_cpu_ptr(ca->cpuusage, cpu);
-		*cpuusage += cputime;
+		// cpuusage: [pcp0] &root_cpuacct_cpuusage
 
+		// *cpuusage: root_cpuacct_cpuusage: 0, cputime: 실행된 시간차이값
+		*cpuusage += cputime;
+		// *cpuusage: root_cpuacct_cpuusage: 실행된 시간차이값
+
+		// ca: &root_cpuacct, parent_ca(&root_cpuacct): NULL
 		ca = parent_ca(ca);
+		// ca: NULL
+
+		// ca: NULL
 		if (!ca)
 			break;
+			// break 수행
 	}
 
 	rcu_read_unlock();
+
+	// rcu_read_unlock 에서 한일:
+	// (kmem_cache#15-oX (struct task_struct) (pid: 1))->rcu_read_lock_nesting: 0
 }
 
 /*

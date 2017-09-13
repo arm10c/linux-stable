@@ -81,6 +81,7 @@ struct rb_root {
 // ARM10C 20160820
 // ARM10C 20170624
 // ARM10C 20170812
+// ARM10C 20170913
 #define	rb_entry(ptr, type, member) container_of(ptr, type, member)
 
 #define RB_EMPTY_ROOT(root)  ((root)->rb_node == NULL)

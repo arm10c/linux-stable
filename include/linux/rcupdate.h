@@ -842,6 +842,8 @@ static inline void rcu_preempt_sleep_check(void)
 // (kmem_cache#15-oX (struct task_struct))->cgroups, 0
 // ARM10C 20170624
 // (*((struct hlist_node __rcu **)(&(&pid_hash[계산된 hash index 값])->first))), 1
+// ARM10C 20170913
+// (kmem_cache#15-oX (struct task_struct) (pid: 1))->cgroups
 #define rcu_dereference_check(p, c) \
 	__rcu_dereference_check((p), rcu_read_lock_held() || (c), __rcu)
 
@@ -957,6 +959,8 @@ static inline void rcu_preempt_sleep_check(void)
 // (kmem_cache#15-oX (struct task_struct))->real_cred
 // ARM10C 20161210
 // (kmem_cache#15-oX (struct task_struct))->cgroups
+// ARM10C 20170913
+// (kmem_cache#15-oX (struct task_struct) (pid: 1))->cgroups
 #define rcu_dereference(p) rcu_dereference_check(p, 0)
 
 /**
@@ -1025,6 +1029,7 @@ static inline void rcu_preempt_sleep_check(void)
 // ARM10C 20161217
 // ARM10C 20170624
 // ARM10C 20170729
+// ARM10C 20170913
 static inline void rcu_read_lock(void)
 {
 	__rcu_read_lock();
@@ -1066,6 +1071,7 @@ static inline void rcu_read_lock(void)
 // ARM10C 20161217
 // ARM10C 20170701
 // ARM10C 20170729
+// ARM10C 20170913
 static inline void rcu_read_unlock(void)
 {
 	// rcu_is_watching(): true
