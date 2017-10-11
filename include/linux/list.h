@@ -381,6 +381,8 @@ static inline void __list_del(struct list_head * prev, struct list_head * next)
 // ARM10C 20140301
 // ARM10C 20140315
 // *entry: &waiter->list
+// ARM10C 20171011
+// entry: &(&(kmem_cache#15-oX (struct task_struct) (pid: 1))->se)->group_node
 static inline void __list_del_entry(struct list_head *entry)
 {
 	__list_del(entry->prev, entry->next);
@@ -433,14 +435,34 @@ static inline void list_replace_init(struct list_head *old,
  */
 // ARM10C 20140315
 // *entry : &waiter->list
+// ARM10C 20171011
+// &se->group_node: &(&(kmem_cache#15-oX (struct task_struct) (pid: 1))->se)->group_node
 static inline void list_del_init(struct list_head *entry)
 {
 	// entry: waiter->list
+	// entry: &(&(kmem_cache#15-oX (struct task_struct) (pid: 1))->se)->group_node
 	__list_del_entry(entry);
+
+	// __list_del_entry 에서 한일:
 	// &waiter->list->prev: prev, &waiter->list->next: next
 
+	// __list_del_entry 에서 한일:
+	// [pcp0] &(&runqueues)->cfs_tasks 란 list head에 &(&(kmem_cache#15-oX (struct task_struct))->se)->group_node 를 제거함(pid 1)
+	// 삭제전:
+	// [pcp0] &(&runqueues)->cfs_tasks <-> &(&(kmem_cache#15-oX (struct task_struct))->se)->group_node (pid 2) <-> &(&(kmem_cache#15-oX (struct task_struct))->se)->group_node (pid 1)
+	// 삭제후:
+	// [pcp0] &(&runqueues)->cfs_tasks <-> &(&(kmem_cache#15-oX (struct task_struct))->se)->group_node (pid 2) 
+
+	// entry: waiter->list
+	// entry: &(&(kmem_cache#15-oX (struct task_struct) (pid: 1))->se)->group_node
 	INIT_LIST_HEAD(entry);
+
+	// INIT_LIST_HEAD 에서 한일:
 	// &waiter->list->next: &waiter->list, &waiter->list->prev: &waiter->list
+
+	// INIT_LIST_HEAD 에서 한일:
+	// (&(&(kmem_cache#15-oX (struct task_struct) (pid: 1))->se)->group_node)->next: &(&(kmem_cache#15-oX (struct task_struct) (pid: 1))->se)->group_node
+	// (&(&(kmem_cache#15-oX (struct task_struct) (pid: 1))->se)->group_node)->prev: &(&(kmem_cache#15-oX (struct task_struct) (pid: 1))->se)->group_node
 }
 
 /**

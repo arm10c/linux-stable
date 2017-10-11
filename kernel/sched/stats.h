@@ -181,13 +181,19 @@ sched_info_switch(struct rq *rq,
  *
  * @tsk:	Pointer to target task.
  */
+// ARM10C 20171011
+// tsk: kmem_cache#15-oX (struct task_struct) (pid: 1)
 static inline bool cputimer_running(struct task_struct *tsk)
-
 {
+	// tsk->signal: (kmem_cache#15-oX (struct task_struct) (pid: 1))->signal: kmem_cache#13-oX (struct signal_struct)
+	// &tsk->signal->cputimer: &(kmem_cache#13-oX (struct signal_struct))->cputimer
 	struct thread_group_cputimer *cputimer = &tsk->signal->cputimer;
+	// cputimer: &(kmem_cache#13-oX (struct signal_struct))->cputimer
 
+	// cputimer->running: (&(kmem_cache#13-oX (struct signal_struct))->cputimer)->running: 0
 	if (!cputimer->running)
 		return false;
+		// return false
 
 	/*
 	 * After we flush the task's sum_exec_runtime to sig->sum_sched_runtime
@@ -265,13 +271,21 @@ static inline void account_group_system_time(struct task_struct *tsk,
  * If thread group time is being maintained, get the structure for the
  * running CPU and update the sum_exec_runtime field there.
  */
+// ARM10C 20171011
+// [20170906] curtask: kmem_cache#15-oX (struct task_struct) (pid: 1), delta_exec: 실행된 시간차이값
 static inline void account_group_exec_runtime(struct task_struct *tsk,
 					      unsigned long long ns)
 {
+	// tsk->signal: (kmem_cache#15-oX (struct task_struct) (pid: 1))->signal: kmem_cache#13-oX (struct signal_struct)
+	// &tsk->signal->cputimer: &(kmem_cache#13-oX (struct signal_struct))->cputimer
 	struct thread_group_cputimer *cputimer = &tsk->signal->cputimer;
+	// cputimer: &(kmem_cache#13-oX (struct signal_struct))->cputimer
 
+	// tsk: kmem_cache#15-oX (struct task_struct) (pid: 1)
+	// cputimer_running(kmem_cache#15-oX (struct task_struct) (pid: 1)): false
 	if (!cputimer_running(tsk))
 		return;
+		// return
 
 	raw_spin_lock(&cputimer->lock);
 	cputimer->cputime.sum_exec_runtime += ns;

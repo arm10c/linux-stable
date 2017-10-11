@@ -534,6 +534,7 @@ struct task_cputime {
  * used for thread group CPU timer calculations.
  */
 // ARM10C 20150919
+// ARM10C 20171011
 // sizeof(struct thread_group_cputimer): 36 bytes
 struct thread_group_cputimer {
 	struct task_cputime cputime;
@@ -1029,6 +1030,7 @@ struct uts_namespace;
 
 // ARM10C 20140913
 // ARM10C 20161015
+// ARM10C 20171011
 // sizeof(struct load_weight): 8 bytes
 struct load_weight {
 	unsigned long weight;
@@ -1038,6 +1040,7 @@ struct load_weight {
 // ARM10C 20151003
 // ARM10C 20170201
 // ARM10C 20170208
+// ARM10C 20171011
 // sizeof(struct sched_avg): 28 bytes
 struct sched_avg {
 	/*
@@ -1101,6 +1104,7 @@ struct sched_statistics {
 // ARM10C 20170812
 // ARM10C 20170906
 // ARM10C 20170913
+// ARM10C 20171011
 // sizeof(struct sched_entity): 100 bytes
 struct sched_entity {
 	struct load_weight	load;		/* for load-balancing */

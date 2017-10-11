@@ -299,6 +299,7 @@ struct cfs_bandwidth { };
 // ARM10C 20170729
 // ARM10C 20170812
 // ARM10C 20170906
+// ARM10C 20171011
 struct cfs_rq {
 	struct load_weight load;
 	unsigned int nr_running, h_nr_running;
@@ -1254,6 +1255,7 @@ static const u32 prio_to_wmult[40] = {
 #endif
 
 // ARM10C 20170906
+// ARM10C 20171011
 // DEQUEUE_SLEEP: 1
 #define DEQUEUE_SLEEP		1
 
