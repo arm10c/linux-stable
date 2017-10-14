@@ -1191,6 +1191,7 @@ enum perf_event_task_context {
 // ARM10C 20170812
 // ARM10C 20170906
 // ARM10C 20170913
+// ARM10C 20171014
 // sizeof(struct task_struct): 815 bytes
 struct task_struct {
 	volatile long state;	/* -1 unrunnable, 0 runnable, >0 stopped */
@@ -1867,6 +1868,7 @@ extern void thread_group_cputime_adjusted(struct task_struct *p, cputime_t *ut, 
 #define PF_VCPU		0x00000010	/* I'm a virtual CPU */
 // ARM10C 20160402
 // ARM10C 20160910
+// ARM10C 20171014
 // PF_WQ_WORKER: 0x00000020
 #define PF_WQ_WORKER	0x00000020	/* I'm a workqueue worker */
 // ARM10C 20160910

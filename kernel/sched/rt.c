@@ -1435,6 +1435,8 @@ static struct task_struct *_pick_next_task_rt(struct rq *rq)
 
 // ARM10C 20170729
 // rq: [pcp0] &runqueues
+// ARM10C 20171014
+// rq: [pcp0] &runqueues
 static struct task_struct *pick_next_task_rt(struct rq *rq)
 {
 	// rq: [pcp0] &runqueues, _pick_next_task_rt([pcp0] &runqueues): NULL

@@ -400,6 +400,8 @@ static inline struct task_struct *task_of(struct sched_entity *se)
 // se: &(&init_task)->se
 // ARM10C 20170906
 // se: &(kmem_cache#15-oX (struct task_struct) (pid: 1))->se
+// ARM10C 20171014
+// se: &(kmem_cache#15-oX (struct task_struct) (pid: 1))->se
 #define for_each_sched_entity(se) \
 		for (; se; se = se->parent)
 
@@ -440,6 +442,8 @@ static inline struct cfs_rq *task_cfs_rq(struct task_struct *p)
 // ARM10C 20170729
 // se: &(&init_task)->se
 // ARM10C 20170906
+// se: &(kmem_cache#15-oX (struct task_struct) (pid: 1))->se
+// ARM10C 20171014
 // se: &(kmem_cache#15-oX (struct task_struct) (pid: 1))->se
 static inline struct cfs_rq *cfs_rq_of(struct sched_entity *se)
 {
@@ -563,6 +567,8 @@ is_same_group(struct sched_entity *se, struct sched_entity *pse)
 // ARM10C 20170617
 // se: &(kmem_cache#15-oX (struct task_struct))->se
 // ARM10C 20171011
+// se: &(kmem_cache#15-oX (struct task_struct) (pid: 1))->se
+// ARM10C 20171014
 // se: &(kmem_cache#15-oX (struct task_struct) (pid: 1))->se
 static inline struct sched_entity *parent_entity(struct sched_entity *se)
 {
@@ -783,6 +789,8 @@ static inline int entity_before(struct sched_entity *a,
 
 // ARM10C 20170906
 // [20170906] cfs_rq: [pcp0] &(&runqueues)->cfs
+// ARM10C 20171014
+// cfs_rq: [pcp0] &(&runqueues)->cfs
 static void update_min_vruntime(struct cfs_rq *cfs_rq)
 {
 	// cfs_rq->min_vruntime: [pcp0] (&(&runqueues)->cfs)->min_vruntime: 0xFFFFFFFFFFF00000
@@ -2657,6 +2665,8 @@ static inline int throttled_hierarchy(struct cfs_rq *cfs_rq);
 // cfs_rq: [pcp0] &(&runqueues)->cfs
 // ARM10C 20170624
 // cfs_rq: [pcp0] &(&runqueues)->cfs
+// ARM10C 20171014
+// cfs_rq: [pcp0] &(&runqueues)->cfs
 static void update_cfs_shares(struct cfs_rq *cfs_rq)
 {
 	struct task_group *tg;
@@ -3184,6 +3194,8 @@ static inline u64 cfs_rq_clock_task(struct cfs_rq *cfs_rq);
 // se: &(kmem_cache#15-oX (struct task_struct))->se, 1
 // ARM10C 20171011
 // se: &(kmem_cache#15-oX (struct task_struct) (pid: 1))->se, 1
+// ARM10C 20171014
+// se: &(kmem_cache#15-oX (struct task_struct) (pid: 1))->se, 1
 static inline void update_entity_load_avg(struct sched_entity *se,
 					  int update_cfs_rq)
 {
@@ -3331,8 +3343,14 @@ static void update_cfs_rq_blocked_load(struct cfs_rq *cfs_rq, int force_update)
 	// 갱신 없음
 }
 
-// ARM10C 20170729
+// ARM10C 20170201
 // rq: [pcp0] &runqueues, rq->nr_running: [pcp0] (&runqueues)->nr_running: 0
+// ARM10C 20170617
+// rq: [pcp0] &runqueues, rq->nr_running: [pcp0] (&runqueues)->nr_running: 1
+// ARM10C 20170729
+// rq: [pcp0] &runqueues, rq->nr_running: [pcp0] (&runqueues)->nr_running: 2
+// ARM10C 20171014
+// rq: [pcp0] &runqueues, 1
 static inline void update_rq_runnable_avg(struct rq *rq, int runnable)
 {
 	// rq: [pcp0] &runqueues, rq_clock_task([pcp0] &runqueues): 현재의 schedule 시간값
@@ -3998,19 +4016,28 @@ dequeue_entity(struct cfs_rq *cfs_rq, struct sched_entity *se, int flags)
 	// [pcp0] (&(&runqueues)->cfs)->nr_running: 1
 
 // 2017/10/11 종료
+// 2017/10/14 시작
 
 	/*
 	 * Normalize the entity after updating the min_vruntime because the
 	 * update can refer to the ->curr item and we need to reflect this
 	 * movement in our normalized position.
 	 */
+	// flags: 1, DEQUEUE_SLEEP: 1
 	if (!(flags & DEQUEUE_SLEEP))
 		se->vruntime -= cfs_rq->min_vruntime;
 
 	/* return excess runtime on last dequeue */
-	return_cfs_rq_runtime(cfs_rq);
+	// cfs_rq: [pcp0] &(&runqueues)->cfs
+	return_cfs_rq_runtime(cfs_rq); // null function
 
+	// cfs_rq: [pcp0] &(&runqueues)->cfs
 	update_min_vruntime(cfs_rq);
+
+	// update_min_vruntime  에서 한일:
+	// [pcp0] (&(&runqueues)->cfs)->min_vruntime: 0xFFFFFFFFFFF00000
+
+	// cfs_rq: [pcp0] &(&runqueues)->cfs
 	update_cfs_shares(cfs_rq);
 }
 
@@ -4173,6 +4200,8 @@ static void check_cfs_rq_runtime(struct cfs_rq *cfs_rq);
 
 // ARM10C 20170729
 // cfs_rq: [pcp0] &(&runqueues)->cfs, se: &(&init_task)->se
+// ARM10C 20171014
+// cfs_rq: [pcp0] &(&runqueues)->cfs, se: &(kmem_cache#15-oX (struct task_struct) (pid: 1))->se
 static void put_prev_entity(struct cfs_rq *cfs_rq, struct sched_entity *prev)
 {
 	/*
@@ -4180,17 +4209,21 @@ static void put_prev_entity(struct cfs_rq *cfs_rq, struct sched_entity *prev)
 	 * was not called and update_curr() has to be done:
 	 */
 	// prev->on_rq: (&(&init_task)->se)->on_rq: 0
+	// prev->on_rq: (&(kmem_cache#15-oX (struct task_struct) (pid: 1))->se)->on_rq: 0
 	if (prev->on_rq)
 		update_curr(cfs_rq);
 
 	/* throttle cfs_rqs exceeding runtime */
 	// cfs_rq: [pcp0] &(&runqueues)->cfs
+	// cfs_rq: [pcp0] &(&runqueues)->cfs
 	check_cfs_rq_runtime(cfs_rq); // null function
 
 	// cfs_rq: [pcp0] &(&runqueues)->cfs, prev: &(&init_task)->se
+	// cfs_rq: [pcp0] &(&runqueues)->cfs, prev: &(kmem_cache#15-oX (struct task_struct) (pid: 1))->se
 	check_spread(cfs_rq, prev);
 
 	// prev->on_rq: (&(&init_task)->se)->on_rq: 0
+	// prev->on_rq: (&(kmem_cache#15-oX (struct task_struct) (pid: 1))->se)->on_rq: 0
 	if (prev->on_rq) {
 		update_stats_wait_start(cfs_rq, prev);
 		/* Put 'current' back into the tree. */
@@ -4198,7 +4231,7 @@ static void put_prev_entity(struct cfs_rq *cfs_rq, struct sched_entity *prev)
 		/* in !on_rq case, update occurred at dequeue */
 		update_entity_load_avg(prev, 1);
 	}
-	// cfs_rq->curr: [pcp0] (&(&runqueues)->cfs)->curr: NULL
+	// cfs_rq->curr: [pcp0] (&(&runqueues)->cfs)->curr: &(kmem_cache#15-oX (struct task_struct))->se (pid: 1)
 	cfs_rq->curr = NULL;
 	// cfs_rq->curr: [pcp0] (&(&runqueues)->cfs)->curr: NULL
 }
@@ -4975,6 +5008,8 @@ static void check_cfs_rq_runtime(struct cfs_rq *cfs_rq) {}
 // ARM10C 20170513
 // cfs_rq: [pcp0] &(&runqueues)->cfs
 static void check_enqueue_throttle(struct cfs_rq *cfs_rq) {}
+// ARM10C 20171014
+// cfs_rq: [pcp0] &(&runqueues)->cfs
 static __always_inline void return_cfs_rq_runtime(struct cfs_rq *cfs_rq) {}
 
 // ARM10C 20170513
@@ -4984,6 +5019,8 @@ static __always_inline void return_cfs_rq_runtime(struct cfs_rq *cfs_rq) {}
 // ARM10C 20170624
 // cfs_rq: [pcp0] &(&runqueues)->cfs
 // ARM10C 20170624
+// cfs_rq: [pcp0] &(&runqueues)->cfs
+// ARM10C 20171014
 // cfs_rq: [pcp0] &(&runqueues)->cfs
 static inline int cfs_rq_throttled(struct cfs_rq *cfs_rq)
 {
@@ -5066,6 +5103,8 @@ static void hrtick_start_fair(struct rq *rq, struct task_struct *p)
 // ARM10C 20170513
 // rq: [pcp0] &runqueues
 // ARM10C 20170624
+// rq: [pcp0] &runqueues
+// ARM10C 20171014
 // rq: [pcp0] &runqueues
 static void hrtick_update(struct rq *rq)
 {
@@ -5312,11 +5351,58 @@ enqueue_task_fair(struct rq *rq, struct task_struct *p, int flags)
 		// 현재 task의 남아 있는 수행 시간량 / 1024 + 현재의 schedule 시간 변화값
 	}
 
-	// se: &(kmem_cache#15-oX (struct task_struct))->se
-	// se: &(kmem_cache#15-oX (struct task_struct))->se
+	// se: NULL
+	// se: NULL
 	if (!se) {
+		// rq: [pcp0] &runqueues, rq->nr_running: [pcp0] (&runqueues)->nr_running: 0
+		// rq: [pcp0] &runqueues, rq->nr_running: [pcp0] (&runqueues)->nr_running: 1
 		update_rq_runnable_avg(rq, rq->nr_running);
+
+		// update_rq_runnable_avg 에서 한일:
+		// delta: 현재의 schedule 시간 변화값은 signed 로 변경시 0 보다 큰 값으로 가정하고 코드 분석 진행
+		//
+		// (&(&runqueues)->avg)->last_runnable_update: 현재의 schedule 시간값
+		//
+		// delta + delta_w 값이 1024 보다 작은 값이라고 가정하고 코드 분석 진행
+		//
+		// (&(&runqueues)->avg)->runnable_avg_sum:
+		// 현재 task의 남아 있는 수행 시간량 / 1024 + 현재의 schedule 시간 변화값
+		// (&(&runqueues)->avg)->runnable_avg_period:
+		// 현재 task의 남아 있는 수행 시간량 / 1024 + 현재의 schedule 시간 변화값
+		//
+		// (&(&runqueues)->avg)->runnable_avg_sum 값과 (&(&runqueues)->avg)->runnable_avg_period 값을 이용하여
+		// contrib 값을 계산함
+		//
+		// &(&root_task_group)->runnable_avg 에 계산된 현재 contrib 값을 더해줌
+		// [pcp0] (&(&runqueues)->cfs))->tg_runnable_contrib: 계산된 현재 contrib 값
+
+		// update_rq_runnable_avg 에서 한일:
+		// delta: 현재의 schedule 시간 변화값은 signed 로 변경시 0 보다 큰 값으로 가정하고 코드 분석 진행
+		//
+		// (&(&runqueues)->avg)->last_runnable_update: 현재의 schedule 시간값
+		//
+		// delta + delta_w 값이 1024 보다 작은 값이라고 가정하고 코드 분석 진행
+		//
+		// (&(&runqueues)->avg)->runnable_avg_sum:
+		// 현재 task의 남아 있는 수행 시간량 / 1024 + 현재의 schedule 시간 변화값
+		// (&(&runqueues)->avg)->runnable_avg_period:
+		// 현재 task의 남아 있는 수행 시간량 / 1024 + 현재의 schedule 시간 변화값
+		//
+		// (&(&runqueues)->avg)->runnable_avg_sum 값과 (&(&runqueues)->avg)->runnable_avg_period 값을 이용하여
+		// contrib 값을 계산함
+		//
+		// &(&root_task_group)->runnable_avg 에 계산된 현재 contrib 값을 더해줌
+		// [pcp0] (&(&runqueues)->cfs))->tg_runnable_contrib: 계산된 현재 contrib 값
+
+		// rq: [pcp0] &runqueues
+		// rq: [pcp0] &runqueues
 		inc_nr_running(rq);
+
+		// inc_nr_running 에서 한일:
+		// [pcp0] (&runqueues)->nr_running: 1
+
+		// inc_nr_running 에서 한일:
+		// [pcp0] (&runqueues)->nr_running: 2
 	}
 
 	// rq: [pcp0] &runqueues
@@ -5345,6 +5431,7 @@ static void dequeue_task_fair(struct rq *rq, struct task_struct *p, int flags)
 	int task_sleep = flags & DEQUEUE_SLEEP;
 	// task_sleep: 1
 
+	// se: &(kmem_cache#15-oX (struct task_struct) (pid: 1))->se
 	for_each_sched_entity(se) {
 	// for (; &(kmem_cache#15-oX (struct task_struct) (pid: 1))->se;
 	//        &(kmem_cache#15-oX (struct task_struct) (pid: 1))->se = (&(kmem_cache#15-oX (struct task_struct) (pid: 1))->se)->parent)
@@ -5357,33 +5444,92 @@ static void dequeue_task_fair(struct rq *rq, struct task_struct *p, int flags)
 		// cfs_rq: [pcp0] &(&runqueues)->cfs, se: &(kmem_cache#15-oX (struct task_struct) (pid: 1))->se, flags: 1
 		dequeue_entity(cfs_rq, se, flags);
 
+		// dequeue_entity 에서 한일:
+		// (&(kmem_cache#15-oX (struct task_struct))->se (pid: 1))->exec_start: 현재의 [pcp0] &runqueues 의 schedule 시간값
+		// (&(kmem_cache#15-oX (struct task_struct))->se (pid: 1))->sum_exec_runtime: 실행된 시간차이값
+		// (&(kmem_cache#15-oX (struct task_struct))->se (pid: 1))->vruntime: 계산된 시간차이값+ XXXXXXXX
+		// [pcp0] (&(&runqueues)->cfs)->min_vruntime: 0xFFFFFFFFFFF00000
+		// root_cpuacct_cpuusage: 실행된 시간차이값
+		//
+		// delta: 현재의 schedule 시간 변화값은 signed 로 변경시 0 보다 큰 값으로 가정하고 코드 분석 진행
+		//
+		// (&(&(kmem_cache#15-oX (struct task_struct))->se)->avg)->last_runnable_update: 현재의 schedule 시간값
+		//
+		// delta + delta_w 값이 1024 보다 작은 값이라고 가정하고 코드 분석 진행
+		//
+		// (&(&(kmem_cache#15-oX (struct task_struct))->se)->avg)->runnable_avg_sum:
+		// 현재 task의 남아 있는 수행 시간량 / 1024 + 현재의 schedule 시간 변화값
+		// (&(&(kmem_cache#15-oX (struct task_struct))->se)->avg)->runnable_avg_period:
+		// 현재 task의 남아 있는 수행 시간량 / 1024 + 현재의 schedule 시간 변화값
+		//
+		// [pcp0] (&(&runqueues)->cfs)->blocked_load_avg: 0
+		// (&(&(&runqueues)->cfs)->decay_counter)->counter: 현재의 schedule 시간값>> 20 + 1 + 시간값x
+		// [pcp0] (&(&runqueues)->cfs)->last_decay: 현재의 schedule 시간값 + 시간값x >> 20
+		//
+		// [pcp0] (&(&runqueues)->cfs)->runnable_load_avg:: 계산된 load avg 값
+		// [pcp0] (&(&runqueues)->cfs)->blocked_load_avg: 현재 task의 남아 있는 수행 시간량 / (현재 task의 남아 있는 수행 시간량 / 1024 + 1)
+		// (&(kmem_cache#15-oX (struct task_struct) (pid: 1))->se)->avg.decay_count: 현재의 schedule 시간값>> 20 + 1 + 시간값x
+		//
+		// (&(kmem_cache#15-oX (struct task_struct) (pid: 1))->se)->on_rq: 0
+		//
+		// [pcp0] (&(&(&runqueues)->cfs)->load)->weight: 0
+		// [pcp0] (&(&(&runqueues)->cfs)->load)->inv_weight: 0
+		// [pcp0] (&(&runqueues)->load)->weight: 0
+		// [pcp0] (&(&runqueues)->load)->inv_weight: 0
+		//
+		// [pcp0] &(&runqueues)->cfs_tasks 란 list head에 &(&(kmem_cache#15-oX (struct task_struct))->se)->group_node 를 제거함(pid 1)
+		// 삭제전:
+		// [pcp0] &(&runqueues)->cfs_tasks <-> &(&(kmem_cache#15-oX (struct task_struct))->se)->group_node (pid 2) <-> &(&(kmem_cache#15-oX (struct task_struct))->se)->group_node (pid 1)
+		// 삭제후:
+		// [pcp0] &(&runqueues)->cfs_tasks <-> &(&(kmem_cache#15-oX (struct task_struct))->se)->group_node (pid 2) 
+		//
+		// (&(&(kmem_cache#15-oX (struct task_struct) (pid: 1))->se)->group_node)->next: &(&(kmem_cache#15-oX (struct task_struct) (pid: 1))->se)->group_node
+		// (&(&(kmem_cache#15-oX (struct task_struct) (pid: 1))->se)->group_node)->prev: &(&(kmem_cache#15-oX (struct task_struct) (pid: 1))->se)->group_node
+		// 
+		// [pcp0] (&(&runqueues)->cfs)->nr_running: 1
+		// 
+		// [pcp0] (&(&runqueues)->cfs)->min_vruntime: 0xFFFFFFFFFFF00000
+
 		/*
 		 * end evaluation on encountering a throttled cfs_rq
 		 *
 		 * note: in the case of encountering a throttled cfs_rq we will
 		 * post the final h_nr_running decrement below.
 		*/
+		// cfs_rq: [pcp0] &(&runqueues)->cfs, cfs_rq_throttled([pcp0] &(&runqueues)->cfs): 0
 		if (cfs_rq_throttled(cfs_rq))
 			break;
+		// cfs_rq->h_nr_running: [pcp0] (&(&runqueues)->cfs)->h_nr_running: 4
 		cfs_rq->h_nr_running--;
+		// cfs_rq->h_nr_running: [pcp0] (&(&runqueues)->cfs)->h_nr_running: 3
 
 		/* Don't dequeue parent if it has other entities besides us */
+
+		// cfs_rq->load.weight: [pcp0] (&(&(&runqueues)->cfs)->load)->weight: 2048
 		if (cfs_rq->load.weight) {
 			/*
 			 * Bias pick_next to pick a task from this cfs_rq, as
 			 * p is sleeping when it is within its sched_slice.
 			 */
+			// task_sleep: 1, se: &(kmem_cache#15-oX (struct task_struct) (pid: 1))->se
+			// parent_entity(&(kmem_cache#15-oX (struct task_struct) (pid: 1))->se): NULL
 			if (task_sleep && parent_entity(se))
 				set_next_buddy(parent_entity(se));
 
 			/* avoid re-evaluating load for this entity */
+			// se: &(kmem_cache#15-oX (struct task_struct) (pid: 1))->se,
+			// parent_entity(&(kmem_cache#15-oX (struct task_struct) (pid: 1))->se): NULL
 			se = parent_entity(se);
+			// se: NULL
 			break;
 		}
 		flags |= DEQUEUE_SLEEP;
 	}
 
+	// se: NULL
 	for_each_sched_entity(se) {
+	// for (; NULL; se = (NULL)->parent)
+
 		cfs_rq = cfs_rq_of(se);
 		cfs_rq->h_nr_running--;
 
@@ -5394,10 +5540,37 @@ static void dequeue_task_fair(struct rq *rq, struct task_struct *p, int flags)
 		update_entity_load_avg(se, 1);
 	}
 
+	// se: NULL
 	if (!se) {
+		// rq: [pcp0] &runqueues
 		dec_nr_running(rq);
+
+		// dec_nr_running 에서 한일:
+		// [pcp0] (&runqueues)->nr_running: 1
+
+		// rq: [pcp0] &runqueues
 		update_rq_runnable_avg(rq, 1);
+
+		// update_rq_runnable_avg 에서 한일:
+		// delta: 현재의 schedule 시간 변화값은 signed 로 변경시 0 보다 큰 값으로 가정하고 코드 분석 진행
+		//
+		// (&(&runqueues)->avg)->last_runnable_update: 현재의 schedule 시간값
+		//
+		// delta + delta_w 값이 1024 보다 작은 값이라고 가정하고 코드 분석 진행
+		//
+		// (&(&runqueues)->avg)->runnable_avg_sum:
+		// 현재 task의 남아 있는 수행 시간량 / 1024 + 현재의 schedule 시간 변화값
+		// (&(&runqueues)->avg)->runnable_avg_period:
+		// 현재 task의 남아 있는 수행 시간량 / 1024 + 현재의 schedule 시간 변화값
+		//
+		// (&(&runqueues)->avg)->runnable_avg_sum 값과 (&(&runqueues)->avg)->runnable_avg_period 값을 이용하여
+		// contrib 값을 계산함
+		//
+		// &(&root_task_group)->runnable_avg 에 계산된 현재 contrib 값을 더해줌
+		// [pcp0] (&(&runqueues)->cfs))->tg_runnable_contrib: 계산된 현재 contrib 값
 	}
+
+	// rq: [pcp0] &runqueues
 	hrtick_update(rq);
 }
 
@@ -6215,6 +6388,8 @@ preempt:
 
 // ARM10C 20170812
 // rq: [pcp0] &runqueues
+// ARM10C 20171014
+// rq: [pcp0] &runqueues
 static struct task_struct *pick_next_task_fair(struct rq *rq)
 {
 	struct task_struct *p;
@@ -6224,6 +6399,8 @@ static struct task_struct *pick_next_task_fair(struct rq *rq)
 	// cfs_rq: [pcp0] &(&runqueues)->cfs
 
 	struct sched_entity *se;
+
+// 2017/10/14 종료
 
 	// cfs_rq->nr_running: [pcp0] (&(&runqueues)->cfs)->nr_running: 2
 	if (!cfs_rq->nr_running)
@@ -6277,24 +6454,37 @@ static struct task_struct *pick_next_task_fair(struct rq *rq)
  */
 // ARM10C 20170729
 // rq: [pcp0] &runqueues, prev: &init_task
+// ARM10C 20171014
+// [pcp0] &runqueues, kmem_cache#15-oX (struct task_struct) (pid: 1)
 static void put_prev_task_fair(struct rq *rq, struct task_struct *prev)
 {
 	// &prev->se: &(&init_task)->se
+	// &prev->se: &(kmem_cache#15-oX (struct task_struct) (pid: 1))->se
 	struct sched_entity *se = &prev->se;
 	// se: &(&init_task)->se
+	// se: &(kmem_cache#15-oX (struct task_struct) (pid: 1))->se
 
 	struct cfs_rq *cfs_rq;
 
 	// se: &(&init_task)->se
+	// se: &(kmem_cache#15-oX (struct task_struct) (pid: 1))->se
 	for_each_sched_entity(se) {
 	// for (; &(&init_task)->se; se = (&(&init_task)->se)->parent)
+	// for (; &(kmem_cache#15-oX (struct task_struct) (pid: 1))->se; se = (&(kmem_cache#15-oX (struct task_struct) (pid: 1))->se)->parent)
 
 		// se: &(&init_task)->se, cfs_rq_of(&(&init_task)->se): [pcp0] &(&runqueues)->cfs
+		// se: &(kmem_cache#15-oX (struct task_struct) (pid: 1))->se,
+		// cfs_rq_of(&(kmem_cache#15-oX (struct task_struct) (pid: 1))->se): [pcp0] &(&runqueues)->cfs
 		cfs_rq = cfs_rq_of(se);
+		// cfs_rq: [pcp0] &(&runqueues)->cfs
 		// cfs_rq: [pcp0] &(&runqueues)->cfs
 
 		// cfs_rq: [pcp0] &(&runqueues)->cfs, se: &(&init_task)->se
+		// cfs_rq: [pcp0] &(&runqueues)->cfs, se: &(kmem_cache#15-oX (struct task_struct) (pid: 1))->se
 		put_prev_entity(cfs_rq, se);
+
+		// put_prev_entity 에서 한일:
+		// [pcp0] (&(&runqueues)->cfs)->curr: NULL
 
 		// put_prev_entity 에서 한일:
 		// [pcp0] (&(&runqueues)->cfs)->curr: NULL

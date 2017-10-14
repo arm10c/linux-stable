@@ -1256,6 +1256,7 @@ static const u32 prio_to_wmult[40] = {
 
 // ARM10C 20170906
 // ARM10C 20171011
+// ARM10C 20171014
 // DEQUEUE_SLEEP: 1
 #define DEQUEUE_SLEEP		1
 
@@ -1264,6 +1265,7 @@ static const u32 prio_to_wmult[40] = {
 // ARM10C 20161008
 // ARM10C 20170513
 // ARM10C 20170520
+// ARM10C 20171014
 struct sched_class {
 	const struct sched_class *next;
 
@@ -1311,8 +1313,10 @@ struct sched_class {
 };
 
 // ARM10C 20170729
+// ARM10C 20171014
 #define sched_class_highest (&stop_sched_class)
 // ARM10C 20170729
+// ARM10C 20171014
 #define for_each_class(class) \
    for (class = sched_class_highest; class; class = class->next)
 
@@ -1366,11 +1370,19 @@ static inline u64 steal_ticks(u64 steal)
 }
 #endif
 
+// ARM10C 20170201
+// rq: [pcp0] &runqueues
+// ARM10C 20170617
+// rq: [pcp0] &runqueues
 static inline void inc_nr_running(struct rq *rq)
 {
+	// rq: [pcp0] (&runqueues)->nr_running: 0
+	// rq: [pcp0] (&runqueues)->nr_running: 1
 	rq->nr_running++;
+	// rq: [pcp0] (&runqueues)->nr_running: 1
+	// rq: [pcp0] (&runqueues)->nr_running: 2
 
-#ifdef CONFIG_NO_HZ_FULL
+#ifdef CONFIG_NO_HZ_FULL // CONFIG_NO_HZ_FULL=n
 	if (rq->nr_running == 2) {
 		if (tick_nohz_full_cpu(rq->cpu)) {
 			/* Order rq->nr_running write against the IPI */
@@ -1381,9 +1393,13 @@ static inline void inc_nr_running(struct rq *rq)
 #endif
 }
 
+// ARM10C 20171014
+// rq: [pcp0] &runqueues
 static inline void dec_nr_running(struct rq *rq)
 {
+	// rq->nr_running: [pcp0] (&runqueues)->nr_running: 2
 	rq->nr_running--;
+	// rq->nr_running: [pcp0] (&runqueues)->nr_running: 1
 }
 
 static inline void rq_last_tick_reset(struct rq *rq)

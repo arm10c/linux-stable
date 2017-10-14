@@ -25,6 +25,8 @@ check_preempt_curr_stop(struct rq *rq, struct task_struct *p, int flags)
 
 // ARM10C 20170729
 // rq: [pcp0] &runqueues
+// ARM10C 20171014
+// rq: [pcp0] &runqueues
 static struct task_struct *pick_next_task_stop(struct rq *rq)
 {
 	// rq->stop: [pcp0] (&runqueues)->stop: NULL

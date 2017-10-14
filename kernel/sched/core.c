@@ -1000,6 +1000,25 @@ static void enqueue_task(struct rq *rq, struct task_struct *p, int flags)
 	// 현재 task의 남아 있는 수행 시간량 / 1024 + 현재의 schedule 시간 변화값
 	// (&(&(kmem_cache#15-oX (struct task_struct))->se)->avg)->runnable_avg_period:
 	// 현재 task의 남아 있는 수행 시간량 / 1024 + 현재의 schedule 시간 변화값
+	//
+	// delta: 현재의 schedule 시간 변화값은 signed 로 변경시 0 보다 큰 값으로 가정하고 코드 분석 진행
+	//
+	// (&(&runqueues)->avg)->last_runnable_update: 현재의 schedule 시간값
+	//
+	// delta + delta_w 값이 1024 보다 작은 값이라고 가정하고 코드 분석 진행
+	//
+	// (&(&runqueues)->avg)->runnable_avg_sum:
+	// 현재 task의 남아 있는 수행 시간량 / 1024 + 현재의 schedule 시간 변화값
+	// (&(&runqueues)->avg)->runnable_avg_period:
+	// 현재 task의 남아 있는 수행 시간량 / 1024 + 현재의 schedule 시간 변화값
+	//
+	// (&(&runqueues)->avg)->runnable_avg_sum 값과 (&(&runqueues)->avg)->runnable_avg_period 값을 이용하여
+	// contrib 값을 계산함
+	//
+	// &(&root_task_group)->runnable_avg 에 계산된 현재 contrib 값을 더해줌
+	// [pcp0] (&(&runqueues)->cfs))->tg_runnable_contrib: 계산된 현재 contrib 값
+	//
+	// [pcp0] (&runqueues)->nr_running: 1
 
 	// enqueue_task_fair 에서 한일:
 	// (&(kmem_cache#15-oX (struct task_struct))->se)->vruntime: 0x4B8D7E
@@ -1049,6 +1068,25 @@ static void enqueue_task(struct rq *rq, struct task_struct *p, int flags)
 	// 현재 task의 남아 있는 수행 시간량 / 1024 + 현재의 schedule 시간 변화값
 	// (&(&(kmem_cache#15-oX (struct task_struct))->se)->avg)->runnable_avg_period:
 	// 현재 task의 남아 있는 수행 시간량 / 1024 + 현재의 schedule 시간 변화값
+	//
+	// delta: 현재의 schedule 시간 변화값은 signed 로 변경시 0 보다 큰 값으로 가정하고 코드 분석 진행
+	//
+	// (&(&runqueues)->avg)->last_runnable_update: 현재의 schedule 시간값
+	//
+	// delta + delta_w 값이 1024 보다 작은 값이라고 가정하고 코드 분석 진행
+	//
+	// (&(&runqueues)->avg)->runnable_avg_sum:
+	// 현재 task의 남아 있는 수행 시간량 / 1024 + 현재의 schedule 시간 변화값
+	// (&(&runqueues)->avg)->runnable_avg_period:
+	// 현재 task의 남아 있는 수행 시간량 / 1024 + 현재의 schedule 시간 변화값
+	//
+	// (&(&runqueues)->avg)->runnable_avg_sum 값과 (&(&runqueues)->avg)->runnable_avg_period 값을 이용하여
+	// contrib 값을 계산함
+	//
+	// &(&root_task_group)->runnable_avg 에 계산된 현재 contrib 값을 더해줌
+	// [pcp0] (&(&runqueues)->cfs))->tg_runnable_contrib: 계산된 현재 contrib 값
+	//
+	// [pcp0] (&runqueues)->nr_running: 2
 }
 
 // ARM10C 20170906
@@ -1070,6 +1108,70 @@ static void dequeue_task(struct rq *rq, struct task_struct *p, int flags)
 	// rq: [pcp0] &runqueues, p: kmem_cache#15-oX (struct task_struct) (pid: 1), flags: 1
 	// dequeue_task_fair([pcp0] &runqueues, kmem_cache#15-oX (struct task_struct) (pid: 1), 1):
 	p->sched_class->dequeue_task(rq, p, flags);
+
+	// dequeue_task_fair 에서 한일:
+	// (&(kmem_cache#15-oX (struct task_struct))->se (pid: 1))->exec_start: 현재의 [pcp0] &runqueues 의 schedule 시간값
+	// (&(kmem_cache#15-oX (struct task_struct))->se (pid: 1))->sum_exec_runtime: 실행된 시간차이값
+	// (&(kmem_cache#15-oX (struct task_struct))->se (pid: 1))->vruntime: 계산된 시간차이값+ XXXXXXXX
+	// [pcp0] (&(&runqueues)->cfs)->min_vruntime: 0xFFFFFFFFFFF00000
+	// root_cpuacct_cpuusage: 실행된 시간차이값
+	//
+	// delta: 현재의 schedule 시간 변화값은 signed 로 변경시 0 보다 큰 값으로 가정하고 코드 분석 진행
+	//
+	// (&(&(kmem_cache#15-oX (struct task_struct))->se)->avg)->last_runnable_update: 현재의 schedule 시간값
+	//
+	// delta + delta_w 값이 1024 보다 작은 값이라고 가정하고 코드 분석 진행
+	//
+	// (&(&(kmem_cache#15-oX (struct task_struct))->se)->avg)->runnable_avg_sum:
+	// 현재 task의 남아 있는 수행 시간량 / 1024 + 현재의 schedule 시간 변화값
+	// (&(&(kmem_cache#15-oX (struct task_struct))->se)->avg)->runnable_avg_period:
+	// 현재 task의 남아 있는 수행 시간량 / 1024 + 현재의 schedule 시간 변화값
+	//
+	// [pcp0] (&(&runqueues)->cfs)->blocked_load_avg: 0
+	// (&(&(&runqueues)->cfs)->decay_counter)->counter: 현재의 schedule 시간값>> 20 + 1 + 시간값x
+	// [pcp0] (&(&runqueues)->cfs)->last_decay: 현재의 schedule 시간값 + 시간값x >> 20
+	//
+	// [pcp0] (&(&runqueues)->cfs)->runnable_load_avg:: 계산된 load avg 값
+	// [pcp0] (&(&runqueues)->cfs)->blocked_load_avg: 현재 task의 남아 있는 수행 시간량 / (현재 task의 남아 있는 수행 시간량 / 1024 + 1)
+	// (&(kmem_cache#15-oX (struct task_struct) (pid: 1))->se)->avg.decay_count: 현재의 schedule 시간값>> 20 + 1 + 시간값x
+	//
+	// (&(kmem_cache#15-oX (struct task_struct) (pid: 1))->se)->on_rq: 0
+	//
+	// [pcp0] (&(&(&runqueues)->cfs)->load)->weight: 0
+	// [pcp0] (&(&(&runqueues)->cfs)->load)->inv_weight: 0
+	// [pcp0] (&(&runqueues)->load)->weight: 0
+	// [pcp0] (&(&runqueues)->load)->inv_weight: 0
+	//
+	// [pcp0] &(&runqueues)->cfs_tasks 란 list head에 &(&(kmem_cache#15-oX (struct task_struct))->se)->group_node 를 제거함(pid 1)
+	// 삭제전:
+	// [pcp0] &(&runqueues)->cfs_tasks <-> &(&(kmem_cache#15-oX (struct task_struct))->se)->group_node (pid 2) <-> &(&(kmem_cache#15-oX (struct task_struct))->se)->group_node (pid 1)
+	// 삭제후:
+	// [pcp0] &(&runqueues)->cfs_tasks <-> &(&(kmem_cache#15-oX (struct task_struct))->se)->group_node (pid 2) 
+	//
+	// (&(&(kmem_cache#15-oX (struct task_struct) (pid: 1))->se)->group_node)->next: &(&(kmem_cache#15-oX (struct task_struct) (pid: 1))->se)->group_node
+	// (&(&(kmem_cache#15-oX (struct task_struct) (pid: 1))->se)->group_node)->prev: &(&(kmem_cache#15-oX (struct task_struct) (pid: 1))->se)->group_node
+	// 
+	// [pcp0] (&(&runqueues)->cfs)->nr_running: 1
+	// [pcp0] (&(&runqueues)->cfs)->min_vruntime: 0xFFFFFFFFFFF00000
+	// [pcp0] (&(&runqueues)->cfs)->h_nr_running: 3
+	// [pcp0] (&runqueues)->nr_running: 1
+	//
+	// delta: 현재의 schedule 시간 변화값은 signed 로 변경시 0 보다 큰 값으로 가정하고 코드 분석 진행
+	//
+	// (&(&runqueues)->avg)->last_runnable_update: 현재의 schedule 시간값
+	//
+	// delta + delta_w 값이 1024 보다 작은 값이라고 가정하고 코드 분석 진행
+	//
+	// (&(&runqueues)->avg)->runnable_avg_sum:
+	// 현재 task의 남아 있는 수행 시간량 / 1024 + 현재의 schedule 시간 변화값
+	// (&(&runqueues)->avg)->runnable_avg_period:
+	// 현재 task의 남아 있는 수행 시간량 / 1024 + 현재의 schedule 시간 변화값
+	//
+	// (&(&runqueues)->avg)->runnable_avg_sum 값과 (&(&runqueues)->avg)->runnable_avg_period 값을 이용하여
+	// contrib 값을 계산함
+	//
+	// &(&root_task_group)->runnable_avg 에 계산된 현재 contrib 값을 더해줌
+	// [pcp0] (&(&runqueues)->cfs))->tg_runnable_contrib: 계산된 현재 contrib 값
 }
 
 // ARM10C 20170201
@@ -1090,9 +1192,6 @@ void activate_task(struct rq *rq, struct task_struct *p, int flags)
 	enqueue_task(rq, p, flags);
 
 	// enqueue_task 에서 한일:
-	// [pcp0] (&runqueues)->clock: 현재의 schedule 시간값
-	// [pcp0] (&runqueues)->clock_task: 현재의 schedule 시간값
-	//
 	// (&(kmem_cache#15-oX (struct task_struct))->se)->vruntime: 0x4B8D7E
 	//
 	// (&(kmem_cache#15-oX (struct task_struct))->se)->avg.last_runnable_update: 현재의 schedule 시간값
@@ -1159,11 +1258,27 @@ void activate_task(struct rq *rq, struct task_struct *p, int flags)
 	// 현재 task의 남아 있는 수행 시간량 / 1024 + 현재의 schedule 시간 변화값
 	// (&(&(kmem_cache#15-oX (struct task_struct))->se)->avg)->runnable_avg_period:
 	// 현재 task의 남아 있는 수행 시간량 / 1024 + 현재의 schedule 시간 변화값
+	//
+	// delta: 현재의 schedule 시간 변화값은 signed 로 변경시 0 보다 큰 값으로 가정하고 코드 분석 진행
+	//
+	// (&(&runqueues)->avg)->last_runnable_update: 현재의 schedule 시간값
+	//
+	// delta + delta_w 값이 1024 보다 작은 값이라고 가정하고 코드 분석 진행
+	//
+	// (&(&runqueues)->avg)->runnable_avg_sum:
+	// 현재 task의 남아 있는 수행 시간량 / 1024 + 현재의 schedule 시간 변화값
+	// (&(&runqueues)->avg)->runnable_avg_period:
+	// 현재 task의 남아 있는 수행 시간량 / 1024 + 현재의 schedule 시간 변화값
+	//
+	// (&(&runqueues)->avg)->runnable_avg_sum 값과 (&(&runqueues)->avg)->runnable_avg_period 값을 이용하여
+	// contrib 값을 계산함
+	//
+	// &(&root_task_group)->runnable_avg 에 계산된 현재 contrib 값을 더해줌
+	// [pcp0] (&(&runqueues)->cfs))->tg_runnable_contrib: 계산된 현재 contrib 값
+	//
+	// [pcp0] (&runqueues)->nr_running: 1
 
 	// enqueue_task 에서 한일:
-	// [pcp0] (&runqueues)->clock: 현재의 schedule 시간값
-	// [pcp0] (&runqueues)->clock_task: 현재의 schedule 시간값
-	//
 	// (&(kmem_cache#15-oX (struct task_struct))->se)->vruntime: 0x4B8D7E
 	//
 	// (&(kmem_cache#15-oX (struct task_struct))->se)->avg.last_runnable_update: 현재의 schedule 시간값
@@ -1211,6 +1326,25 @@ void activate_task(struct rq *rq, struct task_struct *p, int flags)
 	// 현재 task의 남아 있는 수행 시간량 / 1024 + 현재의 schedule 시간 변화값
 	// (&(&(kmem_cache#15-oX (struct task_struct))->se)->avg)->runnable_avg_period:
 	// 현재 task의 남아 있는 수행 시간량 / 1024 + 현재의 schedule 시간 변화값
+	//
+	// delta: 현재의 schedule 시간 변화값은 signed 로 변경시 0 보다 큰 값으로 가정하고 코드 분석 진행
+	//
+	// (&(&runqueues)->avg)->last_runnable_update: 현재의 schedule 시간값
+	//
+	// delta + delta_w 값이 1024 보다 작은 값이라고 가정하고 코드 분석 진행
+	//
+	// (&(&runqueues)->avg)->runnable_avg_sum:
+	// 현재 task의 남아 있는 수행 시간량 / 1024 + 현재의 schedule 시간 변화값
+	// (&(&runqueues)->avg)->runnable_avg_period:
+	// 현재 task의 남아 있는 수행 시간량 / 1024 + 현재의 schedule 시간 변화값
+	//
+	// (&(&runqueues)->avg)->runnable_avg_sum 값과 (&(&runqueues)->avg)->runnable_avg_period 값을 이용하여
+	// contrib 값을 계산함
+	//
+	// &(&root_task_group)->runnable_avg 에 계산된 현재 contrib 값을 더해줌
+	// [pcp0] (&(&runqueues)->cfs))->tg_runnable_contrib: 계산된 현재 contrib 값
+	//
+	// [pcp0] (&runqueues)->nr_running: 2
 }
 
 // ARM10C 20170906
@@ -1226,6 +1360,73 @@ void deactivate_task(struct rq *rq, struct task_struct *p, int flags)
 
 	// rq: [pcp0] &runqueues, p: kmem_cache#15-oX (struct task_struct) (pid: 1), flags: 1
 	dequeue_task(rq, p, flags);
+
+	// dequeue_task 에서 한일:
+	// [pcp0] (&runqueues)->clock: 현재의 schedule 시간값
+	// [pcp0] (&runqueues)->clock_task: 현재의 schedule 시간값
+	//
+	// (&(kmem_cache#15-oX (struct task_struct))->se (pid: 1))->exec_start: 현재의 [pcp0] &runqueues 의 schedule 시간값
+	// (&(kmem_cache#15-oX (struct task_struct))->se (pid: 1))->sum_exec_runtime: 실행된 시간차이값
+	// (&(kmem_cache#15-oX (struct task_struct))->se (pid: 1))->vruntime: 계산된 시간차이값+ XXXXXXXX
+	// [pcp0] (&(&runqueues)->cfs)->min_vruntime: 0xFFFFFFFFFFF00000
+	// root_cpuacct_cpuusage: 실행된 시간차이값
+	//
+	// delta: 현재의 schedule 시간 변화값은 signed 로 변경시 0 보다 큰 값으로 가정하고 코드 분석 진행
+	//
+	// (&(&(kmem_cache#15-oX (struct task_struct))->se)->avg)->last_runnable_update: 현재의 schedule 시간값
+	//
+	// delta + delta_w 값이 1024 보다 작은 값이라고 가정하고 코드 분석 진행
+	//
+	// (&(&(kmem_cache#15-oX (struct task_struct))->se)->avg)->runnable_avg_sum:
+	// 현재 task의 남아 있는 수행 시간량 / 1024 + 현재의 schedule 시간 변화값
+	// (&(&(kmem_cache#15-oX (struct task_struct))->se)->avg)->runnable_avg_period:
+	// 현재 task의 남아 있는 수행 시간량 / 1024 + 현재의 schedule 시간 변화값
+	//
+	// [pcp0] (&(&runqueues)->cfs)->blocked_load_avg: 0
+	// (&(&(&runqueues)->cfs)->decay_counter)->counter: 현재의 schedule 시간값>> 20 + 1 + 시간값x
+	// [pcp0] (&(&runqueues)->cfs)->last_decay: 현재의 schedule 시간값 + 시간값x >> 20
+	//
+	// [pcp0] (&(&runqueues)->cfs)->runnable_load_avg:: 계산된 load avg 값
+	// [pcp0] (&(&runqueues)->cfs)->blocked_load_avg: 현재 task의 남아 있는 수행 시간량 / (현재 task의 남아 있는 수행 시간량 / 1024 + 1)
+	// (&(kmem_cache#15-oX (struct task_struct) (pid: 1))->se)->avg.decay_count: 현재의 schedule 시간값>> 20 + 1 + 시간값x
+	//
+	// (&(kmem_cache#15-oX (struct task_struct) (pid: 1))->se)->on_rq: 0
+	//
+	// [pcp0] (&(&(&runqueues)->cfs)->load)->weight: 0
+	// [pcp0] (&(&(&runqueues)->cfs)->load)->inv_weight: 0
+	// [pcp0] (&(&runqueues)->load)->weight: 0
+	// [pcp0] (&(&runqueues)->load)->inv_weight: 0
+	//
+	// [pcp0] &(&runqueues)->cfs_tasks 란 list head에 &(&(kmem_cache#15-oX (struct task_struct))->se)->group_node 를 제거함(pid 1)
+	// 삭제전:
+	// [pcp0] &(&runqueues)->cfs_tasks <-> &(&(kmem_cache#15-oX (struct task_struct))->se)->group_node (pid 2) <-> &(&(kmem_cache#15-oX (struct task_struct))->se)->group_node (pid 1)
+	// 삭제후:
+	// [pcp0] &(&runqueues)->cfs_tasks <-> &(&(kmem_cache#15-oX (struct task_struct))->se)->group_node (pid 2) 
+	//
+	// (&(&(kmem_cache#15-oX (struct task_struct) (pid: 1))->se)->group_node)->next: &(&(kmem_cache#15-oX (struct task_struct) (pid: 1))->se)->group_node
+	// (&(&(kmem_cache#15-oX (struct task_struct) (pid: 1))->se)->group_node)->prev: &(&(kmem_cache#15-oX (struct task_struct) (pid: 1))->se)->group_node
+	// 
+	// [pcp0] (&(&runqueues)->cfs)->nr_running: 1
+	// [pcp0] (&(&runqueues)->cfs)->min_vruntime: 0xFFFFFFFFFFF00000
+	// [pcp0] (&(&runqueues)->cfs)->h_nr_running: 3
+	// [pcp0] (&runqueues)->nr_running: 1
+	//
+	// delta: 현재의 schedule 시간 변화값은 signed 로 변경시 0 보다 큰 값으로 가정하고 코드 분석 진행
+	//
+	// (&(&runqueues)->avg)->last_runnable_update: 현재의 schedule 시간값
+	//
+	// delta + delta_w 값이 1024 보다 작은 값이라고 가정하고 코드 분석 진행
+	//
+	// (&(&runqueues)->avg)->runnable_avg_sum:
+	// 현재 task의 남아 있는 수행 시간량 / 1024 + 현재의 schedule 시간 변화값
+	// (&(&runqueues)->avg)->runnable_avg_period:
+	// 현재 task의 남아 있는 수행 시간량 / 1024 + 현재의 schedule 시간 변화값
+	//
+	// (&(&runqueues)->avg)->runnable_avg_sum 값과 (&(&runqueues)->avg)->runnable_avg_period 값을 이용하여
+	// contrib 값을 계산함
+	//
+	// &(&root_task_group)->runnable_avg 에 계산된 현재 contrib 값을 더해줌
+	// [pcp0] (&(&runqueues)->cfs))->tg_runnable_contrib: 계산된 현재 contrib 값
 }
 
 // ARM10C 20161008
@@ -2651,9 +2852,6 @@ void wake_up_new_task(struct task_struct *p)
 	activate_task(rq, p, 0);
 
 	// activate_task 에서 한일:
-	// [pcp0] (&runqueues)->clock: 현재의 schedule 시간값
-	// [pcp0] (&runqueues)->clock_task: 현재의 schedule 시간값
-	//
 	// (&(kmem_cache#15-oX (struct task_struct))->se)->vruntime: 0x4B8D7E
 	//
 	// (&(kmem_cache#15-oX (struct task_struct))->se)->avg.last_runnable_update: 현재의 schedule 시간값
@@ -2720,11 +2918,27 @@ void wake_up_new_task(struct task_struct *p)
 	// 현재 task의 남아 있는 수행 시간량 / 1024 + 현재의 schedule 시간 변화값
 	// (&(&(kmem_cache#15-oX (struct task_struct))->se)->avg)->runnable_avg_period:
 	// 현재 task의 남아 있는 수행 시간량 / 1024 + 현재의 schedule 시간 변화값
+	//
+	// delta: 현재의 schedule 시간 변화값은 signed 로 변경시 0 보다 큰 값으로 가정하고 코드 분석 진행
+	//
+	// (&(&runqueues)->avg)->last_runnable_update: 현재의 schedule 시간값
+	//
+	// delta + delta_w 값이 1024 보다 작은 값이라고 가정하고 코드 분석 진행
+	//
+	// (&(&runqueues)->avg)->runnable_avg_sum:
+	// 현재 task의 남아 있는 수행 시간량 / 1024 + 현재의 schedule 시간 변화값
+	// (&(&runqueues)->avg)->runnable_avg_period:
+	// 현재 task의 남아 있는 수행 시간량 / 1024 + 현재의 schedule 시간 변화값
+	//
+	// (&(&runqueues)->avg)->runnable_avg_sum 값과 (&(&runqueues)->avg)->runnable_avg_period 값을 이용하여
+	// contrib 값을 계산함
+	//
+	// &(&root_task_group)->runnable_avg 에 계산된 현재 contrib 값을 더해줌
+	// [pcp0] (&(&runqueues)->cfs))->tg_runnable_contrib: 계산된 현재 contrib 값
+	//
+	// [pcp0] (&runqueues)->nr_running: 1
 
 	// activate_task 에서 한일:
-	// [pcp0] (&runqueues)->clock: 현재의 schedule 시간값
-	// [pcp0] (&runqueues)->clock_task: 현재의 schedule 시간값
-	//
 	// (&(kmem_cache#15-oX (struct task_struct))->se)->vruntime: 0x4B8D7E
 	//
 	// (&(kmem_cache#15-oX (struct task_struct))->se)->avg.last_runnable_update: 현재의 schedule 시간값
@@ -2772,6 +2986,25 @@ void wake_up_new_task(struct task_struct *p)
 	// 현재 task의 남아 있는 수행 시간량 / 1024 + 현재의 schedule 시간 변화값
 	// (&(&(kmem_cache#15-oX (struct task_struct))->se)->avg)->runnable_avg_period:
 	// 현재 task의 남아 있는 수행 시간량 / 1024 + 현재의 schedule 시간 변화값
+	//
+	// delta: 현재의 schedule 시간 변화값은 signed 로 변경시 0 보다 큰 값으로 가정하고 코드 분석 진행
+	//
+	// (&(&runqueues)->avg)->last_runnable_update: 현재의 schedule 시간값
+	//
+	// delta + delta_w 값이 1024 보다 작은 값이라고 가정하고 코드 분석 진행
+	//
+	// (&(&runqueues)->avg)->runnable_avg_sum:
+	// 현재 task의 남아 있는 수행 시간량 / 1024 + 현재의 schedule 시간 변화값
+	// (&(&runqueues)->avg)->runnable_avg_period:
+	// 현재 task의 남아 있는 수행 시간량 / 1024 + 현재의 schedule 시간 변화값
+	//
+	// (&(&runqueues)->avg)->runnable_avg_sum 값과 (&(&runqueues)->avg)->runnable_avg_period 값을 이용하여
+	// contrib 값을 계산함
+	//
+	// &(&root_task_group)->runnable_avg 에 계산된 현재 contrib 값을 더해줌
+	// [pcp0] (&(&runqueues)->cfs))->tg_runnable_contrib: 계산된 현재 contrib 값
+	//
+	// [pcp0] (&runqueues)->nr_running: 2
 
 	// p->on_rq: (kmem_cache#15-oX (struct task_struct))->on_rq: 0
 	// p->on_rq: (kmem_cache#15-oX (struct task_struct))->on_rq: 0
@@ -3011,6 +3244,8 @@ static void finish_task_switch(struct rq *rq, struct task_struct *prev)
 /* assumes rq->lock is held */
 // ARM10C 20170720
 // rq: [pcp0] &runqueues, prev: &init_task
+// ARM10C 20171014
+// rq: [pcp0] &runqueues, prev: kmem_cache#15-oX (struct task_struct) (pid: 1)
 static inline void pre_schedule(struct rq *rq, struct task_struct *prev)
 {
 	// prev->sched_class: (&init_task)->sched_class: &fair_sched_class
@@ -3542,9 +3777,13 @@ static inline void schedule_debug(struct task_struct *prev)
 
 // ARM10C 20170729
 // rq: [pcp0] &runqueues, prev: &init_task
+// ARM10C 20171014
+// rq: [pcp0] &runqueues, prev: kmem_cache#15-oX (struct task_struct) (pid: 1)
 static void put_prev_task(struct rq *rq, struct task_struct *prev)
 {
 	// prev->on_rq: (&init_task)->on_rq: 0
+	// rq->skip_clock_update: [pcp0] (&runqueues)->skip_clock_update: 0
+	// prev->on_rq: (kmem_cache#15-oX (struct task_struct) (pid: 1))->on_rq: 0
 	// rq->skip_clock_update: [pcp0] (&runqueues)->skip_clock_update: 0
 	if (prev->on_rq || rq->skip_clock_update < 0)
 		update_rq_clock(rq);
@@ -3553,7 +3792,14 @@ static void put_prev_task(struct rq *rq, struct task_struct *prev)
 	// prev->sched_class->put_prev_task: (&fair_sched_class)->put_prev_task: put_prev_task_fair
 	// rq: [pcp0] &runqueues, prev: &init_task
 	// put_prev_task_fair([pcp0] &runqueues, &init_task)
+	// prev->sched_class: (kmem_cache#15-oX (struct task_struct) (pid: 1))->sched_class: &fair_sched_class
+	// prev->sched_class->put_prev_task: (&fair_sched_class)->put_prev_task: put_prev_task_fair
+	// rq: [pcp0] &runqueues, prev: kmem_cache#15-oX (struct task_struct) (pid: 1)
+	// put_prev_task_fair([pcp0] &runqueues, kmem_cache#15-oX (struct task_struct) (pid: 1))
 	prev->sched_class->put_prev_task(rq, prev);
+
+	// put_prev_task_fair 에서 한일:
+	// [pcp0] (&(&runqueues)->cfs)->curr: NULL
 
 	// put_prev_task_fair 에서 한일:
 	// [pcp0] (&(&runqueues)->cfs)->curr: NULL
@@ -3563,6 +3809,8 @@ static void put_prev_task(struct rq *rq, struct task_struct *prev)
  * Pick up the highest-prio task:
  */
 // ARM10C 20170729
+// rq: [pcp0] &runqueues
+// ARM10C 20171014
 // rq: [pcp0] &runqueues
 static inline struct task_struct *
 pick_next_task(struct rq *rq)
@@ -3576,6 +3824,9 @@ pick_next_task(struct rq *rq)
 	 */
 	// rq->nr_running: [pcp0] (&runqueues)->nr_running: 0,
 	// rq->cfs.h_nr_running: [pcp0] (&(&runqueues)->cfs)->h_nr_running: 4
+	//
+	// rq->nr_running: [pcp0] (&runqueues)->nr_running: 1,
+	// rq->cfs.h_nr_running: [pcp0] (&(&runqueues)->cfs)->h_nr_running: 3
 	if (likely(rq->nr_running == rq->cfs.h_nr_running)) {
 		p = fair_sched_class.pick_next_task(rq);
 		if (likely(p))
@@ -3584,6 +3835,7 @@ pick_next_task(struct rq *rq)
 
 	for_each_class(class) {
 	// for (class = sched_class_highest; class; class = class->next)
+	// for (class = sched_class_highest; class; class = class->next)
 
 		// [f1] class: &stop_sched_class
 		// [f1] class->pick_next_task: (&stop_sched_class)->pick_next_task: pick_next_task_stop, rq: [pcp0] &runqueues
@@ -3591,7 +3843,6 @@ pick_next_task(struct rq *rq)
 		// [f2] class: &rt_sched_class
 		// [f2] class->pick_next_task: (&rt_sched_class)->pick_next_task: pick_next_task_rt, rq: [pcp0] &runqueues
 		// [f2] pick_next_task_rt([pcp0] &runqueues): NULL
-		//
 		// [f3] class: &fair_sched_class
 		// [f3] class->pick_next_task: (&fair_sched_class)->pick_next_task: pick_next_task_fair, rq: [pcp0] &runqueues
 		// [f3] pick_next_task_fair([pcp0] &runqueues): kmem_cache#15-oX (struct task_struct) (pid: 1)
@@ -3614,7 +3865,6 @@ pick_next_task(struct rq *rq)
 		// (&(kmem_cache#15-oX (struct task_struct))->se (pid: 1))->exec_start: 현재의 schedule 시간값
 		// [pcp0] (&(&runqueues)->cfs)->curr: NULL: &(kmem_cache#15-oX (struct task_struct))->se (pid: 1)
 		// (&(kmem_cache#15-oX (struct task_struct))->se (pid: 1))->prev_sum_exec_runtime: 0
-
 
 		// [f1] p: NULL
 		// [f2] p: NULL
@@ -3762,13 +4012,86 @@ need_resched:
 		} else {
 			// rq: [pcp0] &runqueues, prev: kmem_cache#15-oX (struct task_struct) (pid: 1), DEQUEUE_SLEEP: 1
 			deactivate_task(rq, prev, DEQUEUE_SLEEP);
+
+			// deactivate_task 에서 한일:
+			// [pcp0] (&runqueues)->nr_uninterruptible: 1
+			//
+			// [pcp0] (&runqueues)->clock: 현재의 schedule 시간값
+			// [pcp0] (&runqueues)->clock_task: 현재의 schedule 시간값
+			//
+			// (&(kmem_cache#15-oX (struct task_struct))->se (pid: 1))->exec_start: 현재의 [pcp0] &runqueues 의 schedule 시간값
+			// (&(kmem_cache#15-oX (struct task_struct))->se (pid: 1))->sum_exec_runtime: 실행된 시간차이값
+			// (&(kmem_cache#15-oX (struct task_struct))->se (pid: 1))->vruntime: 계산된 시간차이값+ XXXXXXXX
+			// [pcp0] (&(&runqueues)->cfs)->min_vruntime: 0xFFFFFFFFFFF00000
+			// root_cpuacct_cpuusage: 실행된 시간차이값
+			//
+			// delta: 현재의 schedule 시간 변화값은 signed 로 변경시 0 보다 큰 값으로 가정하고 코드 분석 진행
+			//
+			// (&(&(kmem_cache#15-oX (struct task_struct))->se)->avg)->last_runnable_update: 현재의 schedule 시간값
+			//
+			// delta + delta_w 값이 1024 보다 작은 값이라고 가정하고 코드 분석 진행
+			//
+			// (&(&(kmem_cache#15-oX (struct task_struct))->se)->avg)->runnable_avg_sum:
+			// 현재 task의 남아 있는 수행 시간량 / 1024 + 현재의 schedule 시간 변화값
+			// (&(&(kmem_cache#15-oX (struct task_struct))->se)->avg)->runnable_avg_period:
+			// 현재 task의 남아 있는 수행 시간량 / 1024 + 현재의 schedule 시간 변화값
+			//
+			// [pcp0] (&(&runqueues)->cfs)->blocked_load_avg: 0
+			// (&(&(&runqueues)->cfs)->decay_counter)->counter: 현재의 schedule 시간값>> 20 + 1 + 시간값x
+			// [pcp0] (&(&runqueues)->cfs)->last_decay: 현재의 schedule 시간값 + 시간값x >> 20
+			//
+			// [pcp0] (&(&runqueues)->cfs)->runnable_load_avg:: 계산된 load avg 값
+			// [pcp0] (&(&runqueues)->cfs)->blocked_load_avg: 현재 task의 남아 있는 수행 시간량 / (현재 task의 남아 있는 수행 시간량 / 1024 + 1)
+			// (&(kmem_cache#15-oX (struct task_struct) (pid: 1))->se)->avg.decay_count: 현재의 schedule 시간값>> 20 + 1 + 시간값x
+			//
+			// (&(kmem_cache#15-oX (struct task_struct) (pid: 1))->se)->on_rq: 0
+			//
+			// [pcp0] (&(&(&runqueues)->cfs)->load)->weight: 0
+			// [pcp0] (&(&(&runqueues)->cfs)->load)->inv_weight: 0
+			// [pcp0] (&(&runqueues)->load)->weight: 0
+			// [pcp0] (&(&runqueues)->load)->inv_weight: 0
+			//
+			// [pcp0] &(&runqueues)->cfs_tasks 란 list head에 &(&(kmem_cache#15-oX (struct task_struct))->se)->group_node 를 제거함(pid 1)
+			// 삭제전:
+			// [pcp0] &(&runqueues)->cfs_tasks <-> &(&(kmem_cache#15-oX (struct task_struct))->se)->group_node (pid 2) <-> &(&(kmem_cache#15-oX (struct task_struct))->se)->group_node (pid 1)
+			// 삭제후:
+			// [pcp0] &(&runqueues)->cfs_tasks <-> &(&(kmem_cache#15-oX (struct task_struct))->se)->group_node (pid 2) 
+			//
+			// (&(&(kmem_cache#15-oX (struct task_struct) (pid: 1))->se)->group_node)->next: &(&(kmem_cache#15-oX (struct task_struct) (pid: 1))->se)->group_node
+			// (&(&(kmem_cache#15-oX (struct task_struct) (pid: 1))->se)->group_node)->prev: &(&(kmem_cache#15-oX (struct task_struct) (pid: 1))->se)->group_node
+			// 
+			// [pcp0] (&(&runqueues)->cfs)->nr_running: 1
+			// [pcp0] (&(&runqueues)->cfs)->min_vruntime: 0xFFFFFFFFFFF00000
+			// [pcp0] (&(&runqueues)->cfs)->h_nr_running: 3
+			// [pcp0] (&runqueues)->nr_running: 1
+			//
+			// delta: 현재의 schedule 시간 변화값은 signed 로 변경시 0 보다 큰 값으로 가정하고 코드 분석 진행
+			//
+			// (&(&runqueues)->avg)->last_runnable_update: 현재의 schedule 시간값
+			//
+			// delta + delta_w 값이 1024 보다 작은 값이라고 가정하고 코드 분석 진행
+			//
+			// (&(&runqueues)->avg)->runnable_avg_sum:
+			// 현재 task의 남아 있는 수행 시간량 / 1024 + 현재의 schedule 시간 변화값
+			// (&(&runqueues)->avg)->runnable_avg_period:
+			// 현재 task의 남아 있는 수행 시간량 / 1024 + 현재의 schedule 시간 변화값
+			//
+			// (&(&runqueues)->avg)->runnable_avg_sum 값과 (&(&runqueues)->avg)->runnable_avg_period 값을 이용하여
+			// contrib 값을 계산함
+			//
+			// &(&root_task_group)->runnable_avg 에 계산된 현재 contrib 값을 더해줌
+			// [pcp0] (&(&runqueues)->cfs))->tg_runnable_contrib: 계산된 현재 contrib 값
+
+			// prev->on_rq: (kmem_cache#15-oX (struct task_struct) (pid: 1))->on_rq: 1
 			prev->on_rq = 0;
+			// prev->on_rq: (kmem_cache#15-oX (struct task_struct) (pid: 1))->on_rq: 0
 
 			/*
 			 * If a worker went to sleep, notify and ask workqueue
 			 * whether it wants to wake up a task to maintain
 			 * concurrency.
 			 */
+			// prev->flags: (kmem_cache#15-oX (struct task_struct) (pid: 1))->flags: 0x00200040, PF_WQ_WORKER: 0x00000020
 			if (prev->flags & PF_WQ_WORKER) {
 				struct task_struct *to_wakeup;
 
@@ -3777,13 +4100,18 @@ need_resched:
 					try_to_wake_up_local(to_wakeup);
 			}
 		}
+		// switch_count: &(kmem_cache#15-oX (struct task_struct) (pid: 1))->nivcsw
+		// &prev->nvcsw: &(kmem_cache#15-oX (struct task_struct) (pid: 1))->nvcsw
 		switch_count = &prev->nvcsw;
+		// switch_count: &(kmem_cache#15-oX (struct task_struct) (pid: 1))->nivcsw
 	}
 
 	// rq: [pcp0] &runqueues, prev: &init_task
+	// rq: [pcp0] &runqueues, prev: kmem_cache#15-oX (struct task_struct) (pid: 1)
 	pre_schedule(rq, prev);
 
 	// rq->nr_running: [pcp0] (&runqueues)->nr_running: 0
+	// rq->nr_running: [pcp0] (&runqueues)->nr_running: 1
 	if (unlikely(!rq->nr_running))
 		// cpu: 0, rq: [pcp0] &runqueues
 		idle_balance(cpu, rq);
@@ -3823,13 +4151,20 @@ need_resched:
 		// [pcp0] (&runqueues)->next_balance: 현재 jiff 값 + 100
 
 	// rq: [pcp0] &runqueues, prev: &init_task
+	// rq: [pcp0] &runqueues, prev: kmem_cache#15-oX (struct task_struct) (pid: 1)
 	put_prev_task(rq, prev);
+
+	// put_prev_task 에서 한일:
+	// [pcp0] (&(&runqueues)->cfs)->curr: NULL
 
 	// put_prev_task 에서 한일:
 	// [pcp0] (&(&runqueues)->cfs)->curr: NULL
 
 	// rq: [pcp0] &runqueues
 	// pick_next_task([pcp0] &runqueues): kmem_cache#15-oX (struct task_struct) (pid: 1)
+	//
+	// rq: [pcp0] &runqueues
+	// pick_next_task([pcp0] &runqueues):
 	next = pick_next_task(rq);
 	// next: kmem_cache#15-oX (struct task_struct) (pid: 1)
 
